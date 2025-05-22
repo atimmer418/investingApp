@@ -1,1 +1,27 @@
-<p>survey works!</p>
+<div class="survey-container" *ngIf="currentQuestion">
+  <div class="survey-progress" *ngIf="surveyQuestions.length > 0">
+    <p>Question {{ currentQuestionIndex + 1 }} of {{ surveyQuestions.length }}</p>
+  </div>
+
+  <div class="question-area">
+    <h2>{{ currentQuestion.questionText }}</h2>
+
+    <div class="options-list">
+      <button
+        *ngFor="let option of currentQuestion.options; let i = index"
+        class="option-button"
+        (click)="selectAnswer(option)">
+        {{ option.text }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="!currentQuestion && surveyQuestions.length > 0">
+  <p>Loading survey or survey completed...</p>
+  <!-- Or specific message if survey is completed and navigating -->
+</div>
+
+<div *ngIf="surveyQuestions.length === 0">
+  <p>No survey questions loaded.</p>
+</div>
