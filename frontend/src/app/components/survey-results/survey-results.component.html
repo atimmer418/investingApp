@@ -1,0 +1,14 @@
+<div class="results-container" style="padding: 20px; text-align: center; font-family: sans-serif;">
+  <h1>Survey Results</h1>
+  <div *ngIf="score !== null && score !== undefined; else noScore">
+    <p>Your total risk score is: <strong>{{ score }}</strong></p>
+    <p>Based on your score, your determined risk profile is: <strong>{{ riskProfile }}</strong></p>
+    <p>This information can help guide your investment decisions.</p>
+    <button (click)="continueToApp()" style="padding: 10px 20px; margin-top: 20px; background-color: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer;">
+      Continue to Portfolio
+    </button>
+  </div>
+  <ng-template #noScore>
+    <p>Could not retrieve your survey score, or score is invalid.</p>
+  </ng-template>
+</div>

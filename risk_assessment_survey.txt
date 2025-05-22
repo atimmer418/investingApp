@@ -1,0 +1,41 @@
+1. What is your primary investment goal?
+    a) Preserving my initial capital with minimal risk. (Score: 1)
+    b) Generating a steady stream of income, with some capital growth. (Score: 2)
+    c) Achieving significant capital growth, even if it means taking on higher risk. (Score: 3)
+    d) Maximizing returns through aggressive growth strategies, understanding this involves substantial risk. (Score: 4)
+
+2. How long do you plan to keep your money invested before needing to access a significant portion of it?
+    a) Less than 3 years. (Score: 1)
+    b) 3 to 5 years. (Score: 2)
+    c) 6 to 10 years. (Score: 3)
+    d) More than 10 years. (Score: 4)
+
+3. How would you describe your knowledge of investments and financial markets?
+    a) Limited: I am new to investing and have minimal understanding of financial markets. (Score: 1)
+    b) Basic: I have some understanding of basic investment concepts. (Score: 2)
+    c) Good: I am comfortable with most investment concepts and have some experience. (Score: 3)
+    d) Extensive: I have a strong understanding of complex investment strategies and financial markets. (Score: 4)
+
+4. Imagine your investment portfolio lost 20% of its value in a short period due to market fluctuations. How would you most likely react?
+    a) Sell all or most of my investments to avoid further losses. (Score: 1)
+    b) Sell some of my investments and move into more conservative options. (Score: 2)
+    c) Hold onto my investments and wait for the market to recover. (Score: 3)
+    d) View it as a buying opportunity and consider investing more. (Score: 4)
+
+5. What percentage of your total liquid assets are you comfortable investing in moderate to high-risk investments?
+    a) Less than 10%. (Score: 1)
+    b) 10% to 25%. (Score: 2)
+    c) 26% to 50%. (Score: 3)
+    d) More than 50%. (Score: 4)
+
+6. When considering a new investment opportunity, which factor is most important to you?
+    a) Low risk and high security of funds. (Score: 1)
+    b) A balance between risk and potential return. (Score: 2)
+    c) High potential returns, even if it comes with higher risk. (Score: 3)
+    d) Innovative or cutting-edge potential, accepting of speculative risks. (Score: 4)
+
+7. How stable is your current and future income (e.g., salary, business income)?
+    a) Not very stable; I expect significant fluctuations. (Score: 1)
+    b) Moderately stable; some fluctuations are possible. (Score: 2)
+    c) Stable; I expect it to remain consistent. (Score: 3)
+    d) Very stable and likely to increase. (Score: 4)
