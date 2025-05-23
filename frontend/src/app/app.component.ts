@@ -1,10 +1,17 @@
-
+import { IonicModule } from '@ionic/angular'
 import { Component, OnInit } from '@angular/core'; // Added OnInit
-import { Router } from '@angular/router'; // Added Router
+import { Router, RouterModule } from '@angular/router'; // Added Router
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
+  imports: [
+    IonicModule,
+    CommonModule,
+    RouterModule,
+  ],
+  standalone: true,
   // styleUrls: ['./app.component.scss'] // Assuming app.component.scss might exist or be added later
 })
 export class AppComponent implements OnInit { // Implemented OnInit
