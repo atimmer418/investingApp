@@ -1,0 +1,7 @@
+{
+  "name": "investingApp",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
