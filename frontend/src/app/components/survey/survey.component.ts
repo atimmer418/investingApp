@@ -16,7 +16,6 @@ interface Question {
 @Component({
   selector: 'app-survey',
   templateUrl: './survey.component.html',
-  imports: [CommonModule],
   styleUrls: ['./survey.component.scss'],
 })
 export class SurveyComponent implements OnInit {

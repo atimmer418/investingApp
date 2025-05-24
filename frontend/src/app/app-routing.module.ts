@@ -1,5 +1,7 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { SurveyComponent } from './components/survey/survey.component';
+import { SurveyResultsComponent } from './components/survey-results/survey-results.component';
 
 // --- Import your Page Components or Standalone Page Components ---
 // Example for NON-standalone page components (if you have them):
@@ -34,8 +36,12 @@ export const routes: Routes = [
   // Example: Route to a LAZY-LOADED STANDALONE component (Recommended for components)
   {
     path: 'survey', // URL path will be your-app.com/survey
-    loadComponent: () => import('./components/survey/survey.component').then(m => m.SurveyComponent)
+    component: SurveyComponent // Changed from loadComponent
     // Assuming survey.component.ts exports a standalone SurveyPage component
+  },
+  {
+    path: 'survey-results',
+    component: SurveyResultsComponent // Changed from loadComponent
   },
 //   {
 //     path: 'plaid-link',
