@@ -5,7 +5,6 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-survey-results',
   templateUrl: './survey-results.component.html',
-  imports: [CommonModule],
   // styleUrls: ['./survey-results.component.scss'] // Assuming no specific styles for now
 })
 export class SurveyResultsComponent implements OnInit {
