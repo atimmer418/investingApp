@@ -117,7 +117,7 @@ export class LinkPlaidComponent implements OnInit {
       this.statusMessage = 'Account linked successfully! (Simulated)';
       this.isLoading = false;
       localStorage.setItem('linkplaidCompleted', 'true')
-      this.navCtrl.navigateRoot('/tabs'); // Navigate on success
+      this.navCtrl.navigateRoot('/survey'); // Navigate on success
     }, 2000);
   }
 

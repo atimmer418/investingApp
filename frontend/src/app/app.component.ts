@@ -21,8 +21,9 @@ export class AppComponent implements OnInit {
   checkSurveyStatusAndNavigate() {
 
     // remove this later
-    localStorage.setItem('surveyCompleted', 'false')
+    localStorage.setItem('initialSurveyCompleted', 'false')
     localStorage.setItem('linkplaidCompleted', 'false')
+    localStorage.setItem('investmentSurveyCompleted', 'false')
     // remove this later
 
     const surveyCompleted = localStorage.getItem('surveyCompleted'); // Or your preferred storage
@@ -34,17 +35,7 @@ export class AppComponent implements OnInit {
       // Check if already on a tabs path to avoid loop if user manually types /tabs/*
       if (linkplaidCompleted === 'true') {
         if (!this.router.url.startsWith('/survey')) { // Check if already on /survey to avoid loop
-          const queryParams = {
-            reason: 'linkplaid' // Another example
-          };
-    
-          const navigationExtras: NavigationExtras = {
-            queryParams: queryParams,
-            replaceUrl: true
-          };
-    
-          // Navigate using an array of path segments
-          this.router.navigate(['/survey'], navigationExtras);
+          this.router.navigateByUrl('/survey', { replaceUrl: true });
         }
       } else {
         if (!this.router.url.startsWith('/bank-link')) {

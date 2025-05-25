@@ -1,10 +1,12 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <ion-title>Survey (Question {{ surveyQuestionIndex + 1 }} of {{ surveyQuestions.length }})</ion-title>
+    <!-- Update title to use totalQuestionsInActiveSurvey -->
+    <ion-title>Survey (Question {{ currentQuestionIndex + 1 }} of {{ totalQuestionsInActiveSurvey }})</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding" *ngIf="currentQuestion"> <!-- Show content only if currentQuestion is defined -->
+<!-- Rest of the HTML remains the same, it will bind to `currentQuestion` -->
+<ion-content class="ion-padding" *ngIf="currentQuestion">
   <ion-text color="dark" class="ion-margin-bottom">
     <h3>{{ currentQuestion.questionText }}</h3>
   </ion-text>
@@ -24,10 +26,10 @@
   </ion-list>
 </ion-content>
 
-<ion-footer class="ion-padding-horizontal ion-padding-bottom" *ngIf="currentQuestion && surveyQuestions.length > 1">
+<ion-footer class="ion-padding-horizontal ion-padding-bottom" *ngIf="currentQuestion && totalQuestionsInActiveSurvey > 1">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-button (click)="previousQuestion()" [disabled]="surveyQuestionIndex === 0">
+      <ion-button (click)="previousQuestion()" [disabled]="currentQuestionIndex === 0">
         <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
         Previous
       </ion-button>
