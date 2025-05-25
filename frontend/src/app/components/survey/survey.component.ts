@@ -1,133 +1,168 @@
-
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import {
+  IonHeader, IonToolbar, IonTitle, IonContent, IonText, IonList,
+  IonItem, IonLabel, IonButton, IonButtons, IonIcon, IonFooter
+} from '@ionic/angular/standalone';
 
-interface Option {
+// Interfaces remain the same
+interface SurveyResponseChoice {
+  id: string;
   text: string;
-  score: number;
 }
 
-interface Question {
+interface SurveyQuestion {
+  id: string;
   questionText: string;
-  options: Option[];
+  responseChoices: SurveyResponseChoice[];
+  answer: string | null;
+}
+
+// Enum to define survey types for clarity
+enum SurveyType {
+  InitialRiskSurvey = 'initialRiskSurvey',
+  InvestmentSetup = 'investmentSetup'
 }
 
 @Component({
   selector: 'app-survey',
   templateUrl: './survey.component.html',
   styleUrls: ['./survey.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonText,
+    IonList, IonItem, IonLabel, IonButton, IonButtons, IonIcon, IonFooter
+  ]
 })
 export class SurveyComponent implements OnInit {
-  surveyQuestions: Question[] = [];
-  currentQuestionIndex: number = 0;
-  totalScore: number = 0;
-
-  // Manually parsed questions from risk_assessment_survey.txt
-  private allQuestions: Question[] = [
+  private initialRiskSurveyQuestions: SurveyQuestion[] = [
     {
-      questionText: "1. What is your primary investment goal?",
-      options: [
-        { text: "Preserving my initial capital with minimal risk.", score: 1 },
-        { text: "Generating a steady stream of income, with some capital growth.", score: 2 },
-        { text: "Achieving significant capital growth, even if it means taking on higher risk.", score: 3 },
-        { text: "Maximizing returns through aggressive growth strategies, understanding this involves substantial risk.", score: 4 }
-      ]
+      id: 'q1', questionText: "What is your primary investment goal?", responseChoices: [
+        { id: 'g1', text: "Long-term Growth" }, { id: 'g2', text: "Generating Income" }, { id: 'g3', text: "Capital Preservation" }
+      ], answer: null
     },
     {
-      questionText: "2. How long do you plan to keep your money invested before needing to access a significant portion of it?",
-      options: [
-        { text: "Less than 3 years.", score: 1 },
-        { text: "3 to 5 years.", score: 2 },
-        { text: "6 to 10 years.", score: 3 },
-        { text: "More than 10 years.", score: 4 }
-      ]
+      id: 'q2', questionText: "How would you describe your risk tolerance?", responseChoices: [
+        { id: 'r1', text: "Low" }, { id: 'r2', text: "Medium" }, { id: 'r3', text: "High" }
+      ], answer: null
     },
     {
-      questionText: "3. How would you describe your knowledge of investments and financial markets?",
-      options: [
-        { text: "Limited: I am new to investing and have minimal understanding of financial markets.", score: 1 },
-        { text: "Basic: I have some understanding of basic investment concepts.", score: 2 },
-        { text: "Good: I am comfortable with most investment concepts and have some experience.", score: 3 },
-        { text: "Extensive: I have a strong understanding of complex investment strategies and financial markets.", score: 4 }
-      ]
-    },
-    {
-      questionText: "4. Imagine your investment portfolio lost 20% of its value in a short period due to market fluctuations. How would you most likely react?",
-      options: [
-        { text: "Sell all or most of my investments to avoid further losses.", score: 1 },
-        { text: "Sell some of my investments and move into more conservative options.", score: 2 },
-        { text: "Hold onto my investments and wait for the market to recover.", score: 3 },
-        { text: "View it as a buying opportunity and consider investing more.", score: 4 }
-      ]
-    },
-    {
-      questionText: "5. What percentage of your total liquid assets are you comfortable investing in moderate to high-risk investments?",
-      options: [
-        { text: "Less than 10%.", score: 1 },
-        { text: "10% to 25%.", score: 2 },
-        { text: "26% to 50%.", score: 3 },
-        { text: "More than 50%.", score: 4 }
-      ]
-    },
-    {
-      questionText: "6. When considering a new investment opportunity, which factor is most important to you?",
-      options: [
-        { text: "Low risk and high security of funds.", score: 1 },
-        { text: "A balance between risk and potential return.", score: 2 },
-        { text: "High potential returns, even if it comes with higher risk.", score: 3 },
-        { text: "Innovative or cutting-edge potential, accepting of speculative risks.", score: 4 }
-      ]
-    },
-    {
-      questionText: "7. How stable is your current and future income (e.g., salary, business income)?",
-      options: [
-        { text: "Not very stable; I expect significant fluctuations.", score: 1 },
-        { text: "Moderately stable; some fluctuations are possible.", score: 2 },
-        { text: "Stable; I expect it to remain consistent.", score: 3 },
-        { text: "Very stable and likely to increase.", score: 4 }
-      ]
+      id: 'q3', questionText: "What's your favorite investment type?", responseChoices: [
+        { id: 'i1', text: "Stocks" }, { id: 'i2', text: "Bonds" }, { id: 'i3', text: "Real Estate" }
+      ], answer: null
     }
   ];
 
-  constructor(private router: Router) {}
+  private investmentSetupQuestions: SurveyQuestion[] = [
+    {
+      id: 'iq1', questionText: "How much do you want to take out of your paycheck each month?", responseChoices: [
+        { id: 'p1', text: "10%" }, { id: 'p2', text: "20%" }, { id: 'p3', text: "30%" }
+      ], answer: null
+    },
+    {
+      id: 'iq2', questionText: "Do you want to let all the stocks be picked automatically or would you like to include some of your own?", responseChoices: [
+        { id: 's1', text: "You pick them all for me (you can always add stocks you like later)" },
+        { id: 's2', text: "You pick some and I pick some" }, { id: 's3', text: "I pick them all" }
+      ], answer: null
+    }
+  ];
+
+  activeSurveyQuestions: SurveyQuestion[] = []; // This will hold the questions for the currently active survey
+  currentQuestionIndex: number = 0;
+  currentQuestion: SurveyQuestion | undefined;
+  currentSurveyType: SurveyType | null = null;
+
+  constructor(private router: Router) { }
 
   ngOnInit(): void {
-    this.loadSurvey();
-  }
+    const investmentSurveyCompleted = localStorage.getItem('investmentSurvey') === 'true';
+    const initialSurveyCompleted = localStorage.getItem('initialSurveyCompleted') === 'true';
+    const linkplaidCompleted = localStorage.getItem('linkplaidCompleted') === 'true';
 
-  loadSurvey(): void {
-    // In a real application, you might fetch this from a service or a file
-    this.surveyQuestions = this.allQuestions;
-  }
-
-  get currentQuestion(): Question | null {
-    if (this.surveyQuestions.length > 0 && this.currentQuestionIndex < this.surveyQuestions.length) {
-      return this.surveyQuestions[this.currentQuestionIndex];
+    if (linkplaidCompleted && initialSurveyCompleted && !investmentSurveyCompleted) {
+      this.currentSurveyType = SurveyType.InvestmentSetup;
+      this.activeSurveyQuestions = [...this.investmentSetupQuestions]; // Use a copy
+    } else if (!initialSurveyCompleted) {
+      this.currentSurveyType = SurveyType.InitialRiskSurvey;
+      this.activeSurveyQuestions = [...this.initialRiskSurveyQuestions]; // Use a copy
+    } else {
+      // Both surveys completed, or some other state - navigate away or show completion
+      console.log("All surveys completed or invalid state.");
+      this.router.navigate(['/tabs/tab1']); // Or a dashboard
+      return;
     }
-    return null;
+    this.resetAndLoadFirstQuestion();
   }
 
-  selectAnswer(selectedOption: Option): void {
-    if (!this.currentQuestion) {
-      return; // Should not happen if surveyQuestions is populated
+  resetAndLoadFirstQuestion(): void {
+    this.currentQuestionIndex = 0;
+    // Reset answers if re-taking or starting a new survey type
+    this.activeSurveyQuestions.forEach(q => q.answer = null);
+    this.loadActiveQuestion();
+  }
+
+  loadActiveQuestion(): void {
+    if (this.activeSurveyQuestions && this.activeSurveyQuestions.length > 0) {
+      this.currentQuestion = this.activeSurveyQuestions[this.currentQuestionIndex];
+    } else {
+      this.currentQuestion = undefined;
     }
-
-    this.totalScore += selectedOption.score;
-    this.nextQuestion();
   }
 
-  nextQuestion(): void {
-    this.currentQuestionIndex++;
-    if (this.currentQuestionIndex >= this.surveyQuestions.length) {
-      this.navigateToResults();
+  selectAnswerAndProceed(selectedChoiceId: string): void {
+    if (!this.currentQuestion) return;
+
+    this.currentQuestion.answer = selectedChoiceId;
+    console.log(`Survey [${this.currentSurveyType}] - Question ${this.currentQuestion.id} answered with: ${selectedChoiceId}`);
+
+    setTimeout(() => {
+      if (this.isLastActiveQuestion()) {
+        this.submitActiveSurvey();
+      } else {
+        this.currentQuestionIndex++;
+        this.loadActiveQuestion();
+      }
+    }, 200);
+  }
+
+  previousQuestion(): void {
+    if (this.currentQuestionIndex > 0) {
+      this.currentQuestionIndex--;
+      this.loadActiveQuestion();
     }
   }
 
-  navigateToResults(): void {
-    localStorage.setItem('surveyCompleted', 'true');
-    // Navigate to the results page with the total score
-    // The actual route and how parameters are passed might depend on your app's routing setup
-    this.router.navigate(['/survey-results'], { queryParams: { score: this.totalScore } });
+  isLastActiveQuestion(): boolean {
+    return this.currentQuestionIndex >= this.activeSurveyQuestions.length - 1;
+  }
+
+  submitActiveSurvey(): void {
+    if (!this.currentSurveyType) return;
+
+    console.log(`Survey [${this.currentSurveyType}] Submitted!`);
+    console.log('Answers:');
+    this.activeSurveyQuestions.forEach(q => {
+      const choice = q.responseChoices.find(c => c.id === q.answer);
+      console.log(`  Question '${q.questionText}': Answered with '${choice ? choice.text : 'N/A'}' (ID: ${q.answer})`);
+    });
+
+    if (this.currentSurveyType === SurveyType.InitialRiskSurvey) {
+      localStorage.setItem('initialSurveyCompleted', 'true');
+      // Now, the user needs to link Plaid.
+      // The app's main navigation logic (e.g., in AppComponent or a guard)
+      // should then direct them to Plaid linking.
+      // If this survey component is shown via a route, it should navigate away.
+      this.router.navigate(['/link-bank']); // Navigate to Plaid linking page
+    } else if (this.currentSurveyType === SurveyType.InvestmentSetup) {
+      localStorage.setItem('investmentSetupCompleted', 'true');
+      // Investment setup done, navigate to dashboard or main app area
+      this.router.navigate(['/tabs/tab1']); // Or a dashboard page
+    }
+  }
+
+  // For the template to display progress correctly
+  get totalQuestionsInActiveSurvey(): number {
+    return this.activeSurveyQuestions.length;
   }
 }
