@@ -1,14 +1,14 @@
-import { Component, OnInit, OnDestroy } from '@angular/core'; // Import OnDestroy
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, NavigationEnd, Event as RouterEvent } from '@angular/router'; // Import NavigationEnd and RouterEvent
-import { Subscription } from 'rxjs'; // Import Subscription
-import { filter } from 'rxjs/operators'; // Import filter operator
+import { Router, NavigationEnd, Event as RouterEvent } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators'; // distinctUntilChanged could also be useful
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonText, IonList,
   IonItem, IonLabel, IonButton, IonButtons, IonIcon, IonFooter
 } from '@ionic/angular/standalone';
 
-// Interfaces remain the same
+// Interfaces
 interface SurveyResponseChoice {
   id: string;
   text: string;
@@ -21,7 +21,7 @@ interface SurveyQuestion {
   answer: string | null;
 }
 
-// Enum to define survey types for clarity
+// Enum
 enum SurveyType {
   InitialRiskSurvey = 'initialRiskSurvey',
   InvestmentSetup = 'investmentSetup'
@@ -37,7 +37,7 @@ enum SurveyType {
     IonList, IonItem, IonLabel, IonButton, IonButtons, IonIcon, IonFooter
   ]
 })
-export class SurveyComponent implements OnInit, OnDestroy { // Implement OnDestroy
+export class SurveyComponent implements OnInit, OnDestroy {
   private initialRiskSurveyQuestions: SurveyQuestion[] = [
     { id: 'q1', questionText: "What is your primary investment goal?", responseChoices: [
         {id: 'g1', text: "Long-term Growth"}, {id: 'g2', text: "Generating Income"}, {id: 'g3', text: "Capital Preservation"}
@@ -70,19 +70,19 @@ export class SurveyComponent implements OnInit, OnDestroy { // Implement OnDestr
   constructor(private router: Router) { }
 
   ngOnInit(): void {
-    // Initial setup when component is first created
-    this.initializeOrRefreshSurveyState();
 
-    // Subscribe to router events to re-initialize if navigated to this component's route again
+    console.log('[SurveyComponent] ngOnInit - Initializing.');
+    this.initializeOrRefreshSurveyState(); // Initial setup
+
     this.routerSubscription = this.router.events.pipe(
       filter((event: RouterEvent): event is NavigationEnd =>
-        event instanceof NavigationEnd && event.urlAfterRedirects?.startsWith('/survey')
+        event instanceof NavigationEnd &&
+        event.urlAfterRedirects?.startsWith('/survey') // Trigger if navigated to /survey or /survey?params
       )
     ).subscribe((event: NavigationEnd) => {
-      // Check if we are truly re-navigating to the survey page,
-      // not just a child route or fragment change if the survey page had children.
-      // For a simple '/survey' route, event.urlAfterRedirects === '/survey' or startsWith is usually enough.
-      console.log('Router event: Navigated to survey page, re-evaluating state.', event.urlAfterRedirects);
+      console.log('[SurveyComponent] Router event: NavigationEnd to', event.urlAfterRedirects, '- Re-evaluating survey state.');
+      // This will re-run the logic to determine which survey (if any) should be active
+      // and if its state needs to be reset (e.g., show first question).
       this.initializeOrRefreshSurveyState();
     });
   }
@@ -92,61 +92,80 @@ export class SurveyComponent implements OnInit, OnDestroy { // Implement OnDestr
     const initialSurveyCompleted = localStorage.getItem('initialSurveyCompleted') === 'true';
     const linkplaidCompleted = localStorage.getItem('linkplaidCompleted') === 'true';
 
-    console.log("Initializing/Refreshing Survey State:");
-    console.log("  initialSurveyCompleted: " + initialSurveyCompleted);
-    console.log("  linkplaidCompleted: " + linkplaidCompleted);
-    console.log("  investmentSurveyCompleted: " + investmentSurveyCompleted);
+    console.log("[SurveyComponent] initializeOrRefreshSurveyState called:");
+    console.log("  initialSurveyCompleted:", initialSurveyCompleted);
+    console.log("  linkplaidCompleted:", linkplaidCompleted);
+    console.log("  investmentSurveyCompleted:", investmentSurveyCompleted);
 
-    let previousSurveyType = this.currentSurveyType;
-    let previousQuestionIndex = this.currentQuestionIndex;
+    let newSurveyType: SurveyType | null = null;
+    let newActiveQuestions: SurveyQuestion[] = [];
 
     if (linkplaidCompleted && initialSurveyCompleted && !investmentSurveyCompleted) {
-      this.currentSurveyType = SurveyType.InvestmentSetup;
-      this.activeSurveyQuestions = [...this.investmentSetupQuestions];
+      newSurveyType = SurveyType.InvestmentSetup;
+      newActiveQuestions = [...this.investmentSetupQuestions.map(q => ({...q, answer: null}))]; // Ensure fresh copy with reset answers
+      console.log("[SurveyComponent] Determined state: InvestmentSetup");
     } else if (!initialSurveyCompleted) {
-      this.currentSurveyType = SurveyType.InitialRiskSurvey;
-      this.activeSurveyQuestions = [...this.initialRiskSurveyQuestions];
+      newSurveyType = SurveyType.InitialRiskSurvey;
+      newActiveQuestions = [...this.initialRiskSurveyQuestions.map(q => ({...q, answer: null}))]; // Ensure fresh copy with reset answers
+      console.log("[SurveyComponent] Determined state: InitialRiskSurvey");
     } else {
-      console.log("All surveys completed or invalid state. Navigating to tabs.");
-      // Only navigate if we are currently on the survey page to avoid issues
-      // if this logic is hit while already navigating away.
-      if (this.router.url.startsWith('/survey')) {
+      console.log("[SurveyComponent] All relevant surveys completed or invalid state. Navigating to tabs.");
+      if (this.router.url.startsWith('/survey')) { // Only navigate if currently on a survey path
         this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
       }
+      this.currentSurveyType = null; // Clear current survey type
+      this.activeSurveyQuestions = []; // Clear active questions
+      this.currentQuestion = undefined; // Clear current question
       return; // Exit if no survey needs to be shown
     }
 
-    // Reset and load question only if the survey type changed or it's the first load
-    // or if we explicitly want to restart (e.g., if currentQuestionIndex was not 0)
-    // For simplicity now, we always reset if a survey is to be shown by this logic path.
-    this.resetAndLoadFirstQuestion();
+    // Check if the survey type or questions actually need to be reset.
+    // This prevents re-initializing if the router event fires but the state is already correct
+    // (e.g., user is halfway through a survey and a non-state-changing router event for /survey occurs).
+    // However, for navigating *back* to the survey page after Plaid, we *do* want it to re-evaluate and load the investment survey.
+    // The key is that `newSurveyType` will be different from `this.currentSurveyType` if a new phase starts.
+    if (this.currentSurveyType !== newSurveyType || this.activeSurveyQuestions.length === 0) {
+      console.log(`[SurveyComponent] Survey type changing from ${this.currentSurveyType} to ${newSurveyType} or initializing.`);
+      this.currentSurveyType = newSurveyType;
+      this.activeSurveyQuestions = newActiveQuestions;
+      this.currentQuestionIndex = 0; // Always start from the first question of the new/refreshed survey
+      this.loadActiveQuestion();
+    } else {
+      console.log(`[SurveyComponent] Survey type ${this.currentSurveyType} is already active. No full reset needed.`);
+      // We might still need to ensure the correct question is displayed if currentQuestionIndex was somehow reset
+      // but typically, if the survey type hasn't changed, we wouldn't forcibly reset the index unless intended.
+      // For now, if the type is the same, we assume the user is where they left off or the component is just being checked.
+      // If currentQuestion is undefined, it means we need to load it.
+      if (!this.currentQuestion && this.activeSurveyQuestions.length > 0) {
+        this.loadActiveQuestion();
+      }
+    }
   }
 
-
-  resetAndLoadFirstQuestion(): void {
-    this.currentQuestionIndex = 0;
-    this.activeSurveyQuestions.forEach(q => q.answer = null); // Reset answers for the active survey
-    this.loadActiveQuestion();
-  }
+  // resetAndLoadFirstQuestion() is effectively merged into initializeOrRefreshSurveyState
+  // by resetting index and questions when survey type changes.
 
   loadActiveQuestion(): void {
-    if (this.activeSurveyQuestions && this.activeSurveyQuestions.length > 0 && this.currentQuestionIndex < this.activeSurveyQuestions.length) {
+    if (this.activeSurveyQuestions && this.currentQuestionIndex < this.activeSurveyQuestions.length) {
       this.currentQuestion = this.activeSurveyQuestions[this.currentQuestionIndex];
+      console.log('[SurveyComponent] Loaded question:', this.currentQuestion?.id, this.currentQuestion?.questionText);
     } else {
       this.currentQuestion = undefined;
-      // Potentially handle case where index is out of bounds or no questions
-      if (this.activeSurveyQuestions.length > 0) { // All questions answered
-        console.log("Attempted to load question beyond survey length. Potentially submit.");
-        // this.submitActiveSurvey(); // Or handle this state differently
+      console.log('[SurveyComponent] No active question to load or index out of bounds.');
+      if (this.activeSurveyQuestions.length > 0 && this.currentQuestionIndex >= this.activeSurveyQuestions.length) {
+        console.log("[SurveyComponent] All questions in current survey answered. Consider submitting.");
+        // This state should ideally be caught by isLastActiveQuestion in selectAnswerAndProceed
       }
     }
   }
 
   selectAnswerAndProceed(selectedChoiceId: string): void {
-    if (!this.currentQuestion) return;
+    if (!this.currentQuestion) {
+      console.warn('[SurveyComponent] selectAnswerAndProceed called but no currentQuestion.');
+      return;
+    }
 
     this.currentQuestion.answer = selectedChoiceId;
-    // console.log(`Survey [${this.currentSurveyType}] - Question ${this.currentQuestion.id} answered with: ${selectedChoiceId}`);
 
     setTimeout(() => {
       if (this.isLastActiveQuestion()) {
@@ -171,16 +190,24 @@ export class SurveyComponent implements OnInit, OnDestroy { // Implement OnDestr
   }
 
   submitActiveSurvey(): void {
-    if (!this.currentSurveyType) return;
+    if (!this.currentSurveyType) {
+      console.warn('[SurveyComponent] submitActiveSurvey called but no currentSurveyType.');
+      return;
+    }
 
-    console.log(`Survey [${this.currentSurveyType}] Submitted!`);
-    // ... (logging answers) ...
+    console.log(`[SurveyComponent] Survey [${this.currentSurveyType}] Submitted!`);
+    this.activeSurveyQuestions.forEach(q => {
+      const choice = q.responseChoices.find(c => c.id === q.answer);
+      console.log(`  Q: '${q.questionText}': A: '${choice ? choice.text : 'N/A'}' (ID: ${q.answer})`);
+    });
 
     if (this.currentSurveyType === SurveyType.InitialRiskSurvey) {
       localStorage.setItem('initialSurveyCompleted', 'true');
+      console.log('[SurveyComponent] Navigating to /link-bank');
       this.router.navigate(['/link-bank'], { replaceUrl: true });
     } else if (this.currentSurveyType === SurveyType.InvestmentSetup) {
       localStorage.setItem('investmentSurveyCompleted', 'true');
+      console.log('[SurveyComponent] Navigating to /tabs/tab1');
       this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
     }
   }
@@ -190,6 +217,7 @@ export class SurveyComponent implements OnInit, OnDestroy { // Implement OnDestr
   }
 
   ngOnDestroy(): void {
+    console.log('[SurveyComponent] ngOnDestroy - Unsubscribing from router events.');
     if (this.routerSubscription) {
       this.routerSubscription.unsubscribe();
     }
