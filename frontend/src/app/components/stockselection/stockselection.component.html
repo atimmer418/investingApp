@@ -1,0 +1,65 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back-outline" aria-label="Back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Select Your Stocks</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="skipStockSelection()" [disabled]="isProcessing">Skip</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-searchbar
+    [(ngModel)]="searchTerm"
+    (ionInput)="searchStocks($event)"
+    placeholder="Search for stocks (e.g., AAPL)"
+    debounce="500"
+    [disabled]="isProcessing">
+  </ion-searchbar>
+
+  <div *ngIf="isSearching" class="ion-text-center ion-padding">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <ion-list *ngIf="searchResults.length > 0 && !isSearching">
+    <ion-item *ngFor="let stock of searchResults" (click)="selectStock(stock)" button detail="false">
+      <ion-label>
+        <h2>{{ stock.symbol }}</h2>
+        <p>{{ stock.name }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="selectedStocks.length > 0" class="ion-padding-top">
+    <ion-label color="medium">Your Selections:</ion-label>
+    <div class="selected-chips-container ion-padding-top">
+      <ion-chip *ngFor="let stock of selectedStocks" outline="true">
+        <ion-label>{{ stock.symbol }}</ion-label>
+        <ion-icon
+          name="close-circle"
+          (click)="!isProcessing && removeStock(stock)"
+          [class.icon-disabled]="isProcessing"         
+          role="button"                                
+          [attr.aria-disabled]="isProcessing"          
+          tabindex="{{isProcessing ? -1 : 0}}"         
+        ></ion-icon>
+      </ion-chip>
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-padding-horizontal ion-padding-bottom">
+    <ion-toolbar>
+        <ion-button
+          expand="block"
+          (click)="confirmSelections()"
+          [disabled]="isProcessing || isSearching">
+          <ion-spinner *ngIf="isProcessing" slot="start"></ion-spinner>
+          {{ selectedStocks.length > 0 ? 'Confirm Selections' : 'Continue with Automated Portfolio' }}
+        </ion-button>
+    </ion-toolbar>
+</ion-footer>

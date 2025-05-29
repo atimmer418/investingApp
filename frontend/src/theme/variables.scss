@@ -1,11 +1,2 @@
-$primary-color: #4da6ff;
-$secondary-color: #0cd1e8;
-$danger-color: #f04141;
-
-:root {
-    --primary-app-color: #{$primary-color}; // Use a descriptive name like --primary-app-color or --theme-primary
-    --secondary-app-color: #{$secondary-color}; // Use a descriptive name like --primary-app-color or --theme-primary
-    --danger-app-color: #{$danger-color}; // Use a descriptive name like --primary-app-color or --theme-primary
-    // If you're using Ionic, they have their own convention too:
-    // --ion-color-primary: #{$primary-color};
-  }
+// For information on how to create your own theme, please see:
+// http://ionicframework.com/docs/theming/

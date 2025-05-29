@@ -1,0 +1,49 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; // Vertically center content if page isn't full
+    height: 100%; // Make sure container takes full height for vertical centering
+    max-width: 500px; // Constrain width on larger screens
+    margin: 0 auto; // Center the container itself
+  }
+  
+  ion-text p {
+    margin-bottom: 8px;
+  }
+  
+  .plaid-info {
+    ion-icon {
+      margin-bottom: 8px;
+    }
+    p {
+      margin: 4px 0;
+    }
+  }
+  
+  .main-action-button {
+    --border-radius: 8px; // Slightly more rounded corners for the main button
+    font-weight: bold;
+    margin-top: 32px; // More space above the main button
+  }
+  
+  .status-message {
+    font-size: 0.9em;
+    min-height: 20px; // Reserve space to prevent layout jumps
+  }
+  
+  .info-list {
+    background: transparent; // Make list background transparent
+    margin-top: 32px;
+    ion-item {
+      --padding-start: 0; // Remove default item padding if desired
+      --inner-padding-end: 0;
+      --background: transparent;
+      font-size: 0.9em;
+      color: var(--ion-color-medium-shade);
+  
+      ion-icon {
+        margin-right: 12px;
+        font-size: 1.2em;
+      }
+    }
+  }

@@ -1,0 +1,82 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back-outline" aria-label="Back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Confirm Investment</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="container">
+    <ion-card class="info-card">
+      <ion-card-header>
+        <ion-card-title class="ion-text-center">You're Almost Set!</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-text class="ion-text-center">
+          <p>Please review the details below and authorize your automated investments.</p>
+        </ion-text>
+
+        <ion-list lines="none" class="details-list">
+          <ion-item>
+            <ion-icon name="wallet-outline" slot="start" color="secondary"></ion-icon>
+            <ion-label>Recurring Investment:</ion-label>
+            <ion-text slot="end" color="dark"><strong>{{ investmentPercentage || 'Not set' }} of each paycheck</strong></ion-text>
+          </ion-item>
+          <ion-item>
+            <ion-icon name="briefcase-outline" slot="start" color="secondary"></ion-icon>
+            <ion-label>Portfolio Type:</ion-label>
+            <ion-text slot="end" color="dark"><strong>{{ portfolioType === 'custom' ? 'Your Custom Picks' : 'Automated Portfolio' }}</strong></ion-text>
+          </ion-item>
+        </ion-list>
+
+        <div class="alpaca-info ion-margin-top">
+          <ion-text>
+            <h4>How it Works with Alpaca:</h4>
+            <p><small>Your investments will be managed through Alpaca, a registered broker-dealer. When you authorize, we will instruct Alpaca to:</small></p>
+          </ion-text>
+          <ion-list lines="inset" class="explanation-list">
+            <ion-item>
+              <ion-icon name="checkmark-circle-outline" slot="start" color="success"></ion-icon>
+              <ion-label class="ion-text-wrap">Regularly invest {{ investmentPercentage }} of your direct deposited paycheck amount.</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-icon name="checkmark-circle-outline" slot="start" color="success"></ion-icon>
+              <ion-label class="ion-text-wrap">
+                {{ portfolioType === 'custom' ? 'Purchase the stocks you selected.' : 'Invest in a diversified portfolio based on your survey answers.' }}
+              </ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-icon name="checkmark-circle-outline" slot="start" color="success"></ion-icon>
+              <ion-label class="ion-text-wrap">Provide you with full access to view and manage your Alpaca brokerage account.</ion-label>
+            </ion-item>
+          </ion-list>
+          <ion-text class="ion-margin-top">
+            <p><small>You can pause, adjust, or stop these recurring investments at any time through your settings. Standard brokerage fees may apply. Investing involves risk, including loss of principal.</small></p>
+          </ion-text>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-button
+      expand="block"
+      (click)="authorizeRecurringInvestment()"
+      [disabled]="isAuthorizing"
+      class="ion-margin-top authorize-button"
+      color="success"
+    >
+      <ion-spinner *ngIf="isAuthorizing" name="crescent" slot="start"></ion-spinner>
+      <ion-icon *ngIf="!isAuthorizing" name="shield-checkmark-outline" slot="start"></ion-icon>
+      {{ isAuthorizing ? 'Authorizing...' : 'Authorize & Start Investing' }}
+    </ion-button>
+
+    <div *ngIf="authorizationStatus" class="ion-text-center ion-margin-top status-message">
+      <ion-text [color]="authorizationStatus.includes('Failed') || authorizationStatus.includes('error') ? 'danger' : 'medium'">
+        {{ authorizationStatus }}
+      </ion-text>
+    </div>
+  </div>
+</ion-content>
