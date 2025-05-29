@@ -51,6 +51,9 @@ export class SurveyComponent implements OnInit, OnDestroy {
   ];
 
   private investmentSetupQuestions: SurveyQuestion[] = [
+    // add something for adding the name of their paycheck (you can add multiple sources of income (and modify the percentage withdrawn or delete later))
+    // this question will search their bank account to find the amount of money brought in by said paycheck
+    // it will then show you how much your adjusted paycheck will be one selecting a percentage to take out
     { id: 'iq1', questionText: "How much do you want to take out of your paycheck each month?", responseChoices: [
         {id: 'p1', text: "10%"}, {id: 'p2', text: "20%"}, {id: 'p3', text: "30%"}
       ], answer: null },
@@ -206,9 +209,21 @@ export class SurveyComponent implements OnInit, OnDestroy {
       console.log('[SurveyComponent] Navigating to /link-bank');
       this.router.navigate(['/link-bank'], { replaceUrl: true });
     } else if (this.currentSurveyType === SurveyType.InvestmentSetup) {
-      localStorage.setItem('investmentSurveyCompleted', 'true');
-      console.log('[SurveyComponent] Navigating to /tabs/tab1');
-      this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
+      
+      const stockPreferenceQuestion = this.activeSurveyQuestions.find(q => q.id === 'iq2');
+      if (stockPreferenceQuestion?.answer === 's2') { // 's2' was "Let me pick some specific stocks now"
+        console.log('[SurveyComponent] User wants to pick stocks. Navigating to /stock-selection.');
+        localStorage.setItem('investmentSurveyCompleted', 'true');
+        localStorage.setItem('choseToPickStocks', 'true');
+        localStorage.setItem('stockSelectionCompleted', 'false');
+        this.router.navigate(['/stock-selection'], { replaceUrl: true }); // Navigate to the stock selection "page"
+      } else {
+        console.log('[SurveyComponent] Investment setup complete (auto-invest). Navigating to /confirm-investment.');
+        localStorage.setItem('investmentSurveyCompleted', 'true');
+        localStorage.setItem('choseToPickStocks', 'false');
+        localStorage.setItem('stockSelectionCompleted', 'true');
+        this.router.navigate(['/confirm-investment'], { replaceUrl: true });
+      }
     }
   }
 

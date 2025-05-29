@@ -1,6 +1,17 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
+  // src/app/app.routes.ts
+  // ... other routes
+  {
+    path: 'confirm-investment',
+    loadComponent: () => import('./components/investmentconfirmation/investmentconfirmation.component').then(m => m.InvestmentConfirmationComponent)
+    // Or from './pages/investment-confirmation/investment-confirmation.page' if you use .page convention
+  },
+  {
+    path: 'stock-selection',
+    loadComponent: () => import('./components/stockselection/stockselection.component').then(m => m.StockSelectionComponent)
+  },
   {
     path: 'link-bank', // Or 'plaid-link'
     loadComponent: () => import('./components/linkplaid/linkplaid.component').then(m => m.LinkPlaidComponent)

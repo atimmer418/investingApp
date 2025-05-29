@@ -2,85 +2,108 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
-import { CommonModule } from '@angular/common'; // CommonModule is needed if your app.component.html uses *ngIf etc.
-                                             // For just <ion-app><ion-router-outlet></ion-router-outlet>, it's not strictly required
-                                             // but good to have if you add to the template later.
+import { CommonModule } from '@angular/common';
+import { Platform } from '@ionic/angular/standalone'; // Import Platform
+import { SplashScreen } from '@capacitor/splash-screen'; // Import SplashScreen
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
   standalone: true,
-  imports: [IonApp, IonRouterOutlet, CommonModule], // IonApp and IonRouterOutlet are key
+  imports: [IonApp, IonRouterOutlet, CommonModule], // Added Platform to imports
 })
 export class AppComponent implements OnInit {
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private platform: Platform // Inject Platform
+  ) {
+    this.initializeApp(); // Call initializeApp from constructor
+  }
+
+  initializeApp() {
+    this.platform.ready().then(async () => {
+      console.log('[AppComponent] Platform ready.');
+      // Hide the native splash screen once the platform is ready and Angular is bootstrapping
+      if (this.platform.is('capacitor')) {
+        try {
+          await SplashScreen.hide();
+          console.log('[AppComponent] Splash screen hidden.');
+        } catch (error) {
+          console.error('[AppComponent] Error hiding splash screen:', error);
+        }
+      }
+    });
+  }
 
   ngOnInit(): void {
-
-    // remove these later
-    localStorage.setItem('initialSurveyCompleted', 'false')
-    localStorage.setItem('linkplaidCompleted', 'false')
-    localStorage.setItem('investmentSurveyCompleted', 'false')
-    // remove these later
+    // --- Test Scenarios (Uncomment ONE block at a time to test a flow) ---
+    // (Your existing test scenarios for localStorage - keep them as they are useful)
+    // Scenario 1: Fresh Start
+    localStorage.clear();
+    localStorage.setItem('initialSurveyCompleted', 'false');
+    localStorage.setItem('linkplaidCompleted', 'false');
+    localStorage.setItem('investmentSurveyCompleted', 'false');
+    localStorage.setItem('choseToPickStocks', 'false');
+    localStorage.setItem('stockSelectionCompleted', 'false');
+    localStorage.setItem('investmentConfirmationCompleted', 'false');
+    // --- End Test Scenarios ---
 
     console.log('[AppComponent] ngOnInit - Calling checkSurveyStatusAndNavigate.');
-    this.checkSurveyStatusAndNavigate(); // Now we call the actual logic
+    this.checkSurveyStatusAndNavigate();
   }
 
   checkSurveyStatusAndNavigate(): void {
-    // It's good practice to read these fresh each time the method is called
     const initialSurveyCompleted = localStorage.getItem('initialSurveyCompleted') === 'true';
     const linkplaidCompleted = localStorage.getItem('linkplaidCompleted') === 'true';
     const investmentSurveyCompleted = localStorage.getItem('investmentSurveyCompleted') === 'true';
+    const choseToPickStocks = localStorage.getItem('choseToPickStocks') === 'true';
+    const stockSelectionActualCompletion = localStorage.getItem('stockSelectionCompleted') === 'true';
+    const investmentConfirmationCompleted = localStorage.getItem('investmentConfirmationCompleted') === 'true';
 
-    // More granular console logs to trace the decision path
     console.log("------------------------------------------");
     console.log("[AppComponent] checkSurveyStatusAndNavigate CALLED");
-    console.log("  Current Router URL:", this.router.url); // Log current URL before navigation attempt
+    console.log("  Current Router URL:", this.router.url);
     console.log("  FLAGS FROM LOCALSTORAGE:");
     console.log("    initialSurveyCompleted:", initialSurveyCompleted);
     console.log("    linkplaidCompleted:", linkplaidCompleted);
     console.log("    investmentSurveyCompleted:", investmentSurveyCompleted);
+    console.log("    choseToPickStocks:", choseToPickStocks);
+    console.log("    stockSelectionActualCompletion:", stockSelectionActualCompletion);
+    console.log("    investmentConfirmationCompleted:", investmentConfirmationCompleted);
     console.log("------------------------------------------");
 
+    let targetRoute: string | null = null;
+    let decisionReason: string = "";
 
-    // Condition 1: All onboarding steps are fully completed
-    if (initialSurveyCompleted && linkplaidCompleted && investmentSurveyCompleted) {
-      if (!this.router.url.startsWith('/tabs')) {
-        console.log('[AppComponent] DECISION: All onboarding complete. Navigating to /tabs/tab1.');
-        this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true });
-      } else {
-        console.log('[AppComponent] DECISION: All onboarding complete. Already on a tabs page.');
-      }
+    if (!initialSurveyCompleted) {
+      targetRoute = '/survey';
+      decisionReason = "Initial survey NOT complete.";
+    } else if (!linkplaidCompleted) {
+      targetRoute = '/link-bank';
+      decisionReason = "Initial survey complete, Plaid linking NOT complete.";
+    } else if (!investmentSurveyCompleted) {
+      targetRoute = '/survey';
+      decisionReason = "Plaid linked, Investment setup survey NOT complete.";
+    } else if (choseToPickStocks && !stockSelectionActualCompletion) {
+      targetRoute = '/stock-selection';
+      decisionReason = "User chose to pick stocks, but stock selection page NOT complete.";
+    } else if (!investmentConfirmationCompleted) {
+      targetRoute = '/confirm-investment';
+      decisionReason = "Investment process (auto or custom picks defined) done, Investment confirmation NOT complete.";
+    } else {
+      targetRoute = '/tabs/tab1';
+      decisionReason = "All onboarding steps complete.";
     }
-    // Condition 2: Initial survey is done, but Plaid linking is NOT done
-    else if (initialSurveyCompleted && !linkplaidCompleted) {
-      if (this.router.url !== '/link-bank') { // Check current URL to prevent loop
-        console.log('[AppComponent] DECISION: Initial survey done, Plaid NOT linked. Navigating to /link-bank.');
-        this.router.navigateByUrl('/link-bank', { replaceUrl: true });
-      } else {
-        console.log('[AppComponent] DECISION: Initial survey done, Plaid NOT linked. Already on /link-bank.');
-      }
-    }
-    // Condition 3: Initial survey is done, Plaid linking IS done, but investment survey is NOT done
-    // This means we need to show the survey page again, which will then load the investment questions.
-    else if (initialSurveyCompleted && linkplaidCompleted && !investmentSurveyCompleted) {
-      if (!this.router.url.startsWith('/survey')) { // Check current URL to prevent loop
-        console.log('[AppComponent] DECISION: Plaid linked, investment survey NOT done. Navigating to /survey.');
-        this.router.navigateByUrl('/survey', { replaceUrl: true });
-      } else {
-        console.log('[AppComponent] DECISION: Plaid linked, investment survey NOT done. Already on /survey.');
-      }
-    }
-    // Condition 4: Initial survey is NOT done (this is the very first step)
-    else { // This covers !initialSurveyCompleted
-      if (!this.router.url.startsWith('/survey')) { // Check current URL to prevent loop
-        console.log('[AppComponent] DECISION: Initial survey NOT done. Navigating to /survey.');
-        this.router.navigateByUrl('/survey', { replaceUrl: true });
-      } else {
-        console.log('[AppComponent] DECISION: Initial survey NOT done. Already on /survey.');
-      }
+
+    const currentBaseUrl = this.router.url.split('?')[0].split('#')[0];
+    if (targetRoute && currentBaseUrl !== targetRoute) {
+      console.log(`[AppComponent] DECISION: ${decisionReason} Navigating to ${targetRoute}.`);
+      this.router.navigateByUrl(targetRoute, { replaceUrl: true });
+    } else if (targetRoute && currentBaseUrl === targetRoute) {
+      console.log(`[AppComponent] DECISION: ${decisionReason} Already on target route ${targetRoute}. No navigation needed.`);
+    } else {
+      console.log(`[AppComponent] No specific navigation target determined or already on target. Current URL: ${this.router.url}`);
     }
   }
 }
