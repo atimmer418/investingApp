@@ -1,1 +1,0 @@
-// User survey data model

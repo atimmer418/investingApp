@@ -39,3 +39,34 @@ coverage/
 *.zip
 *.tar.gz
 *.tgz
+
+# Spring Boot profile-specific properties with sensitive data
+src/main/resources/application-dev.properties
+src/main/resources/application-prod.properties # If you create one for prod secrets locally (not best practice for prod itself)
+src/main/resources/application-*.properties    # A more general pattern to ignore all profile-specific properties files
+
+# You might also want to ignore other environment specific files
+.env
+*.env
+
+# IDE specific files
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Build output
+build/
+out/
+target/ # If using Maven
+
+# Gradle files
+.gradle/
+gradle-wrapper.jar # Some commit this, some don't. If you do, ensure it's the version you want.
+
+# Log files
+*.log
