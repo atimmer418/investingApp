@@ -41,9 +41,9 @@ coverage/
 *.tgz
 
 # Spring Boot profile-specific properties with sensitive data
-src/main/resources/application-dev.properties
-src/main/resources/application-prod.properties # If you create one for prod secrets locally (not best practice for prod itself)
-src/main/resources/application-*.properties    # A more general pattern to ignore all profile-specific properties files
+backend/src/main/resources/application-dev.properties
+backend/src/main/resources/application-prod.properties # If you create one for prod secrets locally (not best practice for prod itself)
+backend/src/main/resources/application-*.properties    # A more general pattern to ignore all profile-specific properties files
 
 # You might also want to ignore other environment specific files
 .env
