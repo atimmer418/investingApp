@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      Tab 3
+      User Settings
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -9,9 +9,13 @@
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">Tab 3</ion-title>
+      <ion-title size="large">User Settings</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <app-explore-container name="Tab 3 page"></app-explore-container>
+  <ion-list>
+    <ion-item *ngFor="let option of settingsOptions" [button]="true" (click)="onSettingClick(option)">
+      {{ option }}
+    </ion-item>
+  </ion-list>
 </ion-content>

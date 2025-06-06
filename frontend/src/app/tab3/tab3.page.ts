@@ -9,5 +9,10 @@ import { ExploreContainerComponent } from '../explore-container/explore-containe
   imports: [IonHeader, IonToolbar, IonTitle, IonContent, ExploreContainerComponent],
 })
 export class Tab3Page {
+  public settingsOptions: string[] = ["Adjust Payments", "Adjust Portfolio", "Pause Contributions", "Set Beneficiaries"];
   constructor() {}
+
+  onSettingClick(setting: string) {
+    console.log('Clicked setting:', setting);
+  }
 }
