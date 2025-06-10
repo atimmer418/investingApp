@@ -1,0 +1,44 @@
+ion-list {
+  padding: 16px;
+}
+
+ion-text h3 {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  font-size: 1.4em;
+  font-weight: 600;
+  color: var(--ion-color-dark-shade, #333333);
+}
+
+.survey-option-item {
+  margin-bottom: 12px;
+  border-radius: 8px; // Rounded corners for options
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); // Subtle shadow for depth
+}
+
+.survey-option-item ion-label {
+  font-size: 1.1em;
+  font-weight: normal;
+}
+
+.selected-option {
+  border: 2px solid var(--ion-color-primary);
+  background-color: var(--ion-color-primary-tint); // Use theme variable for a light shade
+}
+
+// Styling for the checkmark icon, if you decide to re-add it
+// ion-icon[name="checkmark-circle"] {
+//   font-size: 24px;
+// }
+
+// Ensure enough space for the footer
+ion-content {
+  --padding-bottom: 70px; // Adjust as needed based on footer height
+}
+
+// Footer styling to prevent overlap
+ion-footer {
+  ion-toolbar {
+    // Add styles if needed, e.g., background, padding
+  }
+}
