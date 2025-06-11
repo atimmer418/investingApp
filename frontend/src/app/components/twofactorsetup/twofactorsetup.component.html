@@ -1,0 +1,70 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start" *ngIf="currentStep === 'enterOtp'">
+      <ion-button (click)="currentStep = 'enterPhone'; errorMessage = null; successMessage = null;">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Set Up 2-Factor Auth</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="form-container">
+    <div *ngIf="currentStep === 'enterPhone'">
+      <ion-text color="dark" class="ion-text-center">
+        <h2>Secure Your Account</h2>
+        <p>Please enter your phone number to receive a verification code. (e.g., +15551234567)</p>
+      </ion-text>
+      <form [formGroup]="phoneForm" (ngSubmit)="requestOtp()" novalidate class="ion-margin-top">
+        <ion-list lines="full">
+          <ion-item>
+            <ion-label position="floating">Phone Number (E.164 format)</ion-label>
+            <ion-input type="tel" formControlName="phoneNumber" placeholder="+12223334444" required></ion-input>
+          </ion-item>
+          <div *ngIf="phoneNumberCtrl?.invalid && (phoneNumberCtrl?.dirty || phoneNumberCtrl?.touched)" class="error-message">
+            <ion-note color="danger" *ngIf="phoneNumberCtrl?.errors?.['required']">Phone number is required.</ion-note>
+            <ion-note color="danger" *ngIf="phoneNumberCtrl?.errors?.['invalidPhoneNumber']">Invalid phone number format (e.g., +12223334444).</ion-note>
+          </div>
+        </ion-list>
+        <ion-button type="submit" expand="block" class="ion-margin-top" [disabled]="isLoading || phoneForm.invalid">
+          <ion-spinner *ngIf="isLoading" name="crescent" slot="start"></ion-spinner>
+          {{ isLoading ? 'Sending OTP...' : 'Send Verification Code' }}
+        </ion-button>
+      </form>
+    </div>
+
+    <div *ngIf="currentStep === 'enterOtp'">
+      <ion-text color="dark" class="ion-text-center">
+        <h2>Enter Verification Code</h2>
+        <p>We've sent a 6-digit code to {{ phoneNumberForVerification }}.</p>
+      </ion-text>
+      <form [formGroup]="otpForm" (ngSubmit)="verifyOtp()" novalidate class="ion-margin-top">
+        <ion-list lines="full">
+          <ion-item>
+            <ion-label position="floating">Verification Code</ion-label>
+            <ion-input type="tel" formControlName="otp" inputmode="numeric" pattern="[0-9]*" maxlength="6" required></ion-input>
+          </ion-item>
+          <div *ngIf="otpCtrl?.invalid && (otpCtrl?.dirty || otpCtrl?.touched)" class="error-message">
+            <ion-note color="danger" *ngIf="otpCtrl?.errors?.['required']">OTP is required.</ion-note>
+            <ion-note color="danger" *ngIf="otpCtrl?.errors?.['minlength'] || otpCtrl?.errors?.['maxlength'] || otpCtrl?.errors?.['pattern']">
+              OTP must be 6 digits.
+            </ion-note>
+          </div>
+        </ion-list>
+        <ion-button type="submit" expand="block" class="ion-margin-top" [disabled]="isLoading || otpForm.invalid">
+          <ion-spinner *ngIf="isLoading" name="crescent" slot="start"></ion-spinner>
+          {{ isLoading ? 'Verifying...' : 'Verify Code & Enable 2FA' }}
+        </ion-button>
+      </form>
+    </div>
+
+    <div *ngIf="errorMessage" class="ion-text-center ion-margin-top error-message-global">
+      <ion-text color="danger">{{ errorMessage }}</ion-text>
+    </div>
+    <div *ngIf="successMessage && currentStep === 'enterPhone'" class="ion-text-center ion-margin-top success-message-global">
+      <ion-text color="success">{{ successMessage }}</ion-text>
+    </div>
+
+  </div>
+</ion-content>

@@ -1,12 +1,29 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonSpinner, IonText, IonButtons, NavController // Added IonButtons, NavController
 } from '@ionic/angular/standalone';
-// import { PlaidService } from '../../services/plaid.service'; // Your service to interact with Plaid backend
-// declare var Plaid: any; // If you are directly using Plaid Link SDK
+import { Observable, throwError, Subscription } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+
+// Make sure Plaid global object is available (from script in index.html)
+declare var Plaid: any;
+
+interface LinkTokenAnonymousResponse {
+  link_token: string;
+  expiration: string;
+  temporary_user_id: string;
+}
+
+interface LinkTokenAuthenticatedResponse {
+  link_token: string;
+  expiration: string;
+}
+
 
 @Component({
   selector: 'app-linkplaid-component',
@@ -20,18 +37,24 @@ import {
     IonList, IonItem, IonLabel, IonSpinner, IonText, IonButtons
   ],
 })
-export class LinkPlaidComponent implements OnInit {
-  isLoading: boolean = false; // To show a spinner while initializing Plaid
+export class LinkPlaidComponent implements OnInit, OnDestroy {
+  isLoading: boolean = false;
   statusMessage: string | null = null;
-  isPlaidReady: boolean = false; // To enable the button once Plaid Link is ready
+  isPlaidReady: boolean = false;
+  plaidHandler: any = null;
 
-  // Plaid specific variables (you'll need to manage these based on your PlaidService)
-  // linkToken: string | null = null;
-  // plaidHandler: any = null;
+  private temporaryUserId: string | null = null; // For anonymous flow
+  private isUserAuthenticated: boolean = false; // Determine this based on JWT presence
+
+  // Replace with your actual backend API URL
+  private backendApiUrl = 'http://localhost:8080/api'; // Your Spring Boot backend URL
+  private plaidSubscription: Subscription | undefined;
+
 
   constructor(
-    private navCtrl: NavController, // For back navigation
-    // private plaidService: PlaidService // Inject your Plaid service
+    private http: HttpClient,
+    private router: Router,
+    private navCtrl: NavController
   ) {}
 
   ngOnInit() {
@@ -44,84 +67,193 @@ export class LinkPlaidComponent implements OnInit {
     setTimeout(() => { // Simulate Plaid SDK loading and token fetching
       this.isPlaidReady = true;
     }, 1500);
+
+    const jwtToken = localStorage.getItem('jwtToken'); // Or your token storage mechanism
+    this.isUserAuthenticated = !!jwtToken; // Convert to boolean
+
+    console.log(`LinkPlaidComponent ngOnInit - User Authenticated: ${this.isUserAuthenticated}`);
+    this.initializePlaidLink();
   }
 
-  // async initializePlaid() {
-  //   this.isLoading = true;
-  //   this.statusMessage = 'Initializing secure connection...';
-  //   try {
-  //     // 1. Load Plaid Script (if needed, often done in index.html or dynamically)
-  //     // await this.plaidService.loadPlaidScript();
+  async initializePlaidLink() {
+    this.isLoading = true;
+    this.isPlaidReady = false;
+    this.statusMessage = 'Initializing secure connection...';
+    this.temporaryUserId = null; // Reset
 
-  //     // 2. Get Link Token
-  //     const tokenResponse = await this.plaidService.getLinkToken().toPromise(); // Convert Observable to Promise for async/await
-  //     this.linkToken = tokenResponse.link_token;
+    try {
+      let linkTokenData: LinkTokenAnonymousResponse | LinkTokenAuthenticatedResponse;
+      let linkToken: string;
 
-  //     if (!this.linkToken) {
-  //       throw new Error('Failed to retrieve link token.');
-  //     }
+      if (this.isUserAuthenticated) {
+        linkTokenData = await this.getLinkTokenAuthenticated().toPromise() as LinkTokenAuthenticatedResponse;
+        linkToken = linkTokenData.link_token;
+        console.log('Received authenticated link_token.');
+      } else {
+        linkTokenData = await this.getLinkTokenAnonymous().toPromise() as LinkTokenAnonymousResponse;
+        linkToken = linkTokenData.link_token;
+        this.temporaryUserId = (linkTokenData as LinkTokenAnonymousResponse).temporary_user_id;
+        console.log('Received anonymous link_token and temp_user_id:', this.temporaryUserId);
+      }
 
-  //     // 3. Initialize Plaid Handler
-  //     this.plaidHandler = Plaid.create({
-  //       token: this.linkToken,
-  //       onSuccess: async (public_token: string, metadata: any) => {
-  //         this.statusMessage = 'Account linked successfully! Finalizing...';
-  //         this.isLoading = true;
-  //         try {
-  //           await this.plaidService.exchangePublicToken(public_token).toPromise();
-  //           this.statusMessage = 'Setup complete!';
-  //           // Navigate to dashboard or next step
-  //           // this.router.navigate(['/tabs/dashboard']);
-  //           this.navCtrl.navigateRoot('/tabs/dashboard', { animated: true, animationDirection: 'forward'});
+      if (!linkToken) {
+        throw new Error('Failed to retrieve link_token from backend.');
+      }
 
-  //         } catch (exchangeError) {
-  //           console.error('Plaid token exchange error:', exchangeError);
-  //           this.statusMessage = 'Could not finalize account link. Please try again.';
-  //         } finally {
-  //           this.isLoading = false;
-  //         }
-  //       },
-  //       onLoad: () => { this.isPlaidReady = true; this.isLoading = false; this.statusMessage = null; },
-  //       onExit: (err: any, metadata: any) => {
-  //         this.isLoading = false;
-  //         if (err != null) {
-  //           this.statusMessage = `Link flow exited: ${err.error_message || err.display_message}`;
-  //         }
-  //         console.log('Plaid exited', err, metadata);
-  //       },
-  //       onEvent: (eventName: string, metadata: any) => {
-  //         console.log('Plaid event:', eventName, metadata);
-  //       }
-  //     });
-  //   } catch (error) {
-  //     console.error('Plaid initialization error:', error);
-  //     this.statusMessage = 'Could not initialize bank linking. Please try again later.';
-  //     this.isLoading = false;
-  //   }
-  // }
-
-  openPlaidLink() {
-    if (!this.isPlaidReady) {
-      this.statusMessage = 'Plaid is not ready yet. Please wait.';
-      return;
-    }
-    // if (this.plaidHandler) {
-    //   this.plaidHandler.open();
-    // } else {
-    //   this.statusMessage = 'Plaid handler not initialized. Please try refreshing.';
-    //   // this.initializePlaid(); // Attempt to re-initialize
-    // }
-    alert('Simulating Plaid Link opening...');
-    // Simulate success for now
-    setTimeout(() => {
-      this.statusMessage = 'Account linked successfully! (Simulated)';
+      this.plaidHandler = Plaid.create({
+        token: linkToken,
+        onSuccess: (public_token: string, metadata: any) => {
+          console.log('Plaid Link success! Public Token:', public_token, "Metadata:", metadata);
+          this.statusMessage = 'Bank account selected! Processing...';
+          this.isLoading = true;
+          if (this.isUserAuthenticated) {
+            this.exchangePublicTokenAuthenticated(public_token);
+          } else {
+            if (!this.temporaryUserId) {
+              console.error("Critical error: Temporary user id is missing for anonymous Plaid exchange.");
+              this.statusMessage = "Error: Session id missing. Please restart the process.";
+              this.isLoading = false;
+              return;
+            }
+            this.exchangePublicTokenAnonymous(public_token, this.temporaryUserId);
+          }
+        },
+        onLoad: () => {
+          console.log('Plaid Link UI loaded.');
+          this.isLoading = false;
+          this.isPlaidReady = true;
+          this.statusMessage = 'Ready to link your bank.';
+        },
+        onExit: (err: any, metadata: any) => {
+          this.isLoading = false;
+          this.isPlaidReady = true;
+          if (err != null) {
+            console.error('Plaid Link exited with error:', err, metadata);
+            this.statusMessage = `Link flow exited: ${err.display_message || err.error_message || 'User closed.'}`;
+          } else {
+            console.log('Plaid Link exited by user.', metadata);
+            this.statusMessage = 'Link flow closed by user.';
+          }
+        },
+        onEvent: (eventName: string, metadata: any) => {
+          console.log('Plaid Link event:', eventName, metadata);
+        }
+      });
+    } catch (error: any) {
+      console.error('Error initializing Plaid Link:', error);
+      this.statusMessage = `Error: ${error.message || 'Could not initialize bank linking.'}`;
       this.isLoading = false;
-      localStorage.setItem('linkplaidCompleted', 'true')
-      this.navCtrl.navigateRoot('/survey'); // Navigate on success
-    }, 2000);
+    }
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('jwtToken');
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  }
+
+  private getLinkTokenAnonymous(): Observable<LinkTokenAnonymousResponse> {
+    console.log('Requesting anonymous link_token...');
+    return this.http.post<LinkTokenAnonymousResponse>(`${this.backendApiUrl}/plaid/create_link_token_anonymous`, {})
+      .pipe(
+        tap(response => console.log('Received anonymous link_token response:', response)),
+        catchError(this.handleError.bind(this))
+      );
+  }
+
+  private getLinkTokenAuthenticated(): Observable<LinkTokenAuthenticatedResponse> {
+    console.log('Requesting authenticated link_token...');
+    return this.http.post<LinkTokenAuthenticatedResponse>(`${this.backendApiUrl}/plaid/create_link_token`, {}, { headers: this.getAuthHeaders() })
+      .pipe(
+        tap(response => console.log('Received authenticated link_token response:', response)),
+        catchError(this.handleError.bind(this))
+      );
+  }
+
+  private exchangePublicTokenAnonymous(publicToken: string, temporaryUserId: string): void {
+    console.log('Exchanging anonymous public_token with temp_user_id:', temporaryUserId);
+    const payload = { public_token: publicToken, temporary_user_id: temporaryUserId };
+    this.plaidSubscription = this.http.post<any>(`${this.backendApiUrl}/plaid/exchange_public_token_anonymous`, payload)
+      .pipe(
+        tap(response => {
+          console.log('Anonymous public token exchanged successfully:', response);
+          this.statusMessage = 'Bank connection saved temporarily.';
+          this.isLoading = false;
+          // IMPORTANT: Navigate to a page where user creates an account or logs in.
+          // Pass temporaryUserId to that page (e.g., via route params or state).
+          console.log('Navigating to account creation/login with temp ID:', temporaryUserId);
+          localStorage.setItem('linkplaidCompleted', 'true');
+          this.router.navigate(['/auth-finalize'], { // Example route for account creation/login after Plaid
+            queryParams: { tempId: temporaryUserId },
+            replaceUrl: true
+          });
+        }),
+        catchError(err => {
+          this.isLoading = false;
+          this.statusMessage = `Error: ${err.error?.message || 'Failed to save bank connection.'}`;
+          return this.handleError(err);
+        })
+      ).subscribe();
+  }
+
+  private exchangePublicTokenAuthenticated(publicToken: string): void {
+    console.log('Exchanging authenticated public_token...');
+    this.plaidSubscription = this.http.post<any>(`${this.backendApiUrl}/plaid/exchange_public_token`, { public_token: publicToken }, { headers: this.getAuthHeaders() })
+      .pipe(
+        tap(response => {
+          console.log('Authenticated public token exchanged successfully:', response);
+          this.statusMessage = 'Bank account linked successfully!';
+          this.isLoading = false;
+          localStorage.setItem('linkplaidCompleted', 'true'); // Set your flag
+          // Navigate to the next step for authenticated users (e.g., investment survey)
+          this.router.navigate(['/survey'], { queryParams: { stage: 'investmentSetup' }, replaceUrl: true });
+        }),
+        catchError(err => {
+          this.isLoading = false;
+          this.statusMessage = `Error: ${err.error?.message || 'Failed to link bank account.'}`;
+          return this.handleError(err);
+        })
+      ).subscribe();
+  }
+
+  openPlaid() {
+    if (this.plaidHandler && this.isPlaidReady) {
+      this.statusMessage = 'Opening Plaid...';
+      this.plaidHandler.open();
+    } else if (!this.isPlaidReady && !this.isLoading) {
+        this.statusMessage = 'Initializing, please wait...';
+        this.initializePlaidLink();
+    } else if (this.isLoading) {
+        this.statusMessage = 'Still loading, please wait...';
+    } else {
+      this.statusMessage = 'Plaid Link is not ready. Please try refreshing.';
+    }
   }
 
   goBack() {
-    this.navCtrl.back(); // Uses Ionic's navigation stack
+    this.navCtrl.back();
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    console.error('API Error:', error);
+    let userMessage = 'An unexpected error occurred. Please try again.';
+    if (error.error && typeof error.error.message === 'string') {
+      userMessage = error.error.message;
+    } else if (typeof error.message === 'string') {
+      userMessage = error.message;
+    }
+    // Potentially update this.statusMessage here as well, or ensure calling code does
+    return throwError(() => new Error(userMessage));
+  }
+
+  ngOnDestroy() {
+    if (this.plaidSubscription) {
+      this.plaidSubscription.unsubscribe();
+    }
+    // Plaid Link SDK does not have a standard 'destroy' method for the handler instance.
+    // It manages its own iframe lifecycle.
   }
 }

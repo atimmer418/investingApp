@@ -4,6 +4,15 @@ export const routes: Routes = [
   // src/app/app.routes.ts
   // ... other routes
   {
+    path: 'setup-2fa',
+    loadComponent: () => import('./components/twofactorsetup/twofactorsetup.component').then(m => m.TwoFactorSetupComponent)
+  },
+  {
+    path: 'auth-finalize', // This is the route you navigate to
+    loadComponent: () => import('./components/authfinalize/authfinalize.component').then(m => m.AuthFinalizeComponent)
+    // Adjust path if you placed AuthFinalizeComponent elsewhere, e.g., directly under 'app/'
+  },
+  {
     path: 'confirm-investment',
     loadComponent: () => import('./components/investmentconfirmation/investmentconfirmation.component').then(m => m.InvestmentConfirmationComponent)
     // Or from './pages/investment-confirmation/investment-confirmation.page' if you use .page convention

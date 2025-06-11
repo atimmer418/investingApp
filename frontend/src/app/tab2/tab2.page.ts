@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar, IonList, IonItem } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonLabel, IonTitle, IonContent, IonSearchbar, IonList, IonItem } from '@ionic/angular/standalone';
 import { StockService } from '../services/stock.service'; // Import StockService
 import { Subscription } from 'rxjs';
 
@@ -16,6 +16,7 @@ import { Subscription } from 'rxjs';
     IonHeader,
     IonToolbar,
     IonTitle,
+    IonLabel,
     IonContent,
     IonSearchbar,
     IonList,
