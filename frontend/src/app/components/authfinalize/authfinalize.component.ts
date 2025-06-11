@@ -41,14 +41,8 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
     private navCtrl: NavController // For potential back navigation
   ) {
     this.registerForm = new FormGroup({
-      firstName: new FormControl('', [Validators.required, Validators.minLength(1), Validators.maxLength(50)]),
-      lastName: new FormControl('', [Validators.required, Validators.minLength(1), Validators.maxLength(50)]),
       email: new FormControl('', [Validators.required, Validators.email, Validators.maxLength(100)]),
-      password: new FormControl('', [Validators.required, Validators.minLength(6), Validators.maxLength(100)]),
-      confirmPassword: new FormControl('', [Validators.required])
-    }, { 
-      validators: this.passwordsMatchValidator
-     });
+    });
   }
 
   ngOnInit() {
@@ -65,18 +59,7 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
     });
   }
 
-  passwordsMatchValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
-    const form = control as FormGroup;
-    const password = form.get('password')?.value;
-    const confirmPassword = form.get('confirmPassword')?.value;
-    return password === confirmPassword ? null : { passwordsMismatch: true };
-  };
-
-  get firstName() { return this.registerForm.get('firstName'); }
-  get lastName() { return this.registerForm.get('lastName'); }
   get email() { return this.registerForm.get('email'); }
-  get password() { return this.registerForm.get('password'); }
-  get confirmPassword() { return this.registerForm.get('confirmPassword'); }
 
   async onSubmit() {
     this.errorMessage = null;
@@ -96,10 +79,7 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
     this.isLoading = true;
 
     const registrationData = {
-      firstName: this.firstName?.value,
-      lastName: this.lastName?.value,
       email: this.email?.value,
-      password: this.password?.value,
       temporaryUserId: this.temporaryUserId // Include the temp ID
     };
 
@@ -116,7 +96,7 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
           alert('Account created successfully! You will be redirected to log in.'); // Placeholder
           localStorage.setItem('accountCreationCompleted', 'true');
           this.router.navigate(['/setup-2fa'], { 
-            queryParams: { email: registrationData.email, userId: response.userId /* if backend returns it */ },
+            queryParams: { email: registrationData.email },
             replaceUrl: true 
           });
         }),
