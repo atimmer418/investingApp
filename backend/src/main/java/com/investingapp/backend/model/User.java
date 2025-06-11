@@ -44,6 +44,15 @@ public class User {
     @Size(max = 100) // BCrypt hashes are typically 60 chars, but good to have some buffer
     private String password; // This will store the HASHED password
 
+    private String phoneNumber;
+
+    // Plaid specific fields
+    @Column(length = 255) // Adjust length as needed
+    private String plaidAccessToken; // IMPORTANT: Encrypt this at rest!
+
+    @Column(length = 255)
+    private String plaidItemId;
+
     // Onboarding status flags
     private boolean initialSurveyCompleted = false;
     private boolean plaidLinked = false;
@@ -51,6 +60,10 @@ public class User {
     private boolean choseToPickStocks = false;
     private boolean stockSelectionCompleted = false;
     private boolean investmentConfirmationCompleted = false;
+
+    private boolean twoFactorEnabled;
+    private String twoFactorOtp;
+    private LocalDateTime twoFactorOtpExpiry;
 
     @CreationTimestamp // Automatically set by Hibernate on creation
     private LocalDateTime createDate;

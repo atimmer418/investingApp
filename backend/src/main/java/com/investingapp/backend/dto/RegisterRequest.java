@@ -29,6 +29,10 @@ public class RegisterRequest {
     // The hashed password in the User entity can be longer.
     private String password;
 
+    @NotBlank(message = "Last name is required")
+    @Size(min = 1, max = 50, message = "Last name must be between 1 and 50 characters")
+    private String temporaryUserId;
+
     // If not using Lombok, you need to add:
     // public RegisterRequest() {} // No-arg constructor
     // Getters and Setters for all fields:
