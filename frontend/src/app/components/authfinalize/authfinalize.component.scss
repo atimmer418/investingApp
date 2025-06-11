@@ -1,0 +1,23 @@
+.form-container {
+    max-width: 500px;
+    margin: auto;
+    padding-top: 20px;
+  }
+  
+  ion-item {
+    margin-bottom: 5px;
+  }
+  
+  .error-message {
+    padding-left: 16px;
+    padding-bottom: 10px;
+    font-size: 0.8em;
+    ion-note {
+      display: block;
+    }
+  }
+  
+  .error-message-global, .success-message-global {
+    font-size: 0.95em;
+    font-weight: 500;
+  }

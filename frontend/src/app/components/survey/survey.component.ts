@@ -231,6 +231,23 @@ export class SurveyComponent implements OnInit, OnDestroy {
     return this.activeSurveyQuestions.length;
   }
 
+  yearsToReachSBLOC(
+    biweeklyContribution: number,
+    desiredSBLOCIncomePerYear: number,
+    annualReturnRate: number = 0.07,
+    contributionsPerYear: number = 26,
+    ltvRatio: number = 0.5
+  ): number {
+    const numerator = (2 * desiredSBLOCIncomePerYear * annualReturnRate);
+    const denominator = biweeklyContribution * contributionsPerYear;
+    const insideLog = numerator / denominator + 1;
+    const years = Math.log(insideLog) / Math.log(1 + annualReturnRate);
+    return years;
+  }
+  // Example usage:
+  // yearsNeeded = this.yearsToReachSBLOC(250, 100000);
+  // console.log(`Years needed: ${this.yearsNeeded.toFixed(2)}`);
+
   ngOnDestroy(): void {
     console.log('[SurveyComponent] ngOnDestroy - Unsubscribing from router events.');
     if (this.routerSubscription) {

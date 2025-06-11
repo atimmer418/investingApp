@@ -1,0 +1,84 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <!-- Optional: Add a back button if appropriate for the flow -->
+    <!-- <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons> -->
+    <ion-title>Create Your Account</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="form-container">
+    <ion-text color="dark" class="ion-text-center">
+      <h2>Almost there!</h2>
+      <p>Your bank connection is ready. Create an account to save your progress and start investing.</p>
+    </ion-text>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate class="ion-margin-top">
+      <ion-list lines="full" class="ion-no-margin ion-no-padding">
+        <ion-item>
+          <ion-label position="floating">First Name</ion-label>
+          <ion-input type="text" formControlName="firstName" required autocapitalize="words"></ion-input>
+        </ion-item>
+        <div *ngIf="firstName?.invalid && (firstName?.dirty || firstName?.touched)" class="error-message">
+          <ion-note color="danger" *ngIf="firstName?.errors?.['required']">First name is required.</ion-note>
+          <ion-note color="danger" *ngIf="firstName?.errors?.['maxlength']">First name is too long.</ion-note>
+        </div>
+
+        <ion-item>
+          <ion-label position="floating">Last Name</ion-label>
+          <ion-input type="text" formControlName="lastName" required autocapitalize="words"></ion-input>
+        </ion-item>
+        <div *ngIf="lastName?.invalid && (lastName?.dirty || lastName?.touched)" class="error-message">
+          <ion-note color="danger" *ngIf="lastName?.errors?.['required']">Last name is required.</ion-note>
+          <ion-note color="danger" *ngIf="lastName?.errors?.['maxlength']">Last name is too long.</ion-note>
+        </div>
+
+        <ion-item>
+          <ion-label position="floating">Email</ion-label>
+          <ion-input type="email" formControlName="email" required email></ion-input>
+        </ion-item>
+        <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="error-message">
+          <ion-note color="danger" *ngIf="email?.errors?.['required']">Email is required.</ion-note>
+          <ion-note color="danger" *ngIf="email?.errors?.['email']">Please enter a valid email.</ion-note>
+        </div>
+
+        <ion-item>
+          <ion-label position="floating">Password</ion-label>
+          <ion-input type="password" formControlName="password" required></ion-input>
+        </ion-item>
+        <div *ngIf="password?.invalid && (password?.dirty || password?.touched)" class="error-message">
+          <ion-note color="danger" *ngIf="password?.errors?.['required']">Password is required.</ion-note>
+          <ion-note color="danger" *ngIf="password?.errors?.['minlength']">Password must be at least 6 characters.</ion-note>
+        </div>
+
+        <ion-item>
+          <ion-label position="floating">Confirm Password</ion-label>
+          <ion-input type="password" formControlName="confirmPassword" required></ion-input>
+        </ion-item>
+        <div *ngIf="confirmPassword?.invalid && (confirmPassword?.dirty || confirmPassword?.touched)" class="error-message">
+          <ion-note color="danger" *ngIf="confirmPassword?.errors?.['required']">Confirming password is required.</ion-note>
+        </div>
+        <div *ngIf="registerForm.errors?.['passwordsMismatch'] && (password?.dirty || confirmPassword?.dirty)" class="error-message">
+          <ion-note color="danger">Passwords do not match.</ion-note>
+        </div>
+      </ion-list>
+
+      <ion-button type="submit" expand="block" class="ion-margin-top" [disabled]="isLoading || registerForm.invalid || !temporaryUserId">
+        <ion-spinner *ngIf="isLoading" name="crescent" slot="start"></ion-spinner>
+        {{ isLoading ? 'Creating Account...' : 'Create Account & Save Connection' }}
+      </ion-button>
+    </form>
+
+    <div *ngIf="errorMessage" class="ion-text-center ion-margin-top error-message-global">
+      <ion-text color="danger">{{ errorMessage }}</ion-text>
+    </div>
+    <div *ngIf="successMessage" class="ion-text-center ion-margin-top success-message-global">
+      <ion-text color="success">{{ successMessage }}</ion-text>
+    </div>
+
+  </div>
+</ion-content>
