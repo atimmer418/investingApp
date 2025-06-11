@@ -1,64 +1,319 @@
 .container {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; // Pushes footer content down if page is short
-    height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; // Pushes footer content down if page is short
+  height: 100%;
+  // Consider adding padding here if ion-padding on ion-content is not sufficient
+  // or if specific overall padding is needed beyond Ionic's defaults.
+  // padding-top: 16px;
+  // padding-bottom: 16px;
+}
+
+.info-card {
+  margin-bottom: 24px; // Good
+  // Add some margin to the sides for smaller screens if not handled by ion-padding
+  margin-left: 8px;
+  margin-right: 8px;
+
+  @media (min-width: 576px) { // For larger screens, revert to default or less margin
+    margin-left: auto; // Or use Ionic's grid system for centering
+    margin-right: auto;
+    // max-width: 500px; // Optional: constrain width on larger viewports
   }
+
+  ion-card-header {
+    // Add a bit more padding if needed, or rely on Ionic's defaults
+    // padding-bottom: 8px; // Example
+    ion-card-title {
+      font-size: 1.5rem; // Increased font size
+      font-weight: 600;  // Slightly bolder
+      margin-bottom: 12px; // Space below title
+      // Consider if text-align: center from class is sufficient or if specific styling is needed
+    }
+  }
+
+  ion-card-content {
+    // Adjust padding for better internal spacing
+    padding-top: 12px;
+    padding-bottom: 16px;
+    // Ionic's default side padding for card-content is usually 16px.
+    // If more is needed:
+    // padding-left: 20px;
+    // padding-right: 20px;
+    > ion-text.ion-text-center p { // Target the main descriptive paragraph
+      font-size: 0.95rem; // Base size for paragraph
+      line-height: 1.5;   // Improved line height
+      color: var(--ion-color-medium-shade); // Softer color for descriptive text
+    }
+  }
+}
+
+.details-list {
+  margin-top: 16px;
+  margin-bottom: 24px; // Slightly more margin at the bottom of the list
   
+  ion-item {
+    --inner-border-width: 0; // Keep this to prevent Ionic default lines if any
+    --padding-start: 0; // Keep this if no extra start padding is desired for the item itself
+    // --inner-padding-start is for content within item, --padding-start for item itself
+    // Increased vertical padding for each item for more spacing
+    --inner-padding-top: 14px;
+    --inner-padding-bottom: 14px;
+
+    // Adding a subtle bottom border to each item
+    border-bottom: 1px solid var(--ion-color-step-200, #e6e6e6);
+
+    // Ensure the last item doesn't have a border
+    &:last-child {
+      border-bottom: none;
+    }
+
+    ion-icon {
+      font-size: 1.4rem; // Slightly larger icon size
+      margin-right: 12px; // Adjusted margin
+      // Vertical alignment is usually handled well by Ionic, but can add flex properties if needed:
+      // position: relative; // Or use flex on parent
+      // top: 1px; // Minor adjustment if needed
+      min-width: 24px; // Ensure icon has enough space and doesn't get squeezed
+      text-align: center;
+    }
+
+    ion-label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--ion-color-dark-tint);
+      // margin-bottom: 2px; // Add tiny space if label and value are stacked and too close
+    }
+
+    ion-text[slot="end"] {
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: right; // Ensure text is aligned to the right
+      // color: var(--ion-color-dark-shade); // Default color should be fine for contrast
+    }
+  }
+}
+
+.alpaca-info {
+  margin-top: 24px; // Ensure good separation for this section
+
+  h4 {
+    // font-size: 1.1rem; // from typography
+    // font-weight: 600; // from typography
+    // color: var(--ion-color-dark-shade); // from typography
+    // margin-top: 1.5rem; // from typography
+    // margin-bottom: 0.75rem; // from typography
+    // Add a subtle bottom border to the heading for more definition
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--ion-color-step-200, #e6e6e6);
+    // font-size: 1.1rem; // Already set by typography step (and was previously explicitly set below)
+    // font-weight: 600;  // Already set by typography step (and was previously explicitly set below)
+    // margin-top: 1.5rem; // Already set by typography step (and was previously explicitly set below)
+    // margin-bottom: 0.75rem; // Already set by typography step (and was previously explicitly set below)
+    // color: var(--ion-color-dark-shade); // Already set by typography step (and was previously explicitly set below)
+    /*
+    font-size: 1.1rem; // Larger heading for this section
+    font-weight: 600;  // Bolder
+    margin-top: 1.5rem; // More space above
+    margin-bottom: 0.75rem; // Space below heading
+    color: var(--ion-color-dark-shade);
+    */
+  }
+
+  p {
+    font-size: 0.9rem;
+    line-height: 1.5; // Good for readability
+    color: var(--ion-color-medium-shade); // Already set, ensure consistency
+    margin-bottom: 8px; // Add some space between paragraphs
+  }
+
+  small {
+    font-size: 0.8rem; // Slightly smaller for disclaimer
+    line-height: 1.4; // Already set
+    color: var(--ion-color-medium-tint); // Even softer for less emphasis
+  }
+}
+
+.explanation-list {
+  margin-top: 12px; // Add a bit more space above the list
+  // margin-bottom: 16px; // Add space below the list before the disclaimer
+  
+  ion-item {
+    --border-width: 0; // Remove all default borders
+    --inner-border-width: 0; // Remove inner default borders
+
+    // Spacing for content within the item
+    --inner-padding-top: 10px; // Adjusted padding
+    --inner-padding-bottom: 10px; // Adjusted padding
+    --padding-start: 12px; // Adjusted to accommodate left border
+
+    // Subtle left border using success color
+    border-left: 3px solid var(--ion-color-success-tint);
+    margin-bottom: 8px; // Add space between list items
+    background: var(--ion-color-light-tint, #f9f9f9); // Slight background tint for the items
+    border-radius: 4px; // Slightly rounded corners for each item
+
+    ion-icon {
+      font-size: 1.3rem; // Icon size
+      margin-right: 10px; // Space between icon and text
+      // color: var(--ion-color-success); // Already set in HTML, good.
+      align-self: flex-start; // Align icon to the top if text wraps multiple lines
+      margin-top: 2px; // Slight adjustment for alignment with text
+    }
+
+    ion-label.ion-text-wrap {
+      font-size: 0.9rem; // from typography
+      line-height: 1.45; // from typography
+      color: var(--ion-color-dark-tint); // from typography
+      white-space: normal; // Ensure text wraps properly
+    }
+  }
+}
+
+.authorize-button {
+  font-weight: bold; // Current
+  --border-radius: 10px; // Slightly more rounded, was 8px
+  margin-top: 32px; // Increased margin-top for more separation, was 24px
+  margin-bottom: 16px; // Add some margin at the bottom too
+
+  // Explicit height and padding for better control and larger tap target
+  height: 50px; // Fixed height
+  --padding-top: 0; // Reset if using fixed height
+  --padding-bottom: 0; // Reset if using fixed height
+  --padding-start: 20px; // Horizontal padding
+  --padding-end: 20px;   // Horizontal padding
+
+  font-size: 1.05rem; // Slightly larger font size
+  letter-spacing: 0.5px; // Refined letter spacing
+  text-transform: none; // Ensure it's not ALL CAPS if that's not the design
+
+  // Custom shadow for a more modern feel
+  // Might need to adjust if it conflicts with Ionic's default button shadows
+  box-shadow: 0 4px 10px rgba(var(--ion-color-success-rgb), 0.3); // Shadow using button color
+
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.1s ease-in-out;
+
+  &:hover {
+    // background-color: var(--ion-color-success-shade); // Darken slightly on hover
+    // box-shadow: 0 6px 12px rgba(var(--ion-color-success-rgb), 0.35); // Enhance shadow on hover
+  }
+
+  &:active {
+    transform: translateY(1px); // Subtle press effect
+    // box-shadow: 0 2px 5px rgba(var(--ion-color-success-rgb), 0.4); // Reduced shadow on press
+  }
+
+  ion-spinner {
+    // Ensure spinner color contrasts with button background if needed
+    // color: var(--ion-color-success-contrast); // Usually white for solid buttons
+    font-size: 1.2em; // Relative to button font size
+  }
+
+  ion-icon {
+    font-size: 1.3em; // Relative to button font size
+    margin-right: 6px; // Space between icon and text, slot="start" adds some default
+  }
+}
+
+.status-message {
+  font-size: 0.9rem;
+  min-height: 20px;
+  margin-top: 16px; // Ensure space above status message
+}
+
+// Ensure global font is set in variables.scss or body,
+// If specific overrides are needed for this component's ion-content:
+// these are component-specific overrides/enhancements.
+// :host {
+//   ion-content {
+//     --padding-start: 20px; // Example
+//     --padding-end: 20px;   // Example
+//     --padding-top: 24px;   // Example
+//     --padding-bottom: 24px; // Example
+//   }
+// }
+
+
+// Media Queries for Small Screens (e.g., iPhone SE and smaller)
+
+@media (max-width: 380px) {
   .info-card {
-    margin-bottom: 24px;
+    ion-card-header {
+      ion-card-title {
+        font-size: 1.35rem; // Reduce title size slightly
+        margin-bottom: 10px; // Adjust space below title
+      }
+    }
+
+    ion-card-content {
+      // Reduce padding slightly if necessary, though Ionic's default might be fine
+      // padding-top: 10px;
+      // padding-bottom: 12px;
+
+      > ion-text.ion-text-center p {
+        font-size: 0.9rem; // Slightly smaller descriptive text
+      }
+    }
   }
-  
+
   .details-list {
-    margin-top: 16px;
-    margin-bottom: 16px;
     ion-item {
-      --inner-border-width: 0; // Remove inner lines if 'lines="none"' on list is not enough
-      --padding-start: 0;
-      font-size: 0.95em;
-      ion-icon {
-        margin-right: 10px;
-        font-size: 1.3em;
+      --inner-padding-top: 12px;    // Slightly reduce item padding
+      --inner-padding-bottom: 12px; // Slightly reduce item padding
+
+      ion-label {
+        font-size: 0.85rem; // Smaller label text
       }
       ion-text[slot="end"] {
-        font-weight: 500;
+        font-size: 0.9rem; // Smaller value text
+      }
+      ion-icon {
+        font-size: 1.3rem; // Slightly smaller icon
       }
     }
   }
-  
+
   .alpaca-info {
     h4 {
-      font-weight: bold;
-      margin-bottom: 8px;
+      font-size: 1rem; // Smaller section heading
     }
     p {
-      font-size: 0.9em;
-      color: var(--ion-color-medium-shade);
+      font-size: 0.85rem; // Smaller paragraph text
     }
     small {
-      font-size: 0.85em;
+      font-size: 0.75rem; // Smaller disclaimer
     }
   }
-  
+
   .explanation-list {
-    margin-top: 8px;
     ion-item {
-      --padding-start: 4px;
-      --border-width: 0;
-      --inner-border-width: 0;
-      font-size: 0.9em;
+      ion-label.ion-text-wrap {
+        font-size: 0.85rem; // Smaller text in explanation list
+      }
       ion-icon {
-        margin-right: 8px;
+        font-size: 1.2rem; // Smaller icon in list
       }
     }
   }
-  
+
   .authorize-button {
-    font-weight: bold;
-    --border-radius: 8px;
+    height: 48px; // Slightly smaller button height
+    font-size: 1rem; // Slightly smaller button font
+    --padding-start: 16px; // Adjust horizontal padding
+    --padding-end: 16px;   // Adjust horizontal padding
   }
-  
-  .status-message {
-    font-size: 0.9em;
-    min-height: 20px;
+}
+
+// Specific adjustments for very narrow screens if the above isn't enough
+@media (max-width: 350px) {
+  .info-card {
+    margin-left: 4px;  // Reduce side margins of the card itself
+    margin-right: 4px;
   }
+
+  // Potentially further reduce some font sizes if absolutely necessary,
+  // but prefer not to make text too small.
+  // Example:
+  // .details-list ion-label { font-size: 0.8rem; }
+  // .details-list ion-text[slot="end"] { font-size: 0.85rem; }
+}
