@@ -21,3 +21,69 @@
     font-size: 0.95em;
     font-weight: 500;
   }
+
+  // Page title - Ionic handles this well, but ensure it's centered if not by default
+  ion-toolbar ion-title {
+    text-align: center; // Ensures title is centered, common in iOS
+    padding-right: 48px; // Offset for potential back button if one were present on other pages
+    padding-left: 48px; // Ensures it's truly centered
+  }
+
+  .form-container {
+    ion-text.ion-text-center {
+      h2 { // Subtitle: "Your secure login and recovery info."
+        font-size: 1.1rem; // Slightly smaller than a typical h1
+        font-weight: 500; // Medium weight
+        color: var(--ion-color-medium-shade); // Softer than primary text
+        margin-bottom: 24px; // Space before the form elements
+      }
+    }
+
+    // Explanation text for email field and passkey info
+    .explanation-text {
+      font-size: 0.85rem;
+      color: var(--ion-color-medium-shade);
+      padding-left: 16px; // Align with ion-item content
+      padding-right: 16px;
+      margin-top: 4px; // Small space below the item
+      margin-bottom: 16px; // Space before next element
+
+      &.ion-text-center { // For the text below the passkey button
+        margin-top: 12px;
+        padding-left: 0;
+        padding-right: 0;
+      }
+    }
+
+    h3 { // "Create a passkey" title
+      font-size: 1.2rem; // Prominent but not too large
+      font-weight: 600; // Bolder
+      color: var(--ion-color-dark-shade);
+      margin-top: 32px; // More space above this section
+      margin-bottom: 16px; // Space before the button
+      text-align: center; // Centered title for this section
+    }
+
+    ion-button { // General button styling, applies to the passkey button
+      --border-radius: 12px; // iOS like rounded corners
+      height: 48px; // Good tap target size
+      font-weight: 600; // Bold text for action
+      text-transform: none; // Avoid ALL CAPS if not desired
+      margin-bottom: 8px; // Space below button
+    }
+
+    // Ensure list and items have appropriate spacing
+    ion-list {
+      margin-bottom: 16px; // Space after the email list/item
+    }
+  }
+
+  // Specific adjustments for responsiveness if needed,
+  // but Ionic's grid and components handle a lot automatically.
+  // Example:
+  // @media (min-width: 768px) {
+  //   .form-container {
+  //     padding-left: 32px;
+  //     padding-right: 32px;
+  //   }
+  // }
