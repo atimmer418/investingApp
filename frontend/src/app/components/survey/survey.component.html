@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar color="light">
     <!-- Update title to use totalQuestionsInActiveSurvey -->
-    <ion-title>Survey (Question {{ currentQuestionIndex + 1 }} of {{ totalQuestionsInActiveSurvey }})</ion-title>
+    <ion-title>{{ currentSurveyType }} (Question {{ currentQuestionIndex + 1 }} of {{ totalQuestionsInActiveSurvey }})</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -12,23 +12,25 @@
   </ion-text>
 
   <ion-list lines="inset" inset="true" mode="ios">
-    <ion-item
+    <ion-chip
       *ngFor="let option of currentQuestion.responseChoices; let i = index"
       button
       (click)="selectAnswerAndProceed(option.id)"
       detail="false"
+      [outline]="true"
+      class="full-width-chip"
       [class.selected-option]="currentQuestion.answer === option.id"
     >
-      <div class="survey-option-chip">{{ option.text }}</div>
+      {{ option.text }}
       <ion-icon *ngIf="currentQuestion.answer === option.id" name="checkmark-circle" slot="end" color="primary"></ion-icon>
-    </ion-item>
+    </ion-chip>
   </ion-list>
 </ion-content>
 
 <ion-footer class="ion-padding-horizontal ion-padding-bottom" *ngIf="currentQuestion && totalQuestionsInActiveSurvey > 1">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-button (click)="previousQuestion()" [disabled]="currentQuestionIndex === 0" fill="outline" color="medium">
+      <ion-button (click)="previousQuestion()" [disabled]="currentQuestionIndex === 0" fill="clear" color="medium">
         <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
         Previous
       </ion-button>

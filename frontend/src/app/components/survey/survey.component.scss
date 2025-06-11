@@ -1,5 +1,8 @@
 ion-list {
     padding: 0; // iOS typically handles padding within items
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   
   ion-text h3 {
@@ -8,6 +11,7 @@ ion-list {
     font-size: 1.2em; // Adjusted for iOS feel
     font-weight: 600;
     color: #8E8E93; // iOS systemGrayColor
+    text-align: center; // Centered for better iOS alignment
   }
   
   // .survey-option-item styling removed as the class was removed from HTML
@@ -47,13 +51,35 @@ ion-list {
     }
   }
 
-  .survey-option-chip {
-    background-color: #f0f0f0;
-    border-radius: 16px;
-    padding: 8px 16px;
-    margin: 4px 0;
-    display: inline-block;
-    color: #333;
-    width: 100%;
-    text-align: center;
-  }
+  .full-width-chip {
+  display: block;              // Forces each chip to be on its own line
+  width: 96%;                  // Makes it full width of parent
+  max-width: 100vw;            // Ensures it doesn't overflow screen
+  margin-bottom: 0.5rem;       // Optional spacing between chips
+  --padding-start: 1rem;       // Optional: control internal padding
+  --padding-end: 1rem;
+  --background: var(--ion-color-light); // Optional: custom background
+  --color: var(--ion-color-dark);       // Optional: custom text color
+
+  text-align: center;
+  justify-content: center; 
+  align-items: center;
+
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 500; // optional: adjust for iOS look
+  font-size: 0.9rem;  // optional: match system size
+}
+
+ion-title {
+  color: #000000; // Standard black for titles
+  text-align: center; // Centered for better iOS alignment
+  margin: 10px 0; // Added margin for spacing
+  padding: 0 15px; // Added padding for better touch targets
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; // iOS system font stack
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); // Optional: subtle shadow for depth
+  text-decoration: none; // Ensure no underline
+  box-sizing: border-box; // Ensures padding is included in width calculations
+  font-size: 1.2em; // Adjusted for iOS feel
+  font-weight: 600; // Semi-bold for emphasis
+  line-height: 1.4; // Adjusted for better readability
+}

@@ -4,7 +4,7 @@ import { Router, NavigationEnd, Event as RouterEvent } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators'; // distinctUntilChanged could also be useful
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonText, IonList,
+  IonHeader, IonChip, IonToolbar, IonTitle, IonContent, IonText, IonList,
   IonItem, IonLabel, IonButton, IonButtons, IonIcon, IonFooter
 } from '@ionic/angular/standalone';
 
@@ -23,8 +23,8 @@ interface SurveyQuestion {
 
 // Enum
 enum SurveyType {
-  InitialRiskSurvey = 'initialRiskSurvey',
-  InvestmentSetup = 'investmentSetup'
+  InitialRiskSurvey = 'Initial Risk Survey',
+  InvestmentSetup = 'Investment Setup'
 }
 
 @Component({
@@ -33,7 +33,7 @@ enum SurveyType {
   styleUrls: ['./survey.component.scss'],
   standalone: true,
   imports: [
-    CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonText,
+    CommonModule, IonHeader, IonChip, IonToolbar, IonTitle, IonContent, IonText,
     IonList, IonItem, IonLabel, IonButton, IonButtons, IonIcon, IonFooter
   ]
 })

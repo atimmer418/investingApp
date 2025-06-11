@@ -35,7 +35,7 @@
         <ion-text color="dark">
           <h3>Create a passkey</h3>
         </ion-text>
-        <ion-button expand="block" class="ion-margin-top" (click)="continueWithBiometrics()">
+        <ion-button expand="block" class="ion-margin-top" (click)="onSubmit()" [disabled]="registerForm.invalid">
           [Continue with Face ID / biometrics]
         </ion-button>
         <div class="explanation-text ion-text-center ion-margin-top">
