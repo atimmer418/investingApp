@@ -20,7 +20,13 @@ ion-list {
   
   .selected-option {
     // border: 2px solid #007AFF; // Removed as checkmark will indicate selection
-    background-color: rgba(0, 122, 255, 0.05); // Very subtle tint for selection
+    // background-color: rgba(0, 122, 255, 0.05); // Very subtle tint for selection - REMOVED
+    // Visual indication is now on the chip itself.
+
+    .survey-option-chip {
+      background-color: #007AFF; // iOS primary blue
+      color: #ffffff; // White text for contrast
+    }
   }
   
   // Styling for the checkmark icon
@@ -39,4 +45,15 @@ ion-list {
     ion-toolbar {
       // Add styles if needed, e.g., background, padding
     }
+  }
+
+  .survey-option-chip {
+    background-color: #f0f0f0;
+    border-radius: 16px;
+    padding: 8px 16px;
+    margin: 4px 0;
+    display: inline-block;
+    color: #333;
+    width: 100%;
+    text-align: center;
   }

@@ -19,7 +19,7 @@
       detail="false"
       [class.selected-option]="currentQuestion.answer === option.id"
     >
-      <ion-label class="ion-text-wrap">{{ option.text }}</ion-label>
+      <div class="survey-option-chip">{{ option.text }}</div>
       <ion-icon *ngIf="currentQuestion.answer === option.id" name="checkmark-circle" slot="end" color="primary"></ion-icon>
     </ion-item>
   </ion-list>
