@@ -1,28 +1,26 @@
 <ion-header>
-  <ion-toolbar color="primary">
+  <ion-toolbar color="light">
     <!-- Update title to use totalQuestionsInActiveSurvey -->
     <ion-title>Survey (Question {{ currentQuestionIndex + 1 }} of {{ totalQuestionsInActiveSurvey }})</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <!-- Rest of the HTML remains the same, it will bind to `currentQuestion` -->
-<ion-content class="ion-padding ion-padding-top" *ngIf="currentQuestion">
-  <ion-text color="dark" class="ion-margin-bottom">
+<ion-content class="ion-padding-top" *ngIf="currentQuestion">
+  <ion-text color="dark" class="ion-margin-bottom ion-padding-horizontal">
     <h3>{{ currentQuestion.questionText }}</h3>
   </ion-text>
 
-  <ion-list lines="inset" inset="false" mode="ios">
+  <ion-list lines="inset" inset="true" mode="ios">
     <ion-item
-      slot="ios"
       *ngFor="let option of currentQuestion.responseChoices; let i = index"
       button
       (click)="selectAnswerAndProceed(option.id)"
       detail="false"
-      class="ion-margin-bottom survey-option-item"
       [class.selected-option]="currentQuestion.answer === option.id"
     >
       <ion-label class="ion-text-wrap">{{ option.text }}</ion-label>
-      <!-- <ion-icon *ngIf="currentQuestion.answer === option.id" name="checkmark-circle" slot="end" color="primary"></ion-icon> -->
+      <ion-icon *ngIf="currentQuestion.answer === option.id" name="checkmark-circle" slot="end" color="primary"></ion-icon>
     </ion-item>
   </ion-list>
 </ion-content>
@@ -30,7 +28,7 @@
 <ion-footer class="ion-padding-horizontal ion-padding-bottom" *ngIf="currentQuestion && totalQuestionsInActiveSurvey > 1">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-button (click)="previousQuestion()" [disabled]="currentQuestionIndex === 0" fill="outline" color="primary">
+      <ion-button (click)="previousQuestion()" [disabled]="currentQuestionIndex === 0" fill="outline" color="medium">
         <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
         Previous
       </ion-button>

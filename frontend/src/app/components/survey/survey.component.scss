@@ -1,35 +1,33 @@
 ion-list {
-    padding: 16px;
+    padding: 0; // iOS typically handles padding within items
   }
   
   ion-text h3 {
     margin-top: 10px;
-    margin-bottom: 20px;
-    font-size: 1.4em;
+    margin-bottom: 15px; // Slightly reduced margin
+    font-size: 1.2em; // Adjusted for iOS feel
     font-weight: 600;
-    color: var(--ion-color-dark-shade, #333333);
+    color: #8E8E93; // iOS systemGrayColor
   }
   
-  .survey-option-item {
-    margin-bottom: 12px;
-    border-radius: 8px; // Rounded corners for options
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); // Subtle shadow for depth
-  }
+  // .survey-option-item styling removed as the class was removed from HTML
+  // and items will now follow standard inset list styling.
   
-  .survey-option-item ion-label {
-    font-size: 1.1em;
-    font-weight: normal;
-  }
+  // .survey-option-item ion-label {
+  //   font-size: 1.0em; // Adjusted for iOS feel
+  //   font-weight: normal;
+  // }
   
   .selected-option {
-    border: 2px solid var(--ion-color-primary);
-    background-color: var(--ion-color-primary-tint); // Use theme variable for a light shade
+    // border: 2px solid #007AFF; // Removed as checkmark will indicate selection
+    background-color: rgba(0, 122, 255, 0.05); // Very subtle tint for selection
   }
   
-  // Styling for the checkmark icon, if you decide to re-add it
-  // ion-icon[name="checkmark-circle"] {
-  //   font-size: 24px;
-  // }
+  // Styling for the checkmark icon
+  ion-icon[name="checkmark-circle"] {
+    font-size: 24px; // Ensure this is a good size
+    color: #007AFF; // iOS systemBlue for the checkmark
+  }
   
   // Ensure enough space for the footer
   ion-content {
