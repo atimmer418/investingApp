@@ -60,6 +60,7 @@ public class WebAuthnConfig {
                 .credentialRepository(this.credentialRepository) // Provide your repository implementation
                 .origins(effectiveOrigins) // Set origins on the main builder
                 .allowUntrustedAttestation(true) // For development. Review for production.
+                .allowOriginPort(true)
                 // .attestationConveyancePreference(AttestationConveyancePreference.NONE) // Optional: set preference
                 // .allowOriginPort(true) // If your origins include non-standard ports
                 // .allowOriginSubdomain(true) // If you need to allow subdomains of your origins

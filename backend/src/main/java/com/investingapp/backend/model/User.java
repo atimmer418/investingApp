@@ -26,11 +26,11 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "First name cannot be blank")
+    // @NotBlank(message = "First name cannot be blank")
     @Size(max = 50)
     private String firstName; // Optional if you only want email initially
 
-    @NotBlank(message = "Last name cannot be blank")
+    // @NotBlank(message = "Last name cannot be blank")
     @Size(max = 50)
     private String lastName; // Optional
 
@@ -79,9 +79,9 @@ public class User {
         // For now, it can be set later or derived.
     }
 
-    public User(String firstName, String lastName, String email) {
-         this.firstName = firstName;
-         this.lastName = lastName;
-         this.email = email;
-    }
+    // public User(String firstName, String lastName, String email) {
+    //      this.firstName = firstName;
+    //      this.lastName = lastName;
+    //      this.email = email;
+    // }
 }

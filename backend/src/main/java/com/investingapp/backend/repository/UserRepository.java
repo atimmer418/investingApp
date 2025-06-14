@@ -3,11 +3,11 @@ package com.investingapp.backend.repository; // Make sure this package name matc
 
 import com.investingapp.backend.model.User; // Import your User entity
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@RepositoryRestResource
+@Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     // Spring Data JPA will automatically implement methods based on their names:
 

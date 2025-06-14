@@ -72,6 +72,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/plaid/create_link_token_anonymous").permitAll() // Ensure this is permitted
                 .requestMatchers("/api/plaid/exchange_public_token_anonymous").permitAll() // Ensure this is permitted
+                .requestMatchers("/api/passkey/**").permitAll()
                 .requestMatchers("/hello").permitAll()
                 .anyRequest().authenticated()
             )

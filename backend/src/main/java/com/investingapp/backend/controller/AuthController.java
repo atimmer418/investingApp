@@ -1,16 +1,10 @@
 // src/main/java/com/investingapp/backend/controller/AuthController.java
 package com.investingapp.backend.controller;
 
-import com.investingapp.backend.dto.FinishAuthenticationRequest;
-import com.investingapp.backend.dto.FinishRegistrationRequest;
 import com.investingapp.backend.dto.JwtResponse;
 import com.investingapp.backend.dto.LoginRequest;
 import com.investingapp.backend.dto.MessageResponse; // You created this earlier
-import com.investingapp.backend.dto.OtpRequest;
-import com.investingapp.backend.dto.OtpVerificationRequest;
 import com.investingapp.backend.dto.RegisterRequest;
-import com.investingapp.backend.dto.StartAuthenticationRequest;
-import com.investingapp.backend.dto.StartRegistrationRequest;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.security.jwt.JwtUtils;
 import com.investingapp.backend.security.services.UserDetailsImpl;
@@ -149,124 +143,4 @@ public class AuthController {
                 .body(new MessageResponse("Login process error.")); // Should not reach here
     }
 
-    // --- Passkey Registration Endpoints ---
-    @PostMapping("/passkey/register/start")
-    public ResponseEntity<?> startPasskeyRegistration(@RequestBody StartRegistrationRequest request) {
-        // In a real app, ensure user is partially authenticated or has a valid
-        // session/token
-        // if this isn't the absolute first step after providing an email.
-        // For the "AuthFinalize" flow, the user isn't fully logged in yet.
-        // The 'email' would come from the previous step (Plaid linking -> AuthFinalize
-        // form).
-        try {
-            logger.info("Starting passkey registration for email: {}", request.getEmail());
-            PublicKeyCredentialCreationOptions creationOptions = webAuthnService.startRegistration(
-                    request.getEmail(),
-                    request.getDisplayName(),
-                    request.getTemporaryPlaidIdentifier() // Pass this along if it's part of this flow
-            );
-            // The frontend needs to store these options (e.g., in sessionStorage)
-            // because they are needed for finishRegistration.
-            // We send them as JSON. The Yubico library can serialize/deserialize them.
-            return ResponseEntity.ok(creationOptions.toJson());
-        } catch (Exception e) {
-            logger.error("Error starting passkey registration for {}: {}", request.getEmail(), e.getMessage(), e);
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Error starting passkey registration: " + e.getMessage()));
-        }
-    }
-
-    @PostMapping("/passkey/register/finish")
-    public ResponseEntity<?> finishPasskeyRegistration(@RequestBody FinishRegistrationRequest request) {
-        try {
-            logger.info("Finishing passkey registration for email: {}", request.getEmail());
-            // Deserialize requestOptionsJson back to PublicKeyCredentialCreationOptions
-            PublicKeyCredentialCreationOptions requestOptions = PublicKeyCredentialCreationOptions
-                    .fromJson(request.getRequestOptionsJson());
-
-            boolean success = webAuthnService.finishRegistration(
-                    request.getEmail(),
-                    request.getCredential(), // This is the JSON string from navigator.credentials.create()
-                    requestOptions);
-
-            if (success) {
-                // Registration successful. Now user needs to "log in" with their new passkey
-                // to get a JWT, or you can issue one here.
-                // For simplicity, let's assume they will now log in.
-                // Or, better yet, log them in here and issue a JWT.
-                User user = userService.getUserByEmail(request.getEmail());
-                if (user == null)
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(new MessageResponse("User not found after passkey registration."));
-
-                UserDetailsImpl userDetails = UserDetailsImpl.build(user);
-                Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
-                        userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                String jwt = jwtUtils.generateJwtToken(authentication);
-
-                logger.info("Passkey registration successful and user {} logged in.", request.getEmail());
-                return ResponseEntity.ok(new JwtResponse(jwt, user.getId(), user.getEmail()));
-            } else {
-                return ResponseEntity.badRequest().body(new MessageResponse("Passkey registration failed."));
-            }
-        } catch (Exception e) {
-            logger.error("Error finishing passkey registration for {}: {}", request.getEmail(), e.getMessage(), e);
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Error finishing passkey registration: " + e.getMessage()));
-        }
-    }
-
-    // --- Passkey Login Endpoints ---
-    @PostMapping("/passkey/login/start")
-    public ResponseEntity<?> startPasskeyAuthentication(
-            @RequestBody(required = false) StartAuthenticationRequest request) {
-        // 'request' can be null or empty for discoverable credentials (passkeys)
-        // If email is provided, it can help narrow down credentials, but it's optional
-        // for passkeys.
-        String email = (request != null) ? request.getEmail() : null;
-        try {
-            logger.info("Starting passkey authentication, email hint: {}", email);
-            AssertionRequest assertionRequest = webAuthnService.startAuthentication(email);
-            // Frontend needs to store assertionRequest (e.g., in sessionStorage) for
-            // finishAuthentication
-            return ResponseEntity.ok(assertionRequest.toJson());
-        } catch (Exception e) {
-            logger.error("Error starting passkey authentication: {}", e.getMessage(), e);
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Error starting passkey authentication: " + e.getMessage()));
-        }
-    }
-
-    @PostMapping("/passkey/login/finish")
-    public ResponseEntity<?> finishPasskeyAuthentication(@RequestBody FinishAuthenticationRequest request) {
-        try {
-            logger.info("Finishing passkey authentication.");
-            // Deserialize requestOptionsJson back to AssertionRequest
-            AssertionRequest requestOptions = AssertionRequest.fromJson(request.getRequestOptionsJson());
-
-            Optional<User> userOptional = webAuthnService.finishAuthentication(
-                    request.getCredential(), // This is the JSON string from navigator.credentials.get()
-                    requestOptions);
-
-            if (userOptional.isPresent()) {
-                User user = userOptional.get();
-                UserDetailsImpl userDetails = UserDetailsImpl.build(user);
-                Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
-                        userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                String jwt = jwtUtils.generateJwtToken(authentication);
-
-                logger.info("Passkey login successful for user {}.", user.getEmail());
-                return ResponseEntity.ok(new JwtResponse(jwt, user.getId(), user.getEmail()));
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new MessageResponse("Passkey authentication failed."));
-            }
-        } catch (Exception e) {
-            logger.error("Error finishing passkey authentication: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new MessageResponse("Error finishing passkey authentication: " + e.getMessage()));
-        }
-    }
 }

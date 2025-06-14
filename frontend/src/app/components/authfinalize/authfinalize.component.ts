@@ -1,17 +1,21 @@
+// src/app/pages/authfinalize/authfinalize.component.ts
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http'; // Removed HttpHeaders as not used here
-import { Subscription, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel,
-  IonInput, IonButton, IonSpinner, IonText, IonNote, NavController // Added NavController
+  IonInput, IonButton, IonSpinner, IonText, IonNote, NavController
 } from '@ionic/angular/standalone';
 
+// --- NEW IMPORTS ---
+import { PasskeyService } from '../../services/passkey.service';
+import { create } from '@github/webauthn-json';
+
 @Component({
-  selector: 'app-authfinalize', // Selector for this page/component
+  selector: 'app-authfinalize',
   templateUrl: './authfinalize.component.html',
   styleUrls: ['./authfinalize.component.scss'],
   standalone: true,
@@ -24,21 +28,18 @@ import {
 })
 export class AuthFinalizeComponent implements OnInit, OnDestroy {
   registerForm: FormGroup;
-  temporaryUserId: string | null = null; // Renamed from temporaryUserIdentifier for consistency
+  temporaryUserId: string | null = null;
   isLoading: boolean = false;
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
   private routeSub: Subscription | undefined;
-  private registerSub: Subscription | undefined;
-
-  private backendApiUrl = 'http://localhost:8080/api/auth';
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private http: HttpClient,
-    private navCtrl: NavController // For potential back navigation
+    private navCtrl: NavController,
+    private passkeyService: PasskeyService // Inject the new service
   ) {
     this.registerForm = new FormGroup({
       email: new FormControl('', [Validators.required, Validators.email, Validators.maxLength(100)]),
@@ -49,73 +50,90 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
     this.routeSub = this.route.queryParamMap.subscribe(params => {
       this.temporaryUserId = params.get('tempId');
       if (this.temporaryUserId) {
-        console.log('AuthFinalizeComponent: Received temporaryUserId:', this.temporaryUserId);
+        console.log('Received temporaryUserId:', this.temporaryUserId);
       } else {
-        console.warn('AuthFinalizeComponent: temporaryUserId not found in query params. User might need to restart linking.');
+        console.warn('temporaryUserId not found in query params.');
         this.errorMessage = 'Session identifier missing. Please restart the bank linking process.';
-        // Optionally redirect if tempId is crucial and missing and they shouldn't be here
-        // this.router.navigate(['/link-bank'], { replaceUrl: true });
       }
     });
   }
 
   get email() { return this.registerForm.get('email'); }
 
-  async onSubmit() {
+  // --- REFACTORED METHOD ---
+  async createPasskey() {
     this.errorMessage = null;
     this.successMessage = null;
 
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
-      this.errorMessage = 'Please correct the errors in the form.';
+      this.errorMessage = 'Please provide a valid email address.';
       return;
     }
-
     if (!this.temporaryUserId) {
-      this.errorMessage = "Cannot proceed without a valid session. Please try linking your bank again.";
+      this.errorMessage = "Cannot proceed without a valid session. Please link your bank again.";
       return;
     }
 
     this.isLoading = true;
+    const userEmail = this.email?.value;
 
-    const registrationData = {
-      email: this.email?.value,
-      temporaryUserId: this.temporaryUserId // Include the temp ID
-    };
+    // STEP 1: Start Registration (Get Challenge from Backend)
+    this.passkeyService.startRegistration({ email: userEmail, temporaryUserId: this.temporaryUserId })
+      .subscribe({
+        next: async (startResponse) => {
+          try {
+            console.log('Received registration options from server:', startResponse.options);
 
-    console.log('Submitting registration data from AuthFinalizeComponent:', registrationData);
+            // The backend sends a JSON *string*. The 'create' function needs a JavaScript *object*.
+            // We must parse the string from the server before using it.
+            const optionsAsObject = JSON.parse(startResponse.options);
 
-    this.registerSub = this.http.post<any>(`${this.backendApiUrl}/register`, registrationData)
-      .pipe(
-        tap(response => {
-          console.log('Registration successful (from AuthFinalizeComponent):', response);
+            const credentialRequestOptions = {
+              publicKey: optionsAsObject
+            };
+
+            // STEP 2: Create Credential (Browser/OS Interaction)
+            // Pass the new, correctly structured object.
+            const credential = await create(credentialRequestOptions);
+
+            // STEP 3: Finish Registration (Send Credential to Backend)
+            this.passkeyService.finishRegistration({ email: userEmail, credential })
+              .subscribe({
+                next: (finishResponse) => {
+                  this.isLoading = false;
+                  this.successMessage = finishResponse; // e.g., "Registration successful."
+                  console.log('Successfully registered passkey!');
+                  // On success, you might navigate them to a "next steps" page or a login prompt.
+                  // this.router.navigate(['/login']);
+                  this.router.navigate(['/survey'], {
+                    // queryParams: { email: this.userEmail }, 
+                    replaceUrl: true 
+                  });
+                },
+                error: (err) => {
+                  this.isLoading = false;
+                  this.errorMessage = `Registration failed: ${err.error || 'Please try again.'}`;
+                  console.error('Error finishing registration:', err);
+                }
+              });
+
+          } catch (error: any) {
+            this.isLoading = false;
+            // Handle errors from the browser's credential creation (e.g., user cancels)
+            this.errorMessage = `Passkey creation was cancelled or failed.`;
+            console.error('Error during navigator.credentials.create():', error);
+          }
+        },
+        error: (err) => {
           this.isLoading = false;
-          this.successMessage = response.message || 'Account created successfully! Please log in.';
-          // After successful registration and Plaid linking, redirect to login
-          // The login page will then issue a JWT.
-          alert('Account created successfully! You will be redirected to log in.'); // Placeholder
-          localStorage.setItem('accountCreationCompleted', 'true');
-          this.router.navigate(['/setup-2fa'], { 
-            queryParams: { email: registrationData.email },
-            replaceUrl: true 
-          });
-        }),
-        catchError((error: HttpErrorResponse) => {
-          this.isLoading = false;
-          this.errorMessage = error.error?.message || error.message || 'Registration failed. Please try again.';
-          console.error('Registration error (from AuthFinalizeComponent):', error);
-          return throwError(() => error);
-        })
-      ).subscribe();
-  }
-
-  goBack() { // Example back navigation
-    // Decide where back should go from here - probably to link-bank or survey start
-    this.navCtrl.navigateBack('/link-bank'); // Or to the start of the survey if appropriate
+          this.errorMessage = `Could not start registration: ${err.error || 'Server error.'}`;
+          console.error('Error starting registration:', err);
+        }
+      });
   }
 
   ngOnDestroy() {
     if (this.routeSub) this.routeSub.unsubscribe();
-    if (this.registerSub) this.registerSub.unsubscribe();
   }
 }
