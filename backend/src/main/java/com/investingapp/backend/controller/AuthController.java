@@ -1,19 +1,26 @@
 // src/main/java/com/investingapp/backend/controller/AuthController.java
 package com.investingapp.backend.controller;
 
+import com.investingapp.backend.dto.FinishAuthenticationRequest;
+import com.investingapp.backend.dto.FinishRegistrationRequest;
 import com.investingapp.backend.dto.JwtResponse;
 import com.investingapp.backend.dto.LoginRequest;
 import com.investingapp.backend.dto.MessageResponse; // You created this earlier
 import com.investingapp.backend.dto.OtpRequest;
 import com.investingapp.backend.dto.OtpVerificationRequest;
 import com.investingapp.backend.dto.RegisterRequest;
+import com.investingapp.backend.dto.StartAuthenticationRequest;
+import com.investingapp.backend.dto.StartRegistrationRequest;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.security.jwt.JwtUtils;
 import com.investingapp.backend.security.services.UserDetailsImpl;
 import com.investingapp.backend.service.UserService;
+import com.yubico.webauthn.AssertionRequest;
+
 import jakarta.validation.Valid;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +34,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 // import org.springframework.security.core.GrantedAuthority; // For roles later
 import org.springframework.web.bind.annotation.*;
+import com.investingapp.backend.service.WebAuthnService;
+import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
+import com.yubico.webauthn.AssertionRequest;
+import com.yubico.webauthn.data.AuthenticatorAssertionResponse; // For parsing client response
+import com.yubico.webauthn.data.AuthenticatorAttestationResponse; // For parsing client response
+import com.yubico.webauthn.data.ClientRegistrationExtensionOutputs;
+import com.yubico.webauthn.data.PublicKeyCredential;
+import com.fasterxml.jackson.databind.ObjectMapper; // For parsing JSON from client if needed
+import org.springframework.web.bind.annotation.RequestBody; // Make sure this is used for complex objects
+
 
 // import java.util.List; // For roles later
 // import java.util.stream.Collectors; // For roles later
@@ -35,6 +52,12 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    
+    @Autowired
+    private WebAuthnService webAuthnService;
+    
+    @Autowired // For parsing JSON string from client if not automatically mapped
+    private ObjectMapper objectMapper;
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
@@ -86,77 +109,6 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/setup-2fa/send-otp")
-    public ResponseEntity<?> sendSetupOtp(@Valid @RequestBody OtpRequest otpRequest) {
-        // This endpoint is called by the frontend after successful registration,
-        // when the user provides their phone number for 2FA setup.
-        try {
-            logger.info("Request to send 2FA setup OTP to phone: {} for email: {}", otpRequest.getPhoneNumber(),
-                    otpRequest.getEmail());
-            boolean otpSent = userService.startPhoneNumberVerification(otpRequest.getEmail(),
-                    otpRequest.getPhoneNumber());
-            if (otpSent) {
-                return ResponseEntity.status(HttpStatus.OK)
-                        .body(new MessageResponse("OTP sent to " + otpRequest.getPhoneNumber() + " for 2FA setup."));
-            } else {
-                return ResponseEntity.badRequest().body(
-                        new MessageResponse("Failed to send OTP. Please check the phone number or try again later."));
-            }
-        } catch (IllegalArgumentException e) {
-            logger.error("Error sending setup OTP due to invalid argument: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
-        } catch (Exception e) {
-            logger.error("Error sending setup OTP: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("An error occurred while sending OTP."));
-        }
-    }
-
-    @PostMapping("/setup-2fa/verify-otp")
-    public ResponseEntity<?> verifySetupOtpAndEnable2FA(@Valid @RequestBody OtpVerificationRequest verificationRequest) {
-        try {
-            logger.info("Request to verify setup OTP for email: {}", verificationRequest.getEmail());
-            User user = userService.getUserByEmail(verificationRequest.getEmail()); // Fetch user by email
-            if (user == null || user.getPhoneNumber() == null) {
-                return ResponseEntity.badRequest()
-                        .body(new MessageResponse("User or phone number not found for OTP verification."));
-            }
-
-            boolean verified = userService.checkPhoneNumberVerification(verificationRequest.getEmail(),
-                    user.getPhoneNumber(), verificationRequest.getOtp());
-
-            if (verified) {
-                // 2FA is now enabled by userService.checkPhoneNumberVerification.
-                // Now, log the user in by generating a JWT.
-
-                UserDetailsImpl userDetails = UserDetailsImpl.build(user); // Build UserDetails from the User object
-                Authentication authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()); // Create Authentication object
-
-                SecurityContextHolder.getContext().setAuthentication(authentication); // Set context
-
-                String jwt = jwtUtils.generateJwtToken(authentication); // Generate JWT
-                logger.info("2FA setup OTP verified. JWT generated for user: {}", verificationRequest.getEmail());
-
-                // Return JwtResponse
-                return ResponseEntity.ok(new JwtResponse(jwt,
-                        userDetails.getId(),
-                        userDetails.getUsername()
-                /* , roles if you have them */ ));
-            } else {
-                return ResponseEntity.badRequest()
-                        .body(new MessageResponse("Invalid or expired OTP. 2FA setup failed."));
-            }
-        } catch (RuntimeException e) { // Catch specific exceptions from userService if defined
-            logger.error("Error verifying setup OTP for {}: {}", verificationRequest.getEmail(), e.getMessage());
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage())); // e.g., "User not found..."
-        } catch (Exception e) {
-            logger.error("Generic error verifying setup OTP: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("An error occurred during OTP verification."));
-        }
-    }
-
     // --- LOGIN FLOW (Handles users with and without 2FA enabled) ---
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -171,8 +123,8 @@ public class AuthController {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             User user = userService.getUserById(userDetails.getId()); // Fetch full User entity
 
-            if (user != null && user.isTwoFactorEnabled()) {
-                boolean otpSent = userService.startPhoneNumberVerification(user.getEmail(), user.getPhoneNumber());
+            if (user != null) {
+                boolean otpSent = true;
                 if (otpSent) {
                     logger.info("2FA enabled for user {}. OTP sent for login verification.", user.getEmail());
                     return ResponseEntity.status(HttpStatus.ACCEPTED)
@@ -197,34 +149,124 @@ public class AuthController {
                 .body(new MessageResponse("Login process error.")); // Should not reach here
     }
 
-    @PostMapping("/login/verify-2fa")
-    public ResponseEntity<?> verifyLoginOtpAndIssueJwt(@Valid @RequestBody OtpVerificationRequest verificationRequest) {
-        // ... (existing login 2FA verification logic that issues JWT on success) ...
+    // --- Passkey Registration Endpoints ---
+    @PostMapping("/passkey/register/start")
+    public ResponseEntity<?> startPasskeyRegistration(@RequestBody StartRegistrationRequest request) {
+        // In a real app, ensure user is partially authenticated or has a valid
+        // session/token
+        // if this isn't the absolute first step after providing an email.
+        // For the "AuthFinalize" flow, the user isn't fully logged in yet.
+        // The 'email' would come from the previous step (Plaid linking -> AuthFinalize
+        // form).
         try {
-            logger.info("Attempting to verify login OTP for email: {}", verificationRequest.getEmail());
-            User user = userService.getUserByEmail(verificationRequest.getEmail());
-            if (user == null || user.getPhoneNumber() == null) {
-                return ResponseEntity.badRequest().body(new MessageResponse("User or phone number not found."));
-            }
-
-            boolean otpVerified = userService.checkPhoneNumberVerification(verificationRequest.getEmail(),
-                    user.getPhoneNumber(), verificationRequest.getOtp());
-
-            if (otpVerified) {
-                UserDetailsImpl userDetails = UserDetailsImpl.build(user); // Build UserDetails from the User object
-                Authentication authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                String jwt = jwtUtils.generateJwtToken(authentication);
-                logger.info("Login 2FA OTP verified. JWT generated for user: {}", verificationRequest.getEmail());
-
-                return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername()));
-            } else {
-                /* ... error handling ... */ }
+            logger.info("Starting passkey registration for email: {}", request.getEmail());
+            PublicKeyCredentialCreationOptions creationOptions = webAuthnService.startRegistration(
+                    request.getEmail(),
+                    request.getDisplayName(),
+                    request.getTemporaryPlaidIdentifier() // Pass this along if it's part of this flow
+            );
+            // The frontend needs to store these options (e.g., in sessionStorage)
+            // because they are needed for finishRegistration.
+            // We send them as JSON. The Yubico library can serialize/deserialize them.
+            return ResponseEntity.ok(creationOptions.toJson());
         } catch (Exception e) {
-            /* ... error handling ... */ }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new MessageResponse("Invalid or expired OTP for login."));
+            logger.error("Error starting passkey registration for {}: {}", request.getEmail(), e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error starting passkey registration: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/passkey/register/finish")
+    public ResponseEntity<?> finishPasskeyRegistration(@RequestBody FinishRegistrationRequest request) {
+        try {
+            logger.info("Finishing passkey registration for email: {}", request.getEmail());
+            // Deserialize requestOptionsJson back to PublicKeyCredentialCreationOptions
+            PublicKeyCredentialCreationOptions requestOptions = PublicKeyCredentialCreationOptions
+                    .fromJson(request.getRequestOptionsJson());
+
+            boolean success = webAuthnService.finishRegistration(
+                    request.getEmail(),
+                    request.getCredential(), // This is the JSON string from navigator.credentials.create()
+                    requestOptions);
+
+            if (success) {
+                // Registration successful. Now user needs to "log in" with their new passkey
+                // to get a JWT, or you can issue one here.
+                // For simplicity, let's assume they will now log in.
+                // Or, better yet, log them in here and issue a JWT.
+                User user = userService.getUserByEmail(request.getEmail());
+                if (user == null)
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(new MessageResponse("User not found after passkey registration."));
+
+                UserDetailsImpl userDetails = UserDetailsImpl.build(user);
+                Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
+                        userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                String jwt = jwtUtils.generateJwtToken(authentication);
+
+                logger.info("Passkey registration successful and user {} logged in.", request.getEmail());
+                return ResponseEntity.ok(new JwtResponse(jwt, user.getId(), user.getEmail()));
+            } else {
+                return ResponseEntity.badRequest().body(new MessageResponse("Passkey registration failed."));
+            }
+        } catch (Exception e) {
+            logger.error("Error finishing passkey registration for {}: {}", request.getEmail(), e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error finishing passkey registration: " + e.getMessage()));
+        }
+    }
+
+    // --- Passkey Login Endpoints ---
+    @PostMapping("/passkey/login/start")
+    public ResponseEntity<?> startPasskeyAuthentication(
+            @RequestBody(required = false) StartAuthenticationRequest request) {
+        // 'request' can be null or empty for discoverable credentials (passkeys)
+        // If email is provided, it can help narrow down credentials, but it's optional
+        // for passkeys.
+        String email = (request != null) ? request.getEmail() : null;
+        try {
+            logger.info("Starting passkey authentication, email hint: {}", email);
+            AssertionRequest assertionRequest = webAuthnService.startAuthentication(email);
+            // Frontend needs to store assertionRequest (e.g., in sessionStorage) for
+            // finishAuthentication
+            return ResponseEntity.ok(assertionRequest.toJson());
+        } catch (Exception e) {
+            logger.error("Error starting passkey authentication: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error starting passkey authentication: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/passkey/login/finish")
+    public ResponseEntity<?> finishPasskeyAuthentication(@RequestBody FinishAuthenticationRequest request) {
+        try {
+            logger.info("Finishing passkey authentication.");
+            // Deserialize requestOptionsJson back to AssertionRequest
+            AssertionRequest requestOptions = AssertionRequest.fromJson(request.getRequestOptionsJson());
+
+            Optional<User> userOptional = webAuthnService.finishAuthentication(
+                    request.getCredential(), // This is the JSON string from navigator.credentials.get()
+                    requestOptions);
+
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+                UserDetailsImpl userDetails = UserDetailsImpl.build(user);
+                Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
+                        userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                String jwt = jwtUtils.generateJwtToken(authentication);
+
+                logger.info("Passkey login successful for user {}.", user.getEmail());
+                return ResponseEntity.ok(new JwtResponse(jwt, user.getId(), user.getEmail()));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new MessageResponse("Passkey authentication failed."));
+            }
+        } catch (Exception e) {
+            logger.error("Error finishing passkey authentication: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("Error finishing passkey authentication: " + e.getMessage()));
+        }
     }
 }

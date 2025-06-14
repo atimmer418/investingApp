@@ -18,6 +18,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Check if a user exists with the given email address
     Boolean existsByEmail(String email);
 
+    Optional<User> findByUserHandle(String userHandle);
+
     // You can add more custom query methods here as needed following Spring Data JPA conventions
     // e.g., List<User> findByLastName(String lastName);
 }
