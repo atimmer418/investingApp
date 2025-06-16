@@ -31,6 +31,12 @@ export const routes: Routes = [
     // You could add a canActivate guard here if needed later
   },
   {
+    path: 'get-started',
+    loadComponent: () => import('./components/get-started/get-started.component').then(m => m.GetStartedComponent)
+    // TODO: This route might need to be set as the initial app route for new users,
+    // or integrated into a guard that redirects new users here.
+  },
+  {
     path: 'tabs',
     loadChildren: () => import('./tabs/tabs.routes').then((m) => m.routes),
   },
