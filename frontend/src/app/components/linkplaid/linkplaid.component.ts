@@ -46,8 +46,11 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
   private temporaryUserId: string | null = null; // For anonymous flow
   private isUserAuthenticated: boolean = false; // Determine this based on JWT presence
 
+  // ngrok
+  // private localhost = 'http://192.168.1.166:8080';
+  private localhost = 'https://796b-2600-4040-2a92-8800-a865-27f2-f55c-bf44.ngrok-free.app';
   // Replace with your actual backend API URL
-  private backendApiUrl = 'http://localhost:8080/api'; // Your Spring Boot backend URL
+  private backendApiUrl = `${this.localhost}/api`; // Your Spring Boot backend URL
   private plaidSubscription: Subscription | undefined;
 
 

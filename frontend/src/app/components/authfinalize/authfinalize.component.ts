@@ -98,25 +98,26 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
             const credential = await create(credentialRequestOptions);
 
             // STEP 3: Finish Registration (Send Credential to Backend)
-            this.passkeyService.finishRegistration({ email: userEmail, credential })
-              .subscribe({
-                next: (finishResponse) => {
-                  this.isLoading = false;
-                  this.successMessage = finishResponse; // e.g., "Registration successful."
-                  console.log('Successfully registered passkey!');
-                  // On success, you might navigate them to a "next steps" page or a login prompt.
-                  // this.router.navigate(['/login']);
+            this.passkeyService.finishRegistration({ email: userEmail, credential, temporaryUserId: this.temporaryUserId})
+            .subscribe({
+              next: (response) => {
+                if (response.success && response.jwtToken) {
+                  console.log('Registration and login successful!', response);
                   this.router.navigate(['/survey'], {
-                    // queryParams: { email: this.userEmail }, 
-                    replaceUrl: true 
-                  });
-                },
-                error: (err) => {
-                  this.isLoading = false;
-                  this.errorMessage = `Registration failed: ${err.error || 'Please try again.'}`;
-                  console.error('Error finishing registration:', err);
+                    replaceUrl: true
+                  }); 
+                } else {
+                  // Handle cases where registration might be successful but no JWT (shouldn't happen with current backend logic)
+                  // Or if success is false
+                  this.errorMessage = response.message || 'Registration failed or login did not occur.';
+                  console.error('Registration finish response error:', response.message);
                 }
-              });
+              },
+              error: (err) => {
+                this.errorMessage = err.error?.message || err.message || 'An unknown error occurred during registration finish.';
+                console.error('Error finishing passkey registration:', err);
+              }
+            });
 
           } catch (error: any) {
             this.isLoading = false;

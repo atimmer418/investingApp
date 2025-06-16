@@ -2,17 +2,24 @@
 package com.investingapp.backend.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.investingapp.backend.dto.RegistrationFinishResponse;
 import com.investingapp.backend.model.PasskeyCredential;
+import com.investingapp.backend.model.PendingPlaidConnection;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.PasskeyCredentialRepository;
 import com.investingapp.backend.repository.UserRepository;
+import com.investingapp.backend.security.jwt.JwtUtils;
+import com.investingapp.backend.security.services.UserDetailsServiceImpl;
 import com.yubico.webauthn.*;
 import com.yubico.webauthn.data.*;
 import com.yubico.webauthn.exception.RegistrationFailedException;
-import com.yubico.webauthn.exception.AssertionFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,9 +27,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
-import java.util.Optional;
 
-// This service NO LONGER implements CredentialRepository
 @Service
 public class WebAuthnService {
 
@@ -32,79 +37,90 @@ public class WebAuthnService {
     private final RelyingParty relyingParty;
     private final UserRepository userRepository;
     private final PasskeyCredentialRepository passkeyCredentialRepository;
+    private final JwtUtils jwtUtils;
+    private final UserDetailsServiceImpl userDetailsService;
+    private final PlaidService plaidService;
+    private final EncryptionService encryptionService;
 
     @Autowired
-    public WebAuthnService(RelyingParty relyingParty, UserRepository userRepository, PasskeyCredentialRepository passkeyCredentialRepository) {
+    public WebAuthnService(RelyingParty relyingParty,
+                           UserRepository userRepository,
+                           PasskeyCredentialRepository passkeyCredentialRepository,
+                           JwtUtils jwtUtils,
+                           UserDetailsServiceImpl userDetailsService,
+                           PlaidService plaidService,
+                           EncryptionService encryptionService) {
         this.relyingParty = relyingParty;
         this.userRepository = userRepository;
         this.passkeyCredentialRepository = passkeyCredentialRepository;
+        this.jwtUtils = jwtUtils;
+        this.userDetailsService = userDetailsService;
+        this.plaidService = plaidService;
+        this.encryptionService = encryptionService;
     }
 
-    /**
-     * Starts the passkey registration flow.
-     * Your controller will call this method.
-     * The PublicKeyCredentialCreationOptions MUST be stored in the user's session temporarily.
-     */
     @Transactional
-    public PublicKeyCredentialCreationOptions startRegistrationFlow(String email, String temporaryPlaidUserId) {
-        logger.info("Starting passkey registration for email: {}", email);
+    public PublicKeyCredentialCreationOptions startRegistrationFlow(String email, String temporaryPlaidUserIdFromClient) {
+        logger.info("Starting passkey registration for email: {}, temporaryPlaidUserIdFromClient: {}", email, temporaryPlaidUserIdFromClient);
 
-        // Find user or create a new one. This is where you create the user object right after Plaid linking.
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             logger.info("User with email {} not found, creating a new user.", email);
-            User newUser = new User(email); // Use constructor that only takes email
-            
-            // Generate a persistent, unique, and non-PII handle for this user for WebAuthn
+            User newUser = new User(email); // Assumes User constructor takes email
             byte[] handleBytes = new byte[16];
             random.nextBytes(handleBytes);
             newUser.setUserHandle(Base64.getUrlEncoder().withoutPadding().encodeToString(handleBytes));
-            
-            // At this point, the user is new. Link the Plaid temporary ID.
-            // In a real app, you would fetch the real Plaid access_token using this temp ID and store it.
-            // For now, we'll just mark the user as linked.
-            // IMPORTANT: You should encrypt the real Plaid access token in your database.
-            newUser.setPlaidItemId(temporaryPlaidUserId); // Or whatever mapping you use
-            newUser.setPlaidLinked(true);
 
+            // --- Link Plaid connection using PendingPlaidConnection ---
+            if (temporaryPlaidUserIdFromClient != null && !temporaryPlaidUserIdFromClient.isEmpty()) {
+                PendingPlaidConnection pendingConnection = plaidService.retrieveAndRemovePendingConnection(temporaryPlaidUserIdFromClient);
+                if (pendingConnection != null) {
+                    logger.info("Associating pending Plaid connection (Item ID: {}) with new user (Email: {}) during passkey registration start.",
+                                pendingConnection.getPlaidItemId(), newUser.getEmail());
+                    
+                    String rawPlaidAccessToken = pendingConnection.getPlaidAccessToken(); // Assumes this is raw/decrypted from PlaidService
+                    
+                    newUser.setPlaidAccessToken(encryptionService.encrypt(rawPlaidAccessToken)); // Encrypt for User entity
+                    newUser.setPlaidItemId(pendingConnection.getPlaidItemId());
+                    newUser.setPlaidLinked(true);
+                    logger.info("Plaid info linked to new user {}.", newUser.getEmail());
+                } else {
+                    logger.warn("No valid pending Plaid connection found for temporary ID: {} during passkey registration start for new user {}.",
+                                temporaryPlaidUserIdFromClient, newUser.getEmail());
+                }
+            }
             return userRepository.save(newUser);
         });
 
-        // Ensure existing users have a user handle if they were created before this logic was added
+        // Ensure existing users or newly created user has a user handle
         if (user.getUserHandle() == null || user.getUserHandle().isEmpty()) {
             byte[] handleBytes = new byte[16];
             random.nextBytes(handleBytes);
             user.setUserHandle(Base64.getUrlEncoder().withoutPadding().encodeToString(handleBytes));
-            user = userRepository.save(user);
+            user = userRepository.save(user); 
         }
 
         UserIdentity userIdentity = UserIdentity.builder()
                 .name(user.getEmail())
-                .displayName(user.getEmail()) // Display name can be the email
+                .displayName(user.getEmail())
                 .id(PasskeyCredential.base64UrlToByteArray(user.getUserHandle()))
                 .build();
 
-        StartRegistrationOptions registrationOptions = StartRegistrationOptions.builder()
+        StartRegistrationOptions optionsToPassToRp = StartRegistrationOptions.builder()
             .user(userIdentity)
             .authenticatorSelection(AuthenticatorSelectionCriteria.builder()
-                .residentKey(ResidentKeyRequirement.PREFERRED) // Essential for passkeys
+                .residentKey(ResidentKeyRequirement.PREFERRED)
                 .userVerification(UserVerificationRequirement.PREFERRED)
                 .build())
             .build();
-
-        // The returned options object must be stored server-side (e.g., in HttpSession)
-        // to be retrieved in the finishRegistrationFlow step.
-        return relyingParty.startRegistration(registrationOptions);
+        
+        return relyingParty.startRegistration(optionsToPassToRp);
     }
 
-    /**
-     * Finishes the passkey registration flow.
-     * Your controller will call this method.
-     */
     @Transactional
-    public boolean finishRegistrationFlow(String userEmail, JsonNode registrationJsonFromClient, PublicKeyCredentialCreationOptions requestOptionsFromServer) {
+    public RegistrationFinishResponse finishRegistrationFlow(String userEmail, JsonNode registrationJsonFromClient, String temporaryUserId, PublicKeyCredentialCreationOptions requestOptionsFromServer) {
         logger.info("Finishing passkey registration for email: {}", userEmail);
+        RegistrationResult registrationResult; 
 
-        // THE FIX: The entire flow, including the user lookup, is now inside the try-catch block.
         try {
             User user = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new RegistrationFailedException(new IllegalArgumentException("User not found during finish flow: " + userEmail)));
@@ -112,34 +128,56 @@ public class WebAuthnService {
             PublicKeyCredential<AuthenticatorAttestationResponse, ClientRegistrationExtensionOutputs> pkc =
                 PublicKeyCredential.parseRegistrationResponseJson(registrationJsonFromClient.toString());
 
-            RegistrationResult registrationResult = relyingParty.finishRegistration(FinishRegistrationOptions.builder()
+            // If relyingParty.finishRegistration() completes without throwing an exception,
+            // the cryptographic checks and registration process are considered successful by the Yubico library.
+            registrationResult = relyingParty.finishRegistration(FinishRegistrationOptions.builder()
                     .request(requestOptionsFromServer)
                     .response(pkc)
                     .build());
+
+            // --- If we reach here, Yubico library considers the registration successful. ---
+            // The RegistrationResult object now contains details of the *successful* registration.
+            // No need to check an "isSuccess()" method on registrationResult for this primary success determination.
+            // The fact that no exception was thrown is the key indicator from the Yubico library.
 
             PasskeyCredential newCredential = new PasskeyCredential(
                     user,
                     PasskeyCredential.byteArrayToBase64Url(registrationResult.getKeyId().getId()),
                     PasskeyCredential.byteArrayToBase64Url(registrationResult.getPublicKeyCose()),
                     registrationResult.getSignatureCount(),
-                    "public-key"
+                    "public-key" // Type or description
             );
-            
             newCredential.setFriendlyName("Passkey - " + LocalDateTime.now().withNano(0));
             newCredential.setLastUsedDate(LocalDateTime.now());
             passkeyCredentialRepository.save(newCredential);
-
             logger.info("Passkey successfully registered for user {} with credential ID: {}", userEmail, newCredential.getExternalId());
-            return true;
+
+            // --- User is registered with passkey, now generate JWT ---
+            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            logger.info("User {} authenticated via passkey registration and set in SecurityContext.", userEmail);
+
+            String jwt = jwtUtils.generateJwtToken(authentication);
+            logger.info("JWT generated for user {}.", userEmail);
+
+            return new RegistrationFinishResponse(
+                    true, // Success is true because no exception was thrown and we saved the credential
+                    "Passkey registration successful. User logged in.",
+                    jwt,
+                    user.getId(),
+                    user.getEmail()
+            );
 
         } catch (RegistrationFailedException | IOException e) {
-            // This block now correctly catches failures from user lookup or from the Yubico library.
-            logger.error("Passkey registration failed for user {}: {}", userEmail, e.getMessage());
-            // It's helpful to log the full stack trace for debugging when a registration truly fails.
-            // logger.error("Detailed registration failure", e); 
-            return false;
+            // This catches exceptions from relyingParty.finishRegistration(), JSON parsing, or user not found.
+            logger.error("Passkey registration failed for user {}: {}", userEmail, e.getMessage(), e);
+            // Optionally, you could provide more specific error messages based on the exception type if needed.
+            return new RegistrationFinishResponse(false, "Passkey registration failed: " + e.getMessage(), null, null, userEmail);
+        } catch (Exception e) { // Catch any other unexpected errors during the process
+            logger.error("Unexpected error during passkey registration finish for user {}: {}", userEmail, e.getMessage(), e);
+            return new RegistrationFinishResponse(false, "An unexpected error occurred during registration.", null, null, userEmail);
         }
     }
-
-    // --- Authentication methods would go here, following the same pattern ---
 }

@@ -39,7 +39,9 @@ export class TwoFactorSetupComponent implements OnInit, OnDestroy {
 
   private routeSub: Subscription | undefined;
   private apiSub: Subscription | undefined;
-  private backendApiUrl = 'http://localhost:8080/api/auth';
+  private localhost = '192.168.1.166';
+
+  private backendApiUrl = 'http://${this.localhost}:8080/api/auth';
 
   constructor(
     private route: ActivatedRoute,
