@@ -1,12 +1,12 @@
 <ion-header>
-  <ion-toolbar color="light">
+  <ion-toolbar>
     <!-- Update title to use totalQuestionsInActiveSurvey -->
     <ion-title>{{ currentSurveyType }} (Question {{ currentQuestionIndex + 1 }} of {{ totalQuestionsInActiveSurvey }})</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <!-- Rest of the HTML remains the same, it will bind to `currentQuestion` -->
-<ion-content class="ion-padding-top" *ngIf="currentQuestion">
+<ion-content class="ion-padding-top" *ngIf="currentQuestion" fullscreen="true">
   <ion-text color="dark" class="ion-margin-bottom ion-padding-horizontal">
     <h3>{{ currentQuestion.questionText }}</h3>
   </ion-text>
@@ -27,7 +27,7 @@
   </ion-list>
 </ion-content>
 
-<ion-footer class="ion-padding-horizontal ion-padding-bottom" *ngIf="currentQuestion && totalQuestionsInActiveSurvey > 1">
+<ion-footer class="ion-padding-horizontal ion-padding-bottom ion-safe-area-bottom" *ngIf="currentQuestion && totalQuestionsInActiveSurvey > 1">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-button (click)="previousQuestion()" [disabled]="currentQuestionIndex === 0" fill="clear" color="medium">

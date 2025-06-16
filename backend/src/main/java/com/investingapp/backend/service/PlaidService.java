@@ -131,24 +131,30 @@ public class PlaidService {
         }
 
         ItemPublicTokenExchangeResponse exchangeResponse = response.body();
-        String rawAccessToken = exchangeResponse.getAccessToken();
+        String rawAccessToken = exchangeResponse.getAccessToken(); // Raw token from Plaid
         String itemId = exchangeResponse.getItemId();
 
-        // TODO: Implement actual encryption
-        // String encryptedAccessToken = encryptionService.encrypt(rawAccessToken);
-        // For now, storing raw (NOT FOR PRODUCTION)
-        String storedAccessToken = rawAccessToken; // Replace with encryptedAccessToken
+        // --- ENCRYPT THE ACCESS TOKEN ---
+        String encryptedAccessToken;
+        try {
+            encryptedAccessToken = encryptionService.encrypt(rawAccessToken);
+        } catch (Exception e) {
+            logger.error("Failed to encrypt Plaid access token for temporaryUserId {}: {}", temporaryUserId, e.getMessage(), e);
+            // Decide on failure strategy: throw exception, or log and potentially store raw (NOT RECOMMENDED)
+            // For security, it's better to fail the operation if encryption fails.
+            throw new IOException("Failed to secure Plaid access token.", e);
+        }
 
         PendingPlaidConnection pendingConnection = new PendingPlaidConnection();
         pendingConnection.setTemporaryUserId(temporaryUserId);
-        pendingConnection.setPlaidAccessToken(storedAccessToken); // Store the (ideally encrypted) token
+        pendingConnection.setPlaidAccessToken(encryptedAccessToken); // Store the ENCRYPTED token
         pendingConnection.setPlaidItemId(itemId);
-        pendingConnection.setCreateDate(LocalDateTime.now()); // Set creation time
-        pendingConnection.setExpireDate(LocalDateTime.now().plusHours(24)); // Set expiry time (e.g., 24 hours)
+        pendingConnection.setCreateDate(LocalDateTime.now());
+        pendingConnection.setExpireDate(LocalDateTime.now().plusHours(24)); // Example: 24-hour expiry
         pendingConnection.setStatus(PendingPlaidConnection.Status.PENDING_ACCOUNT_CREATION);
 
         pendingPlaidConnectionRepository.save(pendingConnection);
-        logger.info("Plaid token stored temporarily in DB for ID: {}. Expires at: {}", temporaryUserId, pendingConnection.getExpireDate());
+        logger.info("Encrypted Plaid token stored temporarily in DB for ID: {}. Expires at: {}", temporaryUserId, pendingConnection.getExpireDate());
     }
 
     // Modified to use the database repository
@@ -156,23 +162,34 @@ public class PlaidService {
     public PendingPlaidConnection retrieveAndRemovePendingConnection(String temporaryUserId) {
         Optional<PendingPlaidConnection> optConnection = pendingPlaidConnectionRepository
                 .findByTemporaryUserIdAndStatus(temporaryUserId, PendingPlaidConnection.Status.PENDING_ACCOUNT_CREATION);
-
+    
         if (optConnection.isPresent()) {
             PendingPlaidConnection connection = optConnection.get();
             if (connection.isExpired()) {
                 logger.warn("Pending Plaid connection for {} has expired. Marking as EXPIRED.", temporaryUserId);
                 connection.setStatus(PendingPlaidConnection.Status.EXPIRED);
-                pendingPlaidConnectionRepository.save(connection); // Update status to EXPIRED
-                return null; // Treat as not found if expired
+                pendingPlaidConnectionRepository.save(connection);
+                return null;
             }
-            // Mark as CLAIMED before returning, or delete. Deleting is simpler if no audit needed.
-            // connection.setStatus(PendingPlaidConnection.Status.CLAIMED);
-            // pendingPlaidConnectionRepository.save(connection);
-            pendingPlaidConnectionRepository.delete(connection); // Simpler: delete after retrieval
-            logger.info("Retrieved and removed pending Plaid connection from DB for {}", temporaryUserId);
-
-            // TODO: Implement actual decryption if tokens are encrypted in this table
-            // connection.setPlaidAccessToken(encryptionService.decrypt(connection.getPlaidAccessToken()));
+    
+            // --- DECRYPT THE ACCESS TOKEN ---
+            String encryptedAccessToken = connection.getPlaidAccessToken();
+            String rawAccessToken;
+            try {
+                rawAccessToken = encryptionService.decrypt(encryptedAccessToken);
+            } catch (Exception e) {
+                logger.error("Failed to decrypt Plaid access token from pending connection for temporaryUserId {}: {}", temporaryUserId, e.getMessage(), e);
+                // If decryption fails, the token is unusable. Treat as if not found or an error.
+                // You might want to mark it as problematic or delete it.
+                // For now, returning null indicates the process can't proceed with this token.
+                pendingPlaidConnectionRepository.delete(connection); // Clean up bad record
+                return null;
+            }
+            // Set the raw token back on the object being returned (or a DTO)
+            connection.setPlaidAccessToken(rawAccessToken); 
+    
+            pendingPlaidConnectionRepository.delete(connection);
+            logger.info("Retrieved, decrypted, and removed pending Plaid connection from DB for {}", temporaryUserId);
             return connection;
         }
         logger.info("No PENDING Plaid connection found in DB for temporary ID: {}", temporaryUserId);

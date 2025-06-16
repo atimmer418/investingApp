@@ -24,26 +24,35 @@ public class UserDetailsImpl implements UserDetails {
     // For now, we'll assign a default "ROLE_USER". You can expand this later.
     private Collection<? extends GrantedAuthority> authorities;
 
-    public UserDetailsImpl(Long id, String email, String password,
-                           Collection<? extends GrantedAuthority> authorities) {
+    @Override
+    public String getPassword() {
+        // If user is passkey-only, this can return null or a placeholder.
+        // If you still support password login, this should return the hashed password.
+        // For now, returning null as we focus on passkeys.
+        // The DaoAuthenticationProvider will fail if it tries to authenticate this user
+        // with a password.
+        return null;
+    }
+
+    public UserDetailsImpl(Long id, String email,
+            Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.email = email;
-        this.password = password;
         this.authorities = authorities;
     }
 
     public static UserDetailsImpl build(User user) {
-        // For now, every user gets ROLE_USER. You can customize this based on user roles in your DB.
+        // For now, every user gets ROLE_USER. You can customize this based on user
+        // roles in your DB.
         List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
         // If you had roles stored in User entity:
         // List<GrantedAuthority> authorities = user.getRoles().stream()
-        //        .map(role -> new SimpleGrantedAuthority(role.getName().name()))
-        //        .collect(Collectors.toList());
+        // .map(role -> new SimpleGrantedAuthority(role.getName().name()))
+        // .collect(Collectors.toList());
 
         return new UserDetailsImpl(
                 user.getId(),
                 user.getEmail(),
-                user.getPassword(),
                 authorities);
     }
 
@@ -54,11 +63,6 @@ public class UserDetailsImpl implements UserDetails {
 
     public Long getId() {
         return id;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
     }
 
     @Override
@@ -88,8 +92,10 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         UserDetailsImpl user = (UserDetailsImpl) o;
         return Objects.equals(id, user.id);
     }

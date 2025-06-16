@@ -4,16 +4,17 @@ package com.investingapp.backend.controller;
 import com.investingapp.backend.dto.JwtResponse;
 import com.investingapp.backend.dto.LoginRequest;
 import com.investingapp.backend.dto.MessageResponse; // You created this earlier
-import com.investingapp.backend.dto.OtpRequest;
-import com.investingapp.backend.dto.OtpVerificationRequest;
 import com.investingapp.backend.dto.RegisterRequest;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.security.jwt.JwtUtils;
 import com.investingapp.backend.security.services.UserDetailsImpl;
 import com.investingapp.backend.service.UserService;
+import com.yubico.webauthn.AssertionRequest;
+
 import jakarta.validation.Valid;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 // import org.springframework.security.core.GrantedAuthority; // For roles later
 import org.springframework.web.bind.annotation.*;
+import com.investingapp.backend.service.WebAuthnService;
+import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
+import com.yubico.webauthn.AssertionRequest;
+import com.yubico.webauthn.data.AuthenticatorAssertionResponse; // For parsing client response
+import com.yubico.webauthn.data.AuthenticatorAttestationResponse; // For parsing client response
+import com.yubico.webauthn.data.ClientRegistrationExtensionOutputs;
+import com.yubico.webauthn.data.PublicKeyCredential;
+import com.fasterxml.jackson.databind.ObjectMapper; // For parsing JSON from client if needed
+import org.springframework.web.bind.annotation.RequestBody; // Make sure this is used for complex objects
+
 
 // import java.util.List; // For roles later
 // import java.util.stream.Collectors; // For roles later
@@ -35,6 +46,12 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    
+    @Autowired
+    private WebAuthnService webAuthnService;
+    
+    @Autowired // For parsing JSON string from client if not automatically mapped
+    private ObjectMapper objectMapper;
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
@@ -86,77 +103,6 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/setup-2fa/send-otp")
-    public ResponseEntity<?> sendSetupOtp(@Valid @RequestBody OtpRequest otpRequest) {
-        // This endpoint is called by the frontend after successful registration,
-        // when the user provides their phone number for 2FA setup.
-        try {
-            logger.info("Request to send 2FA setup OTP to phone: {} for email: {}", otpRequest.getPhoneNumber(),
-                    otpRequest.getEmail());
-            boolean otpSent = userService.startPhoneNumberVerification(otpRequest.getEmail(),
-                    otpRequest.getPhoneNumber());
-            if (otpSent) {
-                return ResponseEntity.status(HttpStatus.OK)
-                        .body(new MessageResponse("OTP sent to " + otpRequest.getPhoneNumber() + " for 2FA setup."));
-            } else {
-                return ResponseEntity.badRequest().body(
-                        new MessageResponse("Failed to send OTP. Please check the phone number or try again later."));
-            }
-        } catch (IllegalArgumentException e) {
-            logger.error("Error sending setup OTP due to invalid argument: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
-        } catch (Exception e) {
-            logger.error("Error sending setup OTP: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("An error occurred while sending OTP."));
-        }
-    }
-
-    @PostMapping("/setup-2fa/verify-otp")
-    public ResponseEntity<?> verifySetupOtpAndEnable2FA(@Valid @RequestBody OtpVerificationRequest verificationRequest) {
-        try {
-            logger.info("Request to verify setup OTP for email: {}", verificationRequest.getEmail());
-            User user = userService.getUserByEmail(verificationRequest.getEmail()); // Fetch user by email
-            if (user == null || user.getPhoneNumber() == null) {
-                return ResponseEntity.badRequest()
-                        .body(new MessageResponse("User or phone number not found for OTP verification."));
-            }
-
-            boolean verified = userService.checkPhoneNumberVerification(verificationRequest.getEmail(),
-                    user.getPhoneNumber(), verificationRequest.getOtp());
-
-            if (verified) {
-                // 2FA is now enabled by userService.checkPhoneNumberVerification.
-                // Now, log the user in by generating a JWT.
-
-                UserDetailsImpl userDetails = UserDetailsImpl.build(user); // Build UserDetails from the User object
-                Authentication authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()); // Create Authentication object
-
-                SecurityContextHolder.getContext().setAuthentication(authentication); // Set context
-
-                String jwt = jwtUtils.generateJwtToken(authentication); // Generate JWT
-                logger.info("2FA setup OTP verified. JWT generated for user: {}", verificationRequest.getEmail());
-
-                // Return JwtResponse
-                return ResponseEntity.ok(new JwtResponse(jwt,
-                        userDetails.getId(),
-                        userDetails.getUsername()
-                /* , roles if you have them */ ));
-            } else {
-                return ResponseEntity.badRequest()
-                        .body(new MessageResponse("Invalid or expired OTP. 2FA setup failed."));
-            }
-        } catch (RuntimeException e) { // Catch specific exceptions from userService if defined
-            logger.error("Error verifying setup OTP for {}: {}", verificationRequest.getEmail(), e.getMessage());
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage())); // e.g., "User not found..."
-        } catch (Exception e) {
-            logger.error("Generic error verifying setup OTP: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("An error occurred during OTP verification."));
-        }
-    }
-
     // --- LOGIN FLOW (Handles users with and without 2FA enabled) ---
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -171,8 +117,8 @@ public class AuthController {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             User user = userService.getUserById(userDetails.getId()); // Fetch full User entity
 
-            if (user != null && user.isTwoFactorEnabled()) {
-                boolean otpSent = userService.startPhoneNumberVerification(user.getEmail(), user.getPhoneNumber());
+            if (user != null) {
+                boolean otpSent = true;
                 if (otpSent) {
                     logger.info("2FA enabled for user {}. OTP sent for login verification.", user.getEmail());
                     return ResponseEntity.status(HttpStatus.ACCEPTED)
@@ -197,34 +143,4 @@ public class AuthController {
                 .body(new MessageResponse("Login process error.")); // Should not reach here
     }
 
-    @PostMapping("/login/verify-2fa")
-    public ResponseEntity<?> verifyLoginOtpAndIssueJwt(@Valid @RequestBody OtpVerificationRequest verificationRequest) {
-        // ... (existing login 2FA verification logic that issues JWT on success) ...
-        try {
-            logger.info("Attempting to verify login OTP for email: {}", verificationRequest.getEmail());
-            User user = userService.getUserByEmail(verificationRequest.getEmail());
-            if (user == null || user.getPhoneNumber() == null) {
-                return ResponseEntity.badRequest().body(new MessageResponse("User or phone number not found."));
-            }
-
-            boolean otpVerified = userService.checkPhoneNumberVerification(verificationRequest.getEmail(),
-                    user.getPhoneNumber(), verificationRequest.getOtp());
-
-            if (otpVerified) {
-                UserDetailsImpl userDetails = UserDetailsImpl.build(user); // Build UserDetails from the User object
-                Authentication authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                String jwt = jwtUtils.generateJwtToken(authentication);
-                logger.info("Login 2FA OTP verified. JWT generated for user: {}", verificationRequest.getEmail());
-
-                return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername()));
-            } else {
-                /* ... error handling ... */ }
-        } catch (Exception e) {
-            /* ... error handling ... */ }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new MessageResponse("Invalid or expired OTP for login."));
-    }
 }

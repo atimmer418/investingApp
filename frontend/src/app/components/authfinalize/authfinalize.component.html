@@ -1,11 +1,5 @@
 <ion-header [translucent]="true">
   <ion-toolbar color="primary">
-    <!-- Optional: Add a back button if appropriate for the flow -->
-    <!-- <ion-buttons slot="start">
-      <ion-button (click)="goBack()">
-        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons> -->
     <ion-title>✨ Create Your Account</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -13,13 +7,14 @@
 <ion-content class="ion-padding">
   <div class="form-container">
     <ion-text color="dark" class="ion-text-center">
-      <h2>Your secure login and recovery info.</h2>
+      <h2>Your secure login and recovery info</h2>
     </ion-text>
 
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate class="ion-margin-top">
+    <!-- The (ngSubmit) is removed to prevent double-firing. The click handler is sufficient. -->
+    <form [formGroup]="registerForm" novalidate class="ion-margin-top">
       <ion-list lines="full" class="ion-no-margin ion-no-padding">
         <ion-item>
-          <ion-label position="floating">🟦 Email Address</ion-label>
+          <ion-label position="floating">Email Address</ion-label>
           <ion-input type="email" formControlName="email" required email></ion-input>
         </ion-item>
         <div class="explanation-text">
@@ -35,15 +30,28 @@
         <ion-text color="dark">
           <h3>Create a passkey</h3>
         </ion-text>
-        <ion-button expand="block" class="ion-margin-top" (click)="onSubmit()" [disabled]="registerForm.invalid">
-          [Continue with Face ID / biometrics]
+        
+        <!-- --- MODIFIED BUTTON --- -->
+        <ion-button 
+            expand="block" 
+            class="ion-margin-top" 
+            type="button"  
+            (click)="createPasskey()" 
+            [disabled]="registerForm.invalid || isLoading">
+          
+          <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+          <span *ngIf="!isLoading">Continue with Face ID / Fingerprint</span>
+          <span *ngIf="isLoading">Follow browser prompt...</span>
+
         </ion-button>
+        
         <div class="explanation-text ion-text-center ion-margin-top">
-          <ion-text color="medium">You won’t need a password. Your device will securely log you in using Face ID or fingerprint.</ion-text>
+          <ion-text color="medium">You won’t need a password. Your device will securely log you in using Face ID or another passkey.</ion-text>
         </div>
       </div>
     </form>
 
+    <!-- Feedback Messages -->
     <div *ngIf="errorMessage" class="ion-text-center ion-margin-top error-message-global">
       <ion-text color="danger">{{ errorMessage }}</ion-text>
     </div>

@@ -10,7 +10,7 @@ ion-list {
     margin-bottom: 15px; // Slightly reduced margin
     font-size: 1.2em; // Adjusted for iOS feel
     font-weight: 600;
-    color: #8E8E93; // iOS systemGrayColor
+    color: var(--ion-text-color, #222);; // iOS systemGrayColor
     text-align: center; // Centered for better iOS alignment
   }
   
@@ -22,16 +22,16 @@ ion-list {
   //   font-weight: normal;
   // }
   
-  .selected-option {
-    // border: 2px solid #007AFF; // Removed as checkmark will indicate selection
-    // background-color: rgba(0, 122, 255, 0.05); // Very subtle tint for selection - REMOVED
-    // Visual indication is now on the chip itself.
+  // .selected-option {
+  //   // border: 2px solid #007AFF; // Removed as checkmark will indicate selection
+  //   // background-color: rgba(0, 122, 255, 0.05); // Very subtle tint for selection - REMOVED
+  //   // Visual indication is now on the chip itself.
 
-    .survey-option-chip {
-      background-color: #007AFF; // iOS primary blue
-      color: #ffffff; // White text for contrast
-    }
-  }
+  //   .survey-option-chip {
+  //     background-color: #007AFF; // iOS primary blue
+  //     color: #ffffff; // White text for contrast
+  //   }
+  // }
   
   // Styling for the checkmark icon
   ion-icon[name="checkmark-circle"] {
@@ -46,37 +46,66 @@ ion-list {
   
   // Footer styling to prevent overlap
   ion-footer {
-    ion-toolbar {
-      // Add styles if needed, e.g., background, padding
-    }
+    padding-bottom: env(safe-area-inset-bottom);
+    background: #fff; // Optional: make it visually distinct
   }
 
-  .full-width-chip {
-  display: block;              // Forces each chip to be on its own line
-  width: 96%;                  // Makes it full width of parent
-  max-width: 100vw;            // Ensures it doesn't overflow screen
-  margin-bottom: 0.5rem;       // Optional spacing between chips
-  --padding-start: 1rem;       // Optional: control internal padding
-  --padding-end: 1rem;
-  --background: var(--ion-color-light); // Optional: custom background
-  --color: var(--ion-color-dark);       // Optional: custom text color
+//   .full-width-chip {
+//   display: block;              // Forces each chip to be on its own line
+//   width: 96%;                  // Makes it full width of parent
+//   max-width: 100vw;            // Ensures it doesn't overflow screen
+//   margin-bottom: 0.5rem;       // Optional spacing between chips
+//   --padding-start: 1rem;       // Optional: control internal padding
+//   --padding-end: 1rem;
+//   --background: var(--ion-color-light); // Optional: custom background
+//   --color: var(--ion-color-dark);       // Optional: custom text color
 
-  text-align: center;
-  justify-content: center; 
-  align-items: center;
+//   text-align: center;
+//   justify-content: center; 
+//   align-items: center;
 
+//   font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+//   font-weight: 500; // optional: adjust for iOS look
+//   font-size: 0.9rem;  // optional: match system size
+// }
+
+ion-header {
+  ion-toolbar {
+    background-color: #3880ff; // Replace with your desired color
+    --background: #3880ff;     // Recommended for Ionic theming
+    color: white;              // Optional: set text color if needed
+  }
+}
+
+.full-width-chip {
+  width: 100%;
+  margin-bottom: 12px;
+  border-radius: 24px;
+  border: 2px solid lightgray;
+  padding: 12px 12px;
+  font-size: 1.1rem;
+  --background: var(--ion-background-color, #ffffff);
+  --color: var(--ion-text-color, #222);
+  --border-color: var(--ion-color-medium, #ccc);
+  --box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: background 0.2s, color 0.2s;
   font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-weight: 500; // optional: adjust for iOS look
-  font-size: 0.9rem;  // optional: match system size
+}
+
+.selected-option {
+  --background: var(--ion-color-primary, #3880ff);
+  --color: var(--ion-color-primary-contrast, #fff);
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(56,128,255,0.08);
 }
 
 ion-title {
-  color: #000000; // Standard black for titles
+  color: white; // Standard black for titles
   text-align: center; // Centered for better iOS alignment
   margin: 10px 0; // Added margin for spacing
   padding: 0 15px; // Added padding for better touch targets
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; // iOS system font stack
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); // Optional: subtle shadow for depth
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.9); // Optional: subtle shadow for depth
   text-decoration: none; // Ensure no underline
   box-sizing: border-box; // Ensures padding is included in width calculations
   font-size: 1.2em; // Adjusted for iOS feel

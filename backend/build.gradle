@@ -30,7 +30,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'com.plaid:plaid-java:18.0.0'
-	implementation 'com.twilio.sdk:twilio:9.+'
+	implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+	implementation 'com.yubico:webauthn-server-core:2.7.0' // Check for the latest version
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5' // Or latest 0.11.x or 0.12.x if available and compatible
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'  // Choose one implementation
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // For Jackson JSON processing with JWTs
