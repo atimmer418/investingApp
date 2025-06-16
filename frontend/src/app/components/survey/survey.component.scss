@@ -46,9 +46,8 @@ ion-list {
   
   // Footer styling to prevent overlap
   ion-footer {
-    ion-toolbar {
-      // Add styles if needed, e.g., background, padding
-    }
+    padding-bottom: env(safe-area-inset-bottom);
+    background: #fff; // Optional: make it visually distinct
   }
 
   .full-width-chip {

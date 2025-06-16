@@ -6,7 +6,7 @@
 </ion-header>
 
 <!-- Rest of the HTML remains the same, it will bind to `currentQuestion` -->
-<ion-content class="ion-padding-top" *ngIf="currentQuestion">
+<ion-content class="ion-padding-top" *ngIf="currentQuestion" fullscreen="true">
   <ion-text color="dark" class="ion-margin-bottom ion-padding-horizontal">
     <h3>{{ currentQuestion.questionText }}</h3>
   </ion-text>
