@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar color="light">
+  <ion-toolbar>
     <!-- Update title to use totalQuestionsInActiveSurvey -->
     <ion-title>{{ currentSurveyType }} (Question {{ currentQuestionIndex + 1 }} of {{ totalQuestionsInActiveSurvey }})</ion-title>
   </ion-toolbar>
@@ -27,7 +27,7 @@
   </ion-list>
 </ion-content>
 
-<ion-footer class="ion-padding-horizontal ion-padding-bottom" *ngIf="currentQuestion && totalQuestionsInActiveSurvey > 1">
+<ion-footer class="ion-padding-horizontal ion-padding-bottom ion-safe-area-bottom" *ngIf="currentQuestion && totalQuestionsInActiveSurvey > 1">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-button (click)="previousQuestion()" [disabled]="currentQuestionIndex === 0" fill="clear" color="medium">
