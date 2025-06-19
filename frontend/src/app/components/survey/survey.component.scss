@@ -43,11 +43,15 @@ ion-list {
   ion-content {
     --padding-bottom: 70px; // Adjust as needed based on footer height
   }
+
+  ion-footer ion-toolbar {
+    padding-bottom: env(safe-area-inset-bottom);
+    --background: var(--ion-color-primary, #000); /* or whatever your dark footer color is */
+  }
   
   // Footer styling to prevent overlap
   ion-footer {
-    padding-bottom: env(safe-area-inset-bottom);
-    background: #fff; // Optional: make it visually distinct
+    padding-bottom: 0;
   }
 
 //   .full-width-chip {

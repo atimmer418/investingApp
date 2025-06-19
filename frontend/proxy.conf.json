@@ -1,0 +1,12 @@
+{
+    "/.well-known/apple-app-site-association": {
+      "target": "http://localhost:8100/assets/.well-known/apple-app-site-association",
+      "secure": false,
+      "changeOrigin": true,
+      "logLevel": "debug",
+      "pathRewrite": {
+        "^/\\.well-known/apple-app-site-association": ""
+      }
+    }
+  }
+  
