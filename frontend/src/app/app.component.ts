@@ -5,6 +5,9 @@ import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { Platform } from '@ionic/angular/standalone'; // Import Platform
 import { SplashScreen } from '@capacitor/splash-screen'; // Import SplashScreen
+import { register } from 'swiper/element/bundle';
+
+register();
 
 @Component({
   selector: 'app-root',
