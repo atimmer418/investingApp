@@ -1,36 +1,124 @@
 <ion-header>
-  <ion-toolbar>
-    <!-- Update title to use totalQuestionsInActiveSurvey -->
-    <ion-title>{{ currentSurveyType }} (Question {{ currentQuestionIndex + 1 }} of {{ totalQuestionsInActiveSurvey }})</ion-title>
+  <ion-toolbar color="light">
+    <ion-title *ngIf="currentQuestion">
+      <span *ngIf="!currentQuestion.isPaycheckSelectionStep && !currentQuestion.isPercentageQuestion">
+        {{ currentSurveyType }} (Question {{ currentQuestionIndex + 1 }} of {{ totalQuestionsInActiveSurvey }})
+      </span>
+      <span *ngIf="currentQuestion.isPaycheckSelectionStep">
+        {{ currentSurveyType }} - Select Income
+      </span>
+      <span *ngIf="currentQuestion.isPercentageQuestion">
+        {{ currentSurveyType }} - Set Percentage
+      </span>
+    </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<!-- Rest of the HTML remains the same, it will bind to `currentQuestion` -->
-<ion-content class="ion-padding-top" *ngIf="currentQuestion" fullscreen="true">
-  <ion-text color="dark" class="ion-margin-bottom ion-padding-horizontal">
-    <h3>{{ currentQuestion.questionText }}</h3>
-  </ion-text>
+<ion-content class="ion-padding-top" fullscreen="true">
 
-  <ion-list lines="inset" inset="true" mode="ios">
-    <ion-chip
-      *ngFor="let option of currentQuestion.responseChoices; let i = index"
-      button
-      (click)="selectAnswerAndProceed(option.id)"
-      detail="false"
-      [outline]="true"
-      class="full-width-chip"
-      [class.selected-option]="currentQuestion.answer === option.id"
-    >
-      {{ option.text }}
-      <ion-icon *ngIf="currentQuestion.answer === option.id" name="checkmark-circle" slot="end" color="primary"></ion-icon>
-    </ion-chip>
-  </ion-list>
+  <!-- Initial Paycheck Selection Step -->
+  <div *ngIf="currentQuestion?.isPaycheckSelectionStep">
+    <ion-text color="dark" class="ion-margin-bottom ion-padding-horizontal">
+      <h3>{{ currentQuestion?.questionText }}</h3>
+      <p class="ion-margin-top">Choose which income sources you'd like to automatically invest from.</p>
+    </ion-text>
+
+    <div *ngIf="isLoadingPaychecks" class="ion-text-center ion-padding">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading your income sources...</p>
+    </div>
+
+    <ion-text color="danger" *ngIf="paycheckErrorMessage && !isLoadingPaychecks" class="ion-padding">
+      <p>{{ paycheckErrorMessage }}</p>
+    </ion-text>
+
+    <div *ngIf="!isLoadingPaychecks && allPaycheckSources.length > 0">
+      <ion-list lines="full" inset="true" mode="ios">
+        <ion-item *ngFor="let source of allPaycheckSources" class="paycheck-item">
+          <ion-checkbox slot="start"
+                        [id]="'paycheck-' + source.accountId"
+                        (ionChange)="togglePaycheckSourceSelection(source, $event)"></ion-checkbox>
+          <ion-label>
+            <h2>{{ source.name }}</h2>
+            <p>Last: ${{ source.lastAmount | number:'1.2-2' }} on {{ source.lastDate | date:'shortDate' }} ({{ source.frequency }})</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
+    <div *ngIf="!isLoadingPaychecks && allPaycheckSources.length === 0 && !paycheckErrorMessage" class="ion-padding ion-text-center">
+        <p>We couldn't find any recurring income sources from your linked accounts yet.</p>
+        <p>You can skip this step for now and set it up later.</p>
+    </div>
+
+    <ion-button expand="block" (click)="proceedFromPaycheckSelection()"
+                [disabled]="isLoadingPaychecks"
+                class="ion-margin">
+      Continue
+    </ion-button>
+  </div>
+
+  <!-- Dynamic Percentage Setting Step -->
+  <div *ngIf="currentQuestion?.isPercentageQuestion && currentQuestion?.relatedPaycheck">
+    <ion-text color="dark" class="ion-margin-bottom ion-padding-horizontal">
+      <h3>{{ currentQuestion?.questionText }}</h3>
+      <p class="ion-margin-top">How much of this income source ({{ currentQuestion?.relatedPaycheck?.name }}) would you like to invest each time you get paid?</p>
+    </ion-text>
+
+    <div class="ion-padding percentage-config-item">
+      <ion-item lines="none">
+        <ion-label position="stacked" class="percentage-label">Investment Percentage: {{ getDisplayPercentage() }}%</ion-label>
+      </ion-item>
+      <ion-range
+        min="0"
+        max="100"
+        step="1"
+        snaps="true"
+        ticks="true"
+        color="primary"
+        [value]="getDisplayPercentage()"
+        (ionChange)="handlePercentageChange($event)">
+        <ion-label slot="start">0%</ion-label>
+        <ion-label slot="end">100%</ion-label>
+      </ion-range>
+    </div>
+
+    <ion-button expand="block" (click)="submitPercentageAndProceed()" class="ion-margin">
+      Set Percentage & Continue
+    </ion-button>
+  </div>
+
+
+  <!-- Standard Question Display (e.g., iq2_stock_preference) -->
+  <div *ngIf="currentQuestion && !currentQuestion.isPaycheckSelectionStep && !currentQuestion.isPercentageQuestion">
+    <ion-text color="dark" class="ion-margin-bottom ion-padding-horizontal">
+      <h3>{{ currentQuestion.questionText }}</h3>
+    </ion-text>
+    <ion-list lines="inset" inset="true" mode="ios">
+      <ion-chip
+        *ngFor="let option of currentQuestion.responseChoices; let i = index"
+        button
+        (click)="selectAnswerAndProceed(option.id)"
+        detail="false"
+        [outline]="true"
+        class="full-width-chip"
+        [class.selected-option]="currentQuestion.answer === option.id"
+      >
+        {{ option.text }}
+        <ion-icon *ngIf="currentQuestion.answer === option.id" name="checkmark-circle" slot="end" color="primary"></ion-icon>
+      </ion-chip>
+    </ion-list>
+  </div>
+
 </ion-content>
 
-<ion-footer class="ion-padding-bottom" *ngIf="currentQuestion && totalQuestionsInActiveSurvey > 1">
+<ion-footer class="ion-padding-horizontal ion-padding-bottom" 
+            *ngIf="currentQuestion && (!currentQuestion.isPaycheckSelectionStep && !currentQuestion.isPercentageQuestion) && totalQuestionsInActiveSurvey > 1">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-button (click)="previousQuestion()" [disabled]="currentQuestionIndex === 0" fill="clear" color="medium">
+      <ion-button (click)="previousQuestion()" 
+                  [disabled]="currentQuestionIndex === 0 || (currentSurveyType === SurveyType.InvestmentSetup && activeSurveyQuestions[currentQuestionIndex-1]?.isPercentageQuestion && !activeSurveyQuestions[currentQuestionIndex-2]?.isPaycheckSelectionStep)" 
+                  fill="clear" color="medium">
+        <!-- Logic for disabling previous on first percentage Q needs refinement if you want to go back to selection step -->
         <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
         Previous
       </ion-button>
