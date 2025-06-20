@@ -61,7 +61,10 @@ export class GetStartedComponent implements OnInit {
   getSetUp() {
     // TODO: Implement navigation to the initial setup/profile creation if different from 'Start Investing'
     console.log('Get Set Up clicked');
-    // Example: this.router.navigate(['/setup-profile']);
+    localStorage.setItem('getStartedCompleted', 'true');
+    this.router.navigate(['/survey'], {
+      replaceUrl: true
+    }); 
   }
 
   // Optional: If you need to interact with slides programmatically

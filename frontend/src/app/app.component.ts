@@ -44,6 +44,7 @@ export class AppComponent implements OnInit {
     // (Your existing test scenarios for localStorage - keep them as they are useful)
     // Scenario 1: Fresh Start
     localStorage.clear();
+    localStorage.setItem('getStartedCompleted', 'false');
     localStorage.setItem('initialSurveyCompleted', 'false');
     localStorage.setItem('linkplaidCompleted', 'false');
     localStorage.setItem('investmentSurveyCompleted', 'false');
@@ -57,6 +58,7 @@ export class AppComponent implements OnInit {
   }
 
   checkSurveyStatusAndNavigate(): void {
+    const getStartedCompleted = localStorage.getItem('getStartedCompleted') === 'true';
     const initialSurveyCompleted = localStorage.getItem('initialSurveyCompleted') === 'true';
     const linkplaidCompleted = localStorage.getItem('linkplaidCompleted') === 'true';
     const investmentSurveyCompleted = localStorage.getItem('investmentSurveyCompleted') === 'true';
@@ -68,6 +70,7 @@ export class AppComponent implements OnInit {
     console.log("[AppComponent] checkSurveyStatusAndNavigate CALLED");
     console.log("  Current Router URL:", this.router.url);
     console.log("  FLAGS FROM LOCALSTORAGE:");
+    console.log("    getStartedCompleted:", getStartedCompleted);
     console.log("    initialSurveyCompleted:", initialSurveyCompleted);
     console.log("    linkplaidCompleted:", linkplaidCompleted);
     console.log("    investmentSurveyCompleted:", investmentSurveyCompleted);
@@ -79,7 +82,10 @@ export class AppComponent implements OnInit {
     let targetRoute: string | null = null;
     let decisionReason: string = "";
 
-    if (!initialSurveyCompleted) {
+    if (!getStartedCompleted) {
+      targetRoute = '/get-started';
+      decisionReason = "Get Started NOT complete.";
+    } else if (!initialSurveyCompleted) {
       targetRoute = '/survey';
       decisionReason = "Initial survey NOT complete.";
     } else if (!linkplaidCompleted) {

@@ -1,0 +1,35 @@
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { PaycheckSource } from '../models/plaid/paycheck-source.model';
+import { SelectedPaycheck } from '../models/plaid/selected-paycheck.model';
+
+// ngrok
+const BACKEND_API_URL = 'https://796b-2600-4040-2a92-8800-a865-27f2-f55c-bf44.ngrok-free.app/api'; // Example from your logs
+
+@Injectable({
+  providedIn: 'root'
+})
+export class PlaidDataService {
+
+  constructor(private http: HttpClient) { }
+
+  private getAuthHeaders(): HttpHeaders {
+    let headers = new HttpHeaders();
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    // --- ADD THIS HEADER TO SKIP NGROK BROWSER WARNING ---
+    headers = headers.set('ngrok-skip-browser-warning', 'true'); // Or any non-empty value
+    return headers;
+  }
+
+  getPaycheckSources(): Observable<PaycheckSource[]> {
+    return this.http.get<PaycheckSource[]>(`${BACKEND_API_URL}/income/paycheck_sources`, { headers: this.getAuthHeaders() });
+  }
+
+  savePaycheckConfiguration(configs: SelectedPaycheck[]): Observable<any> { // Backend returns MessageResponse
+    return this.http.post(`${BACKEND_API_URL}/income/paycheck_configurations`, configs, { headers: this.getAuthHeaders() });
+  }
+}
