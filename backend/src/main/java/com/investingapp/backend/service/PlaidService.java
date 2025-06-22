@@ -6,6 +6,7 @@ import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.PendingPlaidConnectionRepository; // Import new repository
 import com.investingapp.backend.repository.UserRepository;
 import com.investingapp.backend.service.EncryptionService;
+// Import for frequency enum
 import com.plaid.client.model.*;
 import com.plaid.client.request.PlaidApi;
 import org.slf4j.Logger;
@@ -17,11 +18,19 @@ import org.springframework.transaction.annotation.Transactional; // Import Trans
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDateTime; // For expiry
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 // Removed UUID, ConcurrentHashMap, TimeUnit as they are no longer needed for this part
+
+import com.investingapp.backend.dto.PaycheckSourceDto;
+
+import java.util.Collections;
+import java.util.stream.Collectors;
+
 
 @Service
 public class PlaidService {
@@ -42,6 +51,88 @@ public class PlaidService {
 
     @Autowired
     private EncryptionService encryptionService;
+
+    public List<PaycheckSourceDto> getRecurringIncome(String decryptedAccessToken) throws IOException {
+        logger.info("Fetching recurring income for an access token.");
+        List<PaycheckSourceDto> paycheckSources = new ArrayList<>();
+
+        // 1. Get all account IDs for the access token
+        AccountsGetRequest accountsRequest = new AccountsGetRequest().accessToken(decryptedAccessToken);
+        Response<AccountsGetResponse> accountsResponse = plaidApi.accountsGet(accountsRequest).execute();
+
+        if (!accountsResponse.isSuccessful() || accountsResponse.body() == null) {
+            String errorBody = accountsResponse.errorBody() != null ? accountsResponse.errorBody().string() : "Unknown error fetching accounts";
+            logger.error("Plaid /accounts/get failed: {} - {}", accountsResponse.code(), errorBody);
+            throw new IOException("Failed to fetch accounts for income analysis: " + errorBody);
+        }
+        List<String> accountIds = accountsResponse.body().getAccounts().stream()
+                                    .map(AccountBase::getAccountId)
+                                    .collect(Collectors.toList());
+
+        if (accountIds.isEmpty()) {
+            logger.info("No accounts found for the given access token. Cannot fetch recurring income.");
+            return Collections.emptyList();
+        }
+        
+        // 2. Fetch recurring transactions for these account IDs
+        TransactionsRecurringGetRequest recurringRequest = new TransactionsRecurringGetRequest()
+                .accessToken(decryptedAccessToken)
+                .accountIds(accountIds);
+        
+        logger.debug("Calling Plaid /transactions/recurring/get for account IDs: {}", accountIds);
+        Response<TransactionsRecurringGetResponse> response = plaidApi.transactionsRecurringGet(recurringRequest).execute();
+
+        if (!response.isSuccessful() || response.body() == null) {
+            String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+            logger.error("Plaid /transactions/recurring/get failed: {} - {}", response.code(), errorBody);
+            throw new IOException("Plaid /transactions/recurring/get failed: " + errorBody);
+        }
+
+        TransactionsRecurringGetResponse recurringData = response.body();
+        logger.info("Received {} inflow streams and {} outflow streams.", 
+            recurringData.getInflowStreams().size(), 
+            recurringData.getOutflowStreams().size());
+
+        for (TransactionStream stream : recurringData.getInflowStreams()) {
+            // Basic filtering: consider streams that are active and have a known frequency
+            if ((stream.getStatus() == TransactionStreamStatus.MATURE || stream.getStatus() == TransactionStreamStatus.EARLY_DETECTION) &&
+                stream.getFrequency() != null &&
+                stream.getFrequency() != RecurringTransactionFrequency.UNKNOWN &&
+                stream.getFrequency() != RecurringTransactionFrequency.ANNUALLY /* Annually might not be a typical paycheck */) {
+                
+                PaycheckSourceDto dto = new PaycheckSourceDto();
+                dto.setAccountId(stream.getAccountId());
+                
+                // Use merchant name if available, otherwise description.
+                String name = stream.getMerchantName();
+                if (name == null || name.trim().isEmpty() || name.equalsIgnoreCase("null")) { // Plaid sometimes returns "null" as string
+                    name = stream.getDescription();
+                }
+                dto.setName(name != null ? name : "Unknown Income Source");
+
+                if (stream.getLastAmount() != null && stream.getLastAmount().getAmount() != null) {
+                    Double amountValue = stream.getLastAmount().getAmount();
+                    // Convert to BigDecimal if your DTO expects BigDecimal, then take abs
+                    dto.setLastAmount(BigDecimal.valueOf(Math.abs(amountValue))); 
+                } else {
+                    dto.setLastAmount(BigDecimal.ZERO);
+                }
+               
+                dto.setLastDate(stream.getLastDate() != null ? stream.getLastDate().toString() : "N/A");
+                dto.setFrequency(stream.getFrequency() != null ? stream.getFrequency().toString() : "UNKNOWN");
+                
+                paycheckSources.add(dto);
+                logger.debug("Identified potential paycheck source: Name='{}', AccountID='{}', LastAmt='{}', Freq='{}'", 
+                    dto.getName(), dto.getAccountId(), dto.getLastAmount(), dto.getFrequency());
+            }
+        }
+        
+        if (paycheckSources.isEmpty()) {
+            logger.info("No active, regularly recurring inflow streams identified as potential paychecks after filtering.");
+        }
+
+        return paycheckSources;
+    }
 
     // createLinkTokenForAuthenticatedUser method remains the same...
     public LinkTokenCreateResponse createLinkTokenForAuthenticatedUser(String clientUserId) throws IOException {
