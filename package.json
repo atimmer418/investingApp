@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "ionicons": "^8.0.9"
+  },
+  "scripts": {
+    "start": "npm run start --prefix frontend"
   }
 }
