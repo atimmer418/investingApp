@@ -1,8 +1,9 @@
 {
   "dependencies": {
-    "ionicons": "^8.0.9"
+    "ionicons": "^8.0.9",
+    "serve": "^14.2.4"
   },
   "scripts": {
-    "start": "npm run start --prefix frontend"
+    "start": "npx serve frontend/www"
   }
 }
