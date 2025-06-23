@@ -2,8 +2,5 @@
   "dependencies": {
     "ionicons": "^8.0.9",
     "serve": "^14.2.4"
-  },
-  "scripts": {
-    "start": "npx serve frontend/www"
   }
 }
