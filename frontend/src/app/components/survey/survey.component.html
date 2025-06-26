@@ -116,7 +116,7 @@
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-button (click)="previousQuestion()" 
-                  [disabled]="currentQuestionIndex === 0 || (currentSurveyType === SurveyType.InvestmentSetup && activeSurveyQuestions[currentQuestionIndex-1]?.isPercentageQuestion && !activeSurveyQuestions[currentQuestionIndex-2]?.isPaycheckSelectionStep)" 
+                  [disabled]="currentQuestionIndex === 0 || (currentSurveyType === SurveyType.InvestmentSetup && activeSurveyQuestions[currentQuestionIndex-1].isPercentageQuestion && !activeSurveyQuestions[currentQuestionIndex-2].isPaycheckSelectionStep)" 
                   fill="clear" color="medium">
         <!-- Logic for disabling previous on first percentage Q needs refinement if you want to go back to selection step -->
         <ion-icon slot="start" name="chevron-back-outline"></ion-icon>

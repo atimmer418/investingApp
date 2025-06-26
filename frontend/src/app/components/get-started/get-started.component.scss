@@ -1,128 +1,144 @@
-// Import global variables if available, or define key styles
-// For example, if you have a variables.scss:
-// @import '../../../../theme/variables.scss';
-
-// General component styling
+// Use CSS variables for easy theme management
 :host {
-  .get-started-content {
-    --background: #f4f5f8; // Light background for a clean look
-  }
-
-  .get-started-slides {
-    height: 70%; // Adjust as needed, allows space for CTAs below
-    background-color: var(--ion-background-color, #ffffff); // Slide background
-    border-radius: 0 0 20px 20px; // Soften edges if slides are distinct from content bg
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05); // Subtle shadow for depth
-    margin-bottom: 1rem; // Space before CTAs
-  }
-
-  .slide-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    text-align: center;
-    height: 100%; // Ensure content uses full slide height
-
-    .slide-image {
-      max-width: 150px; // Adjust size as needed
-      max-height: 150px; // Adjust size as needed
-      margin-bottom: 24px; // Space between image and text
-      // Add a placeholder style for the image
-      background-color: #e0e0e0; // Placeholder background
-      border-radius: 8px; // Rounded corners for placeholder
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #a0a0a0; // Placeholder text color
-      font-size: 0.8rem;
-      // In a real scenario, you'd have actual SVGs or images
-      // For now, we ensure it has some dimensions
-      min-height: 100px;
-    }
-
-    h2 {
-      font-size: 1.6em; // Prominent heading
-      font-weight: 600;
-      color: var(--ion-color-primary, #3880ff); // Use primary color for headings
-      margin-top: 0;
-      margin-bottom: 12px;
-    }
-
-    p {
-      font-size: 1.0em;
-      line-height: 1.6;
-      color: var(--ion-text-color, #333); // Darker text for readability
-      margin-bottom: 10px;
-      max-width: 90%; // Ensure text isn't too wide on larger iPhones
-    }
-  }
-
-  // Styling for slide pagination bullets
-  .get-started-slides::part(bullet) {
-    background-color: var(--ion-color-medium-tint, #ccc);
-    width: 8px;
-    height: 8px;
-    opacity: 0.7;
-  }
-
-  .get-started-slides::part(bullet-active) {
-    background-color: var(--ion-color-primary, #3880ff);
-    opacity: 1;
-  }
-
-
-  .cta-buttons {
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-bottom: calc(env(safe-area-inset-bottom) + 16px); // Respect safe area
-
-    .cta-main {
-      --background: var(--ion-color-primary, #3880ff);
-      --background-activated: var(--ion-color-primary-shade, #3171e0);
-      --color: var(--ion-color-primary-contrast, #ffffff);
-      font-weight: 600;
-      height: 48px;
-      font-size: 1.1em;
-      margin-bottom: 12px;
-      border-radius: 12px; // Consistent rounded buttons
-       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-
-    .cta-secondary {
-      --border-color: var(--ion-color-medium-shade, #a0a0a0);
-      --color: var(--ion-color-primary, #3880ff); // Text color matching primary
-      --background-activated: rgba(var(--ion-color-primary-rgb, 56, 128, 255), 0.1);
-      font-weight: 500;
-      height: 48px;
-      font-size: 1.0em;
-      margin-bottom: 12px;
-      border-radius: 12px;
-    }
-
-    .cta-tertiary {
-      --color: var(--ion-color-medium-shade, #666666);
-      --background-activated: rgba(var(--ion-color-medium-rgb, 128,128,128), 0.1);
-      font-weight: 500;
-      height: 48px;
-      font-size: 1.0em;
-      border-radius: 12px;
-    }
-  }
+  --ion-background-color: #ffffff;
+  --ion-text-color: #1c1c1e;
+  --ion-text-color-light: #8e8e93;
+  --ion-color-primary: #007aff; // A classic iOS blue
 }
 
-// Ensure ion-content takes full height if not using fullscreen attribute correctly
-ion-content.get-started-content {
-  height: 100vh; // Fallback for height
+.get-started-content {
+  // Use flexbox to structure the page into two main sections: swiper and footer
   display: flex;
   flex-direction: column;
-  justify-content: space-between; // Pushes CTAs to bottom if slides don't fill height
+  height: 100%;
 }
 
-// Specific overrides for iOS if needed, though Ionic generally handles this well
-// .ios {
-//   :host {
-//     // iOS specific styles here
-//   }
-// }
+swiper-container {
+  // The swiper should take up all available space, pushing the footer down
+  flex: 1;
+  width: 100%;
+  height: 100%;
+
+  // --- Styling the Pagination Dots ("Breadcrumbs") ---
+  // This targets the pagination container itself
+  &::part(pagination) {
+    bottom: 20px; // Position them nicely above the buttons
+  }
+
+  // This targets an individual dot
+  &::part(bullet) {
+    background: var(--ion-text-color-light);
+    opacity: 0.4;
+    width: 8px;
+    height: 8px;
+    transition: all 0.3s ease;
+  }
+
+  // This targets the currently active dot
+  &::part(bullet-active) {
+    background: var(--ion-color-primary);
+    opacity: 1;
+    width: 24px; // Make the active dot wider for a modern look
+    border-radius: 8px;
+  }
+}
+
+.slide-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 40px; // Generous horizontal padding
+  height: 100%;
+  box-sizing: border-box;
+
+  .slide-image {
+    max-height: 220px;
+    margin-bottom: 48px;
+  }
+
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--ion-text-color);
+  }
+
+  p {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ion-text-color-light);
+  }
+}
+
+.footer-cta {
+  // This contains the buttons at the bottom of the screen
+  padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px); // Safe area for iPhone home bar
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-top: 16px;
+  background-color: var(--ion-background-color); // Ensures it sits on top of content
+  overflow: hidden; 
+
+  .cta-main {
+    --border-radius: 12px;
+    font-weight: 600;
+    height: 50px;
+    text-transform: none;
+    font-size: 17px;
+    transition: opacity 0.3s ease;
+
+    // Style for the disabled state
+    &[disabled] {
+      opacity: 0.4;
+    }
+  }
+
+  .cta-secondary {
+    --color: var(--ion-color-primary);
+    font-weight: 500;
+    text-transform: none;
+    font-size: 16px;
+  }
+}
+
+// This is the wrapper for the primary button
+.cta-primary-wrapper {
+  // We use a custom animation property
+  animation: slide-up-fade-in 0.6s ease-out forwards;
+}
+
+// This wrapper is for the secondary button
+.cta-secondary {
+  // We can add a subtle fade-in to this one as well
+  animation: fade-in 0.5s 0.2s ease-out forwards;
+  opacity: 0; // Start transparent
+}
+
+// --- Define the Keyframe Animations ---
+
+// Keyframes for the primary button's entrance
+@keyframes slide-up-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%); // Start completely below the view
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0); // End in its natural position
+  }
+}
+
+// A simpler fade-in for the secondary button
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// You can remove the [disabled] style for the button, as it's no longer needed
+// .cta-main[disabled] { ... } // DELETE THIS

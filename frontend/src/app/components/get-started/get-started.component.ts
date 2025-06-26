@@ -1,78 +1,44 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild, ElementRef, AfterViewInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { IonContent, IonButton, IonHeader, IonToolbar, IonTitle } from '@ionic/angular/standalone'; // Removed IonSlide as it's not a standalone import for slides content
-// For IonSlides, individual IonSlide elements are part of the IonSlides structural directive.
-
-// If you are using Swiper directly (which IonSlides v7+ uses)
-// import SwiperCore, { Pagination } from 'swiper';
-// SwiperCore.use([Pagination]);
-// However, for basic usage, IonSlides handles this internally.
+import { IonContent, IonButton } from '@ionic/angular/standalone';
+import type { SwiperContainer } from 'swiper/element';
+import type { Swiper } from 'swiper';
 
 @Component({
   selector: 'app-get-started',
   templateUrl: './get-started.component.html',
   styleUrls: ['./get-started.component.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    IonContent,
-    // IonSlide is not typically imported directly here for standalone components,
-    // it's used as a child tag within IonSlides' template.
-    IonButton,
-    // IonHeader, IonToolbar, IonTitle // Only if you add a header to this component
-  ],
+  imports: [CommonModule, IonContent, IonButton],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class GetStartedComponent implements OnInit {
+export class GetStartedComponent implements AfterViewInit {
+  // Use ViewChild to get a reference to the swiper element
+  @ViewChild('swiper') swiperRef: ElementRef<SwiperContainer> | undefined;
 
-  // Optional: Access IonSlides programmatically if needed
-  // @ViewChild(IonSlides) slides: IonSlides | undefined;
-
-  // Slide options for ion-slides
-  slideOpts = {
-    initialSlide: 0,
-    speed: 400,
-    // centeredSlides: true, // Uncomment if you want slides to be centered if not taking full width
-    // loop: false, // Set to true if you want looping
-    // spaceBetween: 10 // Optional space between slides
-  };
+  isLastSlide = false;
 
   constructor(private router: Router) { }
 
-  ngOnInit() {
-    // Component initialization logic can go here
-    console.log('GetStartedComponent initialized');
+  ngAfterViewInit() {
+    // We register the event listener here to ensure the element exists.
+    this.swiperRef?.nativeElement.addEventListener('swiperprogress', (event: any) => {
+      const [swiper, progress] = event.detail;
+      // The `progress` variable goes from 0 to 1.
+      // If it's 1, we are on the last slide.
+      if (progress === 1) {
+        this.isLastSlide = true;
+      } else {
+        this.isLastSlide = false;
+      }
+    });
   }
 
-  startInvesting() {
-    // TODO: Implement navigation to the next step in the onboarding funnel (e.g., survey or sign-up)
-    console.log('Start Investing clicked');
-    // Example: this.router.navigate(['/survey']);
-  }
-
-  learnMore() {
-    // TODO: Implement navigation to a dedicated "Learn More" page or show a modal
-    console.log('Learn How It Works clicked');
-    // Example: this.router.navigate(['/learn-more']);
-  }
+  // --- No longer need onSlideChange() or checkSlideStatus() ---
 
   getSetUp() {
-    // TODO: Implement navigation to the initial setup/profile creation if different from 'Start Investing'
-    console.log('Get Set Up clicked');
     localStorage.setItem('getStartedCompleted', 'true');
-    this.router.navigate(['/survey'], {
-      replaceUrl: true
-    }); 
+    this.router.navigate(['/survey'], { replaceUrl: true });
   }
-
-  // Optional: If you need to interact with slides programmatically
-  // nextSlide() {
-  //   this.slides?.slideNext();
-  // }
-
-  // prevSlide() {
-  //   this.slides?.slidePrev();
-  // }
 }
