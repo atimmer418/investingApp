@@ -1,0 +1,10 @@
+//
+//  Debug-Test.xcconfig
+//  App
+//
+//  Created by Andrew Timmer on 6/29/25.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+ASSOCIATED_DOMAIN_HOSTNAME = api-test.fredvested.com
