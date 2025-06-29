@@ -5,12 +5,10 @@ import { RegistrationStartRequest } from '../models/passkey/registration-start-r
 import { RegistrationStartResponse } from '../models/passkey/registration-start-response.model';
 import { RegistrationFinishRequest } from '../models/passkey/registration-finish-request.model';
 import { RegistrationFinishResponse } from '../models/passkey/registration-finish-response.model';
+import { environment } from '../../environments/environment';
 
 // ngrok
-const localhost = 'https://796b-2600-4040-2a92-8800-a865-27f2-f55c-bf44.ngrok-free.app';
-// const localhost = 'http://192.168.1.166:8080';
-// Set your backend API's base URL
-const API_URL = `${localhost}/api/passkey`; // Or your production URL
+const BACKEND_API_URL = environment.backendApiUrl;
 
 @Injectable({
   providedIn: 'root'
@@ -20,11 +18,11 @@ export class PasskeyService {
   constructor(private http: HttpClient) { }
 
   startRegistration(data: RegistrationStartRequest): Observable<RegistrationStartResponse> {
-    return this.http.post<RegistrationStartResponse>(`${API_URL}/register/start`, data);
+    return this.http.post<RegistrationStartResponse>(`${BACKEND_API_URL}/passkey/register/start`, data);
   }
 
   finishRegistration(data: RegistrationFinishRequest): Observable<RegistrationFinishResponse> {
-    const finishUrl = `${API_URL}/register/finish`; // Ensure this uses ngrok URL for backend
+    const finishUrl = `${BACKEND_API_URL}/passkey/register/finish`; // Ensure this uses ngrok URL for backend
     return this.http.post<RegistrationFinishResponse>(finishUrl, data)
       .pipe(
         tap(response => {
