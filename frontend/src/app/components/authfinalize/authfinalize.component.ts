@@ -33,6 +33,9 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
+  // for work development
+  simulatePasskey: boolean = false; // Toggle this to simulate passkey creation
+
   private routeSub: Subscription | undefined;
 
   constructor(
@@ -60,6 +63,23 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
 
   get email() { return this.registerForm.get('email'); }
 
+  async bypassAuthID() {
+    this.simulatePasskey = true;
+    await this.createPasskey();
+  }
+
+  bufferToBase64url(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let str = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      str += String.fromCharCode(bytes[i]);
+    }
+    return btoa(str)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+  }
+
   // --- REFACTORED METHOD ---
   async createPasskey() {
     this.errorMessage = null;
@@ -84,6 +104,41 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
         next: async (startResponse) => {
           try {
             console.log('Received registration options from server:', startResponse.options);
+            if (this.simulatePasskey) {
+              console.warn('SIMULATED PASSKEY MODE ENABLED');
+
+              // Simulate a fake credential response
+              const fakeCredential = {
+                id: 'fake-id',
+                rawId: this.bufferToBase64url(Uint8Array.from([1, 2, 3, 4]).buffer),
+                type: 'public-key',
+                response: {
+                  attestationObject: "SIMULATED_ATTESTATION",
+                  clientDataJSON: this.bufferToBase64url(Uint8Array.from([9, 10, 11, 12]).buffer)
+                },
+                clientExtensionResults: {}
+              };
+
+              // STEP 3: Finish Registration (simulate)
+              this.passkeyService.finishRegistration({ email: userEmail, credential: fakeCredential, temporaryUserId: this.temporaryUserId })
+                .subscribe({
+                  next: (response) => {
+                    if (response.success && response.jwtToken) {
+                      console.log('SIMULATED registration and login successful!', response);
+                      this.router.navigate(['/survey'], { replaceUrl: true });
+                    } else {
+                      this.errorMessage = response.message || 'Registration failed or login did not occur.';
+                      console.error('Registration finish response error:', response.message);
+                    }
+                  },
+                  error: (err) => {
+                    this.errorMessage = err.error?.message || err.message || 'An unknown error occurred during simulated finish.';
+                    console.error('Error finishing simulated registration:', err);
+                  }
+                });
+
+              return; // ✅ early return — skip the real WebAuthn
+            }
 
             // The backend sends a JSON *string*. The 'create' function needs a JavaScript *object*.
             // We must parse the string from the server before using it.
@@ -98,26 +153,26 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
             const credential = await create(credentialRequestOptions);
 
             // STEP 3: Finish Registration (Send Credential to Backend)
-            this.passkeyService.finishRegistration({ email: userEmail, credential, temporaryUserId: this.temporaryUserId})
-            .subscribe({
-              next: (response) => {
-                if (response.success && response.jwtToken) {
-                  console.log('Registration and login successful!', response);
-                  this.router.navigate(['/survey'], {
-                    replaceUrl: true
-                  }); 
-                } else {
-                  // Handle cases where registration might be successful but no JWT (shouldn't happen with current backend logic)
-                  // Or if success is false
-                  this.errorMessage = response.message || 'Registration failed or login did not occur.';
-                  console.error('Registration finish response error:', response.message);
+            this.passkeyService.finishRegistration({ email: userEmail, credential, temporaryUserId: this.temporaryUserId })
+              .subscribe({
+                next: (response) => {
+                  if (response.success && response.jwtToken) {
+                    console.log('Registration and login successful!', response);
+                    this.router.navigate(['/survey'], {
+                      replaceUrl: true
+                    });
+                  } else {
+                    // Handle cases where registration might be successful but no JWT (shouldn't happen with current backend logic)
+                    // Or if success is false
+                    this.errorMessage = response.message || 'Registration failed or login did not occur.';
+                    console.error('Registration finish response error:', response.message);
+                  }
+                },
+                error: (err) => {
+                  this.errorMessage = err.error?.message || err.message || 'An unknown error occurred during registration finish.';
+                  console.error('Error finishing passkey registration:', err);
                 }
-              },
-              error: (err) => {
-                this.errorMessage = err.error?.message || err.message || 'An unknown error occurred during registration finish.';
-                console.error('Error finishing passkey registration:', err);
-              }
-            });
+              });
 
           } catch (error: any) {
             this.isLoading = false;
