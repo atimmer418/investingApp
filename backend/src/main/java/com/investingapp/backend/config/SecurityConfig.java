@@ -82,6 +82,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:8100",          // Common for Ionic/Capacitor serve
                 "http://localhost:4200",          // Common for ng serve
+                "http://localhost:3000",          // Common for ng serve
                 "capacitor://localhost",
                 "ionic://localhost",
                 "http://localhost",               // Sometimes needed by native wrappers
