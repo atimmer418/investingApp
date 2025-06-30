@@ -9,6 +9,7 @@ import {
 } from '@ionic/angular/standalone';
 import { Observable, throwError, Subscription } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 // Make sure Plaid global object is available (from script in index.html)
 declare var Plaid: any;
@@ -24,6 +25,8 @@ interface LinkTokenAuthenticatedResponse {
   expiration: string;
 }
 
+// ngrok
+const BACKEND_API_URL = environment.backendApiUrl;
 
 @Component({
   selector: 'app-linkplaid-component',
@@ -45,14 +48,7 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
 
   private temporaryUserId: string | null = null; // For anonymous flow
   private isUserAuthenticated: boolean = false; // Determine this based on JWT presence
-
-  // ngrok
-  // private localhost = 'http://192.168.1.166:8080';
-  private localhost = 'https://796b-2600-4040-2a92-8800-a865-27f2-f55c-bf44.ngrok-free.app';
-  // Replace with your actual backend API URL
-  private backendApiUrl = `${this.localhost}/api`; // Your Spring Boot backend URL
   private plaidSubscription: Subscription | undefined;
-
 
   constructor(
     private http: HttpClient,
@@ -160,7 +156,7 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
 
   private getLinkTokenAnonymous(): Observable<LinkTokenAnonymousResponse> {
     console.log('Requesting anonymous link_token...');
-    return this.http.post<LinkTokenAnonymousResponse>(`${this.backendApiUrl}/plaid/create_link_token_anonymous`, {})
+    return this.http.post<LinkTokenAnonymousResponse>(`${BACKEND_API_URL}/plaid/create_link_token_anonymous`, {})
       .pipe(
         tap(response => console.log('Received anonymous link_token response:', response)),
         catchError(this.handleError.bind(this))
@@ -169,7 +165,7 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
 
   private getLinkTokenAuthenticated(): Observable<LinkTokenAuthenticatedResponse> {
     console.log('Requesting authenticated link_token...');
-    return this.http.post<LinkTokenAuthenticatedResponse>(`${this.backendApiUrl}/plaid/create_link_token`, {}, { headers: this.getAuthHeaders() })
+    return this.http.post<LinkTokenAuthenticatedResponse>(`${BACKEND_API_URL}/plaid/create_link_token`, {}, { headers: this.getAuthHeaders() })
       .pipe(
         tap(response => console.log('Received authenticated link_token response:', response)),
         catchError(this.handleError.bind(this))
@@ -179,7 +175,7 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
   private exchangePublicTokenAnonymous(publicToken: string, temporaryUserId: string): void {
     console.log('Exchanging anonymous public_token with temp_user_id:', temporaryUserId);
     const payload = { public_token: publicToken, temporary_user_id: temporaryUserId };
-    this.plaidSubscription = this.http.post<any>(`${this.backendApiUrl}/plaid/exchange_public_token_anonymous`, payload)
+    this.plaidSubscription = this.http.post<any>(`${BACKEND_API_URL}/plaid/exchange_public_token_anonymous`, payload)
       .pipe(
         tap(response => {
           console.log('Anonymous public token exchanged successfully:', response);
@@ -204,7 +200,7 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
 
   private exchangePublicTokenAuthenticated(publicToken: string): void {
     console.log('Exchanging authenticated public_token...');
-    this.plaidSubscription = this.http.post<any>(`${this.backendApiUrl}/plaid/exchange_public_token`, { public_token: publicToken }, { headers: this.getAuthHeaders() })
+    this.plaidSubscription = this.http.post<any>(`${BACKEND_API_URL}/plaid/exchange_public_token`, { public_token: publicToken }, { headers: this.getAuthHeaders() })
       .pipe(
         tap(response => {
           console.log('Authenticated public token exchanged successfully:', response);
