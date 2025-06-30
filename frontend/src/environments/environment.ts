@@ -3,7 +3,9 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false, // It's a test build, not a full production build
+  backendApiUrl: 'https://796b-2600-4040-2a92-8800-a865-27f2-f55c-bf44.ngrok-free.app/api',
+  rpId: '37de-2600-4040-2a92-8800-a865-27f2-f55c-bf44.ngrok-free.app' // Your test frontend/app origin hostname
 };
 
 /*
