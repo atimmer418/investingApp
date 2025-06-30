@@ -3,6 +3,15 @@ package com.investingapp.backend.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.benmanes.caffeine.cache.Cache;
+
+// imports below are for simulating passkey
+import com.investingapp.backend.model.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.fasterxml.jackson.databind.JsonNode;
+
 import com.investingapp.backend.dto.RegistrationFinishRequest;
 import com.investingapp.backend.dto.RegistrationFinishResponse; // <-- IMPORT YOUR DTO
 import com.investingapp.backend.dto.RegistrationStartRequest;
@@ -28,6 +37,16 @@ public class WebAuthnController {
 
     private final WebAuthnService webAuthnService;
     private final Cache<String, PublicKeyCredentialCreationOptions> challengeCache;
+
+    // these 3 injections are needed for simulating passkey registration
+    @Autowired
+    private UserRepository userRepository; // Your user repo interface
+
+    @Autowired
+    private UserDetailsService userDetailsService; // Usually your Spring Security user details service
+
+    @Autowired
+    private JwtUtils jwtUtils; // Your JWT utility/service class
 
     @Autowired
     public WebAuthnController(WebAuthnService webAuthnService,
@@ -63,15 +82,15 @@ public class WebAuthnController {
         logger.info("Received passkey registration finish request for email: {}", finishRequest.getEmail());
         String email = finishRequest.getEmail();
 
-        if ("SIMULATED_ATTESTATION".equals(
-                finishRequest.getCredential().getResponse().getAttestationObject())) {
+        JsonNode credential = finishRequest.getCredential();
+        String attestationObject = credential.path("response").path("attestationObject").asText();
 
+        if ("SIMULATED_ATTESTATION".equals(attestationObject)) {
             logger.warn("SIMULATED passkey registration used for email: {}", email);
 
-            // Simulate user lookup or creation
             User user = userRepository.findByEmail(email).orElse(null);
             if (user == null) {
-                user = new User(email); // fill in required fields
+                user = new User(email); // Make sure constructor and fields fit your model
                 userRepository.save(user);
             }
 
@@ -79,6 +98,7 @@ public class WebAuthnController {
             Authentication authentication = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
             String jwt = jwtUtils.generateJwtToken(authentication);
 
             return ResponseEntity.ok(new RegistrationFinishResponse(
