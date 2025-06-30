@@ -1,0 +1,7 @@
+source 'https://rubygems.org'
+
+# Use the version of CocoaPods you generally want
+gem 'cocoapods', '~> 1.15' # Or '~> 1.16' is fine
+
+# Force the use of a newer xcodeproj library that understands your Xcode version
+gem 'xcodeproj', '>= 1.26.0' # This version or higher should support object version 71
