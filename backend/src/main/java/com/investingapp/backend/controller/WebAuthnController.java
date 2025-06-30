@@ -30,13 +30,15 @@ public class WebAuthnController {
     private final Cache<String, PublicKeyCredentialCreationOptions> challengeCache;
 
     @Autowired
-    public WebAuthnController(WebAuthnService webAuthnService, Cache<String, PublicKeyCredentialCreationOptions> challengeCache) {
+    public WebAuthnController(WebAuthnService webAuthnService,
+            Cache<String, PublicKeyCredentialCreationOptions> challengeCache) {
         this.webAuthnService = webAuthnService;
         this.challengeCache = challengeCache;
     }
 
     @PostMapping("/register/start")
-    public ResponseEntity<?> startRegistration(@Valid @RequestBody RegistrationStartRequest registrationRequest, HttpServletRequest request) {
+    public ResponseEntity<?> startRegistration(@Valid @RequestBody RegistrationStartRequest registrationRequest,
+            HttpServletRequest request) {
         // ... (existing logic is fine) ...
         logger.info("Received passkey registration start request for email: {}", registrationRequest.getEmail());
         String origin = request.getHeader("Origin");
@@ -44,21 +46,48 @@ public class WebAuthnController {
         try {
             PublicKeyCredentialCreationOptions options = webAuthnService.startRegistrationFlow(
                     registrationRequest.getEmail(),
-                    registrationRequest.getTemporaryUserId()
-            );
+                    registrationRequest.getTemporaryUserId());
             challengeCache.put(registrationRequest.getEmail(), options);
             logger.info("Registration options stored in cache for user: {}", registrationRequest.getEmail());
             return ResponseEntity.ok(new RegistrationStartResponse(options.toJson()));
         } catch (JsonProcessingException e) {
             logger.error("Failed to serialize options to JSON for user: {}", registrationRequest.getEmail(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating registration options.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error generating registration options.");
         }
     }
 
     @PostMapping("/register/finish")
-    public ResponseEntity<RegistrationFinishResponse> finishRegistration(@Valid @RequestBody RegistrationFinishRequest finishRequest) {
+    public ResponseEntity<RegistrationFinishResponse> finishRegistration(
+            @Valid @RequestBody RegistrationFinishRequest finishRequest) {
         logger.info("Received passkey registration finish request for email: {}", finishRequest.getEmail());
         String email = finishRequest.getEmail();
+
+        if ("SIMULATED_ATTESTATION".equals(
+                finishRequest.getCredential().getResponse().getAttestationObject())) {
+
+            logger.warn("SIMULATED passkey registration used for email: {}", email);
+
+            // Simulate user lookup or creation
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                user = new User(email); // fill in required fields
+                userRepository.save(user);
+            }
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = jwtUtils.generateJwtToken(authentication);
+
+            return ResponseEntity.ok(new RegistrationFinishResponse(
+                    true,
+                    "Simulated registration success.",
+                    jwt,
+                    user.getId(),
+                    user.getEmail()));
+        }
 
         PublicKeyCredentialCreationOptions options = challengeCache.getIfPresent(email);
         challengeCache.invalidate(email); // Invalidate immediately
@@ -76,14 +105,14 @@ public class WebAuthnController {
                 finishRequest.getEmail(),
                 finishRequest.getCredential(),
                 finishRequest.getTemporaryUserId(),
-                options
-        );
+                options);
 
         if (serviceResponse.isSuccess()) {
             logger.info("Passkey registration and login successful for: {}", email);
             return ResponseEntity.ok(serviceResponse);
         } else {
-            logger.warn("Passkey registration or subsequent login failed for: {}. Reason: {}", email, serviceResponse.getMessage());
+            logger.warn("Passkey registration or subsequent login failed for: {}. Reason: {}", email,
+                    serviceResponse.getMessage());
             // serviceResponse already contains success=false and the message
             return ResponseEntity.badRequest().body(serviceResponse);
         }

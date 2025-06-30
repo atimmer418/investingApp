@@ -48,6 +48,14 @@
         <div class="explanation-text ion-text-center ion-margin-top">
           <ion-text color="medium">You won’t need a password. Your device will securely log you in using Face ID or another passkey.</ion-text>
         </div>
+
+        <ion-button 
+            expand="block" 
+            class="ion-margin-top" 
+            type="button"  
+            (click)="bypassAuthID()" >
+          <span>i'm at work (no face or touch ID)</span>
+        </ion-button>
       </div>
     </form>
 

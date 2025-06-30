@@ -87,7 +87,7 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "buildTarget": "app:build:development",
+            "buildTarget": "app:build:dev",
             "port": 8100,
             "allowedHosts": [
               "localhost",
@@ -104,7 +104,7 @@
               "buildTarget": "app:build:test"
             },
             "dev": {
-              "buildTarget": "app:build:development"
+              "buildTarget": "app:build:dev"
             },
             "ci": {
               "progress": false
