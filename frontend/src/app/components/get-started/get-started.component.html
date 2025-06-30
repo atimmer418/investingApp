@@ -1,7 +1,8 @@
 <ion-content [fullscreen]="true" class="get-started-content">
 
   <!-- The Swiper container now takes up the main flexible space -->
-  <swiper-container #swiper css-mode="true" [pagination]="true">
+  <!-- SWIPER NEEDS css-mode="true" in prod -->
+  <swiper-container #swiper initial-slide="4" [pagination]="true">
 
     <!-- Slide 1: The Problem -->
     <swiper-slide>
