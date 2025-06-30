@@ -22,11 +22,14 @@ export class GetStartedComponent implements AfterViewInit {
   constructor(private router: Router) { }
 
   ngAfterViewInit() {
-    // We register the event listener here to ensure the element exists.
-    this.swiperRef?.nativeElement.addEventListener('swiperprogress', (event: any) => {
+    const swiperEl = this.swiperRef?.nativeElement;
+
+    if (!swiperEl) return;
+
+    // Register progress event
+    swiperEl.addEventListener('swiperprogress', (event: any) => {
       const [swiper, progress] = event.detail;
-      // The `progress` variable goes from 0 to 1.
-      // If it's 1, we are on the last slide.
+
       if (progress === 1) {
         this.isLastSlide = true;
       } else {
