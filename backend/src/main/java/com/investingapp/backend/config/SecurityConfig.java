@@ -89,7 +89,8 @@ public class SecurityConfig {
                 iphoneAngularOrigin,               // Your iPhone's access point
                 "https://37de-2600-4040-2a92-8800-a865-27f2-f55c-bf44.ngrok-free.app",
                 "http://192.168.1.166:3000",
-                "http://api-test.fredvested.com:3000"
+                "http://api-test.fredvested.com:3000",
+                "https://potential-engine-97999gqqw9q4hpj7w-8100.app.github.dev"
         ));
         // ngrok
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
