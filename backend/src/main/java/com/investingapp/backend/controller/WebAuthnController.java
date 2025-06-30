@@ -11,6 +11,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.investingapp.backend.repository.UserRepository;  // Your UserRepository interface
+import org.springframework.security.core.userdetails.UserDetailsService;
+import com.investingapp.backend.security.jwt.JwtUtils;  // Your JWT helper class
 
 import com.investingapp.backend.dto.RegistrationFinishRequest;
 import com.investingapp.backend.dto.RegistrationFinishResponse; // <-- IMPORT YOUR DTO
