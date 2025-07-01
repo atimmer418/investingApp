@@ -15,27 +15,18 @@ public class AASAController {
     // This endpoint MUST be available without any authentication
     @GetMapping(path = "/.well-known/apple-app-site-association", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> getAASA() {
-        // Replace with your actual Team ID and Bundle ID
+        // Replace with your actual Team ID and Bundle ID from Apple Developer Portal
         String appIdentifier = "9G59L97KRT.com.fredvested.Fred";
 
+        // This is the only part required for Passkeys and AutoFill
         Map<String, Object> webcredentials = Map.of(
             "apps", List.of(appIdentifier)
         );
-        
-        // This is for Universal Links, good to have but not strictly for passkeys
-        Map<String, Object> applinks = Map.of(
-            "apps", List.of(), // Can be empty if no applinks needed
-            "details", List.of(
-                Map.of(
-                    "appID", appIdentifier,
-                    "paths", List.of("/activate/*", "/*") // Example path
-                )
-            )
-        );
 
+        // The entire response body only needs to contain webcredentials
         Map<String, Object> responseBody = Map.of(
-            "webcredentials", webcredentials,
-            "applinks", applinks
+            "webcredentials", webcredentials
+            // You can completely remove the "applinks" key for now
         );
 
         return ResponseEntity.ok(responseBody);
