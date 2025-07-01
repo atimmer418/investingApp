@@ -28,7 +28,7 @@ public class AASAController {
             "details", List.of(
                 Map.of(
                     "appID", appIdentifier,
-                    "paths", List.of("/activate/*") // Example path
+                    "paths", List.of("/activate/*", "/*") // Example path
                 )
             )
         );
