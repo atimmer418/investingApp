@@ -3,6 +3,8 @@
 <plist version="1.0">
 <dict>
 	<key>com.apple.developer.associated-domains</key>
-	<string>webcredentials:api-dev.fredvested.com</string>
+	<array/>
+	<key>keychain-access-groups</key>
+	<array/>
 </dict>
 </plist>
