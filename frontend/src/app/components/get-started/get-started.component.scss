@@ -72,6 +72,12 @@ swiper-container {
   }
 }
 
+swiper-container,
+swiper-slide {
+  height: 100%;
+  overflow: hidden;
+}
+
 .footer-cta {
   // This contains the buttons at the bottom of the screen
   padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px); // Safe area for iPhone home bar
@@ -80,8 +86,15 @@ swiper-container {
   padding-top: 16px;
   background-color: var(--ion-background-color); // Ensures it sits on top of content
   overflow: hidden; 
+  position: absolute;
+  bottom: 60px; // Adjust this to sit right above the swiper pagination
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%; // or any desired width
+  z-index: 10; // ensure it's above slide content
 
   .cta-main {
+    width: 100%;
     --border-radius: 12px;
     font-weight: 600;
     height: 50px;
