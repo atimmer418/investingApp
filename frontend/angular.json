@@ -64,7 +64,19 @@
               ],
               "outputHashing": "all"
             },
+            "local": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true
+            },
             "dev": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.dev.ts"
+                }
+              ],
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
@@ -87,7 +99,7 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "buildTarget": "app:build:dev",
+            "buildTarget": "app:build:local",
             "port": 8100,
             "allowedHosts": [
               "localhost",
@@ -106,11 +118,14 @@
             "dev": {
               "buildTarget": "app:build:dev"
             },
+            "local": {
+              "buildTarget": "app:build:local"
+            },
             "ci": {
               "progress": false
             }
           },
-          "defaultConfiguration": "dev"
+          "defaultConfiguration": "local"
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
