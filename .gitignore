@@ -41,7 +41,7 @@ coverage/
 *.tgz
 
 # Spring Boot profile-specific properties with sensitive data
-backend/src/main/resources/application-dev.properties
+backend/src/main/resources/application-local.properties
 
 # You might also want to ignore other environment specific files
 .env

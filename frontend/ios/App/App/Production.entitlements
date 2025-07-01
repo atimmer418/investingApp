@@ -3,10 +3,6 @@
 <plist version="1.0">
 <dict>
 	<key>com.apple.developer.associated-domains</key>
-	<array>
-		<string>webcredentials:37de-2600-4040-2a92-8800-a865-27f2-f55c-bf44.ngrok-free.app</string>
-	</array>
-	<key>keychain-access-groups</key>
-	<array/>
+	<string>webcredentials:api.fredvested.com</string>
 </dict>
 </plist>
