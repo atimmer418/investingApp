@@ -42,7 +42,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'get-started',
+    redirectTo: 'survey',
     pathMatch: 'full'
   },
 ];
