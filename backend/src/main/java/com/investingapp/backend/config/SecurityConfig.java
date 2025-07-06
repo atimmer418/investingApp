@@ -113,6 +113,7 @@ public class SecurityConfig {
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/", "/index.html", "/favicon.ico").permitAll()
                 .requestMatchers("/.well-known/apple-app-site-association").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/plaid/create_link_token_anonymous").permitAll()
