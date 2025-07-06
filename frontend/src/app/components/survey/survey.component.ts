@@ -6,9 +6,8 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import {
-  IonHeader, IonChip, IonToolbar, IonTitle, IonContent, IonText, IonList,
-  IonItem, IonLabel, IonButton, IonButtons, IonIcon, IonFooter,
-  IonCheckbox, IonInput, IonSpinner, IonRange
+  IonHeader, IonToolbar, IonTitle, IonContent, IonLabel,
+  IonIcon, IonCheckbox, IonSpinner, IonRange
 } from '@ionic/angular/standalone';
 
 import { PlaidDataService } from '../../services/plaid-data.service';
