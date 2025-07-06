@@ -6,9 +6,8 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import {
-  IonHeader, IonChip, IonToolbar, IonTitle, IonContent, IonText, IonList,
-  IonItem, IonLabel, IonButton, IonButtons, IonIcon, IonFooter,
-  IonCheckbox, IonInput, IonSpinner, IonRange
+  IonHeader, IonToolbar, IonTitle, IonContent, IonLabel,
+  IonIcon, IonCheckbox, IonSpinner, IonRange
 } from '@ionic/angular/standalone';
 
 import { PlaidDataService } from '../../services/plaid-data.service';
@@ -43,11 +42,10 @@ enum SurveyType {
   templateUrl: './survey.component.html',
   styleUrls: ['./survey.component.scss'],
   standalone: true,
-  imports: [ /* ... same imports as before ... */
+  imports: [
     CommonModule, FormsModule,
-    IonHeader, IonChip, IonToolbar, IonTitle, IonContent, IonText,
-    IonList, IonItem, IonLabel, IonButton, IonButtons, IonIcon, IonFooter,
-    IonCheckbox, IonInput, IonSpinner, IonRange
+    IonHeader, IonToolbar, IonTitle, IonContent, IonLabel,
+    IonIcon, IonCheckbox, IonSpinner, IonRange
   ]
 })
 export class SurveyComponent implements OnInit, OnDestroy {
@@ -110,8 +108,10 @@ export class SurveyComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('[SurveyComponent] ngOnInit - Initializing.');
+    
+    // Original initialization commented out for demo
     this.initializeOrRefreshSurveyState();
-    // ... (router subscription same as before) ...
+    
     this.routerSubscription = this.router.events.pipe(
       filter((event: RouterEvent): event is NavigationEnd =>
         event instanceof NavigationEnd &&

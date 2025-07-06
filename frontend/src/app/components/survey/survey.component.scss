@@ -1,118 +1,436 @@
-ion-list {
-    padding: 0; // iOS typically handles padding within items
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  ion-text h3 {
-    margin-top: 10px;
-    margin-bottom: 15px; // Slightly reduced margin
-    font-size: 1.2em; // Adjusted for iOS feel
-    font-weight: 600;
-    color: var(--ion-text-color, #222);; // iOS systemGrayColor
-    text-align: center; // Centered for better iOS alignment
-  }
-  
-  // .survey-option-item styling removed as the class was removed from HTML
-  // and items will now follow standard inset list styling.
-  
-  // .survey-option-item ion-label {
-  //   font-size: 1.0em; // Adjusted for iOS feel
-  //   font-weight: normal;
-  // }
-  
-  // .selected-option {
-  //   // border: 2px solid #007AFF; // Removed as checkmark will indicate selection
-  //   // background-color: rgba(0, 122, 255, 0.05); // Very subtle tint for selection - REMOVED
-  //   // Visual indication is now on the chip itself.
+/* iOS 15+ Modern Survey Styling */
 
-  //   .survey-option-chip {
-  //     background-color: #007AFF; // iOS primary blue
-  //     color: #ffffff; // White text for contrast
-  //   }
-  // }
-  
-  // Styling for the checkmark icon
-  ion-icon[name="checkmark-circle"] {
-    font-size: 24px; // Ensure this is a good size
-    color: #007AFF; // iOS systemBlue for the checkmark
-  }
-  
-  // Ensure enough space for the footer
-  ion-content {
-    --padding-bottom: 70px; // Adjust as needed based on footer height
-  }
-
-  ion-footer ion-toolbar {
-    padding-bottom: env(safe-area-inset-bottom);
-    --background: var(--ion-color-primary, #000); /* or whatever your dark footer color is */
-  }
-  
-  // Footer styling to prevent overlap
-  ion-footer {
-    padding-bottom: 0;
-  }
-
-//   .full-width-chip {
-//   display: block;              // Forces each chip to be on its own line
-//   width: 96%;                  // Makes it full width of parent
-//   max-width: 100vw;            // Ensures it doesn't overflow screen
-//   margin-bottom: 0.5rem;       // Optional spacing between chips
-//   --padding-start: 1rem;       // Optional: control internal padding
-//   --padding-end: 1rem;
-//   --background: var(--ion-color-light); // Optional: custom background
-//   --color: var(--ion-color-dark);       // Optional: custom text color
-
-//   text-align: center;
-//   justify-content: center; 
-//   align-items: center;
-
-//   font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
-//   font-weight: 500; // optional: adjust for iOS look
-//   font-size: 0.9rem;  // optional: match system size
-// }
-
-ion-header {
-  ion-toolbar {
-    background-color: #3880ff; // Replace with your desired color
-    --background: #3880ff;     // Recommended for Ionic theming
-    color: white;              // Optional: set text color if needed
-  }
+// iOS System Colors
+:root {
+  --ios-blue: #007AFF;
+  --ios-gray: #8E8E93;
+  --ios-gray-light: #F2F2F7;
+  --ios-bg: #F2F2F7;
+  --ios-bg-secondary: #FFFFFF;
+  --ios-text: #000000;
+  --ios-text-secondary: #6D6D72;
+  --ios-separator: #C6C6C8;
+  --ios-shadow: rgba(0, 0, 0, 0.1);
 }
 
-.full-width-chip {
-  width: 100%;
-  margin-bottom: 12px;
-  border-radius: 24px;
-  border: 2px solid lightgray;
-  padding: 12px 12px;
-  font-size: 1.1rem;
-  --background: var(--ion-background-color, #ffffff);
-  --color: var(--ion-text-color, #222);
-  --border-color: var(--ion-color-medium, #ccc);
-  --box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  transition: background 0.2s, color 0.2s;
-  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
+// Header & Title
+.ios-header ion-toolbar {
+  --background: var(--ios-bg-secondary);
+  --color: var(--ios-text);
+  box-shadow: 0 1px 0 var(--ios-separator);
 }
 
-.selected-option {
-  --background: var(--ion-color-primary, #3880ff);
-  --color: var(--ion-color-primary-contrast, #fff);
+.ios-title {
+  color: var(--ios-text);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   font-weight: 600;
-  box-shadow: 0 4px 16px rgba(56,128,255,0.08);
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 8px 16px;
 }
 
-ion-title {
-  color: white; // Standard black for titles
-  text-align: center; // Centered for better iOS alignment
-  margin: 10px 0; // Added margin for spacing
-  padding: 0 15px; // Added padding for better touch targets
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; // iOS system font stack
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.9); // Optional: subtle shadow for depth
-  text-decoration: none; // Ensure no underline
-  box-sizing: border-box; // Ensures padding is included in width calculations
-  font-size: 1.2em; // Adjusted for iOS feel
-  font-weight: 600; // Semi-bold for emphasis
-  line-height: 1.4; // Adjusted for better readability
+.title-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-bar {
+  width: 120px;
+  height: 4px;
+  background: var(--ios-gray-light);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--ios-blue);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.8rem;
+  color: var(--ios-text-secondary);
+  font-weight: 500;
+}
+
+// Content & Cards
+.ios-content {
+  --background: var(--ios-bg);
+}
+
+.survey-container {
+  padding: 16px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.survey-card {
+  background: var(--ios-bg-secondary);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 16px var(--ios-shadow);
+  border: 1px solid var(--ios-separator);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.question-title {
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ios-text);
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+}
+
+.question-subtitle {
+  font-size: 1rem;
+  color: var(--ios-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.card-footer {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+// Buttons
+.ios-button {
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 16px 24px;
+  border-radius: 12px;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  &.primary {
+    background: var(--ios-blue);
+    color: white;
+    
+    &:hover { background: #0056CC; }
+    &:active { background: #004BB5; transform: scale(0.98); }
+    &:disabled { background: var(--ios-gray); cursor: not-allowed; }
+  }
+  
+  &.secondary {
+    background: var(--ios-gray-light);
+    color: var(--ios-blue);
+    
+    &:hover { background: #E5E5EA; }
+    &:active { background: #D1D1D6; transform: scale(0.98); }
+  }
+}
+
+// Paycheck Items
+.paycheck-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.paycheck-item {
+  background: var(--ios-bg);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--ios-separator);
+  transition: background 0.2s ease;
+  
+  &:hover { background: #F8F8F8; }
+}
+
+.paycheck-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.paycheck-info {
+  flex: 1;
+}
+
+.paycheck-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ios-text);
+  margin: 0 0 4px 0;
+}
+
+.paycheck-details {
+  font-size: 0.9rem;
+  color: var(--ios-text-secondary);
+  margin: 0 0 4px 0;
+}
+
+.paycheck-frequency {
+  font-size: 0.8rem;
+  color: var(--ios-blue);
+  font-weight: 500;
+  background: rgba(0, 122, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+// Checkbox
+.ios-checkbox {
+  --size: 24px;
+  --checkbox-background-checked: var(--ios-blue);
+  --checkmark-color: white;
+  --border-color-checked: var(--ios-blue);
+  --border-color: var(--ios-gray);
+  --border-radius: 6px;
+  --border-width: 2px;
+}
+
+// Percentage Section
+.percentage-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.paycheck-preview {
+  background: var(--ios-bg);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--ios-separator);
+  text-align: center;
+}
+
+.paycheck-preview-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ios-text);
+  margin: 0 0 4px 0;
+}
+
+.paycheck-preview-amount {
+  font-size: 0.9rem;
+  color: var(--ios-text-secondary);
+  margin: 0;
+}
+
+.percentage-display {
+  text-align: center;
+}
+
+.percentage-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--ios-blue);
+  display: block;
+}
+
+.percentage-label {
+  font-size: 0.9rem;
+  color: var(--ios-text-secondary);
+  font-weight: 500;
+}
+
+.range-container {
+  padding: 0 16px;
+}
+
+.ios-range {
+  --bar-background: var(--ios-gray-light);
+  --bar-background-active: var(--ios-blue);
+  --bar-height: 4px;
+  --knob-background: var(--ios-blue);
+  --knob-size: 28px;
+  --knob-box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+.range-label {
+  font-size: 0.8rem;
+  color: var(--ios-text-secondary);
+  font-weight: 500;
+}
+
+// Options
+.options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.option-item {
+  background: var(--ios-bg);
+  border-radius: 12px;
+  padding: 16px;
+  border: 2px solid var(--ios-separator);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #F8F8F8;
+    border-color: var(--ios-blue);
+  }
+  
+  &.selected {
+    background: rgba(0, 122, 255, 0.08);
+    border-color: var(--ios-blue);
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
+  }
+}
+
+.option-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.option-text {
+  font-size: 1rem;
+  color: var(--ios-text);
+  font-weight: 500;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.option-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.check-icon {
+  font-size: 24px;
+  color: var(--ios-blue);
+}
+
+.selection-circle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ios-gray);
+  border-radius: 50%;
+  background: transparent;
+}
+
+// States
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 0;
+}
+
+.ios-spinner {
+  --color: var(--ios-blue);
+  font-size: 32px;
+}
+
+.loading-text {
+  font-size: 1rem;
+  color: var(--ios-text-secondary);
+  margin: 0;
+}
+
+.error-state {
+  margin-bottom: 24px;
+}
+
+.error-card {
+  background: #FFF2F2;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #FFB3B3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.error-icon {
+  font-size: 24px;
+  color: #FF3333;
+  min-width: 24px;
+}
+
+.error-text {
+  font-size: 0.9rem;
+  color: #CC0000;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 0;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: var(--ios-gray);
+}
+
+.empty-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--ios-text);
+  margin: 0;
+}
+
+.empty-text {
+  font-size: 1rem;
+  color: var(--ios-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+  max-width: 280px;
+}
+
+// Footer
+.ios-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--ios-bg-secondary);
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--ios-separator);
+  backdrop-filter: blur(20px);
+}
+
+// Responsive
+@media (max-width: 375px) {
+  .survey-container { padding: 12px; }
+  .survey-card { padding: 20px; }
+  .question-title { font-size: 1.3rem; }
+  .percentage-value { font-size: 2rem; }
+}
+
+@media (min-width: 768px) {
+  .survey-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  .survey-card { padding: 32px; }
 }
