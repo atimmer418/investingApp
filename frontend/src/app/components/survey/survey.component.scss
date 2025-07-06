@@ -1,118 +1,557 @@
-ion-list {
-    padding: 0; // iOS typically handles padding within items
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  ion-text h3 {
-    margin-top: 10px;
-    margin-bottom: 15px; // Slightly reduced margin
-    font-size: 1.2em; // Adjusted for iOS feel
-    font-weight: 600;
-    color: var(--ion-text-color, #222);; // iOS systemGrayColor
-    text-align: center; // Centered for better iOS alignment
-  }
-  
-  // .survey-option-item styling removed as the class was removed from HTML
-  // and items will now follow standard inset list styling.
-  
-  // .survey-option-item ion-label {
-  //   font-size: 1.0em; // Adjusted for iOS feel
-  //   font-weight: normal;
-  // }
-  
-  // .selected-option {
-  //   // border: 2px solid #007AFF; // Removed as checkmark will indicate selection
-  //   // background-color: rgba(0, 122, 255, 0.05); // Very subtle tint for selection - REMOVED
-  //   // Visual indication is now on the chip itself.
+/* iOS 15+ Modern Survey Styling */
 
-  //   .survey-option-chip {
-  //     background-color: #007AFF; // iOS primary blue
-  //     color: #ffffff; // White text for contrast
-  //   }
-  // }
-  
-  // Styling for the checkmark icon
-  ion-icon[name="checkmark-circle"] {
-    font-size: 24px; // Ensure this is a good size
-    color: #007AFF; // iOS systemBlue for the checkmark
-  }
-  
-  // Ensure enough space for the footer
-  ion-content {
-    --padding-bottom: 70px; // Adjust as needed based on footer height
-  }
+// iOS System Colors
+:root {
+  --ios-system-blue: #007AFF;
+  --ios-system-blue-light: #5AC8FA;
+  --ios-system-gray: #8E8E93;
+  --ios-system-gray-light: #F2F2F7;
+  --ios-system-gray-dark: #1C1C1E;
+  --ios-background: #F2F2F7;
+  --ios-background-secondary: #FFFFFF;
+  --ios-label: #000000;
+  --ios-label-secondary: #6D6D72;
+  --ios-separator: #C6C6C8;
+  --ios-shadow: rgba(0, 0, 0, 0.1);
+  --ios-shadow-elevated: rgba(0, 0, 0, 0.15);
+}
 
-  ion-footer ion-toolbar {
-    padding-bottom: env(safe-area-inset-bottom);
-    --background: var(--ion-color-primary, #000); /* or whatever your dark footer color is */
-  }
-  
-  // Footer styling to prevent overlap
-  ion-footer {
-    padding-bottom: 0;
-  }
-
-//   .full-width-chip {
-//   display: block;              // Forces each chip to be on its own line
-//   width: 96%;                  // Makes it full width of parent
-//   max-width: 100vw;            // Ensures it doesn't overflow screen
-//   margin-bottom: 0.5rem;       // Optional spacing between chips
-//   --padding-start: 1rem;       // Optional: control internal padding
-//   --padding-end: 1rem;
-//   --background: var(--ion-color-light); // Optional: custom background
-//   --color: var(--ion-color-dark);       // Optional: custom text color
-
-//   text-align: center;
-//   justify-content: center; 
-//   align-items: center;
-
-//   font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
-//   font-weight: 500; // optional: adjust for iOS look
-//   font-size: 0.9rem;  // optional: match system size
-// }
-
-ion-header {
+// Header Styling
+.ios-header {
   ion-toolbar {
-    background-color: #3880ff; // Replace with your desired color
-    --background: #3880ff;     // Recommended for Ionic theming
-    color: white;              // Optional: set text color if needed
+    --background: var(--ios-background-secondary);
+    --color: var(--ios-label);
+    --border-color: var(--ios-separator);
+    --border-width: 0;
+    box-shadow: 0 1px 0 var(--ios-separator);
   }
 }
 
-.full-width-chip {
-  width: 100%;
-  margin-bottom: 12px;
-  border-radius: 24px;
-  border: 2px solid lightgray;
-  padding: 12px 12px;
-  font-size: 1.1rem;
-  --background: var(--ion-background-color, #ffffff);
-  --color: var(--ion-text-color, #222);
-  --border-color: var(--ion-color-medium, #ccc);
-  --box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  transition: background 0.2s, color 0.2s;
-  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-.selected-option {
-  --background: var(--ion-color-primary, #3880ff);
-  --color: var(--ion-color-primary-contrast, #fff);
+.ios-title {
+  color: var(--ios-label);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
   font-weight: 600;
-  box-shadow: 0 4px 16px rgba(56,128,255,0.08);
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 8px 16px;
 }
 
-ion-title {
-  color: white; // Standard black for titles
-  text-align: center; // Centered for better iOS alignment
-  margin: 10px 0; // Added margin for spacing
-  padding: 0 15px; // Added padding for better touch targets
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; // iOS system font stack
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.9); // Optional: subtle shadow for depth
-  text-decoration: none; // Ensure no underline
-  box-sizing: border-box; // Ensures padding is included in width calculations
-  font-size: 1.2em; // Adjusted for iOS feel
-  font-weight: 600; // Semi-bold for emphasis
-  line-height: 1.4; // Adjusted for better readability
+.title-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.survey-type {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ios-label);
+}
+
+.progress-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.progress-bar {
+  width: 120px;
+  height: 4px;
+  background-color: var(--ios-system-gray-light);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--ios-system-blue);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.8rem;
+  color: var(--ios-label-secondary);
+  font-weight: 500;
+}
+
+// Content Styling
+.ios-content {
+  --background: var(--ios-background);
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+.survey-container {
+  padding: 16px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+// Card Styling
+.survey-card {
+  background: var(--ios-background-secondary);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 16px var(--ios-shadow);
+  border: 1px solid var(--ios-separator);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.question-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ios-label);
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+}
+
+.question-subtitle {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 1rem;
+  color: var(--ios-label-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.card-footer {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+// Button Styling
+.ios-button {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 16px 24px;
+  border-radius: 12px;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  &.primary {
+    background-color: var(--ios-system-blue);
+    color: white;
+    
+    &:hover {
+      background-color: #0056CC;
+    }
+    
+    &:active {
+      background-color: #004BB5;
+      transform: scale(0.98);
+    }
+    
+    &:disabled {
+      background-color: var(--ios-system-gray);
+      cursor: not-allowed;
+    }
+  }
+  
+  &.secondary {
+    background-color: var(--ios-system-gray-light);
+    color: var(--ios-system-blue);
+    
+    &:hover {
+      background-color: #E5E5EA;
+    }
+    
+    &:active {
+      background-color: #D1D1D6;
+      transform: scale(0.98);
+    }
+    
+    &:disabled {
+      background-color: var(--ios-system-gray-light);
+      color: var(--ios-system-gray);
+      cursor: not-allowed;
+    }
+  }
+}
+
+// Paycheck Selection Styling
+.paycheck-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.paycheck-item {
+  background: var(--ios-background);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--ios-separator);
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #F8F8F8;
+  }
+}
+
+.paycheck-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.paycheck-info {
+  flex: 1;
+}
+
+.paycheck-name {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ios-label);
+  margin: 0 0 4px 0;
+}
+
+.paycheck-details {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 0.9rem;
+  color: var(--ios-label-secondary);
+  margin: 0 0 4px 0;
+}
+
+.paycheck-frequency {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: var(--ios-system-blue);
+  font-weight: 500;
+  background: rgba(0, 122, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.ios-checkbox {
+  --size: 24px;
+  --checkbox-background-checked: var(--ios-system-blue);
+  --checkmark-color: white;
+  --border-color-checked: var(--ios-system-blue);
+  --border-color: var(--ios-system-gray);
+  --border-radius: 6px;
+  --border-width: 2px;
+}
+
+// Percentage Setting Styling
+.percentage-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.paycheck-preview {
+  background: var(--ios-background);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--ios-separator);
+}
+
+.paycheck-preview-content {
+  text-align: center;
+}
+
+.paycheck-preview-name {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ios-label);
+  margin: 0 0 4px 0;
+}
+
+.paycheck-preview-amount {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 0.9rem;
+  color: var(--ios-label-secondary);
+  margin: 0;
+}
+
+.percentage-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.percentage-display {
+  text-align: center;
+}
+
+.percentage-value {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--ios-system-blue);
+  display: block;
+}
+
+.percentage-label {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 0.9rem;
+  color: var(--ios-label-secondary);
+  font-weight: 500;
+}
+
+.range-container {
+  padding: 0 16px;
+}
+
+.ios-range {
+  --bar-background: var(--ios-system-gray-light);
+  --bar-background-active: var(--ios-system-blue);
+  --bar-height: 4px;
+  --bar-border-radius: 2px;
+  --knob-background: var(--ios-system-blue);
+  --knob-size: 28px;
+  --knob-border-radius: 14px;
+  --knob-box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+.range-label {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: var(--ios-label-secondary);
+  font-weight: 500;
+}
+
+// Standard Question Options
+.options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.option-item {
+  background: var(--ios-background);
+  border-radius: 12px;
+  padding: 16px;
+  border: 2px solid var(--ios-separator);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #F8F8F8;
+    border-color: var(--ios-system-blue);
+  }
+  
+  &.selected {
+    background: rgba(0, 122, 255, 0.08);
+    border-color: var(--ios-system-blue);
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
+  }
+}
+
+.option-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.option-text {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 1rem;
+  color: var(--ios-label);
+  font-weight: 500;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.option-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.check-icon {
+  font-size: 24px;
+  color: var(--ios-system-blue);
+}
+
+.selection-circle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ios-system-gray);
+  border-radius: 50%;
+  background: transparent;
+}
+
+// Loading States
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 0;
+}
+
+.ios-spinner {
+  --color: var(--ios-system-blue);
+  font-size: 32px;
+}
+
+.loading-text {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 1rem;
+  color: var(--ios-label-secondary);
+  margin: 0;
+}
+
+// Error States
+.error-state {
+  margin-bottom: 24px;
+}
+
+.error-card {
+  background: #FFF2F2;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #FFB3B3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.error-icon {
+  font-size: 24px;
+  color: #FF3333;
+  min-width: 24px;
+}
+
+.error-text {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 0.9rem;
+  color: #CC0000;
+  margin: 0;
+  line-height: 1.4;
+}
+
+// Empty States
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 0;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: var(--ios-system-gray);
+}
+
+.empty-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--ios-label);
+  margin: 0;
+}
+
+.empty-text {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 1rem;
+  color: var(--ios-label-secondary);
+  margin: 0;
+  line-height: 1.4;
+  max-width: 280px;
+}
+
+// Footer Navigation
+.ios-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--ios-background-secondary);
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--ios-separator);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+// Responsive Design
+@media (max-width: 375px) {
+  .survey-container {
+    padding: 12px;
+  }
+  
+  .survey-card {
+    padding: 20px;
+  }
+  
+  .question-title {
+    font-size: 1.3rem;
+  }
+  
+  .percentage-value {
+    font-size: 2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .survey-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  
+  .survey-card {
+    padding: 32px;
+  }
+}
+
+// Dark Mode Support
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ios-background: #000000;
+    --ios-background-secondary: #1C1C1E;
+    --ios-label: #FFFFFF;
+    --ios-label-secondary: #8E8E93;
+    --ios-separator: #38383A;
+    --ios-system-gray-light: #2C2C2E;
+  }
+  
+  .error-card {
+    background: #2C1B1B;
+    border-color: #4A2C2C;
+  }
+  
+  .error-text {
+    color: #FF6B6B;
+  }
+  
+  .paycheck-frequency {
+    background: rgba(90, 200, 250, 0.2);
+  }
+  
+  .option-item.selected {
+    background: rgba(90, 200, 250, 0.15);
+  }
 }
