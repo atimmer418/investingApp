@@ -108,8 +108,37 @@ export class SurveyComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('[SurveyComponent] ngOnInit - Initializing.');
-    this.initializeOrRefreshSurveyState();
-    // ... (router subscription same as before) ...
+    
+    // DEMO: Show a sample question for iOS design showcase
+    this.currentSurveyType = SurveyType.InitialRiskSurvey;
+    this.activeSurveyQuestions = [
+      { 
+        id: 'demo1', 
+        questionText: "What is your primary investment goal?", 
+        responseChoices: [
+          {id: 'g1', text: "Long-term Growth"}, 
+          {id: 'g2', text: "Generating Income"}, 
+          {id: 'g3', text: "Capital Preservation"}
+        ], 
+        answer: null 
+      },
+      { 
+        id: 'demo2', 
+        questionText: "How would you describe your risk tolerance?", 
+        responseChoices: [
+          {id: 'r1', text: "Conservative - I prefer stable, predictable returns"}, 
+          {id: 'r2', text: "Moderate - I'm comfortable with some market fluctuation"}, 
+          {id: 'r3', text: "Aggressive - I'm willing to take higher risks for potentially higher returns"}
+        ], 
+        answer: null 
+      }
+    ];
+    this.currentQuestionIndex = 0;
+    this.currentQuestion = this.activeSurveyQuestions[0];
+    
+    // Original initialization commented out for demo
+    // this.initializeOrRefreshSurveyState();
+    
     this.routerSubscription = this.router.events.pipe(
       filter((event: RouterEvent): event is NavigationEnd =>
         event instanceof NavigationEnd &&
@@ -117,7 +146,7 @@ export class SurveyComponent implements OnInit, OnDestroy {
       )
     ).subscribe((event: NavigationEnd) => {
       console.log('[SurveyComponent] Router event: NavigationEnd to', event.urlAfterRedirects, '- Re-evaluating survey state.');
-      this.initializeOrRefreshSurveyState();
+      // this.initializeOrRefreshSurveyState();
     });
   }
 
