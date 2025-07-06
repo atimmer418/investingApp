@@ -42,11 +42,10 @@ enum SurveyType {
   templateUrl: './survey.component.html',
   styleUrls: ['./survey.component.scss'],
   standalone: true,
-  imports: [ /* ... same imports as before ... */
+  imports: [
     CommonModule, FormsModule,
-    IonHeader, IonChip, IonToolbar, IonTitle, IonContent, IonText,
-    IonList, IonItem, IonLabel, IonButton, IonButtons, IonIcon, IonFooter,
-    IonCheckbox, IonInput, IonSpinner, IonRange
+    IonHeader, IonToolbar, IonTitle, IonContent, IonLabel,
+    IonIcon, IonCheckbox, IonSpinner, IonRange
   ]
 })
 export class SurveyComponent implements OnInit, OnDestroy {
