@@ -2,34 +2,27 @@
 
 // iOS System Colors
 :root {
-  --ios-system-blue: #007AFF;
-  --ios-system-blue-light: #5AC8FA;
-  --ios-system-gray: #8E8E93;
-  --ios-system-gray-light: #F2F2F7;
-  --ios-system-gray-dark: #1C1C1E;
-  --ios-background: #F2F2F7;
-  --ios-background-secondary: #FFFFFF;
-  --ios-label: #000000;
-  --ios-label-secondary: #6D6D72;
+  --ios-blue: #007AFF;
+  --ios-gray: #8E8E93;
+  --ios-gray-light: #F2F2F7;
+  --ios-bg: #F2F2F7;
+  --ios-bg-secondary: #FFFFFF;
+  --ios-text: #000000;
+  --ios-text-secondary: #6D6D72;
   --ios-separator: #C6C6C8;
   --ios-shadow: rgba(0, 0, 0, 0.1);
-  --ios-shadow-elevated: rgba(0, 0, 0, 0.15);
 }
 
-// Header Styling
-.ios-header {
-  ion-toolbar {
-    --background: var(--ios-background-secondary);
-    --color: var(--ios-label);
-    --border-color: var(--ios-separator);
-    --border-width: 0;
-    box-shadow: 0 1px 0 var(--ios-separator);
-  }
+// Header & Title
+.ios-header ion-toolbar {
+  --background: var(--ios-bg-secondary);
+  --color: var(--ios-text);
+  box-shadow: 0 1px 0 var(--ios-separator);
 }
 
 .ios-title {
-  color: var(--ios-label);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+  color: var(--ios-text);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   font-weight: 600;
   font-size: 1.1rem;
   text-align: center;
@@ -43,48 +36,29 @@
   gap: 8px;
 }
 
-.survey-type {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--ios-label);
-}
-
-.progress-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  width: 100%;
-}
-
 .progress-bar {
   width: 120px;
   height: 4px;
-  background-color: var(--ios-system-gray-light);
+  background: var(--ios-gray-light);
   border-radius: 2px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background-color: var(--ios-system-blue);
-  border-radius: 2px;
+  background: var(--ios-blue);
   transition: width 0.3s ease;
 }
 
 .progress-text {
   font-size: 0.8rem;
-  color: var(--ios-label-secondary);
+  color: var(--ios-text-secondary);
   font-weight: 500;
 }
 
-// Content Styling
+// Content & Cards
 .ios-content {
-  --background: var(--ios-background);
-  --padding-start: 0;
-  --padding-end: 0;
-  --padding-top: 0;
-  --padding-bottom: 0;
+  --background: var(--ios-bg);
 }
 
 .survey-container {
@@ -94,9 +68,8 @@
   flex-direction: column;
 }
 
-// Card Styling
 .survey-card {
-  background: var(--ios-background-secondary);
+  background: var(--ios-bg-secondary);
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 16px;
@@ -113,18 +86,17 @@
 }
 
 .question-title {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--ios-label);
+  color: var(--ios-text);
   margin: 0 0 8px 0;
   line-height: 1.3;
 }
 
 .question-subtitle {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   font-size: 1rem;
-  color: var(--ios-label-secondary);
+  color: var(--ios-text-secondary);
   margin: 0;
   line-height: 1.4;
 }
@@ -134,9 +106,9 @@
   padding-top: 24px;
 }
 
-// Button Styling
+// Buttons
 .ios-button {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   font-size: 1rem;
   font-weight: 600;
   padding: 16px 24px;
@@ -151,46 +123,24 @@
   gap: 8px;
   
   &.primary {
-    background-color: var(--ios-system-blue);
+    background: var(--ios-blue);
     color: white;
     
-    &:hover {
-      background-color: #0056CC;
-    }
-    
-    &:active {
-      background-color: #004BB5;
-      transform: scale(0.98);
-    }
-    
-    &:disabled {
-      background-color: var(--ios-system-gray);
-      cursor: not-allowed;
-    }
+    &:hover { background: #0056CC; }
+    &:active { background: #004BB5; transform: scale(0.98); }
+    &:disabled { background: var(--ios-gray); cursor: not-allowed; }
   }
   
   &.secondary {
-    background-color: var(--ios-system-gray-light);
-    color: var(--ios-system-blue);
+    background: var(--ios-gray-light);
+    color: var(--ios-blue);
     
-    &:hover {
-      background-color: #E5E5EA;
-    }
-    
-    &:active {
-      background-color: #D1D1D6;
-      transform: scale(0.98);
-    }
-    
-    &:disabled {
-      background-color: var(--ios-system-gray-light);
-      color: var(--ios-system-gray);
-      cursor: not-allowed;
-    }
+    &:hover { background: #E5E5EA; }
+    &:active { background: #D1D1D6; transform: scale(0.98); }
   }
 }
 
-// Paycheck Selection Styling
+// Paycheck Items
 .paycheck-list {
   display: flex;
   flex-direction: column;
@@ -199,15 +149,13 @@
 }
 
 .paycheck-item {
-  background: var(--ios-background);
+  background: var(--ios-bg);
   border-radius: 12px;
   padding: 16px;
   border: 1px solid var(--ios-separator);
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
   
-  &:hover {
-    background: #F8F8F8;
-  }
+  &:hover { background: #F8F8F8; }
 }
 
 .paycheck-content {
@@ -221,41 +169,39 @@
 }
 
 .paycheck-name {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--ios-label);
+  color: var(--ios-text);
   margin: 0 0 4px 0;
 }
 
 .paycheck-details {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   font-size: 0.9rem;
-  color: var(--ios-label-secondary);
+  color: var(--ios-text-secondary);
   margin: 0 0 4px 0;
 }
 
 .paycheck-frequency {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   font-size: 0.8rem;
-  color: var(--ios-system-blue);
+  color: var(--ios-blue);
   font-weight: 500;
   background: rgba(0, 122, 255, 0.1);
   padding: 2px 8px;
   border-radius: 6px;
 }
 
+// Checkbox
 .ios-checkbox {
   --size: 24px;
-  --checkbox-background-checked: var(--ios-system-blue);
+  --checkbox-background-checked: var(--ios-blue);
   --checkmark-color: white;
-  --border-color-checked: var(--ios-system-blue);
-  --border-color: var(--ios-system-gray);
+  --border-color-checked: var(--ios-blue);
+  --border-color: var(--ios-gray);
   --border-radius: 6px;
   --border-width: 2px;
 }
 
-// Percentage Setting Styling
+// Percentage Section
 .percentage-container {
   display: flex;
   flex-direction: column;
@@ -264,35 +210,24 @@
 }
 
 .paycheck-preview {
-  background: var(--ios-background);
+  background: var(--ios-bg);
   border-radius: 12px;
   padding: 16px;
   border: 1px solid var(--ios-separator);
-}
-
-.paycheck-preview-content {
   text-align: center;
 }
 
 .paycheck-preview-name {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--ios-label);
+  color: var(--ios-text);
   margin: 0 0 4px 0;
 }
 
 .paycheck-preview-amount {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   font-size: 0.9rem;
-  color: var(--ios-label-secondary);
+  color: var(--ios-text-secondary);
   margin: 0;
-}
-
-.percentage-selector {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
 }
 
 .percentage-display {
@@ -300,17 +235,15 @@
 }
 
 .percentage-value {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
   font-size: 2.5rem;
   font-weight: 700;
-  color: var(--ios-system-blue);
+  color: var(--ios-blue);
   display: block;
 }
 
 .percentage-label {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   font-size: 0.9rem;
-  color: var(--ios-label-secondary);
+  color: var(--ios-text-secondary);
   font-weight: 500;
 }
 
@@ -319,24 +252,21 @@
 }
 
 .ios-range {
-  --bar-background: var(--ios-system-gray-light);
-  --bar-background-active: var(--ios-system-blue);
+  --bar-background: var(--ios-gray-light);
+  --bar-background-active: var(--ios-blue);
   --bar-height: 4px;
-  --bar-border-radius: 2px;
-  --knob-background: var(--ios-system-blue);
+  --knob-background: var(--ios-blue);
   --knob-size: 28px;
-  --knob-border-radius: 14px;
   --knob-box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
 }
 
 .range-label {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   font-size: 0.8rem;
-  color: var(--ios-label-secondary);
+  color: var(--ios-text-secondary);
   font-weight: 500;
 }
 
-// Standard Question Options
+// Options
 .options-container {
   display: flex;
   flex-direction: column;
@@ -345,7 +275,7 @@
 }
 
 .option-item {
-  background: var(--ios-background);
+  background: var(--ios-bg);
   border-radius: 12px;
   padding: 16px;
   border: 2px solid var(--ios-separator);
@@ -354,12 +284,12 @@
   
   &:hover {
     background: #F8F8F8;
-    border-color: var(--ios-system-blue);
+    border-color: var(--ios-blue);
   }
   
   &.selected {
     background: rgba(0, 122, 255, 0.08);
-    border-color: var(--ios-system-blue);
+    border-color: var(--ios-blue);
     box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
   }
 }
@@ -371,9 +301,8 @@
 }
 
 .option-text {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   font-size: 1rem;
-  color: var(--ios-label);
+  color: var(--ios-text);
   font-weight: 500;
   flex: 1;
   line-height: 1.4;
@@ -389,18 +318,18 @@
 
 .check-icon {
   font-size: 24px;
-  color: var(--ios-system-blue);
+  color: var(--ios-blue);
 }
 
 .selection-circle {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--ios-system-gray);
+  border: 2px solid var(--ios-gray);
   border-radius: 50%;
   background: transparent;
 }
 
-// Loading States
+// States
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -410,18 +339,16 @@
 }
 
 .ios-spinner {
-  --color: var(--ios-system-blue);
+  --color: var(--ios-blue);
   font-size: 32px;
 }
 
 .loading-text {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   font-size: 1rem;
-  color: var(--ios-label-secondary);
+  color: var(--ios-text-secondary);
   margin: 0;
 }
 
-// Error States
 .error-state {
   margin-bottom: 24px;
 }
@@ -443,14 +370,12 @@
 }
 
 .error-text {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   font-size: 0.9rem;
   color: #CC0000;
   margin: 0;
   line-height: 1.4;
 }
 
-// Empty States
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -462,57 +387,43 @@
 
 .empty-icon {
   font-size: 48px;
-  color: var(--ios-system-gray);
+  color: var(--ios-gray);
 }
 
 .empty-title {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
   font-size: 1.3rem;
   font-weight: 600;
-  color: var(--ios-label);
+  color: var(--ios-text);
   margin: 0;
 }
 
 .empty-text {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   font-size: 1rem;
-  color: var(--ios-label-secondary);
+  color: var(--ios-text-secondary);
   margin: 0;
   line-height: 1.4;
   max-width: 280px;
 }
 
-// Footer Navigation
+// Footer
 .ios-footer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--ios-background-secondary);
+  background: var(--ios-bg-secondary);
   padding: 16px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--ios-separator);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 }
 
-// Responsive Design
+// Responsive
 @media (max-width: 375px) {
-  .survey-container {
-    padding: 12px;
-  }
-  
-  .survey-card {
-    padding: 20px;
-  }
-  
-  .question-title {
-    font-size: 1.3rem;
-  }
-  
-  .percentage-value {
-    font-size: 2rem;
-  }
+  .survey-container { padding: 12px; }
+  .survey-card { padding: 20px; }
+  .question-title { font-size: 1.3rem; }
+  .percentage-value { font-size: 2rem; }
 }
 
 @media (min-width: 768px) {
@@ -521,37 +432,5 @@
     margin: 0 auto;
     padding: 24px;
   }
-  
-  .survey-card {
-    padding: 32px;
-  }
-}
-
-// Dark Mode Support
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ios-background: #000000;
-    --ios-background-secondary: #1C1C1E;
-    --ios-label: #FFFFFF;
-    --ios-label-secondary: #8E8E93;
-    --ios-separator: #38383A;
-    --ios-system-gray-light: #2C2C2E;
-  }
-  
-  .error-card {
-    background: #2C1B1B;
-    border-color: #4A2C2C;
-  }
-  
-  .error-text {
-    color: #FF6B6B;
-  }
-  
-  .paycheck-frequency {
-    background: rgba(90, 200, 250, 0.2);
-  }
-  
-  .option-item.selected {
-    background: rgba(90, 200, 250, 0.15);
-  }
+  .survey-card { padding: 32px; }
 }
