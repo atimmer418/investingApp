@@ -1,4 +1,4 @@
-<ion-content [fullscreen]="true" class="get-started-content">
+<ion-content [fullscreen]="true" [scroll]="false" class="get-started-content">
 
   <!-- The Swiper container now takes up the main flexible space -->
   <!-- SWIPER NEEDS css-mode="true" in prod -->
@@ -7,57 +7,62 @@
     <!-- Slide 1: The Problem -->
     <swiper-slide>
       <div class="slide-content">
-        <img src="assets/icon/wilted-plant.svg" alt="Wilted plant in a piggy bank" class="slide-image"/>
+        <img src="assets/icon/wilted-plant.svg" alt="Wilted plant in a piggy bank" class="slide-image" />
         <h2>Your Savings Are Leaking</h2>
-        <p>In a standard savings account, inflation quietly eats away at your money's value. To truly grow wealth, your money needs to work harder.</p>
+        <p>In a standard savings account, inflation quietly eats away at your money's value. To truly grow wealth, your
+          money needs to work harder.</p>
       </div>
     </swiper-slide>
 
     <!-- Slide 2: The Foundation -->
     <swiper-slide>
       <div class="slide-content">
-        <img src="assets/icon/financial-growth.svg" alt="Upward trending graph" class="slide-image"/>
+        <img src="assets/icon/financial-growth.svg" alt="Upward trending graph" class="slide-image" />
         <h2>Put Your Wealth on Autopilot</h2>
-        <p>We make it effortless. Automatically invest a piece of every paycheck into a smart, diversified portfolio designed to outpace inflation and build your foundation.</p>
+        <p>We make it effortless. Automatically invest a piece of every paycheck into a smart, diversified portfolio
+          designed to outpace inflation and build your foundation.</p>
       </div>
     </swiper-slide>
 
     <!-- Slide 3: The Secret Weapon -->
     <swiper-slide>
       <div class="slide-content">
-        <img src="assets/icon/sbloc.svg" alt="A key unlocking portfolio growth" class="slide-image"/>
+        <img src="assets/icon/sbloc.svg" alt="A key unlocking portfolio growth" class="slide-image" />
         <h2>Live Like the Wealthy</h2>
-        <p>The secret isn't selling—it's borrowing. Access cash when you need it by borrowing against your assets, all while they continue to grow, untouched and untaxed.</p>
+        <p>The secret isn't selling—it's borrowing. Access cash when you need it by borrowing against your assets, all
+          while they continue to grow, untouched and untaxed.</p>
       </div>
     </swiper-slide>
 
     <!-- Slide 4: The Safety Net -->
     <swiper-slide>
       <div class="slide-content">
-        <img src="assets/icon/shield.svg" alt="A shield protecting investments" class="slide-image"/>
+        <img src="assets/icon/shield.svg" alt="A shield protecting investments" class="slide-image" />
         <h2>Your Digital Financial Guard</h2>
-        <p>This powerful strategy requires careful management. Our app is your safety net, constantly monitoring risk factors like LTV to ensure you grow wealth safely.</p>
+        <p>This powerful strategy requires careful management. Our app is your safety net, constantly monitoring risk
+          factors like LTV to ensure you grow wealth safely.</p>
       </div>
     </swiper-slide>
 
     <!-- Slide 5: The Call to Action -->
     <swiper-slide>
       <div class="slide-content">
-        <img src="assets/icon/rocket.svg" alt="A rocket taking off" class="slide-image"/>
+        <img src="assets/icon/rocket.svg" alt="A rocket taking off" class="slide-image" />
         <h2>Your Future Starts Now</h2>
-        <p>Begin your journey to financial independence with a plan that's smarter, safer, and more powerful. Let's build your perpetual wealth engine, together.</p>
+        <p>Begin your journey to financial independence with a plan that's smarter, safer, and more powerful. Let's
+          build your perpetual wealth engine, together.</p>
       </div>
+      <!-- This footer section contains the buttons and is fixed at the bottom -->
+      <div class="footer-cta ion-padding">
+        <div class="cta-primary-wrapper">
+          <ion-button expand="block" (click)="getSetUp()" class="cta-main">
+            Get Started
+          </ion-button>
+        </div>
+      </div>
+
     </swiper-slide>
 
   </swiper-container>
-
-  <!-- This footer section contains the buttons and is fixed at the bottom -->
-  <div class="footer-cta ion-padding">
-    <div *ngIf="isLastSlide" class="cta-primary-wrapper">
-      <ion-button expand="block" (click)="getSetUp()" class="cta-main">
-        Get Started
-      </ion-button>
-    </div>
-  </div>
 
 </ion-content>
