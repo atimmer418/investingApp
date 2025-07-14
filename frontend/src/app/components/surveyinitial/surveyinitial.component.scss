@@ -1,0 +1,101 @@
+// Use CSS variables for a consistent theme
+:host {
+  --ion-background-color: #f2f2f7; // A very light grey, common in iOS settings
+  --ion-toolbar-background: var(--ion-background-color);
+  --ion-text-color: #000000;
+  --ion-color-primary: #007aff; // Classic iOS blue
+  --ion-color-medium: #8e8e93; // For helper text
+}
+
+ion-toolbar {
+  --border-width: 0 !important; // Clean, no line under header
+}
+
+ion-progress-bar {
+  height: 3px;
+  --progress-background: var(--ion-color-primary);
+}
+
+.survey-container {
+  padding: 16px 8px; // Add some padding around the main content
+}
+
+.question-block {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0 0 8px 0;
+  }
+
+  .helper-text {
+    font-size: 14px;
+    color: var(--ion-color-medium);
+    margin: 0 0 24px 0;
+  }
+}
+
+.input-display-wrapper {
+  display: flex;
+  align-items: baseline;
+  border-bottom: 2px solid #e5e5ea;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+
+  .currency-symbol {
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--ion-color-medium);
+    margin-right: 4px;
+  }
+
+  ion-input {
+    font-size: 44px;
+    font-weight: 700;
+    --padding-start: 0;
+    --padding-end: 8px;
+    max-width: fit-content;
+  }
+
+  .per-month-label {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ion-color-medium);
+    margin-left: 4px;
+  }
+}
+
+ion-range {
+  --bar-background: #e5e5ea;
+  --bar-background-active: var(--ion-color-primary);
+  --knob-background: #ffffff;
+  --knob-border: 1px solid #e5e5ea;
+  --knob-box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  padding: 0;
+  margin-top: 16px;
+}
+
+// --- Footer Styling ---
+ion-footer {
+  // Adds a subtle shadow to lift the footer off the page
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.04);
+}
+
+.footer-cta {
+  background: #ffffff;
+  padding-bottom: calc(env(safe-area-inset-bottom, 10px)); // Safe area for home bar
+  
+  .cta-main {
+    --border-radius: 12px;
+    font-weight: 600;
+    height: 50px;
+    text-transform: none;
+    font-size: 17px;
+  }
+}

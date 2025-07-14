@@ -8,6 +8,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/twofactorsetup/twofactorsetup.component').then(m => m.TwoFactorSetupComponent)
   },
   {
+    path: 'survey-initial',
+    loadComponent: () => import('./components/surveyinitial/surveyinitial.component').then(m => m.SurveyInitialComponent)
+  },
+  {
     path: 'auth-finalize', // This is the route you navigate to
     loadComponent: () => import('./components/authfinalize/authfinalize.component').then(m => m.AuthFinalizeComponent)
     // Adjust path if you placed AuthFinalizeComponent elsewhere, e.g., directly under 'app/'

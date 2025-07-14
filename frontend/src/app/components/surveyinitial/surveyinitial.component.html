@@ -1,0 +1,78 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Chart Your Path</ion-title>
+    <!-- Optional: Progress indicator -->
+    <ion-progress-bar [value]="0.5"></ion-progress-bar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="survey-container">
+    <!-- Question 1: Monthly Investment -->
+    <div class="question-block">
+      <h2>First, how much can you invest each month?</h2>
+      <p class="helper-text">This is your wealth-building engine. You can always change it later.</p>
+      
+      <div class="input-display-wrapper">
+        <span class="currency-symbol">$</span>
+        <ion-input
+          type="text"
+          inputmode="numeric"
+          [(ngModel)]="formattedMonthlyInvestment"
+          (ionBlur)="formatAndSetMonthlyInvestment()"
+          (ionFocus)="unformatMonthlyInvestment()"
+        ></ion-input>
+        <span class="per-month-label">/ month</span>
+      </div>
+
+      <ion-range
+        aria-label="Monthly Investment"
+        [min]="100"
+        [max]="10000"
+        [step]="100"
+        [(ngModel)]="monthlyInvestment"
+        (ionChange)="onMonthlyInvestmentChange()"
+      ></ion-range>
+    </div>
+
+    <!-- Question 2: Retirement Income -->
+    <div class="question-block">
+      <h2>Everyone has a 'walk away' number. What's the annual income that would allow you to confidently leave work behind?</h2>
+      <p class="helper-text">Think of this as your personal 'I've made it' salary. The number that gives you the ultimate freedom to choose.</p>
+      
+      <div class="input-display-wrapper">
+        <span class="currency-symbol">$</span>
+        <ion-input
+          type="text"
+          inputmode="numeric"
+          [(ngModel)]="formattedRetirementIncome"
+          (ionBlur)="formatAndSetRetirementIncome()"
+          (ionFocus)="unformatRetirementIncome()"
+        ></ion-input>
+        <span class="per-month-label">/ year</span>
+      </div>
+
+      <ion-range
+        aria-label="Retirement Income"
+        [min]="40000"
+        [max]="250000"
+        [step]="5000"
+        [(ngModel)]="retirementIncome"
+        (ionChange)="onRetirementIncomeChange()"
+      ></ion-range>
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <ion-toolbar>
+    <div class="footer-cta ion-padding">
+      <ion-button expand="block" (click)="calculateTimeline()" class="cta-main">
+        Calculate My Timeline
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>
