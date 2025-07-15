@@ -4,17 +4,17 @@
       <ion-back-button defaultHref="/"></ion-back-button>
     </ion-buttons>
     <ion-title>Chart Your Path</ion-title>
-    <!-- Optional: Progress indicator -->
     <ion-progress-bar [value]="0.5"></ion-progress-bar>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
-  <div class="survey-container">
+  <div class="survey-form-container">
+
     <!-- Question 1: Monthly Investment -->
-    <div class="question-block">
-      <h2>First, how much can you invest each month?</h2>
-      <p class="helper-text">This is your wealth-building engine. You can always change it later.</p>
+    <div class="question-wrapper">
+      <h2>First, let's power up your portfolio.</h2>
+      <p class="helper-text">This is the amount from each paycheck that will build your financial freedom.</p>
       
       <div class="input-display-wrapper">
         <span class="currency-symbol">$</span>
@@ -34,14 +34,17 @@
         [max]="10000"
         [step]="100"
         [(ngModel)]="monthlyInvestment"
-        (ionChange)="onMonthlyInvestmentChange()"
+        (ionChange)="onMonthlySliderChange()"
       ></ion-range>
     </div>
 
+    <!-- Divider -->
+    <hr class="section-divider" />
+
     <!-- Question 2: Retirement Income -->
-    <div class="question-block">
-      <h2>Everyone has a 'walk away' number. What's the annual income that would allow you to confidently leave work behind?</h2>
-      <p class="helper-text">Think of this as your personal 'I've made it' salary. The number that gives you the ultimate freedom to choose.</p>
+    <div class="question-wrapper">
+      <h2>Everyone has a 'walk away' number.</h2>
+      <p class="helper-text">What's the annual income that would allow you to confidently leave work behind?</p>
       
       <div class="input-display-wrapper">
         <span class="currency-symbol">$</span>
@@ -61,17 +64,23 @@
         [max]="250000"
         [step]="5000"
         [(ngModel)]="retirementIncome"
-        (ionChange)="onRetirementIncomeChange()"
+        (ionChange)="onIncomeSliderChange()"
       ></ion-range>
     </div>
+
   </div>
 </ion-content>
 
 <ion-footer class="ion-no-border">
   <ion-toolbar>
-    <div class="footer-cta ion-padding">
-      <ion-button expand="block" (click)="calculateTimeline()" class="cta-main">
-        Calculate My Timeline
+    <div class="footer-container ion-padding">
+      <!-- NEW: Dynamic Result Text -->
+      <p class="dynamic-result-text">
+        Invest <strong>${{ formattedMonthlyInvestment }}/mo</strong> to live off <strong>${{ formattedRetirementIncome }}/yr</strong> in just <strong>{{ timeToIndependence }} years</strong>.
+      </p>
+      <!-- NEW: Action Button -->
+      <ion-button expand="block" (click)="continueToLinking()" class="cta-main">
+        Start Investing
       </ion-button>
     </div>
   </ion-toolbar>
