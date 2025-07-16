@@ -1,6 +1,6 @@
 // Use CSS variables for a consistent theme
 :host {
-  --ion-background-color: #ffffff; // Changed to white for a seamless look
+  --ion-background-color: #f2f2f7; // A very light, clean background
   --ion-toolbar-background: var(--ion-background-color);
   --ion-text-color: #000000;
   --ion-color-primary: #007aff;
@@ -16,15 +16,16 @@ ion-progress-bar {
   --progress-background: var(--ion-color-primary);
 }
 
+// Unified container for the questions
 .survey-form-container {
   padding: 16px;
 }
 
 .question-wrapper {
-  margin-bottom: 40px; // Spacing between questions
+  margin-bottom: 48px;
 
   h2 {
-    font-size: 26px; // Larger, more impactful heading
+    font-size: 26px;
     font-weight: 700;
     line-height: 1.25;
     margin: 0 0 8px 0;
@@ -37,15 +38,7 @@ ion-progress-bar {
   }
 }
 
-// Subtle divider line for visual separation
-.section-divider {
-  border: 0;
-  height: 1px;
-  background-color: #e5e5ea;
-  margin: 0 0 40px 0;
-}
-
-// --- Input Styling (largely the same) ---
+// --- Input Styling (largely the same, slightly refined) ---
 .input-display-wrapper {
   display: flex;
   align-items: baseline;
@@ -53,12 +46,13 @@ ion-progress-bar {
   margin-bottom: 8px;
   padding-bottom: 8px;
 
-  .currency-symbol {
-    font-size: 28px;
-    font-weight: 300;
+  .currency-symbol, .per-month-label {
+    font-weight: 500;
     color: var(--ion-color-medium);
-    margin-right: 4px;
   }
+
+  .currency-symbol { font-size: 28px; margin-right: 4px; }
+  .per-month-label { font-size: 16px; margin-left: 4px; }
 
   ion-input {
     font-size: 44px;
@@ -66,13 +60,6 @@ ion-progress-bar {
     --padding-start: 0;
     --padding-end: 8px;
     max-width: fit-content;
-  }
-
-  .per-month-label {
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--ion-color-medium);
-    margin-left: 4px;
   }
 }
 
@@ -86,25 +73,39 @@ ion-range {
   margin-top: 16px;
 }
 
-// --- New/Updated Footer Styling ---
+// --- NEW "GLassmorphic" Footer Styling ---
 ion-footer {
-  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.04);
+  // This removes the default footer background and border
+  --background: transparent;
+  --border-width: 0;
+  // This allows the footer to sit on top of the content
+  position: absolute;
+  bottom: 0;
+  width: 100%;
 }
 
 .footer-container {
-  background: #ffffff;
   padding: 16px 24px calc(env(safe-area-inset-bottom, 10px)) 24px;
   text-align: center;
   
+  // The "Frosted Glass" Effect
+  background: rgba(255, 255, 255, 0.75); // Semi-transparent white
+  backdrop-filter: blur(20px); // This is the key for the blur effect
+  -webkit-backdrop-filter: blur(20px); // Safari support
+  
+  // Add a subtle border to the top to separate it from the content
+  border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+  
   .dynamic-result-text {
     font-size: 16px;
-    line-height: 1.5;
-    color: var(--ion-color-medium);
+    line-height: 1.4; // Slightly tighter line-height to help it fit
+    color: var(--ion-text-color); // Darker text for better contrast on the blur
     margin: 0 0 16px 0;
+    font-weight: 500;
     
     strong {
-      color: var(--ion-text-color);
-      font-weight: 600;
+      font-weight: 700;
+      color: var(--ion-color-primary); // Highlight numbers in primary color
     }
   }
   
