@@ -48,6 +48,7 @@ export class SurveyInitialComponent implements OnInit {
   // --- User Input Properties (Unchanged) ---
   monthlyInvestment: number = 7000;
   retirementIncome: number = 100000;
+  portfolioValue: number = 1000000;
   formattedMonthlyInvestment: string = '7,000';
   formattedRetirementIncome: string = '100,000';
 
@@ -55,8 +56,8 @@ export class SurveyInitialComponent implements OnInit {
   timeToIndependence: string = ''; // This will now hold the new, precise calculation
 
   // --- NEW: Core Economic Assumptions for the Simulation Engine ---
-  private readonly AVG_MARKET_YIELD = 0.08;
-  private readonly FIXED_SIM_STRESS_TEST_YIELD = 0.06;
+  private readonly ACCUMULATION_YIELD = 0.08; 
+  private readonly FIXED_SIM_STRESS_TEST_YIELD = 0.07;
   private readonly SBLOC_INTEREST_RATE = 0.06;
   private readonly INFLATION_RATE = 0.025;
   private readonly MAX_LTV = 0.70;
@@ -141,7 +142,10 @@ export class SurveyInitialComponent implements OnInit {
 
     // Use the ACCURATE data from our plan result
     // const startingPortfolio = 2500000;
-    const startingPortfolio = this.currentPlanResult.finalPortfolio;
+    // const startingPortfolio = this.currentPlanResult.finalPortfolio;
+    const startingPortfolio = this.portfolioValue;
+    console.log('Starting Portfolio:', startingPortfolio);
+    console.log('Withdrawal Percentage:', this.retirementIncome / startingPortfolio);
     const initialWithdrawal = this.retirementIncome; // Use the user's actual goal
 
     setTimeout(() => {
@@ -164,7 +168,7 @@ export class SurveyInitialComponent implements OnInit {
 
     for (let year = 1; year <= MAX_ACCUMULATION_YEARS; year++) {
       // The accumulation phase should use the optimistic average yield
-      currentPortfolio = (currentPortfolio + (monthlyInvestment * 12)) * (1 + this.AVG_MARKET_YIELD);
+      currentPortfolio = (currentPortfolio + (monthlyInvestment * 12)) * (1 + this.ACCUMULATION_YIELD);
       
       if (currentPortfolio < this.MIN_PORTFOLIO_FOR_SBLOC) continue;
 
@@ -227,10 +231,9 @@ export class SurveyInitialComponent implements OnInit {
       const interestForThisYear = simDebt * this.SBLOC_INTEREST_RATE;
       simDebt += interestForThisYear;
       accumulatedInterest += interestForThisYear; // Keep track of it
-
       simDebt += simCurrentWithdrawal;
       
-      if (simDebt / simPortfolio >= this.MAX_LTV) {
+      if (simDebt / simPortfolio >= 0.45) {
         return false;
       }
 

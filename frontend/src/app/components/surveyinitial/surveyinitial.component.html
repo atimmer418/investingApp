@@ -68,6 +68,13 @@
       ></ion-range>
     </div>
 
+    <ion-input
+      type="text"
+      inputmode="numeric"
+      [(ngModel)]="portfolioValue"
+      (ionChange)="runMonteCarlo()"
+    ></ion-input>
+
   </div>
 </ion-content>
 

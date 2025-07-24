@@ -2,8 +2,8 @@ export class MonteCarloSBLOCSimulator {
 
   // --- Core Economic & Model Assumptions ---
   // These parameters define the "physics" of our simulated world.
-  private readonly MEAN_ANNUAL_RETURN = 0.09;   // 9% average return for a diversified portfolio
-  private readonly STD_DEV_ANNUAL_RETURN = 0.16; // 16% standard deviation (historical volatility)
+  private readonly MEAN_ANNUAL_RETURN = 0.082;   // 8.2% average return for a 80% NSTX and 20% NTI portfolio
+  private readonly STD_DEV_ANNUAL_RETURN = 0.11; // 11% standard deviation (historical volatility for bond based stock portfolio)
   private readonly SBLOC_INTEREST_RATE = 0.06;   // 6% interest on the SBLOC loan
   private readonly INFLATION_RATE = 0.025;       // 2.5% assumed inflation
   private readonly MAX_LTV = 0.70;               // 70% LTV failure threshold
@@ -76,7 +76,7 @@ export class MonteCarloSBLOCSimulator {
       }
 
       // 7. Prepare for next year: increase withdrawal for inflation.
-      // withdrawal *= (1 + this.INFLATION_RATE);
+      withdrawal *= (1 + this.INFLATION_RATE);
     }
 
     // If the loop completes without ever failing...
