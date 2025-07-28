@@ -10,22 +10,33 @@ export class MonteCarloSBLOCSimulator {
   private readonly TRUE_UP_THRESHOLD = 0.12;     // Pay down interest if market return > 12%
   private readonly SIMULATION_YEARS = 50;        // Test each plan for 50 years
   private readonly NUM_SIMULATIONS = 1000;       // Number of "futures" to test
+  private readonly LTV_RECOVERY_TARGET = 0.68; // Target LTV after a margin call paydown
 
   constructor() {}
 
   /**
-   * Runs the full Monte Carlo simulation for a given SBLOC plan.
+   * UPDATED: Runs the full Monte Carlo simulation, now including a cash savings buffer.
    *
-   * @param startingPortfolioValue The user's current portfolio value.
-   * @param initialAnnualWithdrawal The desired first-year income (e.g., 6% of the portfolio).
-   * @returns The probability of success as a percentage (e.g., 95.3).
+   * @param startingPortfolioValue The user's portfolio value.
+   * @param initialAnnualWithdrawal The desired first-year income.
+   * @param startingCashSavings The amount in their "Sleep Well At Night" fund.
+   * @returns An object with the success probability and any failed run data.
    */
-  public runSimulation(startingPortfolioValue: number, initialAnnualWithdrawal: number): { successProbability: number, failedMarketReturns: number[][] } {
+  public runSimulation(
+    startingPortfolioValue: number, 
+    initialAnnualWithdrawal: number,
+    startingCashSavings: number // <-- NEW PARAMETER
+  ): { successProbability: number, failedMarketReturns: number[][] } {
     let successCount = 0;
     const failedMarketReturns: number[][] = [];
 
     for (let i = 0; i < this.NUM_SIMULATIONS; i++) {
-      const { success, marketReturns } = this.runSingleLifePath(startingPortfolioValue, initialAnnualWithdrawal);
+      // Pass the new savings parameter to the simulation
+      const { success, marketReturns } = this.runSingleLifePath(
+        startingPortfolioValue, 
+        initialAnnualWithdrawal,
+        startingCashSavings // <-- PASSING IT HERE
+      );
       if (success) {
         successCount++;
       } else {
@@ -37,49 +48,87 @@ export class MonteCarloSBLOCSimulator {
   }
 
   /**
-   * Simulates a single 50-year financial life path with random market returns.
+   * REWRITTEN: Simulates a single 50-year financial life path, now with a cash buffer and crisis management logic.
    */
-  private runSingleLifePath(startPortfolio: number, startWithdrawal: number): { success: boolean, marketReturns: number[] } {
+  private runSingleLifePath(
+    startPortfolio: number, 
+    startWithdrawal: number,
+    startCash: number // <-- NEW PARAMETER
+  ): { success: boolean, marketReturns: number[] } {
+    
+    // --- Initialize the simulation state ---
     let portfolio = startPortfolio;
     let debt = 0;
+    let cashSavings = startCash; // Initialize the cash buffer
     let withdrawal = startWithdrawal;
-    let accumulatedInterest = 0; // Tracks interest since the last True-Up
+    let accumulatedInterest = 0;
     const marketReturns: number[] = [];
 
     for (let year = 1; year <= this.SIMULATION_YEARS; year++) {
-      // 1. Generate a realistic random market return for this year.
+      // 1. Get market return and grow the portfolio
       const marketReturn = this.generateNormalRandom(this.MEAN_ANNUAL_RETURN, this.STD_DEV_ANNUAL_RETURN);
       marketReturns.push(parseFloat((100 * marketReturn).toFixed(2)));
-
-      // 2. Portfolio value compounds with the market return.
       portfolio *= (1 + marketReturn);
 
-      // 3. Check for the "True-Up" condition.
+      // 2. Handle "True-Up" in good years
       if (marketReturn > this.TRUE_UP_THRESHOLD) {
-        // Use portfolio funds to pay off accumulated interest.
-        portfolio -= accumulatedInterest;
-        debt -= accumulatedInterest;
-        accumulatedInterest = 0; // Reset the interest tracker
+        if (portfolio > accumulatedInterest) { // Safety check
+            portfolio -= accumulatedInterest;
+            debt -= accumulatedInterest;
+            accumulatedInterest = 0;
+        }
       }
 
-      // 4. Calculate this year's new interest and add it to debt and the tracker.
+      // 3. Accrue interest on the loan
       const interestForThisYear = debt * this.SBLOC_INTEREST_RATE;
       debt += interestForThisYear;
       accumulatedInterest += interestForThisYear;
 
-      // 5. Add this year's withdrawal to the debt.
-      debt += withdrawal;
+      // 4. --- NEW: Crisis Management Logic ---
+      // We check LTV *before* taking this year's withdrawal to see if we're in trouble.
+      let withdrawalFromSBLOC = withdrawal;
+      const potentialNextLTV = (debt + withdrawalFromSBLOC) / portfolio;
 
-      // 6. Check for failure condition.
-      if (portfolio <= 0 || (debt / portfolio) >= this.MAX_LTV) {
-        return { success: false, marketReturns }; // This "life path" has failed.
+      if (potentialNextLTV >= this.MAX_LTV) {
+        // "Red Alert": A margin call is imminent. Trigger the Recovery Playbook.
+        
+        // Calculate how much cash we need to pay down the debt to get to a safe LTV
+        const amountToPaydown = (debt + withdrawalFromSBLOC) - (portfolio * this.LTV_RECOVERY_TARGET);
+
+        if (cashSavings >= amountToPaydown) {
+          // Playbook Step 1: We have enough cash to solve the problem.
+          cashSavings -= amountToPaydown;
+          debt -= amountToPaydown;
+          
+          // Playbook Step 2: Live off cash this year, so no SBLOC withdrawal.
+          // We still need to account for this spending by reducing our cash buffer.
+          if (cashSavings >= withdrawal) {
+            cashSavings -= withdrawal;
+            withdrawalFromSBLOC = 0;
+          } else {
+            // Not enough cash to live on for the whole year. This is a failure.
+            return { success: false, marketReturns };
+          }
+
+        } else {
+          // We don't have enough cash to cover the margin call. The plan has failed.
+          return { success: false, marketReturns };
+        }
       }
 
-      // 7. Prepare for next year: increase withdrawal for inflation.
+      // 5. Add the (potentially modified) withdrawal to the debt
+      debt += withdrawalFromSBLOC;
+
+      // 6. Final safety check on the cash buffer
+      if (cashSavings < 0) {
+        return { success: false, marketReturns };
+      }
+
+      // 7. Prepare for next year by inflating the withdrawal amount
       withdrawal *= (1 + this.INFLATION_RATE);
     }
 
-    // If the loop completes without ever failing...
+    // If we survived all 50 years without failing...
     return { success: true, marketReturns };
   }
 
