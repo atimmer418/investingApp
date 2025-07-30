@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/"></ion-back-button>
     </ion-buttons>
-    <ion-title>Chart Your Path</ion-title>
+    <ion-title>Your Path to FI</ion-title>
     <ion-progress-bar [value]="0.5"></ion-progress-bar>
   </ion-toolbar>
 </ion-header>
@@ -13,8 +13,8 @@
 
     <!-- Question 1: Monthly Investment -->
     <div class="question-wrapper">
-      <h2>First, let's power up your portfolio.</h2>
-      <p class="helper-text">This is the amount from each paycheck that will build your financial freedom.</p>
+      <h2>First, how much can you invest each month?</h2>
+      <p class="helper-text">This is the lifeline to your financial independence. The more you invest, the sooner you're free.</p>
       
       <div class="input-display-wrapper">
         <span class="currency-symbol">$</span>
@@ -34,7 +34,7 @@
         [max]="10000"
         [step]="100"
         [(ngModel)]="monthlyInvestment"
-        (ionChange)="onMonthlySliderChange()"
+        (ionChange)="onSliderChange()"
       ></ion-range>
     </div>
 
@@ -43,8 +43,8 @@
 
     <!-- Question 2: Retirement Income -->
     <div class="question-wrapper">
-      <h2>Everyone has a 'walk away' number.</h2>
-      <p class="helper-text">What's the annual income that would allow you to confidently leave work behind?</p>
+      <h2>What annual income do you want your portfolio to replace?</h2>
+      <p class="helper-text">Think of the yearly salary you'd need to live comfortably without a traditional job.</p>
       
       <div class="input-display-wrapper">
         <span class="currency-symbol">$</span>
@@ -64,7 +64,7 @@
         [max]="250000"
         [step]="5000"
         [(ngModel)]="retirementIncome"
-        (ionChange)="onIncomeSliderChange()"
+        (ionChange)="onSliderChange()"
       ></ion-range>
     </div>
 
@@ -73,16 +73,14 @@
 
 <ion-footer class="ion-no-border">
   <div class="footer-container">
+    <!-- NEW: The persuasive sales pitch -->
     <p class="dynamic-result-text">
-      Investing <strong>${{ formattedMonthlyInvestment }}/mo</strong> for <strong>{{ optimisticYears }}-{{ conservativeYears }}</strong> years will give you a portfolio worth <strong>${{ formattedTargetPortfolio }}</strong>.
-      The chance of you living off <strong>${{ formattedRetirementIncome }}/yr</strong> for the rest of your life is <strong>{{ successProbability }}%</strong>.
+      With this plan, you can reach financial independence in just <strong>{{ timeToFI }} years</strong>. We'll show you how to use smart, tactical borrowing to protect your portfolio and make your timeline even safer.
     </p>
-    <!-- <p class="dynamic-result-text">
-      With your plan, you can start living on <strong>${{ formattedRetirementIncome }}/yr</strong> in just <strong>{{ timeToIndependence }} years</strong>.
-      Monte Carlo simulations show a <strong>{{ successProbability }}%</strong> chance of success.
-    </p> -->
-    <ion-button expand="block" (click)="continueToLinking()" class="cta-main">
-      Start Investing
+    
+    <!-- NEW: The Call to Action -->
+    <ion-button expand="block" (click)="viewMyPlan()" class="cta-main">
+      See My FI Plan
     </ion-button>
   </div>
 </ion-footer>
