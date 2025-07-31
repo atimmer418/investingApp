@@ -1,0 +1,128 @@
+:host {
+  --ion-background-color: #f2f2f7;
+  --ion-toolbar-background: var(--ion-background-color);
+  --ion-text-color: #000000;
+  --ion-color-primary: #007aff;
+  --ion-color-medium: #555;
+  --card-background: #ffffff;
+  --card-border-color: #e5e5ea;
+  --card-selected-border: var(--ion-color-primary);
+}
+
+.page-intro {
+  padding: 0 16px 16px 16px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--ion-color-medium);
+  line-height: 1.6;
+
+  strong {
+    color: var(--ion-text-color);
+    font-weight: 600;
+  }
+}
+
+.strategy-cards-container {
+  padding: 0 16px;
+}
+
+.strategy-card {
+  background: var(--card-background);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 2px solid var(--card-border-color);
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  cursor: pointer;
+
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--ion-color-medium);
+    margin: 0 0 20px 0;
+    line-height: 1.5;
+  }
+
+  &.selected {
+    border-color: var(--card-selected-border);
+    box-shadow: 0 5px 15px rgba(0, 122, 255, 0.15);
+  }
+
+  &.recommended {
+    // border-color: var(--card-selected-border);
+  }
+}
+
+.recommended-badge {
+  position: absolute;
+  top: -12px;
+  left: 16px;
+  background: var(--ion-color-primary);
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  ion-icon {
+    font-size: 14px;
+  }
+}
+
+// --- NEW: Styles for the tags ---
+.strategy-tags {
+  display: flex;
+  flex-wrap: wrap; // Allows tags to wrap onto the next line on small screens
+  gap: 8px; // Space between tags
+  border-top: 1px solid var(--card-border-color);
+  padding-top: 16px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+// Color coding for the different tag types
+.tag-positive {
+  background-color: #eef7ee; // A light, friendly green
+  color: #348437; // A darker green for the text
+}
+
+.tag-neutral {
+  background-color: #f2f2f7; // The same as our page background
+  color: #555;
+}
+
+.tag-caution {
+  background-color: #fff8e6; // A light, warm yellow
+  color: #a77c00; // A darker yellow/brown for the text
+}
+
+// Footer
+.footer-container {
+  background: #ffffff;
+  padding: 16px 24px calc(env(safe-area-inset-bottom, 10px)) 24px;
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.04);
+  
+  .cta-main {
+    --border-radius: 12px;
+    font-weight: 600;
+    height: 50px;
+    text-transform: none;
+    font-size: 17px;
+  }
+}
