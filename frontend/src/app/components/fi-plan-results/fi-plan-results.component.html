@@ -13,7 +13,6 @@
   <div class="page-intro">
     <p>
       You're on track to reach FI in <strong>~{{ timeToFI }} years</strong> with a portfolio of <strong>{{ targetPortfolio | currency:'USD':'symbol':'1.0-0' }}</strong>.
-      <br/><br/>
       Here are four proven strategies to turn that portfolio into a lifetime of income.
     </p>
   </div>
@@ -31,7 +30,10 @@
         <ion-icon name="star"></ion-icon> Recommended
       </div>
 
-      <h2>{{ strategy.title }}</h2>
+      <h2>
+        {{ strategy.title }}
+        <ion-icon [name]="strategy.icon"></ion-icon>
+      </h2>
       <p>{{ strategy.description }}</p>
 
       <!-- REWRITTEN: The stats section is now a container for tags -->

@@ -26,27 +26,40 @@
   padding: 0 16px;
 }
 
+// When the parent card is selected, change the badge background
+.strategy-card.selected .recommended-badge {
+  background: var(--ion-color-primary);
+}
+
 .strategy-card {
   background: var(--card-background);
   border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
   border: 2px solid var(--card-border-color);
   transition: all 0.2s ease-in-out;
   position: relative;
   cursor: pointer;
 
   h2 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
-    margin: 0 0 8px 0;
+    margin: 0 0 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    ion-icon {
+      font-size: 20px;
+      color: var(--ion-color-primary);
+    }
   }
 
   p {
     font-size: 14px;
     color: var(--ion-color-medium);
-    margin: 0 0 20px 0;
-    line-height: 1.5;
+    margin: 0 0 12px 0;
+    line-height: 1.4;
   }
 
   &.selected {
@@ -63,7 +76,7 @@
   position: absolute;
   top: -12px;
   left: 16px;
-  background: var(--ion-color-primary);
+  background: var(--card-border-color);
   color: #ffffff;
   padding: 4px 10px;
   border-radius: 16px;
@@ -78,20 +91,21 @@
   }
 }
 
+
 // --- NEW: Styles for the tags ---
 .strategy-tags {
   display: flex;
   flex-wrap: wrap; // Allows tags to wrap onto the next line on small screens
-  gap: 8px; // Space between tags
+  gap: 4px; // Space between tags
   border-top: 1px solid var(--card-border-color);
-  padding-top: 16px;
+  padding-top: 12px;
 }
 
 .tag {
   display: inline-block;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 13px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
   font-weight: 600;
   line-height: 1;
 }
