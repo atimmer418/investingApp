@@ -117,3 +117,26 @@ ion-footer {
     font-size: 17px;
   }
 }
+
+// Info icon styling
+.info-icon {
+  font-size: 18px;
+  color: var(--ion-color-primary);
+  cursor: pointer;
+  margin-left: 4px;
+  vertical-align: middle;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Modal content styling
+.modal-explanation {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  color: var(--ion-text-color);
+}

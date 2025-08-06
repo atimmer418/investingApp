@@ -36,7 +36,7 @@ export class FiPlanResultsComponent implements OnInit {
     {
       id: 'optimal',
       title: 'Optimal Growth',
-      description: 'Withdraw from your portfolio and use a tactical line of credit in down years to protect and grow your wealth.',
+      description: 'Withdraw from your portfolio and use a line of credit in down years to protect and grow your wealth.',
       icon: 'trending-up',
       tags: [
         { label: 'Highest Growth', type: 'positive' },
