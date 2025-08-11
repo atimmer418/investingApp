@@ -99,6 +99,12 @@ export class FiPlanResultsComponent implements OnInit {
     return this.strategies.find(s => s.id === this.selectedStrategyId)?.title || 'Strategy';
   }
 
+  getFutureYear(): number {
+    const currentYear = new Date().getFullYear();
+    const yearsToAdd = parseFloat(this.timeToFI) || 0;
+    return currentYear + Math.round(yearsToAdd);
+  }
+
   confirmSelection() {
     console.log(`User selected the ${this.getSelectedStrategyName()} plan.`);
     this.router.navigate(['/onboarding/final-steps'], { 

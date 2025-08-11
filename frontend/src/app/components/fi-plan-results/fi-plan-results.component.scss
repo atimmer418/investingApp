@@ -16,6 +16,18 @@
   color: var(--ion-color-medium);
   line-height: 1.6;
 
+  h2 {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0 0 8px 0;
+    color: var(--ion-text-color);
+  }
+
+  p {
+    margin: 0;
+  }
+
   strong {
     color: var(--ion-text-color);
     font-weight: 600;
@@ -68,7 +80,7 @@
   }
 
   &.recommended {
-    // border-color: var(--card-selected-border);
+    // Could add special styling for recommended cards here if needed
   }
 }
 
@@ -90,7 +102,6 @@
     font-size: 14px;
   }
 }
-
 
 // --- NEW: Styles for the tags ---
 .strategy-tags {

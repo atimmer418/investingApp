@@ -11,9 +11,10 @@
 
 <ion-content [fullscreen]="true" class="ion-padding">
   <div class="page-intro">
+    <h2>Fast Forward to {{ getFutureYear() }}</h2>
     <p>
-      You're on track to reach FI in <strong>~{{ timeToFI }} years</strong> with a portfolio of <strong>{{ targetPortfolio | currency:'USD':'symbol':'1.0-0' }}</strong>.
-      Select one of the four proven strategies that will turn your portfolio into a lifetime of income.
+      Your portfolio is worth <strong>{{ targetPortfolio | currency:'USD':'symbol':'1.0-0' }}</strong>. 
+      Choose from one of these four strategies to turn this wealth into lifetime income. You can always change this later.
     </p>
   </div>
 

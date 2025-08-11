@@ -73,12 +73,26 @@
 
 <ion-footer class="ion-no-border">
   <div class="footer-container">
-    <!-- NEW: The persuasive sales pitch -->
-    <p class="dynamic-result-text">
-      With this plan, you can reach financial independence in just <strong>{{ timeToFI }} years</strong>. 
-      <ion-icon name="information-circle-outline" class="info-icon" (click)="openCalculationModal()"></ion-icon>
-      <br/>We'll show you how to use smart, tactical borrowing to protect your portfolio and make your timeline even safer.
-    </p>
+    <!-- NEW: Expandable calculation info card -->
+    <div class="calculation-info-card" [class.expanded]="isCalculationExpanded">
+      <p class="dynamic-result-text" (click)="toggleCalculationInfo()">
+        With this setup, you can have financial independence in just <strong>{{ timeToFI }} years</strong>. 
+        <ion-icon 
+          [name]="isCalculationExpanded ? 'chevron-up' : 'information-circle-outline'" 
+          class="info-icon">
+        </ion-icon>
+        <br/>
+        Next, we'll show you proven strategies to turn this wealth into lifetime income.
+      </p>
+      
+      <div class="calculation-details" *ngIf="isCalculationExpanded">
+        <div class="calculation-explanation">
+          <p><strong>Your personalized timeline isn't a guess—it's a projection based on a proven wealth-building formula.</strong></p>
+          <p>We calculate the portfolio size needed to support your desired annual income, using a sustainable 4% withdrawal rate. We then estimate how long your monthly investments, growing at an average 8% annual return, will take to reach that goal.</p>
+          <p>The result is a realistic estimate of your journey to financial independence.</p>
+        </div>
+      </div>
+    </div>
     
     <!-- NEW: The Call to Action -->
     <ion-button expand="block" (click)="viewMyPlan()" class="cta-main">
@@ -87,29 +101,3 @@
   </div>
 </ion-footer>
 
-<!-- Calculation Explanation Modal -->
-<ion-modal [isOpen]="isCalculationModalOpen" (willDismiss)="closeCalculationModal()">
-  <ng-template>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>How We Calculate Your Timeline</ion-title>
-        <ion-buttons slot="end">
-          <ion-button (click)="closeCalculationModal()">
-            <ion-icon name="close"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="ion-padding">
-      <p class="modal-explanation">
-        <strong>Your personalized timeline isn't a guess—it's a projection based on a proven wealth-building formula.</strong>
-      </p>
-      <p class="modal-explanation">
-        We calculate the portfolio size needed to support your desired annual income, using a sustainable 4% withdrawal rate. We then estimate how long your monthly investments, growing at an average 8% annual return, will take to reach that goal.
-      </p>
-      <p class="modal-explanation">
-        The result is a realistic estimate of your journey to financial independence.
-      </p>
-    </ion-content>
-  </ng-template>
-</ion-modal>

@@ -3,7 +3,7 @@ import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { informationCircleOutline, close } from 'ionicons/icons';
+import { informationCircleOutline, chevronUp } from 'ionicons/icons';
 import {
   IonContent,
   IonHeader,
@@ -17,7 +17,6 @@ import {
   IonButtons,
   IonBackButton,
   IonIcon,
-  IonModal,
 } from '@ionic/angular/standalone';
 
 @Component({
@@ -41,7 +40,6 @@ import {
     IonButtons,
     IonBackButton,
     IonIcon,
-    IonModal,
   ],
 })
 export class SurveyInitialComponent implements OnInit {
@@ -54,14 +52,14 @@ export class SurveyInitialComponent implements OnInit {
 
   // --- Display Property ---
   timeToFI: string = '';
-  isCalculationModalOpen: boolean = false;
+  isCalculationExpanded: boolean = false;
 
   // --- Economic Assumptions for the SWR/FIRE calculation ---
   private readonly AVG_MARKET_YIELD = 0.08; // A standard assumption for a growth portfolio
   private readonly SAFE_WITHDRAWAL_RATE = 0.04; // The classic 4% rule
 
   constructor(private router: Router) {
-    addIcons({ informationCircleOutline, close });
+    addIcons({ informationCircleOutline, chevronUp });
   }
 
   ngOnInit() {
@@ -121,12 +119,8 @@ export class SurveyInitialComponent implements OnInit {
     this.timeToFI = isFinite(years) ? years.toFixed(1) : '∞';
   }
 
-  openCalculationModal() {
-    this.isCalculationModalOpen = true;
-  }
-
-  closeCalculationModal() {
-    this.isCalculationModalOpen = false;
+  toggleCalculationInfo() {
+    this.isCalculationExpanded = !this.isCalculationExpanded;
   }
 
   /**
