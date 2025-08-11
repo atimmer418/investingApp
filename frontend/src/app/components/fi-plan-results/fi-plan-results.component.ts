@@ -107,7 +107,7 @@ export class FiPlanResultsComponent implements OnInit {
 
   confirmSelection() {
     console.log(`User selected the ${this.getSelectedStrategyName()} plan.`);
-    this.router.navigate(['/onboarding/final-steps'], { 
+    this.router.navigate(['/link-bank'], { 
       queryParams: { plan: this.selectedStrategyId } 
     });
   }

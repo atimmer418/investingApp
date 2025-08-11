@@ -1,10 +1,8 @@
 // src/app/pages/survey/survey.component.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, NavigationEnd, Event as RouterEvent } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
-import { filter } from 'rxjs/operators';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonLabel,
   IonIcon, IonCheckbox, IonSpinner, IonRange
@@ -31,9 +29,8 @@ interface SurveyQuestion {
   percentageAnswer?: number;         // Store percentage (0.0 to 1.0)
 }
 
-// Enum
+// Enum - simplified to only investment setup
 enum SurveyType {
-  InitialRiskSurvey = 'Initial Risk Survey',
   InvestmentSetup = 'Investment Setup'
 }
 
@@ -48,21 +45,9 @@ enum SurveyType {
     IonIcon, IonCheckbox, IonSpinner, IonRange
   ]
 })
-export class SurveyComponent implements OnInit, OnDestroy {
-  private initialRiskSurveyQuestions: SurveyQuestion[] = [
-    // ... (same as before) ...
-    { id: 'q1', questionText: "What is your primary investment goal?", responseChoices: [
-        {id: 'g1', text: "Long-term Growth"}, {id: 'g2', text: "Generating Income"}, {id: 'g3', text: "Capital Preservation"}
-      ], answer: null },
-    { id: 'q2', questionText: "How would you describe your risk tolerance?", responseChoices: [
-        {id: 'r1', text: "Low"}, {id: 'r2', text: "Medium"}, {id: 'r3', text: "High"}
-      ], answer: null },
-    { id: 'q3', questionText: "What's your favorite investment type?", responseChoices: [
-        {id: 'i1', text: "Stocks"}, {id: 'i2', text: "Bonds"}, {id: 'i3', text: "Real Estate"}
-      ], answer: null }
-  ];
-
-  private baseInvestmentSetupQuestions: SurveyQuestion[] = [ // Base questions
+export class SurveyComponent implements OnInit {
+  // Only keep investment setup questions
+  private investmentSetupQuestions: SurveyQuestion[] = [ // Base questions
     {
       id: 'iq1_paycheck_selection',
       questionText: "Which of your income sources would you like to invest from?",
@@ -99,79 +84,31 @@ export class SurveyComponent implements OnInit, OnDestroy {
   paycheckErrorMessage: string | null = null;
   isSubmittingSurvey: boolean = false;
 
-  private routerSubscription: Subscription | undefined;
-
   constructor(
     private router: Router,
     private plaidDataService: PlaidDataService
   ) {}
 
   ngOnInit(): void {
-    console.log('[SurveyComponent] ngOnInit - Initializing.');
-    
-    // Original initialization commented out for demo
-    this.initializeOrRefreshSurveyState();
-    
-    this.routerSubscription = this.router.events.pipe(
-      filter((event: RouterEvent): event is NavigationEnd =>
-        event instanceof NavigationEnd &&
-        event.urlAfterRedirects?.startsWith('/survey')
-      )
-    ).subscribe((event: NavigationEnd) => {
-      console.log('[SurveyComponent] Router event: NavigationEnd to', event.urlAfterRedirects, '- Re-evaluating survey state.');
-      this.initializeOrRefreshSurveyState();
-    });
+    console.log('[SurveyComponent] ngOnInit - Initializing Investment Setup Survey.');
+    this.initializeInvestmentSurvey();
   }
 
-  initializeOrRefreshSurveyState(): void {
-    const investmentSurveyCompleted = localStorage.getItem('investmentSurveyCompleted') === 'true';
-    const initialSurveyCompleted = localStorage.getItem('initialSurveyCompleted') === 'true';
-    const linkplaidCompleted = localStorage.getItem('linkplaidCompleted') === 'true';
-
-    console.log("[SurveyComponent] initializeOrRefreshSurveyState called:", {
-      initialSurveyCompleted, linkplaidCompleted, investmentSurveyCompleted
+  initializeInvestmentSurvey(): void {
+    console.log("[SurveyComponent] Initializing Investment Setup Survey");
+    
+    this.currentSurveyType = SurveyType.InvestmentSetup;
+    this.activeSurveyQuestions = [...this.investmentSetupQuestions.map(q => ({...q, answer: null, percentageAnswer: undefined, relatedPaycheck: undefined }))];
+    this.currentQuestionIndex = 0;
+    this.paycheckConfigsToSave = [];
+    
+    // Reset checkbox states
+    this.allPaycheckSources.forEach(source => {
+      const checkbox = document.getElementById(`paycheck-${source.accountId}`) as HTMLIonCheckboxElement;
+      if (checkbox) checkbox.checked = false;
     });
-
-    let newSurveyType: SurveyType | null = null;
-    let tempActiveQuestions: SurveyQuestion[] = []; // Temporary holder
-
-    if (!initialSurveyCompleted) {
-      newSurveyType = SurveyType.InitialRiskSurvey;
-      tempActiveQuestions = [...this.initialRiskSurveyQuestions.map(q => ({...q, answer: null, percentageAnswer: undefined, relatedPaycheck: undefined }))];
-      console.log("[SurveyComponent] Determined state: InitialRiskSurvey");
-    } else if (linkplaidCompleted && !investmentSurveyCompleted) {
-      newSurveyType = SurveyType.InvestmentSetup;
-      // Start with just the base questions; percentage questions are added dynamically
-      tempActiveQuestions = [...this.baseInvestmentSetupQuestions.map(q => ({...q, answer: null, percentageAnswer: undefined, relatedPaycheck: undefined }))];
-      console.log("[SurveyComponent] Determined state: InvestmentSetup");
-    } else {
-      // ... (navigation to tabs if all done, same as before) ...
-      console.log("[SurveyComponent] All relevant surveys completed or invalid state. Navigating to tabs.");
-      if (this.router.url.startsWith('/survey')) { // Only navigate if currently on a survey path
-        this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
-      }
-      this.currentSurveyType = null; 
-      this.activeSurveyQuestions = []; 
-      this.currentQuestion = undefined; 
-      return;
-    }
-
-    if (this.currentSurveyType !== newSurveyType || this.activeSurveyQuestions.length === 0 ||
-        (newSurveyType === SurveyType.InvestmentSetup && !this.activeSurveyQuestions.some(q => q.isPaycheckSelectionStep))) {
-      console.log(`[SurveyComponent] Survey type changing or needs reinitialization.`);
-      this.currentSurveyType = newSurveyType;
-      this.activeSurveyQuestions = tempActiveQuestions; // Use the temporary holder
-      this.currentQuestionIndex = 0;
-      this.paycheckConfigsToSave = []; // Reset for a new survey run
-      // this.tempSelectedSourceIds.clear(); // Clear previous selections
-      this.allPaycheckSources.forEach(source => { // Reset temporary selection state if needed
-        const checkbox = document.getElementById(`paycheck-${source.accountId}`) as HTMLIonCheckboxElement;
-        if (checkbox) checkbox.checked = false;
-      });
-      this.loadActiveQuestion();
-    } else if (!this.currentQuestion && this.activeSurveyQuestions.length > 0) {
-      this.loadActiveQuestion();
-    }
+    
+    this.loadActiveQuestion();
   }
 
   loadActiveQuestion(): void {
@@ -383,19 +320,13 @@ export class SurveyComponent implements OnInit, OnDestroy {
 
     console.log(`[SurveyComponent] Survey [${this.currentSurveyType}] Final Submission!`);
 
-    if (this.currentSurveyType === SurveyType.InitialRiskSurvey) {
-      // ... (logging and navigation same as before) ...
-      localStorage.setItem('initialSurveyCompleted', 'true');
-      this.isSubmittingSurvey = false;
-      this.router.navigate(['/link-bank'], { replaceUrl: true });
-    } else if (this.currentSurveyType === SurveyType.InvestmentSetup) {
+    if (this.currentSurveyType === SurveyType.InvestmentSetup) {
       // Save paycheck configs first if any are pending
       if (this.paycheckConfigsToSave.length > 0) {
         console.log('[SurveyComponent] Saving final paycheck configurations:', this.paycheckConfigsToSave);
         this.plaidDataService.savePaycheckConfiguration(this.paycheckConfigsToSave).subscribe({
           next: () => {
             console.log('[SurveyComponent] Final paycheck configs saved.');
-            // localStorage.setItem('paycheckConfigCompleted', 'true');
             this.proceedToStockPreferenceDecision();
           },
           error: (err) => {
@@ -447,13 +378,5 @@ export class SurveyComponent implements OnInit, OnDestroy {
     // Or, if you want to pre-select all fetched paychecks:
     // return this.allPaycheckSources.some(p => p.accountId === accountId);
     return this.paycheckConfigsToSave.some(p => p.accountId === accountId);
-  }
-
-  ngOnDestroy(): void {
-    // ... (same as before) ...
-    console.log('[SurveyComponent] ngOnDestroy - Unsubscribing from router events.');
-    if (this.routerSubscription) {
-      this.routerSubscription.unsubscribe();
-    }
   }
 }
