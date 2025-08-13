@@ -3,9 +3,17 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   // src/app/app.routes.ts
   // ... other routes
+  // {
+  //   path: 'setup-2fa',
+  //   loadComponent: () => import('./components/twofactorsetup/twofactorsetup.component').then(m => m.TwoFactorSetupComponent)
+  // },
   {
-    path: 'setup-2fa',
-    loadComponent: () => import('./components/twofactorsetup/twofactorsetup.component').then(m => m.TwoFactorSetupComponent)
+    path: 'survey-initial',
+    loadComponent: () => import('./components/surveyinitial/surveyinitial.component').then(m => m.SurveyInitialComponent)
+  },
+  {
+    path: 'fi-plan-results',
+    loadComponent: () => import('./components/fi-plan-results/fi-plan-results.component').then(m => m.FiPlanResultsComponent)
   },
   {
     path: 'auth-finalize', // This is the route you navigate to

@@ -1,0 +1,57 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/survey"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Choose Your FI Strategy</ion-title>
+    <!-- ADDED: The progress indicator for consistency -->
+    <ion-progress-bar [value]="0.75"></ion-progress-bar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="page-intro">
+    <h2>Fast Forward to {{ getFutureYear() }}</h2>
+    <p>
+      Your portfolio is worth <strong>{{ targetPortfolio | currency:'USD':'symbol':'1.0-0' }}</strong>. 
+      Choose from one of these four strategies to turn this wealth into lifetime income. You can always change this later.
+    </p>
+  </div>
+
+  <!-- Strategy Cards Container -->
+  <div class="strategy-cards-container">
+    <div 
+      *ngFor="let strategy of strategies" 
+      class="strategy-card"
+      [class.recommended]="strategy.id === 'optimal'"
+      [class.selected]="selectedStrategyId === strategy.id"
+      (click)="selectStrategy(strategy.id)">
+
+      <div *ngIf="strategy.id === 'optimal'" class="recommended-badge">
+        <ion-icon name="star"></ion-icon> Recommended
+      </div>
+
+      <h2>
+        {{ strategy.title }}
+        <ion-icon [name]="strategy.icon"></ion-icon>
+      </h2>
+      <p>{{ strategy.description }}</p>
+
+      <!-- REWRITTEN: The stats section is now a container for tags -->
+      <div class="strategy-tags">
+        <span *ngFor="let tag of strategy.tags" class="tag" [class]="'tag-' + tag.type">
+          {{ tag.label }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="footer-container">
+    <ion-button expand="block" (click)="confirmSelection()" class="cta-main">
+      Continue with {{ getSelectedStrategyName() }}
+    </ion-button>
+  </div>
+</ion-footer>

@@ -1,19 +1,19 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
 
-import { AuthFinalizeComponent } from './authfinalize.component';
+import { SurveyinitialComponent } from './surveyinitial.component';
 
-describe('AuthFinalizeComponent', () => {
-  let component: AuthFinalizeComponent;
-  let fixture: ComponentFixture<AuthFinalizeComponent>;
+describe('SurveyinitialComponent', () => {
+  let component: SurveyinitialComponent;
+  let fixture: ComponentFixture<SurveyinitialComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ AuthFinalizeComponent ],
+      declarations: [ SurveyinitialComponent ],
       imports: [IonicModule.forRoot()]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(AuthFinalizeComponent);
+    fixture = TestBed.createComponent(SurveyinitialComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   }));

@@ -7,7 +7,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel,
-  IonInput, IonButton, IonSpinner, IonText, IonNote, NavController
+  IonInput, IonButton, IonSpinner, IonText, IonNote, IonProgressBar, 
+  IonBackButton, IonButtons, IonIcon, NavController
 } from '@ionic/angular/standalone';
 
 // --- NEW IMPORTS ---
@@ -23,7 +24,8 @@ import { create } from '@github/webauthn-json';
     CommonModule,
     FormsModule, ReactiveFormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel,
-    IonInput, IonButton, IonSpinner, IonText, IonNote
+    IonInput, IonButton, IonSpinner, IonText, IonNote, IonProgressBar,
+    IonBackButton, IonButtons, IonIcon
   ]
 })
 export class AuthFinalizeComponent implements OnInit, OnDestroy {

@@ -42,6 +42,6 @@ export class GetStartedComponent implements AfterViewInit {
 
   getSetUp() {
     localStorage.setItem('getStartedCompleted', 'true');
-    this.router.navigate(['/survey'], { replaceUrl: true });
+    this.router.navigate(['/survey-initial'], { replaceUrl: true });
   }
 }

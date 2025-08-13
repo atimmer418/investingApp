@@ -1,19 +1,19 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
 
-import { AuthFinalizeComponent } from './authfinalize.component';
+import { FiPlanResultsComponent } from './fi-plan-results.component';
 
-describe('AuthFinalizeComponent', () => {
-  let component: AuthFinalizeComponent;
-  let fixture: ComponentFixture<AuthFinalizeComponent>;
+describe('FiPlanResultsComponent', () => {
+  let component: FiPlanResultsComponent;
+  let fixture: ComponentFixture<FiPlanResultsComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ AuthFinalizeComponent ],
+      declarations: [ FiPlanResultsComponent ],
       imports: [IonicModule.forRoot()]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(AuthFinalizeComponent);
+    fixture = TestBed.createComponent(FiPlanResultsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   }));
