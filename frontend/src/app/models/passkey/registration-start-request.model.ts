@@ -1,4 +1,4 @@
 export interface RegistrationStartRequest {
     email: string;
-    temporaryUserId: string; // From the Plaid flow
+    temporaryUserId?: string; // Optional - from the Plaid flow
 }

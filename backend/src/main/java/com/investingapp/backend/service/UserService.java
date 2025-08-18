@@ -70,6 +70,8 @@ public class UserService {
                 logger.warn("No valid pending Plaid connection found for temporary ID: {} during registration for user {}.",
                             registerRequest.getTemporaryUserId(), savedUser.getEmail());
             }
+        } else {
+            logger.info("No Plaid temporary user ID provided for user {}. Registration proceeding without bank linking.", savedUser.getEmail());
         }
         return savedUser; // Return the fully saved user, potentially with Plaid info
     }

@@ -11,6 +11,6 @@ public class RegistrationStartRequest {
     @Email(message = "Email should be valid")
     private String email;
 
-    @NotBlank(message = "Temporary user ID from Plaid cannot be blank")
+    // Optional - only provided if coming from Plaid flow
     private String temporaryUserId;
 }

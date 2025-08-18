@@ -70,7 +70,7 @@ public class WebAuthnService {
             random.nextBytes(handleBytes);
             newUser.setUserHandle(Base64.getUrlEncoder().withoutPadding().encodeToString(handleBytes));
 
-            // --- Link Plaid connection using PendingPlaidConnection ---
+            // --- Link Plaid connection using PendingPlaidConnection (if provided) ---
             if (temporaryPlaidUserIdFromClient != null && !temporaryPlaidUserIdFromClient.isEmpty()) {
                 PendingPlaidConnection pendingConnection = plaidService.retrieveAndRemovePendingConnection(temporaryPlaidUserIdFromClient);
                 if (pendingConnection != null) {
@@ -87,6 +87,8 @@ public class WebAuthnService {
                     logger.warn("No valid pending Plaid connection found for temporary ID: {} during passkey registration start for new user {}.",
                                 temporaryPlaidUserIdFromClient, newUser.getEmail());
                 }
+            } else {
+                logger.info("No Plaid temporary user ID provided for user {}. Account creation proceeding without bank linking.", newUser.getEmail());
             }
             return userRepository.save(newUser);
         });
