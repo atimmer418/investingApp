@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonHeader, IonToolbar, IonButtons, IonBackButton, IonProgressBar, IonTitle, IonContent, IonIcon, IonFooter, IonButton } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons'; // Import for custom icons
 import { star, trendingUp, shieldCheckmark, swapHorizontal, shield } from 'ionicons/icons';
+import { Subscription } from 'rxjs';
 
 // Define a type for our strategy for clean code
 export interface StrategyTag {
@@ -26,13 +27,7 @@ export interface Strategy {
   standalone: true,
   imports: [CommonModule, CurrencyPipe, IonHeader, IonToolbar, IonButtons, IonBackButton, IonProgressBar, IonTitle, IonContent, IonIcon, IonFooter, IonButton],
 })
-export class FiPlanResultsComponent implements OnInit {
-
-  timeToFI: string = '';
-  targetPortfolio: number = 0;
-  retirementIncome: number = 0;
-  monthlyInvestment: number = 0;
-  selectedStrategyId: string = 'optimal';
+export class FiPlanResultsComponent implements OnInit, OnDestroy {
 
   strategies: Strategy[] = [
     {
@@ -81,19 +76,27 @@ export class FiPlanResultsComponent implements OnInit {
     }
   ];
 
+  timeToFI: string = '';
+  targetPortfolio: number = 0;
+  retirementIncome: number = 0;
+  monthlyInvestment: number = 0;
+  selectedStrategyId: string = 'optimal';
+  
+  private routeSub: Subscription | undefined;
+  
   constructor(private route: ActivatedRoute, private router: Router) {
     addIcons({ star, trendingUp, shieldCheckmark, swapHorizontal, shield });
   }
 
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
+    this.routeSub = this.route.queryParams.subscribe(params => {
       this.timeToFI = params['t'] || 'N/A';
       this.retirementIncome = +params['rI'];
       this.targetPortfolio = this.retirementIncome / 0.04;
       this.monthlyInvestment = +params['mI'];
     });
   }
-
+  
   selectStrategy(id: string) {
     this.selectedStrategyId = id;
   }
@@ -107,7 +110,7 @@ export class FiPlanResultsComponent implements OnInit {
     const yearsToAdd = parseFloat(this.timeToFI) || 0;
     return currentYear + Math.round(yearsToAdd);
   }
-
+  
   confirmSelection() {
     console.log(`User selected the ${this.getSelectedStrategyName()} plan.`);
     this.router.navigate(['/auth-finalize'], { 
@@ -119,5 +122,9 @@ export class FiPlanResultsComponent implements OnInit {
         mI: this.monthlyInvestment
       } 
     });
+  }
+  
+  ngOnDestroy() {
+    if (this.routeSub) this.routeSub.unsubscribe();
   }
 }
