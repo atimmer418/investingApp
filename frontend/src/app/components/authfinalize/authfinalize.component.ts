@@ -158,7 +158,16 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
                   next: (response) => {
                     if (response.success && response.jwtToken) {
                       console.log('SIMULATED registration and login successful!', response);
-                      this.router.navigate(['/survey'], { replaceUrl: true });
+                      this.router.navigate(['/kyc-verification'], { 
+                        queryParams: {
+                          plan: this.planId,
+                          t: this.timeToFI,
+                          p: this.targetPortfolio,
+                          rI: this.retirementIncome,
+                          mI: this.monthlyInvestment
+                        },
+                        replaceUrl: true 
+                      });
                     } else {
                       this.errorMessage = response.message || 'Registration failed or login did not occur.';
                       console.error('Registration finish response error:', response.message);
@@ -191,7 +200,14 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
                 next: (response) => {
                   if (response.success && response.jwtToken) {
                     console.log('Registration and login successful!', response);
-                    this.router.navigate(['/survey'], {
+                    this.router.navigate(['/kyc-verification'], {
+                      queryParams: {
+                        plan: this.planId,
+                        t: this.timeToFI,
+                        p: this.targetPortfolio,
+                        rI: this.retirementIncome,
+                        mI: this.monthlyInvestment
+                      },
                       replaceUrl: true
                     });
                   } else {
