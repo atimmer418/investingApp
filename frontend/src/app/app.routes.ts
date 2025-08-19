@@ -21,6 +21,10 @@ export const routes: Routes = [
     // Adjust path if you placed AuthFinalizeComponent elsewhere, e.g., directly under 'app/'
   },
   {
+    path: 'kyc-verification',
+    loadComponent: () => import('./components/kyc-verification/kyc-verification.component').then(m => m.KycVerificationComponent)
+  },
+  {
     path: 'confirm-investment',
     loadComponent: () => import('./components/investmentconfirmation/investmentconfirmation.component').then(m => m.InvestmentConfirmationComponent)
     // Or from './pages/investment-confirmation/investment-confirmation.page' if you use .page convention
