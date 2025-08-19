@@ -30,6 +30,8 @@ export class FiPlanResultsComponent implements OnInit {
 
   timeToFI: string = '';
   targetPortfolio: number = 0;
+  retirementIncome: number = 0;
+  monthlyInvestment: number = 0;
   selectedStrategyId: string = 'optimal';
 
   strategies: Strategy[] = [
@@ -86,8 +88,9 @@ export class FiPlanResultsComponent implements OnInit {
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       this.timeToFI = params['t'] || 'N/A';
-      const retirementIncome = +params['x'];
-      this.targetPortfolio = retirementIncome / 0.04;
+      this.retirementIncome = +params['rI'];
+      this.targetPortfolio = this.retirementIncome / 0.04;
+      this.monthlyInvestment = +params['mI'];
     });
   }
 
@@ -108,7 +111,13 @@ export class FiPlanResultsComponent implements OnInit {
   confirmSelection() {
     console.log(`User selected the ${this.getSelectedStrategyName()} plan.`);
     this.router.navigate(['/auth-finalize'], { 
-      queryParams: { plan: this.selectedStrategyId } 
+      queryParams: { 
+        plan: this.selectedStrategyId,
+        t: this.timeToFI,
+        p: this.targetPortfolio,
+        rI: this.retirementIncome,
+        mI: this.monthlyInvestment
+      } 
     });
   }
 }

@@ -2,7 +2,6 @@
 package com.investingapp.backend.service;
 
 import com.investingapp.backend.dto.RegisterRequest;
-import com.investingapp.backend.model.PendingPlaidConnection;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.UserRepository;
 
@@ -39,38 +38,25 @@ public class UserService {
         return userRepository.findById(id).orElse(null);
     }
 
-    @Transactional
-    public User registerUser(RegisterRequest registerRequest) {
-        if (userRepository.existsByEmail(registerRequest.getEmail())) {
-            logger.warn("Registration attempt with existing email: {}", registerRequest.getEmail());
-            throw new RuntimeException("Error: Email is already in use!");
-        }
+    // @Transactional
+    // public User registerUser(RegisterRequest registerRequest) {
+    //     if (userRepository.existsByEmail(registerRequest.getEmail())) {
+    //         logger.warn("Registration attempt with existing email: {}", registerRequest.getEmail());
+    //         throw new RuntimeException("Error: Email is already in use!");
+    //     }
 
-        User user = new User();
-        user.setFirstName(registerRequest.getFirstName());
-        user.setLastName(registerRequest.getLastName());
-        user.setEmail(registerRequest.getEmail());
-        // Default onboarding flags are set in User entity
+    //     User user = new User();
+    //     user.setFirstName(registerRequest.getFirstName());
+    //     user.setLastName(registerRequest.getLastName());
+    //     user.setEmail(registerRequest.getEmail());
+    //     // Default onboarding flags are set in User entity
 
-        User savedUser = userRepository.save(user); // Save user first
-        logger.info("User registered successfully with ID: {} and Email: {}", savedUser.getId(), savedUser.getEmail());
+    //     User savedUser = userRepository.save(user); // Save user first
+    //     logger.info("User registered successfully with ID: {} and Email: {}", savedUser.getId(), savedUser.getEmail());
 
 
-        if (registerRequest.getTemporaryUserId() != null && !registerRequest.getTemporaryUserId().isEmpty()) {
-            PendingPlaidConnection pendingConnection = plaidService.retrieveAndRemovePendingConnection(registerRequest.getTemporaryUserId());
-            if (pendingConnection != null) {
-                logger.info("Associating pending Plaid connection (Item ID: {}) with new user ID: {}", pendingConnection.getPlaidItemId(), savedUser.getId());
-                String encryptedAccessToken = encryptionService.encrypt(pendingConnection.getPlaidAccessToken());
-                savedUser.setPlaidAccessToken(encryptedAccessToken); // TODO: Handle encryption/decryption
-                savedUser.setPlaidItemId(pendingConnection.getPlaidItemId());
-                savedUser.setPlaidLinked(true);
-                savedUser = userRepository.save(savedUser); // Save again with Plaid info
-                logger.info("Plaid info linked to user ID: {}", savedUser.getId());
-            } else {
-                logger.warn("No valid pending Plaid connection found for temporary ID: {} during registration for user {}.",
-                            registerRequest.getTemporaryUserId(), savedUser.getEmail());
-            }
-        }
-        return savedUser; // Return the fully saved user, potentially with Plaid info
-    }
+    //     savedUser = userRepository.save(savedUser); // Save again with Plaid info
+    //     logger.info("Plaid info linked to user ID: {}", savedUser.getId());
+    //     return savedUser; // Return the fully saved user, potentially with Plaid info
+    // }
 }

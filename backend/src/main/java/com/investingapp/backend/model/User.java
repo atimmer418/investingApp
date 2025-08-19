@@ -67,6 +67,12 @@ public class User {
     private boolean stockSelectionCompleted = false;
     private boolean investmentConfirmationCompleted = false;
 
+    private String planId;
+    private String timeToFi;
+    private Double targetPortfolio;
+    private Double retirementIncome;
+    private Double monthlyIncome;
+
     @CreationTimestamp // Automatically set by Hibernate on creation
     private LocalDateTime createDate;
 

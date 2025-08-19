@@ -33,50 +33,8 @@ public class PlaidController {
     @Autowired
     private UserRepository userRepository;
 
-    // --- ANONYMOUS FLOW ENDPOINTS ---
-
-    @PostMapping("/create_link_token_anonymous")
-    public ResponseEntity<?> createLinkTokenAnonymous() {
-        String temporaryUserId = "anon_" + UUID.randomUUID().toString();
-        logger.info("Request received for /create_link_token_anonymous. Generated temp ID: {}", temporaryUserId);
-        try {
-            LinkTokenCreateResponse response = plaidService.createLinkTokenAnonymous(temporaryUserId);
-            return ResponseEntity.ok(Map.of(
-                    "link_token", response.getLinkToken(),
-                    "expiration", response.getExpiration().toString(), // Ensure toString if not already string
-                    "temporary_user_id", temporaryUserId
-            ));
-        } catch (IOException e) {
-            logger.error("Error creating anonymous Plaid link token: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("Error creating Plaid link token: " + e.getMessage()));
-        }
-    }
-
-    @PostMapping("/exchange_public_token_anonymous")
-    public ResponseEntity<?> exchangePublicTokenAnonymous(@RequestBody Map<String, String> payload) {
-        String publicToken = payload.get("public_token");
-        String temporaryUserId = payload.get("temporary_user_id");
-        logger.info("Request received for /exchange_public_token_anonymous. Temp ID: {}", temporaryUserId);
-
-
-        if (publicToken == null || publicToken.isEmpty() || temporaryUserId == null || temporaryUserId.isEmpty()) {
-            logger.warn("/exchange_public_token_anonymous: Missing public_token or temporary_user_id");
-            return ResponseEntity.badRequest().body(new MessageResponse("public_token and temporary_user_id are required"));
-        }
-
-        try {
-            plaidService.exchangePublicTokenAndStoreTemporarily(publicToken, temporaryUserId);
-            return ResponseEntity.ok(new MessageResponse("Plaid connection pending account creation. Please create or link your account."));
-        } catch (IOException e) {
-            logger.error("Error exchanging anonymous Plaid public token for temp ID {}: {}", temporaryUserId, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("Error exchanging Plaid public token: " + e.getMessage()));
-        }
-    }
-
     // --- AUTHENTICATED FLOW ENDPOINTS ---
-
+    
     @PostMapping("/create_link_token") // No suffix, implies authenticated
     public ResponseEntity<?> createLinkTokenAuthenticated() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
