@@ -158,16 +158,7 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
                   next: (response) => {
                     if (response.success && response.jwtToken) {
                       console.log('SIMULATED registration and login successful!', response);
-                      this.router.navigate(['/kyc-verification'], { 
-                        queryParams: {
-                          plan: this.planId,
-                          t: this.timeToFI,
-                          p: this.targetPortfolio,
-                          rI: this.retirementIncome,
-                          mI: this.monthlyInvestment
-                        },
-                        replaceUrl: true 
-                      });
+                      this.router.navigate(['/kyc-verification'], { replaceUrl: true });
                     } else {
                       this.errorMessage = response.message || 'Registration failed or login did not occur.';
                       console.error('Registration finish response error:', response.message);
@@ -200,16 +191,7 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
                 next: (response) => {
                   if (response.success && response.jwtToken) {
                     console.log('Registration and login successful!', response);
-                    this.router.navigate(['/kyc-verification'], {
-                      queryParams: {
-                        plan: this.planId,
-                        t: this.timeToFI,
-                        p: this.targetPortfolio,
-                        rI: this.retirementIncome,
-                        mI: this.monthlyInvestment
-                      },
-                      replaceUrl: true
-                    });
+                    this.router.navigate(['/kyc-verification'], { replaceUrl: true });
                   } else {
                     // Handle cases where registration might be successful but no JWT (shouldn't happen with current backend logic)
                     // Or if success is false
