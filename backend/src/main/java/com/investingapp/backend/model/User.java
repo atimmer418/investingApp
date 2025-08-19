@@ -71,7 +71,7 @@ public class User {
     private String timeToFi;
     private Double targetPortfolio;
     private Double retirementIncome;
-    private Double monthlyIncome;
+    private Double monthlyInvestment;
 
     @CreationTimestamp // Automatically set by Hibernate on creation
     private LocalDateTime createDate;
