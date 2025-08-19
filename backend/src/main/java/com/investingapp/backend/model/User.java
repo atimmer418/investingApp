@@ -68,7 +68,7 @@ public class User {
     private boolean investmentConfirmationCompleted = false;
 
     private String planId;
-    private String timeToFi;
+    private String timeToFI;
     private Double targetPortfolio;
     private Double retirementIncome;
     private Double monthlyInvestment;
