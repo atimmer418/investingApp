@@ -55,7 +55,7 @@ export class SurveyInitialComponent implements OnInit {
   isCalculationExpanded: boolean = false;
 
   // --- Economic Assumptions for the SWR/FIRE calculation ---
-  private readonly AVG_MARKET_YIELD = 0.08; // A standard assumption for a growth portfolio
+  private readonly AVG_MARKET_YIELD = 0.09; // A standard assumption for a growth portfolio
   private readonly SAFE_WITHDRAWAL_RATE = 0.04; // The classic 4% rule
 
   constructor(private router: Router) {
@@ -135,8 +135,8 @@ export class SurveyInitialComponent implements OnInit {
     
     this.router.navigate(['/fi-plan-results'], { // A new route for your detailed plan page
       queryParams: {
-        y: this.monthlyInvestment,
-        x: this.retirementIncome,
+        mI: this.monthlyInvestment,
+        rI: this.retirementIncome,
         t: this.timeToFI
       }
     });

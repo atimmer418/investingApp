@@ -81,27 +81,25 @@ public class AuthController {
         return ResponseEntity.ok(responseMessage);
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
-        try {
-            logger.info("Attempting to register user: {}", registerRequest.getEmail());
-            User registeredUser = userService.registerUser(registerRequest);
-            logger.info("User {} registered successfully. ID: {}. Prompting for 2FA setup.", registeredUser.getEmail(),
-                    registeredUser.getId());
+    // @PostMapping("/register")
+    // public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+    //     try {
+    //         logger.info("Attempting to register user: {}", registerRequest.getEmail());
+    //         User registeredUser = userService.registerUser(registerRequest);
+    //         logger.info("User {} registered successfully. ID: {}.", registeredUser.getEmail(), registeredUser.getId());
 
-            // Respond with success and the user's email, so frontend knows who to setup 2FA
-            // for.
-            // No JWT is issued yet.
-            return ResponseEntity.ok(Map.of(
-                    "message", "Registration successful. Please proceed to Two-Factor Authentication setup.",
-                    "email", registeredUser.getEmail(), // Send email back for frontend to use
-                    "userId", registeredUser.getId() // Optional: send userId if useful for frontend state
-            ));
-        } catch (RuntimeException e) {
-            logger.error("Registration failed for email {}: {}", registerRequest.getEmail(), e.getMessage());
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
-        }
-    }
+    //         // Respond with success and the user's email.
+    //         // No JWT is issued yet.
+    //         return ResponseEntity.ok(Map.of(
+    //                 "message", "Registration successful.",
+    //                 "email", registeredUser.getEmail(), // Send email back for frontend to use
+    //                 "userId", registeredUser.getId() // Optional: send userId if useful for frontend state
+    //         ));
+    //     } catch (RuntimeException e) {
+    //         logger.error("Registration failed for email {}: {}", registerRequest.getEmail(), e.getMessage());
+    //         return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+    //     }
+    // }
 
     // --- LOGIN FLOW (Handles users with and without 2FA enabled) ---
     @PostMapping("/login")
