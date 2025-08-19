@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
-import { of } from 'rxjs';
 
 import { KycVerificationComponent } from './kyc-verification.component';
 
@@ -13,15 +12,7 @@ describe('KycVerificationComponent', () => {
 
   beforeEach(async () => {
     mockRouter = jasmine.createSpyObj('Router', ['navigate']);
-    mockActivatedRoute = {
-      queryParamMap: of(new Map([
-        ['plan', 'test-plan'],
-        ['t', '10'],
-        ['p', '500000'],
-        ['rI', '50000'],
-        ['mI', '2000']
-      ]))
-    };
+    mockActivatedRoute = {};
 
     await TestBed.configureTestingModule({
       imports: [KycVerificationComponent],
@@ -40,13 +31,10 @@ describe('KycVerificationComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize with correct parameters', () => {
-    expect(component.hasRequiredParams).toBe(true);
-    expect(component.planId).toBe('test-plan');
-    expect(component.timeToFI).toBe('10');
-    expect(component.targetPortfolio).toBe(500000);
-    expect(component.retirementIncome).toBe(50000);
-    expect(component.monthlyInvestment).toBe(2000);
+  it('should initialize with default state', () => {
+    expect(component.isLoading).toBe(false);
+    expect(component.errorMessage).toBe(null);
+    expect(component.successMessage).toBe(null);
   });
 
   it('should set loading state when starting verification', () => {
