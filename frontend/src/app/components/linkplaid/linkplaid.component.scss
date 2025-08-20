@@ -1,49 +1,101 @@
-.container {
+// Use CSS variables for a consistent theme
+:host {
+  --ion-background-color: #f2f2f7; // A very light, clean background
+  --ion-toolbar-background: var(--ion-background-color);
+  --ion-text-color: #000000;
+  --ion-color-primary: #007aff;
+  --ion-color-medium: #8e8e93;
+}
+
+ion-toolbar {
+  --border-width: 0 !important;
+}
+
+ion-progress-bar {
+  height: 3px;
+  --progress-background: var(--ion-color-primary);
+}
+
+// Unified container for the form
+.linkplaid-form-container {
+  padding: 16px;
+}
+
+.page-intro {
+  margin-bottom: 32px;
+  text-align: center;
+
+  h2 {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0 0 8px 0;
+  }
+
+  .helper-text {
+    font-size: 16px;
+    color: var(--ion-color-medium);
+    margin: 0;
+    line-height: 1.4;
+  }
+}
+
+.benefits-section {
+  margin-bottom: 32px;
+
+  .benefit-features {
     display: flex;
     flex-direction: column;
-    justify-content: center; // Vertically center content if page isn't full
-    height: 100%; // Make sure container takes full height for vertical centering
-    max-width: 500px; // Constrain width on larger screens
-    margin: 0 auto; // Center the container itself
-  }
-  
-  ion-text p {
-    margin-bottom: 8px;
-  }
-  
-  .plaid-info {
-    ion-icon {
-      margin-bottom: 8px;
-    }
-    p {
-      margin: 4px 0;
-    }
-  }
-  
-  .main-action-button {
-    --border-radius: 8px; // Slightly more rounded corners for the main button
-    font-weight: bold;
-    margin-top: 32px; // More space above the main button
-  }
-  
-  .status-message {
-    font-size: 0.9em;
-    min-height: 20px; // Reserve space to prevent layout jumps
-  }
-  
-  .info-list {
-    background: transparent; // Make list background transparent
-    margin-top: 32px;
-    ion-item {
-      --padding-start: 0; // Remove default item padding if desired
-      --inner-padding-end: 0;
-      --background: transparent;
-      font-size: 0.9em;
-      color: var(--ion-color-medium-shade);
-  
-      ion-icon {
-        margin-right: 12px;
-        font-size: 1.2em;
+    gap: 16px;
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+      .feature-icon {
+        font-size: 20px;
+        color: var(--ion-color-primary);
+        flex-shrink: 0;
+      }
+
+      span {
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--ion-text-color);
       }
     }
   }
+}
+
+.connection-button-section {
+  text-align: center;
+
+  .connection-button {
+    --border-radius: 12px;
+    font-weight: 600;
+    height: 50px;
+    text-transform: none;
+    font-size: 17px;
+    margin-bottom: 16px;
+  }
+
+  .connection-note {
+    font-size: 14px;
+    color: var(--ion-color-medium);
+    margin: 0;
+    line-height: 1.4;
+    padding: 0 16px;
+  }
+}
+
+.error-message-global, .success-message-global {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 15px;
+  font-weight: 500;
+}
