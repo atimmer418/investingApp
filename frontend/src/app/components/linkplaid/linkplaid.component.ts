@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
-  IonList, IonItem, IonLabel, IonSpinner, IonText, IonButtons, NavController // Added IonButtons, NavController
+  IonSpinner, IonText, IonButtons, IonBackButton, IonProgressBar, NavController
 } from '@ionic/angular/standalone';
 import { Observable, throwError, Subscription } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
@@ -31,7 +31,7 @@ const BACKEND_API_URL = environment.backendApiUrl;
     CommonModule,
     FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
-    IonList, IonItem, IonLabel, IonSpinner, IonText, IonButtons
+    IonSpinner, IonText, IonButtons, IonBackButton, IonProgressBar
   ],
 })
 export class LinkPlaidComponent implements OnInit, OnDestroy {
