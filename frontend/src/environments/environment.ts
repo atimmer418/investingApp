@@ -5,7 +5,12 @@
 export const environment = {
   production: false, // It's a test build, not a full production build
   backendApiUrl: 'https://796b-2600-4040-2a92-8800-a865-27f2-f55c-bf44.ngrok-free.app/api',
-  rpId: '37de-2600-4040-2a92-8800-a865-27f2-f55c-bf44.ngrok-free.app' // Your test frontend/app origin hostname
+  rpId: '37de-2600-4040-2a92-8800-a865-27f2-f55c-bf44.ngrok-free.app', // Your test frontend/app origin hostname
+  persona: {
+    templateId: 'PERSONA_TEMPLATE_ID', // Replace with actual Persona template ID from dashboard
+    environmentId: 'sandbox', // Use 'production' for production environment
+    version: 'v4.11.0'
+  }
 };
 
 /*

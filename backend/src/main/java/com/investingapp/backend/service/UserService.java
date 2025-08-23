@@ -38,6 +38,11 @@ public class UserService {
         return userRepository.findById(id).orElse(null);
     }
 
+    @Transactional
+    public User updateUser(User user) {
+        return userRepository.save(user);
+    }
+
     // @Transactional
     // public User registerUser(RegisterRequest registerRequest) {
     //     if (userRepository.existsByEmail(registerRequest.getEmail())) {

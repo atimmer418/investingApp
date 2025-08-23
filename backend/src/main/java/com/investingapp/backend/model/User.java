@@ -61,6 +61,7 @@ public class User {
 
     // Onboarding status flags
     private boolean initialSurveyCompleted = false;
+    private boolean kycVerificationCompleted = false;
     private boolean plaidLinked = false;
     private boolean investmentSurveyCompleted = false;
     private boolean choseToPickStocks = false;
