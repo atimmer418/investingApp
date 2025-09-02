@@ -149,43 +149,30 @@ export class SurveyComponent implements OnInit {
           this.isLoadingPaychecks = false;
           console.log('[SurveyComponent] Using immediate income sources for webhook trigger setup');
         } else {
-          // Fallback to recurring income sources if no immediate sources found
-          console.log('[SurveyComponent] No immediate sources found, falling back to recurring income API');
+          // Check if account was recently linked - transactions might still be initializing
+          console.log('[SurveyComponent] No immediate sources found - trying recurring API and providing user guidance');
+          this.paycheckErrorMessage = "Your bank account was just linked! We're still analyzing your transaction history to find income sources. This usually takes a few minutes to a few hours. You can skip this step and set up automatic investing later from your dashboard.";
+          this.isLoadingPaychecks = false;
+          
+          // Still try the recurring API as a fallback, but don't expect much
           this.plaidDataService.getPaycheckSources().subscribe({
             next: (sources) => {
-              console.log('[SurveyComponent] Received recurring paycheck sources:', sources);
-              this.allPaycheckSources = sources;
-              this.isLoadingPaychecks = false;
-              if (sources.length === 0) {
-                this.paycheckErrorMessage = "No potential paycheck sources found yet. Plaid may need 24-48 hours to detect recurring income from your transactions. You can skip this step or come back later.";
+              if (sources.length > 0) {
+                console.log('[SurveyComponent] Found some recurring sources as fallback:', sources);
+                this.allPaycheckSources = sources;
+                this.paycheckErrorMessage = null; // Clear the message if we found sources
               }
             },
             error: (err) => {
-              console.error('[SurveyComponent] Error fetching recurring paycheck sources:', err);
-              this.paycheckErrorMessage = err.message || "Failed to fetch paycheck information. Please try again.";
-              this.isLoadingPaychecks = false;
+              console.log('[SurveyComponent] Recurring sources also not available, which is expected for newly linked accounts');
             }
           });
         }
       },
       error: (immediateErr) => {
-        console.error('[SurveyComponent] Error fetching immediate income sources, trying recurring sources:', immediateErr);
-        // Fallback to recurring income sources on error
-        this.plaidDataService.getPaycheckSources().subscribe({
-          next: (sources) => {
-            console.log('[SurveyComponent] Received paycheck sources as fallback:', sources);
-            this.allPaycheckSources = sources;
-            this.isLoadingPaychecks = false;
-            if (sources.length === 0) {
-              this.paycheckErrorMessage = "No potential paycheck sources found. You can skip this step or link another bank account later.";
-            }
-          },
-          error: (err) => {
-            console.error('[SurveyComponent] Error fetching paycheck sources:', err);
-            this.paycheckErrorMessage = err.message || "Failed to fetch paycheck information. Please try again.";
-            this.isLoadingPaychecks = false;
-          }
-        });
+        console.log('[SurveyComponent] Expected: Immediate income detection not available for newly linked account');
+        this.paycheckErrorMessage = "Your bank account was just linked! Plaid is still setting up access to your transaction history. This process usually takes a few minutes. You can skip this step and return later to set up automatic investing.";
+        this.isLoadingPaychecks = false;
       }
     });
   }

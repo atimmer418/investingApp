@@ -53,15 +53,15 @@
       </div>
 
       <div class="empty-paycheck-state" *ngIf="!isLoadingPaychecks && allPaycheckSources.length === 0">
-        <ion-icon name="wallet-outline"></ion-icon>
-        <h3>No Income Sources Found Yet</h3>
-        <p class="helper-text">We couldn't find clear income patterns in your recent transactions. This could be because:</p>
+        <ion-icon name="time-outline"></ion-icon>
+        <h3>Setting Up Your Account</h3>
+        <p class="helper-text">We're still initializing access to your transaction history. This is normal for newly linked accounts and usually takes:</p>
         <ul class="helper-list">
-          <li>Your account is newly linked</li>
-          <li>You receive irregular income</li>
-          <li>Your paychecks are processed differently</li>
+          <li><strong>A few minutes</strong> for basic transaction access</li>
+          <li><strong>A few hours</strong> to identify clear income patterns</li>
+          <li><strong>24-48 hours</strong> for complete recurring income analysis</li>
         </ul>
-        <p class="helper-text">You can skip this step and set up automatic investing later when more transaction data is available.</p>
+        <p class="helper-text">You can skip this step and set up automatic investing later from your dashboard once your transaction data is ready.</p>
       </div>
 
       <ion-button 

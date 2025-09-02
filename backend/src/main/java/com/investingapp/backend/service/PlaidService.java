@@ -170,10 +170,22 @@ public class PlaidService {
 
         Response<TransactionsGetResponse> transactionsResponse = plaidApi.transactionsGet(transactionsRequest).execute();
 
-        if (!transactionsResponse.isSuccessful() || transactionsResponse.body() == null) {
+        if (!transactionsResponse.isSuccessful()) {
             String errorBody = transactionsResponse.errorBody() != null ? transactionsResponse.errorBody().string() : "Unknown error";
-            logger.error("Failed to fetch transactions: {} - {}", transactionsResponse.code(), errorBody);
+            
+            // Check if it's a product not ready error - this is expected for newly linked accounts
+            if (transactionsResponse.code() == 400 && errorBody.contains("PRODUCT_NOT_READY")) {
+                logger.info("TRANSACTIONS product not ready yet for immediate income detection - this is expected for newly linked accounts");
+                return potentialIncomes; // Return empty list gracefully
+            }
+            
+            logger.error("Failed to fetch transactions for immediate income detection: {} - {}", transactionsResponse.code(), errorBody);
             throw new IOException("Failed to fetch transactions: " + errorBody);
+        }
+
+        if (transactionsResponse.body() == null || transactionsResponse.body().getTransactions().isEmpty()) {
+            logger.info("No transactions available yet for immediate income detection");
+            return potentialIncomes; // Return empty list if no transactions
         }
 
         // Group deposits by merchant/description to identify potential recurring income
@@ -298,7 +310,8 @@ public class PlaidService {
                 .clientName(plaidClientName)
                 .products(products)
                 .countryCodes(countryCodes)
-                .language("en");
+                .language("en")
+                .webhook("https://your-app-domain.com/api/webhooks/plaid"); // Add webhook URL for real-time transaction updates
 
         Response<LinkTokenCreateResponse> response = plaidApi.linkTokenCreate(request).execute();
         if (!response.isSuccessful() || response.body() == null) {
@@ -306,6 +319,7 @@ public class PlaidService {
             logger.error("Plaid Link Token creation failed: {} - {}", response.code(), errorBody);
             throw new IOException("Plaid Link Token creation failed: " + errorBody);
         }
+        logger.info("Successfully created Link token with TRANSACTIONS product and webhook enabled");
         return response.body();
     }
 
