@@ -147,7 +147,7 @@
               <ion-item lines="none">
                 <ion-select 
                   [ngModel]="showPrimaryIncomeForm ? primaryIncomeConfig.frequency : secondaryIncomeConfig.frequency"
-                  (ngModelChange)="showPrimaryIncomeForm ? (primaryIncomeConfig.frequency = $event) : (secondaryIncomeConfig.frequency = $event)"
+                  (ngModelChange)="onFrequencyChange($event, showPrimaryIncomeForm)"
                   label="Frequency"
                   labelPlacement="stacked">
                   <ion-select-option value="WEEKLY">Weekly</ion-select-option>
@@ -190,9 +190,9 @@
             </div>
 
             <div class="percentage-field">
-              <div class="percentage-label">Monthly Investment Amount</div>
+              <div class="percentage-label">Investment Amount</div>
               <div class="percentage-control">
-                <div class="percentage-display">${{ userMonthlyInvestmentAmount | number:'1.0-0' }}</div>
+                <div class="percentage-display">${{ userInvestmentAmount | number:'1.0-0' }}</div>
                 <div class="investment-note">From your initial survey</div>
               </div>
             </div>

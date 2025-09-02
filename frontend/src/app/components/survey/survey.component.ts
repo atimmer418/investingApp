@@ -115,6 +115,9 @@ export class SurveyComponent implements OnInit {
 
   // User's monthly investment amount from initial survey
   userMonthlyInvestmentAmount: number = 0;
+  
+  // Investment amount display (per paycheck based on frequency)
+  userInvestmentAmount: number = 0;
 
   constructor(
     private router: Router,
@@ -134,6 +137,9 @@ export class SurveyComponent implements OnInit {
     if (userProgress && userProgress.monthlyInvestment) {
       this.userMonthlyInvestmentAmount = userProgress.monthlyInvestment;
       console.log('[SurveyComponent] Loaded user monthly investment amount:', this.userMonthlyInvestmentAmount);
+      
+      // Set default investment amount based on default frequency (biweekly)
+      this.updateInvestmentAmountForFrequency('BIWEEKLY');
     } else {
       console.log('[SurveyComponent] No monthly investment amount found in user progress');
     }
@@ -586,5 +592,48 @@ export class SurveyComponent implements OnInit {
     }
     // Otherwise check if it's in the paycheckConfigsToSave
     return this.paycheckConfigsToSave.some(p => p.accountId === accountId);
+  }
+
+  updateInvestmentAmountForFrequency(frequency: string): void {
+    if (this.userMonthlyInvestmentAmount <= 0) {
+      this.userInvestmentAmount = 0;
+      return;
+    }
+
+    // Calculate per-paycheck amount based on frequency
+    let paychecksPerMonth: number;
+    switch (frequency) {
+      case 'WEEKLY':
+        paychecksPerMonth = 4.33; // 52 weeks / 12 months
+        break;
+      case 'BIWEEKLY':
+        paychecksPerMonth = 2.17; // 26 paychecks / 12 months
+        break;
+      case 'SEMI_MONTHLY':
+        paychecksPerMonth = 2; // 24 paychecks / 12 months
+        break;
+      case 'MONTHLY':
+        paychecksPerMonth = 1;
+        break;
+      default:
+        paychecksPerMonth = 2.17; // Default to biweekly
+    }
+
+    this.userInvestmentAmount = Math.round(this.userMonthlyInvestmentAmount / paychecksPerMonth);
+    console.log(`[SurveyComponent] Updated investment amount for ${frequency}: $${this.userInvestmentAmount} per paycheck`);
+  }
+
+  onFrequencyChange(frequency: string, isPrimary?: boolean): void {
+    // Update the configuration object
+    if (isPrimary !== undefined) {
+      if (isPrimary) {
+        this.primaryIncomeConfig.frequency = frequency;
+      } else {
+        this.secondaryIncomeConfig.frequency = frequency;
+      }
+    }
+    
+    // Update the investment amount display for any frequency change
+    this.updateInvestmentAmountForFrequency(frequency);
   }
 }
