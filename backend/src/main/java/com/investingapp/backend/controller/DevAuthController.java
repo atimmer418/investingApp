@@ -7,8 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.UserRepository;
-import com.investingapp.backend.util.JwtUtils;
-import com.investingapp.backend.dto.AuthResponse;
+import com.investingapp.backend.security.jwt.JwtUtils;
+import com.investingapp.backend.dto.JwtResponse;
 
 /**
  * 🧪 DEVELOPMENT ONLY: Controller for simulating login as existing users
@@ -37,13 +37,36 @@ public class DevAuthController {
         public void setUserHandle(String userHandle) { this.userHandle = userHandle; }
     }
 
+    public static class DevAuthResponse {
+        private boolean success;
+        private String message;
+        private String jwtToken;
+        private Long id;
+        private String email;
+        
+        public DevAuthResponse(boolean success, String message, String jwtToken, Long id, String email) {
+            this.success = success;
+            this.message = message;
+            this.jwtToken = jwtToken;
+            this.id = id;
+            this.email = email;
+        }
+        
+        // Getters
+        public boolean isSuccess() { return success; }
+        public String getMessage() { return message; }
+        public String getJwtToken() { return jwtToken; }
+        public Long getId() { return id; }
+        public String getEmail() { return email; }
+    }
+
     /**
      * 🧪 DEV ONLY: Authenticate as any existing user from the database
      * POST /api/dev/authenticate-as-user
      * Body: { "email": "user@example.com" } OR { "userHandle": "handle123" }
      */
     @PostMapping("/authenticate-as-user")
-    public ResponseEntity<AuthResponse> authenticateAsUser(@RequestBody AuthAsUserRequest request) {
+    public ResponseEntity<DevAuthResponse> authenticateAsUser(@RequestBody AuthAsUserRequest request) {
         try {
             logger.info("[DevAuthController] 🧪 Attempting to authenticate as user: email={}, userHandle={}", 
                        request.getEmail(), request.getUserHandle());
@@ -63,14 +86,14 @@ public class DevAuthController {
                 String message = "User not found with " + 
                     (request.getEmail() != null ? "email: " + request.getEmail() : "userHandle: " + request.getUserHandle());
                 logger.warn("[DevAuthController] {}", message);
-                return ResponseEntity.ok(new AuthResponse(false, message, null, null, null));
+                return ResponseEntity.ok(new DevAuthResponse(false, message, null, null, null));
             }
             
             // Generate JWT for this user
-            String jwt = jwtUtils.generateToken(user.getEmail(), user.getId());
+            String jwt = jwtUtils.generateTokenFromUsername(user.getEmail());
             logger.info("[DevAuthController] ✅ Successfully generated JWT for user: {} (ID: {})", user.getEmail(), user.getId());
             
-            return ResponseEntity.ok(new AuthResponse(
+            return ResponseEntity.ok(new DevAuthResponse(
                 true, 
                 "Successfully authenticated as user", 
                 jwt, 
@@ -80,7 +103,7 @@ public class DevAuthController {
             
         } catch (Exception e) {
             logger.error("[DevAuthController] ❌ Error authenticating as user: {}", e.getMessage(), e);
-            return ResponseEntity.ok(new AuthResponse(false, "Error: " + e.getMessage(), null, null, null));
+            return ResponseEntity.ok(new DevAuthResponse(false, "Error: " + e.getMessage(), null, null, null));
         }
     }
     

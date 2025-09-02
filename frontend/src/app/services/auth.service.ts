@@ -22,11 +22,11 @@ export interface PasskeyAuthRequest {
 }
 
 export interface AuthResponse {
+  success: boolean;
+  message: string;
   jwtToken: string;
   id: number;
   email: string;
-  success: boolean;
-  message: string;
 }
 
 @Injectable({
