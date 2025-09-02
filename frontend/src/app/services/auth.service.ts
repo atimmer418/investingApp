@@ -165,12 +165,26 @@ export class AuthService {
       userHandle: userHandle || null
     };
     
-    return this.http.post<AuthResponse>(`${BACKEND_API_URL}/dev/authenticate-as-user`, payload, {
+    const url = `${BACKEND_API_URL}/dev/authenticate-as-user`;
+    console.log('[AuthService] Making HTTP POST to:', url);
+    console.log('[AuthService] Payload:', payload);
+    
+    return this.http.post<AuthResponse>(url, payload, {
       headers: this.getAuthHeaders()
     }).pipe(
       tap(response => {
+        console.log('[AuthService] 🔍 Raw HTTP response:', response);
         if (response.success) {
           console.log('[AuthService] ✅ Successfully authenticated as user:', response.email);
+        } else {
+          console.log('[AuthService] ❌ Authentication failed:', response.message);
+        }
+      }),
+      tap({
+        error: (error) => {
+          console.error('[AuthService] ❌ HTTP Error during authentication:', error);
+          console.error('[AuthService] Error status:', error?.status);
+          console.error('[AuthService] Error message:', error?.message);
         }
       })
     );

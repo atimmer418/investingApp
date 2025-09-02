@@ -84,7 +84,9 @@ export class AppComponent implements OnInit {
     // Call backend to authenticate as this user and get their JWT + progress
     this.authService.authenticateAsUser(email, userHandle).subscribe({
       next: (response) => {
-        if (response.success && response.jwtToken) {
+        console.log('🔍 [AppComponent] Raw response from authenticateAsUser:', response);
+        
+        if (response && response.success && response.jwtToken) {
           console.log('✅ [AppComponent] Successfully authenticated as user:', response);
           
           // Store JWT and trigger auth state update
@@ -92,13 +94,24 @@ export class AppComponent implements OnInit {
           this.authService.handleSuccessfulAuthentication(response.jwtToken, response.id!, response.email!);
           
         } else {
-          console.error('❌ [AppComponent] Failed to authenticate as user:', response.message);
+          console.error('❌ [AppComponent] Failed to authenticate as user. Response:', response);
+          console.error('❌ [AppComponent] Response details:', {
+            hasResponse: !!response,
+            success: response?.success,
+            hasJwtToken: !!response?.jwtToken,
+            message: response?.message
+          });
           // Go to login page if simulation fails
           this.router.navigate(['/get-started'], { replaceUrl: true });
         }
       },
       error: (err) => {
         console.error('❌ [AppComponent] Error simulating user login:', err);
+        console.error('❌ [AppComponent] Error details:', {
+          status: err?.status,
+          message: err?.message,
+          url: err?.url
+        });
         this.router.navigate(['/get-started'], { replaceUrl: true });
       }
     });

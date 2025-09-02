@@ -118,6 +118,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/plaid/create_link_token_anonymous").permitAll()
                 .requestMatchers("/api/plaid/exchange_public_token_anonymous").permitAll()
                 .requestMatchers("/api/passkey/**").permitAll()
+                .requestMatchers("/api/dev/**").permitAll() // 🧪 DEV ONLY: Allow dev endpoints without authentication
                 .requestMatchers("/hello").permitAll()
                 .anyRequest().authenticated()
             )
