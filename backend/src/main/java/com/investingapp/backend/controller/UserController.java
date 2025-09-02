@@ -11,7 +11,7 @@ import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.UserRepository;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 @CrossOrigin(origins = "*")
 public class UserController {
     
