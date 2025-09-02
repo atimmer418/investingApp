@@ -58,7 +58,7 @@ public class UserController {
         try {
             if (authentication == null || authentication.getPrincipal() == null) {
                 logger.warn("[UserController] No authentication found for progress request");
-                return ResponseEntity.unauthorized().build();
+                return ResponseEntity.status(401).build();
             }
             
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
