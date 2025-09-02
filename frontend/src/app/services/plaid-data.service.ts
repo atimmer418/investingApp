@@ -32,6 +32,10 @@ export class PlaidDataService {
     return this.http.get<PaycheckSource[]>(`${BACKEND_API_URL}/income/paycheck_sources`, { headers: this.getAuthHeaders() });
   }
 
+  getImmediateIncomeSources(): Observable<PaycheckSource[]> {
+    return this.http.get<PaycheckSource[]>(`${BACKEND_API_URL}/income/immediate_income_sources`, { headers: this.getAuthHeaders() });
+  }
+
   savePaycheckConfiguration(configs: SelectedPaycheck[]): Observable<any> { // Backend returns MessageResponse
     return this.http.post(`${BACKEND_API_URL}/income/paycheck_configurations`, configs, { headers: this.getAuthHeaders() });
   }

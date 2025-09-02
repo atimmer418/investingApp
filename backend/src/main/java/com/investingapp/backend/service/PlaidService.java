@@ -17,10 +17,13 @@ import retrofit2.Response;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime; // For expiry
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 // Removed UUID, ConcurrentHashMap, TimeUnit as they are no longer needed for this part
 
@@ -80,6 +83,14 @@ public class PlaidService {
         if (!response.isSuccessful() || response.body() == null) {
             String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
             logger.error("Plaid /transactions/recurring/get failed: {} - {}", response.code(), errorBody);
+            
+            // Handle PRODUCT_NOT_READY specifically - this is expected for recently linked accounts
+            if (response.code() == 400 && errorBody.contains("PRODUCT_NOT_READY")) {
+                logger.warn("Recurring transactions product not ready yet. This is expected for recently linked accounts. Returning empty list for now.");
+                logger.info("User can try again later or wait for webhook notification when product becomes ready.");
+                return Collections.emptyList(); // Return empty list instead of throwing exception
+            }
+            
             throw new IOException("Plaid /transactions/recurring/get failed: " + errorBody);
         }
 
@@ -127,6 +138,152 @@ public class PlaidService {
         }
 
         return paycheckSources;
+    }
+
+    /**
+     * Get potential income sources from recent transactions (immediate analysis)
+     * This method analyzes recent deposits to identify potential income sources for webhook configuration
+     * Users can select which deposits should trigger automatic investments when detected via webhooks
+     */
+    public List<PaycheckSourceDto> getImmediateIncomeSourcesFromTransactions(String decryptedAccessToken) throws IOException {
+        logger.info("Fetching potential income sources from recent transactions for webhook trigger configuration.");
+        List<PaycheckSourceDto> potentialIncomes = new ArrayList<>();
+
+        // Get accounts first
+        AccountsGetRequest accountsRequest = new AccountsGetRequest().accessToken(decryptedAccessToken);
+        Response<AccountsGetResponse> accountsResponse = plaidApi.accountsGet(accountsRequest).execute();
+
+        if (!accountsResponse.isSuccessful() || accountsResponse.body() == null) {
+            String errorBody = accountsResponse.errorBody() != null ? accountsResponse.errorBody().string() : "Unknown error";
+            logger.error("Failed to fetch accounts: {} - {}", accountsResponse.code(), errorBody);
+            throw new IOException("Failed to fetch accounts: " + errorBody);
+        }
+
+        // Get transactions from the last 60 days for better pattern recognition
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(60); // Extended window for better income detection
+
+        TransactionsGetRequest transactionsRequest = new TransactionsGetRequest()
+                .accessToken(decryptedAccessToken)
+                .startDate(startDate)
+                .endDate(endDate);
+
+        Response<TransactionsGetResponse> transactionsResponse = plaidApi.transactionsGet(transactionsRequest).execute();
+
+        if (!transactionsResponse.isSuccessful() || transactionsResponse.body() == null) {
+            String errorBody = transactionsResponse.errorBody() != null ? transactionsResponse.errorBody().string() : "Unknown error";
+            logger.error("Failed to fetch transactions: {} - {}", transactionsResponse.code(), errorBody);
+            throw new IOException("Failed to fetch transactions: " + errorBody);
+        }
+
+        // Group deposits by merchant/description to identify potential recurring income
+        Map<String, List<Transaction>> depositGroups = new HashMap<>();
+        
+        for (Transaction transaction : transactionsResponse.body().getTransactions()) {
+            // Look for deposits (positive amounts in income accounts or negative amounts representing credits)
+            if (transaction.getAmount() != null && transaction.getAmount() < 0) { // Negative amounts are credits/deposits in Plaid
+                String key = getIncomeSourceKey(transaction);
+                depositGroups.computeIfAbsent(key, k -> new ArrayList<>()).add(transaction);
+            }
+        }
+
+        // Convert potential recurring deposits to PaycheckSourceDto for webhook trigger configuration
+        for (Map.Entry<String, List<Transaction>> entry : depositGroups.entrySet()) {
+            List<Transaction> deposits = entry.getValue();
+            
+            // Consider any deposit pattern that could be income (even single large deposits)
+            if (deposits.size() >= 1) {
+                Transaction mostRecent = deposits.get(0); // First transaction is most recent
+                
+                // Filter out very small amounts and obvious non-income transactions
+                double amount = Math.abs(mostRecent.getAmount());
+                if (amount >= 50.0 && !isLikelyNonIncomeTransaction(mostRecent)) { // Lowered threshold, added filtering
+                    
+                    PaycheckSourceDto dto = new PaycheckSourceDto();
+                    dto.setAccountId(mostRecent.getAccountId());
+                    dto.setName(getDisplayName(mostRecent));
+                    dto.setLastAmount(BigDecimal.valueOf(amount));
+                    dto.setLastDate(mostRecent.getDate() != null ? mostRecent.getDate().toString() : "N/A");
+                    
+                    // Estimate frequency based on number of deposits in 60 days
+                    String frequency = estimateFrequency(deposits.size(), 60);
+                    dto.setFrequency(frequency);
+                    
+                    // Add webhook trigger info
+                    dto.setDescription("Select this to automatically invest when similar deposits are detected");
+                    
+                    potentialIncomes.add(dto);
+                    logger.info("Found potential income source for webhook config: {} - ${} (appeared {} times in 60 days)", 
+                        dto.getName(), dto.getLastAmount(), deposits.size());
+                }
+            }
+        }
+
+        logger.info("Found {} potential income sources from recent transactions.", potentialIncomes.size());
+        return potentialIncomes;
+    }
+
+    private String getIncomeSourceKey(Transaction transaction) {
+        // Create a key to group similar transactions
+        String merchantName = transaction.getMerchantName();
+        if (merchantName != null && !merchantName.trim().isEmpty()) {
+            return merchantName.trim().toLowerCase();
+        }
+        
+        String description = transaction.getName();
+        if (description != null && !description.trim().isEmpty()) {
+            return description.trim().toLowerCase();
+        }
+        
+        return "unknown_source";
+    }
+
+    private String getDisplayName(Transaction transaction) {
+        String merchantName = transaction.getMerchantName();
+        if (merchantName != null && !merchantName.trim().isEmpty()) {
+            return merchantName;
+        }
+        
+        String description = transaction.getName();
+        if (description != null && !description.trim().isEmpty()) {
+            return description;
+        }
+        
+        return "Income Source";
+    }
+
+    private String estimateFrequency(int occurrencesInPeriod, int periodDays) {
+        // Calculate approximate frequency based on occurrences over the period
+        double occurrencesPerMonth = (occurrencesInPeriod * 30.0) / periodDays;
+        
+        if (occurrencesPerMonth >= 3.5) {
+            return "WEEKLY";
+        } else if (occurrencesPerMonth >= 1.8) {
+            return "BIWEEKLY";
+        } else if (occurrencesPerMonth >= 0.8) {
+            return "MONTHLY";
+        } else {
+            return "IRREGULAR";
+        }
+    }
+
+    private boolean isLikelyNonIncomeTransaction(Transaction transaction) {
+        String description = getDisplayName(transaction).toLowerCase();
+        
+        // Filter out obvious non-income transactions
+        String[] nonIncomeKeywords = {
+            "refund", "return", "cashback", "rebate", "credit card", "loan", "transfer", 
+            "insurance", "settlement", "tax refund", "irs", "dividend", "interest",
+            "venmo", "paypal", "zelle", "cashapp", "atm", "deposit correction"
+        };
+        
+        for (String keyword : nonIncomeKeywords) {
+            if (description.contains(keyword)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     // createLinkTokenForAuthenticatedUser method remains the same...

@@ -15,5 +15,6 @@ public class PaycheckSourceDto {
     private BigDecimal lastAmount; // Amount of the last detected deposit
     private String lastDate; // Date of the last detected deposit (ISO 8601 string)
     private String frequency; // e.g., "BI_WEEKLY", "MONTHLY", "UNKNOWN" (if detectable)
+    private String description; // Additional description for webhook configuration context
     // Add any other relevant fields Plaid might provide or you derive
 }

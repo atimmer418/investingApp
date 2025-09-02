@@ -4,8 +4,8 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonLabel,
-  IonIcon, IonCheckbox, IonSpinner, IonRange
+  IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
+  IonProgressBar, IonIcon, IonCheckbox, IonSpinner, IonRange, IonButton, IonNote, IonLabel
 } from '@ionic/angular/standalone';
 
 import { PlaidDataService } from '../../services/plaid-data.service';
@@ -41,8 +41,8 @@ enum SurveyType {
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    IonHeader, IonToolbar, IonTitle, IonContent, IonLabel,
-    IonIcon, IonCheckbox, IonSpinner, IonRange
+    IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
+    IonProgressBar, IonIcon, IonCheckbox, IonSpinner, IonRange, IonButton, IonNote, IonLabel
   ]
 })
 export class SurveyComponent implements OnInit {
@@ -131,7 +131,7 @@ export class SurveyComponent implements OnInit {
   }
 
   fetchPaycheckSources(): void {
-    console.log('[SurveyComponent] Fetching paycheck sources...');
+    console.log('[SurveyComponent] Fetching immediate income sources for webhook configuration...');
     this.isLoadingPaychecks = true;
     this.paycheckErrorMessage = null;
     // this.tempSelectedSourceIds.clear();
@@ -140,19 +140,52 @@ export class SurveyComponent implements OnInit {
         if (checkbox) checkbox.checked = false;
       });
 
-    this.plaidDataService.getPaycheckSources().subscribe({
-      next: (sources) => {
-        console.log('[SurveyComponent] Received paycheck sources:', sources);
-        this.allPaycheckSources = sources;
-        this.isLoadingPaychecks = false;
-        if (sources.length === 0) {
-          this.paycheckErrorMessage = "No potential paycheck sources found. You can skip this step or link another bank account later.";
+    // Try immediate income sources first (from recent transactions) for webhook setup
+    this.plaidDataService.getImmediateIncomeSources().subscribe({
+      next: (immediateSources) => {
+        console.log('[SurveyComponent] Received immediate income sources for webhook configuration:', immediateSources);
+        if (immediateSources.length > 0) {
+          this.allPaycheckSources = immediateSources;
+          this.isLoadingPaychecks = false;
+          console.log('[SurveyComponent] Using immediate income sources for webhook trigger setup');
+        } else {
+          // Fallback to recurring income sources if no immediate sources found
+          console.log('[SurveyComponent] No immediate sources found, falling back to recurring income API');
+          this.plaidDataService.getPaycheckSources().subscribe({
+            next: (sources) => {
+              console.log('[SurveyComponent] Received recurring paycheck sources:', sources);
+              this.allPaycheckSources = sources;
+              this.isLoadingPaychecks = false;
+              if (sources.length === 0) {
+                this.paycheckErrorMessage = "No potential paycheck sources found yet. Plaid may need 24-48 hours to detect recurring income from your transactions. You can skip this step or come back later.";
+              }
+            },
+            error: (err) => {
+              console.error('[SurveyComponent] Error fetching recurring paycheck sources:', err);
+              this.paycheckErrorMessage = err.message || "Failed to fetch paycheck information. Please try again.";
+              this.isLoadingPaychecks = false;
+            }
+          });
         }
       },
-      error: (err) => {
-        console.error('[SurveyComponent] Error fetching paycheck sources:', err);
-        this.paycheckErrorMessage = err.message || "Failed to fetch paycheck information. Please try again.";
-        this.isLoadingPaychecks = false;
+      error: (immediateErr) => {
+        console.error('[SurveyComponent] Error fetching immediate income sources, trying recurring sources:', immediateErr);
+        // Fallback to recurring income sources on error
+        this.plaidDataService.getPaycheckSources().subscribe({
+          next: (sources) => {
+            console.log('[SurveyComponent] Received paycheck sources as fallback:', sources);
+            this.allPaycheckSources = sources;
+            this.isLoadingPaychecks = false;
+            if (sources.length === 0) {
+              this.paycheckErrorMessage = "No potential paycheck sources found. You can skip this step or link another bank account later.";
+            }
+          },
+          error: (err) => {
+            console.error('[SurveyComponent] Error fetching paycheck sources:', err);
+            this.paycheckErrorMessage = err.message || "Failed to fetch paycheck information. Please try again.";
+            this.isLoadingPaychecks = false;
+          }
+        });
       }
     });
   }

@@ -84,6 +84,43 @@ public class IncomeController {
         }
     }
 
+    @GetMapping("/immediate_income_sources")
+    public ResponseEntity<?> getImmediateIncomeSources() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // Ensure principal is UserDetailsImpl before casting
+        if (!(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+            logger.warn("/income/immediate_income_sources: Authentication principal is not an instance of UserDetailsImpl.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Invalid authentication details."));
+        }
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        
+        User appUser = userRepository.findById(userDetails.getId()).orElse(null);
+
+        if (appUser == null) {
+            logger.warn("/income/immediate_income_sources: User ID {} not found from authenticated principal.", userDetails.getId());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new MessageResponse("User not found."));
+        }
+        if (!appUser.isPlaidLinked() || appUser.getPlaidAccessToken() == null || appUser.getPlaidAccessToken().isEmpty()) {
+            logger.warn("/income/immediate_income_sources: User {} Plaid not linked or access token missing.", userDetails.getUsername());
+            return ResponseEntity.badRequest().body(new MessageResponse("Plaid account not linked or access token missing. Please link your bank account."));
+        }
+
+        try {
+            String decryptedAccessToken = encryptionService.decrypt(appUser.getPlaidAccessToken());
+            List<PaycheckSourceDto> immediateIncomes = plaidService.getImmediateIncomeSourcesFromTransactions(decryptedAccessToken);
+            logger.info("Successfully retrieved {} immediate income sources for user {}", immediateIncomes.size(), appUser.getEmail());
+            return ResponseEntity.ok(immediateIncomes);
+        } catch (IOException e) {
+            logger.error("Error fetching immediate income sources for user {}: {}", appUser.getEmail(), e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error fetching immediate income information: " + e.getMessage()));
+        } catch (Exception e) { // Catch decryption or other errors
+            logger.error("Error processing request for immediate income sources for user {}: {}", appUser.getEmail(), e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error processing request. Please try again."));
+        }
+    }
+
     @PostMapping("/paycheck_configurations") // Changed endpoint name
     public ResponseEntity<?> savePaycheckConfigurations(@Valid @RequestBody List<SelectedPaycheckDto> selectedPaychecks) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
