@@ -126,7 +126,7 @@ export class AppComponent implements OnInit {
       targetRoute = '/link-bank';
       decisionReason = "Initial survey complete, Plaid linking NOT complete.";
     } else if (!investmentSurveyCompleted) {
-      targetRoute = '/investment-survey';
+      targetRoute = '/survey';
       decisionReason = "Plaid linked, Investment setup survey NOT complete.";
     } else if (choseToPickStocks && !stockSelectionCompleted) {
       targetRoute = '/manual-stock-selection';

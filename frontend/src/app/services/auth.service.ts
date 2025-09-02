@@ -165,7 +165,7 @@ export class AuthService {
       userHandle: userHandle || null
     };
     
-    return this.http.post<AuthResponse>(`${BACKEND_API_URL}/api/dev/authenticate-as-user`, payload, {
+    return this.http.post<AuthResponse>(`${BACKEND_API_URL}/dev/authenticate-as-user`, payload, {
       headers: this.getAuthHeaders()
     }).pipe(
       tap(response => {
