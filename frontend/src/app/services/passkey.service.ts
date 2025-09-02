@@ -6,6 +6,7 @@ import { RegistrationStartResponse } from '../models/passkey/registration-start-
 import { RegistrationFinishRequest } from '../models/passkey/registration-finish-request.model';
 import { RegistrationFinishResponse } from '../models/passkey/registration-finish-response.model';
 import { environment } from '../../environments/environment';
+import { JwtTokenUtils } from '../utils/jwt-token.utils';
 
 // ngrok
 const BACKEND_API_URL = environment.backendApiUrl;
@@ -27,11 +28,9 @@ export class PasskeyService {
       .pipe(
         tap(response => {
           if (response.success && response.jwtToken) {
-            // Store the JWT (e.g., in localStorage or a secure cookie)
-            localStorage.setItem('jwtToken', response.jwtToken);
-            // You might also want to store user info or update an authentication state service
-            // e.g., this.authStatusService.login(response.userId, response.email);
-            console.log('User registered and logged in. JWT stored.');
+            // Store JWT with expiration info and user details
+            JwtTokenUtils.storeJwtToken(response.jwtToken, response.userId, response.email);
+            console.log('User registered and logged in. JWT stored with expiration info.');
           }
         })
       );

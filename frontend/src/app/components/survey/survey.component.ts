@@ -5,7 +5,8 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-  IonProgressBar, IonIcon, IonCheckbox, IonSpinner, IonRange, IonButton, IonNote, IonLabel
+  IonProgressBar, IonIcon, IonCheckbox, IonSpinner, IonRange, IonButton, IonNote, IonLabel,
+  IonInput, IonSelect, IonSelectOption, IonItem
 } from '@ionic/angular/standalone';
 
 import { PlaidDataService } from '../../services/plaid-data.service';
@@ -42,7 +43,8 @@ enum SurveyType {
   imports: [
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-    IonProgressBar, IonIcon, IonCheckbox, IonSpinner, IonRange, IonButton, IonNote, IonLabel
+    IonProgressBar, IonIcon, IonCheckbox, IonSpinner, IonRange, IonButton, IonNote, IonLabel,
+    IonInput, IonSelect, IonSelectOption, IonItem
   ]
 })
 export class SurveyComponent implements OnInit {
@@ -84,6 +86,32 @@ export class SurveyComponent implements OnInit {
   paycheckErrorMessage: string | null = null;
   isSubmittingSurvey: boolean = false;
 
+  // Manual Income Configuration State
+  showPrimaryIncomeForm: boolean = false;
+  showSecondaryIncomeForm: boolean = false;
+  hasPrimaryIncome: boolean = false;
+  hasSecondaryIncome: boolean = false;
+
+  primaryIncomeConfig = {
+    name: '',
+    employerName: '',
+    frequency: 'BIWEEKLY',
+    approximateAmount: 0,
+    investmentPercentage: 10,
+    accountId: ''
+  };
+
+  secondaryIncomeConfig = {
+    name: '',
+    employerName: '',
+    frequency: 'MONTHLY',
+    approximateAmount: 0,
+    investmentPercentage: 5,
+    accountId: ''
+  };
+
+  availableAccounts: any[] = []; // Will be populated with user's bank accounts
+
   constructor(
     private router: Router,
     private plaidDataService: PlaidDataService
@@ -116,8 +144,14 @@ export class SurveyComponent implements OnInit {
       this.currentQuestion = this.activeSurveyQuestions[this.currentQuestionIndex];
       console.log('[SurveyComponent] Loaded question:', this.currentQuestion?.id, this.currentQuestion?.questionText);
 
-      if (this.currentQuestion?.isPaycheckSelectionStep && this.allPaycheckSources.length === 0 && !this.isLoadingPaychecks) {
-        this.fetchPaycheckSources();
+      if (this.currentQuestion?.isPaycheckSelectionStep) {
+        // Always update the sources display when loading the paycheck selection step
+        this.updatePaycheckSourcesFromConfigs();
+        
+        // Only fetch if we don't have any configured sources and aren't loading
+        if (this.allPaycheckSources.length === 0 && !this.isLoadingPaychecks) {
+          this.fetchPaycheckSources();
+        }
       }
     } else {
       this.currentQuestion = undefined;
@@ -131,64 +165,226 @@ export class SurveyComponent implements OnInit {
   }
 
   fetchPaycheckSources(): void {
-    console.log('[SurveyComponent] Fetching immediate income sources for webhook configuration...');
-    this.isLoadingPaychecks = true;
+    console.log('[SurveyComponent] Loading configured income sources');
+    this.isLoadingPaychecks = false;
     this.paycheckErrorMessage = null;
-    // this.tempSelectedSourceIds.clear();
-    this.allPaycheckSources.forEach(source => { // Reset temporary selection state if needed
-        const checkbox = document.getElementById(`paycheck-${source.accountId}`) as HTMLIonCheckboxElement;
-        if (checkbox) checkbox.checked = false;
-      });
-
-    // Try immediate income sources first (from recent transactions) for webhook setup
-    this.plaidDataService.getImmediateIncomeSources().subscribe({
-      next: (immediateSources) => {
-        console.log('[SurveyComponent] Received immediate income sources for webhook configuration:', immediateSources);
-        if (immediateSources.length > 0) {
-          this.allPaycheckSources = immediateSources;
-          this.isLoadingPaychecks = false;
-          console.log('[SurveyComponent] Using immediate income sources for webhook trigger setup');
-        } else {
-          // Check if account was recently linked - transactions might still be initializing
-          console.log('[SurveyComponent] No immediate sources found - trying recurring API and providing user guidance');
-          this.paycheckErrorMessage = "Your bank account was just linked! We're still analyzing your transaction history to find income sources. This usually takes a few minutes to a few hours. You can skip this step and set up automatic investing later from your dashboard.";
-          this.isLoadingPaychecks = false;
-          
-          // Still try the recurring API as a fallback, but don't expect much
-          this.plaidDataService.getPaycheckSources().subscribe({
-            next: (sources) => {
-              if (sources.length > 0) {
-                console.log('[SurveyComponent] Found some recurring sources as fallback:', sources);
-                this.allPaycheckSources = sources;
-                this.paycheckErrorMessage = null; // Clear the message if we found sources
-              }
-            },
-            error: (err) => {
-              console.log('[SurveyComponent] Recurring sources also not available, which is expected for newly linked accounts');
-            }
-          });
-        }
-      },
-      error: (immediateErr) => {
-        console.log('[SurveyComponent] Expected: Immediate income detection not available for newly linked account');
-        this.paycheckErrorMessage = "Your bank account was just linked! Plaid is still setting up access to your transaction history. This process usually takes a few minutes. You can skip this step and return later to set up automatic investing.";
-        this.isLoadingPaychecks = false;
-      }
-    });
+    
+    // Populate allPaycheckSources with configured income sources
+    this.updatePaycheckSourcesFromConfigs();
+    
+    // The UI will show configured sources or empty state for manual entry
   }
 
-  // --- Methods for Paycheck Selection Step (iq1_paycheck_selection) ---
+  private updatePaycheckSourcesFromConfigs(): void {
+    this.allPaycheckSources = [];
+    
+    // Add primary income if configured
+    if (this.hasPrimaryIncome && this.primaryIncomeConfig.name) {
+      const primarySource: PaycheckSource = {
+        accountId: this.primaryIncomeConfig.accountId || 'primary_' + Date.now(),
+        name: this.primaryIncomeConfig.name,
+        lastAmount: this.primaryIncomeConfig.approximateAmount,
+        lastDate: new Date().toISOString().split('T')[0],
+        frequency: this.primaryIncomeConfig.frequency,
+        description: `Primary income from ${this.primaryIncomeConfig.employerName}`
+      };
+      this.allPaycheckSources.push(primarySource);
+    }
+    
+    // Add secondary income if configured
+    if (this.hasSecondaryIncome && this.secondaryIncomeConfig.name) {
+      const secondarySource: PaycheckSource = {
+        accountId: this.secondaryIncomeConfig.accountId || 'secondary_' + Date.now(),
+        name: this.secondaryIncomeConfig.name,
+        lastAmount: this.secondaryIncomeConfig.approximateAmount,
+        lastDate: new Date().toISOString().split('T')[0],
+        frequency: this.secondaryIncomeConfig.frequency,
+        description: `Secondary income from ${this.secondaryIncomeConfig.employerName}`
+      };
+      this.allPaycheckSources.push(secondarySource);
+    }
+  }
+
+  // --- Methods for Manual Income Configuration ---
+  showPrimaryIncomeEntry(): void {
+    this.showPrimaryIncomeForm = true;
+    this.loadUserAccounts();
+  }
+
+  showSecondaryIncomeEntry(): void {
+    this.showSecondaryIncomeForm = true;
+    if (this.availableAccounts.length === 0) {
+      this.loadUserAccounts();
+    }
+  }
+
+  private loadUserAccounts(): void {
+    // TODO: Implement account loading from Plaid
+    // For now, we'll use a placeholder
+    this.availableAccounts = [
+      { accountId: 'checking_001', name: 'Main Checking', type: 'depository' },
+      { accountId: 'savings_001', name: 'Savings Account', type: 'depository' }
+    ];
+  }
+
+  savePrimaryIncomeConfig(): void {
+    if (!this.validateIncomeConfig(this.primaryIncomeConfig)) {
+      return;
+    }
+
+    this.hasPrimaryIncome = true;
+    this.addIncomeToConfigs(this.primaryIncomeConfig, true);
+    this.showPrimaryIncomeForm = false;
+    
+    // Update the displayed paycheck sources to show the new configuration
+    this.updatePaycheckSourcesFromConfigs();
+    
+    console.log('[SurveyComponent] Added primary income configuration');
+  }
+
+  saveSecondaryIncomeConfig(): void {
+    if (!this.validateIncomeConfig(this.secondaryIncomeConfig)) {
+      return;
+    }
+
+    this.hasSecondaryIncome = true;
+    this.addIncomeToConfigs(this.secondaryIncomeConfig, false);
+    this.showSecondaryIncomeForm = false;
+    
+    // Update the displayed paycheck sources to show the new configuration
+    this.updatePaycheckSourcesFromConfigs();
+    
+    console.log('[SurveyComponent] Added secondary income configuration');
+  }
+
+  private addIncomeToConfigs(config: any, isPrimary: boolean): void {
+    // Generate a consistent accountId if none provided
+    const accountId = config.accountId || (isPrimary ? 'primary_income' : 'secondary_income');
+    config.accountId = accountId; // Update the config object with the ID
+    
+    // Add to configs to save with proper structure
+    const paycheckConfig: SelectedPaycheck = {
+      accountId: accountId,
+      name: config.name,
+      withdrawalPercentage: config.investmentPercentage / 100,
+      employerName: config.employerName,
+      expectedAmount: config.approximateAmount,
+      frequency: config.frequency
+    };
+
+    const existingConfigIndex = this.paycheckConfigsToSave.findIndex(c => c.accountId === accountId);
+    if (existingConfigIndex > -1) {
+      this.paycheckConfigsToSave[existingConfigIndex] = paycheckConfig;
+    } else {
+      this.paycheckConfigsToSave.push(paycheckConfig);
+    }
+  }
+
+  private validateIncomeConfig(config: any): boolean {
+    if (!config.name.trim()) {
+      alert('Please enter a name for this income source');
+      return false;
+    }
+    if (!config.employerName.trim()) {
+      alert('Please enter your employer name');
+      return false;
+    }
+    if (config.approximateAmount <= 0) {
+      alert('Please enter a valid amount');
+      return false;
+    }
+    if (!config.accountId) {
+      alert('Please select which account receives this income');
+      return false;
+    }
+    return true;
+  }
+
+  cancelPrimaryIncomeEntry(): void {
+    this.resetPrimaryIncomeForm();
+    this.showPrimaryIncomeForm = false;
+  }
+
+  cancelSecondaryIncomeEntry(): void {
+    this.resetSecondaryIncomeForm();
+    this.showSecondaryIncomeForm = false;
+  }
+
+  private resetPrimaryIncomeForm(): void {
+    this.primaryIncomeConfig = {
+      name: '',
+      employerName: '',
+      frequency: 'BIWEEKLY',
+      approximateAmount: 0,
+      investmentPercentage: 10,
+      accountId: ''
+    };
+  }
+
+  private resetSecondaryIncomeForm(): void {
+    this.secondaryIncomeConfig = {
+      name: '',
+      employerName: '',
+      frequency: 'MONTHLY',
+      approximateAmount: 0,
+      investmentPercentage: 5,
+      accountId: ''
+    };
+  }
+
+  editPrimaryIncome(): void {
+    this.showPrimaryIncomeForm = true;
+  }
+
+  editSecondaryIncome(): void {
+    this.showSecondaryIncomeForm = true;
+  }
+
+  removePrimaryIncome(): void {
+    this.hasPrimaryIncome = false;
+    this.paycheckConfigsToSave = this.paycheckConfigsToSave.filter(c => c.accountId !== this.primaryIncomeConfig.accountId);
+    this.resetPrimaryIncomeForm();
+    
+    // Update the displayed paycheck sources to remove the primary income
+    this.updatePaycheckSourcesFromConfigs();
+  }
+
+  removeSecondaryIncome(): void {
+    this.hasSecondaryIncome = false;
+    this.paycheckConfigsToSave = this.paycheckConfigsToSave.filter(c => c.accountId !== this.secondaryIncomeConfig.accountId);
+    this.resetSecondaryIncomeForm();
+    
+    // Update the displayed paycheck sources to remove the secondary income
+    this.updatePaycheckSourcesFromConfigs();
+  }
+
+  getInvestmentPercentageForSource(accountId: string): number {
+    const config = this.paycheckConfigsToSave.find(c => c.accountId === accountId);
+    return config ? Math.round(config.withdrawalPercentage * 100) : 0;
+  }
   togglePaycheckSourceSelection(source: PaycheckSource, event: any): void {
     const isSelected = event.detail.checked;
     const existingConfigIndex = this.paycheckConfigsToSave.findIndex(p => p.accountId === source.accountId);
 
     if (isSelected) {
       if (existingConfigIndex === -1) { // Not yet in the list to be configured
-        // Add it with a default percentage, it will be configured in the next step
-         this.paycheckConfigsToSave.push({
+        // For configured income sources, use the existing configuration
+        let withdrawalPercentage = 0.10; // Default
+        
+        // Check if this is a primary or secondary income source and get the configured percentage
+        if (this.hasPrimaryIncome && source.accountId === this.primaryIncomeConfig.accountId) {
+          withdrawalPercentage = this.primaryIncomeConfig.investmentPercentage / 100;
+        } else if (this.hasSecondaryIncome && source.accountId === this.secondaryIncomeConfig.accountId) {
+          withdrawalPercentage = this.secondaryIncomeConfig.investmentPercentage / 100;
+        }
+        
+        this.paycheckConfigsToSave.push({
             accountId: source.accountId,
             name: source.name,
-            withdrawalPercentage: 0.10 // Default, will be set by user
+            withdrawalPercentage: withdrawalPercentage,
+            employerName: this.getEmployerNameForSource(source),
+            expectedAmount: source.lastAmount,
+            frequency: source.frequency
         });
       }
     } else {
@@ -199,67 +395,38 @@ export class SurveyComponent implements OnInit {
     console.log('Paycheck sources marked for configuration:', this.paycheckConfigsToSave.map(p=>p.accountId));
   }
 
+  private getEmployerNameForSource(source: PaycheckSource): string {
+    // Extract employer name from configured sources
+    if (this.hasPrimaryIncome && source.accountId === this.primaryIncomeConfig.accountId) {
+      return this.primaryIncomeConfig.employerName;
+    }
+    if (this.hasSecondaryIncome && source.accountId === this.secondaryIncomeConfig.accountId) {
+      return this.secondaryIncomeConfig.employerName;
+    }
+    // Fallback: try to extract from description or use source name
+    if (source.description && source.description.includes('from ')) {
+      return source.description.split('from ')[1];
+    }
+    return source.name;
+  }
+
   proceedFromPaycheckSelection(): void {
     if (!this.currentQuestion || !this.currentQuestion.isPaycheckSelectionStep) return;
 
-    console.log('[SurveyComponent] Proceeding from paycheck selection.');
-    // Filter out sources that were not actually selected by the user for configuration
-    // This step is slightly redundant if togglePaycheckSourceSelection correctly maintains paycheckConfigsToSave
-    // but good as a final check.
-    // For this new flow, paycheckConfigsToSave should only contain initially selected ones.
-    // We will now generate questions for these.
-
-    const selectedSourcesForConfig = this.allPaycheckSources.filter(source =>
-        (document.getElementById(`paycheck-${source.accountId}`) as HTMLIonCheckboxElement)?.checked
-    );
-
-
-    // Remove the current 'iq1_paycheck_selection' question
-    // And insert new questions for percentages AFTER it.
+    console.log('[SurveyComponent] Proceeding from paycheck selection with manual configurations:', this.paycheckConfigsToSave);
+    
+    // For manual configuration, we already have the paycheckConfigsToSave populated
+    // No need to generate percentage questions since we collected everything upfront
+    
+    // Skip to the next non-paycheck question
     const originalSelectionQuestionIndex = this.activeSurveyQuestions.findIndex(q => q.id === 'iq1_paycheck_selection');
     
-    let percentageQuestions: SurveyQuestion[] = [];
-    if (selectedSourcesForConfig.length > 0) {
-        percentageQuestions = selectedSourcesForConfig.map(source => ({
-            id: `percentage_for_${source.accountId}`,
-            questionText: `Set investment percentage for: ${source.name}`,
-            responseChoices: [], // Will use ion-range
-            answer: null,
-            isPercentageQuestion: true,
-            relatedPaycheck: source,
-            percentageAnswer: 0.10 // Default to 10%
-        }));
-    }
-
-
-    // Rebuild activeSurveyQuestions: questions before + new percentage questions + questions after
-    const questionsBefore = this.activeSurveyQuestions.slice(0, originalSelectionQuestionIndex + 1); // Keep the selection question for now, or remove it
-    const questionsAfter = this.activeSurveyQuestions.slice(originalSelectionQuestionIndex + 1).filter(q => !q.isPercentageQuestion); // Remove any old percentage questions
-
-    // We will replace the original selection question with the percentage questions,
-    // or insert after if we want to keep a summary of selection step.
-    // For this flow, let's replace the "select paychecks" step with the series of "set percentage" steps.
+    // Remove the selection question and don't add percentage questions
+    this.activeSurveyQuestions.splice(originalSelectionQuestionIndex, 1);
     
-    this.activeSurveyQuestions.splice(
-      originalSelectionQuestionIndex, // Start index to remove/replace
-      1, // Remove the original selection question
-      ...percentageQuestions // Add all new percentage questions
-    );
-
-
-    if (percentageQuestions.length === 0 && selectedSourcesForConfig.length === 0) {
-      // No paychecks selected, and no percentage questions to ask.
-      // We need to find the next *actual* question (iq2_stock_preference)
-      // The currentQuestionIndex should effectively skip over where percentage questions *would have been*.
-      // The splice above already adjusted the array.
-      // We just need to ensure currentQuestionIndex points to the next logical step.
-      this.currentQuestionIndex = originalSelectionQuestionIndex; // Index of where new questions would start
-                                                                 // if there are none, this index now points to iq2
-    } else {
-       // Start with the first percentage question (or iq2 if none were selected)
-      this.currentQuestionIndex = originalSelectionQuestionIndex;
-    }
-
+    // currentQuestionIndex should now point to the next question (iq2_stock_preference)
+    this.currentQuestionIndex = originalSelectionQuestionIndex;
+    
     this.loadActiveQuestion();
   }
 
@@ -393,10 +560,14 @@ export class SurveyComponent implements OnInit {
 
   // --- Paycheck UI Helper Methods (for iq1_paycheck_selection step) ---
   isPaycheckInitiallySelected(accountId: string): boolean {
-    // This determines if the checkbox should be initially checked in the list
-    // For the new flow, we don't pre-select here, user action does.
-    // Or, if you want to pre-select all fetched paychecks:
-    // return this.allPaycheckSources.some(p => p.accountId === accountId);
+    // Configured income sources should be automatically selected
+    if (this.hasPrimaryIncome && accountId === this.primaryIncomeConfig.accountId) {
+      return true;
+    }
+    if (this.hasSecondaryIncome && accountId === this.secondaryIncomeConfig.accountId) {
+      return true;
+    }
+    // Otherwise check if it's in the paycheckConfigsToSave
     return this.paycheckConfigsToSave.some(p => p.accountId === accountId);
   }
 }

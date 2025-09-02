@@ -22,4 +22,9 @@ public class SelectedPaycheckDto {
     @DecimalMin(value = "0.0", inclusive = true, message = "Percentage must be at least 0")
     @DecimalMax(value = "1.0", inclusive = true, message = "Percentage must be at most 1 (100%)") // Represent as 0.0 to 1.0
     private BigDecimal withdrawalPercentage;
+    
+    // Manual configuration fields for webhook matching (optional)
+    private String employerName; // Company/employer name for transaction matching
+    private BigDecimal expectedAmount; // Approximate expected amount for matching
+    private String frequency; // Pay frequency for pattern matching
 }
