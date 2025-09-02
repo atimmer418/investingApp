@@ -28,6 +28,7 @@ public class UserController {
         private boolean choseToPickStocks;
         private boolean stockSelectionCompleted;
         private boolean investmentConfirmationCompleted;
+        private Double monthlyInvestment;
         
         public UserProgressResponse(User user) {
             this.getStartedCompleted = true; // If they have a user record, get-started is done
@@ -37,6 +38,7 @@ public class UserController {
             this.choseToPickStocks = user.isChoseToPickStocks();
             this.stockSelectionCompleted = user.isStockSelectionCompleted();
             this.investmentConfirmationCompleted = user.isInvestmentConfirmationCompleted();
+            this.monthlyInvestment = user.getMonthlyInvestment();
         }
         
         // Getters
@@ -47,6 +49,7 @@ public class UserController {
         public boolean isChoseToPickStocks() { return choseToPickStocks; }
         public boolean isStockSelectionCompleted() { return stockSelectionCompleted; }
         public boolean isInvestmentConfirmationCompleted() { return investmentConfirmationCompleted; }
+        public Double getMonthlyInvestment() { return monthlyInvestment; }
     }
 
     /**

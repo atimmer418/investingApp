@@ -327,6 +327,14 @@ ion-progress-bar {
             margin-bottom: 12px;
           }
 
+          .investment-note {
+            text-align: center;
+            font-size: 12px;
+            color: var(--ion-color-medium);
+            font-style: italic;
+            margin-top: 4px;
+          }
+
           ion-range {
             --bar-background: #E5E5EA;
             --bar-background-active: var(--ion-color-primary);

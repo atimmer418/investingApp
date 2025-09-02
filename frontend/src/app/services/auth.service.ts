@@ -14,6 +14,7 @@ export interface UserProgress {
   choseToPickStocks: boolean;
   stockSelectionCompleted: boolean;
   investmentConfirmationCompleted: boolean;
+  monthlyInvestment?: number; // User's monthly investment capacity
 }
 
 export interface PasskeyAuthRequest {

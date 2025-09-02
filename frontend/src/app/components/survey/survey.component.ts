@@ -10,6 +10,7 @@ import {
 } from '@ionic/angular/standalone';
 
 import { PlaidDataService } from '../../services/plaid-data.service';
+import { AuthService } from '../../services/auth.service';
 import { PaycheckSource } from '../../models/plaid/paycheck-source.model';
 import { SelectedPaycheck } from '../../models/plaid/selected-paycheck.model'; // We'll use this to store final config
 
@@ -112,14 +113,30 @@ export class SurveyComponent implements OnInit {
 
   availableAccounts: any[] = []; // Will be populated with user's bank accounts
 
+  // User's monthly investment amount from initial survey
+  userMonthlyInvestmentAmount: number = 0;
+
   constructor(
     private router: Router,
-    private plaidDataService: PlaidDataService
+    private plaidDataService: PlaidDataService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
     console.log('[SurveyComponent] ngOnInit - Initializing Investment Setup Survey.');
+    this.loadUserMonthlyInvestment();
     this.initializeInvestmentSurvey();
+  }
+
+  loadUserMonthlyInvestment(): void {
+    // Get user's monthly investment amount from their progress data
+    const userProgress = this.authService.getCurrentProgress();
+    if (userProgress && userProgress.monthlyInvestment) {
+      this.userMonthlyInvestmentAmount = userProgress.monthlyInvestment;
+      console.log('[SurveyComponent] Loaded user monthly investment amount:', this.userMonthlyInvestmentAmount);
+    } else {
+      console.log('[SurveyComponent] No monthly investment amount found in user progress');
+    }
   }
 
   initializeInvestmentSurvey(): void {

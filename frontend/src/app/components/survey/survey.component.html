@@ -190,18 +190,10 @@
             </div>
 
             <div class="percentage-field">
-              <div class="percentage-label">Investment Percentage</div>
+              <div class="percentage-label">Monthly Investment Amount</div>
               <div class="percentage-control">
-                <div class="percentage-display">{{ showPrimaryIncomeForm ? primaryIncomeConfig.investmentPercentage : secondaryIncomeConfig.investmentPercentage }}%</div>
-                <ion-range
-                  min="1"
-                  max="50"
-                  step="1"
-                  snaps="true"
-                  color="primary"
-                  [ngModel]="showPrimaryIncomeForm ? primaryIncomeConfig.investmentPercentage : secondaryIncomeConfig.investmentPercentage"
-                  (ngModelChange)="showPrimaryIncomeForm ? (primaryIncomeConfig.investmentPercentage = $event) : (secondaryIncomeConfig.investmentPercentage = $event)">
-                </ion-range>
+                <div class="percentage-display">${{ userMonthlyInvestmentAmount | number:'1.0-0' }}</div>
+                <div class="investment-note">From your initial survey</div>
               </div>
             </div>
           </div>
