@@ -1,7 +1,9 @@
 package com.investingapp.backend.service;
 
 import com.investingapp.backend.model.User;
+import com.investingapp.backend.model.UserPaycheckConfig;
 import com.investingapp.backend.repository.UserRepository;
+import com.investingapp.backend.repository.UserPaycheckConfigRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,18 +18,20 @@ public class PlaidWebhookService {
     private static final Logger logger = LoggerFactory.getLogger(PlaidWebhookService.class);
 
     private final UserRepository userRepository;
+    private final UserPaycheckConfigRepository paycheckConfigRepository;
     private final PlaidService plaidService;
     private final EncryptionService encryptionService;
     // You'll need to create these services for the investment flow
     // private final InvestmentService investmentService;
-    // private final PaycheckConfigService paycheckConfigService;
 
     @Autowired
     public PlaidWebhookService(
             UserRepository userRepository,
+            UserPaycheckConfigRepository paycheckConfigRepository,
             PlaidService plaidService,
             EncryptionService encryptionService) {
         this.userRepository = userRepository;
+        this.paycheckConfigRepository = paycheckConfigRepository;
         this.plaidService = plaidService;
         this.encryptionService = encryptionService;
     }
@@ -57,6 +61,16 @@ public class PlaidWebhookService {
                 return;
             }
 
+            // Check if user has any webhook-configured paycheck configs
+            List<UserPaycheckConfig> webhookConfigs = paycheckConfigRepository.findByUser(user).stream()
+                .filter(config -> config.isPaycheckDetected() && config.isWebhookConfigured())
+                .toList();
+
+            if (webhookConfigs.isEmpty()) {
+                logger.info("No webhook-configured paycheck configs found for user {}, skipping transaction processing", user.getId());
+                return;
+            }
+
             // Get user's paycheck configurations
             // List<PaycheckConfig> userPaycheckConfigs = paycheckConfigService.getUserPaycheckConfigs(user);
             
@@ -81,16 +95,27 @@ public class PlaidWebhookService {
             logger.info("Checking {} new transactions for user {} against configured paycheck sources", 
                 transactionIds.size(), user.getEmail());
 
+            // Get user's detected paycheck configurations
+            List<UserPaycheckConfig> webhookConfigs = paycheckConfigRepository.findByUser(user).stream()
+                .filter(config -> config.isPaycheckDetected() && config.isWebhookConfigured())
+                .toList();
+
+            if (webhookConfigs.isEmpty()) {
+                logger.info("No webhook-ready paycheck configs for user {}", user.getEmail());
+                return;
+            }
+
+            logger.info("Found {} webhook-configured paycheck sources for user {}", webhookConfigs.size(), user.getEmail());
+
             // TODO: Implement the following steps:
             // 1. Fetch the specific transactions by ID from Plaid
-            // 2. Get user's saved paycheck configurations (which deposits should trigger investments)
-            // 3. For each new transaction, check if it matches any configured paycheck source:
-            //    - Similar merchant name/description
-            //    - Similar amount (within tolerance)
-            //    - Same account
-            // 4. If match found, trigger investment:
+            // 2. For each new transaction, check if it matches any detected paycheck source:
+            //    - Same account as the detected paycheck
+            //    - Similar amount (within tolerance of expected amount)
+            //    - Transaction type is deposit (positive amount)
+            // 3. If match found, trigger investment:
             //    - Calculate investment amount based on user's configured percentage
-            //    - Call investment service to execute the trade
+            //    - Call investment service to execute the trade (will be implemented in future branch)
             //    - Log the transaction for user records
             //    - Optionally notify user of automatic investment
 

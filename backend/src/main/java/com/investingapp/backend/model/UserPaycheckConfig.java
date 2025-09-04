@@ -38,5 +38,18 @@ public class UserPaycheckConfig {
     @Column(nullable = false, precision = 5, scale = 4) // e.g., 0.1000 for 10.00%
     private BigDecimal withdrawalPercentage;
 
+    // Manual configuration fields for webhook matching
+    private String employerName; // Company/employer name for transaction matching
+    private BigDecimal expectedAmount; // Approximate expected amount for matching
+    private String frequency; // Pay frequency for pattern matching (WEEKLY, BIWEEKLY, etc.)
+    
+    // Paycheck detection and webhook status
+    private boolean paycheckDetected = false; // Whether this paycheck has been found in Plaid recurring transactions
+    private boolean webhookConfigured = false; // Whether webhook is set up for this paycheck
+    private String plaidStreamId; // The Plaid transaction stream ID if detected
+    private java.time.LocalDateTime lastDetectionAttempt; // When we last tried to detect this paycheck
+    private java.time.LocalDateTime paycheckDetectedAt; // When the paycheck was successfully detected
+    private java.time.LocalDateTime webhookConfiguredAt; // When the webhook was set up
+
     // Add other fields if needed, e.g., fixed withdrawal amount, priority, status (active/paused)
 }
