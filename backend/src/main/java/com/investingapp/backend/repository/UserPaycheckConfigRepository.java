@@ -11,4 +11,9 @@ import java.util.List;
 public interface UserPaycheckConfigRepository extends JpaRepository<UserPaycheckConfig, Long> {
     List<UserPaycheckConfig> findByUser(User user);
     void deleteByUser(User user); // For easily replacing all configs
+    
+    // Methods for paycheck detection
+    List<UserPaycheckConfig> findByPaycheckDetectedFalse();
+    List<UserPaycheckConfig> findByUserAndPaycheckDetectedFalse(User user);
+    List<UserPaycheckConfig> findByPaycheckDetectedTrueAndWebhookConfiguredFalse();
 }
