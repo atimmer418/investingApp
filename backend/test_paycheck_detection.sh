@@ -1,23 +1,23 @@
 #!/bin/bash
 
 # Paycheck Detection Testing Script
-# Make sure the backend is running on localhost:8080 before running this script
+# Make sure the backend is running on api-dev.fredvested.com before running this script
 
-BASE_URL="http://localhost:8080"
+BASE_URL="https://api-dev.fredvested.com"
 
 echo "=== Paycheck Detection Testing Script ==="
 echo ""
 
 # Step 1: Authenticate as a user to get JWT token
 echo "Step 1: Authenticating as a test user..."
-AUTH_RESPONSE=$(curl -s -X POST "$BASE_URL/api/dev/authenticate" \
+AUTH_RESPONSE=$(curl -s -X POST "$BASE_URL/api/dev/authenticate-as-user" \
   -H "Content-Type: application/json" \
-  -d '{"userIdentifier": "test@example.com"}')
+  -d '{"email": "lockedin@yahoo.com"}')
 
 echo "Auth Response: $AUTH_RESPONSE"
 
 # Extract JWT token (you might need to adjust this based on your response format)
-JWT_TOKEN=$(echo $AUTH_RESPONSE | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+JWT_TOKEN=$(echo $AUTH_RESPONSE | grep -o '"jwtToken":"[^"]*"' | cut -d'"' -f4)
 
 if [ -z "$JWT_TOKEN" ]; then
     echo "❌ Failed to get JWT token. Make sure the user exists and backend is running."
