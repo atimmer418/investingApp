@@ -44,7 +44,7 @@ public class PaycheckDetectionController {
             }
 
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-            User user = userRepository.findByEmail(userDetails.getUsername());
+            User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
             if (user == null) {
                 return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
             }
@@ -75,7 +75,7 @@ public class PaycheckDetectionController {
             }
 
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-            User user = userRepository.findByEmail(userDetails.getUsername());
+            User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
             if (user == null) {
                 return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
             }
