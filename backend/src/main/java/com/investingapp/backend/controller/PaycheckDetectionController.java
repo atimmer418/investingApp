@@ -3,8 +3,9 @@ package com.investingapp.backend.controller;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.model.UserPaycheckConfig;
 import com.investingapp.backend.repository.UserPaycheckConfigRepository;
+import com.investingapp.backend.repository.UserRepository;
 import com.investingapp.backend.service.PaycheckDetectionService;
-import com.investingapp.backend.security.jwt.JwtUtils;
+import com.investingapp.backend.security.services.UserDetailsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class PaycheckDetectionController {
     private UserPaycheckConfigRepository paycheckConfigRepository;
 
     @Autowired
-    private JwtUtils jwtUtils;
+    private UserRepository userRepository;
 
     /**
      * Manually trigger paycheck detection for the authenticated user
@@ -38,7 +39,12 @@ public class PaycheckDetectionController {
     @PostMapping("/detect")
     public ResponseEntity<Map<String, Object>> triggerPaycheckDetection(Authentication authentication) {
         try {
-            User user = jwtUtils.getUserFromAuthentication(authentication);
+            if (!(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid authentication"));
+            }
+
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            User user = userRepository.findByEmail(userDetails.getEmail());
             if (user == null) {
                 return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
             }
@@ -64,7 +70,12 @@ public class PaycheckDetectionController {
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> getPaycheckDetectionStatus(Authentication authentication) {
         try {
-            User user = jwtUtils.getUserFromAuthentication(authentication);
+            if (!(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid authentication"));
+            }
+
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            User user = userRepository.findByEmail(userDetails.getEmail());
             if (user == null) {
                 return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
             }
