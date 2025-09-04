@@ -4,7 +4,7 @@ import com.investingapp.backend.model.User;
 import com.investingapp.backend.model.UserPaycheckConfig;
 import com.investingapp.backend.repository.UserPaycheckConfigRepository;
 import com.investingapp.backend.service.PaycheckDetectionService;
-import com.investingapp.backend.service.JwtUtils;
+import com.investingapp.backend.security.jwt.JwtUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
