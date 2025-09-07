@@ -4,11 +4,10 @@ import { Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  IonButtons, IonSpinner, NavController // Added IonCard elements
+  IonButtons, IonSpinner, NavController, ToastController
 } from '@ionic/angular/standalone';
-// import { BiometricAuth } from 'capacitor-native-biometric'; // Example import for a biometric plugin
-// import { AlpacaService } from '../../services/alpaca.service'; // Your service for Alpaca interactions
-// import { UserSettingsService } from '../../services/user-settings.service'; // To get selected percentage
+import { AlpacaService, CreateAccountRequest } from '../../services/alpaca.service';
+import { PersonaService } from '../../services/persona.service'; // For KYC data if needed
 
 @Component({
   selector: 'app-investmentconfirmation',
@@ -26,19 +25,20 @@ export class InvestmentConfirmationComponent implements OnInit {
   portfolioType: 'custom' | 'auto' = 'auto'; // Determined by previous steps
   isAuthorizing: boolean = false;
   authorizationStatus: string | null = null;
+  isCreatingAccount: boolean = false;
+  alpacaAccountId: string | null = null;
 
   constructor(
     private router: Router,
     private navCtrl: NavController,
-    // private alpacaService: AlpacaService,
-    // private userSettingsService: UserSettingsService
+    private alpacaService: AlpacaService,
+    private personaService: PersonaService,
+    private toastController: ToastController
   ) {}
 
   ngOnInit() {
     console.log('InvestmentConfirmationComponent loaded');
     // Fetch the selected percentage and portfolio type from a service or route params
-    // this.investmentPercentage = this.userSettingsService.getInvestmentPercentage();
-    // this.portfolioType = this.userSettingsService.getPortfolioType();
     this.investmentPercentage = "15%"; // Placeholder
     const didPickStocks = localStorage.getItem('stockSelectionCompleted') === 'true' && localStorage.getItem('stockSelectionSkipped') !== 'true';
     this.portfolioType = didPickStocks ? 'custom' : 'auto';
@@ -52,9 +52,6 @@ export class InvestmentConfirmationComponent implements OnInit {
     // --- Biometric Authentication (Conceptual) ---
     let biometricSuccess = false;
     try {
-      // const result = await BiometricAuth.verify(); // Or similar plugin method
-      // biometricSuccess = result.verified;
-      // For simulation, assume success if you want to test the flow
       console.log('Simulating Biometric Auth prompt...');
       const userConfirmedBiometrics = await this.simulateBiometricPrompt();
       if (userConfirmedBiometrics) {
@@ -69,10 +66,7 @@ export class InvestmentConfirmationComponent implements OnInit {
     } catch (error) {
       console.error('Biometric authentication error:', error);
       this.authorizationStatus = 'Biometric authentication is not available or failed. You can proceed without it for now.';
-      // Decide if you want to allow proceeding without biometrics or require it.
-      // For this example, let's allow proceeding if it fails but log it.
-      // You might have a fallback to device PIN/password or skip biometrics.
-      biometricSuccess = true; // Simulate proceeding even if biometrics "failed" in this demo
+      biometricSuccess = true; // Allow proceeding for demo
     }
 
     if (!biometricSuccess && false) { // Set to true to enforce biometrics
@@ -81,41 +75,112 @@ export class InvestmentConfirmationComponent implements OnInit {
     }
     // --- End Biometric Authentication ---
 
-
-    // TODO: Call your backend service, which then interacts with Alpaca
-    // This backend call would:
-    // 1. Securely store the user's consent and the recurring investment percentage.
-    // 2. Potentially set up recurring ACH transfers with Plaid (if that's the funding source).
-    // 3. Interface with Alpaca to:
-    //    - Ensure the account is ready for trading.
-    //    - If 'auto' portfolio, potentially create/assign to a model portfolio.
-    //    - If 'custom' portfolio, ensure the selected stocks are noted (e.g., in a watchlist, or prepare for fractional orders).
-    //    - Set up logic for recurring investments (Alpaca doesn't directly do "X% of paycheck" but you can set up recurring buys based on amounts).
-
-    // try {
-    //   await this.alpacaService.setupRecurringInvestment(this.investmentPercentage, this.portfolioType).toPromise();
-    //   this.authorizationStatus = 'Recurring investment authorized successfully!';
-    //   setTimeout(() => {
-    //     this.router.navigate(['/tabs/tab1'], { replaceUrl: true }); // Navigate to dashboard
-    //   }, 1500);
-    // } catch (error) {
-    //   console.error('Error authorizing recurring investment with backend/Alpaca:', error);
-    //   this.authorizationStatus = 'Failed to authorize. Please try again later.';
-    // } finally {
-    //   this.isAuthorizing = false;
-    // }
-
-    // ---- SIMULATED BACKEND CALL ----
-    setTimeout(() => {
-      console.log('Recurring investment setup with Alpaca (simulated).');
-      this.authorizationStatus = 'Recurring investment authorized successfully!';
+    // Create Alpaca account
+    try {
+      await this.createAlpacaAccount();
+      
+      // If account creation successful, proceed with investment setup
+      if (this.alpacaAccountId) {
+        this.authorizationStatus = 'Alpaca account created! Setting up recurring investment...';
+        
+        // TODO: Set up recurring investment logic
+        setTimeout(() => {
+          this.authorizationStatus = 'Recurring investment authorized successfully!';
+          this.isAuthorizing = false;
+          setTimeout(() => {
+            localStorage.setItem('investmentConfirmationCompleted', 'true');
+            localStorage.setItem('alpacaAccountId', this.alpacaAccountId!);
+            this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
+          }, 1000);
+        }, 2000);
+      } else {
+        throw new Error('Failed to create Alpaca account');
+      }
+      
+    } catch (error) {
+      console.error('Error in authorization process:', error);
+      this.authorizationStatus = 'Failed to authorize. Please try again later.';
       this.isAuthorizing = false;
-      setTimeout(() => {
-        localStorage.setItem('investmentConfirmationCompleted', 'true');
-        this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
-      }, 1000);
-    }, 2000);
-    // ---- END SIMULATED BACKEND CALL ----
+      
+      // Show error toast
+      const toast = await this.toastController.create({
+        message: 'Failed to create trading account. Please try again.',
+        duration: 3000,
+        color: 'danger'
+      });
+      await toast.present();
+    }
+  }
+
+  private async createAlpacaAccount(): Promise<void> {
+    this.isCreatingAccount = true;
+    this.authorizationStatus = 'Creating your trading account...';
+    
+    try {
+      // Get user email (this would typically come from authentication service)
+      const userEmail = 'user@example.com'; // Replace with actual user email
+      
+      // Get KYC data if available (from Persona verification)
+      const kycData = this.getKycData();
+      
+      // Prepare account data
+      const accountData: CreateAccountRequest = this.alpacaService.prepareAccountData(userEmail, kycData);
+      
+      console.log('Creating Alpaca account with data:', { ...accountData, ssn: '[REDACTED]' });
+      
+      // Create the account
+      const response = await this.alpacaService.createAccount(accountData).toPromise();
+      
+      if (response && response.account_id && !response.error) {
+        this.alpacaAccountId = response.account_id;
+        console.log('Alpaca account created successfully:', response.account_id);
+        
+        // Show success toast
+        const toast = await this.toastController.create({
+          message: 'Trading account created successfully!',
+          duration: 2000,
+          color: 'success'
+        });
+        await toast.present();
+        
+      } else {
+        throw new Error(response?.error || 'Unknown error creating account');
+      }
+      
+    } catch (error: any) {
+      console.error('Error creating Alpaca account:', error);
+      this.authorizationStatus = 'Failed to create trading account.';
+      throw error;
+    } finally {
+      this.isCreatingAccount = false;
+    }
+  }
+
+  private getKycData(): any {
+    // Try to get KYC data from Persona verification or user profile
+    // This is where you'd integrate with your KYC verification results
+    try {
+      const storedKycData = localStorage.getItem('kycVerificationData');
+      if (storedKycData) {
+        return JSON.parse(storedKycData);
+      }
+    } catch (error) {
+      console.warn('Could not retrieve KYC data:', error);
+    }
+    
+    // Return default/placeholder data if no KYC data available
+    return {
+      firstName: 'John',
+      lastName: 'Doe',
+      dateOfBirth: '1990-01-01',
+      phone: '+1234567890',
+      address: {
+        street: '123 Main St',
+        city: 'New York',
+        state: 'NY',
+        zip: '10001'
+      }
+    };
   }
 
   // Helper for simulation
