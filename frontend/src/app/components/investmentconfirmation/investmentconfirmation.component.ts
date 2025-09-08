@@ -7,7 +7,7 @@ import {
   IonButtons, IonSpinner, NavController, ToastController
 } from '@ionic/angular/standalone';
 import { AlpacaService, CreateAccountRequest } from '../../services/alpaca.service';
-import { PersonaService } from '../../services/persona.service'; // For KYC data if needed
+import { AuthService } from '../../services/auth.service'; // For user authentication data
 
 @Component({
   selector: 'app-investmentconfirmation',
@@ -27,17 +27,37 @@ export class InvestmentConfirmationComponent implements OnInit {
   authorizationStatus: string | null = null;
   isCreatingAccount: boolean = false;
   alpacaAccountId: string | null = null;
+  userEmail: string | null = null; // Store user email for display
 
   constructor(
     private router: Router,
     private navCtrl: NavController,
     private alpacaService: AlpacaService,
-    private personaService: PersonaService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
     console.log('InvestmentConfirmationComponent loaded');
+    
+    // Check if user is authenticated
+    if (!this.authService.isAuthenticated()) {
+      console.warn('User not authenticated, redirecting to login');
+      this.router.navigate(['/get-started'], { replaceUrl: true });
+      return;
+    }
+    
+    // Check if we have user email
+    const userEmail = this.authService.getCurrentUserEmail();
+    if (!userEmail) {
+      console.warn('User email not found, redirecting to login');
+      this.router.navigate(['/get-started'], { replaceUrl: true });
+      return;
+    }
+    
+    console.log('User authenticated:', userEmail);
+    this.userEmail = userEmail; // Store for display
+    
     // Fetch the selected percentage and portfolio type from a service or route params
     this.investmentPercentage = "15%"; // Placeholder
     const didPickStocks = localStorage.getItem('stockSelectionCompleted') === 'true' && localStorage.getItem('stockSelectionSkipped') !== 'true';
@@ -117,8 +137,14 @@ export class InvestmentConfirmationComponent implements OnInit {
     this.authorizationStatus = 'Creating your trading account...';
     
     try {
-      // Get user email (this would typically come from authentication service)
-      const userEmail = 'user@example.com'; // Replace with actual user email
+      // Get user email from authentication service
+      const userEmail = this.authService.getCurrentUserEmail();
+      
+      if (!userEmail) {
+        throw new Error('User email not found. Please log in again.');
+      }
+      
+      console.log('Creating Alpaca account for user:', userEmail);
       
       // Get KYC data if available (from Persona verification)
       const kycData = this.getKycData();
