@@ -155,6 +155,35 @@ export class AuthService {
   }
 
   /**
+   * Get current user's email from stored JWT data
+   */
+  getCurrentUserEmail(): string | null {
+    return localStorage.getItem('userEmail');
+  }
+
+  /**
+   * Get current user's ID from stored JWT data
+   */
+  getCurrentUserId(): number | null {
+    const userId = localStorage.getItem('userId');
+    return userId ? parseInt(userId) : null;
+  }
+
+  /**
+   * Get current user information
+   */
+  getCurrentUser(): { id: number | null; email: string | null } | null {
+    const email = this.getCurrentUserEmail();
+    const id = this.getCurrentUserId();
+    
+    if (!email && !id) {
+      return null;
+    }
+    
+    return { id, email };
+  }
+
+  /**
    * 🧪 DEVELOPMENT: Authenticate as an existing user from the database
    * This is for development/testing to simulate logging in as any user
    */
