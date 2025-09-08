@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { JwtTokenUtils } from '../utils/jwt-token.utils';
 
 export interface CreateAccountRequest {
   email: string;
@@ -35,18 +36,37 @@ export class AlpacaService {
 
   constructor(private http: HttpClient) {}
 
+  private getAuthHeaders(): HttpHeaders {
+    let headers = new HttpHeaders().set('Content-Type', 'application/json');
+    const token = JwtTokenUtils.getValidJwtToken();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    if (this.baseUrl.includes("ngrok")) {
+      headers = headers.set('ngrok-skip-browser-warning', 'true');
+    }
+    return headers;
+  }
+
   /**
    * Create an Alpaca trading account for the user
    */
   createAccount(accountData: CreateAccountRequest): Observable<AlpacaAccountResponse> {
-    return this.http.post<AlpacaAccountResponse>(`${this.baseUrl}/alpaca/create-account`, accountData);
+    return this.http.post<AlpacaAccountResponse>(
+      `${this.baseUrl}/alpaca/create-account`, 
+      accountData,
+      { headers: this.getAuthHeaders() }
+    );
   }
 
   /**
    * Get current account information
    */
   getAccountInfo(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/alpaca/account`);
+    return this.http.get(
+      `${this.baseUrl}/alpaca/account`,
+      { headers: this.getAuthHeaders() }
+    );
   }
 
   /**
