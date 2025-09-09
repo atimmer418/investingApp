@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Base64;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class AlpacaApiService {
@@ -30,27 +32,39 @@ public class AlpacaApiService {
     public AlpacaApiService(
         @Value("${alpaca.api.key}") String apiKey,
         @Value("${alpaca.api.secret}") String apiSecret,
-        @Value("${alpaca.api.base-url:https://paper-api.alpaca.markets/v2}") String baseUrl
+        @Value("${alpaca.api.base-url:https://broker-api.sandbox.alpaca.markets/v1}") String baseUrl
     ) {
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
         this.baseUrl = baseUrl;
+        
+        // Log configuration (without exposing secrets)
+        logger.info("AlpacaApiService initialized:");
+        logger.info("  Base URL: {}", baseUrl);
+        logger.info("  API Key: {}", apiKey != null ? apiKey.substring(0, Math.min(8, apiKey.length())) + "..." : "null");
+        logger.info("  API Secret: {}", apiSecret != null ? "***set***" : "null");
     }
 
     private HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("APCA-API-KEY-ID", apiKey);
-        headers.set("APCA-API-SECRET-KEY", apiSecret);
+        
+        // Use HTTP Basic authentication for Broker API
+        String credentials = apiKey + ":" + apiSecret;
+        String base64Credentials = Base64.getEncoder().encodeToString(
+            credentials.getBytes(StandardCharsets.UTF_8)
+        );
+        headers.set("Authorization", "Basic " + base64Credentials);
+        
         return headers;
     }
 
     public String getAccountInfo() {
         HttpEntity<String> entity = new HttpEntity<>(createHeaders());
         ResponseEntity<String> response = restTemplate.exchange(
-            baseUrl + "/account", 
+            baseUrl + "/accounts", 
             HttpMethod.GET, 
             entity, 
             String.class
