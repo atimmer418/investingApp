@@ -81,6 +81,22 @@ public class AlpacaApiService {
                                            Map<String, String> address) {
         logger.info("Creating Alpaca account for user: {}", email);
         
+        // Add parameter validation and logging
+        logger.debug("Parameters received - email: {}, firstName: {}, lastName: {}, dateOfBirth: {}, ssn: {}, phone: {}, address: {}", 
+            email, firstName, lastName, dateOfBirth, ssn, phone, address);
+        
+        if (address != null) {
+            logger.debug("Address details - street_address: {}, city: {}, state: {}, postal_code: {}", 
+                address.get("street_address"), address.get("city"), address.get("state"), address.get("postal_code"));
+        }
+        
+        if (email == null || firstName == null || lastName == null) {
+            logger.error("Required parameters are null - email: {}, firstName: {}, lastName: {}", email, firstName, lastName);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("error", "Required parameters cannot be null: email, firstName, lastName");
+            return errorResult;
+        }
+        
         Map<String, Object> accountData = new HashMap<>();
         
         // Contact information
@@ -90,7 +106,10 @@ public class AlpacaApiService {
         
         // Add address to contact if provided
         if (address != null) {
-            contactInfo.put("street_address", List.of(address.get("street")));
+            String streetAddress = address.get("street_address"); // Fixed: use correct key
+            if (streetAddress != null) {
+                contactInfo.put("street_address", List.of(streetAddress));
+            }
             contactInfo.put("city", address.get("city"));
             contactInfo.put("state", address.get("state"));
             contactInfo.put("postal_code", address.get("postal_code"));
