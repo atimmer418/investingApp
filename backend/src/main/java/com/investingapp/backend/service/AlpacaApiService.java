@@ -84,12 +84,20 @@ public class AlpacaApiService {
         Map<String, Object> accountData = new HashMap<>();
         
         // Contact information
-        Map<String, String> contactInfo = new HashMap<>();
+        Map<String, Object> contactInfo = new HashMap<>();
         contactInfo.put("email_address", email);
         contactInfo.put("phone_number", phone);
         
+        // Add address to contact if provided
+        if (address != null) {
+            contactInfo.put("street_address", List.of(address.get("street")));
+            contactInfo.put("city", address.get("city"));
+            contactInfo.put("state", address.get("state"));
+            contactInfo.put("postal_code", address.get("postal_code"));
+        }
+        
         // Identity information
-        Map<String, String> identity = new HashMap<>();
+        Map<String, Object> identity = new HashMap<>();
         identity.put("given_name", firstName);
         identity.put("family_name", lastName);
         identity.put("date_of_birth", dateOfBirth); // Format: YYYY-MM-DD
@@ -97,27 +105,27 @@ public class AlpacaApiService {
         identity.put("tax_id_type", "USA_SSN");
         identity.put("country_of_citizenship", "USA");
         identity.put("country_of_birth", "USA");
+        identity.put("country_of_tax_residence", "USA");
+        identity.put("funding_source", List.of("employment_income"));
         
-        // Address information
+        // Trusted contact (required)
+        Map<String, String> trustedContact = new HashMap<>();
+        trustedContact.put("given_name", firstName); // Use same person for simplicity
+        trustedContact.put("family_name", lastName);
+        trustedContact.put("email_address", email);
+        
+        // Build account data
         accountData.put("contact", contactInfo);
         accountData.put("identity", identity);
+        accountData.put("trusted_contact", trustedContact);
         accountData.put("disclosures", Map.of(
             "is_control_person", false,
             "is_affiliated_exchange_or_finra", false,
+            "is_affiliated_exchange_or_iiroc", false,
             "is_politically_exposed", false,
             "immediate_family_exposed", false
         ));
         accountData.put("agreements", List.of(
-            Map.of(
-                "agreement", "margin_agreement",
-                "signed_at", java.time.Instant.now().toString(),
-                "ip_address", "127.0.0.1"
-            ),
-            Map.of(
-                "agreement", "account_agreement",
-                "signed_at", java.time.Instant.now().toString(),
-                "ip_address", "127.0.0.1"
-            ),
             Map.of(
                 "agreement", "customer_agreement",
                 "signed_at", java.time.Instant.now().toString(),
@@ -125,10 +133,8 @@ public class AlpacaApiService {
             )
         ));
         
-        if (address != null) {
-            accountData.put("address", address);
-        }
-
+        // Remove the separate address handling since it's now in contact
+        
         try {
             String jsonBody = objectMapper.writeValueAsString(accountData);
             logger.debug("Alpaca account creation request: {}", jsonBody);
