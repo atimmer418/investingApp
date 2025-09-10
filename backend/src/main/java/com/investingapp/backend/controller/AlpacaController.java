@@ -61,6 +61,20 @@ public class AlpacaController {
         }
     }
 
+    @GetMapping("/assets")
+    public ResponseEntity<String> getAssets(
+            @RequestParam(value = "status", defaultValue = "active") String status,
+            @RequestParam(value = "asset_class", defaultValue = "us_equity") String assetClass) {
+        try {
+            String assets = alpacaApiService.getAssets(status, assetClass);
+            return ResponseEntity.ok(assets);
+        } catch (Exception e) {
+            logger.error("Error getting assets: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("{\"error\":\"Failed to get assets\"}");
+        }
+    }
+
     @GetMapping("/account/{accountId}/status")
     public ResponseEntity<String> getAccountStatus(@PathVariable String accountId) {
         try {

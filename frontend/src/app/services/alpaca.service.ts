@@ -20,6 +20,20 @@ export interface CreateAccountRequest {
   };
 }
 
+export interface AlpacaAsset {
+  id: string;
+  class: string;
+  exchange: string;
+  symbol: string;
+  name: string;
+  status: string;
+  tradable: boolean;
+  marginable: boolean;
+  shortable: boolean;
+  easy_to_borrow: boolean;
+  fractionable: boolean;
+}
+
 export interface AlpacaAccountResponse {
   account_id: string;
   status: string;
@@ -70,25 +84,74 @@ export class AlpacaService {
   }
 
   /**
+   * Get tradeable assets from Alpaca (public endpoint)
+   */
+  getAssets(status: string = 'active', assetClass: string = 'us_equity'): Observable<any> {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (assetClass) params.append('asset_class', assetClass);
+    
+    // Assets endpoint doesn't require authentication as it's public data
+    let headers = new HttpHeaders().set('Content-Type', 'application/json');
+    if (this.baseUrl.includes("ngrok")) {
+      headers = headers.set('ngrok-skip-browser-warning', 'true');
+    }
+    
+    return this.http.get(
+      `${this.baseUrl}/alpaca/assets?${params.toString()}`,
+      { headers }
+    );
+  }
+
+  /**
    * Get account status by account ID
    */
   getAccountStatus(accountId: string): Observable<any> {
     return this.http.get(`${this.baseUrl}/alpaca/account/${accountId}/status`);
   }
 
-  /**
+    /**
    * Create account data from user information
-   * This would typically come from user profile, KYC data, etc.
+   * This would typically come from user registration/KYC data, etc.
    */
   prepareAccountData(userEmail: string, kycData?: any): CreateAccountRequest {
+    // Generate a realistic test SSN based on user email for consistency
+    const generateTestSSN = (email: string): string => {
+      // Use email hash to generate consistent but unique SSN parts
+      let hash = 0;
+      for (let i = 0; i < email.length; i++) {
+        const char = email.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+      }
+      
+      // Ensure positive hash
+      hash = Math.abs(hash);
+      
+      // Generate valid SSN format: AAA-GG-SSSS
+      // Area number (001-899, avoid 666 and 900-999)
+      const area = (hash % 665) + 1; // 1-665, avoiding 666
+      const areaStr = area.toString().padStart(3, '0');
+      
+      // Group number (01-99)
+      const group = ((hash >> 10) % 99) + 1; // 1-99
+      const groupStr = group.toString().padStart(2, '0');
+      
+      // Serial number (0001-9999)
+      const serial = ((hash >> 20) % 9999) + 1; // 1-9999
+      const serialStr = serial.toString().padStart(4, '0');
+      
+      return `${areaStr}-${groupStr}-${serialStr}`;
+    };
+
     // In a real app, this data would come from user registration/KYC process
-    // For now, using placeholder data
+    // For now, using placeholder data with realistic test SSN
     return {
       email: userEmail,
       firstName: kycData?.firstName || 'John',
       lastName: kycData?.lastName || 'Doe',
       dateOfBirth: kycData?.dateOfBirth || '1990-01-01',
-      ssn: kycData?.ssn || '123-45-6789', // In real app, this should be properly encrypted/handled
+      ssn: kycData?.ssn || generateTestSSN(userEmail), // Generate unique test SSN
       phone: kycData?.phone || '+1234567890',
       address: {
         street_address: kycData?.address?.street || '123 Main St',
