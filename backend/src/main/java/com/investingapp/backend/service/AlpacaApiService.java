@@ -217,6 +217,67 @@ public class AlpacaApiService {
     }
 
     /**
+     * Create ACH relationship for an Alpaca account using bank details
+     */
+    public Map<String, Object> createAchRelationship(String accountId, String accountOwnerName, 
+                                                   String bankAccountType, String bankAccountNumber, 
+                                                   String bankRoutingNumber, String nickname) {
+        logger.info("Creating ACH relationship for account: {}", accountId);
+        
+        try {
+            Map<String, Object> achData = new HashMap<>();
+            achData.put("account_owner_name", accountOwnerName);
+            achData.put("bank_account_type", bankAccountType.toUpperCase()); // CHECKING or SAVINGS
+            achData.put("bank_account_number", bankAccountNumber);
+            achData.put("bank_routing_number", bankRoutingNumber);
+            achData.put("nickname", nickname);
+            
+            String jsonBody = objectMapper.writeValueAsString(achData);
+            logger.debug("ACH relationship creation request: {}", jsonBody);
+            
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, createHeaders());
+            ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl + "/accounts/" + accountId + "/ach_relationships",
+                HttpMethod.POST,
+                entity,
+                String.class
+            );
+            
+            String responseBody = response.getBody();
+            JsonNode responseNode = objectMapper.readTree(responseBody);
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", responseNode.get("id").asText());
+            result.put("status", responseNode.get("status").asText());
+            result.put("created_at", responseNode.get("created_at").asText());
+            result.put("raw_response", responseBody);
+            logger.info("Successfully created ACH relationship: {}", result.get("id"));
+            return result;
+            
+        } catch (Exception e) {
+            logger.error("Error creating ACH relationship for account {}: {}", accountId, e.getMessage(), e);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("error", "Failed to create ACH relationship: " + e.getMessage());
+            return errorResult;
+        }
+    }
+
+    /**
+     * Get ACH relationships for an account
+     */
+    public String getAchRelationships(String accountId) {
+        logger.debug("Getting ACH relationships for account: {}", accountId);
+        
+        HttpEntity<String> entity = new HttpEntity<>(createHeaders());
+        ResponseEntity<String> response = restTemplate.exchange(
+            baseUrl + "/accounts/" + accountId + "/ach_relationships",
+            HttpMethod.GET,
+            entity,
+            String.class
+        );
+        return response.getBody();
+    }
+
+    /**
      * Get account status by account ID
      */
     public String getAccountStatus(String accountId) {
