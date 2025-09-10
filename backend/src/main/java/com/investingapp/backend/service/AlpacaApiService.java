@@ -194,8 +194,6 @@ public class AlpacaApiService {
      * Note: Assets endpoint is typically public and doesn't require authentication
      */
     public String getAssets(String status, String assetClass) {
-        // Use paper trading API for assets (this endpoint is public)
-        String assetsUrl = "https://paper-api.alpaca.markets/v2/assets";
         
         // Add query parameters
         StringBuilder queryParams = new StringBuilder("?");
@@ -205,19 +203,12 @@ public class AlpacaApiService {
         if (assetClass != null && !assetClass.isEmpty()) {
             queryParams.append("asset_class=").append(assetClass).append("&");
         }
+
+        logger.debug("Fetching assets from: {}", baseUrl + "/assets" + queryParams.toString().replaceAll("&$", ""));
         
-        // Remove trailing & if present
-        String finalUrl = assetsUrl + queryParams.toString().replaceAll("&$", "");
-        
-        logger.debug("Fetching assets from: {}", finalUrl);
-        
-        // Create headers without authentication for public endpoint
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+        HttpEntity<String> entity = new HttpEntity<>(createHeaders());
         ResponseEntity<String> response = restTemplate.exchange(
-            finalUrl,
+            baseUrl + "/assets" + queryParams.toString().replaceAll("&$", ""),
             HttpMethod.GET,
             entity,
             String.class
