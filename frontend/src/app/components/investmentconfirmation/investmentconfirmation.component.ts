@@ -199,7 +199,6 @@ export class InvestmentConfirmationComponent implements OnInit {
       firstName: 'John',
       lastName: 'Doe',
       dateOfBirth: '1990-01-01',
-      phone: '+1234567890',
       address: {
         street: '123 Main St',
         city: 'New York',
