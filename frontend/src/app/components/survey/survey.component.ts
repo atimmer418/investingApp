@@ -63,9 +63,9 @@ export class SurveyComponent implements OnInit {
       id: 'iq2_stock_preference',
       questionText: "How would you like to choose your investments?",
       responseChoices: [
-        {id: 's1', text: "Guide me: Pick investments based on my profile (Recommended)"},
-        {id: 's2', text: "Hybrid: Start with recommendations, then I'll customize"},
-        {id: 's3', text: "Self-directed: I'll pick all my investments"}
+        {id: 's1', text: "I'll go with the default investments"},
+        {id: 's2', text: "I'll go with the default investments but also pick some stocks myself"},
+        {id: 's3', text: "I'll pick all my investments"}
       ],
       answer: null
     }

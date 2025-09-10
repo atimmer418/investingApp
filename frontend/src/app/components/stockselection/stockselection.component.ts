@@ -6,7 +6,7 @@ import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonSearchbar, IonList, IonItem, IonFooter, 
   IonLabel, IonButton, IonSpinner, IonChip, IonIcon, IonButtons, NavController // Added NavController for back
 } from '@ionic/angular/standalone';
-// import { AlpacaService } from '../../services/alpaca.service'; // Your service
+import { AlpacaService, AlpacaAsset } from '../../services/alpaca.service';
 
 export interface StockAsset { // Keep this export if other parts of app might use it
   symbol: string;
@@ -26,38 +26,80 @@ export interface StockAsset { // Keep this export if other parts of app might us
 export class StockSelectionComponent implements OnInit {
   searchTerm: string = '';
   searchResults: StockAsset[] = [];
+  filteredResults: StockAsset[] = [];
   selectedStocks: StockAsset[] = [];
   isSearching: boolean = false;
   isProcessing: boolean = false;
+  isLoadingAssets: boolean = false;
+  allAssets: StockAsset[] = []; // Store all assets for filtering
 
   constructor(
     private router: Router,
     private navCtrl: NavController, // For back navigation
-    // private alpacaService: AlpacaService
+    private alpacaService: AlpacaService
   ) {}
 
   ngOnInit() {
     console.log('StockSelectionComponent (acting as page) loaded');
+    this.loadAssets();
+  }
+
+  async loadAssets() {
+    this.isLoadingAssets = true;
+    try {
+      this.alpacaService.getAssets('active', 'us_equity').subscribe({
+        next: (assets: AlpacaAsset[]) => {
+          console.log('Loaded assets from Alpaca:', assets.length);
+          // Convert AlpacaAsset to StockAsset format
+          this.allAssets = assets
+            .filter(asset => asset.tradable && asset.status === 'active')
+            .map(asset => ({
+              symbol: asset.symbol,
+              name: asset.name
+            }));
+          this.isLoadingAssets = false;
+        },
+        error: (error) => {
+          console.error('Error loading assets:', error);
+          this.isLoadingAssets = false;
+          // Fallback to demo data if API fails
+          this.allAssets = [
+            { symbol: 'AAPL', name: 'Apple Inc.' }, 
+            { symbol: 'MSFT', name: 'Microsoft Corp.' },
+            { symbol: 'TSLA', name: 'Tesla Inc.' }, 
+            { symbol: 'AMZN', name: 'Amazon.com Inc.' },
+            { symbol: 'GOOGL', name: 'Alphabet Inc. Class A' },
+            { symbol: 'META', name: 'Meta Platforms Inc.' },
+            { symbol: 'NVDA', name: 'NVIDIA Corp.' }
+          ];
+        }
+      });
+    } catch (error) {
+      console.error('Error in loadAssets:', error);
+      this.isLoadingAssets = false;
+    }
   }
 
   async searchStocks(event: any) {
-    const query = event.target.value.toLowerCase();
-    if (query && query.length > 1) {
+    const query = event.target.value.toLowerCase().trim();
+    this.searchTerm = query;
+    
+    if (query && query.length > 0) {
       this.isSearching = true;
-      this.searchResults = [];
-      console.log('Searching for stocks with query:', query);
-      // ---- SIMULATED SEARCH ----
-      setTimeout(() => {
-        this.searchResults = [
-          { symbol: 'AAPL', name: 'Apple Inc.' }, { symbol: 'MSFT', name: 'Microsoft Corp.' },
-          { symbol: 'TSLA', name: 'Tesla Inc.' }, { symbol: 'AMZN', name: 'Amazon.com Inc.' },
-          { symbol: 'GOOGL', name: 'Alphabet Inc. Class A' }
-        ].filter(s => s.symbol.toLowerCase().includes(query) || s.name.toLowerCase().includes(query));
-        this.isSearching = false;
-      }, 500);
-      // ---- END SIMULATED SEARCH ----
+      
+      // Filter the pre-loaded assets
+      this.filteredResults = this.allAssets
+        .filter(asset => 
+          asset.symbol.toLowerCase().includes(query) || 
+          asset.name.toLowerCase().includes(query)
+        )
+        .slice(0, 20); // Limit to first 20 results for performance
+      
+      this.searchResults = this.filteredResults;
+      this.isSearching = false;
     } else {
       this.searchResults = [];
+      this.filteredResults = [];
       this.isSearching = false;
     }
   }
