@@ -113,14 +113,9 @@ public class PlaidToAlpacaService {
      */
     private PlaidBankAccount getBankAccountFromPlaid(String accessToken, String accountId) {
         try {
-            // Create Plaid Auth request
+            // Create Plaid Auth request - get all accounts and filter later
             AuthGetRequest request = new AuthGetRequest()
                 .accessToken(accessToken);
-            
-            // Add account IDs filter if needed
-            if (accountId != null && !accountId.isEmpty()) {
-                request.setAccountIds(Arrays.asList(accountId));
-            }
 
             // Get account and routing numbers from Plaid
             AuthGetResponse response = plaidApi.authGet(request).execute().body();
