@@ -299,18 +299,30 @@ export class InvestmentConfirmationComponent implements OnInit {
     }
   }
 
-  private showSuccess(message: string): void {
-    // Add your success toast/notification logic here
-    console.log('✅ SUCCESS:', message);
+  private async showSuccess(message: string): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      color: 'success'
+    });
+    await toast.present();
   }
 
-  private showWarning(message: string): void {
-    // Add your warning toast/notification logic here
-    console.log('⚠️ WARNING:', message);
+  private async showWarning(message: string): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      color: 'warning'
+    });
+    await toast.present();
   }
 
-  private showError(message: string): void {
-    // Add your error toast/notification logic here
-    console.error('❌ ERROR:', message);
+  private async showError(message: string): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration: 4000,
+      color: 'danger'
+    });
+    await toast.present();
   }
 }
