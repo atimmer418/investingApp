@@ -3,10 +3,12 @@ package com.investingapp.backend.controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.investingapp.backend.service.AlpacaApiService;
 import com.investingapp.backend.service.PlaidToAlpacaService;
+import com.investingapp.backend.security.services.UserDetailsImpl;
 import java.util.Map;
 import java.util.HashMap;
 
