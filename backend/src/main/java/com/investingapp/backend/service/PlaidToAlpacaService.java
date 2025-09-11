@@ -13,7 +13,9 @@ import com.plaid.client.model.NumbersACH;
 
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.UserRepository;
+import com.investingapp.backend.service.EncryptionService;
 
+import retrofit2.Response;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
@@ -32,6 +34,9 @@ public class PlaidToAlpacaService {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private EncryptionService encryptionService;
 
     /**
      * Create ACH relationship using Plaid access token
@@ -111,14 +116,25 @@ public class PlaidToAlpacaService {
     /**
      * Get bank account details from Plaid using access token
      */
-    private PlaidBankAccount getBankAccountFromPlaid(String accessToken, String accountId) {
+    private PlaidBankAccount getBankAccountFromPlaid(String encryptedAccessToken, String accountId) {
         try {
+            // Decrypt the access token before using it with Plaid API
+            String accessToken = encryptionService.decrypt(encryptedAccessToken);
+            
             // Create Plaid Auth request - get all accounts and filter later
             AuthGetRequest request = new AuthGetRequest()
                 .accessToken(accessToken);
 
             // Get account and routing numbers from Plaid
-            AuthGetResponse response = plaidApi.authGet(request).execute().body();
+            retrofit2.Response<AuthGetResponse> apiResponse = plaidApi.authGet(request).execute();
+            
+            if (!apiResponse.isSuccessful() || apiResponse.body() == null) {
+                String errorBody = apiResponse.errorBody() != null ? apiResponse.errorBody().string() : "Unknown error";
+                logger.error("Plaid Auth API call failed: {} - {}", apiResponse.code(), errorBody);
+                return null;
+            }
+            
+            AuthGetResponse response = apiResponse.body();
             
             if (response.getAccounts().isEmpty()) {
                 logger.error("No accounts found for access token");
