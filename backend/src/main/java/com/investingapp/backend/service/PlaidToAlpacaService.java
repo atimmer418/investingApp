@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.plaid.client.PlaidClient;
 import com.plaid.client.request.PlaidApi;
 import com.plaid.client.model.AuthGetRequest;
 import com.plaid.client.model.AuthGetResponse;
@@ -26,7 +25,7 @@ public class PlaidToAlpacaService {
     private static final Logger logger = LoggerFactory.getLogger(PlaidToAlpacaService.class);
     
     @Autowired
-    private PlaidClient plaidClient;
+    private PlaidApi plaidApi;
     
     @Autowired
     private AlpacaApiService alpacaApiService;
@@ -120,7 +119,7 @@ public class PlaidToAlpacaService {
                 .accountIds(Arrays.asList(accountId));
 
             // Get account and routing numbers from Plaid
-            AuthGetResponse response = plaidClient.authGet(request).execute().body();
+            AuthGetResponse response = plaidApi.authGet(request).execute().body();
             
             if (response.getAccounts().isEmpty()) {
                 logger.error("No accounts found for access token");
