@@ -252,9 +252,9 @@ export class InvestmentConfirmationComponent implements OnInit {
       });
 
       // Get user's full name for account owner (using current user email as fallback)
-      const userEmail = this.userEmail || 'Unknown User';
-      const accountOwnerName = `${userEmail}`; // TODO: Get actual name from user profile/KYC data
-      
+      const kycData = this.getKycData();
+      const accountOwnerName = `${kycData.firstName} ${kycData.lastName}`; // Get actual name from KYC data
+
       // Create ACH relationship using database Plaid data
       const achResult = await this.alpacaService.createAchRelationshipFromPlaid(
         alpacaAccountId,
