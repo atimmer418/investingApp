@@ -323,7 +323,7 @@ public class PlaidService {
         return response.body();
     }
 
-    // exchangePublicTokenAndLinkUser method remains the same...
+    // exchangePublicTokenAndLinkUser method - enhanced to store account details
     @Transactional // Add transactional if multiple DB operations
     public ItemPublicTokenExchangeResponse exchangePublicTokenAndLinkUser(String publicToken, User appUser) throws IOException {
         logger.info("Exchanging public token for user ID: {}", appUser.getId());
@@ -341,11 +341,78 @@ public class PlaidService {
 
         String encryptedAccessToken = encryptionService.encrypt(rawAccessToken);
 
+        // Store basic Plaid info
         appUser.setPlaidAccessToken(encryptedAccessToken);
         appUser.setPlaidItemId(exchangeResponse.getItemId());
         appUser.setPlaidLinked(true);
+        
+        try {
+            // Fetch and store account details and institution information
+            populateAccountAndInstitutionDetails(rawAccessToken, appUser);
+            logger.info("Successfully populated account and institution details for user ID: {}", appUser.getId());
+        } catch (Exception e) {
+            logger.error("Failed to populate account details for user {}: {}", appUser.getId(), e.getMessage());
+            // Don't fail the whole process if this fails - user can still use the app
+        }
+        
         userRepository.save(appUser);
-        logger.info("Plaid item linked to user ID: {}", appUser.getId());
+        logger.info("Plaid item linked to user ID: {} with account details", appUser.getId());
         return exchangeResponse;
+    }
+    
+    /**
+     * Fetch and populate account details and institution information
+     */
+    private void populateAccountAndInstitutionDetails(String accessToken, User appUser) throws IOException {
+        // 1. Get accounts information
+        AccountsGetRequest accountsRequest = new AccountsGetRequest().accessToken(accessToken);
+        Response<AccountsGetResponse> accountsResponse = plaidApi.accountsGet(accountsRequest).execute();
+        
+        if (!accountsResponse.isSuccessful() || accountsResponse.body() == null) {
+            throw new IOException("Failed to fetch account details from Plaid");
+        }
+        
+        List<AccountBase> accounts = accountsResponse.body().getAccounts();
+        if (!accounts.isEmpty()) {
+            // Use the first checking account, or first account if no checking account
+            AccountBase primaryAccount = accounts.stream()
+                .filter(acc -> acc.getSubtype() != null && 
+                              acc.getSubtype().toString().toLowerCase().contains("checking"))
+                .findFirst()
+                .orElse(accounts.get(0));
+            
+            // Store account details
+            appUser.setPlaidAccountId(primaryAccount.getAccountId());
+            appUser.setPlaidAccountName(primaryAccount.getName());
+            appUser.setPlaidAccountType(primaryAccount.getType() != null ? 
+                primaryAccount.getType().toString() : null);
+            appUser.setPlaidAccountSubtype(primaryAccount.getSubtype() != null ? 
+                primaryAccount.getSubtype().toString() : null);
+            
+            logger.info("Set primary account for user {}: {} ({})", 
+                appUser.getId(), primaryAccount.getName(), primaryAccount.getSubtype());
+        }
+        
+        // 2. Get institution information
+        try {
+            InstitutionsGetByIdRequest institutionRequest = new InstitutionsGetByIdRequest()
+                .institutionId(accountsResponse.body().getItem().getInstitutionId())
+                .countryCodes(Arrays.asList(CountryCode.US));
+            
+            Response<InstitutionsGetByIdResponse> institutionResponse = 
+                plaidApi.institutionsGetById(institutionRequest).execute();
+            
+            if (institutionResponse.isSuccessful() && institutionResponse.body() != null) {
+                Institution institution = institutionResponse.body().getInstitution();
+                appUser.setPlaidInstitutionName(institution.getName());
+                
+                logger.info("Set institution for user {}: {}", 
+                    appUser.getId(), institution.getName());
+            }
+        } catch (Exception e) {
+            logger.warn("Could not fetch institution details for user {}: {}", 
+                appUser.getId(), e.getMessage());
+            // Don't fail if institution lookup fails
+        }
     }
 }
