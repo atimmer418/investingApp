@@ -115,8 +115,12 @@ public class PlaidToAlpacaService {
         try {
             // Create Plaid Auth request
             AuthGetRequest request = new AuthGetRequest()
-                .accessToken(accessToken)
-                .accountIds(Arrays.asList(accountId));
+                .accessToken(accessToken);
+            
+            // Add account IDs filter if needed
+            if (accountId != null && !accountId.isEmpty()) {
+                request.setAccountIds(Arrays.asList(accountId));
+            }
 
             // Get account and routing numbers from Plaid
             AuthGetResponse response = plaidApi.authGet(request).execute().body();
@@ -149,7 +153,8 @@ public class PlaidToAlpacaService {
             }
 
             // Map Plaid account type to Alpaca format
-            String alpacaAccountType = mapPlaidAccountType(account.getSubtype());
+            String subtypeString = account.getSubtype() != null ? account.getSubtype().toString() : null;
+            String alpacaAccountType = mapPlaidAccountType(subtypeString);
             
             // Create nickname from account info
             String nickname = String.format("%s %s ****%s", 
