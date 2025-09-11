@@ -42,6 +42,7 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // localStorage.clear();
     console.log('[AppComponent] ngOnInit - Setting up authentication and progress tracking.');
     
     // 🧪 SIMULATE EXISTING USER - Login as any user from your database
