@@ -107,6 +107,31 @@ export class AlpacaService {
     return this.http.get(`${this.baseUrl}/alpaca/account/${accountId}/status`);
   }
 
+  /**
+   * Create ACH relationship using Plaid data
+   */
+  createAchRelationshipFromPlaid(accountId: string, plaidAccessToken: string, plaidAccountId: string, accountOwnerName: string): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/alpaca/accounts/${accountId}/ach-relationships/plaid`,
+      {
+        plaidAccessToken,
+        plaidAccountId,
+        accountOwnerName
+      },
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  /**
+   * Get ACH relationships for an account
+   */
+  getAchRelationships(accountId: string): Observable<any> {
+    return this.http.get(
+      `${this.baseUrl}/alpaca/accounts/${accountId}/ach-relationships`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
     /**
    * Create account data from user information
    * This would typically come from user registration/KYC data, etc.

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.investingapp.backend.service.AlpacaApiService;
+import com.investingapp.backend.service.PlaidToAlpacaService;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -15,9 +16,11 @@ public class AlpacaController {
 
     private static final Logger logger = LoggerFactory.getLogger(AlpacaController.class);
     private final AlpacaApiService alpacaApiService;
+    private final PlaidToAlpacaService plaidToAlpacaService;
 
-    public AlpacaController(AlpacaApiService alpacaApiService) {
+    public AlpacaController(AlpacaApiService alpacaApiService, PlaidToAlpacaService plaidToAlpacaService) {
         this.alpacaApiService = alpacaApiService;
+        this.plaidToAlpacaService = plaidToAlpacaService;
     }
 
     @GetMapping("/account")
@@ -75,6 +78,82 @@ public class AlpacaController {
         }
     }
 
+    @PostMapping("/accounts/{accountId}/ach-relationships")
+    public ResponseEntity<Map<String, Object>> createAchRelationship(
+            @PathVariable String accountId,
+            @RequestBody CreateAchRelationshipRequest request) {
+        try {
+            logger.info("Creating ACH relationship for account: {}", accountId);
+            
+            Map<String, Object> result = alpacaApiService.createAchRelationship(
+                accountId,
+                request.getAccountOwnerName(),
+                request.getBankAccountType(),
+                request.getBankAccountNumber(),
+                request.getBankRoutingNumber(),
+                request.getNickname()
+            );
+            
+            if (result.containsKey("error")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+            }
+            
+            return ResponseEntity.ok(result);
+            
+        } catch (Exception e) {
+            logger.error("Error creating ACH relationship: {}", e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to create ACH relationship: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @PostMapping("/accounts/{accountId}/ach-relationships/plaid")
+    public ResponseEntity<Map<String, Object>> createAchRelationshipFromPlaid(
+            @PathVariable String accountId,
+            @RequestBody CreateAchFromPlaidRequest request,
+            Authentication authentication) {
+        try {
+            logger.info("Creating ACH relationship for account {} using Plaid", accountId);
+            
+            // Get user email from authentication
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            String userEmail = userDetails.getUsername();
+            
+            Map<String, Object> result = plaidToAlpacaService.createAchRelationshipFromPlaid(
+                accountId,
+                request.getPlaidAccessToken(),
+                request.getPlaidAccountId(),
+                request.getAccountOwnerName(),
+                userEmail
+            );
+            
+            if (result.containsKey("error")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+            }
+            
+            return ResponseEntity.ok(result);
+            
+        } catch (Exception e) {
+            logger.error("Error creating ACH relationship from Plaid: {}", e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to create ACH relationship from Plaid: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/accounts/{accountId}/ach-relationships")
+    public ResponseEntity<String> getAchRelationships(@PathVariable String accountId) {
+        try {
+            String relationships = alpacaApiService.getAchRelationships(accountId);
+            return ResponseEntity.ok(relationships);
+        } catch (Exception e) {
+            logger.error("Error getting ACH relationships: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("{\"error\":\"Failed to get ACH relationships\"}");
+        }
+    }
+
     @GetMapping("/account/{accountId}/status")
     public ResponseEntity<String> getAccountStatus(@PathVariable String accountId) {
         try {
@@ -118,5 +197,47 @@ public class AlpacaController {
 
         public Map<String, String> getAddress() { return address; }
         public void setAddress(Map<String, String> address) { this.address = address; }
+    }
+
+    // DTO for ACH relationship creation request
+    public static class CreateAchRelationshipRequest {
+        private String accountOwnerName;
+        private String bankAccountType; // CHECKING or SAVINGS
+        private String bankAccountNumber;
+        private String bankRoutingNumber;
+        private String nickname;
+
+        // Getters and setters
+        public String getAccountOwnerName() { return accountOwnerName; }
+        public void setAccountOwnerName(String accountOwnerName) { this.accountOwnerName = accountOwnerName; }
+
+        public String getBankAccountType() { return bankAccountType; }
+        public void setBankAccountType(String bankAccountType) { this.bankAccountType = bankAccountType; }
+
+        public String getBankAccountNumber() { return bankAccountNumber; }
+        public void setBankAccountNumber(String bankAccountNumber) { this.bankAccountNumber = bankAccountNumber; }
+
+        public String getBankRoutingNumber() { return bankRoutingNumber; }
+        public void setBankRoutingNumber(String bankRoutingNumber) { this.bankRoutingNumber = bankRoutingNumber; }
+
+        public String getNickname() { return nickname; }
+        public void setNickname(String nickname) { this.nickname = nickname; }
+    }
+
+    // DTO for ACH relationship creation using Plaid
+    public static class CreateAchFromPlaidRequest {
+        private String plaidAccessToken;
+        private String plaidAccountId;
+        private String accountOwnerName;
+
+        // Getters and setters
+        public String getPlaidAccessToken() { return plaidAccessToken; }
+        public void setPlaidAccessToken(String plaidAccessToken) { this.plaidAccessToken = plaidAccessToken; }
+
+        public String getPlaidAccountId() { return plaidAccountId; }
+        public void setPlaidAccountId(String plaidAccountId) { this.plaidAccountId = plaidAccountId; }
+
+        public String getAccountOwnerName() { return accountOwnerName; }
+        public void setAccountOwnerName(String accountOwnerName) { this.accountOwnerName = accountOwnerName; }
     }
 }

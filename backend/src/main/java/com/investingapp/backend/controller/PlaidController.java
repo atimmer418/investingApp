@@ -17,7 +17,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @CrossOrigin(origins = "*", maxAge = 3600) // For development, restrict in production
@@ -92,6 +94,84 @@ public class PlaidController {
             logger.error("Error exchanging Plaid public token for user {}: {}", appUser.getId(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new MessageResponse("Error exchanging Plaid public token: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/user-data")
+    public ResponseEntity<?> getUserPlaidData(Authentication authentication) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+            
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("User not found");
+            }
+            
+            User user = userOpt.get();
+            
+            // Create response with essential Plaid data for ACH creation
+            Map<String, Object> plaidData = new HashMap<>();
+            plaidData.put("accessToken", user.getPlaidAccessToken());
+            plaidData.put("accountId", user.getPlaidAccountId());
+            plaidData.put("institutionName", user.getPlaidInstitutionName());
+            plaidData.put("hasValidToken", user.getPlaidAccessToken() != null && !user.getPlaidAccessToken().isEmpty());
+            
+            return ResponseEntity.ok(plaidData);
+        } catch (Exception e) {
+            logger.error("Error retrieving user Plaid data", e);
+            return ResponseEntity.status(500).body("Error retrieving Plaid data");
+        }
+    }
+
+    @GetMapping("/access-token")
+    public ResponseEntity<String> getAccessToken(Authentication authentication) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+            
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("User not found");
+            }
+            
+            User user = userOpt.get();
+            String accessToken = user.getPlaidAccessToken();
+            
+            if (accessToken == null || accessToken.isEmpty()) {
+                return ResponseEntity.badRequest().body("No Plaid access token found");
+            }
+            
+            return ResponseEntity.ok(accessToken);
+        } catch (Exception e) {
+            logger.error("Error retrieving access token", e);
+            return ResponseEntity.status(500).body("Error retrieving access token");
+        }
+    }
+
+    @GetMapping("/primary-bank-account")
+    public ResponseEntity<?> getPrimaryBankAccount(Authentication authentication) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+            
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("User not found");
+            }
+            
+            User user = userOpt.get();
+            
+            // Create response with bank account info needed for ACH
+            Map<String, Object> bankAccount = new HashMap<>();
+            bankAccount.put("accountId", user.getPlaidAccountId());
+            bankAccount.put("accessToken", user.getPlaidAccessToken());
+            bankAccount.put("institutionName", user.getPlaidInstitutionName());
+            bankAccount.put("accountName", user.getPlaidAccountName());
+            bankAccount.put("accountType", user.getPlaidAccountType());
+            bankAccount.put("accountSubtype", user.getPlaidAccountSubtype());
+            
+            return ResponseEntity.ok(bankAccount);
+        } catch (Exception e) {
+            logger.error("Error retrieving primary bank account", e);
+            return ResponseEntity.status(500).body("Error retrieving bank account");
         }
     }
 }

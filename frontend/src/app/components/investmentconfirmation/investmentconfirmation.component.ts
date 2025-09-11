@@ -8,6 +8,7 @@ import {
 } from '@ionic/angular/standalone';
 import { AlpacaService, CreateAccountRequest } from '../../services/alpaca.service';
 import { AuthService } from '../../services/auth.service'; // For user authentication data
+import { PlaidDataService } from '../../services/plaid-data.service';
 
 @Component({
   selector: 'app-investmentconfirmation',
@@ -34,7 +35,8 @@ export class InvestmentConfirmationComponent implements OnInit {
     private navCtrl: NavController,
     private alpacaService: AlpacaService,
     private toastController: ToastController,
-    private authService: AuthService
+    private authService: AuthService,
+    private plaidDataService: PlaidDataService
   ) {}
 
   ngOnInit() {
@@ -168,6 +170,9 @@ export class InvestmentConfirmationComponent implements OnInit {
           color: 'success'
         });
         await toast.present();
+
+        // Create ACH relationship using Plaid data
+        await this.createAchRelationship(response.account_id);
         
       } else {
         throw new Error(response?.error || 'Unknown error creating account');
@@ -218,8 +223,106 @@ export class InvestmentConfirmationComponent implements OnInit {
     });
   }
 
-  goBack() {
-    // Consider the state if the user goes back. Should they re-select stocks?
-    this.navCtrl.back();
+  /**
+   * Create ACH relationship using Plaid data from database after successful account creation
+   */
+  private async createAchRelationship(alpacaAccountId: string): Promise<void> {
+    try {
+      console.log('🏦 Creating ACH relationship for account:', alpacaAccountId);
+      
+      // Get Plaid data from database
+      const plaidData = await this.plaidDataService.getUserPlaidData().toPromise();
+      
+      if (!plaidData?.accessToken || !plaidData?.accountId) {
+        console.warn('⚠️ No Plaid banking data found in database. User may need to re-link their bank account.');
+        
+        const toast = await this.toastController.create({
+          message: 'Bank account linking skipped - please link your bank account in settings later.',
+          duration: 3000,
+          color: 'warning'
+        });
+        await toast.present();
+        return;
+      }
+
+      console.log('✅ Found Plaid data in database:', { 
+        hasAccessToken: !!plaidData.accessToken,
+        hasAccountId: !!plaidData.accountId,
+        institutionName: plaidData.institutionName 
+      });
+
+      // Get user's full name for account owner (using current user email as fallback)
+      const kycData = this.getKycData();
+      const accountOwnerName = `${kycData.firstName} ${kycData.lastName}`; // Get actual name from KYC data
+
+      // Create ACH relationship using database Plaid data
+      const achResult = await this.alpacaService.createAchRelationshipFromPlaid(
+        alpacaAccountId,
+        plaidData.accessToken,
+        plaidData.accountId,
+        accountOwnerName
+      ).toPromise();
+
+      if (achResult && !achResult.error) {
+        console.log('✅ ACH relationship created successfully:', achResult);
+        
+        const toast = await this.toastController.create({
+          message: 'Bank account linked successfully! You can now fund your investment account.',
+          duration: 3000,
+          color: 'success'
+        });
+        await toast.present();
+      } else {
+        throw new Error(achResult?.error || 'Unknown ACH creation error');
+      }
+      
+    } catch (error: any) {
+      console.error('🚨 UNEXPECTED: ACH creation failed despite successful Plaid linking!', error);
+      
+      // Since we have Plaid data in the database, this failure is unexpected and should be investigated
+      const errorMessage = error?.error?.message || error?.message || 'Unknown error';
+      console.error('ACH Creation Error Details:', {
+        alpacaAccountId,
+        error: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Show user a more specific error since this shouldn't fail if Plaid worked
+      const toast = await this.toastController.create({
+        message: `Bank linking failed unexpectedly: ${errorMessage}. Please contact support.`,
+        duration: 4000,
+        color: 'danger'
+      });
+      await toast.present();
+      
+      // TODO: Consider adding retry logic or automatic support ticket creation
+    }
+  }
+
+  private async showSuccess(message: string): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      color: 'success'
+    });
+    await toast.present();
+  }
+
+  private async showWarning(message: string): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      color: 'warning'
+    });
+    await toast.present();
+  }
+
+  private async showError(message: string): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration: 4000,
+      color: 'danger'
+    });
+    await toast.present();
   }
 }
