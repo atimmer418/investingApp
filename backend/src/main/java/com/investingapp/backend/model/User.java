@@ -60,6 +60,9 @@ public class User {
     private String plaidItemId;
     
     @Column(length = 255)
+    private String plaidUserToken; // Plaid user token for Income/Employment APIs (never expires)
+    
+    @Column(length = 255)
     private String plaidAccountId; // Primary bank account ID from Plaid
     
     @Column(length = 255)

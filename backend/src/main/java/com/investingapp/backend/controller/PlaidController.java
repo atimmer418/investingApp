@@ -186,14 +186,13 @@ public class PlaidController {
             }
             
             User user = userOpt.get();
-            String accessToken = user.getPlaidAccessToken();
             
-            if (accessToken == null || accessToken.isEmpty()) {
-                return ResponseEntity.badRequest().body("No Plaid access token found");
+            if (user.getPlaidUserToken() == null) {
+                return ResponseEntity.badRequest().body("No Plaid user token found - bank income analysis not available. Please re-link your bank account.");
             }
             
-            // Call Plaid service to get bank income data
-            Map<String, Object> incomeData = plaidService.getBankIncomeData(accessToken);
+            // Call Plaid service to get bank income data using user ID
+            Map<String, Object> incomeData = plaidService.getBankIncomeData(user.getId());
             
             return ResponseEntity.ok(incomeData);
         } catch (Exception e) {

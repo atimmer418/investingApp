@@ -346,6 +346,18 @@ public class PlaidService {
         appUser.setPlaidItemId(exchangeResponse.getItemId());
         appUser.setPlaidLinked(true);
         
+        // Create Plaid user token for Income/Employment APIs if not already created
+        if (appUser.getPlaidUserToken() == null) {
+            try {
+                String userToken = createPlaidUser(appUser.getId().toString());
+                appUser.setPlaidUserToken(userToken);
+                logger.info("Successfully created Plaid user token for user ID: {}", appUser.getId());
+            } catch (Exception e) {
+                logger.error("Failed to create Plaid user token for user {}: {}", appUser.getId(), e.getMessage());
+                // Don't fail the whole process if this fails - user can still use basic features
+            }
+        }
+        
         try {
             // Fetch and store account details and institution information
             populateAccountAndInstitutionDetails(rawAccessToken, appUser);
@@ -415,23 +427,46 @@ public class PlaidService {
             // Don't fail if institution lookup fails
         }
     }
+    
+    /**
+     * Create a Plaid user token for Income/Employment APIs
+     */
+    private String createPlaidUser(String clientUserId) throws IOException {
+        logger.info("Creating Plaid user token for client user ID: {}", clientUserId);
+        
+        UserCreateRequest request = new UserCreateRequest()
+            .clientUserId(clientUserId);
+            
+        Response<UserCreateResponse> response = plaidApi.userCreate(request).execute();
+        
+        if (!response.isSuccessful() || response.body() == null) {
+            String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+            logger.error("Plaid User creation failed: {} - {}", response.code(), errorBody);
+            throw new IOException("Plaid User creation failed: " + errorBody);
+        }
+        
+        String userToken = response.body().getUserToken();
+        logger.info("Successfully created Plaid user token for client user ID: {}", clientUserId);
+        return userToken;
+    }
 
     /**
      * Get bank income data using Plaid's Bank Income API with proper error handling
      */
-    public Map<String, Object> getBankIncomeData(String encryptedAccessToken) throws IOException {
-        logger.info("Fetching bank income data from Plaid Bank Income API");
+    public Map<String, Object> getBankIncomeData(Long userId) throws IOException {
+        logger.info("Fetching bank income data from Plaid Credit Bank Income API for user ID: {}", userId);
         
         try {
-            // Decrypt the access token
-            String accessToken = encryptionService.decrypt(encryptedAccessToken);
-            
-            // Create the Credit Bank Income request with options
-            Map<String, Integer> options = new HashMap<>();
-            options.put("count", 1);
+            // Get user from database
+            User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+                
+            if (user.getPlaidUserToken() == null) {
+                throw new RuntimeException("User has no Plaid user token - bank income analysis not available");
+            }
             
             CreditBankIncomeGetRequest request = new CreditBankIncomeGetRequest()
-                .userToken(accessToken);
+                .userToken(user.getPlaidUserToken());
             
             logger.debug("Making Plaid Credit Bank Income API call...");
             Response<CreditBankIncomeGetResponse> response = plaidApi.creditBankIncomeGet(request).execute();
