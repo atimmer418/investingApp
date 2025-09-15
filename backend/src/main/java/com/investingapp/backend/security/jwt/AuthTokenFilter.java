@@ -39,7 +39,6 @@ public class AuthTokenFilter extends OncePerRequestFilter { // Extend OncePerReq
         // If already authenticated from a previous pass of this filter in the same
         // request, skip
         Authentication existingAuthentication = SecurityContextHolder.getContext().getAuthentication();
-        logger.info("{} && {} && {}", existingAuthentication != null, (existingAuthentication != null && existingAuthentication.isAuthenticated()), !(existingAuthentication instanceof AnonymousAuthenticationToken));
         if (existingAuthentication != null && existingAuthentication.isAuthenticated() &&
                 !(existingAuthentication instanceof AnonymousAuthenticationToken)) {
             logger.info(
@@ -52,16 +51,13 @@ public class AuthTokenFilter extends OncePerRequestFilter { // Extend OncePerReq
 
         try {
             String jwt = parseJwt(request); // Ensure parseJwt is working (from your JwtUtils or locally)
-            logger.info("AuthTokenFilter: Parsed JWT from header: {}", jwt);
 
             if (jwt != null) {
                 boolean isValid = jwtUtils.validateJwtToken(jwt); // Explicitly store result
-                logger.info("AuthTokenFilter: JWT validation result: {}", isValid);
                 if (isValid) {
-                    String username = jwtUtils.getUserNameFromJwtToken(jwt);
-                    logger.info("AuthTokenFilter: Username from token: {}", username);
+                    String email = jwtUtils.getUserNameFromJwtToken(jwt);
 
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -69,14 +65,7 @@ public class AuthTokenFilter extends OncePerRequestFilter { // Extend OncePerReq
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    logger.info("AuthTokenFilter: User '{}' authenticated and set in SecurityContext.", username);
-
-                    logger.info("AuthTokenFilter: Authentication object set in SecurityContext. IsAuthenticated: {}",
-                            SecurityContextHolder.getContext().getAuthentication().isAuthenticated());
-                    logger.info("AuthTokenFilter: Principal: {}",
-                            SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-                    logger.info("AuthTokenFilter: Authorities: {}",
-                            SecurityContextHolder.getContext().getAuthentication().getAuthorities());
+                    logger.info("AuthTokenFilter: User '{}' authenticated and set in SecurityContext with {}.", email, userDetails.getAuthorities());
                 } else {
                     logger.warn("AuthTokenFilter: JWT token is invalid and was not set in SecurityContext.");
                 }

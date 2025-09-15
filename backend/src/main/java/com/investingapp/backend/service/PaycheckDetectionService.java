@@ -148,11 +148,11 @@ public class PaycheckDetectionService {
      * Match a user's paycheck configuration with detected recurring income from Plaid
      */
     private PaycheckSourceDto findMatchingPaycheck(UserPaycheckConfig config, List<PaycheckSourceDto> recurringIncome) {
-        logger.debug("Attempting to match config: name='{}', employer='{}', expectedAmount={}, frequency='{}'",
+        logger.info("Attempting to match config: name='{}', employer='{}', expectedAmount={}, frequency='{}'",
             config.getName(), config.getEmployerName(), config.getExpectedAmount(), config.getFrequency());
         
         for (PaycheckSourceDto paycheck : recurringIncome) {
-            logger.debug("Checking paycheck: name='{}', amount={}, frequency='{}'", 
+            logger.info("Checking paycheck: name='{}', amount={}, frequency='{}'", 
                 paycheck.getName(), paycheck.getLastAmount(), paycheck.getFrequency());
             
             boolean isMatch = isPaycheckMatch(config, paycheck);
