@@ -38,6 +38,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/linkplaid/linkplaid.component').then(m => m.LinkPlaidComponent)
   },
   {
+    path: 'income-selection',
+    loadComponent: () => import('./components/income-selection/income-selection.component').then(m => m.IncomeSelectionComponent)
+  },
+  {
     path: 'survey',
     loadComponent: () => import('./components/survey/survey.component').then(m => m.SurveyComponent)
     // You could add a canActivate guard here if needed later

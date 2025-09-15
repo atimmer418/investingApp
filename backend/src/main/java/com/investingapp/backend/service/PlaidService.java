@@ -415,4 +415,79 @@ public class PlaidService {
             // Don't fail if institution lookup fails
         }
     }
+
+    /**
+     * Get bank income data using Plaid's Bank Income API
+     */
+    public Map<String, Object> getBankIncomeData(String encryptedAccessToken) throws IOException {
+        logger.info("Fetching bank income data from Plaid");
+        
+        try {
+            // Decrypt the access token
+            String accessToken = encryptionService.decrypt(encryptedAccessToken);
+            
+            // Create Bank Income request
+            CreditBankIncomeGetRequest request = new CreditBankIncomeGetRequest()
+                .accessToken(accessToken);
+            
+            Response<CreditBankIncomeGetResponse> response = plaidApi.creditBankIncomeGet(request).execute();
+            
+            if (!response.isSuccessful() || response.body() == null) {
+                String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+                logger.error("Plaid Bank Income API call failed: {} - {}", response.code(), errorBody);
+                throw new IOException("Failed to fetch bank income data: " + errorBody);
+            }
+            
+            CreditBankIncomeGetResponse incomeResponse = response.body();
+            
+            // Convert to a simpler format for frontend
+            Map<String, Object> result = new HashMap<>();
+            List<Map<String, Object>> bankIncomes = new ArrayList<>();
+            
+            if (incomeResponse.getBankIncome() != null) {
+                for (CreditBankIncome bankIncome : incomeResponse.getBankIncome()) {
+                    Map<String, Object> bankIncomeMap = new HashMap<>();
+                    
+                    // Add income sources
+                    List<Map<String, Object>> incomeSources = new ArrayList<>();
+                    if (bankIncome.getIncomeSourcesByCategory() != null && 
+                        bankIncome.getIncomeSourcesByCategory().getSalary() != null) {
+                        
+                        for (CreditBankIncomeSource source : bankIncome.getIncomeSourcesByCategory().getSalary()) {
+                            Map<String, Object> sourceMap = new HashMap<>();
+                            sourceMap.put("employer_name", source.getEmployer() != null ? source.getEmployer().getName() : "Unknown Employer");
+                            sourceMap.put("pay_frequency", source.getPayFrequency() != null ? source.getPayFrequency().toString() : "UNKNOWN");
+                            sourceMap.put("last_amount", source.getHistoricalAverageMonthlyGrossIncome() != null ? 
+                                source.getHistoricalAverageMonthlyGrossIncome() : 0.0);
+                            sourceMap.put("last_date", source.getLastUpdatedDatetime() != null ? 
+                                source.getLastUpdatedDatetime().toString() : "");
+                            sourceMap.put("account_id", source.getAccountId());
+                            sourceMap.put("income_description", source.getIncomeDescription());
+                            sourceMap.put("confidence", source.getConfidence() != null ? 
+                                source.getConfidence().toString() : "UNKNOWN");
+                            
+                            incomeSources.add(sourceMap);
+                        }
+                    }
+                    
+                    bankIncomeMap.put("income_sources", incomeSources);
+                    bankIncomeMap.put("days_requested", bankIncome.getDaysRequested());
+                    bankIncomeMap.put("total_amount", 0.0); // Calculate if needed
+                    
+                    bankIncomes.add(bankIncomeMap);
+                }
+            }
+            
+            result.put("bank_income", bankIncomes);
+            
+            logger.info("Successfully fetched bank income data with {} income sources", 
+                bankIncomes.stream().mapToInt(bi -> ((List<?>) bi.get("income_sources")).size()).sum());
+            
+            return result;
+            
+        } catch (Exception e) {
+            logger.error("Error fetching bank income data: {}", e.getMessage(), e);
+            throw new IOException("Failed to fetch bank income data: " + e.getMessage());
+        }
+    }
 }

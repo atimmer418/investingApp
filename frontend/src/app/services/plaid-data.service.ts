@@ -51,4 +51,8 @@ export class PlaidDataService {
   getPrimaryBankAccount(): Observable<any> {
     return this.http.get(`${BACKEND_API_URL}/plaid/primary-bank-account`, { headers: this.getAuthHeaders() });
   }
+
+  getBankIncome(): Observable<any> {
+    return this.http.get(`${BACKEND_API_URL}/plaid/bank-income`, { headers: this.getAuthHeaders() });
+  }
 }

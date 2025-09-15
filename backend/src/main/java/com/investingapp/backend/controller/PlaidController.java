@@ -174,4 +174,31 @@ public class PlaidController {
             return ResponseEntity.status(500).body("Error retrieving bank account");
         }
     }
+
+    @GetMapping("/bank-income")
+    public ResponseEntity<?> getBankIncome(Authentication authentication) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+            
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("User not found");
+            }
+            
+            User user = userOpt.get();
+            String accessToken = user.getPlaidAccessToken();
+            
+            if (accessToken == null || accessToken.isEmpty()) {
+                return ResponseEntity.badRequest().body("No Plaid access token found");
+            }
+            
+            // Call Plaid service to get bank income data
+            Map<String, Object> incomeData = plaidService.getBankIncomeData(accessToken);
+            
+            return ResponseEntity.ok(incomeData);
+        } catch (Exception e) {
+            logger.error("Error retrieving bank income data", e);
+            return ResponseEntity.status(500).body("Error retrieving bank income data: " + e.getMessage());
+        }
+    }
 }

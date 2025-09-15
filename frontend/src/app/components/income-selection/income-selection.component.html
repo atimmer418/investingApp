@@ -1,0 +1,182 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-title>Income Sources</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="income-selection-container">
+
+    <!-- Page Introduction -->
+    <div class="page-intro">
+      <h2>Set up automatic investing</h2>
+      <p class="helper-text">
+        Choose which income sources you'd like us to monitor. When you receive payment from these sources, 
+        we'll automatically invest your chosen percentage to help you build wealth effortlessly.
+      </p>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="loading-content">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <h3>{{ loadingMessage }}</h3>
+        <p class="helper-text">
+          We're analyzing your recent transactions to identify your income sources. 
+          This may take a moment for newly linked accounts.
+        </p>
+        <div class="retry-info" *ngIf="retryAttempts > 2">
+          <ion-note color="medium">
+            Attempt {{ retryAttempts }} of {{ maxRetryAttempts }}
+          </ion-note>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" *ngIf="errorMessage && !isLoading">
+      <div class="error-content">
+        <ion-icon name="alert-circle-outline" color="danger"></ion-icon>
+        <h3>Unable to load income data</h3>
+        <p class="helper-text">{{ errorMessage }}</p>
+        <div class="error-actions">
+          <ion-button fill="outline" (click)="retry()">
+            <ion-icon name="refresh" slot="start"></ion-icon>
+            Try Again
+          </ion-button>
+          <ion-button fill="clear" (click)="skipForNow()">
+            Set Up Manually Later
+          </ion-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Income Sources List -->
+    <div class="income-sources" *ngIf="!isLoading && !errorMessage">
+      
+      <!-- Info Banner -->
+      <div class="info-banner" *ngIf="incomeSources.length > 0">
+        <ion-icon name="information-circle-outline" color="primary"></ion-icon>
+        <p class="helper-text">
+          Select the income sources you want to use for automatic investing. 
+          We'll monitor these sources and invest your chosen percentage with each payment.
+        </p>
+      </div>
+
+      <!-- No Income Sources Found -->
+      <div class="empty-state" *ngIf="incomeSources.length === 0">
+        <ion-icon name="wallet-outline" color="medium"></ion-icon>
+        <h3>No income sources detected</h3>
+        <p class="helper-text">
+          We couldn't find any recurring income in your recent transactions. 
+          This is normal for newly linked accounts or irregular income patterns.
+        </p>
+        <ion-button expand="block" (click)="skipForNow()">
+          Set Up Income Manually
+        </ion-button>
+      </div>
+
+      <!-- Income Sources List -->
+      <ion-list *ngIf="incomeSources.length > 0" class="income-list">
+        
+        <ion-item-divider color="light">
+          <ion-label>
+            <h3>Detected Income Sources</h3>
+            <p>{{ incomeSources.length }} source{{ incomeSources.length !== 1 ? 's' : '' }} found</p>
+          </ion-label>
+        </ion-item-divider>
+
+        <ion-card 
+          *ngFor="let source of incomeSources; trackBy: trackByAccountId" 
+          class="income-card"
+          [class.selected]="source.selected"
+          (click)="toggleIncomeSource(source)">
+          
+          <ion-card-content>
+            <div class="income-card-header">
+              <div class="income-info">
+                <h3 class="employer-name">
+                  {{ source.employer_name || 'Unknown Employer' }}
+                </h3>
+                <p class="income-description">
+                  {{ source.income_description || 'Regular income' }}
+                </p>
+              </div>
+              
+              <div class="selection-area">
+                <ion-checkbox 
+                  [checked]="source.selected"
+                  (ionChange)="toggleIncomeSource(source)"
+                  (click)="$event.stopPropagation()">
+                </ion-checkbox>
+              </div>
+            </div>
+
+            <div class="income-details">
+              <div class="detail-row">
+                <div class="detail-item">
+                  <ion-icon name="cash-outline" color="primary"></ion-icon>
+                  <div class="detail-content">
+                    <span class="label">Amount</span>
+                    <span class="value">{{ formatAmount(source.last_amount) }}</span>
+                  </div>
+                </div>
+
+                <div class="detail-item">
+                  <ion-icon name="calendar-outline" color="primary"></ion-icon>
+                  <div class="detail-content">
+                    <span class="label">Frequency</span>
+                    <span class="value">{{ getFrequencyDisplay(source.pay_frequency) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-item">
+                  <ion-icon name="time-outline" color="primary"></ion-icon>
+                  <div class="detail-content">
+                    <span class="label">Last Payment</span>
+                    <span class="value">{{ formatDate(source.last_date) }}</span>
+                  </div>
+                </div>
+
+                <div class="detail-item">
+                  <ion-icon name="shield-checkmark-outline" [color]="getConfidenceColor(source.confidence)"></ion-icon>
+                  <div class="detail-content">
+                    <span class="label">Confidence</span>
+                    <span class="value" [style.color]="'var(--ion-color-' + getConfidenceColor(source.confidence) + ')'">
+                      {{ source.confidence }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+      </ion-list>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons" *ngIf="incomeSources.length > 0">
+        <ion-button 
+          expand="block" 
+          size="large"
+          [disabled]="selectedIncomeSources.size === 0"
+          (click)="continueToInvestmentSetup()">
+          Continue with {{ selectedIncomeSources.size }} source{{ selectedIncomeSources.size !== 1 ? 's' : '' }}
+          <ion-icon name="arrow-forward" slot="end"></ion-icon>
+        </ion-button>
+
+        <ion-button 
+          expand="block" 
+          fill="clear" 
+          size="large"
+          (click)="skipForNow()">
+          Set up income sources manually later
+        </ion-button>
+      </div>
+
+    </div>
+
+  </div>
+</ion-content>
