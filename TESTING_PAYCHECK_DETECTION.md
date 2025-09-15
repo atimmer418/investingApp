@@ -14,9 +14,9 @@ Since there's a JVM version issue preventing compilation, here's how you can tes
 
 ```bash
 # First, authenticate as a user (use the dev auth endpoint)
-curl -X POST http://localhost:8080/api/dev/authenticate \
+curl -X POST https://api-dev.fredvested.com/api/dev/authenticate-as-user \
   -H "Content-Type: application/json" \
-  -d '{"userIdentifier": "user@example.com"}'
+  -d '{"email": "beastmode@gmail.com"}'
 ```
 
 This should return a JWT token. Use this token for subsequent requests.
@@ -25,7 +25,7 @@ This should return a JWT token. Use this token for subsequent requests.
 
 ```bash
 # Get current detection status
-curl -X GET http://localhost:8080/api/paycheck/status \
+curl -X GET https://api-dev.fredvested.com/api/paycheck/status \
   -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
 ```
 
@@ -58,7 +58,7 @@ Expected response:
 
 ```bash
 # Trigger detection for the authenticated user
-curl -X POST http://localhost:8080/api/paycheck/detect \
+curl -X POST https://api-dev.fredvested.com/api/paycheck/detect \
   -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
 ```
 
@@ -75,7 +75,7 @@ Expected response:
 
 ```bash
 # Check if anything was detected
-curl -X GET http://localhost:8080/api/paycheck/status \
+curl -X GET https://api-dev.fredvested.com/api/paycheck/status \
   -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
 ```
 
@@ -166,7 +166,7 @@ WHERE id = 1;
 
 ```bash
 # Trigger detection for all users (admin endpoint)
-curl -X POST http://localhost:8080/api/paycheck/detect-all
+curl -X POST https://api-dev.fredvested.com/api/paycheck/detect-all
 ```
 
 ### Test with Mock Data
