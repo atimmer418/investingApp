@@ -73,6 +73,26 @@ export class IncomeSelectionComponent implements OnInit {
     
     try {
       const response = await this.plaidDataService.getBankIncome().toPromise();
+      
+      // Check if response indicates an error or retry needed
+      if (response?.error) {
+        if (response.retry && this.retryAttempts < this.maxRetryAttempts) {
+          this.retryAttempts++;
+          this.updateLoadingMessage();
+          
+          console.log(`Income API returned error, retrying... (${this.retryAttempts}/${this.maxRetryAttempts})`);
+          setTimeout(() => {
+            this.loadIncomeData();
+          }, this.retryInterval);
+          return;
+        } else {
+          // Max retries reached or non-retryable error
+          this.isLoading = false;
+          this.errorMessage = response.message || 'Failed to load income data. Please try again later.';
+          return;
+        }
+      }
+      
       this.processIncomeData(response);
       this.isLoading = false;
     } catch (error: any) {

@@ -417,77 +417,123 @@ public class PlaidService {
     }
 
     /**
-     * Get bank income data using Plaid's Bank Income API
+     * Get bank income data using Plaid's Bank Income API with proper error handling
      */
     public Map<String, Object> getBankIncomeData(String encryptedAccessToken) throws IOException {
-        logger.info("Fetching bank income data from Plaid");
+        logger.info("Fetching bank income data from Plaid Bank Income API");
         
         try {
             // Decrypt the access token
             String accessToken = encryptionService.decrypt(encryptedAccessToken);
             
-            // Create Bank Income request
-            CreditBankIncomeGetRequest request = new CreditBankIncomeGetRequest()
-                .accessToken(accessToken);
+            // Create the Credit Bank Income request with options
+            Map<String, Integer> options = new HashMap<>();
+            options.put("count", 1);
             
+            CreditBankIncomeGetRequest request = new CreditBankIncomeGetRequest()
+                .accessToken(accessToken)
+                .options(options);
+            
+            logger.debug("Making Plaid Credit Bank Income API call...");
             Response<CreditBankIncomeGetResponse> response = plaidApi.creditBankIncomeGet(request).execute();
             
-            if (!response.isSuccessful() || response.body() == null) {
+            if (!response.isSuccessful()) {
                 String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
                 logger.error("Plaid Bank Income API call failed: {} - {}", response.code(), errorBody);
-                throw new IOException("Failed to fetch bank income data: " + errorBody);
+                
+                // Return structured error for the frontend to handle
+                Map<String, Object> errorResult = new HashMap<>();
+                errorResult.put("error", true);
+                errorResult.put("message", "Bank income data is still being processed. Please wait a moment and try again.");
+                errorResult.put("code", response.code());
+                return errorResult;
+            }
+            
+            if (response.body() == null) {
+                logger.error("Plaid Bank Income API returned null response body");
+                Map<String, Object> errorResult = new HashMap<>();
+                errorResult.put("error", true);
+                errorResult.put("message", "No income data available yet. Please try again in a few moments.");
+                return errorResult;
             }
             
             CreditBankIncomeGetResponse incomeResponse = response.body();
+            logger.info("Successfully received Credit Bank Income API response");
             
-            // Convert to a simpler format for frontend
+            // Process response and create structured data for frontend
             Map<String, Object> result = new HashMap<>();
-            List<Map<String, Object>> bankIncomes = new ArrayList<>();
+            List<Map<String, Object>> incomeSources = new ArrayList<>();
+            double totalAmount = 0.0;
+            String currency = "USD";
             
-            if (incomeResponse.getBankIncome() != null) {
-                for (CreditBankIncome bankIncome : incomeResponse.getBankIncome()) {
-                    Map<String, Object> bankIncomeMap = new HashMap<>();
+            if (incomeResponse.getBankIncome() != null && !incomeResponse.getBankIncome().isEmpty()) {
+                // Get the first bank income object (typically there's only one per user)
+                CreditBankIncome bankIncome = incomeResponse.getBankIncome().get(0);
+                
+                if (bankIncome.getItems() != null && !bankIncome.getItems().isEmpty()) {
+                    // Get the first item (typically there's only one per bank account)
+                    CreditBankIncomeItem item = bankIncome.getItems().get(0);
                     
-                    // Add income sources
-                    List<Map<String, Object>> incomeSources = new ArrayList<>();
-                    if (bankIncome.getIncomeSourcesByCategory() != null && 
-                        bankIncome.getIncomeSourcesByCategory().getSalary() != null) {
-                        
-                        for (CreditBankIncomeSource source : bankIncome.getIncomeSourcesByCategory().getSalary()) {
-                            Map<String, Object> sourceMap = new HashMap<>();
-                            sourceMap.put("employer_name", source.getEmployer() != null ? source.getEmployer().getName() : "Unknown Employer");
-                            sourceMap.put("pay_frequency", source.getPayFrequency() != null ? source.getPayFrequency().toString() : "UNKNOWN");
-                            sourceMap.put("last_amount", source.getHistoricalAverageMonthlyGrossIncome() != null ? 
-                                source.getHistoricalAverageMonthlyGrossIncome() : 0.0);
-                            sourceMap.put("last_date", source.getLastUpdatedDatetime() != null ? 
-                                source.getLastUpdatedDatetime().toString() : "");
-                            sourceMap.put("account_id", source.getAccountId());
-                            sourceMap.put("income_description", source.getIncomeDescription());
-                            sourceMap.put("confidence", source.getConfidence() != null ? 
-                                source.getConfidence().toString() : "UNKNOWN");
+                    if (item.getBankIncomeSources() != null) {
+                        for (CreditBankIncomeSource source : item.getBankIncomeSources()) {
+                            Map<String, Object> incomeSourceMap = new HashMap<>();
                             
-                            incomeSources.add(sourceMap);
+                            incomeSourceMap.put("id", source.getIncomeSourceId());
+                            incomeSourceMap.put("description", source.getIncomeDescription());
+                            incomeSourceMap.put("category", source.getIncomeCategory() != null ? source.getIncomeCategory().toString() : "UNKNOWN");
+                            incomeSourceMap.put("amount", source.getTotalAmount());
+                            incomeSourceMap.put("frequency", source.getPayFrequency() != null ? source.getPayFrequency().toString() : "UNKNOWN");
+                            incomeSourceMap.put("startDate", source.getStartDate());
+                            incomeSourceMap.put("endDate", source.getEndDate());
+                            incomeSourceMap.put("transactionCount", source.getTransactionCount());
+                            incomeSourceMap.put("selected", false); // Default to not selected
+                            
+                            incomeSources.add(incomeSourceMap);
+                            totalAmount += source.getTotalAmount() != null ? source.getTotalAmount() : 0.0;
                         }
                     }
-                    
-                    bankIncomeMap.put("income_sources", incomeSources);
-                    bankIncomeMap.put("days_requested", bankIncome.getDaysRequested());
-                    bankIncomeMap.put("total_amount", 0.0); // Calculate if needed
-                    
-                    bankIncomes.add(bankIncomeMap);
                 }
+                
+                // Get currency from bank income summary if available
+                if (bankIncome.getBankIncomeSummary() != null && 
+                    bankIncome.getBankIncomeSummary().getIsoCurrencyCode() != null) {
+                    currency = bankIncome.getBankIncomeSummary().getIsoCurrencyCode();
+                }
+                
+                logger.info("Successfully processed {} income sources with total amount: {} {}", 
+                    incomeSources.size(), totalAmount, currency);
+                
+            } else {
+                logger.warn("No bank income data found in response");
             }
             
-            result.put("bank_income", bankIncomes);
+            // Structure the response to match what frontend expects
+            result.put("success", true);
+            result.put("incomeSources", incomeSources);
+            result.put("totalAmount", totalAmount);
+            result.put("currency", currency);
+            result.put("api_available", true);
             
-            logger.info("Successfully fetched bank income data with {} income sources", 
-                bankIncomes.stream().mapToInt(bi -> ((List<?>) bi.get("income_sources")).size()).sum());
+            if (incomeSources.isEmpty()) {
+                result.put("message", "No income sources found. Make sure you have recent income transactions in your linked account.");
+            }
             
             return result;
             
         } catch (Exception e) {
-            logger.error("Error fetching bank income data: {}", e.getMessage(), e);
-            throw new IOException("Failed to fetch bank income data: " + e.getMessage());
+            logger.error("Error calling Plaid Bank Income API: {}", e.getMessage(), e);
+            
+            // Check if it's a 500 error (still processing)
+            if (e.getMessage() != null && e.getMessage().contains("500")) {
+                Map<String, Object> errorResult = new HashMap<>();
+                errorResult.put("error", true);
+                errorResult.put("message", "Income analysis still in progress. Please wait a few moments and try again.");
+                errorResult.put("retry", true);
+                return errorResult;
+            }
+            
+            // For other errors, throw IOException to be handled by controller
+            throw new IOException("Bank Income API unavailable: " + e.getMessage());
         }
     }
 }
