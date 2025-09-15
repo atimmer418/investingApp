@@ -431,7 +431,7 @@ public class PlaidService {
             options.put("count", 1);
             
             CreditBankIncomeGetRequest request = new CreditBankIncomeGetRequest()
-                .accessToken(accessToken)
+                .userToken(accessToken)
                 .options(options);
             
             logger.debug("Making Plaid Credit Bank Income API call...");
