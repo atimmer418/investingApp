@@ -1,0 +1,297 @@
+<!-- Modern Survey Interface -->
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-title>{{ currentSurveyType }}</ion-title>
+    <ion-progress-bar [value]="currentQuestion && !currentQuestion.isPaycheckSelectionStep && !currentQuestion.isPercentageQuestion ? ((currentQuestionIndex + 1) / totalQuestionsInActiveSurvey) * 100 / 100 : 1"></ion-progress-bar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="survey-container">
+
+    <!-- Paycheck Selection Step -->
+    <div class="question-wrapper" *ngIf="currentQuestion?.isPaycheckSelectionStep">
+      <div class="page-intro">
+        <h2>Build wealth effortlessly with every paycheck</h2>
+        <p class="helper-text">The most successful investors automate their strategy. Tell us about your main paycheck so we can automatically deduct your investment amount from every future paycheck as soon as it hits your account.</p>
+      </div>
+
+      <div class="loading-state" *ngIf="isLoadingPaychecks">
+        <ion-spinner name="crescent"></ion-spinner>
+        <p class="helper-text">Preparing your personalized investment strategy...</p>
+      </div>
+
+      <div class="error-state" *ngIf="paycheckErrorMessage && !isLoadingPaychecks">
+        <div class="error-message">
+          <ion-note color="danger">{{ paycheckErrorMessage }}</ion-note>
+        </div>
+      </div>
+
+      <!-- <div class="paycheck-list" *ngIf="!isLoadingPaychecks && allPaycheckSources.length > 0"> -->
+        <div class="info-banner">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          <p class="helper-text">Each time you receive income from this source, we'll invest your chosen percentage for consistent wealth building.</p>
+        </div>
+        
+
+      <!-- </div> -->
+
+      <div class="empty-paycheck-state" *ngIf="!isLoadingPaychecks && !hasPrimaryIncome && !showPrimaryIncomeForm">
+        <ion-icon name="wallet-outline"></ion-icon>
+        <h3>Transform Your Paycheck Into Wealth</h3>
+        <p class="helper-text">Connect your income source and start building your investment portfolio automatically with every paycheck.</p>
+        <ion-button 
+          expand="block" 
+          (click)="showPrimaryIncomeEntry()">
+          Set Up Automatic Investing
+        </ion-button>
+      </div>
+
+      <!-- Primary Income Card (Configured) -->
+      <div class="income-card primary-income" *ngIf="hasPrimaryIncome && !showPrimaryIncomeForm" [class.selected]="true">
+        <div class="income-card-content">
+          <div class="income-header">
+            <div class="income-title">
+              <h3>{{ primaryIncomeConfig.name }}</h3>
+              <span class="primary-badge">Primary</span>
+            </div>
+            <ion-button fill="clear" size="small" (click)="editPrimaryIncome()">
+              <ion-icon name="pencil" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+          
+          <div class="income-details">
+            <div class="detail-row">
+              <span class="label">Employer:</span>
+              <span class="value">{{ primaryIncomeConfig.employerName }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Amount:</span>
+              <span class="value">${{ primaryIncomeConfig.approximateAmount | number:'1.0-0' }} {{ primaryIncomeConfig.frequency.toLowerCase() }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Investment:</span>
+              <span class="value investment-highlight">{{ primaryIncomeConfig.investmentPercentage }}% automatic</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Secondary Income Option -->
+        <div class="secondary-option" *ngIf="!hasSecondaryIncome && !showSecondaryIncomeForm">
+          <div class="secondary-prompt">
+            <span>Have another income source?</span>
+            <ion-button fill="clear" size="small" (click)="showSecondaryIncomeEntry()">
+              <ion-icon name="add" slot="start"></ion-icon>
+              Add Secondary
+            </ion-button>
+          </div>
+        </div>
+
+        <!-- Secondary Income Display -->
+        <div class="secondary-income" *ngIf="hasSecondaryIncome && !showSecondaryIncomeForm">
+          <div class="income-header secondary">
+            <div class="income-title">
+              <h4>{{ secondaryIncomeConfig.name }}</h4>
+              <span class="secondary-badge">Secondary</span>
+            </div>
+            <ion-button fill="clear" size="small" (click)="editSecondaryIncome()">
+              <ion-icon name="pencil" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+          
+          <div class="income-details secondary">
+            <div class="detail-row">
+              <span class="label">{{ secondaryIncomeConfig.employerName }}</span>
+              <span class="value">${{ secondaryIncomeConfig.approximateAmount | number:'1.0-0' }} • {{ secondaryIncomeConfig.investmentPercentage }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inline Form (iPhone Style) -->
+      <div class="inline-income-form" *ngIf="showPrimaryIncomeForm || showSecondaryIncomeForm">
+        <div class="form-card">
+          <div class="form-header">
+            <h3>{{ showPrimaryIncomeForm ? 'Primary Income Source' : 'Secondary Income Source' }}</h3>
+            <ion-button fill="clear" size="small" (click)="showPrimaryIncomeForm ? cancelPrimaryIncomeEntry() : cancelSecondaryIncomeEntry()">
+              <ion-icon name="close" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+
+          <div class="form-fields">
+            <div class="field-group">
+              <ion-item lines="none">
+                <ion-input 
+                  [ngModel]="showPrimaryIncomeForm ? primaryIncomeConfig.name : secondaryIncomeConfig.name"
+                  (ngModelChange)="showPrimaryIncomeForm ? (primaryIncomeConfig.name = $event) : (secondaryIncomeConfig.name = $event)"
+                  placeholder="Income source name"
+                  label="Name"
+                  labelPlacement="stacked">
+                </ion-input>
+              </ion-item>
+            </div>
+
+            <div class="field-group">
+              <ion-item lines="none">
+                <ion-input 
+                  [ngModel]="showPrimaryIncomeForm ? primaryIncomeConfig.employerName : secondaryIncomeConfig.employerName"
+                  (ngModelChange)="showPrimaryIncomeForm ? (primaryIncomeConfig.employerName = $event) : (secondaryIncomeConfig.employerName = $event)"
+                  placeholder="Company or employer name"
+                  label="Employer"
+                  labelPlacement="stacked">
+                </ion-input>
+              </ion-item>
+            </div>
+
+            <div class="field-group">
+              <ion-item lines="none">
+                <ion-select 
+                  [ngModel]="showPrimaryIncomeForm ? primaryIncomeConfig.frequency : secondaryIncomeConfig.frequency"
+                  (ngModelChange)="onFrequencyChange($event, showPrimaryIncomeForm)"
+                  label="Frequency"
+                  labelPlacement="stacked">
+                  <ion-select-option value="WEEKLY">Weekly</ion-select-option>
+                  <ion-select-option value="BIWEEKLY">Bi-weekly</ion-select-option>
+                  <ion-select-option value="SEMI_MONTHLY">Twice per month</ion-select-option>
+                  <ion-select-option value="MONTHLY">Monthly</ion-select-option>
+                  <ion-select-option value="IRREGULAR" *ngIf="!showPrimaryIncomeForm">Irregular</ion-select-option>
+                </ion-select>
+              </ion-item>
+            </div>
+
+            <div class="field-group">
+              <ion-item lines="none">
+                <ion-input 
+                  type="number"
+                  [ngModel]="showPrimaryIncomeForm ? primaryIncomeConfig.approximateAmount : secondaryIncomeConfig.approximateAmount"
+                  (ngModelChange)="showPrimaryIncomeForm ? (primaryIncomeConfig.approximateAmount = $event) : (secondaryIncomeConfig.approximateAmount = $event)"
+                  placeholder="2500"
+                  label="Take-home amount"
+                  labelPlacement="stacked">
+                  <div slot="start">$</div>
+                </ion-input>
+              </ion-item>
+            </div>
+
+            <div class="field-group">
+              <ion-item lines="none">
+                <ion-select 
+                  [ngModel]="showPrimaryIncomeForm ? primaryIncomeConfig.accountId : secondaryIncomeConfig.accountId"
+                  (ngModelChange)="showPrimaryIncomeForm ? (primaryIncomeConfig.accountId = $event) : (secondaryIncomeConfig.accountId = $event)"
+                  label="Bank Account"
+                  labelPlacement="stacked">
+                  <ion-select-option 
+                    *ngFor="let account of availableAccounts" 
+                    [value]="account.accountId">
+                    {{ account.name }}
+                  </ion-select-option>
+                </ion-select>
+              </ion-item>
+            </div>
+
+            <div class="percentage-field">
+              <div class="percentage-label">Investment Amount</div>
+              <div class="percentage-control">
+                <div class="percentage-display">${{ userInvestmentAmount | number:'1.0-0' }}</div>
+                <div class="investment-note">From your initial survey</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <ion-button 
+              expand="block"
+              (click)="showPrimaryIncomeForm ? savePrimaryIncomeConfig() : saveSecondaryIncomeConfig()">
+              {{ showPrimaryIncomeForm ? 'Save Primary Income' : 'Save Secondary Income' }}
+            </ion-button>
+          </div>
+        </div>
+      </div>
+
+      <ion-button 
+        expand="block" 
+        (click)="proceedFromPaycheckSelection()" 
+        [disabled]="isLoadingPaychecks">
+        Continue
+      </ion-button>
+    </div>
+
+    <!-- Percentage Setting Step -->
+    <div class="question-wrapper" *ngIf="currentQuestion?.isPercentageQuestion && currentQuestion?.relatedPaycheck">
+      <div class="page-intro">
+        <h2>{{ currentQuestion?.questionText }}</h2>
+        <p class="helper-text">How much of this income source would you like to invest each time you get paid?</p>
+      </div>
+
+      <div class="percentage-container">
+        <div class="paycheck-preview">
+          <div class="paycheck-preview-content">
+            <h3 class="paycheck-preview-name">{{ currentQuestion?.relatedPaycheck?.name }}</h3>
+            <p class="helper-text">Last payment: ${{ currentQuestion?.relatedPaycheck?.lastAmount | number:'1.2-2' }}</p>
+          </div>
+        </div>
+
+        <div class="percentage-selector">
+          <div class="percentage-display">
+            <span class="percentage-value">{{ getDisplayPercentage() }}%</span>
+            <span class="percentage-label">Investment Amount</span>
+          </div>
+          
+          <div class="range-container">
+            <ion-range
+              min="0"
+              max="100"
+              step="5"
+              snaps="true"
+              color="primary"
+              [value]="getDisplayPercentage()"
+              (ionChange)="handlePercentageChange($event)">
+              <ion-label slot="start" class="range-label">0%</ion-label>
+              <ion-label slot="end" class="range-label">100%</ion-label>
+            </ion-range>
+          </div>
+        </div>
+      </div>
+
+      <ion-button 
+        expand="block" 
+        (click)="submitPercentageAndProceed()">
+        Set Percentage & Continue
+      </ion-button>
+    </div>
+
+    <!-- Standard Question Display -->
+    <div class="question-wrapper" *ngIf="currentQuestion && !currentQuestion.isPaycheckSelectionStep && !currentQuestion.isPercentageQuestion">
+      <div class="page-intro">
+        <h2>{{ currentQuestion.questionText }}</h2>
+      </div>
+
+      <div class="options-container">
+        <div class="option-item" 
+             *ngFor="let option of currentQuestion.responseChoices; let i = index"
+             [class.selected]="currentQuestion.answer === option.id"
+             (click)="selectAnswerAndProceed(option.id)">
+          <div class="option-content">
+            <span class="option-text">{{ option.text }}</span>
+            <div class="option-indicator">
+              <ion-icon name="checkmark-circle" *ngIf="currentQuestion.answer === option.id"></ion-icon>
+              <div class="selection-circle" *ngIf="currentQuestion.answer !== option.id"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Navigation Footer -->
+  <div *ngIf="currentQuestion && (!currentQuestion.isPaycheckSelectionStep && !currentQuestion.isPercentageQuestion) && totalQuestionsInActiveSurvey > 1 && currentQuestionIndex > 0">
+    <ion-button 
+      fill="clear" 
+      (click)="previousQuestion()" 
+      [disabled]="currentQuestionIndex === 0">
+      <ion-icon name="chevron-back-outline" slot="start"></ion-icon>
+      Previous
+    </ion-button>
+  </div>
+</ion-content>

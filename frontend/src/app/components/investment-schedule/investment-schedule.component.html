@@ -1,0 +1,157 @@
+<!-- Investment Schedule Page -->
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/survey-initial"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Investment Schedule</ion-title>
+    <ion-progress-bar [value]="0.75"></ion-progress-bar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="investment-schedule-container">
+    
+    <!-- Page Introduction -->
+    <div class="page-intro">
+      <h2>Set Up Your Investment Schedule</h2>
+      <p class="helper-text">
+        We'll automatically invest from your linked checking account based on your pay schedule. 
+        This ensures consistent wealth building without the need to remember manual transfers.
+      </p>
+    </div>
+
+    <!-- Pay Frequency Selection -->
+    <div class="input-section">
+      <div class="section-label">
+        <h3>How often are you paid?</h3>
+        <p class="helper-text">Choose your pay frequency</p>
+      </div>
+      
+      <div class="input-display-wrapper">
+        <ion-select
+          [(ngModel)]="schedule.payFrequency"
+          (ionChange)="onFrequencyChange($event.detail.value)"
+          placeholder="Select your pay frequency"
+          interface="popover">
+          <ion-select-option 
+            *ngFor="let freq of frequencyOptions" 
+            [value]="freq.value">
+            {{ freq.label }}
+          </ion-select-option>
+        </ion-select>
+      </div>
+    </div>
+
+    <!-- Investment Amount -->
+    <div class="input-section">
+      <div class="section-label">
+        <h3>Investment amount</h3>
+        <p class="helper-text">Amount to invest per {{ getSelectedFrequencyDetails()?.label?.toLowerCase() || 'payment' }}</p>
+      </div>
+      
+      <div class="input-display-wrapper">
+        <span class="currency-symbol">$</span>
+        <ion-input
+          type="number"
+          [(ngModel)]="schedule.investmentAmount"
+          (ionBlur)="onAmountChange()"
+          placeholder="0"
+          min="1">
+        </ion-input>
+      </div>
+      
+      <div class="amount-recommendations" *ngIf="monthlyGoal > 0">
+        <p class="helper-text">
+          <ion-icon name="lightbulb-outline"></ion-icon>
+          Recommended: {{ formatCurrency(monthlyGoal / (getSelectedFrequencyDetails()?.paychecksPerMonth || 1)) }} 
+          to meet your monthly goal of {{ formatCurrency(monthlyGoal) }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Investment Projections -->
+    <div class="projections-section" *ngIf="schedule.investmentAmount > 0">
+      <div class="section-label">
+        <h3>Projections</h3>
+        <p class="helper-text">How much you'll invest over time</p>
+      </div>
+      
+      <div class="projection-grid">
+        <div class="projection-item">
+          <div class="projection-value">{{ formatCurrency(getMonthlyProjection()) }}</div>
+          <div class="projection-label">Per Month</div>
+        </div>
+        <div class="projection-item">
+          <div class="projection-value">{{ formatCurrency(getAnnualProjection()) }}</div>
+          <div class="projection-label">Per Year</div>
+        </div>
+      </div>
+      
+      <div class="goal-comparison" *ngIf="monthlyGoal > 0">
+        <p class="helper-text" [class.success-text]="getMonthlyProjection() >= monthlyGoal" [class.warning-text]="getMonthlyProjection() < monthlyGoal">
+          <ion-icon [name]="getMonthlyProjection() >= monthlyGoal ? 'checkmark-circle' : 'warning'"></ion-icon>
+          {{ getMonthlyProjection() >= monthlyGoal ? 'You\'re on track to meet your goal!' : 'Consider increasing to meet your goal (' + formatCurrency(monthlyGoal - getMonthlyProjection()) + ' short)' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Start Date -->
+    <div class="input-section">
+      <div class="section-label">
+        <h3>Start date</h3>
+        <p class="helper-text">When to begin your investment schedule</p>
+      </div>
+      
+      <div class="input-display-wrapper">
+        <ion-input
+          type="date"
+          [(ngModel)]="schedule.startDate"
+          (ionChange)="onStartDateChange($event.detail.value || '')"
+          placeholder="Select start date">
+        </ion-input>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-section" *ngIf="schedule.investmentAmount > 0 && schedule.startDate">
+      <div class="section-label">
+        <h3>Summary</h3>
+        <p class="helper-text">Review your investment schedule</p>
+      </div>
+      
+      <div class="summary-card">
+        <div class="summary-item">
+          <span class="summary-label">Frequency</span>
+          <span class="summary-value">{{ getSelectedFrequencyDetails()?.label }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Amount</span>
+          <span class="summary-value">{{ formatCurrency(schedule.investmentAmount) }} per {{ getSelectedFrequencyDetails()?.label?.toLowerCase() ?? 'period' }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Start Date</span>
+          <span class="summary-value">{{ schedule.startDate | date:'mediumDate' }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Monthly Total</span>
+          <span class="summary-value">{{ formatCurrency(getMonthlyProjection()) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="navigation-controls">
+      <ion-button 
+        expand="block" 
+        [disabled]="!canProceed() || isSubmitting"
+        (click)="goToStockPreferences()">
+        <ion-spinner name="crescent" *ngIf="isSubmitting" slot="start"></ion-spinner>
+        <span *ngIf="!isSubmitting">Continue to Stock Preferences</span>
+        <span *ngIf="isSubmitting">Setting up schedule...</span>
+        <ion-icon name="chevron-forward" slot="end" *ngIf="!isSubmitting"></ion-icon>
+      </ion-button>
+    </div>
+
+  </div>
+</ion-content>

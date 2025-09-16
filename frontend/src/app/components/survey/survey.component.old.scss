@@ -1,0 +1,745 @@
+// Consistent theming with other pages
+:host {
+  --ion-background-color: #f2f2f7;
+  --ion-toolbar-background: var(--ion-background-color);
+  --ion-text-color: #000000;
+  --ion-color-primary: #007aff;
+  --ion-color-medium: #8e8e93;
+  --card-background: #ffffff;
+  --card-border-color: #e5e5ea;
+}
+
+ion-toolbar {
+  --border-width: 0 !important;
+}
+
+ion-progress-bar {
+  height: 3px;
+  --progress-background: var(--ion-color-primary);
+}
+
+.survey-container {
+  padding: 16px;
+}
+
+.page-intro {
+  margin-bottom: 32px;
+  text-align: center;
+
+  h2 {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0 0 8px 0;
+    color: var(--ion-text-color);
+  }
+
+  .helper-text {
+    font-size: 16px;
+    color: var(--ion-color-medium);
+    margin: 0;
+    line-height: 1.4;
+  }
+}
+
+.question-wrapper {
+  margin-bottom: 24px;
+}
+
+// Info banner styling
+.info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background: var(--card-background);
+  border-radius: 12px;
+  border: 1px solid var(--card-border-color);
+
+  ion-icon {
+    color: var(--ion-color-primary);
+    font-size: 20px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .helper-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--ion-color-medium);
+  }
+}
+
+// Empty state styling
+.empty-paycheck-state {
+  text-align: center;
+  padding: 40px 20px;
+  background: var(--card-background);
+  border-radius: 12px;
+  border: 1px solid var(--card-border-color);
+  margin-bottom: 24px;
+
+  ion-icon {
+    font-size: 48px;
+    color: var(--ion-color-medium);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: var(--ion-text-color);
+  }
+
+  .helper-text {
+    font-size: 16px;
+    color: var(--ion-color-medium);
+    margin: 0 0 24px 0;
+    line-height: 1.4;
+  }
+}
+
+// Income card styling (iPhone-like)
+.income-card {
+  background: var(--card-background);
+  border-radius: 12px;
+  border: 2px solid var(--card-border-color);
+  margin-bottom: 24px;
+  overflow: hidden;
+
+  &.selected {
+    border-color: var(--ion-color-primary);
+  }
+
+  .income-card-content {
+    padding: 20px;
+  }
+
+  .income-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+
+    .income-title {
+      flex: 1;
+
+      h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        color: var(--ion-text-color);
+      }
+
+      h4 {
+        font-size: 16px;
+        font-weight: 500;
+        margin: 0 0 4px 0;
+        color: var(--ion-text-color);
+      }
+
+      .primary-badge {
+        background: var(--ion-color-primary);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .secondary-badge {
+        background: var(--ion-color-medium);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+    }
+
+    ion-button {
+      --color: var(--ion-color-medium);
+      margin: 0;
+    }
+
+    &.secondary {
+      margin-bottom: 8px;
+    }
+  }
+
+  .income-details {
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .label {
+        font-size: 15px;
+        color: var(--ion-color-medium);
+        font-weight: 400;
+      }
+
+      .value {
+        font-size: 15px;
+        color: var(--ion-text-color);
+        font-weight: 500;
+        text-align: right;
+
+        &.investment-highlight {
+          color: var(--ion-color-primary);
+          font-weight: 600;
+        }
+      }
+    }
+
+    &.secondary {
+      .detail-row {
+        margin-bottom: 4px;
+
+        .label {
+          font-size: 14px;
+        }
+
+        .value {
+          font-size: 14px;
+        }
+      }
+    }
+  }
+
+  .secondary-option {
+    border-top: 1px solid var(--card-border-color);
+    padding: 16px 20px;
+    background: rgba(0, 122, 255, 0.02);
+
+    .secondary-prompt {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      span {
+        font-size: 15px;
+        color: var(--ion-color-medium);
+        font-weight: 400;
+      }
+
+      ion-button {
+        --color: var(--ion-color-primary);
+        margin: 0;
+        font-size: 14px;
+      }
+    }
+  }
+
+  .secondary-income {
+    border-top: 1px solid var(--card-border-color);
+    padding: 16px 20px;
+    background: rgba(0, 0, 0, 0.01);
+  }
+}
+
+// iPhone-style inline form
+.inline-income-form {
+  .form-card {
+    background: var(--card-background);
+    border-radius: 12px;
+    border: 1px solid var(--card-border-color);
+    margin-bottom: 24px;
+    overflow: hidden;
+
+    .form-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--card-border-color);
+      background: rgba(0, 0, 0, 0.01);
+
+      h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+        color: var(--ion-text-color);
+      }
+
+      ion-button {
+        --color: var(--ion-color-medium);
+        margin: 0;
+      }
+    }
+
+    .form-fields {
+      .field-group {
+        border-bottom: 1px solid var(--card-border-color);
+
+        &:last-of-type {
+          border-bottom: none;
+        }
+
+        ion-item {
+          --background: transparent;
+          --border-width: 0;
+          --inner-border-width: 0;
+          --padding-start: 20px;
+          --padding-end: 20px;
+          --min-height: 56px;
+
+          ion-input, ion-select {
+            --padding-start: 0;
+            --padding-end: 0;
+            font-size: 16px;
+          }
+
+          ion-label {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--ion-color-medium) !important;
+            margin-bottom: 2px !important;
+          }
+        }
+      }
+
+      .percentage-field {
+        padding: 20px;
+        border-bottom: 1px solid var(--card-border-color);
+
+        .percentage-label {
+          font-size: 13px;
+          font-weight: 400;
+          color: var(--ion-color-medium);
+          margin-bottom: 8px;
+        }
+
+        .percentage-control {
+          .percentage-display {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--ion-color-primary);
+            margin-bottom: 12px;
+          }
+
+          .investment-note {
+            text-align: center;
+            font-size: 12px;
+            color: var(--ion-color-medium);
+            font-style: italic;
+            margin-top: 4px;
+          }
+
+          ion-range {
+            --bar-background: #E5E5EA;
+            --bar-background-active: var(--ion-color-primary);
+            --knob-background: var(--ion-color-primary);
+            --knob-size: 28px;
+            --bar-height: 4px;
+          }
+        }
+      }
+    }
+
+    .form-actions {
+      padding: 20px;
+
+      ion-button {
+        --border-radius: 12px;
+        height: 50px;
+        font-size: 16px;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+.progress-text {
+  font-size: 0.8rem;
+  color: var(--ios-text-secondary);
+  font-weight: 500;
+}
+
+// Content & Cards
+.ios-content {
+  --background: var(--ios-bg);
+}
+
+.survey-container {
+  padding: 16px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.survey-card {
+  background: var(--ios-bg-secondary);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 16px var(--ios-shadow);
+  border: 1px solid var(--ios-separator);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.question-title {
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ios-text);
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+}
+
+.question-subtitle {
+  font-size: 1rem;
+  color: var(--ios-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.card-footer {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+// Buttons
+.ios-button {
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 16px 24px;
+  border-radius: 12px;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  &.primary {
+    background: var(--ios-blue);
+    color: white;
+    
+    &:hover { background: #0056CC; }
+    &:active { background: #004BB5; transform: scale(0.98); }
+    &:disabled { background: var(--ios-gray); cursor: not-allowed; }
+  }
+  
+  &.secondary {
+    background: var(--ios-gray-light);
+    color: var(--ios-blue);
+    
+    &:hover { background: #E5E5EA; }
+    &:active { background: #D1D1D6; transform: scale(0.98); }
+  }
+}
+
+// Paycheck Items
+.paycheck-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.paycheck-item {
+  background: var(--ios-bg);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--ios-separator);
+  transition: background 0.2s ease;
+  
+  &:hover { background: #F8F8F8; }
+}
+
+.paycheck-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.paycheck-info {
+  flex: 1;
+}
+
+.paycheck-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ios-text);
+  margin: 0 0 4px 0;
+}
+
+.paycheck-details {
+  font-size: 0.9rem;
+  color: var(--ios-text-secondary);
+  margin: 0 0 4px 0;
+}
+
+.paycheck-frequency {
+  font-size: 0.8rem;
+  color: var(--ios-blue);
+  font-weight: 500;
+  background: rgba(0, 122, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+// Checkbox
+.ios-checkbox {
+  --size: 24px;
+  --checkbox-background-checked: var(--ios-blue);
+  --checkmark-color: white;
+  --border-color-checked: var(--ios-blue);
+  --border-color: var(--ios-gray);
+  --border-radius: 6px;
+  --border-width: 2px;
+}
+
+// Percentage Section
+.percentage-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.paycheck-preview {
+  background: var(--ios-bg);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--ios-separator);
+  text-align: center;
+}
+
+.paycheck-preview-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ios-text);
+  margin: 0 0 4px 0;
+}
+
+.paycheck-preview-amount {
+  font-size: 0.9rem;
+  color: var(--ios-text-secondary);
+  margin: 0;
+}
+
+.percentage-display {
+  text-align: center;
+}
+
+.percentage-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--ios-blue);
+  display: block;
+}
+
+.percentage-label {
+  font-size: 0.9rem;
+  color: var(--ios-text-secondary);
+  font-weight: 500;
+}
+
+.range-container {
+  padding: 0 16px;
+}
+
+.ios-range {
+  --bar-background: var(--ios-gray-light);
+  --bar-background-active: var(--ios-blue);
+  --bar-height: 4px;
+  --knob-background: var(--ios-blue);
+  --knob-size: 28px;
+  --knob-box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+.range-label {
+  font-size: 0.8rem;
+  color: var(--ios-text-secondary);
+  font-weight: 500;
+}
+
+// Options
+.options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.option-item {
+  background: var(--ios-bg);
+  border-radius: 12px;
+  padding: 16px;
+  border: 2px solid var(--ios-separator);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #F8F8F8;
+    border-color: var(--ios-blue);
+  }
+  
+  &.selected {
+    background: rgba(0, 122, 255, 0.08);
+    border-color: var(--ios-blue);
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
+  }
+}
+
+.option-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.option-text {
+  font-size: 1rem;
+  color: var(--ios-text);
+  font-weight: 500;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.option-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.check-icon {
+  font-size: 24px;
+  color: var(--ios-blue);
+}
+
+.selection-circle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ios-gray);
+  border-radius: 50%;
+  background: transparent;
+}
+
+// States
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 0;
+}
+
+.ios-spinner {
+  --color: var(--ios-blue);
+  font-size: 32px;
+}
+
+.loading-text {
+  font-size: 1rem;
+  color: var(--ios-text-secondary);
+  margin: 0;
+}
+
+.error-state {
+  margin-bottom: 24px;
+}
+
+.error-card {
+  background: #FFF2F2;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #FFB3B3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.error-icon {
+  font-size: 24px;
+  color: #FF3333;
+  min-width: 24px;
+}
+
+.error-text {
+  font-size: 0.9rem;
+  color: #CC0000;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 0;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: var(--ios-gray);
+}
+
+.empty-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--ios-text);
+  margin: 0;
+}
+
+.empty-text {
+  font-size: 1rem;
+  color: var(--ios-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+  max-width: 280px;
+}
+
+// Footer
+.ios-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--ios-bg-secondary);
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--ios-separator);
+  backdrop-filter: blur(20px);
+}
+
+// Responsive
+@media (max-width: 375px) {
+  .survey-container { padding: 12px; }
+  .survey-card { padding: 20px; }
+  .question-title { font-size: 1.3rem; }
+  .percentage-value { font-size: 2rem; }
+}
+
+@media (min-width: 768px) {
+  .survey-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  .survey-card { padding: 32px; }
+}

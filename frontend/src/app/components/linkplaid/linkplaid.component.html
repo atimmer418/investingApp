@@ -10,24 +10,24 @@
     
     <!-- Page Introduction -->
     <div class="page-intro">
-      <h2>You're almost there!</h2>
-      <p class="helper-text">Connect your bank account to enable automatic investing. Every time you receive your paycheck, we'll invest your chosen amount—no manual transfers needed.</p>
+      <h2>Connect Your Primary Checking Account</h2>
+      <p class="helper-text">Link the checking account where you receive your income to enable seamless, scheduled investments. We'll help you set up automatic transfers that align with your pay schedule.</p>
     </div>
 
     <!-- Benefits Section -->
     <div class="benefits-section">
       <div class="benefit-features">
         <div class="feature-item">
-          <ion-icon name="sync" class="feature-icon"></ion-icon>
-          <span>Automatic investing from each paycheck</span>
+          <ion-icon name="calendar-outline" class="feature-icon"></ion-icon>
+          <span>Schedule investments based on your pay frequency</span>
         </div>
         <div class="feature-item">
           <ion-icon name="shield-checkmark" class="feature-icon"></ion-icon>
-          <span>Bank-level security with Plaid</span>
+          <span>Bank-level security with 256-bit encryption</span>
         </div>
         <div class="feature-item">
-          <ion-icon name="pause-circle" class="feature-icon"></ion-icon>
-          <span>No paycheck? No investment—it's that simple</span>
+          <ion-icon name="settings-outline" class="feature-icon"></ion-icon>
+          <span>Full control over timing and amounts</span>
         </div>
       </div>
     </div>
@@ -41,13 +41,13 @@
         (click)="openPlaid()" 
         [disabled]="isLoading || !isPlaidReady">
         <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
-        <span *ngIf="!isLoading && isPlaidReady">Connect Your Bank Account</span>
+        <span *ngIf="!isLoading && isPlaidReady">Connect Your Checking Account</span>
         <span *ngIf="!isLoading && !isPlaidReady">Preparing secure connection...</span>
-        <span *ngIf="isLoading">{{ statusMessage || 'Initializing...' }}</span>
+        <span *ngIf="isLoading">{{ statusMessage || 'Establishing secure connection...' }}</span>
       </ion-button>
       
       <p class="connection-note">
-        Your banking credentials are never stored. Powered by Plaid's trusted, encrypted connection.
+        Your account details are encrypted and secure. We only access what's needed to facilitate your investments.
       </p>
     </div>
 
