@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel,
   IonSelect, IonSelectOption, IonInput, IonNote, IonIcon, IonCard, IonCardContent,
@@ -237,6 +237,15 @@ export class InvestmentScheduleComponent implements OnInit {
     return this.schedule.investmentAmount > 0 && this.schedule.startDate !== '';
   }
 
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('jwtToken');
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  }
+
   goToStockPreferences(): void {
     console.log('[InvestmentScheduleComponent] Proceeding to stock preferences with schedule:', this.schedule);
     this.isSubmitting = true;
@@ -252,7 +261,7 @@ export class InvestmentScheduleComponent implements OnInit {
     console.log('[InvestmentScheduleComponent] Sending investment schedule to backend:', investmentScheduleData);
 
     // Save investment schedule to backend API
-    this.http.post<InvestmentScheduleResponse>(`${environment.backendApiUrl}/investment-schedule/create`, investmentScheduleData)
+    this.http.post<InvestmentScheduleResponse>(`${environment.backendApiUrl}/investment-schedule/create`, investmentScheduleData, { headers: this.getAuthHeaders() })
       .subscribe({
         next: (response) => {
           console.log('[InvestmentScheduleComponent] ✅ Investment schedule saved successfully:', response);

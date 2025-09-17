@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
@@ -312,6 +312,15 @@ export class InvestmentConfirmationComponent implements OnInit {
     }
   }
 
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('jwtToken');
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  }
+
   private async showSuccess(message: string): Promise<void> {
     const toast = await this.toastController.create({
       message,
@@ -359,7 +368,8 @@ export class InvestmentConfirmationComponent implements OnInit {
 
       const response = await this.http.post<any>(
         `${environment.backendApiUrl}/investment-schedule/update-ach-request-id`,
-        requestData
+        requestData,
+        { headers: this.getAuthHeaders() }
       ).toPromise();
 
       if (response && response.success) {
