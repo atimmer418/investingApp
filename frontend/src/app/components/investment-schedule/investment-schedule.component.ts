@@ -10,6 +10,7 @@ import {
 } from '@ionic/angular/standalone';
 
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface InvestmentSchedule {
   payFrequency: string;
@@ -251,7 +252,7 @@ export class InvestmentScheduleComponent implements OnInit {
     console.log('[InvestmentScheduleComponent] Sending investment schedule to backend:', investmentScheduleData);
 
     // Save investment schedule to backend API
-    this.http.post<InvestmentScheduleResponse>('http://localhost:8080/api/investment-schedule/create', investmentScheduleData)
+    this.http.post<InvestmentScheduleResponse>(`${environment.backendApiUrl}/investment-schedule/create`, investmentScheduleData)
       .subscribe({
         next: (response) => {
           console.log('[InvestmentScheduleComponent] ✅ Investment schedule saved successfully:', response);

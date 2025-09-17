@@ -43,16 +43,19 @@ public class InvestmentScheduleService {
             logger.info("Paused existing investment schedule with ID: {}", schedule.getId());
         }
         
-        // Create new investment schedule
-        InvestmentSchedule newSchedule = new InvestmentSchedule(user, monthlyAmount, frequency);
-        newSchedule.setTargetPortfolio(targetPortfolio);
-        newSchedule.setTimeToFI(timeToFI);
-        
-        InvestmentSchedule savedSchedule = investmentScheduleRepository.save(newSchedule);
-        logger.info("Successfully created investment schedule with ID: {} for user: {}", 
-                   savedSchedule.getId(), user.getEmail());
-        
-        return savedSchedule;
+    // Create new investment schedule
+    InvestmentSchedule newSchedule = new InvestmentSchedule();
+    newSchedule.setUser(user);
+    newSchedule.setMonthlyAmount(monthlyAmount);
+    newSchedule.setFrequency(frequency);
+    newSchedule.setTargetPortfolio(targetPortfolio);
+    newSchedule.setTimeToFI(timeToFI);
+    newSchedule.setIsPaused(true); // Always start paused until ACH is confirmed
+
+    InvestmentSchedule savedSchedule = investmentScheduleRepository.save(newSchedule);
+    logger.info("Successfully created investment schedule with ID: {} for user: {}", 
+           savedSchedule.getId(), user.getEmail());
+    return savedSchedule;
     }
     
     /**
@@ -69,14 +72,14 @@ public class InvestmentScheduleService {
             throw new RuntimeException("No investment schedule found for user");
         }
         
-        InvestmentSchedule schedule = scheduleOpt.get();
-        schedule.setAchRequestId(achRequestId);
-        
-        InvestmentSchedule updatedSchedule = investmentScheduleRepository.save(schedule);
-        logger.info("Successfully updated investment schedule ID: {} with ACH request ID: {}", 
-                   updatedSchedule.getId(), achRequestId);
-        
-        return updatedSchedule;
+    InvestmentSchedule schedule = scheduleOpt.get();
+    schedule.setAchRequestId(achRequestId);
+    schedule.setIsPaused(false); // Unpause when ACH is confirmed
+
+    InvestmentSchedule updatedSchedule = investmentScheduleRepository.save(schedule);
+    logger.info("Successfully updated investment schedule ID: {} with ACH request ID: {} and unpaused it", 
+           updatedSchedule.getId(), achRequestId);
+    return updatedSchedule;
     }
     
     /**
