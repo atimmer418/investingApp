@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
@@ -9,6 +10,12 @@ import {
 import { AlpacaService, CreateAccountRequest } from '../../services/alpaca.service';
 import { AuthService } from '../../services/auth.service'; // For user authentication data
 import { PlaidDataService } from '../../services/plaid-data.service';
+import { environment } from '../../../environments/environment';
+
+interface UpdateAchRequestIdRequest {
+  userEmail: string;
+  achRequestId: string;
+}
 
 @Component({
   selector: 'app-investmentconfirmation',
@@ -36,7 +43,8 @@ export class InvestmentConfirmationComponent implements OnInit {
     private alpacaService: AlpacaService,
     private toastController: ToastController,
     private authService: AuthService,
-    private plaidDataService: PlaidDataService
+    private plaidDataService: PlaidDataService,
+    private http: HttpClient
   ) {}
 
   ngOnInit() {
@@ -266,6 +274,11 @@ export class InvestmentConfirmationComponent implements OnInit {
       if (achResult && !achResult.error) {
         console.log('✅ ACH relationship created successfully:', achResult);
         
+        // Update investment schedule with ACH request ID
+        if (achResult.id) {
+          await this.updateInvestmentScheduleWithAchId(achResult.id);
+        }
+        
         const toast = await this.toastController.create({
           message: 'Bank account linked successfully! You can now fund your investment account.',
           duration: 3000,
@@ -324,5 +337,39 @@ export class InvestmentConfirmationComponent implements OnInit {
       color: 'danger'
     });
     await toast.present();
+  }
+
+  /**
+   * Update the investment schedule with the ACH request ID after successful account creation
+   */
+  private async updateInvestmentScheduleWithAchId(achRequestId: string): Promise<void> {
+    try {
+      const userEmail = this.authService.getCurrentUserEmail();
+      if (!userEmail) {
+        console.warn('Cannot update investment schedule: user email not found');
+        return;
+      }
+
+      const requestData: UpdateAchRequestIdRequest = {
+        userEmail,
+        achRequestId
+      };
+
+      console.log('Updating investment schedule with ACH request ID:', achRequestId);
+
+      const response = await this.http.post<any>(
+        `${environment.backendApiUrl}/investment-schedule/update-ach-request-id`,
+        requestData
+      ).toPromise();
+
+      if (response && response.success) {
+        console.log('Investment schedule updated successfully with ACH request ID');
+      } else {
+        console.warn('Failed to update investment schedule with ACH request ID:', response);
+      }
+    } catch (error) {
+      console.error('Error updating investment schedule with ACH request ID:', error);
+      // Don't throw error as this shouldn't block the user flow
+    }
   }
 }

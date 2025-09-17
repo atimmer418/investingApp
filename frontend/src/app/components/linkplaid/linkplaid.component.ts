@@ -159,8 +159,8 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
           this.statusMessage = 'Bank account linked successfully!';
           this.isLoading = false;
           localStorage.setItem('linkplaidCompleted', 'true'); // Set your flag
-          // Navigate to the next step for authenticated users (e.g., investment survey)
-          this.router.navigate(['/survey'], { queryParams: { stage: 'investmentSetup' }, replaceUrl: true });
+          // Navigate to the investment schedule setup
+          this.router.navigate(['/investment-schedule'], { replaceUrl: true });
         }),
         catchError(err => {
           this.isLoading = false;
