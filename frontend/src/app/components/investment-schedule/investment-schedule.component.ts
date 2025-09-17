@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel,
   IonSelect, IonSelectOption, IonInput, IonNote, IonIcon, IonCard, IonCardContent,
@@ -15,6 +16,25 @@ export interface InvestmentSchedule {
   investmentAmount: number;
   startDate: string;
   isEnabled: boolean;
+}
+
+export interface CreateInvestmentScheduleRequest {
+  monthlyAmount: number;
+  frequency: string;
+  targetPortfolio?: number;
+  timeToFI?: number;
+}
+
+export interface InvestmentScheduleResponse {
+  id: number;
+  monthlyAmount: number;
+  frequency: string;
+  targetPortfolio?: number;
+  timeToFI?: number;
+  achRequestId?: string;
+  isPaused: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 @Component({
@@ -39,7 +59,8 @@ export class InvestmentScheduleComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private http: HttpClient
   ) {}
 
   // Investment schedule configuration
@@ -219,13 +240,32 @@ export class InvestmentScheduleComponent implements OnInit {
     console.log('[InvestmentScheduleComponent] Proceeding to stock preferences with schedule:', this.schedule);
     this.isSubmitting = true;
 
-    // TODO: Save investment schedule to backend API
-    // For now, simulate API call
-    setTimeout(() => {
-      this.isSubmitting = false;
-      // Navigate to stock preference selection (survey with just stock question)
-      this.router.navigate(['/survey']);
-    }, 1000);
+    // Prepare data for backend
+    const investmentScheduleData: CreateInvestmentScheduleRequest = {
+      monthlyAmount: this.schedule.investmentAmount,
+      frequency: this.schedule.payFrequency,
+      targetPortfolio: this.targetPortfolio,
+      timeToFI: this.timeToFI
+    };
+
+    console.log('[InvestmentScheduleComponent] Sending investment schedule to backend:', investmentScheduleData);
+
+    // Save investment schedule to backend API
+    this.http.post<InvestmentScheduleResponse>('http://localhost:8080/api/investment-schedule/create', investmentScheduleData)
+      .subscribe({
+        next: (response) => {
+          console.log('[InvestmentScheduleComponent] ✅ Investment schedule saved successfully:', response);
+          this.isSubmitting = false;
+          // Navigate to stock preference selection (survey with just stock question)
+          this.router.navigate(['/survey']);
+        },
+        error: (error) => {
+          console.error('[InvestmentScheduleComponent] ❌ Error saving investment schedule:', error);
+          this.isSubmitting = false;
+          // Show error message to user
+          alert('Error saving investment schedule. Please try again.');
+        }
+      });
   }
 
   formatCurrency(amount: number): string {
