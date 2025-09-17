@@ -90,6 +90,14 @@ public class InvestmentScheduleController {
                         .body(new MessageResponse("User not authenticated"));
             }
             
+            // Validate that the userEmail in request matches the authenticated user
+            if (!user.getEmail().equals(request.getUserEmail())) {
+                logger.warn("User email mismatch: authenticated user {} vs request user {}", 
+                           user.getEmail(), request.getUserEmail());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new MessageResponse("User email mismatch"));
+            }
+            
             logger.info("Updating ACH request ID: {} for user: {}", 
                        request.getAchRequestId(), user.getEmail());
             

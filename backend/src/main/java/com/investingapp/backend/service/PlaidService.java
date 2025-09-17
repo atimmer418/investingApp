@@ -51,7 +51,7 @@ public class PlaidService {
     public LinkTokenCreateResponse createLinkTokenForAuthenticatedUser(String clientUserId) throws IOException {
         logger.info("Creating Plaid Link token for authenticated user ID: {}", clientUserId);
         LinkTokenCreateRequestUser user = new LinkTokenCreateRequestUser().clientUserId(clientUserId);
-        List<Products> products = Arrays.asList(Products.AUTH, Products.TRANSACTIONS);
+        List<Products> products = Arrays.asList(Products.AUTH, Products.IDENTITY);
         List<CountryCode> countryCodes = Arrays.asList(CountryCode.US);
 
         LinkTokenCreateRequest request = new LinkTokenCreateRequest()
@@ -67,7 +67,7 @@ public class PlaidService {
             logger.error("Plaid Link Token creation failed: {} - {}", response.code(), errorBody);
             throw new IOException("Plaid Link Token creation failed: " + errorBody);
         }
-        logger.info("Successfully created Link token with TRANSACTIONS product");
+        logger.info("Successfully created Link token with AUTH and IDENTITY products");
         return response.body();
     }
 

@@ -10,6 +10,7 @@ import {
 import { AlpacaService, CreateAccountRequest } from '../../services/alpaca.service';
 import { AuthService } from '../../services/auth.service'; // For user authentication data
 import { PlaidDataService } from '../../services/plaid-data.service';
+import { environment } from '../../../environments/environment';
 
 interface UpdateAchRequestIdRequest {
   userEmail: string;
@@ -357,7 +358,7 @@ export class InvestmentConfirmationComponent implements OnInit {
       console.log('Updating investment schedule with ACH request ID:', achRequestId);
 
       const response = await this.http.post<any>(
-        '/api/investment-schedule/update-ach-request-id',
+        `${environment.backendApiUrl}/investment-schedule/update-ach-request-id`,
         requestData
       ).toPromise();
 

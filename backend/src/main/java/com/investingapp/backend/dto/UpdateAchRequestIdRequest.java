@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UpdateAchRequestIdRequest {
     
+    @NotBlank(message = "User email is required")
+    private String userEmail;
+    
     @NotBlank(message = "ACH request ID is required")
     private String achRequestId;
     
