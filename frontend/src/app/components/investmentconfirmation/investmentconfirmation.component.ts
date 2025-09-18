@@ -372,8 +372,8 @@ export class InvestmentConfirmationComponent implements OnInit {
         { headers: this.getAuthHeaders() }
       ).toPromise();
 
-      if (response && response.success) {
-        console.log('Investment schedule updated successfully with ACH request ID');
+      if (response && response.id) {
+        console.log('Investment schedule updated successfully with ACH request ID:', response);
       } else {
         console.warn('Failed to update investment schedule with ACH request ID:', response);
       }
