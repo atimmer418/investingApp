@@ -42,7 +42,7 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // localStorage.clear();
+    localStorage.clear();
     console.log('[AppComponent] ngOnInit - Setting up authentication and progress tracking.');
     
     // 🧪 SIMULATE EXISTING USER - Login as any user from your database
@@ -54,7 +54,7 @@ export class AppComponent implements OnInit {
     // this.simulateUserLogin('test@test.com');              // Login as different user
     
     // OR navigate directly to any page for testing (bypasses auth entirely):
-    this.router.navigate(['/investment-schedule'], { replaceUrl: true });
+    this.router.navigate(['/confirm-investment'], { replaceUrl: true });
     // this.router.navigate(['/manual-stock-selection'], { replaceUrl: true });
     // this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
     
@@ -135,13 +135,13 @@ export class AppComponent implements OnInit {
     let decisionReason: string = "";
 
     if (!initialSurveyCompleted) {
-      targetRoute = '/survey';
+      targetRoute = '/initial-survey';
       decisionReason = "Initial survey NOT complete.";
     } else if (!linkplaidCompleted) {
       targetRoute = '/link-bank';
       decisionReason = "Initial survey complete, Plaid linking NOT complete.";
     } else if (!investmentSurveyCompleted) {
-      targetRoute = '/survey';
+      targetRoute = '/confirm-investment';
       decisionReason = "Plaid linked, Investment setup survey NOT complete.";
     } else if (choseToPickStocks && !stockSelectionCompleted) {
       targetRoute = '/manual-stock-selection';
@@ -205,13 +205,13 @@ export class AppComponent implements OnInit {
       targetRoute = '/get-started';
       decisionReason = "Get Started NOT complete.";
     } else if (!initialSurveyCompleted) {
-      targetRoute = '/survey';
+      targetRoute = '/initial-survey';
       decisionReason = "Initial survey NOT complete.";
     } else if (!linkplaidCompleted) {
       targetRoute = '/link-bank';
       decisionReason = "Initial survey complete, Plaid linking NOT complete.";
     } else if (!investmentSurveyCompleted) {
-      targetRoute = '/survey';
+      targetRoute = '/confirm-investment';
       decisionReason = "Plaid linked, Investment setup survey NOT complete.";
     } else if (choseToPickStocks && !stockSelectionActualCompletion) {
       targetRoute = '/stock-selection';
