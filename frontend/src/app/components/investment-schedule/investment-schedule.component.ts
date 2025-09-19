@@ -485,8 +485,8 @@ export class InvestmentScheduleComponent implements OnInit {
         next: (response) => {
           console.log('[InvestmentScheduleComponent] ✅ Investment schedule saved successfully:', response);
           this.isSubmitting = false;
-          // Navigate to stock preference selection (survey with just stock question)
-          this.router.navigate(['/survey']);
+          // Navigate to investment confirmation instead of survey
+          this.router.navigate(['/confirm-investment']);
         },
         error: (error) => {
           console.error('[InvestmentScheduleComponent] ❌ Error saving investment schedule:', error);

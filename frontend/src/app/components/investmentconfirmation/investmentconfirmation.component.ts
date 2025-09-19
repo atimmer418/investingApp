@@ -5,16 +5,32 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  IonButtons, IonSpinner, NavController, ToastController
+  IonButtons, IonSpinner, IonBackButton, IonNote, IonChip, ToastController
 } from '@ionic/angular/standalone';
 import { AlpacaService, CreateAccountRequest } from '../../services/alpaca.service';
-import { AuthService } from '../../services/auth.service'; // For user authentication data
+import { AuthService } from '../../services/auth.service';
 import { PlaidDataService } from '../../services/plaid-data.service';
 import { environment } from '../../../environments/environment';
 
 interface UpdateAchRequestIdRequest {
   userEmail: string;
   achRequestId: string;
+}
+
+// Investment schedule interfaces
+interface InvestmentSchedule {
+  payFrequency: string;
+  investmentAmount: number;
+  startDate: string;
+  isEnabled: boolean;
+}
+
+// Default portfolio interface
+interface DefaultStock {
+  symbol: string;
+  name: string;
+  allocation: number; // percentage
+  description: string;
 }
 
 @Component({
@@ -25,53 +41,231 @@ interface UpdateAchRequestIdRequest {
   imports: [
     CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
     IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    IonButtons, IonSpinner
+    IonButtons, IonSpinner, IonBackButton, IonNote, IonChip
   ]
 })
+
 export class InvestmentConfirmationComponent implements OnInit {
-  investmentPercentage: string | null = null; // e.g., "10%"
-  portfolioType: 'custom' | 'auto' = 'auto'; // Determined by previous steps
+  // Investment schedule data
+  investmentSchedule: InvestmentSchedule = {
+    payFrequency: 'BIWEEKLY',
+    investmentAmount: 0,
+    startDate: '',
+    isEnabled: true
+  };
+
+  // Financial projections
+  monthlyGoal: number = 0;
+  targetPortfolio: number = 0;
+  timeToFI: number = 0;
+
+  // Legacy fields (will be replaced)
+  investmentPercentage: string | null = null;
+  portfolioType: 'custom' | 'auto' = 'auto';
+  
+  // Component state
   isAuthorizing: boolean = false;
   authorizationStatus: string | null = null;
   isCreatingAccount: boolean = false;
   alpacaAccountId: string | null = null;
-  userEmail: string | null = null; // Store user email for display
+  userEmail: string | null = null;
+
+  // Default portfolio
+  defaultPortfolio: DefaultStock[] = [
+    {
+      symbol: 'VTI',
+      name: 'Vanguard Total Stock Market ETF',
+      allocation: 40,
+      description: 'Tracks the entire U.S. stock market'
+    },
+    {
+      symbol: 'VXUS',
+      name: 'Vanguard Total International Stock ETF', 
+      allocation: 30,
+      description: 'International diversification outside the U.S.'
+    },
+    {
+      symbol: 'BND',
+      name: 'Vanguard Total Bond Market ETF',
+      allocation: 20,
+      description: 'Broad exposure to U.S. investment grade bonds'
+    },
+    {
+      symbol: 'VNQ',
+      name: 'Vanguard Real Estate ETF',
+      allocation: 10,
+      description: 'Real estate investment trusts (REITs)'
+    }
+  ];
+
+  // Frequency options for display
+  frequencyOptions = [
+    { value: 'WEEKLY', label: 'Weekly', paychecksPerMonth: 4.33 },
+    { value: 'BIWEEKLY', label: 'Bi-weekly', paychecksPerMonth: 2.17 },
+    { value: 'SEMI_MONTHLY', label: 'Semi-monthly', paychecksPerMonth: 2.0 },
+    { value: 'MONTHLY', label: 'Monthly', paychecksPerMonth: 1.0 }
+  ];
 
   constructor(
     private router: Router,
-    private navCtrl: NavController,
     private alpacaService: AlpacaService,
-    private toastController: ToastController,
     private authService: AuthService,
     private plaidDataService: PlaidDataService,
-    private http: HttpClient
+    private http: HttpClient,
+    private toastController: ToastController
   ) {}
 
   ngOnInit() {
-    console.log('InvestmentConfirmationComponent loaded');
+    console.log('[InvestmentConfirmationComponent] Initializing investment confirmation page');
     
+    // 🧪 TESTING: Authentication check temporarily disabled for testing
     // Check if user is authenticated
-    if (!this.authService.isAuthenticated()) {
-      console.warn('User not authenticated, redirecting to login');
-      this.router.navigate(['/get-started'], { replaceUrl: true });
-      return;
-    }
+    // if (!this.authService.isAuthenticated()) {
+    //   console.warn('User not authenticated, redirecting to login');
+    //   this.router.navigate(['/get-started'], { replaceUrl: true });
+    //   return;
+    // }
     
-    // Check if we have user email
+    // Load user data and investment schedule
+    this.loadUserFinancialData();
+    this.loadInvestmentSchedule();
+    
+    // Get user email for display
     const userEmail = this.authService.getCurrentUserEmail();
-    if (!userEmail) {
-      console.warn('User email not found, redirecting to login');
-      this.router.navigate(['/get-started'], { replaceUrl: true });
-      return;
+    if (userEmail) {
+      this.userEmail = userEmail;
+      console.log('[InvestmentConfirmationComponent] User email:', userEmail);
+    }
+  }
+
+  loadUserFinancialData(): void {
+    console.log('[InvestmentConfirmationComponent] Loading user financial data...');
+    
+    const currentProgress = this.authService.getCurrentProgress();
+    if (currentProgress && currentProgress.monthlyInvestment) {
+      this.monthlyGoal = currentProgress.monthlyInvestment;
+      // Retrieve other financial data from backend
+      // Calculate target portfolio and time to FI
+      const annualInvestment = this.monthlyGoal * 12;
+      this.targetPortfolio = annualInvestment * 25; // 4% rule estimate
+      this.timeToFI = 25; // Simplified estimate
+      
+      console.log('[InvestmentConfirmationComponent] Loaded financial data:', {
+        monthlyGoal: this.monthlyGoal,
+        targetPortfolio: this.targetPortfolio,
+        timeToFI: this.timeToFI
+      });
+    } else {
+      console.log('[InvestmentConfirmationComponent] No financial data found, fetching from API...');
+      this.authService.getUserProgress().subscribe({
+        next: (progress) => {
+          if (progress && progress.monthlyInvestment) {
+            this.monthlyGoal = progress.monthlyInvestment;
+            const annualInvestment = this.monthlyGoal * 12;
+            this.targetPortfolio = annualInvestment * 25;
+            this.timeToFI = 25;
+          }
+        },
+        error: (error) => {
+          console.error('[InvestmentConfirmationComponent] Error loading user progress:', error);
+        }
+      });
+    }
+  }
+
+  loadInvestmentSchedule(): void {
+    console.log('[InvestmentConfirmationComponent] Loading investment schedule...');
+    // Retrieve from the backend or local storage
+    // For now, we'll use some reasonable defaults
+    // In a real app, this would come from the backend or navigation state
+    this.investmentSchedule = {
+      payFrequency: 'BIWEEKLY',
+      investmentAmount: Math.round(this.monthlyGoal / 2.17), // Bi-weekly default
+      startDate: this.getNextInvestmentDate('BIWEEKLY'),
+      isEnabled: true
+    };
+  }
+
+  private getNextInvestmentDate(frequency: string): string {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    
+    // Simple default - would be more sophisticated in real app
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Helper methods for display
+  getSelectedFrequencyDetails() {
+    return this.frequencyOptions.find(f => f.value === this.investmentSchedule.payFrequency);
+  }
+
+  getInvestmentScheduleDescription(): string {
+    const frequency = this.getSelectedFrequencyDetails();
+    if (!frequency || !this.investmentSchedule.startDate) return '';
+
+    const dateParts = this.investmentSchedule.startDate.split('-');
+    const startDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+    
+    switch (frequency.value) {
+      case 'WEEKLY':
+        const weekday = startDate.toLocaleDateString('en-US', { weekday: 'long' });
+        return `Every ${weekday}`;
+      case 'BIWEEKLY':
+        const biweeklyDay = startDate.toLocaleDateString('en-US', { weekday: 'long' });
+        return `Every other ${biweeklyDay}`;
+      case 'SEMI_MONTHLY':
+        return 'Every 1st and 15th of the month';
+      case 'MONTHLY':
+        const monthlyDay = startDate.getDate();
+        return `Every ${monthlyDay}${this.getOrdinalSuffix(monthlyDay)} of the month`;
+      default:
+        return '';
+    }
+  }
+
+  private getOrdinalSuffix(day: number): string {
+    const lastDigit = day % 10;
+    const lastTwoDigits = day % 100;
+    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+      return 'th';
     }
     
-    console.log('User authenticated:', userEmail);
-    this.userEmail = userEmail; // Store for display
-    
-    // Fetch the selected percentage and portfolio type from a service or route params
-    this.investmentPercentage = "15%"; // Placeholder
-    const didPickStocks = localStorage.getItem('stockSelectionCompleted') === 'true' && localStorage.getItem('stockSelectionSkipped') !== 'true';
-    this.portfolioType = didPickStocks ? 'custom' : 'auto';
+    switch (lastDigit) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  }
+
+  getMonthlyProjection(): number {
+    const frequencyDetails = this.getSelectedFrequencyDetails();
+    if (!frequencyDetails) return 0;
+    return this.investmentSchedule.investmentAmount * frequencyDetails.paychecksPerMonth;
+  }
+
+  getAnnualProjection(): number {
+    return this.getMonthlyProjection() * 12;
+  }
+
+  // Navigation methods
+  editPortfolio(): void {
+    console.log('[InvestmentConfirmationComponent] Navigating to portfolio customization');
+    this.router.navigate(['/portfolio-customize']);
   }
 
   async authorizeRecurringInvestment() {

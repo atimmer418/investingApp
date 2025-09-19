@@ -1,12 +1,6 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  // src/app/app.routes.ts
-  // ... other routes
-  // {
-  //   path: 'setup-2fa',
-  //   loadComponent: () => import('./components/twofactorsetup/twofactorsetup.component').then(m => m.TwoFactorSetupComponent)
-  // },
   {
     path: 'survey-initial',
     loadComponent: () => import('./components/surveyinitial/surveyinitial.component').then(m => m.SurveyInitialComponent)
@@ -42,9 +36,8 @@ export const routes: Routes = [
     loadComponent: () => import('./components/investment-schedule/investment-schedule.component').then(m => m.InvestmentScheduleComponent)
   },
   {
-    path: 'survey',
-    loadComponent: () => import('./components/survey/survey.component').then(m => m.SurveyComponent)
-    // You could add a canActivate guard here if needed later
+    path: 'portfolio-customize',
+    loadComponent: () => import('./components/portfolio-customize/portfolio-customize.component').then(m => m.PortfolioCustomizeComponent)
   },
   {
     path: 'get-started',

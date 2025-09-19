@@ -1,0 +1,211 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/confirm-investment"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Customize Portfolio</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="container">
+    <!-- Header -->
+    <div class="header-section">
+      <h1>Build Your Portfolio</h1>
+      <p class="subtitle">Customize your investment mix to match your goals and risk tolerance</p>
+    </div>
+
+    <!-- Why Default Portfolio Card -->
+    <ion-card class="info-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="bulb-outline" color="warning"></ion-icon>
+          Why We Recommend This Portfolio
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>Our default portfolio is designed by financial experts to provide:</p>
+        <ul class="benefit-list">
+          <li><strong>Diversification:</strong> Spread risk across different asset classes</li>
+          <li><strong>Low Costs:</strong> Index funds with minimal expense ratios</li>
+          <li><strong>Global Exposure:</strong> Both domestic and international markets</li>
+          <li><strong>Balanced Growth:</strong> Mix of stocks, bonds, and real estate</li>
+        </ul>
+        <ion-note>
+          <ion-icon name="information-circle-outline"></ion-icon>
+          This allocation follows modern portfolio theory and is suitable for most long-term investors.
+        </ion-note>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Current Portfolio -->
+    <ion-card class="portfolio-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="pie-chart-outline" color="primary"></ion-icon>
+          Your Portfolio
+          <ion-chip [color]="isValidAllocation() ? 'success' : 'danger'" class="total-chip">
+            {{ getTotalAllocation() }}%
+          </ion-chip>
+        </ion-card-title>
+        <ion-note *ngIf="!isValidAllocation()" color="danger">
+          Allocations must add up to 100%
+        </ion-note>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-reorder-group [disabled]="false" (ionItemReorder)="reorderStocks($event)">
+          <ion-item-sliding *ngFor="let stock of portfolio">
+            <ion-item>
+              <ion-reorder slot="start"></ion-reorder>
+              <ion-label>
+                <h3>{{ stock.symbol }}</h3>
+                <p class="stock-name">{{ stock.name }}</p>
+                <ion-note>{{ stock.description }}</ion-note>
+              </ion-label>
+              
+              <div class="allocation-controls" slot="end">
+                <ion-range
+                  [min]="1"
+                  [max]="100"
+                  [value]="stock.allocation"
+                  [pin]="true"
+                  [pinFormatter]="pinFormatter"
+                  (ionChange)="updateAllocation(stock, $event)"
+                  color="primary">
+                </ion-range>
+                <ion-text class="allocation-text">{{ stock.allocation }}%</ion-text>
+              </div>
+            </ion-item>
+            
+            <ion-item-options side="end">
+              <ion-item-option color="danger" (click)="removeStock(stock)">
+                <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+              </ion-item-option>
+            </ion-item-options>
+          </ion-item-sliding>
+        </ion-reorder-group>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Add Popular Stocks -->
+    <ion-card class="add-stocks-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="add-circle-outline" color="secondary"></ion-icon>
+          Popular Investments
+        </ion-card-title>
+        <ion-note>Tap to add to your portfolio</ion-note>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="popular-stocks">
+          <div 
+            class="stock-chip" 
+            *ngFor="let stock of popularStocks"
+            (click)="addPopularStock(stock)"
+            [class.disabled]="isStockInPortfolio(stock)">
+            <div class="stock-info">
+              <span class="symbol">{{ stock.symbol }}</span>
+              <span class="name">{{ stock.name }}</span>
+            </div>
+            <ion-icon 
+              [name]="getStockIconName(stock)"
+              [color]="getStockIconColor(stock)">
+            </ion-icon>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Add Custom Stock -->
+    <ion-card class="custom-stock-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="search-outline" color="tertiary"></ion-icon>
+          Add Custom Stock
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-button 
+          fill="outline" 
+          expand="block" 
+          color="primary"
+          (click)="toggleAddStock()">
+          <ion-icon name="add" slot="start"></ion-icon>
+          Add Custom Stock
+        </ion-button>
+        
+        <div class="add-stock-form" *ngIf="showAddStock">
+          <ion-item>
+            <ion-label position="stacked">Stock Symbol</ion-label>
+            <ion-input 
+              [(ngModel)]="newStock.symbol" 
+              placeholder="e.g. AAPL, TSLA"
+              style="text-transform: uppercase;">
+            </ion-input>
+          </ion-item>
+          
+          <ion-item>
+            <ion-label position="stacked">Initial Allocation (%)</ion-label>
+            <ion-range
+              [min]="1"
+              [max]="50"
+              [value]="newStock.allocation"
+              [pin]="true"
+              [pinFormatter]="pinFormatter"
+              (ionChange)="updateNewStockAllocation($event)"
+              color="primary">
+            </ion-range>
+            <ion-text slot="end">{{ newStock.allocation }}%</ion-text>
+          </ion-item>
+          
+          <div class="form-buttons">
+            <ion-button 
+              size="small" 
+              color="primary" 
+              (click)="addCustomStock()"
+              [disabled]="!isNewStockValid()">
+              Add Stock
+            </ion-button>
+            <ion-button 
+              size="small" 
+              fill="clear" 
+              color="medium" 
+              (click)="hideAddStock()">
+              Cancel
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <ion-button 
+        expand="block" 
+        size="large" 
+        color="primary"
+        (click)="savePortfolio()"
+        [disabled]="!isValidAllocation()">
+        <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+        Save Portfolio
+      </ion-button>
+      
+      <ion-button 
+        expand="block" 
+        fill="outline" 
+        color="warning"
+        (click)="resetToDefault()">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon>
+        Reset to Default
+      </ion-button>
+      
+      <ion-button 
+        fill="clear" 
+        color="medium" 
+        expand="block"
+        (click)="cancel()">
+        Cancel
+      </ion-button>
+    </div>
+  </div>
+</ion-content>
