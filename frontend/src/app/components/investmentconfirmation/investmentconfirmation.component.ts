@@ -4,8 +4,8 @@ import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
-  IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  IonButtons, IonSpinner, IonBackButton, IonNote, IonChip, ToastController
+  IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
+  IonButtons, IonBackButton, IonNote, ToastController
 } from '@ionic/angular/standalone';
 import { AlpacaService, CreateAccountRequest } from '../../services/alpaca.service';
 import { AuthService } from '../../services/auth.service';
@@ -40,8 +40,8 @@ interface DefaultStock {
   standalone: true,
   imports: [
     CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
-    IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    IonButtons, IonSpinner, IonBackButton, IonNote, IonChip
+    IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
+    IonButtons, IonBackButton, IonNote
   ]
 })
 

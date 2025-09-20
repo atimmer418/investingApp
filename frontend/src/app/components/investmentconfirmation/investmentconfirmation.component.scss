@@ -63,14 +63,173 @@
 .action-buttons {
   margin-top: 32px;
   
-  ion-button {
+  .start-investing-btn {
     --border-radius: 12px;
-    margin-bottom: 12px;
-    height: 48px;
+    margin-bottom: 16px;
+    height: 52px;
     font-weight: 600;
     
     ion-icon {
       margin-right: 8px;
+    }
+  }
+  
+  .legal-disclaimer {
+    font-size: 0.8rem;
+    color: var(--ion-color-medium);
+    text-align: center;
+    margin: 0;
+    padding: 0 16px;
+    line-height: 1.4;
+  }
+}
+
+// Portfolio section styles
+.portfolio-summary {
+  .portfolio-type {
+    margin-bottom: 16px;
+    
+    h4 {
+      color: var(--ion-color-dark);
+      margin: 0 0 8px 0;
+      font-weight: 600;
+    }
+    
+    .portfolio-description {
+      color: var(--ion-color-medium);
+      font-size: 0.9rem;
+      margin: 0;
+    }
+  }
+  
+  .portfolio-list {
+    margin-bottom: 16px;
+    
+    .portfolio-item {
+      --padding-start: 0;
+      --inner-padding-end: 0;
+      margin-bottom: 8px;
+      
+      .allocation-badge {
+        background: var(--ion-color-primary);
+        color: white;
+        border-radius: 12px;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-right: 12px;
+        min-width: 40px;
+        text-align: center;
+      }
+      
+      h3 {
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        color: var(--ion-color-dark);
+        font-size: 0.95rem;
+      }
+      
+      p {
+        margin: 0 0 4px 0;
+        color: var(--ion-color-dark);
+        font-size: 0.85rem;
+      }
+      
+      ion-note {
+        color: var(--ion-color-medium);
+        font-size: 0.8rem;
+      }
+    }
+  }
+  
+  .edit-portfolio-btn {
+    --color: var(--ion-color-primary);
+    margin: 0;
+    
+    ion-icon {
+      margin-right: 6px;
+    }
+  }
+}
+
+// Info card styles
+.info-card {
+  .info-content {
+    .info-intro {
+      color: var(--ion-color-dark);
+      font-weight: 500;
+      margin: 0 0 20px 0;
+      font-size: 1rem;
+    }
+    
+    .info-steps {
+      margin-bottom: 20px;
+      
+      .info-step {
+        display: flex;
+        margin-bottom: 16px;
+        align-items: flex-start;
+        
+        .step-number {
+          background: var(--ion-color-tertiary);
+          color: white;
+          border-radius: 50%;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.8rem;
+          font-weight: 600;
+          margin-right: 12px;
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+        
+        .step-content {
+          flex: 1;
+          
+          h4 {
+            color: var(--ion-color-dark);
+            margin: 0 0 6px 0;
+            font-weight: 600;
+            font-size: 0.95rem;
+          }
+          
+          p {
+            color: var(--ion-color-medium);
+            margin: 0;
+            font-size: 0.85rem;
+            line-height: 1.4;
+          }
+        }
+      }
+    }
+    
+    .flexibility-note {
+      background: var(--ion-color-light);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      
+      ion-icon {
+        font-size: 1.2rem;
+        margin-top: 2px;
+        flex-shrink: 0;
+      }
+      
+      p {
+        margin: 0;
+        color: var(--ion-color-dark);
+        font-size: 0.9rem;
+        line-height: 1.4;
+        
+        strong {
+          font-weight: 600;
+        }
+      }
     }
   }
 }

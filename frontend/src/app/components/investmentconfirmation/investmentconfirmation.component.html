@@ -42,18 +42,110 @@
       </ion-card-content>
     </ion-card>
 
+    <ion-card class="summary-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="pie-chart-outline" color="secondary"></ion-icon>
+          Your Portfolio
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="portfolio-summary">
+          <div class="portfolio-type">
+            <h4>{{ portfolioType === 'auto' ? 'Recommended Diversified Portfolio' : 'Custom Portfolio' }}</h4>
+            <p class="portfolio-description">
+              {{ portfolioType === 'auto' ? 'A balanced mix of stocks, bonds, and real estate for long-term growth' : 'Your custom selected investments' }}
+            </p>
+          </div>
+          
+          <ion-list lines="none" class="portfolio-list">
+            <ion-item *ngFor="let stock of defaultPortfolio" class="portfolio-item">
+              <div slot="start" class="allocation-badge">
+                {{ stock.allocation }}%
+              </div>
+              <ion-label>
+                <h3>{{ stock.symbol }}</h3>
+                <p>{{ stock.name }}</p>
+                <ion-note>{{ stock.description }}</ion-note>
+              </ion-label>
+            </ion-item>
+          </ion-list>
+          
+          <ion-button 
+            fill="clear" 
+            size="small" 
+            color="primary"
+            (click)="editPortfolio()"
+            class="edit-portfolio-btn">
+            <ion-icon name="create-outline" slot="start"></ion-icon>
+            Edit Portfolio
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="info-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="information-circle-outline" color="tertiary"></ion-icon>
+          What Happens Next?
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="info-content">
+          <p class="info-intro">When you click "Start Investing", here's what will happen:</p>
+          
+          <div class="info-steps">
+            <div class="info-step">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <h4>Account Creation</h4>
+                <p>We'll create a personal brokerage account for you through Alpaca Securities using your verified information.</p>
+              </div>
+            </div>
+            
+            <div class="info-step">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <h4>Automated Funding</h4>
+                <p>Your account will be automatically funded following your pay schedule - {{ formatCurrency(investmentSchedule.investmentAmount) }} every {{ getSelectedFrequencyDetails()?.label?.toLowerCase() || 'period' }}.</p>
+              </div>
+            </div>
+            
+            <div class="info-step">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <h4>Smart Investing</h4>
+                <p>Each time funds are added, they'll be automatically invested into your selected portfolio based on the allocations you've chosen.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flexibility-note">
+            <ion-icon name="pause-circle-outline" color="medium"></ion-icon>
+            <p><strong>Full Control:</strong> You can pause, modify, or stop your investment schedule at any time through your dashboard.</p>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
     <div class="action-buttons">
       <ion-button 
         expand="block" 
         size="large" 
         color="primary"
         (click)="authorizeRecurringInvestment()"
-        [disabled]="isAuthorizing || isCreatingAccount">
+        [disabled]="isAuthorizing || isCreatingAccount"
+        class="start-investing-btn">
         <ion-icon name="rocket-outline" slot="start"></ion-icon>
-        <span *ngIf="!isAuthorizing && !isCreatingAccount">Start Investing</span>
-        <span *ngIf="isAuthorizing">Authorizing...</span>
-        <span *ngIf="isCreatingAccount">Creating Account...</span>
+        <span *ngIf="!isAuthorizing && !isCreatingAccount">Start Investing & Create Account</span>
+        <span *ngIf="isAuthorizing">Verifying Identity...</span>
+        <span *ngIf="isCreatingAccount">Creating Your Brokerage Account...</span>
       </ion-button>
+      
+      <p class="legal-disclaimer">
+        By clicking "Start Investing", you agree to create a brokerage account with Alpaca Securities LLC and authorize automatic investments according to your schedule.
+      </p>
     </div>
   </div>
 </ion-content>
