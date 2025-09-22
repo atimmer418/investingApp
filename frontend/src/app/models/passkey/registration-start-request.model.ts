@@ -1,4 +1,8 @@
 export interface RegistrationStartRequest {
     email: string;
-    temporaryUserId: string; // From the Plaid flow
+    planId: string;
+    timeToFI: string;
+    targetPortfolio: number;
+    retirementIncome: number;
+    monthlyInvestment: number;
 }

@@ -1,0 +1,109 @@
+// Use CSS variables for a consistent theme
+:host {
+  --ion-background-color: #f2f2f7; // A very light, clean background
+  --ion-toolbar-background: var(--ion-background-color);
+  --ion-text-color: #000000;
+  --ion-color-primary: #007aff;
+  --ion-color-medium: #8e8e93;
+}
+
+ion-toolbar {
+  --border-width: 0 !important;
+}
+
+ion-progress-bar {
+  height: 3px;
+  --progress-background: var(--ion-color-primary);
+}
+
+// Unified container for the form
+.kyc-form-container {
+  padding: 16px;
+}
+
+.page-intro {
+  margin-bottom: 32px;
+  text-align: center;
+
+  h2 {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0 0 8px 0;
+  }
+
+  .helper-text {
+    font-size: 16px;
+    color: var(--ion-color-medium);
+    margin: 0;
+    line-height: 1.4;
+  }
+}
+
+.verification-info-section {
+  margin-bottom: 32px;
+
+  .verification-description {
+    font-size: 16px;
+    color: var(--ion-color-medium);
+    margin: 0 0 24px 0;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .verification-features {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+      .feature-icon {
+        font-size: 20px;
+        color: var(--ion-color-primary);
+        flex-shrink: 0;
+      }
+
+      span {
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--ion-text-color);
+      }
+    }
+  }
+}
+
+.verification-button-section {
+  text-align: center;
+
+  .verification-button {
+    --border-radius: 12px;
+    font-weight: 600;
+    height: 50px;
+    text-transform: none;
+    font-size: 17px;
+    margin-bottom: 16px;
+  }
+
+  .verification-note {
+    font-size: 14px;
+    color: var(--ion-color-medium);
+    margin: 0;
+    line-height: 1.4;
+    padding: 0 16px;
+  }
+}
+
+.error-message-global, .success-message-global {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 15px;
+  font-weight: 500;
+}

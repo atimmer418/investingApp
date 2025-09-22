@@ -1,69 +1,77 @@
-<ion-header [translucent]="true">
-  <ion-toolbar color="primary">
-    <ion-title>✨ Create Your Account</ion-title>
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/fi-plan-results"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Create Your Account</ion-title>
+    <ion-progress-bar [value]="0.8"></ion-progress-bar>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <div class="form-container">
-    <ion-text color="dark" class="ion-text-center">
-      <h2>Your secure login and recovery info</h2>
-    </ion-text>
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="auth-form-container">
+    
+    <!-- Page Introduction -->
+    <div class="page-intro">
+      <h2>Let's lock it in...</h2>
+      <p class="helper-text">By creating an account, you'll lock in your strategy and be one step closer to making this plan into reality.</p>
+    </div>
 
-    <!-- The (ngSubmit) is removed to prevent double-firing. The click handler is sufficient. -->
-    <form [formGroup]="registerForm" novalidate class="ion-margin-top">
-      <ion-list lines="full" class="ion-no-margin ion-no-padding">
-        <ion-item>
-          <ion-label position="floating">Email Address</ion-label>
-          <ion-input type="email" formControlName="email" required email></ion-input>
-        </ion-item>
-        <div class="explanation-text">
-          <ion-text color="medium">We’ll use this to help you recover access if you lose your device.</ion-text>
+    <!-- Email Input Section -->
+    <div class="input-section">
+      <form [formGroup]="registerForm" novalidate>
+        <div class="input-display-wrapper">
+          <ion-input
+            type="email"
+            formControlName="email"
+            placeholder="Enter your email address"
+            required
+            email
+          ></ion-input>
         </div>
+        
         <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="error-message">
           <ion-note color="danger" *ngIf="email?.errors?.['required']">Email is required.</ion-note>
           <ion-note color="danger" *ngIf="email?.errors?.['email']">Please enter a valid email.</ion-note>
         </div>
-      </ion-list>
+      </form>
+    </div>
 
-      <div class="ion-margin-top">
-        <ion-text color="dark">
-          <h3>Create a passkey</h3>
-        </ion-text>
+    <!-- Divider -->
+    <!-- <hr class="section-divider" /> -->
+
+    <!-- Passkey Section -->
+    <div class="passkey-section">
+      <!-- <h2>Create a passkey</h2> -->
+      <p class="helper-text">No passwords needed—just Face ID or fingerprint. Your email is backup recovery if needed.</p>
+      
+      <ion-button 
+        expand="block" 
+        class="passkey-button" 
+        type="button"  
+        (click)="createPasskey()" 
+        [disabled]="registerForm.invalid || isLoading">
         
-        <!-- --- MODIFIED BUTTON --- -->
-        <ion-button 
-            expand="block" 
-            class="ion-margin-top" 
-            type="button"  
-            (click)="createPasskey()" 
-            [disabled]="registerForm.invalid || isLoading">
-          
-          <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
-          <span *ngIf="!isLoading">Continue with Face ID / Fingerprint</span>
-          <span *ngIf="isLoading">Follow browser prompt...</span>
-
-        </ion-button>
-        
-        <div class="explanation-text ion-text-center ion-margin-top">
-          <ion-text color="medium">You won’t need a password. Your device will securely log you in using Face ID or another passkey.</ion-text>
-        </div>
-
-        <ion-button 
-            expand="block" 
-            class="ion-margin-top" 
-            type="button"  
-            (click)="bypassAuthID()" >
-          <span>i'm at work (no face or touch ID)</span>
-        </ion-button>
-      </div>
-    </form>
+        <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+        <span *ngIf="!isLoading">Sign up <ion-icon name="lock-closed"></ion-icon></span>
+        <span *ngIf="isLoading">Follow browser prompt...</span>
+      </ion-button>
+      
+      <ion-button 
+        expand="block" 
+        fill="clear"
+        class="bypass-button" 
+        type="button"  
+        (click)="bypassAuthID()">
+        <span>I'm at work (no face or touch ID)</span>
+      </ion-button>
+    </div>
 
     <!-- Feedback Messages -->
-    <div *ngIf="errorMessage" class="ion-text-center ion-margin-top error-message-global">
+    <div *ngIf="errorMessage" class="error-message-global">
       <ion-text color="danger">{{ errorMessage }}</ion-text>
     </div>
-    <div *ngIf="successMessage" class="ion-text-center ion-margin-top success-message-global">
+    <div *ngIf="successMessage" class="success-message-global">
       <ion-text color="success">{{ successMessage }}</ion-text>
     </div>
 

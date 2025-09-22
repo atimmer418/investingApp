@@ -1,0 +1,142 @@
+// Use CSS variables for a consistent theme
+:host {
+  --ion-background-color: #f2f2f7; // A very light, clean background
+  --ion-toolbar-background: var(--ion-background-color);
+  --ion-text-color: #000000;
+  --ion-color-primary: #007aff;
+  --ion-color-medium: #8e8e93;
+}
+
+ion-toolbar {
+  --border-width: 0 !important;
+}
+
+ion-progress-bar {
+  height: 3px;
+  --progress-background: var(--ion-color-primary);
+}
+
+// Unified container for the questions
+.survey-form-container {
+  padding: 16px;
+}
+
+.question-wrapper {
+  margin-bottom: 48px;
+
+  h2 {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0 0 8px 0;
+  }
+
+  .helper-text {
+    font-size: 16px;
+    color: var(--ion-color-medium);
+    margin: 0 0 32px 0;
+  }
+}
+
+// --- Input Styling (largely the same, slightly refined) ---
+.input-display-wrapper {
+  display: flex;
+  align-items: baseline;
+  border-bottom: 2px solid #e5e5ea;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+
+  .currency-symbol, .per-month-label {
+    font-weight: 500;
+    color: var(--ion-color-medium);
+  }
+
+  .currency-symbol { font-size: 28px; margin-right: 4px; }
+  .per-month-label { font-size: 16px; margin-left: 4px; }
+
+  ion-input {
+    font-size: 44px;
+    font-weight: 700;
+    --padding-start: 0;
+    --padding-end: 8px;
+    max-width: fit-content;
+  }
+}
+
+ion-range {
+  --bar-background: #e5e5ea;
+  --bar-background-active: var(--ion-color-primary);
+  --knob-background: #ffffff;
+  --knob-border: 1px solid #e5e5ea;
+  --knob-box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  padding: 0;
+  margin-top: 16px;
+}
+
+// --- NEW "GLassmorphic" Footer Styling ---
+ion-footer {
+  // This removes the default footer background and border
+  --background: transparent;
+  --border-width: 0;
+  // This allows the footer to sit on top of the content
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+
+.footer-container {
+  padding: 16px 24px calc(env(safe-area-inset-bottom, 10px)) 24px;
+  text-align: center;
+  
+  // The "Frosted Glass" Effect
+  background: rgba(255, 255, 255, 0.75); // Semi-transparent white
+  backdrop-filter: blur(20px); // This is the key for the blur effect
+  -webkit-backdrop-filter: blur(20px); // Safari support
+  
+  // Add a subtle border to the top to separate it from the content
+  border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+  
+  .dynamic-result-text {
+    font-size: 16px;
+    line-height: 1.4; // Slightly tighter line-height to help it fit
+    color: var(--ion-text-color); // Darker text for better contrast on the blur
+    margin: 0 0 16px 0;
+    font-weight: 500;
+    
+    strong {
+      font-weight: 700;
+      color: var(--ion-color-primary); // Highlight numbers in primary color
+    }
+  }
+  
+  .cta-main {
+    --border-radius: 12px;
+    font-weight: 600;
+    height: 50px;
+    text-transform: none;
+    font-size: 17px;
+  }
+}
+
+// Info icon styling
+.info-icon {
+  font-size: 18px;
+  color: var(--ion-color-primary);
+  cursor: pointer;
+  margin-left: 4px;
+  vertical-align: middle;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Modal content styling
+.modal-explanation {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  color: var(--ion-text-color);
+}

@@ -1,0 +1,508 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import {
+  IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel,
+  IonSelect, IonSelectOption, IonInput, IonNote, IonIcon, IonCard, IonCardContent,
+  IonCardHeader, IonCardTitle, IonButtons, IonBackButton, IonProgressBar, IonSpinner
+} from '@ionic/angular/standalone';
+
+import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
+
+export interface InvestmentSchedule {
+  payFrequency: string;
+  investmentAmount: number;
+  startDate: string;
+  isEnabled: boolean;
+}
+
+export interface CreateInvestmentScheduleRequest {
+  monthlyAmount: number;
+  frequency: string;
+  targetPortfolio?: number;
+  timeToFI?: number;
+}
+
+export interface InvestmentScheduleResponse {
+  id: number;
+  monthlyAmount: number;
+  frequency: string;
+  targetPortfolio?: number;
+  timeToFI?: number;
+  achRequestId?: string;
+  isPaused: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+@Component({
+  selector: 'app-investment-schedule',
+  templateUrl: './investment-schedule.component.html',
+  styleUrls: ['./investment-schedule.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule, FormsModule,
+    IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel,
+    IonSelect, IonSelectOption, IonInput, IonNote, IonIcon, IonCard, IonCardContent,
+    IonCardHeader, IonCardTitle, IonButtons, IonBackButton, IonProgressBar, IonSpinner
+  ]
+})
+export class InvestmentScheduleComponent implements OnInit {
+  // User's financial data from initial survey
+  monthlyGoal: number = 0;
+  targetPortfolio: number = 0;
+  timeToFI: number = 0;
+
+  isSubmitting: boolean = false;
+
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    private http: HttpClient
+  ) {}
+
+  // Investment schedule configuration
+  schedule: InvestmentSchedule = {
+    payFrequency: 'BIWEEKLY',
+    investmentAmount: 0,
+    startDate: '', // This will be the next pay date
+    isEnabled: true
+  };
+
+  // Frequency options with descriptions and calculation details
+  frequencyOptions = [
+    {
+      value: 'WEEKLY',
+      label: 'Weekly',
+      description: 'Every 7 days',
+      paychecksPerMonth: 4.33,
+      daysBetween: 7
+    },
+    {
+      value: 'BIWEEKLY',
+      label: 'Bi-weekly',
+      description: 'Every 2 weeks (26 times per year)',
+      paychecksPerMonth: 2.17,
+      daysBetween: 14
+    },
+    {
+      value: 'SEMI_MONTHLY',
+      label: 'Semi-monthly',
+      description: '1st and 15th of each month',
+      paychecksPerMonth: 2.0,
+      daysBetween: null // Special case - handled separately
+    },
+    {
+      value: 'MONTHLY',
+      label: 'Monthly',
+      description: 'Once per month',
+      paychecksPerMonth: 1.0,
+      daysBetween: null // Special case - handled separately
+    }
+  ];
+
+  ngOnInit() {
+    console.log('[InvestmentScheduleComponent] ngOnInit - Initializing Investment Schedule Page.');
+    this.loadUserFinancialData();
+    // Set default next pay date to tomorrow (user can adjust)
+    this.schedule.startDate = this.getInvestmentDate();
+  }
+
+  loadUserFinancialData(): void {
+    console.log('[InvestmentScheduleComponent] Loading user financial data...');
+    
+    // First try to get current progress
+    const currentProgress = this.authService.getCurrentProgress();
+    console.log('[InvestmentScheduleComponent] Current progress from cache:', currentProgress);
+    
+    if (currentProgress && currentProgress.monthlyInvestment) {
+      console.log('[InvestmentScheduleComponent] ✅ Found monthlyInvestment in cached progress:', currentProgress.monthlyInvestment);
+      this.setFinancialData(currentProgress);
+    } else {
+      console.log('[InvestmentScheduleComponent] ⚠️ No current progress or no monthlyInvestment found, fetching fresh data...');
+      console.log('[InvestmentScheduleComponent] Details - hasProgress:', !!currentProgress, 'hasMonthlyInvestment:', currentProgress?.monthlyInvestment);
+      
+      // If no current progress, fetch fresh data from backend
+      this.authService.getUserProgress().subscribe({
+        next: (progress) => {
+          console.log('[InvestmentScheduleComponent] ✅ Fresh progress data received from API:', progress);
+          this.setFinancialData(progress);
+        },
+        error: (error) => {
+          console.error('[InvestmentScheduleComponent] ❌ Error loading user progress:', error);
+          // Set defaults if API fails
+          this.monthlyGoal = 500; // Default fallback
+          this.calculateRecommendedAmount();
+        }
+      });
+    }
+
+    // Also subscribe to ongoing changes
+    this.authService.userProgress$.subscribe(progress => {
+      if (progress && progress.monthlyInvestment) {
+        console.log('[InvestmentScheduleComponent] Progress updated via subscription:', progress);
+        this.setFinancialData(progress);
+      }
+    });
+  }
+
+  private setFinancialData(progress: any): void {
+    console.log('[InvestmentScheduleComponent] 🔥 setFinancialData called with data:', progress);
+    console.log('[InvestmentScheduleComponent] 🔥 monthlyInvestment value:', progress?.monthlyInvestment);
+    console.log('[InvestmentScheduleComponent] 🔥 Full progress object:', JSON.stringify(progress, null, 2));
+    
+    if (progress && progress.monthlyInvestment) {
+      this.monthlyGoal = progress.monthlyInvestment;
+      console.log('[InvestmentScheduleComponent] ✅ Loaded user monthly investment amount:', this.monthlyGoal);
+    } else {
+      console.log('[InvestmentScheduleComponent] ⚠️ No monthlyInvestment found in progress data.');
+      console.log('[InvestmentScheduleComponent] Progress exists:', !!progress);
+      console.log('[InvestmentScheduleComponent] Progress keys:', progress ? Object.keys(progress) : 'N/A');
+      // Set a default for testing
+      this.monthlyGoal = 0;
+    }
+
+    // For now, we'll calculate these from the monthly investment
+    // In a real app, these might be stored separately or calculated server-side
+    if (this.monthlyGoal > 0) {
+      // Estimate target portfolio using 4% rule and monthly investment
+      // This is a simplified calculation - actual FI calculations are more complex
+      const annualInvestment = this.monthlyGoal * 12;
+      this.targetPortfolio = annualInvestment * 25; // Rough 4% rule estimate
+      this.timeToFI = 25; // Simplified estimate
+      console.log('[InvestmentScheduleComponent] ✅ Calculated financial goals:', {
+        monthlyGoal: this.monthlyGoal,
+        targetPortfolio: this.targetPortfolio,
+        timeToFI: this.timeToFI
+      });
+    }
+
+    this.calculateRecommendedAmount();
+  }
+
+  // Method to manually refresh user data (useful for debugging)
+  refreshUserData(): void {
+    console.log('[InvestmentScheduleComponent] 🔄 Manually refreshing user data...');
+    this.authService.loadUserProgress();
+  }
+
+  onFrequencyChange(frequency: string) {
+    this.schedule.payFrequency = frequency;
+    this.calculateRecommendedAmount();
+    // Update the suggested pay date based on the new frequency
+    this.schedule.startDate = this.getInvestmentDate();
+    // Angular's change detection will automatically update the description when these properties change
+    console.log('[InvestmentScheduleComponent] Frequency changed to:', frequency, 'Start date set to:', this.schedule.startDate);
+  }
+
+  onAmountChange() {
+    // Amount changes don't affect the schedule description
+  }
+
+  onStartDateChange(date: string) {
+    this.schedule.startDate = date;
+    // Trigger change detection for the investment schedule description
+    // The description will automatically update since it reads from this.schedule.startDate
+  }
+
+  calculateRecommendedAmount() {
+    if (this.monthlyGoal <= 0) return;
+
+    const selectedFrequency = this.getSelectedFrequencyDetails();
+
+    if (selectedFrequency) {
+      this.schedule.investmentAmount = Math.round(
+        this.monthlyGoal / selectedFrequency.paychecksPerMonth
+      );
+    }
+  }
+
+  getSelectedFrequencyDetails() {
+    return this.frequencyOptions.find(f => f.value === this.schedule.payFrequency);
+  }
+
+  getMonthlyProjection(): number {
+    const frequencyDetails = this.getSelectedFrequencyDetails();
+    if (!frequencyDetails) return 0;
+    return this.schedule.investmentAmount * frequencyDetails.paychecksPerMonth;
+  }
+
+  getAnnualProjection(): number {
+    return this.getMonthlyProjection() * 12;
+  }
+
+  private getNextMonday(): string {
+    const today = new Date();
+    const daysUntilMonday = (8 - today.getDay()) % 7 || 7;
+    const nextMonday = new Date(today);
+    nextMonday.setDate(today.getDate() + daysUntilMonday);
+    
+    // Format date as YYYY-MM-DD in local time to avoid timezone issues
+    const year = nextMonday.getFullYear();
+    const month = String(nextMonday.getMonth() + 1).padStart(2, '0');
+    const day = String(nextMonday.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private getNextNextMonday(): string {
+    const today = new Date();
+    const daysUntilMonday = (8 - today.getDay()) % 7 || 7;
+    const nextNextMonday = new Date(today);
+    nextNextMonday.setDate(today.getDate() + daysUntilMonday + 7);
+    
+    // Format date as YYYY-MM-DD in local time to avoid timezone issues
+    const year = nextNextMonday.getFullYear();
+    const month = String(nextNextMonday.getMonth() + 1).padStart(2, '0');
+    const day = String(nextNextMonday.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private getInvestmentDate(): string {
+    const today = new Date();
+    const frequency = this.schedule.payFrequency;
+
+    switch (frequency) {
+      case 'WEEKLY':
+        // Next Monday
+        return this.getNextMonday();
+      
+      case 'BIWEEKLY':
+        // Monday after next Monday (2 weeks out)
+        return this.getNextNextMonday();
+      
+      case 'SEMI_MONTHLY':
+        // Next 1st or 15th (whichever comes first)
+        return this.getNextSemiMonthlyDate();
+      
+      case 'MONTHLY':
+        // Next 1st of the month
+        return this.getNextFirstOfMonth();
+      
+      default:
+        // Fallback to tomorrow
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        // Format date as YYYY-MM-DD in local time to avoid timezone issues
+        const year = tomorrow.getFullYear();
+        const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+        const day = String(tomorrow.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+  }
+
+  private getNextSemiMonthlyDate(): string {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    let nextDate: Date;
+
+    if (currentDay < 15) {
+      // Before 15th, so next pay date is 15th of this month
+      nextDate = new Date(currentYear, currentMonth, 15);
+    } else if (currentDay === 15) {
+      // Today is 15th, so next pay date is 1st of next month
+      nextDate = new Date(currentYear, currentMonth + 1, 1);
+    } else {
+      // After 15th, so next pay date is 1st of next month
+      nextDate = new Date(currentYear, currentMonth + 1, 1);
+    }
+
+    // Format date as YYYY-MM-DD in local time to avoid timezone issues
+    const year = nextDate.getFullYear();
+    const month = String(nextDate.getMonth() + 1).padStart(2, '0');
+    const day = String(nextDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private getNextFirstOfMonth(): string {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    
+    // If today is the 1st, go to next month's 1st. Otherwise, go to next month's 1st
+    const nextFirstOfMonth = new Date(currentYear, currentMonth + 1, 1);
+    
+    // Format date as YYYY-MM-DD in local time to avoid timezone issues
+    const year = nextFirstOfMonth.getFullYear();
+    const month = String(nextFirstOfMonth.getMonth() + 1).padStart(2, '0');
+    const day = String(nextFirstOfMonth.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Calculate the next investment dates based on the pay frequency and start date
+   */
+  getNextInvestmentDates(count: number = 3): string[] {
+    if (!this.schedule.startDate) return [];
+
+    const startDate = new Date(this.schedule.startDate);
+    const dates: string[] = [];
+    const frequency = this.getSelectedFrequencyDetails();
+
+    if (!frequency) return [];
+
+    for (let i = 0; i < count; i++) {
+      let nextDate = new Date(startDate);
+
+      if (frequency.value === 'WEEKLY' || frequency.value === 'BIWEEKLY') {
+        // Add days for weekly/biweekly
+        const daysToAdd = i * (frequency.daysBetween || 14);
+        nextDate.setDate(startDate.getDate() + daysToAdd);
+      } else if (frequency.value === 'SEMI_MONTHLY') {
+        // For semi-monthly, alternate between 1st and 15th
+        const monthsToAdd = Math.floor(i / 2);
+        nextDate.setMonth(startDate.getMonth() + monthsToAdd);
+        
+        if (i % 2 === 0) {
+          // Keep original date (could be 1st or 15th)
+          nextDate.setDate(startDate.getDate());
+        } else {
+          // Switch between 1st and 15th
+          nextDate.setDate(startDate.getDate() === 1 ? 15 : 1);
+        }
+      } else if (frequency.value === 'MONTHLY') {
+        // Add months for monthly
+        nextDate.setMonth(startDate.getMonth() + i);
+      }
+
+      dates.push(nextDate.toISOString().split('T')[0]);
+    }
+
+    return dates;
+  }
+
+  /**
+   * Get a user-friendly description of when investments will happen
+   */
+  getInvestmentScheduleDescription(): string {
+    const frequency = this.getSelectedFrequencyDetails();
+    if (!frequency || !this.schedule.startDate) {
+      console.log('[InvestmentScheduleComponent] Missing data for description - frequency:', frequency, 'startDate:', this.schedule.startDate);
+      return '';
+    }
+
+    // Parse the date string ensuring it's treated as local time, not UTC
+    const dateParts = this.schedule.startDate.split('-');
+    const startDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+    
+    console.log('[InvestmentScheduleComponent] Calculating description - frequency:', frequency.value, 'startDate:', this.schedule.startDate, 'parsed date:', startDate, 'day of week:', startDate.getDay());
+    
+    switch (frequency.value) {
+      case 'WEEKLY':
+        const weekday = startDate.toLocaleDateString('en-US', { weekday: 'long' });
+        return `Every ${weekday}`;
+      
+      case 'BIWEEKLY':
+        const biweeklyDay = startDate.toLocaleDateString('en-US', { weekday: 'long' });
+        return `Every other ${biweeklyDay}`;
+      
+      case 'SEMI_MONTHLY':
+        const dayOfMonth = startDate.getDate();
+        const semiMonthlyDayWithSuffix = this.getDayWithOrdinalSuffix(dayOfMonth);
+        
+        if (dayOfMonth === 1) {
+          return `Every 1st and 15th of the month`;
+        } else if (dayOfMonth === 15) {
+          return `Every 15th and 1st of the month`;
+        } else if (dayOfMonth <= 15) {
+          // If user picked a date in first half of month, pair it with 15th
+          return `Every ${semiMonthlyDayWithSuffix} and 15th of the month`;
+        } else {
+          // If user picked a date in second half of month, it goes with 1st of next month
+          return `Every ${semiMonthlyDayWithSuffix} and 1st of the month`;
+        }
+      
+      case 'MONTHLY':
+        const monthlyDay = startDate.getDate();
+        const monthlyDayWithSuffix = this.getDayWithOrdinalSuffix(monthlyDay);
+        return `Every ${monthlyDayWithSuffix} of the month`;
+      
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Helper function to add ordinal suffix to day numbers (1st, 2nd, 3rd, etc.)
+   */
+  private getDayWithOrdinalSuffix(day: number): string {
+    const lastDigit = day % 10;
+    const lastTwoDigits = day % 100;
+    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+      return `${day}th`;
+    }
+    
+    switch (lastDigit) {
+      case 1:
+        return `${day}st`;
+      case 2:
+        return `${day}nd`;
+      case 3:
+        return `${day}rd`;
+      default:
+        return `${day}th`;
+    }
+  }
+
+  canProceed(): boolean {
+    return this.schedule.investmentAmount > 0 && this.schedule.startDate !== '';
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('jwtToken');
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  }
+
+  goToStockPreferences(): void {
+    console.log('[InvestmentScheduleComponent] Proceeding to stock preferences with schedule:', this.schedule);
+    this.isSubmitting = true;
+
+    // Prepare data for backend
+    const investmentScheduleData: CreateInvestmentScheduleRequest = {
+      monthlyAmount: this.schedule.investmentAmount,
+      frequency: this.schedule.payFrequency,
+      targetPortfolio: this.targetPortfolio,
+      timeToFI: this.timeToFI
+    };
+
+    console.log('[InvestmentScheduleComponent] Sending investment schedule to backend:', investmentScheduleData);
+
+    // Save investment schedule to backend API
+    this.http.post<InvestmentScheduleResponse>(`${environment.backendApiUrl}/investment-schedule/create`, investmentScheduleData, { headers: this.getAuthHeaders() })
+      .subscribe({
+        next: (response) => {
+          console.log('[InvestmentScheduleComponent] ✅ Investment schedule saved successfully:', response);
+          this.isSubmitting = false;
+          // Navigate to investment confirmation instead of survey
+          this.router.navigate(['/confirm-investment']);
+        },
+        error: (error) => {
+          console.error('[InvestmentScheduleComponent] ❌ Error saving investment schedule:', error);
+          this.isSubmitting = false;
+          // Show error message to user
+          alert('Error saving investment schedule. Please try again.');
+        }
+      });
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  }
+}

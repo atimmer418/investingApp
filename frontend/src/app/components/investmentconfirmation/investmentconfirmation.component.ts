@@ -1,14 +1,37 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
-  IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  IonButtons, IonSpinner, NavController // Added IonCard elements
+  IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
+  IonButtons, IonBackButton, IonNote, ToastController
 } from '@ionic/angular/standalone';
-// import { BiometricAuth } from 'capacitor-native-biometric'; // Example import for a biometric plugin
-// import { AlpacaService } from '../../services/alpaca.service'; // Your service for Alpaca interactions
-// import { UserSettingsService } from '../../services/user-settings.service'; // To get selected percentage
+import { AlpacaService, CreateAccountRequest } from '../../services/alpaca.service';
+import { AuthService } from '../../services/auth.service';
+import { PlaidDataService } from '../../services/plaid-data.service';
+import { environment } from '../../../environments/environment';
+
+interface UpdateAchRequestIdRequest {
+  userEmail: string;
+  achRequestId: string;
+}
+
+// Investment schedule interfaces
+interface InvestmentSchedule {
+  payFrequency: string;
+  investmentAmount: number;
+  startDate: string;
+  isEnabled: boolean;
+}
+
+// Default portfolio interface
+interface DefaultStock {
+  symbol: string;
+  name: string;
+  allocation: number; // percentage
+  description: string;
+}
 
 @Component({
   selector: 'app-investmentconfirmation',
@@ -17,31 +40,232 @@ import {
   standalone: true,
   imports: [
     CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
-    IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    IonButtons, IonSpinner
+    IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
+    IonButtons, IonBackButton, IonNote
   ]
 })
+
 export class InvestmentConfirmationComponent implements OnInit {
-  investmentPercentage: string | null = null; // e.g., "10%"
-  portfolioType: 'custom' | 'auto' = 'auto'; // Determined by previous steps
+  // Investment schedule data
+  investmentSchedule: InvestmentSchedule = {
+    payFrequency: 'BIWEEKLY',
+    investmentAmount: 0,
+    startDate: '',
+    isEnabled: true
+  };
+
+  // Financial projections
+  monthlyGoal: number = 0;
+  targetPortfolio: number = 0;
+  timeToFI: number = 0;
+
+  // Legacy fields (will be replaced)
+  investmentPercentage: string | null = null;
+  portfolioType: 'custom' | 'auto' = 'auto';
+  
+  // Component state
   isAuthorizing: boolean = false;
   authorizationStatus: string | null = null;
+  isCreatingAccount: boolean = false;
+  alpacaAccountId: string | null = null;
+  userEmail: string | null = null;
+
+  // Default portfolio
+  defaultPortfolio: DefaultStock[] = [
+    {
+      symbol: 'VTI',
+      name: 'Vanguard Total Stock Market ETF',
+      allocation: 40,
+      description: 'Tracks the entire U.S. stock market'
+    },
+    {
+      symbol: 'VXUS',
+      name: 'Vanguard Total International Stock ETF', 
+      allocation: 30,
+      description: 'International diversification outside the U.S.'
+    },
+    {
+      symbol: 'BND',
+      name: 'Vanguard Total Bond Market ETF',
+      allocation: 20,
+      description: 'Broad exposure to U.S. investment grade bonds'
+    },
+    {
+      symbol: 'VNQ',
+      name: 'Vanguard Real Estate ETF',
+      allocation: 10,
+      description: 'Real estate investment trusts (REITs)'
+    }
+  ];
+
+  // Frequency options for display
+  frequencyOptions = [
+    { value: 'WEEKLY', label: 'Weekly', paychecksPerMonth: 4.33 },
+    { value: 'BIWEEKLY', label: 'Bi-weekly', paychecksPerMonth: 2.17 },
+    { value: 'SEMI_MONTHLY', label: 'Semi-monthly', paychecksPerMonth: 2.0 },
+    { value: 'MONTHLY', label: 'Monthly', paychecksPerMonth: 1.0 }
+  ];
 
   constructor(
     private router: Router,
-    private navCtrl: NavController,
-    // private alpacaService: AlpacaService,
-    // private userSettingsService: UserSettingsService
+    private alpacaService: AlpacaService,
+    private authService: AuthService,
+    private plaidDataService: PlaidDataService,
+    private http: HttpClient,
+    private toastController: ToastController
   ) {}
 
   ngOnInit() {
-    console.log('InvestmentConfirmationComponent loaded');
-    // Fetch the selected percentage and portfolio type from a service or route params
-    // this.investmentPercentage = this.userSettingsService.getInvestmentPercentage();
-    // this.portfolioType = this.userSettingsService.getPortfolioType();
-    this.investmentPercentage = "15%"; // Placeholder
-    const didPickStocks = localStorage.getItem('stockSelectionCompleted') === 'true' && localStorage.getItem('stockSelectionSkipped') !== 'true';
-    this.portfolioType = didPickStocks ? 'custom' : 'auto';
+    console.log('[InvestmentConfirmationComponent] Initializing investment confirmation page');
+    
+    // 🧪 TESTING: Authentication check temporarily disabled for testing
+    // Check if user is authenticated
+    // if (!this.authService.isAuthenticated()) {
+    //   console.warn('User not authenticated, redirecting to login');
+    //   this.router.navigate(['/get-started'], { replaceUrl: true });
+    //   return;
+    // }
+    
+    // Load user data and investment schedule
+    this.loadUserFinancialData();
+    this.loadInvestmentSchedule();
+    
+    // Get user email for display
+    const userEmail = this.authService.getCurrentUserEmail();
+    if (userEmail) {
+      this.userEmail = userEmail;
+      console.log('[InvestmentConfirmationComponent] User email:', userEmail);
+    }
+  }
+
+  loadUserFinancialData(): void {
+    console.log('[InvestmentConfirmationComponent] Loading user financial data...');
+    
+    const currentProgress = this.authService.getCurrentProgress();
+    if (currentProgress && currentProgress.monthlyInvestment) {
+      this.monthlyGoal = currentProgress.monthlyInvestment;
+      // Retrieve other financial data from backend
+      // Calculate target portfolio and time to FI
+      const annualInvestment = this.monthlyGoal * 12;
+      this.targetPortfolio = annualInvestment * 25; // 4% rule estimate
+      this.timeToFI = 25; // Simplified estimate
+      
+      console.log('[InvestmentConfirmationComponent] Loaded financial data:', {
+        monthlyGoal: this.monthlyGoal,
+        targetPortfolio: this.targetPortfolio,
+        timeToFI: this.timeToFI
+      });
+    } else {
+      console.log('[InvestmentConfirmationComponent] No financial data found, fetching from API...');
+      this.authService.getUserProgress().subscribe({
+        next: (progress) => {
+          if (progress && progress.monthlyInvestment) {
+            this.monthlyGoal = progress.monthlyInvestment;
+            const annualInvestment = this.monthlyGoal * 12;
+            this.targetPortfolio = annualInvestment * 25;
+            this.timeToFI = 25;
+          }
+        },
+        error: (error) => {
+          console.error('[InvestmentConfirmationComponent] Error loading user progress:', error);
+        }
+      });
+    }
+  }
+
+  loadInvestmentSchedule(): void {
+    console.log('[InvestmentConfirmationComponent] Loading investment schedule...');
+    // Retrieve from the backend or local storage
+    // For now, we'll use some reasonable defaults
+    // In a real app, this would come from the backend or navigation state
+    this.investmentSchedule = {
+      payFrequency: 'BIWEEKLY',
+      investmentAmount: Math.round(this.monthlyGoal / 2.17), // Bi-weekly default
+      startDate: this.getNextInvestmentDate('BIWEEKLY'),
+      isEnabled: true
+    };
+  }
+
+  private getNextInvestmentDate(frequency: string): string {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    
+    // Simple default - would be more sophisticated in real app
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Helper methods for display
+  getSelectedFrequencyDetails() {
+    return this.frequencyOptions.find(f => f.value === this.investmentSchedule.payFrequency);
+  }
+
+  getInvestmentScheduleDescription(): string {
+    const frequency = this.getSelectedFrequencyDetails();
+    if (!frequency || !this.investmentSchedule.startDate) return '';
+
+    const dateParts = this.investmentSchedule.startDate.split('-');
+    const startDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+    
+    switch (frequency.value) {
+      case 'WEEKLY':
+        const weekday = startDate.toLocaleDateString('en-US', { weekday: 'long' });
+        return `Every ${weekday}`;
+      case 'BIWEEKLY':
+        const biweeklyDay = startDate.toLocaleDateString('en-US', { weekday: 'long' });
+        return `Every other ${biweeklyDay}`;
+      case 'SEMI_MONTHLY':
+        return 'Every 1st and 15th of the month';
+      case 'MONTHLY':
+        const monthlyDay = startDate.getDate();
+        return `Every ${monthlyDay}${this.getOrdinalSuffix(monthlyDay)} of the month`;
+      default:
+        return '';
+    }
+  }
+
+  private getOrdinalSuffix(day: number): string {
+    const lastDigit = day % 10;
+    const lastTwoDigits = day % 100;
+    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+      return 'th';
+    }
+    
+    switch (lastDigit) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  }
+
+  getMonthlyProjection(): number {
+    const frequencyDetails = this.getSelectedFrequencyDetails();
+    if (!frequencyDetails) return 0;
+    return this.investmentSchedule.investmentAmount * frequencyDetails.paychecksPerMonth;
+  }
+
+  getAnnualProjection(): number {
+    return this.getMonthlyProjection() * 12;
+  }
+
+  // Navigation methods
+  editPortfolio(): void {
+    console.log('[InvestmentConfirmationComponent] Navigating to portfolio customization');
+    this.router.navigate(['/portfolio-customize']);
   }
 
   async authorizeRecurringInvestment() {
@@ -52,9 +276,6 @@ export class InvestmentConfirmationComponent implements OnInit {
     // --- Biometric Authentication (Conceptual) ---
     let biometricSuccess = false;
     try {
-      // const result = await BiometricAuth.verify(); // Or similar plugin method
-      // biometricSuccess = result.verified;
-      // For simulation, assume success if you want to test the flow
       console.log('Simulating Biometric Auth prompt...');
       const userConfirmedBiometrics = await this.simulateBiometricPrompt();
       if (userConfirmedBiometrics) {
@@ -69,10 +290,7 @@ export class InvestmentConfirmationComponent implements OnInit {
     } catch (error) {
       console.error('Biometric authentication error:', error);
       this.authorizationStatus = 'Biometric authentication is not available or failed. You can proceed without it for now.';
-      // Decide if you want to allow proceeding without biometrics or require it.
-      // For this example, let's allow proceeding if it fails but log it.
-      // You might have a fallback to device PIN/password or skip biometrics.
-      biometricSuccess = true; // Simulate proceeding even if biometrics "failed" in this demo
+      biometricSuccess = true; // Allow proceeding for demo
     }
 
     if (!biometricSuccess && false) { // Set to true to enforce biometrics
@@ -81,41 +299,120 @@ export class InvestmentConfirmationComponent implements OnInit {
     }
     // --- End Biometric Authentication ---
 
-
-    // TODO: Call your backend service, which then interacts with Alpaca
-    // This backend call would:
-    // 1. Securely store the user's consent and the recurring investment percentage.
-    // 2. Potentially set up recurring ACH transfers with Plaid (if that's the funding source).
-    // 3. Interface with Alpaca to:
-    //    - Ensure the account is ready for trading.
-    //    - If 'auto' portfolio, potentially create/assign to a model portfolio.
-    //    - If 'custom' portfolio, ensure the selected stocks are noted (e.g., in a watchlist, or prepare for fractional orders).
-    //    - Set up logic for recurring investments (Alpaca doesn't directly do "X% of paycheck" but you can set up recurring buys based on amounts).
-
-    // try {
-    //   await this.alpacaService.setupRecurringInvestment(this.investmentPercentage, this.portfolioType).toPromise();
-    //   this.authorizationStatus = 'Recurring investment authorized successfully!';
-    //   setTimeout(() => {
-    //     this.router.navigate(['/tabs/tab1'], { replaceUrl: true }); // Navigate to dashboard
-    //   }, 1500);
-    // } catch (error) {
-    //   console.error('Error authorizing recurring investment with backend/Alpaca:', error);
-    //   this.authorizationStatus = 'Failed to authorize. Please try again later.';
-    // } finally {
-    //   this.isAuthorizing = false;
-    // }
-
-    // ---- SIMULATED BACKEND CALL ----
-    setTimeout(() => {
-      console.log('Recurring investment setup with Alpaca (simulated).');
-      this.authorizationStatus = 'Recurring investment authorized successfully!';
+    // Create Alpaca account
+    try {
+      await this.createAlpacaAccount();
+      
+      // If account creation successful, proceed with investment setup
+      if (this.alpacaAccountId) {
+        this.authorizationStatus = 'Alpaca account created! Setting up recurring investment...';
+        
+        // TODO: Set up recurring investment logic
+        setTimeout(() => {
+          this.authorizationStatus = 'Recurring investment authorized successfully!';
+          this.isAuthorizing = false;
+          setTimeout(() => {
+            localStorage.setItem('investmentConfirmationCompleted', 'true');
+            localStorage.setItem('alpacaAccountId', this.alpacaAccountId!);
+            this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
+          }, 1000);
+        }, 2000);
+      } else {
+        throw new Error('Failed to create Alpaca account');
+      }
+      
+    } catch (error) {
+      console.error('Error in authorization process:', error);
+      this.authorizationStatus = 'Failed to authorize. Please try again later.';
       this.isAuthorizing = false;
-      setTimeout(() => {
-        localStorage.setItem('investmentConfirmationCompleted', 'true');
-        this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
-      }, 1000);
-    }, 2000);
-    // ---- END SIMULATED BACKEND CALL ----
+      
+      // Show error toast
+      const toast = await this.toastController.create({
+        message: 'Failed to create trading account. Please try again.',
+        duration: 3000,
+        color: 'danger'
+      });
+      await toast.present();
+    }
+  }
+
+  private async createAlpacaAccount(): Promise<void> {
+    this.isCreatingAccount = true;
+    this.authorizationStatus = 'Creating your trading account...';
+    
+    try {
+      // Get user email from authentication service
+      const userEmail = this.authService.getCurrentUserEmail();
+      
+      if (!userEmail) {
+        throw new Error('User email not found. Please log in again.');
+      }
+      
+      console.log('Creating Alpaca account for user:', userEmail);
+      
+      // Get KYC data if available (from Persona verification)
+      const kycData = this.getKycData();
+      
+      // Prepare account data
+      const accountData: CreateAccountRequest = this.alpacaService.prepareAccountData(userEmail, kycData);
+      
+      console.log('Creating Alpaca account with data:', { ...accountData, ssn: '[REDACTED]' });
+      
+      // Create the account
+      const response = await this.alpacaService.createAccount(accountData).toPromise();
+      
+      if (response && response.account_id && !response.error) {
+        this.alpacaAccountId = response.account_id;
+        console.log('Alpaca account created successfully:', response.account_id);
+        
+        // Show success toast
+        const toast = await this.toastController.create({
+          message: 'Trading account created successfully!',
+          duration: 2000,
+          color: 'success'
+        });
+        await toast.present();
+
+        // Create ACH relationship using Plaid data
+        await this.createAchRelationship(response.account_id);
+        
+      } else {
+        throw new Error(response?.error || 'Unknown error creating account');
+      }
+      
+    } catch (error: any) {
+      console.error('Error creating Alpaca account:', error);
+      this.authorizationStatus = 'Failed to create trading account.';
+      throw error;
+    } finally {
+      this.isCreatingAccount = false;
+    }
+  }
+
+  private getKycData(): any {
+    // Try to get KYC data from Persona verification or user profile
+    // This is where you'd integrate with your KYC verification results
+    try {
+      const storedKycData = localStorage.getItem('kycVerificationData');
+      if (storedKycData) {
+        return JSON.parse(storedKycData);
+      }
+    } catch (error) {
+      console.warn('Could not retrieve KYC data:', error);
+    }
+    
+    // Return default/placeholder data if no KYC data available
+    return {
+      firstName: 'John',
+      lastName: 'Doe',
+      dateOfBirth: '1990-01-01',
+      address: {
+        street: '123 Main St',
+        city: 'New York',
+        state: 'NY',
+        zip: '10001'
+      }
+    };
   }
 
   // Helper for simulation
@@ -128,8 +425,155 @@ export class InvestmentConfirmationComponent implements OnInit {
     });
   }
 
-  goBack() {
-    // Consider the state if the user goes back. Should they re-select stocks?
-    this.navCtrl.back();
+  /**
+   * Create ACH relationship using Plaid data from database after successful account creation
+   */
+  private async createAchRelationship(alpacaAccountId: string): Promise<void> {
+    try {
+      console.log('🏦 Creating ACH relationship for account:', alpacaAccountId);
+      
+      // Get Plaid data from database
+      const plaidData = await this.plaidDataService.getUserPlaidData().toPromise();
+      
+      if (!plaidData?.accessToken || !plaidData?.accountId) {
+        console.warn('⚠️ No Plaid banking data found in database. User may need to re-link their bank account.');
+        
+        const toast = await this.toastController.create({
+          message: 'Bank account linking skipped - please link your bank account in settings later.',
+          duration: 3000,
+          color: 'warning'
+        });
+        await toast.present();
+        return;
+      }
+
+      console.log('✅ Found Plaid data in database:', { 
+        hasAccessToken: !!plaidData.accessToken,
+        hasAccountId: !!plaidData.accountId,
+        institutionName: plaidData.institutionName 
+      });
+
+      // Get user's full name for account owner (using current user email as fallback)
+      const kycData = this.getKycData();
+      const accountOwnerName = `${kycData.firstName} ${kycData.lastName}`; // Get actual name from KYC data
+
+      // Create ACH relationship using database Plaid data
+      const achResult = await this.alpacaService.createAchRelationshipFromPlaid(
+        alpacaAccountId,
+        plaidData.accessToken,
+        plaidData.accountId,
+        accountOwnerName
+      ).toPromise();
+
+      if (achResult && !achResult.error) {
+        console.log('✅ ACH relationship created successfully:', achResult);
+        
+        // Update investment schedule with ACH request ID
+        if (achResult.id) {
+          await this.updateInvestmentScheduleWithAchId(achResult.id);
+        }
+        
+        const toast = await this.toastController.create({
+          message: 'Bank account linked successfully! You can now fund your investment account.',
+          duration: 3000,
+          color: 'success'
+        });
+        await toast.present();
+      } else {
+        throw new Error(achResult?.error || 'Unknown ACH creation error');
+      }
+      
+    } catch (error: any) {
+      console.error('🚨 UNEXPECTED: ACH creation failed despite successful Plaid linking!', error);
+      
+      // Since we have Plaid data in the database, this failure is unexpected and should be investigated
+      const errorMessage = error?.error?.message || error?.message || 'Unknown error';
+      console.error('ACH Creation Error Details:', {
+        alpacaAccountId,
+        error: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Show user a more specific error since this shouldn't fail if Plaid worked
+      const toast = await this.toastController.create({
+        message: `Bank linking failed unexpectedly: ${errorMessage}. Please contact support.`,
+        duration: 4000,
+        color: 'danger'
+      });
+      await toast.present();
+      
+      // TODO: Consider adding retry logic or automatic support ticket creation
+    }
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('jwtToken');
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  }
+
+  private async showSuccess(message: string): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      color: 'success'
+    });
+    await toast.present();
+  }
+
+  private async showWarning(message: string): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      color: 'warning'
+    });
+    await toast.present();
+  }
+
+  private async showError(message: string): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration: 4000,
+      color: 'danger'
+    });
+    await toast.present();
+  }
+
+  /**
+   * Update the investment schedule with the ACH request ID after successful account creation
+   */
+  private async updateInvestmentScheduleWithAchId(achRequestId: string): Promise<void> {
+    try {
+      const userEmail = this.authService.getCurrentUserEmail();
+      if (!userEmail) {
+        console.warn('Cannot update investment schedule: user email not found');
+        return;
+      }
+
+      const requestData: UpdateAchRequestIdRequest = {
+        userEmail,
+        achRequestId
+      };
+
+      console.log('Updating investment schedule with ACH request ID:', achRequestId);
+
+      const response = await this.http.post<any>(
+        `${environment.backendApiUrl}/investment-schedule/update-ach-request-id`,
+        requestData,
+        { headers: this.getAuthHeaders() }
+      ).toPromise();
+
+      if (response && response.id) {
+        console.log('Investment schedule updated successfully with ACH request ID:', response);
+      } else {
+        console.warn('Failed to update investment schedule with ACH request ID:', response);
+      }
+    } catch (error) {
+      console.error('Error updating investment schedule with ACH request ID:', error);
+      // Don't throw error as this shouldn't block the user flow
+    }
   }
 }

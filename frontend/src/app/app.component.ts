@@ -1,11 +1,12 @@
-// src/app/app.component.ts
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
-import { Platform } from '@ionic/angular/standalone'; // Import Platform
-import { SplashScreen } from '@capacitor/splash-screen'; // Import SplashScreen
+import { Platform } from '@ionic/angular/standalone'; 
+import { SplashScreen } from '@capacitor/splash-screen';
 import { register } from 'swiper/element/bundle';
+import { AuthService, UserProgress } from './services/auth.service';
+import { JwtTokenUtils } from './utils/jwt-token.utils';
 
 register();
 
@@ -19,9 +20,10 @@ register();
 export class AppComponent implements OnInit {
   constructor(
     private router: Router,
-    private platform: Platform // Inject Platform
+    private platform: Platform,
+    private authService: AuthService
   ) {
-    this.initializeApp(); // Call initializeApp from constructor
+    this.initializeApp();
   }
 
   initializeApp() {
@@ -40,21 +42,138 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // --- Test Scenarios (Uncomment ONE block at a time to test a flow) ---
-    // (Your existing test scenarios for localStorage - keep them as they are useful)
-    // Scenario 1: Fresh Start
     localStorage.clear();
-    localStorage.setItem('getStartedCompleted', 'false');
-    localStorage.setItem('initialSurveyCompleted', 'false');
-    localStorage.setItem('linkplaidCompleted', 'false');
-    localStorage.setItem('investmentSurveyCompleted', 'false');
-    localStorage.setItem('choseToPickStocks', 'false');
-    localStorage.setItem('stockSelectionCompleted', 'false');
-    localStorage.setItem('investmentConfirmationCompleted', 'false');
-    // --- End Test Scenarios ---
+    console.log('[AppComponent] ngOnInit - Setting up authentication and progress tracking.');
+    
+    // 🧪 SIMULATE EXISTING USER - Login as any user from your database
+    // First, check your database users by visiting: http://localhost:8080/api/dev/list-users
+    // Then uncomment ONE of these to simulate logging in as that user:
+    
+    // this.simulateUserLogin('andrew3@msn.com');           // Login by email
+    // this.simulateUserLogin('', 'user_handle_123');        // Login by user_handle  
+    // this.simulateUserLogin('test@test.com');              // Login as different user
+    
+    // OR navigate directly to any page for testing (bypasses auth entirely):
+    // this.router.navigate(['/confirm-investment'], { replaceUrl: true });
+    // this.router.navigate(['/manual-stock-selection'], { replaceUrl: true });
+    // this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
+    
+    // 🚫 COMMENT OUT AUTH LOGIC WHEN TESTING SPECIFIC PAGES
+    // Subscribe to authentication state changes
+    this.authService.isLoggedIn$.subscribe(isLoggedIn => {
+      if (isLoggedIn) {
+        // User is logged in, wait for progress data
+        this.authService.userProgress$.subscribe(progress => {
+          if (progress) {
+            this.navigateBasedOnProgress(progress);
+          }
+        });
+      } else {
+        // User is not logged in, redirect to login
+        console.log('[AppComponent] User not logged in, redirecting to get-started');
+        this.router.navigate(['/get-started'], { replaceUrl: true });
+      }
+    });
+  }
 
-    console.log('[AppComponent] ngOnInit - Calling checkSurveyStatusAndNavigate.');
-    this.checkSurveyStatusAndNavigate();
+  /**
+   * Simulate logging in as an existing user from your database
+   * Call your backend to authenticate and get their progress state
+   */
+  private simulateUserLogin(email?: string, userHandle?: string): void {
+    console.log(`[AppComponent] 🧪 Simulating login for user:`, { email, userHandle });
+    
+    // Call backend to authenticate as this user and get their JWT + progress
+    this.authService.authenticateAsUser(email, userHandle).subscribe({
+      next: (response) => {
+        console.log('🔍 [AppComponent] Raw response from authenticateAsUser:', response);
+        
+        if (response && response.success && response.jwtToken) {
+          console.log('✅ [AppComponent] Successfully authenticated as user:', response);
+          
+          // Store JWT and trigger auth state update
+          JwtTokenUtils.storeJwtToken(response.jwtToken, response.id!, response.email!);
+          this.authService.handleSuccessfulAuthentication(response.jwtToken, response.id!, response.email!);
+          
+        } else {
+          console.error('❌ [AppComponent] Failed to authenticate as user. Response:', response);
+          console.error('❌ [AppComponent] Response details:', {
+            hasResponse: !!response,
+            success: response?.success,
+            hasJwtToken: !!response?.jwtToken,
+            message: response?.message
+          });
+          // Go to login page if simulation fails
+          this.router.navigate(['/get-started'], { replaceUrl: true });
+        }
+      },
+      error: (err) => {
+        console.error('❌ [AppComponent] Error simulating user login:', err);
+        console.error('❌ [AppComponent] Error details:', {
+          status: err?.status,
+          message: err?.message,
+          url: err?.url
+        });
+        this.router.navigate(['/get-started'], { replaceUrl: true });
+      }
+    });
+  }
+
+  navigateBasedOnProgress(progress: UserProgress): void {
+    console.log('🚀 [AppComponent] navigateBasedOnProgress called with actual user progress:', progress);
+    
+    // Use the ACTUAL progress data from the backend, not localStorage
+    const getStartedCompleted = true; // If we have progress data, get-started is done
+    const initialSurveyCompleted = progress.initialSurveyCompleted;
+    const linkplaidCompleted = progress.linkplaidCompleted;
+    const investmentSurveyCompleted = progress.investmentSurveyCompleted;
+    const choseToPickStocks = progress.choseToPickStocks;
+    const stockSelectionCompleted = progress.stockSelectionCompleted;
+    const investmentConfirmationCompleted = progress.investmentConfirmationCompleted;
+
+    let targetRoute: string | null = null;
+    let decisionReason: string = "";
+
+    if (!initialSurveyCompleted) {
+      targetRoute = '/initial-survey';
+      decisionReason = "Initial survey NOT complete.";
+    } else if (!linkplaidCompleted) {
+      targetRoute = '/link-bank';
+      decisionReason = "Initial survey complete, Plaid linking NOT complete.";
+    } else if (!investmentSurveyCompleted) {
+      targetRoute = '/confirm-investment';
+      decisionReason = "Plaid linked, Investment setup survey NOT complete.";
+    } else if (choseToPickStocks && !stockSelectionCompleted) {
+      targetRoute = '/manual-stock-selection';
+      decisionReason = "User chose to pick stocks, but stock selection page NOT complete.";
+    } else if (!investmentConfirmationCompleted) {
+      targetRoute = '/confirm-investment';
+      decisionReason = "Investment process done, Investment confirmation NOT complete.";
+    } else {
+      targetRoute = '/tabs/tab1';
+      decisionReason = "All onboarding steps complete.";
+    }
+
+    const currentBaseUrl = this.router.url.split('?')[0].split('#')[0];
+    if (targetRoute && currentBaseUrl !== targetRoute) {
+      console.log(`[AppComponent] DECISION: ${decisionReason} Navigating to ${targetRoute}.`);
+      this.router.navigateByUrl(targetRoute, { replaceUrl: true });
+    } else if (targetRoute && currentBaseUrl === targetRoute) {
+      console.log(`[AppComponent] DECISION: ${decisionReason} Already on target route ${targetRoute}. No navigation needed.`);
+    }
+
+    // Log the current user state for debugging
+    console.log('📊 [AppComponent] Current user state (FROM BACKEND):', {
+      getStartedCompleted,
+      initialSurveyCompleted, 
+      linkplaidCompleted,
+      investmentSurveyCompleted,
+      choseToPickStocks,
+      stockSelectionCompleted,
+      investmentConfirmationCompleted,
+      targetRoute,
+      currentUrl: this.router.url
+    });
   }
 
   checkSurveyStatusAndNavigate(): void {
@@ -86,13 +205,13 @@ export class AppComponent implements OnInit {
       targetRoute = '/get-started';
       decisionReason = "Get Started NOT complete.";
     } else if (!initialSurveyCompleted) {
-      targetRoute = '/survey';
+      targetRoute = '/initial-survey';
       decisionReason = "Initial survey NOT complete.";
     } else if (!linkplaidCompleted) {
       targetRoute = '/link-bank';
       decisionReason = "Initial survey complete, Plaid linking NOT complete.";
     } else if (!investmentSurveyCompleted) {
-      targetRoute = '/survey';
+      targetRoute = '/confirm-investment';
       decisionReason = "Plaid linked, Investment setup survey NOT complete.";
     } else if (choseToPickStocks && !stockSelectionActualCompletion) {
       targetRoute = '/stock-selection';

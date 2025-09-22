@@ -17,7 +17,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @CrossOrigin(origins = "*", maxAge = 3600) // For development, restrict in production
@@ -33,50 +35,8 @@ public class PlaidController {
     @Autowired
     private UserRepository userRepository;
 
-    // --- ANONYMOUS FLOW ENDPOINTS ---
-
-    @PostMapping("/create_link_token_anonymous")
-    public ResponseEntity<?> createLinkTokenAnonymous() {
-        String temporaryUserId = "anon_" + UUID.randomUUID().toString();
-        logger.info("Request received for /create_link_token_anonymous. Generated temp ID: {}", temporaryUserId);
-        try {
-            LinkTokenCreateResponse response = plaidService.createLinkTokenAnonymous(temporaryUserId);
-            return ResponseEntity.ok(Map.of(
-                    "link_token", response.getLinkToken(),
-                    "expiration", response.getExpiration().toString(), // Ensure toString if not already string
-                    "temporary_user_id", temporaryUserId
-            ));
-        } catch (IOException e) {
-            logger.error("Error creating anonymous Plaid link token: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("Error creating Plaid link token: " + e.getMessage()));
-        }
-    }
-
-    @PostMapping("/exchange_public_token_anonymous")
-    public ResponseEntity<?> exchangePublicTokenAnonymous(@RequestBody Map<String, String> payload) {
-        String publicToken = payload.get("public_token");
-        String temporaryUserId = payload.get("temporary_user_id");
-        logger.info("Request received for /exchange_public_token_anonymous. Temp ID: {}", temporaryUserId);
-
-
-        if (publicToken == null || publicToken.isEmpty() || temporaryUserId == null || temporaryUserId.isEmpty()) {
-            logger.warn("/exchange_public_token_anonymous: Missing public_token or temporary_user_id");
-            return ResponseEntity.badRequest().body(new MessageResponse("public_token and temporary_user_id are required"));
-        }
-
-        try {
-            plaidService.exchangePublicTokenAndStoreTemporarily(publicToken, temporaryUserId);
-            return ResponseEntity.ok(new MessageResponse("Plaid connection pending account creation. Please create or link your account."));
-        } catch (IOException e) {
-            logger.error("Error exchanging anonymous Plaid public token for temp ID {}: {}", temporaryUserId, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("Error exchanging Plaid public token: " + e.getMessage()));
-        }
-    }
-
     // --- AUTHENTICATED FLOW ENDPOINTS ---
-
+    
     @PostMapping("/create_link_token") // No suffix, implies authenticated
     public ResponseEntity<?> createLinkTokenAuthenticated() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -134,6 +94,84 @@ public class PlaidController {
             logger.error("Error exchanging Plaid public token for user {}: {}", appUser.getId(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new MessageResponse("Error exchanging Plaid public token: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/user-data")
+    public ResponseEntity<?> getUserPlaidData(Authentication authentication) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+            
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("User not found");
+            }
+            
+            User user = userOpt.get();
+            
+            // Create response with essential Plaid data for ACH creation
+            Map<String, Object> plaidData = new HashMap<>();
+            plaidData.put("accessToken", user.getPlaidAccessToken());
+            plaidData.put("accountId", user.getPlaidAccountId());
+            plaidData.put("institutionName", user.getPlaidInstitutionName());
+            plaidData.put("hasValidToken", user.getPlaidAccessToken() != null && !user.getPlaidAccessToken().isEmpty());
+            
+            return ResponseEntity.ok(plaidData);
+        } catch (Exception e) {
+            logger.error("Error retrieving user Plaid data", e);
+            return ResponseEntity.status(500).body("Error retrieving Plaid data");
+        }
+    }
+
+    @GetMapping("/access-token")
+    public ResponseEntity<String> getAccessToken(Authentication authentication) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+            
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("User not found");
+            }
+            
+            User user = userOpt.get();
+            String accessToken = user.getPlaidAccessToken();
+            
+            if (accessToken == null || accessToken.isEmpty()) {
+                return ResponseEntity.badRequest().body("No Plaid access token found");
+            }
+            
+            return ResponseEntity.ok(accessToken);
+        } catch (Exception e) {
+            logger.error("Error retrieving access token", e);
+            return ResponseEntity.status(500).body("Error retrieving access token");
+        }
+    }
+
+    @GetMapping("/primary-bank-account")
+    public ResponseEntity<?> getPrimaryBankAccount(Authentication authentication) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+            
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("User not found");
+            }
+            
+            User user = userOpt.get();
+            
+            // Create response with bank account info needed for ACH
+            Map<String, Object> bankAccount = new HashMap<>();
+            bankAccount.put("accountId", user.getPlaidAccountId());
+            bankAccount.put("accessToken", user.getPlaidAccessToken());
+            bankAccount.put("institutionName", user.getPlaidInstitutionName());
+            bankAccount.put("accountName", user.getPlaidAccountName());
+            bankAccount.put("accountType", user.getPlaidAccountType());
+            bankAccount.put("accountSubtype", user.getPlaidAccountSubtype());
+            
+            return ResponseEntity.ok(bankAccount);
+        } catch (Exception e) {
+            logger.error("Error retrieving primary bank account", e);
+            return ResponseEntity.status(500).body("Error retrieving bank account");
         }
     }
 }

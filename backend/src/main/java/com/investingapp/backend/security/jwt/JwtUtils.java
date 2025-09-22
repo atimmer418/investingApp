@@ -89,15 +89,11 @@ public class JwtUtils {
     }
 
     public boolean validateJwtToken(String authToken) {
-        logger.info("JwtUtils validateJwtToken - Validating with key object: {}", System.identityHashCode(this.key));
-        logger.info("JwtUtils validateJwtToken - Current jwtSecretString value (for reference): '{}'", this.jwtSecretString); // Should be the new one
-
         try {
             Jwts.parserBuilder()
                 .setSigningKey(this.key) // Ensure it's using this.key
                 .build()
                 .parseClaimsJws(authToken);
-            logger.info("JwtUtils validateJwtToken - Token validation successful for token: {}", authToken);
             return true;
         } catch (SignatureException e) {
             logger.error("JwtUtils validateJwtToken - Invalid JWT signature: {} for token: {}", e.getMessage(), authToken);

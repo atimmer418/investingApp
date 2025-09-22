@@ -1,0 +1,103 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Your Path to FI</ion-title>
+    <ion-progress-bar [value]="0.5"></ion-progress-bar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="survey-form-container">
+
+    <!-- Question 1: Monthly Investment -->
+    <div class="question-wrapper">
+      <h2>First, how much can you invest each month?</h2>
+      <p class="helper-text">This is the lifeline to your financial independence. The more you invest, the sooner you're free.</p>
+      
+      <div class="input-display-wrapper">
+        <span class="currency-symbol">$</span>
+        <ion-input
+          type="text"
+          inputmode="numeric"
+          [(ngModel)]="formattedMonthlyInvestment"
+          (ionBlur)="formatAndSetMonthlyInvestment()"
+          (ionFocus)="unformatMonthlyInvestment()"
+        ></ion-input>
+        <span class="per-month-label">/ month</span>
+      </div>
+
+      <ion-range
+        aria-label="Monthly Investment"
+        [min]="100"
+        [max]="10000"
+        [step]="100"
+        [(ngModel)]="monthlyInvestment"
+        (ionChange)="onSliderChange()"
+      ></ion-range>
+    </div>
+
+    <!-- Divider -->
+    <hr class="section-divider" />
+
+    <!-- Question 2: Retirement Income -->
+    <div class="question-wrapper">
+      <h2>What annual income do you want your portfolio to replace?</h2>
+      <p class="helper-text">Think of the yearly salary you'd need to live comfortably without a traditional job.</p>
+      
+      <div class="input-display-wrapper">
+        <span class="currency-symbol">$</span>
+        <ion-input
+          type="text"
+          inputmode="numeric"
+          [(ngModel)]="formattedRetirementIncome"
+          (ionBlur)="formatAndSetRetirementIncome()"
+          (ionFocus)="unformatRetirementIncome()"
+        ></ion-input>
+        <span class="per-month-label">/ year</span>
+      </div>
+
+      <ion-range
+        aria-label="Retirement Income"
+        [min]="40000"
+        [max]="250000"
+        [step]="5000"
+        [(ngModel)]="retirementIncome"
+        (ionChange)="onSliderChange()"
+      ></ion-range>
+    </div>
+
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="footer-container">
+    <!-- NEW: Expandable calculation info card -->
+    <div class="calculation-info-card" [class.expanded]="isCalculationExpanded">
+      <p class="dynamic-result-text" (click)="toggleCalculationInfo()">
+        With this setup, you can have financial independence in just <strong>{{ timeToFI }} years</strong>. 
+        <ion-icon 
+          [name]="isCalculationExpanded ? 'chevron-up' : 'information-circle-outline'" 
+          class="info-icon">
+        </ion-icon>
+        <br/>
+        Next, we'll show you proven strategies to turn this wealth into lifetime income.
+      </p>
+      
+      <div class="calculation-details" *ngIf="isCalculationExpanded">
+        <div class="calculation-explanation">
+          <p><strong>Your personalized timeline isn't a guess—it's a projection based on a proven wealth-building formula.</strong></p>
+          <p>We calculate the portfolio size needed to support your desired annual income, using a sustainable 4% withdrawal rate. We then estimate how long your monthly investments, growing at our portfolio's historical average of 9% annual return, will take to reach that goal.</p>
+          <p>The result is a realistic estimate of your journey to financial independence.</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- NEW: The Call to Action -->
+    <ion-button expand="block" (click)="viewMyPlan()" class="cta-main">
+      See My FI Plan
+    </ion-button>
+  </div>
+</ion-footer>
+

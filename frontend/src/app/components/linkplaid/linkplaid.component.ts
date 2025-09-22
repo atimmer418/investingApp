@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
-  IonList, IonItem, IonLabel, IonSpinner, IonText, IonButtons, NavController // Added IonButtons, NavController
+  IonSpinner, IonText, IonButtons, IonBackButton, IonProgressBar, NavController
 } from '@ionic/angular/standalone';
 import { Observable, throwError, Subscription } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
@@ -13,12 +13,6 @@ import { environment } from '../../../environments/environment';
 
 // Make sure Plaid global object is available (from script in index.html)
 declare var Plaid: any;
-
-interface LinkTokenAnonymousResponse {
-  link_token: string;
-  expiration: string;
-  temporary_user_id: string;
-}
 
 interface LinkTokenAuthenticatedResponse {
   link_token: string;
@@ -37,7 +31,7 @@ const BACKEND_API_URL = environment.backendApiUrl;
     CommonModule,
     FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
-    IonList, IonItem, IonLabel, IonSpinner, IonText, IonButtons
+    IonSpinner, IonText, IonButtons, IonBackButton, IonProgressBar
   ],
 })
 export class LinkPlaidComponent implements OnInit, OnDestroy {
@@ -46,7 +40,6 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
   isPlaidReady: boolean = false;
   plaidHandler: any = null;
 
-  private temporaryUserId: string | null = null; // For anonymous flow
   private isUserAuthenticated: boolean = false; // Determine this based on JWT presence
   private plaidSubscription: Subscription | undefined;
 
@@ -78,10 +71,9 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.isPlaidReady = false;
     this.statusMessage = 'Initializing secure connection...';
-    this.temporaryUserId = null; // Reset
 
     try {
-      let linkTokenData: LinkTokenAnonymousResponse | LinkTokenAuthenticatedResponse;
+      let linkTokenData: LinkTokenAuthenticatedResponse;
       let linkToken: string;
 
       if (this.isUserAuthenticated) {
@@ -89,13 +81,11 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
         linkToken = linkTokenData.link_token;
         console.log('Received authenticated link_token.');
       } else {
-        linkTokenData = await this.getLinkTokenAnonymous().toPromise() as LinkTokenAnonymousResponse;
-        linkToken = linkTokenData.link_token;
-        this.temporaryUserId = (linkTokenData as LinkTokenAnonymousResponse).temporary_user_id;
-        console.log('Received anonymous link_token and temp_user_id:', this.temporaryUserId);
+        linkToken = "";
+        console.log('JWT token expired most likely. Need the user to log in again.');
       }
 
-      if (!linkToken) {
+      if (linkToken === "") {
         throw new Error('Failed to retrieve link_token from backend.');
       }
 
@@ -108,13 +98,10 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
           if (this.isUserAuthenticated) {
             this.exchangePublicTokenAuthenticated(public_token);
           } else {
-            if (!this.temporaryUserId) {
-              console.error("Critical error: Temporary user id is missing for anonymous Plaid exchange.");
-              this.statusMessage = "Error: Session id missing. Please restart the process.";
-              this.isLoading = false;
-              return;
-            }
-            this.exchangePublicTokenAnonymous(public_token, this.temporaryUserId);
+            console.error("Critical error: user is not authenticated when trying to link bank.");
+            this.statusMessage = "Error: User is not authenticated. Please restart the process.";
+            this.isLoading = false;
+            return;
           }
         },
         onLoad: () => {
@@ -154,15 +141,6 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
     return headers;
   }
 
-  private getLinkTokenAnonymous(): Observable<LinkTokenAnonymousResponse> {
-    console.log('Requesting anonymous link_token...');
-    return this.http.post<LinkTokenAnonymousResponse>(`${BACKEND_API_URL}/plaid/create_link_token_anonymous`, {})
-      .pipe(
-        tap(response => console.log('Received anonymous link_token response:', response)),
-        catchError(this.handleError.bind(this))
-      );
-  }
-
   private getLinkTokenAuthenticated(): Observable<LinkTokenAuthenticatedResponse> {
     console.log('Requesting authenticated link_token...');
     return this.http.post<LinkTokenAuthenticatedResponse>(`${BACKEND_API_URL}/plaid/create_link_token`, {}, { headers: this.getAuthHeaders() })
@@ -170,32 +148,6 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
         tap(response => console.log('Received authenticated link_token response:', response)),
         catchError(this.handleError.bind(this))
       );
-  }
-
-  private exchangePublicTokenAnonymous(publicToken: string, temporaryUserId: string): void {
-    console.log('Exchanging anonymous public_token with temp_user_id:', temporaryUserId);
-    const payload = { public_token: publicToken, temporary_user_id: temporaryUserId };
-    this.plaidSubscription = this.http.post<any>(`${BACKEND_API_URL}/plaid/exchange_public_token_anonymous`, payload)
-      .pipe(
-        tap(response => {
-          console.log('Anonymous public token exchanged successfully:', response);
-          this.statusMessage = 'Bank connection saved temporarily.';
-          this.isLoading = false;
-          // IMPORTANT: Navigate to a page where user creates an account or logs in.
-          // Pass temporaryUserId to that page (e.g., via route params or state).
-          console.log('Navigating to account creation/login with temp ID:', temporaryUserId);
-          localStorage.setItem('linkplaidCompleted', 'true');
-          this.router.navigate(['/auth-finalize'], { // Example route for account creation/login after Plaid
-            queryParams: { tempId: temporaryUserId },
-            replaceUrl: true
-          });
-        }),
-        catchError(err => {
-          this.isLoading = false;
-          this.statusMessage = `Error: ${err.error?.message || 'Failed to save bank connection.'}`;
-          return this.handleError(err);
-        })
-      ).subscribe();
   }
 
   private exchangePublicTokenAuthenticated(publicToken: string): void {
@@ -207,8 +159,8 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
           this.statusMessage = 'Bank account linked successfully!';
           this.isLoading = false;
           localStorage.setItem('linkplaidCompleted', 'true'); // Set your flag
-          // Navigate to the next step for authenticated users (e.g., investment survey)
-          this.router.navigate(['/survey'], { queryParams: { stage: 'investmentSetup' }, replaceUrl: true });
+          // Navigate to the investment schedule setup
+          this.router.navigate(['/investment-schedule'], { replaceUrl: true });
         }),
         catchError(err => {
           this.isLoading = false;

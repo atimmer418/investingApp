@@ -20,6 +20,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUserHandle(String userHandle);
 
+    // Find a user by their Plaid item ID for webhook processing
+    User findByPlaidItemId(String plaidItemId);
+
     // You can add more custom query methods here as needed following Spring Data JPA conventions
     // e.g., List<User> findByLastName(String lastName);
 }

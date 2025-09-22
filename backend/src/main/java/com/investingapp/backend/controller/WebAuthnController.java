@@ -6,6 +6,8 @@ import com.github.benmanes.caffeine.cache.Cache;
 
 // imports below are for simulating passkey
 import com.investingapp.backend.model.User;
+import org.springframework.http.HttpStatus;
+import java.util.Map;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -61,19 +63,26 @@ public class WebAuthnController {
     @PostMapping("/register/start")
     public ResponseEntity<?> startRegistration(@Valid @RequestBody RegistrationStartRequest registrationRequest,
             HttpServletRequest request) {
-        // ... (existing logic is fine) ...
         logger.info("Received passkey registration start request for email: {}", registrationRequest.getEmail());
         String origin = request.getHeader("Origin");
         logger.info("Received request from ORIGIN: {}", origin);
         try {
             PublicKeyCredentialCreationOptions options = webAuthnService.startRegistrationFlow(
                     registrationRequest.getEmail(),
-                    registrationRequest.getTemporaryUserId());
+                    registrationRequest.getPlanId(),
+                    registrationRequest.getTimeToFI(),
+                    registrationRequest.getTargetPortfolio(),
+                    registrationRequest.getRetirementIncome(),
+                    registrationRequest.getMonthlyInvestment());
             challengeCache.put(registrationRequest.getEmail(), options);
             logger.info("Registration options stored in cache for user: {}", registrationRequest.getEmail());
             return ResponseEntity.ok(new RegistrationStartResponse(options.toJson()));
+        } catch (IllegalArgumentException e) {
+            logger.warn("Registration failed for email {}: {}", registrationRequest.getEmail(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Email is already taken.");
         } catch (JsonProcessingException e) {
-            logger.error("Failed to serialize options to JSON for user: {}", registrationRequest.getEmail(), e);
+            logger.error("Failed to serialize options to JSON for user: {}", registrationRequest.getEmail(), e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error generating registration options.");
         }
@@ -127,7 +136,6 @@ public class WebAuthnController {
         RegistrationFinishResponse serviceResponse = webAuthnService.finishRegistrationFlow(
                 finishRequest.getEmail(),
                 finishRequest.getCredential(),
-                finishRequest.getTemporaryUserId(),
                 options);
 
         if (serviceResponse.isSuccess()) {

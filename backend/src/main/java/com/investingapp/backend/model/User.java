@@ -58,6 +58,31 @@ public class User {
 
     @Column(length = 255)
     private String plaidItemId;
+    
+    @Column(length = 255)
+    private String plaidAccountId; // Primary bank account ID from Plaid
+    
+    @Column(length = 255)
+    private String plaidInstitutionName; // Bank name (e.g., "Chase Bank")
+    
+    @Column(length = 255)
+    private String plaidAccountName; // Account nickname (e.g., "Chase Checking")
+    
+    @Column(length = 50)
+    private String plaidAccountType; // "depository", "credit", etc.
+    
+    @Column(length = 50)
+    private String plaidAccountSubtype; // "checking", "savings", etc.
+
+    // Alpaca ACH relationship fields
+    @Column(length = 255)
+    private String alpacaAccountId; // Alpaca brokerage account ID
+    
+    @Column(length = 255)
+    private String alpacaAchRelationshipId; // ACH relationship ID for funding
+    
+    @Column(length = 50)
+    private String alpacaAchStatus; // "QUEUED", "APPROVED", "PENDING", etc.
 
     // Onboarding status flags
     private boolean initialSurveyCompleted = false;
@@ -66,6 +91,12 @@ public class User {
     private boolean choseToPickStocks = false;
     private boolean stockSelectionCompleted = false;
     private boolean investmentConfirmationCompleted = false;
+
+    private String planId;
+    private String timeToFI;
+    private Double targetPortfolio;
+    private Double retirementIncome;
+    private Double monthlyInvestment;
 
     @CreationTimestamp // Automatically set by Hibernate on creation
     private LocalDateTime createDate;

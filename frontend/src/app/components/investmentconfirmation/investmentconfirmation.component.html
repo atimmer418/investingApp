@@ -1,9 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar color="primary">
     <ion-buttons slot="start">
-      <ion-button (click)="goBack()">
-        <ion-icon slot="icon-only" name="arrow-back-outline" aria-label="Back"></ion-icon>
-      </ion-button>
+      <ion-back-button defaultHref="/investment-schedule"></ion-back-button>
     </ion-buttons>
     <ion-title>Confirm Investment</ion-title>
   </ion-toolbar>
@@ -11,72 +9,143 @@
 
 <ion-content class="ion-padding">
   <div class="container">
-    <ion-card class="info-card">
+    <div class="welcome-section">
+      <h1>You're Almost Ready!</h1>
+      <p class="subtitle">Review your investment details and confirm to get started</p>
+    </div>
+
+    <ion-card class="summary-card">
       <ion-card-header>
-        <ion-card-title class="ion-text-center">You're Almost Set!</ion-card-title>
+        <ion-card-title>
+          <ion-icon name="calendar-outline" color="primary"></ion-icon>
+          Your Investment Schedule
+        </ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <ion-text class="ion-text-center">
-          <p>Please review the details below and authorize your automated investments.</p>
-        </ion-text>
-
-        <ion-list lines="none" class="details-list">
+        <ion-list lines="none" class="summary-list">
           <ion-item>
-            <ion-icon name="wallet-outline" slot="start" color="secondary"></ion-icon>
-            <ion-label>Recurring Investment:</ion-label>
-            <ion-text slot="end" color="dark"><strong>{{ investmentPercentage || 'Not set' }} of each paycheck</strong></ion-text>
+            <ion-icon name="cash-outline" slot="start" color="success"></ion-icon>
+            <ion-label>
+              <h3>Investment Amount</h3>
+              <p>{{ formatCurrency(investmentSchedule.investmentAmount) }} per {{ getSelectedFrequencyDetails()?.label?.toLowerCase() || 'period' }}</p>
+            </ion-label>
           </ion-item>
+          
           <ion-item>
-            <ion-icon name="briefcase-outline" slot="start" color="secondary"></ion-icon>
-            <ion-label>Portfolio Type:</ion-label>
-            <ion-text slot="end" color="dark"><strong>{{ portfolioType === 'custom' ? 'Your Custom Picks' : 'Automated Portfolio' }}</strong></ion-text>
+            <ion-icon name="repeat-outline" slot="start" color="primary"></ion-icon>
+            <ion-label>
+              <h3>Schedule</h3>
+              <p>{{ getInvestmentScheduleDescription() }}</p>
+            </ion-label>
           </ion-item>
         </ion-list>
+      </ion-card-content>
+    </ion-card>
 
-        <div class="alpaca-info ion-margin-top">
-          <ion-text>
-            <h4>How it Works with Alpaca:</h4>
-            <p><small>Your investments will be managed through Alpaca, a registered broker-dealer. When you authorize, we will instruct Alpaca to:</small></p>
-          </ion-text>
-          <ion-list lines="inset" class="explanation-list">
-            <ion-item>
-              <ion-icon name="checkmark-circle-outline" slot="start" color="success"></ion-icon>
-              <ion-label class="ion-text-wrap">Regularly invest {{ investmentPercentage }} of your direct deposited paycheck amount.</ion-label>
-            </ion-item>
-            <ion-item>
-              <ion-icon name="checkmark-circle-outline" slot="start" color="success"></ion-icon>
-              <ion-label class="ion-text-wrap">
-                {{ portfolioType === 'custom' ? 'Purchase the stocks you selected.' : 'Invest in a diversified portfolio based on your survey answers.' }}
+    <ion-card class="summary-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="pie-chart-outline" color="secondary"></ion-icon>
+          Your Portfolio
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="portfolio-summary">
+          <div class="portfolio-type">
+            <h4>{{ portfolioType === 'auto' ? 'Recommended Diversified Portfolio' : 'Custom Portfolio' }}</h4>
+            <p class="portfolio-description">
+              {{ portfolioType === 'auto' ? 'A balanced mix of stocks, bonds, and real estate for long-term growth' : 'Your custom selected investments' }}
+            </p>
+          </div>
+          
+          <ion-list lines="none" class="portfolio-list">
+            <ion-item *ngFor="let stock of defaultPortfolio" class="portfolio-item">
+              <div slot="start" class="allocation-badge">
+                {{ stock.allocation }}%
+              </div>
+              <ion-label>
+                <h3>{{ stock.symbol }}</h3>
+                <p>{{ stock.name }}</p>
+                <ion-note>{{ stock.description }}</ion-note>
               </ion-label>
             </ion-item>
-            <ion-item>
-              <ion-icon name="checkmark-circle-outline" slot="start" color="success"></ion-icon>
-              <ion-label class="ion-text-wrap">Provide you with full access to view and manage your Alpaca brokerage account.</ion-label>
-            </ion-item>
           </ion-list>
-          <ion-text class="ion-margin-top">
-            <p><small>You can pause, adjust, or stop these recurring investments at any time through your settings. Standard brokerage fees may apply. Investing involves risk, including loss of principal.</small></p>
-          </ion-text>
+          
+          <ion-button 
+            fill="clear" 
+            size="small" 
+            color="primary"
+            (click)="editPortfolio()"
+            class="edit-portfolio-btn">
+            <ion-icon name="create-outline" slot="start"></ion-icon>
+            Edit Portfolio
+          </ion-button>
         </div>
       </ion-card-content>
     </ion-card>
 
-    <ion-button
-      expand="block"
-      (click)="authorizeRecurringInvestment()"
-      [disabled]="isAuthorizing"
-      class="ion-margin-top authorize-button"
-      color="success"
-    >
-      <ion-spinner *ngIf="isAuthorizing" name="crescent" slot="start"></ion-spinner>
-      <ion-icon *ngIf="!isAuthorizing" name="shield-checkmark-outline" slot="start"></ion-icon>
-      {{ isAuthorizing ? 'Authorizing...' : 'Authorize & Start Investing' }}
-    </ion-button>
+    <ion-card class="info-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="information-circle-outline" color="tertiary"></ion-icon>
+          What Happens Next?
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="info-content">
+          <p class="info-intro">When you click "Start Investing", here's what will happen:</p>
+          
+          <div class="info-steps">
+            <div class="info-step">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <h4>Account Creation</h4>
+                <p>We'll create a personal brokerage account for you through Alpaca Securities using your verified information.</p>
+              </div>
+            </div>
+            
+            <div class="info-step">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <h4>Automated Funding</h4>
+                <p>Your account will be automatically funded following your pay schedule - {{ formatCurrency(investmentSchedule.investmentAmount) }} every {{ getSelectedFrequencyDetails()?.label?.toLowerCase() || 'period' }}.</p>
+              </div>
+            </div>
+            
+            <div class="info-step">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <h4>Smart Investing</h4>
+                <p>Each time funds are added, they'll be automatically invested into your selected portfolio based on the allocations you've chosen.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flexibility-note">
+            <ion-icon name="pause-circle-outline" color="medium"></ion-icon>
+            <p><strong>Full Control:</strong> You can pause, modify, or stop your investment schedule at any time through your dashboard.</p>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
 
-    <div *ngIf="authorizationStatus" class="ion-text-center ion-margin-top status-message">
-      <ion-text [color]="authorizationStatus.includes('Failed') || authorizationStatus.includes('error') ? 'danger' : 'medium'">
-        {{ authorizationStatus }}
-      </ion-text>
+    <div class="action-buttons">
+      <ion-button 
+        expand="block" 
+        size="large" 
+        color="primary"
+        (click)="authorizeRecurringInvestment()"
+        [disabled]="isAuthorizing || isCreatingAccount"
+        class="start-investing-btn">
+        <ion-icon name="rocket-outline" slot="start"></ion-icon>
+        <span *ngIf="!isAuthorizing && !isCreatingAccount">Start Investing & Create Account</span>
+        <span *ngIf="isAuthorizing">Verifying Identity...</span>
+        <span *ngIf="isCreatingAccount">Creating Your Brokerage Account...</span>
+      </ion-button>
+      
+      <p class="legal-disclaimer">
+        By clicking "Start Investing", you agree to create a brokerage account with Alpaca Securities LLC and authorize automatic investments according to your schedule.
+      </p>
     </div>
   </div>
 </ion-content>

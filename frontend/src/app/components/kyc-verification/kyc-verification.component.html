@@ -1,0 +1,66 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-title>Verify Your Identity</ion-title>
+    <ion-progress-bar [value]="0.9"></ion-progress-bar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="kyc-form-container">
+    
+    <!-- Page Introduction -->
+    <div class="page-intro">
+      <h2>Before we can continue...</h2>
+      <p class="helper-text">We need to verify that you are who you say you are in order to open a personal brokerage account in your name.</p>
+    </div>
+
+    <!-- Verification Information Section -->
+    <div class="verification-info-section">
+      <p class="verification-description">
+        We use Persona, a trusted identity verification service, to securely verify your identity. This process typically takes just a few minutes and helps us comply with KYC (Know Your Customer) and AML (Anti-Money Laundering) regulations.
+      </p>
+      
+      <div class="verification-features">
+        <div class="feature-item">
+          <ion-icon name="shield-checkmark" class="feature-icon"></ion-icon>
+          <span>Bank-level security</span>
+        </div>
+        <div class="feature-item">
+          <ion-icon name="time" class="feature-icon"></ion-icon>
+          <span>Takes just 2-3 minutes</span>
+        </div>
+        <div class="feature-item">
+          <ion-icon name="document-text" class="feature-icon"></ion-icon>
+          <span>Government ID required</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verification Button Section -->
+    <div class="verification-button-section">
+      <ion-button 
+        expand="block" 
+        class="verification-button" 
+        type="button"  
+        (click)="startVerification()" 
+        [disabled]="isLoading">
+        <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+        <span *ngIf="!isLoading">Start Identity Verification</span>
+        <span *ngIf="isLoading">Preparing verification...</span>
+      </ion-button>
+      
+      <p class="verification-note">
+        Your personal information is encrypted and secure. We'll never share your data with third parties.
+      </p>
+    </div>
+
+    <!-- Feedback Messages -->
+    <div *ngIf="errorMessage" class="error-message-global">
+      <ion-text color="danger">{{ errorMessage }}</ion-text>
+    </div>
+    <div *ngIf="successMessage" class="success-message-global">
+      <ion-text color="success">{{ successMessage }}</ion-text>
+    </div>
+
+  </div>
+</ion-content>

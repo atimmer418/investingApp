@@ -4,7 +4,6 @@ package com.investingapp.backend.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.investingapp.backend.dto.RegistrationFinishResponse;
 import com.investingapp.backend.model.PasskeyCredential;
-import com.investingapp.backend.model.PendingPlaidConnection;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.PasskeyCredentialRepository;
 import com.investingapp.backend.repository.UserRepository;
@@ -60,44 +59,33 @@ public class WebAuthnService {
     }
 
     @Transactional
-    public PublicKeyCredentialCreationOptions startRegistrationFlow(String email, String temporaryPlaidUserIdFromClient) {
-        logger.info("Starting passkey registration for email: {}, temporaryPlaidUserIdFromClient: {}", email, temporaryPlaidUserIdFromClient);
+    public PublicKeyCredentialCreationOptions startRegistrationFlow(String email, String planId, String timeToFI, Double targetPortfolio, Double retirementIncome, Double monthlyInvestment) {
+        logger.info("Starting passkey registration for email: {}, planId: {}, timeToFI: {}, targetPortfolio: {}, retirementIncome: {}, monthlyInvestment: {}", email, planId, timeToFI, targetPortfolio, retirementIncome, monthlyInvestment);
 
-        User user = userRepository.findByEmail(email).orElseGet(() -> {
-            logger.info("User with email {} not found, creating a new user.", email);
-            User newUser = new User(email); // Assumes User constructor takes email
-            byte[] handleBytes = new byte[16];
-            random.nextBytes(handleBytes);
-            newUser.setUserHandle(Base64.getUrlEncoder().withoutPadding().encodeToString(handleBytes));
-
-            // --- Link Plaid connection using PendingPlaidConnection ---
-            if (temporaryPlaidUserIdFromClient != null && !temporaryPlaidUserIdFromClient.isEmpty()) {
-                PendingPlaidConnection pendingConnection = plaidService.retrieveAndRemovePendingConnection(temporaryPlaidUserIdFromClient);
-                if (pendingConnection != null) {
-                    logger.info("Associating pending Plaid connection (Item ID: {}) with new user (Email: {}) during passkey registration start.",
-                                pendingConnection.getPlaidItemId(), newUser.getEmail());
-                    
-                    String rawPlaidAccessToken = pendingConnection.getPlaidAccessToken(); // Assumes this is raw/decrypted from PlaidService
-                    
-                    newUser.setPlaidAccessToken(encryptionService.encrypt(rawPlaidAccessToken)); // Encrypt for User entity
-                    newUser.setPlaidItemId(pendingConnection.getPlaidItemId());
-                    newUser.setPlaidLinked(true);
-                    logger.info("Plaid info linked to new user {}.", newUser.getEmail());
-                } else {
-                    logger.warn("No valid pending Plaid connection found for temporary ID: {} during passkey registration start for new user {}.",
-                                temporaryPlaidUserIdFromClient, newUser.getEmail());
-                }
-            }
-            return userRepository.save(newUser);
-        });
-
-        // Ensure existing users or newly created user has a user handle
-        if (user.getUserHandle() == null || user.getUserHandle().isEmpty()) {
-            byte[] handleBytes = new byte[16];
-            random.nextBytes(handleBytes);
-            user.setUserHandle(Base64.getUrlEncoder().withoutPadding().encodeToString(handleBytes));
-            user = userRepository.save(user); 
+        // Check if user already exists
+        if (userRepository.findByEmail(email).isPresent()) {
+            logger.warn("Registration attempt failed - email already exists: {}", email);
+            throw new IllegalArgumentException("Email is already taken");
         }
+        
+        // Create new user since email is available
+        logger.info("Email available, creating new user for: {}", email);
+        User user = new User(email);
+        
+        // Generate user handle
+        byte[] handleBytes = new byte[16];
+        random.nextBytes(handleBytes);
+        user.setUserHandle(Base64.getUrlEncoder().withoutPadding().encodeToString(handleBytes));
+        
+        // Store FI plan data (add these fields to your User model)
+        user.setPlanId(planId);
+        user.setTimeToFI(timeToFI);
+        user.setTargetPortfolio(targetPortfolio);
+        user.setRetirementIncome(retirementIncome);
+        user.setMonthlyInvestment(monthlyInvestment);
+        
+        user = userRepository.save(user);
+        logger.info("New user created successfully for email: {}", email);
 
         UserIdentity userIdentity = UserIdentity.builder()
                 .name(user.getEmail())
@@ -117,7 +105,7 @@ public class WebAuthnService {
     }
 
     @Transactional
-    public RegistrationFinishResponse finishRegistrationFlow(String userEmail, JsonNode registrationJsonFromClient, String temporaryUserId, PublicKeyCredentialCreationOptions requestOptionsFromServer) {
+    public RegistrationFinishResponse finishRegistrationFlow(String userEmail, JsonNode registrationJsonFromClient, PublicKeyCredentialCreationOptions requestOptionsFromServer) {
         logger.info("Finishing passkey registration for email: {}", userEmail);
         RegistrationResult registrationResult; 
 
