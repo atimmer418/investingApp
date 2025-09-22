@@ -58,14 +58,6 @@
           placeholder="Select your next pay date">
         </ion-input>
       </div>
-
-      <!-- Show upcoming investment dates -->
-      <div class="investment-preview" *ngIf="schedule.startDate && schedule.payFrequency">
-        <p class="helper-text">
-          <ion-icon name="calendar-outline"></ion-icon>
-          {{ getInvestmentScheduleDescription() }}
-        </p>
-      </div>
     </div>
 
     <!-- Investment Amount -->
@@ -121,33 +113,6 @@
       </div>
     </div>
 
-    <!-- Summary -->
-    <div class="summary-section" *ngIf="schedule.investmentAmount > 0 && schedule.startDate">
-      <div class="section-label">
-        <h3>Summary</h3>
-        <p class="helper-text">Review your investment schedule</p>
-      </div>
-      
-      <div class="summary-card">
-        <div class="summary-item">
-          <span class="summary-label">Pay Frequency</span>
-          <span class="summary-value">{{ getSelectedFrequencyDetails()?.label }}</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-label">Investment Amount</span>
-          <span class="summary-value">{{ formatCurrency(schedule.investmentAmount) }} per {{ getSelectedFrequencyDetails()?.label?.toLowerCase() ?? 'period' }}</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-label">Next Pay Date</span>
-          <span class="summary-value">{{ schedule.startDate | date:'mediumDate' }}</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-label">Monthly Total</span>
-          <span class="summary-value">{{ formatCurrency(getMonthlyProjection()) }}</span>
-        </div>
-      </div>
-    </div>
-
     <!-- Navigation Controls -->
     <div class="navigation-controls">
       <ion-button 
@@ -155,7 +120,7 @@
         [disabled]="!canProceed() || isSubmitting"
         (click)="goToStockPreferences()">
         <ion-spinner name="crescent" *ngIf="isSubmitting" slot="start"></ion-spinner>
-        <span *ngIf="!isSubmitting">Continue to Stock Preferences</span>
+        <span *ngIf="!isSubmitting">Review & Finalize</span>
         <span *ngIf="isSubmitting">Setting up schedule...</span>
         <ion-icon name="chevron-forward" slot="end" *ngIf="!isSubmitting"></ion-icon>
       </ion-button>

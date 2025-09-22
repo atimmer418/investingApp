@@ -174,16 +174,64 @@ export class InvestmentConfirmationComponent implements OnInit {
   }
 
   loadInvestmentSchedule(): void {
-    console.log('[InvestmentConfirmationComponent] Loading investment schedule...');
-    // Retrieve from the backend or local storage
-    // For now, we'll use some reasonable defaults
-    // In a real app, this would come from the backend or navigation state
+    console.log('[InvestmentConfirmationComponent] Loading investment schedule from backend...');
+    
+    // Try to get investment schedule from backend first
+    this.authService.getCurrentInvestmentSchedule().subscribe({
+      next: (scheduleData) => {
+        console.log('[InvestmentConfirmationComponent] ✅ Retrieved investment schedule from backend:', scheduleData);
+        
+        if (scheduleData && scheduleData.frequency && scheduleData.monthlyAmount) {
+          // Map backend data to component structure (from InvestmentScheduleResponse)
+          this.investmentSchedule = {
+            payFrequency: scheduleData.frequency,
+            investmentAmount: this.calculateInvestmentAmountByFrequency(scheduleData.monthlyAmount, scheduleData.frequency),
+            startDate: this.getNextInvestmentDate(scheduleData.frequency), // Generate next date since backend doesn't store it
+            isEnabled: !scheduleData.isPaused // Convert isPaused to isEnabled
+          };
+          
+          // Update financial projections if available
+          if (scheduleData.targetPortfolio) {
+            this.targetPortfolio = scheduleData.targetPortfolio;
+          }
+          if (scheduleData.timeToFI) {
+            this.timeToFI = scheduleData.timeToFI;
+          }
+          
+          console.log('[InvestmentConfirmationComponent] ✅ Investment schedule loaded:', this.investmentSchedule);
+        } else {
+          console.log('[InvestmentConfirmationComponent] No valid schedule data, using defaults');
+          this.setDefaultInvestmentSchedule();
+        }
+      },
+      error: (error) => {
+        console.error('[InvestmentConfirmationComponent] ❌ Error loading investment schedule:', error);
+        console.log('[InvestmentConfirmationComponent] Using default values...');
+        this.setDefaultInvestmentSchedule();
+      }
+    });
+  }
+
+  private setDefaultInvestmentSchedule(): void {
+    // Fallback to default values
     this.investmentSchedule = {
       payFrequency: 'BIWEEKLY',
       investmentAmount: Math.round(this.monthlyGoal / 2.17), // Bi-weekly default
       startDate: this.getNextInvestmentDate('BIWEEKLY'),
       isEnabled: true
     };
+  }
+
+  private calculateInvestmentAmountByFrequency(monthlyAmount: number, frequency: string): number {
+    const frequencyMap: { [key: string]: number } = {
+      'WEEKLY': 4.33,
+      'BIWEEKLY': 2.17,
+      'SEMI_MONTHLY': 2.0,
+      'MONTHLY': 1.0
+    };
+    
+    const periodsPerMonth = frequencyMap[frequency] || 2.17;
+    return Math.round(monthlyAmount / periodsPerMonth);
   }
 
   private getNextInvestmentDate(frequency: string): string {

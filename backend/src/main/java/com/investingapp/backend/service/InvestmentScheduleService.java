@@ -27,35 +27,48 @@ public class InvestmentScheduleService {
     }
     
     /**
-     * Create a new investment schedule for a user
+     * Create or update investment schedule for a user (upsert operation)
      */
     public InvestmentSchedule createInvestmentSchedule(User user, BigDecimal monthlyAmount, 
                                                       String frequency, BigDecimal targetPortfolio, 
                                                       Integer timeToFI) {
-        logger.info("Creating investment schedule for user: {} with monthly amount: {}", 
+        logger.info("Creating/updating investment schedule for user: {} with monthly amount: {}", 
                    user.getEmail(), monthlyAmount);
         
-        // Pause any existing active schedules for this user
-        List<InvestmentSchedule> activeSchedules = investmentScheduleRepository.findActiveSchedulesByUser(user);
-        for (InvestmentSchedule schedule : activeSchedules) {
-            schedule.setIsPaused(true);
-            investmentScheduleRepository.save(schedule);
-            logger.info("Paused existing investment schedule with ID: {}", schedule.getId());
-        }
+        // Check if user already has an investment schedule
+        Optional<InvestmentSchedule> existingScheduleOpt = getCurrentSchedule(user);
         
-    // Create new investment schedule
-    InvestmentSchedule newSchedule = new InvestmentSchedule();
-    newSchedule.setUser(user);
-    newSchedule.setMonthlyAmount(monthlyAmount);
-    newSchedule.setFrequency(frequency);
-    newSchedule.setTargetPortfolio(targetPortfolio);
-    newSchedule.setTimeToFI(timeToFI);
-    newSchedule.setIsPaused(true); // Always start paused until ACH is confirmed
+        InvestmentSchedule schedule;
+        if (existingScheduleOpt.isPresent()) {
+            // Update existing schedule
+            schedule = existingScheduleOpt.get();
+            logger.info("Updating existing investment schedule with ID: {} for user: {}", 
+                       schedule.getId(), user.getEmail());
+            
+            // Update the fields
+            schedule.setMonthlyAmount(monthlyAmount);
+            schedule.setFrequency(frequency);
+            schedule.setTargetPortfolio(targetPortfolio);
+            schedule.setTimeToFI(timeToFI);
+            // Keep existing isPaused and achRequestId values
+            
+        } else {
+            // Create new investment schedule
+            schedule = new InvestmentSchedule();
+            schedule.setUser(user);
+            schedule.setMonthlyAmount(monthlyAmount);
+            schedule.setFrequency(frequency);
+            schedule.setTargetPortfolio(targetPortfolio);
+            schedule.setTimeToFI(timeToFI);
+            schedule.setIsPaused(true); // Always start paused until ACH is confirmed
+            
+            logger.info("Creating new investment schedule for user: {}", user.getEmail());
+        }
 
-    InvestmentSchedule savedSchedule = investmentScheduleRepository.save(newSchedule);
-    logger.info("Successfully created investment schedule with ID: {} for user: {}", 
-           savedSchedule.getId(), user.getEmail());
-    return savedSchedule;
+        InvestmentSchedule savedSchedule = investmentScheduleRepository.save(schedule);
+        logger.info("Successfully saved investment schedule with ID: {} for user: {}", 
+                   savedSchedule.getId(), user.getEmail());
+        return savedSchedule;
     }
     
     /**

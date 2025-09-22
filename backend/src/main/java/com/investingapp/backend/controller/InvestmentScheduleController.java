@@ -42,7 +42,8 @@ public class InvestmentScheduleController {
     }
     
     /**
-     * Create a new investment schedule (called when user clicks Continue on investment-schedule page)
+     * Create or update investment schedule (upsert operation)
+     * Creates new schedule if none exists, updates existing schedule if found
      */
     @PostMapping("/create")
     public ResponseEntity<?> createInvestmentSchedule(@Valid @RequestBody CreateInvestmentScheduleRequest request) {
@@ -53,7 +54,7 @@ public class InvestmentScheduleController {
                         .body(new MessageResponse("User not authenticated"));
             }
             
-            logger.info("Creating investment schedule for user: {} with amount: {}", 
+            logger.info("Creating/updating investment schedule for user: {} with amount: {}", 
                        user.getEmail(), request.getMonthlyAmount());
             
             InvestmentSchedule schedule = investmentScheduleService.createInvestmentSchedule(
@@ -66,7 +67,7 @@ public class InvestmentScheduleController {
             
             InvestmentScheduleResponse response = new InvestmentScheduleResponse(schedule);
             
-            logger.info("Successfully created investment schedule with ID: {} for user: {}", 
+            logger.info("Successfully created/updated investment schedule with ID: {} for user: {}", 
                        schedule.getId(), user.getEmail());
             
             return ResponseEntity.ok(response);

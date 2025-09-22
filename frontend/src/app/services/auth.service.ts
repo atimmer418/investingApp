@@ -139,6 +139,57 @@ export class AuthService {
       { headers: this.getAuthHeaders() });
   }
 
+  // Investment Schedule methods (one-to-one mapping per user)
+  createOrUpdateInvestmentSchedule(schedule: any): Observable<any> {
+    console.log('[AuthService] Creating/updating investment schedule (upsert):', schedule);
+    // Use POST to create new or update existing investment schedule
+    return this.http.post(`${BACKEND_API_URL}/investment-schedule/create`, schedule, 
+      { headers: this.getAuthHeaders() });
+  }
+
+  // Backward compatibility method - delegates to createOrUpdateInvestmentSchedule
+  createInvestmentSchedule(schedule: any): Observable<any> {
+    console.log('[AuthService] Creating investment schedule (delegates to upsert method):', schedule);
+    return this.createOrUpdateInvestmentSchedule(schedule);
+  }
+
+  getCurrentInvestmentSchedule(): Observable<any> {
+    console.log('[AuthService] Retrieving current user investment schedule...');
+    // GET the user's current investment schedule
+    return this.http.get(`${BACKEND_API_URL}/investment-schedule/current`, 
+      { headers: this.getAuthHeaders() });
+  }
+
+  getAllInvestmentSchedules(): Observable<any> {
+    console.log('[AuthService] Retrieving all user investment schedules...');
+    // GET all user's investment schedules
+    return this.http.get(`${BACKEND_API_URL}/investment-schedule/all`, 
+      { headers: this.getAuthHeaders() });
+  }
+
+  updateAchRequestId(achRequestId: string, userEmail: string): Observable<any> {
+    console.log('[AuthService] Updating ACH request ID for schedule...');
+    // Update ACH request ID for investment schedule
+    return this.http.post(`${BACKEND_API_URL}/investment-schedule/update-ach-request-id`, {
+      achRequestId,
+      userEmail
+    }, { headers: this.getAuthHeaders() });
+  }
+
+  pauseInvestmentSchedule(scheduleId: number): Observable<any> {
+    console.log('[AuthService] Pausing investment schedule:', scheduleId);
+    // Pause investment schedule
+    return this.http.post(`${BACKEND_API_URL}/investment-schedule/${scheduleId}/pause`, {}, 
+      { headers: this.getAuthHeaders() });
+  }
+
+  resumeInvestmentSchedule(scheduleId: number): Observable<any> {
+    console.log('[AuthService] Resuming investment schedule:', scheduleId);
+    // Resume investment schedule  
+    return this.http.post(`${BACKEND_API_URL}/investment-schedule/${scheduleId}/resume`, {}, 
+      { headers: this.getAuthHeaders() });
+  }
+
   // Helper method to get current progress synchronously
   getCurrentProgress(): UserProgress | null {
     return this.userProgressSubject.value;

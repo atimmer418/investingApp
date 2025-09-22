@@ -466,26 +466,26 @@ export class InvestmentScheduleComponent implements OnInit {
   }
 
   goToStockPreferences(): void {
-    console.log('[InvestmentScheduleComponent] Proceeding to stock preferences with schedule:', this.schedule);
+    console.log('[InvestmentScheduleComponent] Proceeding to investment confirmation with schedule:', this.schedule);
     this.isSubmitting = true;
 
-    // Prepare data for backend
-    const investmentScheduleData: CreateInvestmentScheduleRequest = {
-      monthlyAmount: this.schedule.investmentAmount,
+    // Prepare data for backend - match CreateInvestmentScheduleRequest DTO
+    const investmentScheduleData = {
+      monthlyAmount: this.getMonthlyProjection(),
       frequency: this.schedule.payFrequency,
       targetPortfolio: this.targetPortfolio,
       timeToFI: this.timeToFI
     };
 
-    console.log('[InvestmentScheduleComponent] Sending investment schedule to backend:', investmentScheduleData);
+    console.log('[InvestmentScheduleComponent] Saving investment schedule:', investmentScheduleData);
 
-    // Save investment schedule to backend API
-    this.http.post<InvestmentScheduleResponse>(`${environment.backendApiUrl}/investment-schedule/create`, investmentScheduleData, { headers: this.getAuthHeaders() })
+    // Save investment schedule using AuthService
+    this.authService.createOrUpdateInvestmentSchedule(investmentScheduleData)
       .subscribe({
         next: (response) => {
           console.log('[InvestmentScheduleComponent] ✅ Investment schedule saved successfully:', response);
           this.isSubmitting = false;
-          // Navigate to investment confirmation instead of survey
+          // Navigate to investment confirmation
           this.router.navigate(['/confirm-investment']);
         },
         error: (error) => {

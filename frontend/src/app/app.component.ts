@@ -55,6 +55,7 @@ export class AppComponent implements OnInit {
     
     // OR navigate directly to any page for testing (bypasses auth entirely):
     // this.router.navigate(['/confirm-investment'], { replaceUrl: true });
+    // this.router.navigate(['/investment-schedule'], { replaceUrl: true });
     // this.router.navigate(['/manual-stock-selection'], { replaceUrl: true });
     // this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
     
