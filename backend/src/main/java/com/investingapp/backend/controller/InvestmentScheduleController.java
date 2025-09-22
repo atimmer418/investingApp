@@ -55,14 +55,13 @@ public class InvestmentScheduleController {
             }
             
             logger.info("Creating/updating investment schedule for user: {} with amount: {}", 
-                       user.getEmail(), request.getMonthlyAmount());
+                       user.getEmail(), request.getInvestmentAmount());
             
             InvestmentSchedule schedule = investmentScheduleService.createInvestmentSchedule(
                     user, 
-                    request.getMonthlyAmount(), 
+                    request.getInvestmentAmount(), 
                     request.getFrequency(),
-                    request.getTargetPortfolio(),
-                    request.getTimeToFI()
+                    request.getStartDate()
             );
             
             InvestmentScheduleResponse response = new InvestmentScheduleResponse(schedule);

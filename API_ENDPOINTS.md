@@ -59,9 +59,9 @@ https://your-production-domain.com (production)
 | `POST` | `/api/investment-schedule/{scheduleId}/resume`     | Resume a paused investment schedule   | ✅            | None                          | InvestmentScheduleResponse      |
 
 **DTOs:**
-- `CreateInvestmentScheduleRequest`: `{ monthlyAmount, frequency, targetPortfolio?, timeToFI? }`
+- `CreateInvestmentScheduleRequest`: `{ investmentAmount, frequency, startDate }` (frequency: "WEEKLY", "BIWEEKLY", "SEMI_MONTHLY", "MONTHLY")
 - `UpdateAchRequestIdRequest`: `{ achRequestId, userEmail }`
-- `InvestmentScheduleResponse`: `{ id, monthlyAmount, frequency, targetPortfolio, timeToFI, achRequestId, isPaused, createdAt, updatedAt }`
+- `InvestmentScheduleResponse`: `{ id, monthlyAmount, investmentAmount, frequency, startDate, nextInvestmentDate, achRequestId, isPaused, createdAt, updatedAt }`
 
 ---
 

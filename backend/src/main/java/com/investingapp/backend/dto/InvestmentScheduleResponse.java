@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -16,9 +17,10 @@ public class InvestmentScheduleResponse {
     
     private Long id;
     private BigDecimal monthlyAmount;
+    private BigDecimal investmentAmount;
     private String frequency;
-    private BigDecimal targetPortfolio;
-    private Integer timeToFI;
+    private LocalDate startDate;
+    private LocalDate nextInvestmentDate;
     private String achRequestId;
     private Boolean isPaused;
     private LocalDateTime createdAt;
@@ -28,9 +30,10 @@ public class InvestmentScheduleResponse {
     public InvestmentScheduleResponse(InvestmentSchedule schedule) {
         this.id = schedule.getId();
         this.monthlyAmount = schedule.getMonthlyAmount();
+        this.investmentAmount = schedule.getInvestmentAmount();
         this.frequency = schedule.getFrequency();
-        this.targetPortfolio = schedule.getTargetPortfolio();
-        this.timeToFI = schedule.getTimeToFI();
+        this.startDate = schedule.getStartDate();
+        this.nextInvestmentDate = schedule.getNextInvestmentDate();
         this.achRequestId = schedule.getAchRequestId();
         this.isPaused = schedule.getIsPaused();
         this.createdAt = schedule.getCreatedAt();

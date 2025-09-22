@@ -3,6 +3,7 @@ package com.investingapp.backend.service;
 import com.investingapp.backend.model.InvestmentSchedule;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.InvestmentScheduleRepository;
+import com.investingapp.backend.service.PortfolioService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -20,20 +22,22 @@ public class InvestmentScheduleService {
     private static final Logger logger = LoggerFactory.getLogger(InvestmentScheduleService.class);
     
     private final InvestmentScheduleRepository investmentScheduleRepository;
+    private final PortfolioService portfolioService;
     
     @Autowired
-    public InvestmentScheduleService(InvestmentScheduleRepository investmentScheduleRepository) {
+    public InvestmentScheduleService(InvestmentScheduleRepository investmentScheduleRepository,
+                                   PortfolioService portfolioService) {
         this.investmentScheduleRepository = investmentScheduleRepository;
+        this.portfolioService = portfolioService;
     }
     
     /**
      * Create or update investment schedule for a user (upsert operation)
      */
-    public InvestmentSchedule createInvestmentSchedule(User user, BigDecimal monthlyAmount, 
-                                                      String frequency, BigDecimal targetPortfolio, 
-                                                      Integer timeToFI) {
-        logger.info("Creating/updating investment schedule for user: {} with monthly amount: {}", 
-                   user.getEmail(), monthlyAmount);
+    public InvestmentSchedule createInvestmentSchedule(User user, BigDecimal investmentAmount, 
+                                                      String frequency, LocalDate startDate) {
+        logger.info("Creating/updating investment schedule for user: {} with investment amount: {}", 
+                   user.getEmail(), investmentAmount);
         
         // Check if user already has an investment schedule
         Optional<InvestmentSchedule> existingScheduleOpt = getCurrentSchedule(user);
@@ -45,29 +49,46 @@ public class InvestmentScheduleService {
             logger.info("Updating existing investment schedule with ID: {} for user: {}", 
                        schedule.getId(), user.getEmail());
             
-            // Update the fields
-            schedule.setMonthlyAmount(monthlyAmount);
+            // Update core investment fields
+            schedule.setInvestmentAmount(investmentAmount);
             schedule.setFrequency(frequency);
-            schedule.setTargetPortfolio(targetPortfolio);
-            schedule.setTimeToFI(timeToFI);
-            // Keep existing isPaused and achRequestId values
+            
+            // Calculate monthly amount from investment amount and frequency
+            schedule.setMonthlyAmount(calculateMonthlyAmountFromInvestment(investmentAmount, frequency));
+            
+            // Update start date if provided
+            if (startDate != null) {
+                schedule.setStartDate(startDate);
+                schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(startDate));
+            }
             
         } else {
             // Create new investment schedule
             schedule = new InvestmentSchedule();
             schedule.setUser(user);
-            schedule.setMonthlyAmount(monthlyAmount);
+            schedule.setInvestmentAmount(investmentAmount);
             schedule.setFrequency(frequency);
-            schedule.setTargetPortfolio(targetPortfolio);
-            schedule.setTimeToFI(timeToFI);
+            
+            // Calculate monthly amount from investment amount and frequency
+            schedule.setMonthlyAmount(calculateMonthlyAmountFromInvestment(investmentAmount, frequency));
+            
+            // Set dates
+            LocalDate effectiveStartDate = startDate != null ? startDate : LocalDate.now();
+            schedule.setStartDate(effectiveStartDate);
+            schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(effectiveStartDate));
+            
             schedule.setIsPaused(true); // Always start paused until ACH is confirmed
             
             logger.info("Creating new investment schedule for user: {}", user.getEmail());
         }
 
         InvestmentSchedule savedSchedule = investmentScheduleRepository.save(schedule);
-        logger.info("Successfully saved investment schedule with ID: {} for user: {}", 
-                   savedSchedule.getId(), user.getEmail());
+        
+        // Ensure user has a default portfolio (create if not exists)
+        portfolioService.getOrCreatePortfolio(user);
+        
+        logger.info("Successfully saved investment schedule with ID: {} for user: {} (Next investment: {})", 
+                   savedSchedule.getId(), user.getEmail(), savedSchedule.getNextInvestmentDate());
         return savedSchedule;
     }
     
@@ -109,6 +130,37 @@ public class InvestmentScheduleService {
     @Transactional(readOnly = true)
     public List<InvestmentSchedule> getAllSchedules(User user) {
         return investmentScheduleRepository.findByUserOrderByCreatedAtDesc(user);
+    }
+
+    /**
+     * Get all schedules ready for investment execution (for cron processing)
+     */
+    @Transactional(readOnly = true)
+    public List<InvestmentSchedule> getSchedulesReadyForInvestment() {
+        logger.info("Finding investment schedules ready for execution...");
+        
+        List<InvestmentSchedule> allSchedules = investmentScheduleRepository.findAll();
+        List<InvestmentSchedule> readySchedules = allSchedules.stream()
+                .filter(InvestmentSchedule::isReadyForInvestment)
+                .toList();
+        
+        logger.info("Found {} schedules ready for investment execution", readySchedules.size());
+        return readySchedules;
+    }
+
+    /**
+     * Calculate monthly amount from investment amount and frequency
+     */
+    private BigDecimal calculateMonthlyAmountFromInvestment(BigDecimal investmentAmount, String frequency) {
+        if (investmentAmount == null) return BigDecimal.ZERO;
+        
+        return switch (frequency.toUpperCase()) {
+            case "WEEKLY" -> investmentAmount.multiply(new BigDecimal("4.33")); // ~4.33 weeks per month
+            case "BIWEEKLY" -> investmentAmount.multiply(new BigDecimal("2.17")); // ~2.17 biweekly periods per month
+            case "SEMI_MONTHLY" -> investmentAmount.multiply(new BigDecimal("2")); // Exactly 2 times per month
+            case "MONTHLY" -> investmentAmount;
+            default -> investmentAmount;
+        };
     }
     
     /**
@@ -166,8 +218,8 @@ public class InvestmentScheduleService {
     /**
      * Update investment schedule details
      */
-    public InvestmentSchedule updateSchedule(User user, Long scheduleId, BigDecimal monthlyAmount, 
-                                           String frequency, BigDecimal targetPortfolio, Integer timeToFI) {
+    public InvestmentSchedule updateSchedule(User user, Long scheduleId, BigDecimal investmentAmount, 
+                                           String frequency) {
         logger.info("Updating investment schedule ID: {} for user: {}", scheduleId, user.getEmail());
         
         Optional<InvestmentSchedule> scheduleOpt = investmentScheduleRepository.findByIdAndUser(scheduleId, user);
@@ -178,10 +230,11 @@ public class InvestmentScheduleService {
         }
         
         InvestmentSchedule schedule = scheduleOpt.get();
-        schedule.setMonthlyAmount(monthlyAmount);
+        schedule.setInvestmentAmount(investmentAmount);
         schedule.setFrequency(frequency);
-        schedule.setTargetPortfolio(targetPortfolio);
-        schedule.setTimeToFI(timeToFI);
+        
+        // Recalculate monthly amount from investment amount and frequency
+        schedule.setMonthlyAmount(calculateMonthlyAmountFromInvestment(investmentAmount, frequency));
         
         InvestmentSchedule updatedSchedule = investmentScheduleRepository.save(schedule);
         logger.info("Successfully updated investment schedule ID: {}", scheduleId);

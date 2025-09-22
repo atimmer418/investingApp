@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -15,15 +16,14 @@ import java.math.BigDecimal;
 
 public class CreateInvestmentScheduleRequest {
     
-    @NotNull(message = "Monthly amount is required")
-    @DecimalMin(value = "1.0", message = "Monthly amount must be at least $1.00")
-    private BigDecimal monthlyAmount;
+    @NotNull(message = "Investment amount is required")
+    @DecimalMin(value = "1.0", message = "Investment amount must be at least $1.00")
+    private BigDecimal investmentAmount;
     
     @NotBlank(message = "Frequency is required")
     private String frequency;
     
-    private BigDecimal targetPortfolio;
-    
-    private Integer timeToFI;
+    @NotNull(message = "Start date is required")
+    private LocalDate startDate;
     
 }

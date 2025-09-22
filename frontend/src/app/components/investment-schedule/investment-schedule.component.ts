@@ -471,10 +471,9 @@ export class InvestmentScheduleComponent implements OnInit {
 
     // Prepare data for backend - match CreateInvestmentScheduleRequest DTO
     const investmentScheduleData = {
-      monthlyAmount: this.getMonthlyProjection(),
+      investmentAmount: this.schedule.investmentAmount,
       frequency: this.schedule.payFrequency,
-      targetPortfolio: this.targetPortfolio,
-      timeToFI: this.timeToFI
+      startDate: this.schedule.startDate
     };
 
     console.log('[InvestmentScheduleComponent] Saving investment schedule:', investmentScheduleData);
