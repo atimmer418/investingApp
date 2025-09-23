@@ -90,6 +90,13 @@ public class InvestmentScheduleService {
         logger.info("DEBUG: After save - startDate: {}, nextInvestmentDate: {}", 
                    savedSchedule.getStartDate(), savedSchedule.getNextInvestmentDate());
         
+        // Additional debug: Query the database directly to see what's actually stored
+        InvestmentSchedule reloadedSchedule = investmentScheduleRepository.findById(savedSchedule.getId()).orElse(null);
+        if (reloadedSchedule != null) {
+            logger.info("DEBUG: Reloaded from DB - startDate: {}, nextInvestmentDate: {}", 
+                       reloadedSchedule.getStartDate(), reloadedSchedule.getNextInvestmentDate());
+        }
+        
         // Ensure user has a default portfolio (create if not exists)
         portfolioService.getOrCreatePortfolio(user);
         
