@@ -84,6 +84,12 @@ public class InvestmentScheduleService {
 
         InvestmentSchedule savedSchedule = investmentScheduleRepository.save(schedule);
         
+        // Debug: Log what was actually saved
+        logger.info("DEBUG: Before save - startDate: {}, nextInvestmentDate: {}", 
+                   schedule.getStartDate(), schedule.getNextInvestmentDate());
+        logger.info("DEBUG: After save - startDate: {}, nextInvestmentDate: {}", 
+                   savedSchedule.getStartDate(), savedSchedule.getNextInvestmentDate());
+        
         // Ensure user has a default portfolio (create if not exists)
         portfolioService.getOrCreatePortfolio(user);
         

@@ -76,7 +76,7 @@ public class InvestmentSchedule {
     public LocalDate calculateNextInvestmentDate(LocalDate fromDate) {
         if (fromDate == null) fromDate = LocalDate.now();
         
-        return switch (frequency.toUpperCase()) {
+        LocalDate nextDate = switch (frequency.toUpperCase()) {
             case "WEEKLY" -> fromDate.plusWeeks(1);
             case "BIWEEKLY" -> fromDate.plusWeeks(2);
             case "SEMI_MONTHLY" -> {
@@ -91,6 +91,9 @@ public class InvestmentSchedule {
             case "MONTHLY" -> fromDate.plusMonths(1);
             default -> fromDate.plusWeeks(2); // Default to biweekly
         };
+        
+        System.out.println("calculateNextInvestmentDate: fromDate=" + fromDate + ", frequency=" + frequency + ", nextDate=" + nextDate);
+        return nextDate;
     }
 
     /**
