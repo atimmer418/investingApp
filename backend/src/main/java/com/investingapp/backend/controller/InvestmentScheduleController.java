@@ -56,6 +56,7 @@ public class InvestmentScheduleController {
             
             logger.info("Creating/updating investment schedule for user: {} with amount: {}", 
                        user.getEmail(), request.getInvestmentAmount());
+            logger.info("Received start date from frontend: {}", request.getStartDate());
             
             InvestmentSchedule schedule = investmentScheduleService.createInvestmentSchedule(
                     user, 
@@ -63,6 +64,9 @@ public class InvestmentScheduleController {
                     request.getFrequency(),
                     request.getStartDate()
             );
+            
+            logger.info("Saved schedule with start date: {} and next investment date: {}", 
+                       schedule.getStartDate(), schedule.getNextInvestmentDate());
             
             InvestmentScheduleResponse response = new InvestmentScheduleResponse(schedule);
             

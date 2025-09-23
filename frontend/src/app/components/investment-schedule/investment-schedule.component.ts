@@ -473,10 +473,11 @@ export class InvestmentScheduleComponent implements OnInit {
     const investmentScheduleData = {
       investmentAmount: this.schedule.investmentAmount,
       frequency: this.schedule.payFrequency,
-      startDate: this.schedule.startDate
+      startDate: this.schedule.startDate // Send as string in YYYY-MM-DD format
     };
 
     console.log('[InvestmentScheduleComponent] Saving investment schedule:', investmentScheduleData);
+    console.log('[InvestmentScheduleComponent] Start date being sent:', this.schedule.startDate);
 
     // Save investment schedule using AuthService
     this.authService.createOrUpdateInvestmentSchedule(investmentScheduleData)

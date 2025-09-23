@@ -42,14 +42,14 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    localStorage.clear();
+    // localStorage.clear();
     console.log('[AppComponent] ngOnInit - Setting up authentication and progress tracking.');
     
     // 🧪 SIMULATE EXISTING USER - Login as any user from your database
     // First, check your database users by visiting: http://localhost:8080/api/dev/list-users
     // Then uncomment ONE of these to simulate logging in as that user:
     
-    // this.simulateUserLogin('andrew3@msn.com');           // Login by email
+    // this.simulateUserLogin('heywoah@msn.com');           // Login by email
     // this.simulateUserLogin('', 'user_handle_123');        // Login by user_handle  
     // this.simulateUserLogin('test@test.com');              // Login as different user
     

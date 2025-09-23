@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,6 +25,7 @@ public class CreateInvestmentScheduleRequest {
     private String frequency;
     
     @NotNull(message = "Start date is required")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
     
 }

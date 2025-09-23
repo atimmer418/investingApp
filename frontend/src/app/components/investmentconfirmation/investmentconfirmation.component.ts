@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { ViewWillEnter } from '@ionic/angular';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
@@ -46,7 +47,7 @@ interface DefaultStock {
   ]
 })
 
-export class InvestmentConfirmationComponent implements OnInit {
+export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
   // Investment schedule data
   investmentSchedule: InvestmentSchedule = {
     payFrequency: 'BIWEEKLY',
@@ -115,6 +116,12 @@ export class InvestmentConfirmationComponent implements OnInit {
       this.userEmail = userEmail;
       console.log('[InvestmentConfirmationComponent] User email:', userEmail);
     }
+  }
+
+  ionViewWillEnter() {
+    console.log('[InvestmentConfirmationComponent] View will enter - reloading portfolio');
+    // Reload portfolio when returning to this page (e.g., from portfolio customization)
+    this.loadUserPortfolio();
   }
 
   loadUserFinancialData(): void {

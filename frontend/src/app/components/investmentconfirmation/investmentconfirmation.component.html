@@ -70,9 +70,9 @@
             <p>{{ portfolioError }}</p>
           </div>
           
-          <!-- Simple portfolio list -->
-          <div *ngIf="!isLoadingPortfolio && !portfolioError" class="simple-portfolio-list">
-            <div *ngFor="let stock of userPortfolio" class="portfolio-item-simple">
+          <!-- Simple portfolio list - horizontal layout -->
+          <div *ngIf="!isLoadingPortfolio && !portfolioError" class="simple-portfolio-horizontal">
+            <div *ngFor="let stock of userPortfolio" class="portfolio-item-horizontal">
               <div class="allocation-circle">{{ stock.allocation }}%</div>
               <div class="stock-info">
                 <strong>{{ stock.symbol }}</strong>
