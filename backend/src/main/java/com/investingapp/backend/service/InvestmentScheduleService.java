@@ -84,17 +84,22 @@ public class InvestmentScheduleService {
 
         InvestmentSchedule savedSchedule = investmentScheduleRepository.save(schedule);
         
-        // Debug: Log what was actually saved
-        logger.info("DEBUG: Before save - startDate: {}, nextInvestmentDate: {}", 
-                   schedule.getStartDate(), schedule.getNextInvestmentDate());
-        logger.info("DEBUG: After save - startDate: {}, nextInvestmentDate: {}", 
-                   savedSchedule.getStartDate(), savedSchedule.getNextInvestmentDate());
+        // Debug: Log what was actually saved with detailed timezone info
+        logger.info("DEBUG: Before save - startDate: {} (toString: '{}'), nextInvestmentDate: {} (toString: '{}')", 
+                   schedule.getStartDate(), schedule.getStartDate().toString(), 
+                   schedule.getNextInvestmentDate(), schedule.getNextInvestmentDate().toString());
+        logger.info("DEBUG: After save - startDate: {} (toString: '{}'), nextInvestmentDate: {} (toString: '{}')", 
+                   savedSchedule.getStartDate(), savedSchedule.getStartDate().toString(),
+                   savedSchedule.getNextInvestmentDate(), savedSchedule.getNextInvestmentDate().toString());
+        logger.info("DEBUG: JVM Timezone: {}, Default TimeZone: {}", 
+                   System.getProperty("user.timezone"), java.util.TimeZone.getDefault().getID());
         
         // Additional debug: Query the database directly to see what's actually stored
         InvestmentSchedule reloadedSchedule = investmentScheduleRepository.findById(savedSchedule.getId()).orElse(null);
         if (reloadedSchedule != null) {
-            logger.info("DEBUG: Reloaded from DB - startDate: {}, nextInvestmentDate: {}", 
-                       reloadedSchedule.getStartDate(), reloadedSchedule.getNextInvestmentDate());
+            logger.info("DEBUG: Reloaded from DB - startDate: {} (toString: '{}'), nextInvestmentDate: {} (toString: '{}')", 
+                       reloadedSchedule.getStartDate(), reloadedSchedule.getStartDate().toString(),
+                       reloadedSchedule.getNextInvestmentDate(), reloadedSchedule.getNextInvestmentDate().toString());
         }
         
         // Ensure user has a default portfolio (create if not exists)
