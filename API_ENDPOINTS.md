@@ -65,7 +65,50 @@ https://your-production-domain.com (production)
 
 ---
 
-## 4. Banking & Plaid Integration
+## 4. Portfolio Management
+
+### Portfolio Controller (`/api/portfolio`)
+
+| Method | Endpoint                    | Description                              | Auth Required | Request Body              | Response                |
+|--------|-----------------------------|------------------------------------------|---------------|---------------------------|-------------------------|
+| `PUT`  | `/api/portfolio/update`     | Update user's portfolio allocations     | ✅            | UpdatePortfolioRequest    | PortfolioResponse       |
+| `GET`  | `/api/portfolio/current`    | Get current portfolio for user           | ✅            | None                      | PortfolioResponse       |
+| `POST` | `/api/portfolio/reset-to-default` | Reset portfolio to default allocation | ✅            | None                      | PortfolioResponse       |
+
+**DTOs:**
+- `UpdatePortfolioRequest`: `{ portfolioItems: [{ symbol, name, percentage, assetType? }] }`
+- `PortfolioResponse`: `{ id, name, totalPercentage, isDefault, portfolioItems: [{ id, symbol, name, percentage, assetType }], createdAt, updatedAt }`
+- `PortfolioItemDto`: `{ symbol, name, percentage, assetType }` (percentage must total 100% across all items)
+
+**Example UpdatePortfolioRequest:**
+```json
+{
+  "portfolioItems": [
+    {
+      "symbol": "VTI",
+      "name": "Vanguard Total Stock Market ETF",
+      "percentage": 60.00,
+      "assetType": "ETF"
+    },
+    {
+      "symbol": "VXUS", 
+      "name": "Vanguard Total International Stock ETF",
+      "percentage": 30.00,
+      "assetType": "ETF"
+    },
+    {
+      "symbol": "BND",
+      "name": "Vanguard Total Bond Market ETF", 
+      "percentage": 10.00,
+      "assetType": "ETF"
+    }
+  ]
+}
+```
+
+---
+
+## 5. Banking & Plaid Integration
 
 ### Plaid Controller (`/api/plaid`)
 
@@ -79,7 +122,7 @@ https://your-production-domain.com (production)
 
 ---
 
-## 5. Alpaca Trading Integration
+## 6. Alpaca Trading Integration
 
 ### Alpaca Controller (`/api/alpaca`)
 
@@ -95,7 +138,7 @@ https://your-production-domain.com (production)
 
 ---
 
-## 6. System & Health
+## 7. System & Health
 
 ### Health Check Controller
 

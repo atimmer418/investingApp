@@ -58,18 +58,28 @@
             </p>
           </div>
           
-          <ion-list lines="none" class="portfolio-list">
-            <ion-item *ngFor="let stock of defaultPortfolio" class="portfolio-item">
-              <div slot="start" class="allocation-badge">
-                {{ stock.allocation }}%
+          <!-- Loading state -->
+          <div *ngIf="isLoadingPortfolio" class="loading-portfolio">
+            <ion-spinner name="dots"></ion-spinner>
+            <p>Loading your portfolio...</p>
+          </div>
+          
+          <!-- Error state -->
+          <div *ngIf="portfolioError" class="portfolio-error">
+            <ion-icon name="warning-outline" color="warning"></ion-icon>
+            <p>{{ portfolioError }}</p>
+          </div>
+          
+          <!-- Simple portfolio list -->
+          <div *ngIf="!isLoadingPortfolio && !portfolioError" class="simple-portfolio-list">
+            <div *ngFor="let stock of userPortfolio" class="portfolio-item-simple">
+              <div class="allocation-circle">{{ stock.allocation }}%</div>
+              <div class="stock-info">
+                <strong>{{ stock.symbol }}</strong>
+                <span class="stock-description">{{ stock.description }}</span>
               </div>
-              <ion-label>
-                <h3>{{ stock.symbol }}</h3>
-                <p>{{ stock.name }}</p>
-                <ion-note>{{ stock.description }}</ion-note>
-              </ion-label>
-            </ion-item>
-          </ion-list>
+            </div>
+          </div>
           
           <ion-button 
             fill="clear" 

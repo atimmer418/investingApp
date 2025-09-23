@@ -5,12 +5,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  IonButtons, IonBackButton, IonNote, ToastController
+  IonButtons, IonBackButton, IonNote, ToastController, IonSpinner
 } from '@ionic/angular/standalone';
 import { AlpacaService, CreateAccountRequest } from '../../services/alpaca.service';
 import { AuthService } from '../../services/auth.service';
 import { PlaidDataService } from '../../services/plaid-data.service';
 import { environment } from '../../../environments/environment';
+import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 
 interface UpdateAchRequestIdRequest {
   userEmail: string;
@@ -41,7 +42,7 @@ interface DefaultStock {
   imports: [
     CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
     IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    IonButtons, IonBackButton, IonNote
+    IonButtons, IonBackButton, IonNote, IonSpinner
   ]
 })
 
@@ -70,33 +71,10 @@ export class InvestmentConfirmationComponent implements OnInit {
   alpacaAccountId: string | null = null;
   userEmail: string | null = null;
 
-  // Default portfolio
-  defaultPortfolio: DefaultStock[] = [
-    {
-      symbol: 'VTI',
-      name: 'Vanguard Total Stock Market ETF',
-      allocation: 40,
-      description: 'Tracks the entire U.S. stock market'
-    },
-    {
-      symbol: 'VXUS',
-      name: 'Vanguard Total International Stock ETF', 
-      allocation: 30,
-      description: 'International diversification outside the U.S.'
-    },
-    {
-      symbol: 'BND',
-      name: 'Vanguard Total Bond Market ETF',
-      allocation: 20,
-      description: 'Broad exposure to U.S. investment grade bonds'
-    },
-    {
-      symbol: 'VNQ',
-      name: 'Vanguard Real Estate ETF',
-      allocation: 10,
-      description: 'Real estate investment trusts (REITs)'
-    }
-  ];
+  // User's portfolio (fetched from backend)
+  userPortfolio: DefaultStock[] = [];
+  isLoadingPortfolio: boolean = false;
+  portfolioError: string | null = null;
 
   // Frequency options for display
   frequencyOptions = [
@@ -129,6 +107,7 @@ export class InvestmentConfirmationComponent implements OnInit {
     // Load user data and investment schedule
     this.loadUserFinancialData();
     this.loadInvestmentSchedule();
+    this.loadUserPortfolio(); // Add portfolio loading
     
     // Get user email for display
     const userEmail = this.authService.getCurrentUserEmail();
@@ -244,6 +223,50 @@ export class InvestmentConfirmationComponent implements OnInit {
     const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
     const day = String(tomorrow.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  loadUserPortfolio(): void {
+    console.log('[InvestmentConfirmationComponent] Loading user portfolio from backend...');
+    this.isLoadingPortfolio = true;
+    this.portfolioError = null;
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${JwtTokenUtils.getValidJwtToken()}`
+    });
+
+    this.http.get<any>(`${environment.backendApiUrl}/portfolio/current`, { headers }).subscribe({
+      next: (portfolioResponse) => {
+        console.log('[InvestmentConfirmationComponent] ✅ Portfolio loaded:', portfolioResponse);
+        
+        if (portfolioResponse && portfolioResponse.portfolioItems) {
+          // Convert backend portfolio to display format
+          this.userPortfolio = portfolioResponse.portfolioItems.map((item: any) => ({
+            symbol: item.symbol,
+            name: item.name,
+            allocation: item.percentage,
+            description: `${item.assetType || 'Investment'}`
+          }));
+          
+          // Update portfolio type based on whether it's default or custom
+          this.portfolioType = portfolioResponse.isDefault ? 'auto' : 'custom';
+        }
+        
+        this.isLoadingPortfolio = false;
+      },
+      error: (error) => {
+        console.error('[InvestmentConfirmationComponent] ❌ Error loading portfolio:', error);
+        this.portfolioError = 'Unable to load portfolio. Using default allocation.';
+        this.isLoadingPortfolio = false;
+        
+        // Fallback to default portfolio
+        this.userPortfolio = [
+          { symbol: 'VTI', name: 'Vanguard Total Stock Market ETF', allocation: 40, description: 'U.S. Stock Market' },
+          { symbol: 'VXUS', name: 'Vanguard Total International Stock ETF', allocation: 30, description: 'International Stocks' },
+          { symbol: 'BND', name: 'Vanguard Total Bond Market ETF', allocation: 20, description: 'U.S. Bonds' },
+          { symbol: 'VNQ', name: 'Vanguard Real Estate ETF', allocation: 10, description: 'Real Estate' }
+        ];
+      }
+    });
   }
 
   // Helper methods for display

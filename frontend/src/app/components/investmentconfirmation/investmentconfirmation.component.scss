@@ -1,3 +1,12 @@
+// Use CSS variables for a consistent theme
+:host {
+  --ion-background-color: #f2f2f7; // Gray background like other components
+  --ion-toolbar-background: var(--ion-background-color);
+  --ion-text-color: #000000;
+  --ion-color-primary: #007aff;
+  --ion-color-medium: #8e8e93;
+}
+
 .container {
   max-width: 600px;
   margin: 0 auto;
@@ -148,6 +157,92 @@
     
     ion-icon {
       margin-right: 6px;
+    }
+  }
+  
+  // Loading and error states
+  .loading-portfolio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    
+    ion-spinner {
+      margin-bottom: 8px;
+    }
+    
+    p {
+      color: var(--ion-color-medium);
+      font-size: 0.9rem;
+      margin: 0;
+    }
+  }
+  
+  .portfolio-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background-color: rgba(255, 193, 7, 0.1);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    
+    ion-icon {
+      font-size: 1.2rem;
+    }
+    
+    p {
+      color: var(--ion-color-warning-shade);
+      font-size: 0.9rem;
+      margin: 0;
+    }
+  }
+  
+  // Simplified portfolio display
+  .simple-portfolio-list {
+    margin-bottom: 16px;
+    
+    .portfolio-item-simple {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      .allocation-circle {
+        background: var(--ion-color-primary);
+        color: white;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+      
+      .stock-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        
+        strong {
+          color: var(--ion-color-dark);
+          font-size: 0.95rem;
+          font-weight: 600;
+        }
+        
+        .stock-description {
+          color: var(--ion-color-medium);
+          font-size: 0.8rem;
+        }
+      }
     }
   }
 }
