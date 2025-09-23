@@ -103,10 +103,10 @@ public class InvestmentScheduleService {
         try {
             String rawQuery = "SELECT start_date, next_investment_date FROM investment_schedules WHERE id = ?";
             jdbcTemplate.query(rawQuery, new Object[]{savedSchedule.getId()}, rs -> {
-                java.sql.Date startDate = rs.getDate("start_date");
-                java.sql.Date nextDate = rs.getDate("next_investment_date");
+                java.sql.Date dbStartDate = rs.getDate("start_date");
+                java.sql.Date dbNextDate = rs.getDate("next_investment_date");
                 logger.info("TIMEZONE_DEBUG_END: RAW SQL query result - start_date: {}, next_investment_date: {}", 
-                           startDate, nextDate);
+                           dbStartDate, dbNextDate);
             });
         } catch (Exception e) {
             logger.error("TIMEZONE_DEBUG_ERROR: Error querying raw date values: {}", e.getMessage());
