@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,12 +24,15 @@ public class InvestmentScheduleService {
     
     private final InvestmentScheduleRepository investmentScheduleRepository;
     private final PortfolioService portfolioService;
+    private final JdbcTemplate jdbcTemplate;
     
     @Autowired
     public InvestmentScheduleService(InvestmentScheduleRepository investmentScheduleRepository,
-                                   PortfolioService portfolioService) {
+                                   PortfolioService portfolioService,
+                                   JdbcTemplate jdbcTemplate) {
         this.investmentScheduleRepository = investmentScheduleRepository;
         this.portfolioService = portfolioService;
+        this.jdbcTemplate = jdbcTemplate;
     }
     
     /**
@@ -36,6 +40,9 @@ public class InvestmentScheduleService {
      */
     public InvestmentSchedule createInvestmentSchedule(User user, BigDecimal investmentAmount, 
                                                       String frequency, LocalDate startDate) {
+        // Check and set MySQL timezone to UTC
+        checkAndSetDatabaseTimezone();
+        
         logger.info("Creating/updating investment schedule for user: {} with investment amount: {}", 
                    user.getEmail(), investmentAmount);
         
@@ -85,21 +92,18 @@ public class InvestmentScheduleService {
         InvestmentSchedule savedSchedule = investmentScheduleRepository.save(schedule);
         
         // Debug: Log what was actually saved with detailed timezone info
-        logger.info("DEBUG: Before save - startDate: {} (toString: '{}'), nextInvestmentDate: {} (toString: '{}')", 
-                   schedule.getStartDate(), schedule.getStartDate().toString(), 
-                   schedule.getNextInvestmentDate(), schedule.getNextInvestmentDate().toString());
-        logger.info("DEBUG: After save - startDate: {} (toString: '{}'), nextInvestmentDate: {} (toString: '{}')", 
-                   savedSchedule.getStartDate(), savedSchedule.getStartDate().toString(),
-                   savedSchedule.getNextInvestmentDate(), savedSchedule.getNextInvestmentDate().toString());
+        logger.info("DEBUG: Before save - startDate: {}, nextInvestmentDate: {}", 
+                   schedule.getStartDate(), schedule.getNextInvestmentDate());
+        logger.info("DEBUG: After save - startDate: {}, nextInvestmentDate: {}", 
+                   savedSchedule.getStartDate(), savedSchedule.getNextInvestmentDate());
         logger.info("DEBUG: JVM Timezone: {}, Default TimeZone: {}", 
                    System.getProperty("user.timezone"), java.util.TimeZone.getDefault().getID());
         
         // Additional debug: Query the database directly to see what's actually stored
         InvestmentSchedule reloadedSchedule = investmentScheduleRepository.findById(savedSchedule.getId()).orElse(null);
         if (reloadedSchedule != null) {
-            logger.info("DEBUG: Reloaded from DB - startDate: {} (toString: '{}'), nextInvestmentDate: {} (toString: '{}')", 
-                       reloadedSchedule.getStartDate(), reloadedSchedule.getStartDate().toString(),
-                       reloadedSchedule.getNextInvestmentDate(), reloadedSchedule.getNextInvestmentDate().toString());
+            logger.info("DEBUG: Reloaded from DB - startDate: {}, nextInvestmentDate: {}", 
+                       reloadedSchedule.getStartDate(), reloadedSchedule.getNextInvestmentDate());
         }
         
         // Ensure user has a default portfolio (create if not exists)
@@ -258,5 +262,30 @@ public class InvestmentScheduleService {
         logger.info("Successfully updated investment schedule ID: {}", scheduleId);
         
         return updatedSchedule;
+    }
+
+    /**
+     * Check and set the MySQL database session timezone to UTC
+     */
+    private void checkAndSetDatabaseTimezone() {
+        try {
+            // First, check current MySQL timezone settings
+            String globalTimezone = jdbcTemplate.queryForObject("SELECT @@global.time_zone", String.class);
+            String sessionTimezone = jdbcTemplate.queryForObject("SELECT @@session.time_zone", String.class);
+            String systemTimezone = jdbcTemplate.queryForObject("SELECT @@system_time_zone", String.class);
+            
+            logger.info("MySQL Global timezone: {}, Session timezone: {}, System timezone: {}", 
+                       globalTimezone, sessionTimezone, systemTimezone);
+            
+            // Set session timezone to UTC for this connection
+            jdbcTemplate.execute("SET time_zone = '+00:00'");
+            
+            // Verify it was set
+            String newSessionTimezone = jdbcTemplate.queryForObject("SELECT @@session.time_zone", String.class);
+            logger.info("MySQL session timezone set to: {}", newSessionTimezone);
+            
+        } catch (Exception e) {
+            logger.error("Error checking/setting database timezone: {}", e.getMessage());
+        }
     }
 }
