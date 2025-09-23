@@ -284,6 +284,25 @@ public class InvestmentScheduleService {
             String newSessionTimezone = jdbcTemplate.queryForObject("SELECT @@session.time_zone", String.class);
             logger.info("MySQL session timezone set to: {}", newSessionTimezone);
             
+            // Check the actual column types in the investment_schedules table
+            try {
+                String columnInfo = jdbcTemplate.queryForObject(
+                    "SELECT COLUMN_NAME, DATA_TYPE, COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS " +
+                    "WHERE TABLE_NAME = 'investment_schedules' AND COLUMN_NAME IN ('start_date', 'next_investment_date')", 
+                    String.class);
+                logger.info("Column info for date fields: {}", columnInfo);
+            } catch (Exception ex) {
+                logger.info("Could not query column info: {}", ex.getMessage());
+                // Try a different approach - describe the table
+                jdbcTemplate.query("DESCRIBE investment_schedules", rs -> {
+                    String field = rs.getString("Field");
+                    String type = rs.getString("Type");
+                    if (field.contains("date")) {
+                        logger.info("Column {}: Type {}", field, type);
+                    }
+                });
+            }
+            
         } catch (Exception e) {
             logger.error("Error checking/setting database timezone: {}", e.getMessage());
         }

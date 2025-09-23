@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.investingapp.backend.config.LocalDateConverter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,10 +23,12 @@ public class InvestmentSchedule {
     private User user;
 
     // Core investment schedule fields for cron processing
-    @Column(name = "start_date", nullable = false)
+    @Column(name = "start_date", nullable = false, columnDefinition = "DATE")
+    @Temporal(TemporalType.DATE)
     private LocalDate startDate;
 
-    @Column(name = "next_investment_date", nullable = false)
+    @Column(name = "next_investment_date", nullable = false, columnDefinition = "DATE") 
+    @Temporal(TemporalType.DATE)
     private LocalDate nextInvestmentDate;
 
     @Column(name = "investment_amount", precision = 10, scale = 2, nullable = false)
