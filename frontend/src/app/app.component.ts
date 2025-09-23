@@ -54,27 +54,27 @@ export class AppComponent implements OnInit {
     // this.simulateUserLogin('test@test.com');              // Login as different user
     
     // OR navigate directly to any page for testing (bypasses auth entirely):
-    this.router.navigate(['/confirm-investment'], { replaceUrl: true });
+    // this.router.navigate(['/confirm-investment'], { replaceUrl: true });
     // this.router.navigate(['/investment-schedule'], { replaceUrl: true });
     // this.router.navigate(['/manual-stock-selection'], { replaceUrl: true });
     // this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
     
     // 🚫 COMMENT OUT AUTH LOGIC WHEN TESTING SPECIFIC PAGES
     // Subscribe to authentication state changes
-    // this.authService.isLoggedIn$.subscribe(isLoggedIn => {
-    //   if (isLoggedIn) {
-    //     // User is logged in, wait for progress data
-    //     this.authService.userProgress$.subscribe(progress => {
-    //       if (progress) {
-    //         this.navigateBasedOnProgress(progress);
-    //       }
-    //     });
-    //   } else {
-    //     // User is not logged in, redirect to login
-    //     console.log('[AppComponent] User not logged in, redirecting to get-started');
-    //     this.router.navigate(['/get-started'], { replaceUrl: true });
-    //   }
-    // });
+    this.authService.isLoggedIn$.subscribe(isLoggedIn => {
+      if (isLoggedIn) {
+        // User is logged in, wait for progress data
+        this.authService.userProgress$.subscribe(progress => {
+          if (progress) {
+            this.navigateBasedOnProgress(progress);
+          }
+        });
+      } else {
+        // User is not logged in, redirect to login
+        console.log('[AppComponent] User not logged in, redirecting to get-started');
+        this.router.navigate(['/get-started'], { replaceUrl: true });
+      }
+    });
   }
 
   /**
