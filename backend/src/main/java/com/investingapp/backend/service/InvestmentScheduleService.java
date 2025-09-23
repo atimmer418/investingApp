@@ -89,15 +89,28 @@ public class InvestmentScheduleService {
             logger.info("Creating new investment schedule for user: {}", user.getEmail());
         }
 
+        // Debug BEFORE save - what LocalDate values are we trying to save?
+        logger.info("TIMEZONE_DEBUG_START: BEFORE save - startDate LocalDate: {}, nextInvestmentDate LocalDate: {}", 
+                   schedule.getStartDate(), schedule.getNextInvestmentDate());
+        
         InvestmentSchedule savedSchedule = investmentScheduleRepository.save(schedule);
         
-        // Debug: Log what was actually saved with detailed timezone info
-        logger.info("DEBUG: Before save - startDate: {}, nextInvestmentDate: {}", 
-                   schedule.getStartDate(), schedule.getNextInvestmentDate());
-        logger.info("DEBUG: After save - startDate: {}, nextInvestmentDate: {}", 
+        // Debug: Log what was actually saved
+        logger.info("TIMEZONE_DEBUG_MIDDLE: AFTER save - startDate: {}, nextInvestmentDate: {}", 
                    savedSchedule.getStartDate(), savedSchedule.getNextInvestmentDate());
-        logger.info("DEBUG: JVM Timezone: {}, Default TimeZone: {}", 
-                   System.getProperty("user.timezone"), java.util.TimeZone.getDefault().getID());
+                   
+        // Query the database with raw SQL to see what's actually stored
+        try {
+            String rawQuery = "SELECT start_date, next_investment_date FROM investment_schedules WHERE id = ?";
+            jdbcTemplate.query(rawQuery, new Object[]{savedSchedule.getId()}, rs -> {
+                java.sql.Date startDate = rs.getDate("start_date");
+                java.sql.Date nextDate = rs.getDate("next_investment_date");
+                logger.info("TIMEZONE_DEBUG_END: RAW SQL query result - start_date: {}, next_investment_date: {}", 
+                           startDate, nextDate);
+            });
+        } catch (Exception e) {
+            logger.error("TIMEZONE_DEBUG_ERROR: Error querying raw date values: {}", e.getMessage());
+        }
         
         // Additional debug: Query the database directly to see what's actually stored
         InvestmentSchedule reloadedSchedule = investmentScheduleRepository.findById(savedSchedule.getId()).orElse(null);
