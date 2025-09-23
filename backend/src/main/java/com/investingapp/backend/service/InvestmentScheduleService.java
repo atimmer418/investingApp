@@ -103,10 +103,11 @@ public class InvestmentScheduleService {
         try {
             String rawQuery = "SELECT start_date, next_investment_date FROM investment_schedules WHERE id = ?";
             jdbcTemplate.query(rawQuery, new Object[]{savedSchedule.getId()}, rs -> {
-                java.sql.Date dbStartDate = rs.getDate("start_date");
-                java.sql.Date dbNextDate = rs.getDate("next_investment_date");
-                logger.info("TIMEZONE_DEBUG_END: RAW SQL query result - start_date: {}, next_investment_date: {}", 
-                           dbStartDate, dbNextDate);
+                // Use getString() to get the raw DATE value without any timezone conversion
+                String dbStartDateStr = rs.getString("start_date");
+                String dbNextDateStr = rs.getString("next_investment_date");
+                logger.info("TIMEZONE_DEBUG_END: RAW SQL STRING result - start_date: '{}', next_investment_date: '{}'", 
+                           dbStartDateStr, dbNextDateStr);
             });
         } catch (Exception e) {
             logger.error("TIMEZONE_DEBUG_ERROR: Error querying raw date values: {}", e.getMessage());
