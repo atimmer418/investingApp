@@ -90,24 +90,25 @@ public class InvestmentScheduleService {
         }
 
         // Debug BEFORE save - what LocalDate values are we trying to save?
-        logger.info("TIMEZONE_DEBUG_START: BEFORE save - startDate LocalDate: {}, nextInvestmentDate LocalDate: {}", 
-                   schedule.getStartDate(), schedule.getNextInvestmentDate());
+        logger.info("TIMEZONE_DEBUG_START: BEFORE save - ID: {}, startDate LocalDate: {}, nextInvestmentDate LocalDate: {}", 
+                   schedule.getId(), schedule.getStartDate(), schedule.getNextInvestmentDate());
         
         InvestmentSchedule savedSchedule = investmentScheduleRepository.save(schedule);
         
         // Debug: Log what was actually saved
-        logger.info("TIMEZONE_DEBUG_MIDDLE: AFTER save - startDate: {}, nextInvestmentDate: {}", 
-                   savedSchedule.getStartDate(), savedSchedule.getNextInvestmentDate());
+        logger.info("TIMEZONE_DEBUG_MIDDLE: AFTER save - ID: {}, startDate: {}, nextInvestmentDate: {}", 
+                   savedSchedule.getId(), savedSchedule.getStartDate(), savedSchedule.getNextInvestmentDate());
                    
         // Query the database with raw SQL to see what's actually stored
         try {
-            String rawQuery = "SELECT start_date, next_investment_date FROM investment_schedules WHERE id = ?";
+            String rawQuery = "SELECT id, start_date, next_investment_date FROM investment_schedules WHERE id = ?";
             jdbcTemplate.query(rawQuery, new Object[]{savedSchedule.getId()}, rs -> {
                 // Use getString() to get the raw DATE value without any timezone conversion
+                Long dbId = rs.getLong("id");
                 String dbStartDateStr = rs.getString("start_date");
                 String dbNextDateStr = rs.getString("next_investment_date");
-                logger.info("TIMEZONE_DEBUG_END: RAW SQL STRING result - start_date: '{}', next_investment_date: '{}'", 
-                           dbStartDateStr, dbNextDateStr);
+                logger.info("TIMEZONE_DEBUG_END: RAW SQL STRING result - ID: {}, start_date: '{}', next_investment_date: '{}'", 
+                           dbId, dbStartDateStr, dbNextDateStr);
             });
         } catch (Exception e) {
             logger.error("TIMEZONE_DEBUG_ERROR: Error querying raw date values: {}", e.getMessage());
