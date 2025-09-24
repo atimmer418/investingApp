@@ -292,6 +292,14 @@ public class InvestmentScheduleService {
             logger.info("MySQL Global timezone: {}, Session timezone: {}, System timezone: {}", 
                        globalTimezone, sessionTimezone, systemTimezone);
             
+            // Try to set global timezone to UTC (requires SUPER privilege, might fail)
+            try {
+                jdbcTemplate.execute("SET GLOBAL time_zone = '+00:00'");
+                logger.info("Successfully set MySQL global timezone to UTC");
+            } catch (Exception e) {
+                logger.warn("Could not set global timezone (requires SUPER privilege): {}", e.getMessage());
+            }
+            
             // Set session timezone to UTC for this connection
             jdbcTemplate.execute("SET time_zone = '+00:00'");
             
