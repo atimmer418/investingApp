@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,15 +23,12 @@ public class InvestmentScheduleService {
     
     private final InvestmentScheduleRepository investmentScheduleRepository;
     private final PortfolioService portfolioService;
-    private final JdbcTemplate jdbcTemplate;
     
     @Autowired
     public InvestmentScheduleService(InvestmentScheduleRepository investmentScheduleRepository,
-                                   PortfolioService portfolioService,
-                                   JdbcTemplate jdbcTemplate) {
+                                   PortfolioService portfolioService) {
         this.investmentScheduleRepository = investmentScheduleRepository;
         this.portfolioService = portfolioService;
-        this.jdbcTemplate = jdbcTemplate;
     }
     
     /**
@@ -40,9 +36,6 @@ public class InvestmentScheduleService {
      */
     public InvestmentSchedule createInvestmentSchedule(User user, BigDecimal investmentAmount, 
                                                       String frequency, LocalDate startDate) {
-        // Check and set MySQL timezone to UTC
-        checkAndSetDatabaseTimezone();
-        
         logger.info("Creating/updating investment schedule for user: {} with investment amount: {}", 
                    user.getEmail(), investmentAmount);
         
@@ -89,30 +82,7 @@ public class InvestmentScheduleService {
             logger.info("Creating new investment schedule for user: {}", user.getEmail());
         }
 
-        // Debug BEFORE save - what LocalDate values are we trying to save?
-        logger.info("TIMEZONE_DEBUG_START: BEFORE save - ID: {}, startDate LocalDate: {}, nextInvestmentDate LocalDate: {}", 
-                   schedule.getId(), schedule.getStartDate(), schedule.getNextInvestmentDate());
-        
         InvestmentSchedule savedSchedule = investmentScheduleRepository.save(schedule);
-        
-        // Debug: Log what was actually saved
-        logger.info("TIMEZONE_DEBUG_MIDDLE: AFTER save - ID: {}, startDate: {}, nextInvestmentDate: {}", 
-                   savedSchedule.getId(), savedSchedule.getStartDate(), savedSchedule.getNextInvestmentDate());
-                   
-        // Query the database with raw SQL to see what's actually stored
-        try {
-            String rawQuery = "SELECT id, start_date, next_investment_date FROM investment_schedules WHERE id = ?";
-            jdbcTemplate.query(rawQuery, new Object[]{savedSchedule.getId()}, rs -> {
-                // Use getString() to get the raw DATE value without any timezone conversion
-                Long dbId = rs.getLong("id");
-                String dbStartDateStr = rs.getString("start_date");
-                String dbNextDateStr = rs.getString("next_investment_date");
-                logger.info("TIMEZONE_DEBUG_END: RAW SQL STRING result - ID: {}, start_date: '{}', next_investment_date: '{}'", 
-                           dbId, dbStartDateStr, dbNextDateStr);
-            });
-        } catch (Exception e) {
-            logger.error("TIMEZONE_DEBUG_ERROR: Error querying raw date values: {}", e.getMessage());
-        }
         
         // Additional debug: Query the database directly to see what's actually stored
         InvestmentSchedule reloadedSchedule = investmentScheduleRepository.findById(savedSchedule.getId()).orElse(null);
@@ -277,57 +247,5 @@ public class InvestmentScheduleService {
         logger.info("Successfully updated investment schedule ID: {}", scheduleId);
         
         return updatedSchedule;
-    }
-
-    /**
-     * Check and set the MySQL database session timezone to UTC
-     */
-    private void checkAndSetDatabaseTimezone() {
-        try {
-            // First, check current MySQL timezone settings
-            String globalTimezone = jdbcTemplate.queryForObject("SELECT @@global.time_zone", String.class);
-            String sessionTimezone = jdbcTemplate.queryForObject("SELECT @@session.time_zone", String.class);
-            String systemTimezone = jdbcTemplate.queryForObject("SELECT @@system_time_zone", String.class);
-            
-            logger.info("MySQL Global timezone: {}, Session timezone: {}, System timezone: {}", 
-                       globalTimezone, sessionTimezone, systemTimezone);
-            
-            // Try to set global timezone to UTC (requires SUPER privilege, might fail)
-            try {
-                jdbcTemplate.execute("SET GLOBAL time_zone = '+00:00'");
-                logger.info("Successfully set MySQL global timezone to UTC");
-            } catch (Exception e) {
-                logger.warn("Could not set global timezone (requires SUPER privilege): {}", e.getMessage());
-            }
-            
-            // Set session timezone to UTC for this connection
-            jdbcTemplate.execute("SET time_zone = '+00:00'");
-            
-            // Verify it was set
-            String newSessionTimezone = jdbcTemplate.queryForObject("SELECT @@session.time_zone", String.class);
-            logger.info("MySQL session timezone set to: {}", newSessionTimezone);
-            
-            // Check the actual column types in the investment_schedules table
-            try {
-                String columnInfo = jdbcTemplate.queryForObject(
-                    "SELECT COLUMN_NAME, DATA_TYPE, COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS " +
-                    "WHERE TABLE_NAME = 'investment_schedules' AND COLUMN_NAME IN ('start_date', 'next_investment_date')", 
-                    String.class);
-                logger.info("Column info for date fields: {}", columnInfo);
-            } catch (Exception ex) {
-                logger.info("Could not query column info: {}", ex.getMessage());
-                // Try a different approach - describe the table
-                jdbcTemplate.query("DESCRIBE investment_schedules", rs -> {
-                    String field = rs.getString("Field");
-                    String type = rs.getString("Type");
-                    if (field.contains("date")) {
-                        logger.info("Column {}: Type {}", field, type);
-                    }
-                });
-            }
-            
-        } catch (Exception e) {
-            logger.error("Error checking/setting database timezone: {}", e.getMessage());
-        }
     }
 }
