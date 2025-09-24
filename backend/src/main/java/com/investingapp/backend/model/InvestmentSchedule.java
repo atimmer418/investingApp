@@ -128,6 +128,54 @@ public class InvestmentSchedule {
         };
     }
 
+    /**
+     * Generate a user-friendly schedule description
+     */
+    public String getScheduleDescription() {
+        if (startDate == null || frequency == null) {
+            return "Schedule not configured";
+        }
+
+        java.time.DayOfWeek dayOfWeek = startDate.getDayOfWeek();
+        String dayName = dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.ENGLISH);
+        
+        return switch (frequency.toUpperCase()) {
+            case "WEEKLY" -> String.format("Starting %s %s, every %s", 
+                dayName, startDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d")), dayName);
+            case "BIWEEKLY" -> String.format("Starting %s %s, every other %s", 
+                dayName, startDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d")), dayName);
+            case "SEMI_MONTHLY" -> {
+                int dayOfMonth = startDate.getDayOfMonth();
+                if (dayOfMonth <= 15) {
+                    yield "Starting " + startDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d")) + 
+                          ", on the 1st and 15th of each month";
+                } else {
+                    yield "Starting " + startDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d")) + 
+                          ", on the 15th and last day of each month";
+                }
+            }
+            case "MONTHLY" -> String.format("Starting %s %s, on the %s of each month", 
+                dayName, startDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d")), 
+                getOrdinalNumber(startDate.getDayOfMonth()));
+            default -> "Custom schedule";
+        };
+    }
+
+    /**
+     * Helper method to convert numbers to ordinal (1st, 2nd, 3rd, etc.)
+     */
+    private String getOrdinalNumber(int number) {
+        if (number >= 11 && number <= 13) {
+            return number + "th";
+        }
+        return switch (number % 10) {
+            case 1 -> number + "st";
+            case 2 -> number + "nd";
+            case 3 -> number + "rd";
+            default -> number + "th";
+        };
+    }
+
 
 }
 

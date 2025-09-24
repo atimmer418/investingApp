@@ -25,6 +25,7 @@ interface InvestmentSchedule {
   investmentAmount: number;
   startDate: string;
   isEnabled: boolean;
+  scheduleDescription?: string; // Add the backend schedule description
 }
 
 // Default portfolio interface
@@ -172,8 +173,9 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
           this.investmentSchedule = {
             payFrequency: scheduleData.frequency,
             investmentAmount: this.calculateInvestmentAmountByFrequency(scheduleData.monthlyAmount, scheduleData.frequency),
-            startDate: this.getNextInvestmentDate(scheduleData.frequency), // Generate next date since backend doesn't store it
-            isEnabled: !scheduleData.isPaused // Convert isPaused to isEnabled
+            startDate: scheduleData.startDate, // Use actual start date from backend
+            isEnabled: !scheduleData.isPaused, // Convert isPaused to isEnabled
+            scheduleDescription: scheduleData.scheduleDescription // Use backend schedule description
           };
           
           // Update financial projections if available
@@ -282,24 +284,34 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
   }
 
   getInvestmentScheduleDescription(): string {
+    // Use backend schedule description if available
+    if (this.investmentSchedule.scheduleDescription) {
+      return this.investmentSchedule.scheduleDescription;
+    }
+
+    // Fall back to frontend-generated description
     const frequency = this.getSelectedFrequencyDetails();
     if (!frequency || !this.investmentSchedule.startDate) return '';
 
-    const dateParts = this.investmentSchedule.startDate.split('-');
-    const startDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+    const startDate = new Date(this.investmentSchedule.startDate);
+    const dayName = startDate.toLocaleDateString('en-US', { weekday: 'long' });
+    const monthDay = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     
     switch (frequency.value) {
       case 'WEEKLY':
-        const weekday = startDate.toLocaleDateString('en-US', { weekday: 'long' });
-        return `Every ${weekday}`;
+        return `Starting ${dayName} ${monthDay}, every ${dayName}`;
       case 'BIWEEKLY':
-        const biweeklyDay = startDate.toLocaleDateString('en-US', { weekday: 'long' });
-        return `Every other ${biweeklyDay}`;
+        return `Starting ${dayName} ${monthDay}, every other ${dayName}`;
       case 'SEMI_MONTHLY':
-        return 'Every 1st and 15th of the month';
+        const dayOfMonth = startDate.getDate();
+        if (dayOfMonth <= 15) {
+          return `Starting ${monthDay}, on the 1st and 15th of each month`;
+        } else {
+          return `Starting ${monthDay}, on the 15th and last day of each month`;
+        }
       case 'MONTHLY':
         const monthlyDay = startDate.getDate();
-        return `Every ${monthlyDay}${this.getOrdinalSuffix(monthlyDay)} of the month`;
+        return `Starting ${dayName} ${monthDay}, on the ${monthlyDay}${this.getOrdinalSuffix(monthlyDay)} of each month`;
       default:
         return '';
     }

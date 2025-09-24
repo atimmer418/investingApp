@@ -23,6 +23,7 @@ public class InvestmentScheduleResponse {
     private LocalDate nextInvestmentDate;
     private String achRequestId;
     private Boolean isPaused;
+    private String scheduleDescription; // User-friendly schedule description
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -36,6 +37,7 @@ public class InvestmentScheduleResponse {
         this.nextInvestmentDate = schedule.getNextInvestmentDate();
         this.achRequestId = schedule.getAchRequestId();
         this.isPaused = schedule.getIsPaused();
+        this.scheduleDescription = schedule.getScheduleDescription(); // Add schedule description
         this.createdAt = schedule.getCreatedAt();
         this.updatedAt = schedule.getUpdatedAt();
     }
