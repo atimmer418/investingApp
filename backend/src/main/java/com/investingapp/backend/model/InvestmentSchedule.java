@@ -103,7 +103,7 @@ public class InvestmentSchedule {
         // Adjust for weekends and holidays
         nextDate = adjustForBusinessDay(nextDate);
         
-        log.info("calculateNextInvestmentDate: fromDate=" + fromDate + ", frequency=" + frequency + ", nextDate=" + nextDate);
+        System.out.println("calculateNextInvestmentDate: fromDate=" + fromDate + ", frequency=" + frequency + ", nextDate=" + nextDate);
         return nextDate;
     }
 
