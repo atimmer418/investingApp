@@ -285,15 +285,19 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
 
   getInvestmentScheduleDescription(): string {
     // Use backend schedule description if available
-    // if (this.investmentSchedule.scheduleDescription) {
-    //   return this.investmentSchedule.scheduleDescription;
-    // }
+    if (this.investmentSchedule.scheduleDescription) {
+      return this.investmentSchedule.scheduleDescription;
+    }
 
     // Fall back to frontend-generated description
     const frequency = this.getSelectedFrequencyDetails();
     if (!frequency || !this.investmentSchedule.startDate) return '';
 
-    const startDate = new Date(this.investmentSchedule.startDate);
+    // Parse date string as local date to avoid timezone issues
+    const dateString = this.investmentSchedule.startDate;
+    const dateParts = dateString.split('-');
+    const startDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+    
     const dayName = startDate.toLocaleDateString('en-US', { weekday: 'long' });
     const monthDay = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     
