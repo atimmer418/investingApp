@@ -83,13 +83,17 @@ public class InvestmentSchedule {
                 // Semi-monthly: Always 15th and last day of month (ignore input date)
                 LocalDate today = LocalDate.now();
                 int currentDay = today.getDayOfMonth();
+                int lastDayOfMonth = today.lengthOfMonth();
                 
                 if (currentDay < 15) {
                     // Next payment is 15th of current month
                     yield today.withDayOfMonth(15);
-                } else {
+                } else if (currentDay < lastDayOfMonth) {
                     // Next payment is last day of current month
-                    yield today.withDayOfMonth(today.lengthOfMonth());
+                    yield today.withDayOfMonth(lastDayOfMonth);
+                } else {
+                    // Already at or past last day, schedule for 15th of next month
+                    yield today.plusMonths(1).withDayOfMonth(15);
                 }
             }
             case "MONTHLY" -> fromDate.plusMonths(1);
@@ -99,7 +103,7 @@ public class InvestmentSchedule {
         // Adjust for weekends and holidays
         nextDate = adjustForBusinessDay(nextDate);
         
-        System.out.println("calculateNextInvestmentDate: fromDate=" + fromDate + ", frequency=" + frequency + ", nextDate=" + nextDate);
+        log.info("calculateNextInvestmentDate: fromDate=" + fromDate + ", frequency=" + frequency + ", nextDate=" + nextDate);
         return nextDate;
     }
 

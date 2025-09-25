@@ -350,12 +350,17 @@ export class InvestmentScheduleComponent implements OnInit {
     if (currentDay < 15) {
       // Before 15th, so next pay date is 15th of this month
       nextDate = new Date(currentYear, currentMonth, 15);
-    } else if (currentDay === 15) {
-      // Today is 15th, so next pay date is 1st of next month
-      nextDate = new Date(currentYear, currentMonth + 1, 1);
     } else {
-      // After 15th, so next pay date is 1st of next month
-      nextDate = new Date(currentYear, currentMonth + 1, 1);
+      // On or after 15th, so next pay date is last day of this month
+      const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      
+      if (currentDay < lastDayOfMonth) {
+        // Before last day, schedule for last day of current month
+        nextDate = new Date(currentYear, currentMonth, lastDayOfMonth);
+      } else {
+        // Already at or past last day, schedule for 15th of next month
+        nextDate = new Date(currentYear, currentMonth + 1, 15);
+      }
     }
 
     // Format date as YYYY-MM-DD in local time to avoid timezone issues
