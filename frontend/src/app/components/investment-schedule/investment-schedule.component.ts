@@ -203,9 +203,53 @@ export class InvestmentScheduleComponent implements OnInit {
   }
 
   onStartDateChange(date: string) {
-    this.schedule.startDate = date;
-    // Trigger change detection for the investment schedule description
-    // The description will automatically update since it reads from this.schedule.startDate
+    // Check if the selected date is a weekend
+    const selectedDate = new Date(date);
+    const dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 6 = Saturday
+    
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      // Find next business day
+      const nextBusinessDay = this.findNextBusinessDay(selectedDate);
+      const adjustedDate = nextBusinessDay.toISOString().split('T')[0];
+      
+      console.warn('[InvestmentSchedule] Weekend date selected, adjusting to next business day:', date, '->', adjustedDate);
+      this.schedule.startDate = adjustedDate;
+      
+      // Show warning to user
+      this.showDateAdjustmentWarning(selectedDate, nextBusinessDay);
+    } else {
+      this.schedule.startDate = date;
+    }
+  }
+
+  private findNextBusinessDay(date: Date): Date {
+    const nextDay = new Date(date);
+    
+    while (this.isWeekend(nextDay)) {
+      nextDay.setDate(nextDay.getDate() + 1);
+    }
+    
+    return nextDay;
+  }
+
+  private isWeekend(date: Date): boolean {
+    const dayOfWeek = date.getDay();
+    return dayOfWeek === 0 || dayOfWeek === 6; // Sunday or Saturday
+  }
+
+  private showDateAdjustmentWarning(originalDate: Date, adjustedDate: Date): void {
+    // You can implement a toast or alert here if available in your Ionic setup
+    // For now, just console warn
+    const originalStr = originalDate.toLocaleDateString();
+    const adjustedStr = adjustedDate.toLocaleDateString();
+    console.warn(`Date adjusted from ${originalStr} to ${adjustedStr} (weekend dates are not allowed for investments)`);
+  }
+
+  getMinDate(): string {
+    // Set minimum date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
   }
 
   calculateRecommendedAmount() {
@@ -282,14 +326,15 @@ export class InvestmentScheduleComponent implements OnInit {
         return this.getNextFirstOfMonth();
       
       default:
-        // Fallback to tomorrow
+        // Fallback to next business day
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
+        const nextBusinessDay = this.findNextBusinessDay(tomorrow);
         
         // Format date as YYYY-MM-DD in local time to avoid timezone issues
-        const year = tomorrow.getFullYear();
-        const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-        const day = String(tomorrow.getDate()).padStart(2, '0');
+        const year = nextBusinessDay.getFullYear();
+        const month = String(nextBusinessDay.getMonth() + 1).padStart(2, '0');
+        const day = String(nextBusinessDay.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     }
   }

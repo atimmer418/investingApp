@@ -285,9 +285,9 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
 
   getInvestmentScheduleDescription(): string {
     // Use backend schedule description if available
-    if (this.investmentSchedule.scheduleDescription) {
-      return this.investmentSchedule.scheduleDescription;
-    }
+    // if (this.investmentSchedule.scheduleDescription) {
+    //   return this.investmentSchedule.scheduleDescription;
+    // }
 
     // Fall back to frontend-generated description
     const frequency = this.getSelectedFrequencyDetails();
@@ -299,19 +299,14 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
     
     switch (frequency.value) {
       case 'WEEKLY':
-        return `Starting ${dayName} ${monthDay}, every ${dayName}`;
+        return `Starting ${dayName}, ${monthDay} — recurring every week on ${dayName}`;
       case 'BIWEEKLY':
-        return `Starting ${dayName} ${monthDay}, every other ${dayName}`;
+        return `Starting ${dayName}, ${monthDay} — recurring every 2 weeks on ${dayName}`;
       case 'SEMI_MONTHLY':
-        const dayOfMonth = startDate.getDate();
-        if (dayOfMonth <= 15) {
-          return `Starting ${monthDay}, on the 1st and 15th of each month`;
-        } else {
-          return `Starting ${monthDay}, on the 15th and last day of each month`;
-        }
+        return `Starting ${monthDay} — recurring every month on the 15th and last day`;
       case 'MONTHLY':
         const monthlyDay = startDate.getDate();
-        return `Starting ${dayName} ${monthDay}, on the ${monthlyDay}${this.getOrdinalSuffix(monthlyDay)} of each month`;
+        return `Starting ${dayName}, ${monthDay} — recurring every month on the ${monthlyDay}${this.getOrdinalSuffix(monthlyDay)}`;
       default:
         return '';
     }

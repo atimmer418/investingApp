@@ -44,16 +44,25 @@
     <div class="input-section">
       <div class="section-label">
         <h3>When is your next pay date?</h3>
-        <p class="helper-text">We'll start your investments on this date and continue based on your pay frequency</p>
+        <p class="helper-text" *ngIf="schedule.payFrequency !== 'SEMI_MONTHLY'">We'll start your investments on this date and continue based on your pay frequency</p>
+        <p class="helper-text" *ngIf="schedule.payFrequency === 'SEMI_MONTHLY'">Semi-monthly investments are automatically scheduled for the 15th and last day of each month</p>
       </div>
       
-      <div class="input-display-wrapper">
+      <div class="input-display-wrapper" *ngIf="schedule.payFrequency !== 'SEMI_MONTHLY'">
         <ion-input
           type="date"
           [(ngModel)]="schedule.startDate"
           (ionChange)="onStartDateChange($event.detail.value || '')"
+          [min]="getMinDate()"
           placeholder="Select your next pay date">
         </ion-input>
+      </div>
+      
+      <div class="input-display-wrapper" *ngIf="schedule.payFrequency === 'SEMI_MONTHLY'">
+        <ion-note color="medium">
+          <ion-icon name="calendar-outline"></ion-icon>
+          Automatically scheduled for 15th and last day of each month
+        </ion-note>
       </div>
     </div>
 

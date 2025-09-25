@@ -56,10 +56,17 @@ public class InvestmentScheduleService {
             // Calculate monthly amount from investment amount and frequency
             schedule.setMonthlyAmount(calculateMonthlyAmountFromInvestment(investmentAmount, frequency));
             
-            // Update start date if provided
+            // Update start date if provided (except for semi-monthly)
             if (startDate != null) {
-                schedule.setStartDate(startDate);
-                schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(startDate));
+                if ("SEMI_MONTHLY".equalsIgnoreCase(frequency)) {
+                    // For semi-monthly, ignore provided start date and enforce 15th/last day
+                    LocalDate enforcedStartDate = getNextSemiMonthlyDate();
+                    schedule.setStartDate(enforcedStartDate);
+                    schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(enforcedStartDate));
+                } else {
+                    schedule.setStartDate(startDate);
+                    schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(startDate));
+                }
             }
             
         } else {
@@ -72,8 +79,14 @@ public class InvestmentScheduleService {
             // Calculate monthly amount from investment amount and frequency
             schedule.setMonthlyAmount(calculateMonthlyAmountFromInvestment(investmentAmount, frequency));
             
-            // Set dates
-            LocalDate effectiveStartDate = startDate != null ? startDate : LocalDate.now();
+            // Set dates (enforce semi-monthly rules)
+            LocalDate effectiveStartDate;
+            if ("SEMI_MONTHLY".equalsIgnoreCase(frequency)) {
+                // For semi-monthly, ignore provided start date and enforce 15th/last day
+                effectiveStartDate = getNextSemiMonthlyDate();
+            } else {
+                effectiveStartDate = startDate != null ? startDate : LocalDate.now();
+            }
             schedule.setStartDate(effectiveStartDate);
             schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(effectiveStartDate));
             
@@ -247,5 +260,24 @@ public class InvestmentScheduleService {
         logger.info("Successfully updated investment schedule ID: {}", scheduleId);
         
         return updatedSchedule;
+    }
+
+    /**
+     * Get the next semi-monthly date (15th or last day of month)
+     */
+    private LocalDate getNextSemiMonthlyDate() {
+        LocalDate today = LocalDate.now();
+        int currentDay = today.getDayOfMonth();
+        
+        if (currentDay < 15) {
+            // Next payment is 15th of current month
+            return today.withDayOfMonth(15);
+        } else if (currentDay < today.lengthOfMonth()) {
+            // Next payment is last day of current month
+            return today.withDayOfMonth(today.lengthOfMonth());
+        } else {
+            // Current day is last day, next payment is 15th of next month
+            return today.plusMonths(1).withDayOfMonth(15);
+        }
     }
 }
