@@ -52,10 +52,7 @@
       <ion-card-content>
         <div class="portfolio-summary">
           <div class="portfolio-type">
-            <h4>{{ portfolioType === 'auto' ? 'Recommended Diversified Portfolio' : 'Custom Portfolio' }}</h4>
-            <p class="portfolio-description">
-              {{ portfolioType === 'auto' ? 'A balanced mix of stocks, bonds, and real estate for long-term growth' : 'Your custom selected investments' }}
-            </p>
+            <h4>{{ portfolioType === 'auto' ? 'Diversified Portfolio' : 'Custom Portfolio' }}</h4>
           </div>
           
           <!-- Loading state -->
@@ -70,26 +67,33 @@
             <p>{{ portfolioError }}</p>
           </div>
           
-          <!-- Simple portfolio list - horizontal layout -->
-          <div *ngIf="!isLoadingPortfolio && !portfolioError" class="simple-portfolio-horizontal">
-            <div *ngFor="let stock of userPortfolio" class="portfolio-item-horizontal">
-              <div class="allocation-circle">{{ stock.allocation }}%</div>
-              <div class="stock-info">
-                <strong>{{ stock.symbol }}</strong>
-                <span class="stock-description">{{ stock.description }}</span>
+          <!-- Compact portfolio display -->
+          <div *ngIf="!isLoadingPortfolio && !portfolioError" class="compact-portfolio">
+            <div *ngFor="let stock of userPortfolio" class="portfolio-item-compact">
+              <div class="stock-header">
+                <div class="stock-main">
+                  <span class="stock-symbol">{{ stock.symbol }}</span>
+                  <span class="allocation-percent">{{ stock.allocation }}%</span>
+                </div>
+                <div class="stock-name">{{ stock.description }}</div>
+              </div>
+              <div class="allocation-bar">
+                <div class="allocation-fill" [style.width.%]="stock.allocation"></div>
               </div>
             </div>
           </div>
           
-          <ion-button 
-            fill="clear" 
-            size="small" 
-            color="primary"
-            (click)="editPortfolio()"
-            class="edit-portfolio-btn">
-            <ion-icon name="create-outline" slot="start"></ion-icon>
-            Edit Portfolio
-          </ion-button>
+          <div class="portfolio-actions">
+            <ion-button 
+              fill="clear" 
+              size="small" 
+              color="medium"
+              (click)="editPortfolio()"
+              class="edit-portfolio-btn">
+              <ion-icon name="create-outline" slot="start"></ion-icon>
+              Edit Portfolio
+            </ion-button>
+          </div>
         </div>
       </ion-card-content>
     </ion-card>
