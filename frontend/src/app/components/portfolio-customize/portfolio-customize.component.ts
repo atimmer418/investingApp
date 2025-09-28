@@ -8,9 +8,8 @@ import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  IonButtons, IonBackButton, IonNote, IonChip, IonInput, IonRange, IonReorder, IonReorderGroup,
-  IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInfiniteScroll,
-  IonInfiniteScrollContent
+  IonButtons, IonBackButton, IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
+  IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar
 } from '@ionic/angular/standalone';
 
 interface PortfolioItem {
@@ -74,9 +73,8 @@ interface Stock {
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
     IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    IonButtons, IonBackButton, IonNote, IonChip, IonInput, IonRange, IonReorder, IonReorderGroup,
-    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInfiniteScroll,
-    IonInfiniteScrollContent
+    IonButtons, IonBackButton, IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
+    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar
   ]
 })
 export class PortfolioCustomizeComponent implements OnInit {
@@ -92,7 +90,6 @@ export class PortfolioCustomizeComponent implements OnInit {
   // Stock search
   searchTerm = '';
   searchResults: AlpacaAsset[] = [];
-  showAddStock = false;
   
   // New stock form
   newStock = {
@@ -180,7 +177,7 @@ export class PortfolioCustomizeComponent implements OnInit {
     ];
   }
 
-  // Search stocks using Alpaca API
+  // Search stocks using Alpaca API with enhanced search
   async searchStocks(searchTerm?: string): Promise<void> {
     const term = searchTerm || this.searchTerm;
     if (!term || term.length < 2) {
@@ -188,28 +185,91 @@ export class PortfolioCustomizeComponent implements OnInit {
       return;
     }
 
+    console.log(`[PortfolioCustomizeComponent] Starting search for: "${term}"`);
+    console.log(`[PortfolioCustomizeComponent] Backend URL: ${environment.backendApiUrl}`);
+    console.log(`[PortfolioCustomizeComponent] Auth headers:`, this.getAuthHeaders().keys());
     this.isSearching = true;
     try {
-      const response = await this.http.get<AlpacaAsset[]>(
+      console.log(`[PortfolioCustomizeComponent] Searching stocks with URL: ${environment.backendApiUrl}/alpaca/assets`);
+      
+      // First search for US equity stocks
+      const stocksResponse = await this.http.get<AlpacaAsset[]>(
         `${environment.backendApiUrl}/alpaca/assets`,
         { 
           headers: this.getAuthHeaders(),
-          params: { search: term }
+          params: { 
+            search: term,
+            asset_class: 'us_equity',
+            status: 'active'
+          }
         }
       ).toPromise();
+
+      console.log(`[PortfolioCustomizeComponent] Stocks response:`, stocksResponse);
+
+      // Then search for ETFs
+      const etfsResponse = await this.http.get<AlpacaAsset[]>(
+        `${environment.backendApiUrl}/alpaca/assets`,
+        { 
+          headers: this.getAuthHeaders(),
+          params: { 
+            search: term,
+            asset_class: 'etf',
+            status: 'active'
+          }
+        }
+      ).toPromise();
+
+      console.log(`[PortfolioCustomizeComponent] ETFs response:`, etfsResponse);
       
-      if (response) {
-        // Filter for tradable stocks and ETFs only
-        this.searchResults = response
-          .filter(asset => 
-            asset.tradable && 
-            (asset.class === 'us_equity' || asset.class === 'etf') &&
-            asset.status === 'active'
-          )
-          .slice(0, 20); // Limit to 20 results
+      // Combine results
+      let allResults: AlpacaAsset[] = [];
+      if (stocksResponse) {
+        allResults = allResults.concat(stocksResponse);
+      }
+      if (etfsResponse) {
+        allResults = allResults.concat(etfsResponse);
       }
       
-      console.log('[PortfolioCustomizeComponent] Search results:', this.searchResults);
+      if (allResults.length > 0) {
+        // Filter for tradable assets only
+        let filteredResults = allResults.filter(asset => 
+          asset.tradable && asset.status === 'active'
+        );
+
+        // Enhanced search: prioritize exact symbol matches, then partial symbol matches, then name matches
+        const termUpper = term.toUpperCase();
+        
+        // Sort results by relevance
+        filteredResults.sort((a, b) => {
+          // Exact symbol match gets highest priority
+          const aExactSymbol = a.symbol === termUpper ? 1 : 0;
+          const bExactSymbol = b.symbol === termUpper ? 1 : 0;
+          if (aExactSymbol !== bExactSymbol) return bExactSymbol - aExactSymbol;
+          
+          // Symbol starts with search term
+          const aSymbolStart = a.symbol.startsWith(termUpper) ? 1 : 0;
+          const bSymbolStart = b.symbol.startsWith(termUpper) ? 1 : 0;
+          if (aSymbolStart !== bSymbolStart) return bSymbolStart - aSymbolStart;
+          
+          // Symbol contains search term
+          const aSymbolContains = a.symbol.includes(termUpper) ? 1 : 0;
+          const bSymbolContains = b.symbol.includes(termUpper) ? 1 : 0;
+          if (aSymbolContains !== bSymbolContains) return bSymbolContains - aSymbolContains;
+          
+          // Name contains search term (case insensitive)
+          const aNameContains = a.name.toLowerCase().includes(term.toLowerCase()) ? 1 : 0;
+          const bNameContains = b.name.toLowerCase().includes(term.toLowerCase()) ? 1 : 0;
+          if (aNameContains !== bNameContains) return bNameContains - aNameContains;
+          
+          // Alphabetical by symbol as final sort
+          return a.symbol.localeCompare(b.symbol);
+        });
+
+        this.searchResults = filteredResults.slice(0, 50); // Increased limit for better search results
+      }
+      
+      console.log(`[PortfolioCustomizeComponent] Search for "${term}" returned ${this.searchResults.length} results`);
     } catch (error) {
       console.error('[PortfolioCustomizeComponent] Error searching stocks:', error);
       this.searchResults = [];
@@ -234,20 +294,6 @@ export class PortfolioCustomizeComponent implements OnInit {
 
   getStockIconColor(asset: AlpacaAsset): string {
     return this.isStockInPortfolio(asset) ? 'success' : 'primary';
-  }
-
-  toggleAddStock(): void {
-    this.showAddStock = !this.showAddStock;
-    if (this.showAddStock) {
-      this.searchTerm = '';
-      this.searchResults = [];
-    }
-  }
-
-  hideAddStock(): void {
-    this.showAddStock = false;
-    this.searchTerm = '';
-    this.searchResults = [];
   }
 
   updateNewStockPercentage(event: any): void {
@@ -321,8 +367,9 @@ export class PortfolioCustomizeComponent implements OnInit {
     this.portfolio.push(newStock);
     this.normalizeAllocations();
     
-    // Hide search
-    this.hideAddStock();
+    // Clear search
+    this.searchTerm = '';
+    this.searchResults = [];
   }
 
   // Add custom stock
@@ -350,7 +397,6 @@ export class PortfolioCustomizeComponent implements OnInit {
     
     // Reset form
     this.newStock = { symbol: '', percentage: 10 };
-    this.showAddStock = false;
   }
 
   // Reorder stocks

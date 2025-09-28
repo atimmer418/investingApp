@@ -14,6 +14,7 @@ import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/alpaca")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class AlpacaController {
 
     private static final Logger logger = LoggerFactory.getLogger(AlpacaController.class);
@@ -69,12 +70,14 @@ public class AlpacaController {
     @GetMapping("/assets")
     public ResponseEntity<String> getAssets(
             @RequestParam(value = "status", defaultValue = "active") String status,
-            @RequestParam(value = "asset_class", defaultValue = "us_equity") String assetClass) {
+            @RequestParam(value = "asset_class", defaultValue = "us_equity") String assetClass,
+            @RequestParam(value = "search", required = false) String search) {
         try {
-            String assets = alpacaApiService.getAssets(status, assetClass);
+            logger.info("Getting assets with status: {}, asset_class: {}, search: {}", status, assetClass, search);
+            String assets = alpacaApiService.getAssets(status, assetClass, search);
             return ResponseEntity.ok(assets);
         } catch (Exception e) {
-            logger.error("Error getting assets: {}", e.getMessage());
+            logger.error("Error getting assets: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("{\"error\":\"Failed to get assets\"}");
         }

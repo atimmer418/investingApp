@@ -27,22 +27,26 @@ public class AlpacaApiService {
     private final ObjectMapper objectMapper;
     private final String apiKey;
     private final String apiSecret;
-    private final String baseUrl;
+    private final String brokerBaseUrl;
+    private final String tradingBaseUrl;
 
     public AlpacaApiService(
         @Value("${alpaca.api.key}") String apiKey,
         @Value("${alpaca.api.secret}") String apiSecret,
-        @Value("${alpaca.api.base-url:https://broker-api.sandbox.alpaca.markets/v1}") String baseUrl
+        @Value("${alpaca.broker.base-url:https://broker-api.sandbox.alpaca.markets/v1}") String brokerBaseUrl,
+        @Value("${alpaca.trading.base-url:https://paper-api.alpaca.markets/v2}") String tradingBaseUrl
     ) {
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
-        this.baseUrl = baseUrl;
+        this.brokerBaseUrl = brokerBaseUrl;
+        this.tradingBaseUrl = tradingBaseUrl;
         
         // Log configuration (without exposing secrets)
         logger.info("AlpacaApiService initialized:");
-        logger.info("  Base URL: {}", baseUrl);
+        logger.info("  Broker Base URL: {}", brokerBaseUrl);
+        logger.info("  Trading Base URL: {}", tradingBaseUrl);
         logger.info("  API Key: {}", apiKey != null ? apiKey.substring(0, Math.min(8, apiKey.length())) + "..." : "null");
         logger.info("  API Secret: {}", apiSecret != null ? "***set***" : "null");
     }
@@ -64,7 +68,7 @@ public class AlpacaApiService {
     public String getAccountInfo() {
         HttpEntity<String> entity = new HttpEntity<>(createHeaders());
         ResponseEntity<String> response = restTemplate.exchange(
-            baseUrl + "/accounts", 
+            brokerBaseUrl + "/accounts", 
             HttpMethod.GET, 
             entity, 
             String.class
@@ -160,7 +164,7 @@ public class AlpacaApiService {
             
             HttpEntity<String> entity = new HttpEntity<>(jsonBody, createHeaders());
             ResponseEntity<String> response = restTemplate.exchange(
-                baseUrl + "/accounts",
+                brokerBaseUrl + "/accounts",
                 HttpMethod.POST,
                 entity,
                 String.class
@@ -193,7 +197,7 @@ public class AlpacaApiService {
      * Get tradeable assets from Alpaca
      * Note: Assets endpoint is typically public and doesn't require authentication
      */
-    public String getAssets(String status, String assetClass) {
+    public String getAssets(String status, String assetClass, String search) {
         
         // Add query parameters
         StringBuilder queryParams = new StringBuilder("?");
@@ -203,17 +207,37 @@ public class AlpacaApiService {
         if (assetClass != null && !assetClass.isEmpty()) {
             queryParams.append("asset_class=").append(assetClass).append("&");
         }
+        if (search != null && !search.isEmpty()) {
+            queryParams.append("search=").append(search).append("&");
+        }
 
-        logger.debug("Fetching assets from: {}", baseUrl + "/assets" + queryParams.toString().replaceAll("&$", ""));
+        String fullUrl = brokerBaseUrl + "/assets" + queryParams.toString().replaceAll("&$", "");
+        logger.info("Fetching assets from: {}", fullUrl);
+        logger.info("Using API Key: {}***", apiKey != null ? apiKey.substring(0, Math.min(4, apiKey.length())) : "null");
         
-        HttpEntity<String> entity = new HttpEntity<>(createHeaders());
-        ResponseEntity<String> response = restTemplate.exchange(
-            baseUrl + "/assets" + queryParams.toString().replaceAll("&$", ""),
-            HttpMethod.GET,
-            entity,
-            String.class
-        );
-        return response.getBody();
+        try {
+            HttpEntity<String> entity = new HttpEntity<>(createHeaders());
+            ResponseEntity<String> response = restTemplate.exchange(
+                fullUrl,
+                HttpMethod.GET,
+                entity,
+                String.class
+            );
+            
+            String responseBody = response.getBody();
+            logger.info("Assets API response status: {}, body length: {}", 
+                response.getStatusCode(), 
+                responseBody != null ? responseBody.length() : 0);
+            
+            if (responseBody != null && responseBody.length() > 100) {
+                logger.debug("Assets API response preview: {}", responseBody.substring(0, 100) + "...");
+            }
+            
+            return responseBody;
+        } catch (Exception e) {
+            logger.error("Error calling Alpaca assets API: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch assets from Alpaca: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -237,7 +261,7 @@ public class AlpacaApiService {
             
             HttpEntity<String> entity = new HttpEntity<>(jsonBody, createHeaders());
             ResponseEntity<String> response = restTemplate.exchange(
-                baseUrl + "/accounts/" + accountId + "/ach_relationships",
+                brokerBaseUrl + "/accounts/" + accountId + "/ach_relationships",
                 HttpMethod.POST,
                 entity,
                 String.class
@@ -269,7 +293,7 @@ public class AlpacaApiService {
         
         HttpEntity<String> entity = new HttpEntity<>(createHeaders());
         ResponseEntity<String> response = restTemplate.exchange(
-            baseUrl + "/accounts/" + accountId + "/ach_relationships",
+            brokerBaseUrl + "/accounts/" + accountId + "/ach_relationships",
             HttpMethod.GET,
             entity,
             String.class
@@ -283,7 +307,7 @@ public class AlpacaApiService {
     public String getAccountStatus(String accountId) {
         HttpEntity<String> entity = new HttpEntity<>(createHeaders());
         ResponseEntity<String> response = restTemplate.exchange(
-            baseUrl + "/accounts/" + accountId,
+            brokerBaseUrl + "/accounts/" + accountId,
             HttpMethod.GET,
             entity,
             String.class
