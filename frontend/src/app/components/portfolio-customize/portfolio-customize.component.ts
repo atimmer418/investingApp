@@ -82,6 +82,9 @@ export class PortfolioCustomizeComponent implements OnInit {
   // Current portfolio
   portfolio: Stock[] = [];
   
+  // Track original portfolio for change detection
+  originalPortfolio: Stock[] = [];
+  
   // Loading states
   isLoading = false;
   isSaving = false;
@@ -135,6 +138,9 @@ export class PortfolioCustomizeComponent implements OnInit {
           description: `${item.assetType}: ${item.name}`,
           isDefault: response.isDefault
         }));
+        
+        // Save original state for change detection
+        this.originalPortfolio = JSON.parse(JSON.stringify(this.portfolio));
       }
       
       console.log('[PortfolioCustomizeComponent] Loaded portfolio:', this.portfolio);
@@ -175,6 +181,9 @@ export class PortfolioCustomizeComponent implements OnInit {
         isDefault: true
       }
     ];
+    
+    // Save original state for change detection
+    this.originalPortfolio = JSON.parse(JSON.stringify(this.portfolio));
   }
 
   // Search stocks using Alpaca API with enhanced search
@@ -313,6 +322,77 @@ export class PortfolioCustomizeComponent implements OnInit {
   isValidAllocation(): boolean {
     const total = this.getTotalAllocation();
     return total === 100 && this.portfolio.length > 0;
+  }
+
+  // Check if portfolio has been modified from original
+  hasPortfolioChanged(): boolean {
+    if (this.portfolio.length !== this.originalPortfolio.length) {
+      return true;
+    }
+    
+    // Check if any stock symbol, percentage, or order has changed
+    for (let i = 0; i < this.portfolio.length; i++) {
+      const current = this.portfolio[i];
+      const original = this.originalPortfolio[i];
+      
+      if (current.symbol !== original.symbol || 
+          current.percentage !== original.percentage) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  // Check if current portfolio differs from default portfolio
+  isPortfolioDifferentFromDefault(): boolean {
+    const defaultPortfolio = this.getDefaultPortfolioStructure();
+    
+    if (this.portfolio.length !== defaultPortfolio.length) {
+      return true;
+    }
+    
+    // Check if any stock symbol or percentage differs from default
+    for (let i = 0; i < this.portfolio.length; i++) {
+      const current = this.portfolio[i];
+      const defaultStock = defaultPortfolio.find(stock => stock.symbol === current.symbol);
+      
+      if (!defaultStock || current.percentage !== defaultStock.percentage) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  // Get the default portfolio structure for comparison
+  private getDefaultPortfolioStructure(): Stock[] {
+    return [
+      {
+        symbol: 'VTI',
+        name: 'Vanguard Total Stock Market ETF',
+        percentage: 70,
+        assetType: 'ETF',
+        description: 'Tracks the entire U.S. stock market',
+        isDefault: true
+      },
+      {
+        symbol: 'VXUS',
+        name: 'Vanguard Total International Stock ETF',
+        percentage: 20,
+        assetType: 'ETF',
+        description: 'International diversification outside the U.S.',
+        isDefault: true
+      },
+      {
+        symbol: 'BND',
+        name: 'Vanguard Total Bond Market ETF',
+        percentage: 10,
+        assetType: 'ETF',
+        description: 'Broad exposure to U.S. investment grade bonds',
+        isDefault: true
+      }
+    ];
   }
 
   // Update stock allocation

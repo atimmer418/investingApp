@@ -214,6 +214,25 @@ ion-card {
       --color: white;
     }
   }
+  
+  // Portfolio actions styling (reset button)
+  .portfolio-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(var(--ion-color-medium-rgb), 0.2);
+    
+    .reset-portfolio-btn {
+      --color: var(--ion-color-medium);
+      font-size: 0.85rem;
+      
+      ion-icon {
+        margin-right: 4px;
+        font-size: 0.9rem;
+      }
+    }
+  }
 }
 
 // Popular stocks styling

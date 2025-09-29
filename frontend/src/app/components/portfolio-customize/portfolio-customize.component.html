@@ -51,7 +51,7 @@
         <ion-searchbar
           [(ngModel)]="searchTerm"
           (ionInput)="searchStocks()"
-          placeholder="Search by symbol (AAPL) or company name (Apple)"
+          placeholder="Symbol (AAPL) or company name (Apple)"
           show-clear-button="focus"
           debounce="300"
           class="enhanced-searchbar">
@@ -150,6 +150,20 @@
             </ion-item-options>
           </ion-item-sliding>
         </ion-reorder-group>
+        
+        <!-- Reset to Default Button - only show if portfolio differs from default -->
+        <div class="portfolio-actions" *ngIf="isPortfolioDifferentFromDefault()">
+          <ion-button 
+            fill="clear" 
+            size="small" 
+            color="medium"
+            (click)="resetToDefault()"
+            [disabled]="isLoading || isSaving"
+            class="reset-portfolio-btn">
+            <ion-icon name="refresh-outline" slot="start"></ion-icon>
+            Reset to Default
+          </ion-button>
+        </div>
       </ion-card-content>
     </ion-card>
 
@@ -165,18 +179,6 @@
         <ion-icon name="checkmark-outline" *ngIf="!isSaving" slot="start"></ion-icon>
         <span *ngIf="!isSaving">Save Portfolio</span>
         <span *ngIf="isSaving">Saving...</span>
-      </ion-button>
-      
-      <ion-button 
-        expand="block" 
-        fill="outline" 
-        color="warning"
-        (click)="resetToDefault()"
-        [disabled]="isLoading || isSaving">
-        <ion-spinner name="crescent" *ngIf="isLoading" slot="start"></ion-spinner>
-        <ion-icon name="refresh-outline" *ngIf="!isLoading" slot="start"></ion-icon>
-        <span *ngIf="!isLoading">Reset to Default</span>
-        <span *ngIf="isLoading">Resetting...</span>
       </ion-button>
       
       <ion-button 
