@@ -70,9 +70,18 @@ export class AppComponent implements OnInit {
           }
         });
       } else {
-        // User is not logged in, redirect to login
-        console.log('[AppComponent] User not logged in, redirecting to get-started');
-        this.router.navigate(['/get-started'], { replaceUrl: true });
+        // User is not logged in
+        // Check if device supports passkeys and prompt for re-authentication
+        if (this.authService.shouldPromptForPasskeyReauth() && this.authService.supportsPasskeys()) {
+          console.log('[AppComponent] JWT expired, prompting for passkey re-authentication');
+          // TODO: Implement actual passkey authentication call
+          // For now, just navigate to get-started
+          this.router.navigate(['/get-started'], { replaceUrl: true });
+        } else {
+          // No passkey support or other reason - go to get-started
+          console.log('[AppComponent] User not logged in, redirecting to get-started');
+          this.router.navigate(['/get-started'], { replaceUrl: true });
+        }
       }
     });
   }
@@ -123,36 +132,47 @@ export class AppComponent implements OnInit {
   navigateBasedOnProgress(progress: UserProgress): void {
     console.log('🚀 [AppComponent] navigateBasedOnProgress called with actual user progress:', progress);
     
-    // Use the ACTUAL progress data from the backend, not localStorage
-    const getStartedCompleted = true; // If we have progress data, get-started is done
-    const initialSurveyCompleted = progress.initialSurveyCompleted;
-    const linkplaidCompleted = progress.linkplaidCompleted;
-    const investmentSurveyCompleted = progress.investmentSurveyCompleted;
-    const choseToPickStocks = progress.choseToPickStocks;
-    const stockSelectionCompleted = progress.stockSelectionCompleted;
+    // Use the ACTUAL progress data from the backend to determine the user's current step
+    const getStartedCompleted = progress.getStartedCompleted;
+    const surveyInitialCompleted = progress.surveyInitialCompleted;
+    const fiPlanResultsCompleted = progress.fiPlanResultsCompleted;
+    const authFinalizeCompleted = progress.authFinalizeCompleted;
+    const kycVerificationCompleted = progress.kycVerificationCompleted;
+    const linkPlaidCompleted = progress.linkPlaidCompleted;
+    const investmentScheduleCompleted = progress.investmentScheduleCompleted;
     const investmentConfirmationCompleted = progress.investmentConfirmationCompleted;
 
     let targetRoute: string | null = null;
     let decisionReason: string = "";
 
-    if (!initialSurveyCompleted) {
-      targetRoute = '/initial-survey';
-      decisionReason = "Initial survey NOT complete.";
-    } else if (!linkplaidCompleted) {
-      targetRoute = '/link-bank';
-      decisionReason = "Initial survey complete, Plaid linking NOT complete.";
-    } else if (!investmentSurveyCompleted) {
-      targetRoute = '/confirm-investment';
-      decisionReason = "Plaid linked, Investment setup survey NOT complete.";
-    } else if (choseToPickStocks && !stockSelectionCompleted) {
-      targetRoute = '/manual-stock-selection';
-      decisionReason = "User chose to pick stocks, but stock selection page NOT complete.";
+    // Follow the exact user flow: get-started → surveyinitial → fi-plan-results → authfinalize → kyc-verification → linkplaid → investment-schedule → investmentconfirmation
+    if (!getStartedCompleted) {
+      targetRoute = '/get-started';
+      decisionReason = "Get started NOT complete.";
+    } else if (!surveyInitialCompleted) {
+      targetRoute = '/surveyinitial';
+      decisionReason = "Get started complete, initial survey NOT complete.";
+    } else if (!fiPlanResultsCompleted) {
+      targetRoute = '/fi-plan-results';
+      decisionReason = "Initial survey complete, FI plan results NOT complete.";
+    } else if (!authFinalizeCompleted) {
+      targetRoute = '/authfinalize';
+      decisionReason = "FI plan results complete, auth finalize NOT complete.";
+    } else if (!kycVerificationCompleted) {
+      targetRoute = '/kyc-verification';
+      decisionReason = "Auth finalize complete, KYC verification NOT complete.";
+    } else if (!linkPlaidCompleted) {
+      targetRoute = '/linkplaid';
+      decisionReason = "KYC verification complete, Plaid linking NOT complete.";
+    } else if (!investmentScheduleCompleted) {
+      targetRoute = '/investment-schedule';
+      decisionReason = "Plaid linked, investment schedule NOT complete.";
     } else if (!investmentConfirmationCompleted) {
-      targetRoute = '/confirm-investment';
-      decisionReason = "Investment process done, Investment confirmation NOT complete.";
+      targetRoute = '/investmentconfirmation';
+      decisionReason = "Investment schedule complete, investment confirmation NOT complete.";
     } else {
       targetRoute = '/tabs/tab1';
-      decisionReason = "All onboarding steps complete.";
+      decisionReason = "All onboarding steps complete - directing to home page.";
     }
 
     const currentBaseUrl = this.router.url.split('?')[0].split('#')[0];
@@ -166,11 +186,12 @@ export class AppComponent implements OnInit {
     // Log the current user state for debugging
     console.log('📊 [AppComponent] Current user state (FROM BACKEND):', {
       getStartedCompleted,
-      initialSurveyCompleted, 
-      linkplaidCompleted,
-      investmentSurveyCompleted,
-      choseToPickStocks,
-      stockSelectionCompleted,
+      surveyInitialCompleted,
+      fiPlanResultsCompleted,
+      authFinalizeCompleted,
+      kycVerificationCompleted,
+      linkPlaidCompleted,
+      investmentScheduleCompleted,
       investmentConfirmationCompleted,
       targetRoute,
       currentUrl: this.router.url

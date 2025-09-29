@@ -8,11 +8,12 @@ const BACKEND_API_URL = environment.backendApiUrl;
 
 export interface UserProgress {
   getStartedCompleted: boolean;
-  initialSurveyCompleted: boolean;
-  linkplaidCompleted: boolean;
-  investmentSurveyCompleted: boolean;
-  choseToPickStocks: boolean;
-  stockSelectionCompleted: boolean;
+  surveyInitialCompleted: boolean;
+  fiPlanResultsCompleted: boolean;
+  authFinalizeCompleted: boolean;
+  kycVerificationCompleted: boolean;
+  linkPlaidCompleted: boolean;
+  investmentScheduleCompleted: boolean;
   investmentConfirmationCompleted: boolean;
   monthlyInvestment?: number; // User's monthly investment capacity
 }
@@ -69,11 +70,12 @@ export class AuthService {
         // For test users, create mock progress (the app will read from localStorage)
         const mockProgress = {
           getStartedCompleted: true,
-          initialSurveyCompleted: true,
-          linkplaidCompleted: true,
-          investmentSurveyCompleted: false,
-          choseToPickStocks: false,
-          stockSelectionCompleted: false,
+          surveyInitialCompleted: true,
+          fiPlanResultsCompleted: true,
+          authFinalizeCompleted: true,
+          kycVerificationCompleted: true,
+          linkPlaidCompleted: true,
+          investmentScheduleCompleted: false,
           investmentConfirmationCompleted: false
         };
         this.userProgressSubject.next(mockProgress);
@@ -94,6 +96,8 @@ export class AuthService {
       });
     } else {
       console.log('[AuthService] No valid token found, user needs to authenticate');
+      // TODO: Implement actual passkey authentication call
+      // For now, just leave as is
     }
   }
 
@@ -137,6 +141,25 @@ export class AuthService {
   updateProgress(progressUpdate: Partial<UserProgress>): Observable<any> {
     return this.http.put(`${BACKEND_API_URL}/user/progress`, progressUpdate, 
       { headers: this.getAuthHeaders() });
+  }
+
+  /**
+   * Check if we should prompt user for passkey re-authentication
+   * Now we don't need stored email - passkeys work without it!
+   */
+  shouldPromptForPasskeyReauth(): boolean {
+    const token = JwtTokenUtils.getValidJwtToken();
+    
+    // If no valid token, we can try passkey authentication
+    // No need to check for stored email anymore!
+    return !token;
+  }
+
+  /**
+   * Check if browser supports passkeys/WebAuthn
+   */
+  supportsPasskeys(): boolean {
+    return !!(navigator.credentials && window.PublicKeyCredential && typeof window.PublicKeyCredential === 'function');
   }
 
   // Investment Schedule methods (one-to-one mapping per user)

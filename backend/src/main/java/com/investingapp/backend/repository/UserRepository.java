@@ -18,6 +18,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Check if a user exists with the given email address
     Boolean existsByEmail(String email);
 
+    // Find a user by their WebAuthn user handle (for passkey authentication)
     Optional<User> findByUserHandle(String userHandle);
 
     // Find a user by their Plaid item ID for webhook processing
