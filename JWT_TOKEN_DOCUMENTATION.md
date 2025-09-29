@@ -35,10 +35,10 @@ export class JwtTokenUtils {
   // Store JWT with user info
   static storeJwtToken(token: string, userId?: number, email?: string): void
   
-  // Check if token is expired (with 5-min buffer)
+  // Check if token is expired (with 5-min buffer) - USE THIS FOR AUTHENTICATION CHECKS
   static isJwtExpired(): boolean
   
-  // Get valid token or null if expired
+  // Get valid token or null if expired - USE THIS FOR API REQUESTS
   static getValidJwtToken(): string | null
   
   // Clear all JWT data
@@ -47,6 +47,71 @@ export class JwtTokenUtils {
   // Get minutes until expiration
   static getMinutesUntilExpiration(): number | null
 }
+```
+
+### **Best Practices for JWT Utility Usage:**
+
+#### ✅ **Use `isJwtExpired()` for:**
+- Authentication state checks
+- Deciding if user needs to re-authenticate
+- Component initialization logic
+- Progress flow decisions
+
+```typescript
+// ✅ CORRECT - Check authentication state
+isAuthenticated(): boolean {
+  return !JwtTokenUtils.isJwtExpired();
+}
+
+// ✅ CORRECT - Component authentication check
+ngOnInit() {
+  this.isUserAuthenticated = !JwtTokenUtils.isJwtExpired();
+}
+
+// ✅ CORRECT - Re-authentication logic
+shouldPromptForPasskeyReauth(): boolean {
+  return JwtTokenUtils.isJwtExpired();
+}
+```
+
+#### ✅ **Use `getValidJwtToken()` for:**
+- API request headers
+- When you need the actual token value
+- Backend authentication calls
+
+```typescript
+// ✅ CORRECT - API request headers
+private getAuthHeaders(): HttpHeaders {
+  const token = JwtTokenUtils.getValidJwtToken();
+  if (token) {
+    headers = headers.set('Authorization', `Bearer ${token}`);
+  }
+  return headers;
+}
+
+// ✅ CORRECT - API call with token
+makeAuthenticatedRequest() {
+  const token = JwtTokenUtils.getValidJwtToken();
+  if (token) {
+    // Make API call
+  } else {
+    // Redirect to login
+  }
+}
+```
+
+#### ❌ **Avoid These Patterns:**
+```typescript
+// ❌ WRONG - Don't check localStorage directly
+const token = localStorage.getItem('jwtToken');
+const isAuth = !!token; // Doesn't check expiration!
+
+// ❌ WRONG - Don't duplicate expiration logic
+const expiration = localStorage.getItem('jwtExpiration');
+const isExpired = Date.now() > parseInt(expiration) * 1000;
+
+// ❌ WRONG - Don't use getValidJwtToken() for boolean checks
+const isAuth = !!JwtTokenUtils.getValidJwtToken(); // Less clear intent
 ```
 
 ### Authentication Service

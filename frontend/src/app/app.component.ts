@@ -71,17 +71,10 @@ export class AppComponent implements OnInit {
         });
       } else {
         // User is not logged in
-        // Check if device supports passkeys and prompt for re-authentication
-        if (this.authService.shouldPromptForPasskeyReauth() && this.authService.supportsPasskeys()) {
-          console.log('[AppComponent] JWT expired, prompting for passkey re-authentication');
-          // TODO: Implement actual passkey authentication call
-          // For now, just navigate to get-started
-          this.router.navigate(['/get-started'], { replaceUrl: true });
-        } else {
-          // No passkey support or other reason - go to get-started
-          console.log('[AppComponent] User not logged in, redirecting to get-started');
-          this.router.navigate(['/get-started'], { replaceUrl: true });
-        }
+        // AuthService.checkExistingSession() already handles passkey re-auth logic
+        // If no re-auth happens, direct user to get-started
+        console.log('[AppComponent] User not logged in, redirecting to get-started');
+        this.router.navigate(['/get-started'], { replaceUrl: true });
       }
     });
   }

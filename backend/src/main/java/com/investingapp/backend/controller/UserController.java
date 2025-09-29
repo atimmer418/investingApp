@@ -14,6 +14,7 @@ import com.investingapp.backend.repository.UserProgressRepository;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
@@ -235,5 +236,46 @@ public class UserController {
         
         // Fall back to remote address
         return request.getRemoteAddr();
+    }
+    
+    /**
+     * Check if the current IP/device should be prompted for passkey re-authentication
+     * Only prompt if there's an existing user from this IP who has completed auth-finalize
+     * GET /user/should-prompt-reauth
+     */
+    @GetMapping("/should-prompt-reauth")
+    public ResponseEntity<?> shouldPromptForReauth(HttpServletRequest request) {
+        try {
+            String currentIp = getClientIpAddress(request);
+            logger.info("[UserController] Checking if IP {} should be prompted for passkey re-auth", currentIp);
+            
+            // Find users from this IP who have completed auth-finalize
+            List<User> usersFromThisIp = userRepository.findByRegistrationIpAddressAndAuthFinalizeCompleted(currentIp, true);
+            
+            boolean shouldPrompt = !usersFromThisIp.isEmpty();
+            
+            if (shouldPrompt) {
+                logger.info("[UserController] Found {} users from IP {} who completed auth-finalize, should prompt for passkey", 
+                           usersFromThisIp.size(), currentIp);
+                return ResponseEntity.ok(Map.of(
+                    "shouldPromptReauth", true,
+                    "message", "Device has previous users who completed registration"
+                ));
+            } else {
+                logger.info("[UserController] No users from IP {} have completed auth-finalize, skip passkey prompt", currentIp);
+                return ResponseEntity.ok(Map.of(
+                    "shouldPromptReauth", false,
+                    "message", "New device or no completed registrations"
+                ));
+            }
+            
+        } catch (Exception e) {
+            logger.error("[UserController] Error checking reauth prompt status: {}", e.getMessage(), e);
+            // Default to false on error - don't block new users
+            return ResponseEntity.ok(Map.of(
+                "shouldPromptReauth", false,
+                "message", "Error occurred, defaulting to no prompt"
+            ));
+        }
     }
 }

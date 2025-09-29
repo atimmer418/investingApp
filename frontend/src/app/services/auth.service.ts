@@ -60,7 +60,7 @@ export class AuthService {
 
   private checkExistingSession(): void {
     const token = JwtTokenUtils.getValidJwtToken(); // This checks expiration automatically
-    if (token) {
+    if (token && !JwtTokenUtils.isJwtExpired()) {
       // Check if this is a test user (mock JWT)
       const isTestUser = token.includes('mock_signature_for_testing');
       
@@ -95,9 +95,34 @@ export class AuthService {
         }
       });
     } else {
-      console.log('[AuthService] No valid token found, user needs to authenticate');
-      // TODO: Implement actual passkey authentication call
-      // For now, just leave as is
+      console.log('[AuthService] JWT token expired or missing, checking if should prompt for passkey re-auth');
+      
+      // Check if this device should be prompted for passkey re-authentication
+      if (this.supportsPasskeys()) {
+        this.shouldPromptForReauth().subscribe({
+          next: async (response) => {
+            if (response.shouldPromptReauth) {
+              console.log('[AuthService] Device has previous users, prompting for passkey re-auth');
+              const reauthSuccess = await this.promptForPasskeyReauth();
+              
+              if (!reauthSuccess) {
+                console.log('[AuthService] Passkey re-auth failed or cancelled, user needs to authenticate normally');
+                // User will be directed by app.component.ts routing logic
+              }
+            } else {
+              console.log('[AuthService] New device or no completed registrations, no passkey prompt needed');
+              // User will be directed by app.component.ts routing logic
+            }
+          },
+          error: (err) => {
+            console.error('[AuthService] Error checking reauth prompt status, skipping passkey prompt:', err);
+            // Continue with normal flow
+          }
+        });
+      } else {
+        console.log('[AuthService] Device does not support passkeys');
+        // User will be directed by app.component.ts routing logic
+      }
     }
   }
 
@@ -118,7 +143,7 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return JwtTokenUtils.getValidJwtToken() !== null;
+    return !JwtTokenUtils.isJwtExpired();
   }
 
   getUserProgress(): Observable<UserProgress> {
@@ -148,11 +173,8 @@ export class AuthService {
    * Now we don't need stored email - passkeys work without it!
    */
   shouldPromptForPasskeyReauth(): boolean {
-    const token = JwtTokenUtils.getValidJwtToken();
-    
-    // If no valid token, we can try passkey authentication
-    // No need to check for stored email anymore!
-    return !token;
+    // Use the utility method to check if JWT is expired
+    return JwtTokenUtils.isJwtExpired();
   }
 
   /**
@@ -160,6 +182,63 @@ export class AuthService {
    */
   supportsPasskeys(): boolean {
     return !!(navigator.credentials && window.PublicKeyCredential && typeof window.PublicKeyCredential === 'function');
+  }
+
+  /**
+   * Check with backend if current device/IP should be prompted for passkey re-authentication
+   * Only devices that have previous users who completed auth-finalize will be prompted
+   */
+  shouldPromptForReauth(): Observable<{shouldPromptReauth: boolean, message: string}> {
+    return this.http.get<{shouldPromptReauth: boolean, message: string}>(`${BACKEND_API_URL}/user/should-prompt-reauth`, 
+      { headers: this.getAuthHeaders() });
+  }
+
+  /**
+   * Prompt user for passkey re-authentication
+   */
+  async promptForPasskeyReauth(): Promise<boolean> {
+    try {
+      console.log('[AuthService] Starting passkey re-authentication');
+      
+      // 1. Start authentication
+      const startResponse = await this.http.post<{requestOptions: string, sessionId: string}>(`${BACKEND_API_URL}/passkey/authenticate/start`, {}).toPromise();
+      
+      if (!startResponse) {
+        throw new Error('Failed to start authentication');
+      }
+      
+      // 2. Show browser passkey prompt
+      const credential = await navigator.credentials.get({
+        publicKey: JSON.parse(startResponse.requestOptions)
+      });
+      
+      if (!credential) {
+        throw new Error('User cancelled passkey authentication');
+      }
+      
+      // 3. Finish authentication 
+      const authResponse = await this.http.post<any>(`${BACKEND_API_URL}/passkey/authenticate/finish`, {
+        credential: credential,
+        sessionId: startResponse.sessionId
+      }).toPromise();
+      
+      if (authResponse?.success) {
+        // User re-authenticated! Update auth state
+        this.handleSuccessfulAuthentication(
+          authResponse.jwtToken, 
+          authResponse.userId, 
+          authResponse.email
+        );
+        console.log('[AuthService] Passkey re-authentication successful');
+        return true;
+      } else {
+        throw new Error(authResponse?.message || 'Authentication failed');
+      }
+      
+    } catch (error) {
+      console.error('[AuthService] Passkey re-authentication failed:', error);
+      return false;
+    }
   }
 
   // Investment Schedule methods (one-to-one mapping per user)
