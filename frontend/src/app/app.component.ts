@@ -70,11 +70,20 @@ export class AppComponent implements OnInit {
           }
         });
       } else {
-        // User is not logged in
+        // User is not logged in - check for localStorage progress
         // AuthService.checkExistingSession() already handles passkey re-auth logic
-        // If no re-auth happens, direct user to get-started
-        console.log('[AppComponent] User not logged in, redirecting to get-started');
-        this.router.navigate(['/get-started'], { replaceUrl: true });
+        const unifiedProgress = this.authService.getUnifiedProgress();
+        const hasAnyProgress = unifiedProgress.getStartedCompleted || 
+                             unifiedProgress.surveyInitialCompleted || 
+                             unifiedProgress.fiPlanResultsCompleted;
+        
+        if (hasAnyProgress) {
+          console.log('[AppComponent] User not authenticated but has localStorage progress, continuing from where they left off');
+          this.navigateBasedOnProgress(unifiedProgress);
+        } else {
+          console.log('[AppComponent] User not authenticated and no progress, redirecting to get-started');
+          this.router.navigate(['/get-started'], { replaceUrl: true });
+        }
       }
     });
   }
@@ -192,61 +201,17 @@ export class AppComponent implements OnInit {
   }
 
   checkSurveyStatusAndNavigate(): void {
-    const getStartedCompleted = localStorage.getItem('getStartedCompleted') === 'true';
-    const initialSurveyCompleted = localStorage.getItem('initialSurveyCompleted') === 'true';
-    const linkplaidCompleted = localStorage.getItem('linkplaidCompleted') === 'true';
-    const investmentSurveyCompleted = localStorage.getItem('investmentSurveyCompleted') === 'true';
-    const choseToPickStocks = localStorage.getItem('choseToPickStocks') === 'true';
-    const stockSelectionActualCompletion = localStorage.getItem('stockSelectionCompleted') === 'true';
-    const investmentConfirmationCompleted = localStorage.getItem('investmentConfirmationCompleted') === 'true';
-
+    // Use unified progress that works both pre-auth (localStorage) and post-auth (database)
+    const progress = this.authService.getUnifiedProgress();
+    
     console.log("------------------------------------------");
-    console.log("[AppComponent] checkSurveyStatusAndNavigate CALLED");
+    console.log("[AppComponent] checkSurveyStatusAndNavigate CALLED (UNIFIED)");
     console.log("  Current Router URL:", this.router.url);
-    console.log("  FLAGS FROM LOCALSTORAGE:");
-    console.log("    getStartedCompleted:", getStartedCompleted);
-    console.log("    initialSurveyCompleted:", initialSurveyCompleted);
-    console.log("    linkplaidCompleted:", linkplaidCompleted);
-    console.log("    investmentSurveyCompleted:", investmentSurveyCompleted);
-    console.log("    choseToPickStocks:", choseToPickStocks);
-    console.log("    stockSelectionActualCompletion:", stockSelectionActualCompletion);
-    console.log("    investmentConfirmationCompleted:", investmentConfirmationCompleted);
+    console.log("  UNIFIED PROGRESS:", progress);
+    console.log("  Is Authenticated:", this.authService.isAuthenticated());
     console.log("------------------------------------------");
 
-    let targetRoute: string | null = null;
-    let decisionReason: string = "";
-
-    if (!getStartedCompleted) {
-      targetRoute = '/get-started';
-      decisionReason = "Get Started NOT complete.";
-    } else if (!initialSurveyCompleted) {
-      targetRoute = '/initial-survey';
-      decisionReason = "Initial survey NOT complete.";
-    } else if (!linkplaidCompleted) {
-      targetRoute = '/link-bank';
-      decisionReason = "Initial survey complete, Plaid linking NOT complete.";
-    } else if (!investmentSurveyCompleted) {
-      targetRoute = '/confirm-investment';
-      decisionReason = "Plaid linked, Investment setup survey NOT complete.";
-    } else if (choseToPickStocks && !stockSelectionActualCompletion) {
-      targetRoute = '/stock-selection';
-      decisionReason = "User chose to pick stocks, but stock selection page NOT complete.";
-    } else if (!investmentConfirmationCompleted) {
-      targetRoute = '/confirm-investment';
-      decisionReason = "Investment process (auto or custom picks defined) done, Investment confirmation NOT complete.";
-    } else {
-      targetRoute = '/tabs/tab1';
-      decisionReason = "All onboarding steps complete.";
-    }
-
-    const currentBaseUrl = this.router.url.split('?')[0].split('#')[0];
-    if (targetRoute && currentBaseUrl !== targetRoute) {
-      console.log(`[AppComponent] DECISION: ${decisionReason} Navigating to ${targetRoute}.`);
-      this.router.navigateByUrl(targetRoute, { replaceUrl: true });
-    } else if (targetRoute && currentBaseUrl === targetRoute) {
-      console.log(`[AppComponent] DECISION: ${decisionReason} Already on target route ${targetRoute}. No navigation needed.`);
-    } else {
-      console.log(`[AppComponent] No specific navigation target determined or already on target. Current URL: ${this.router.url}`);
-    }
+    // Use the same navigation logic as navigateBasedOnProgress
+    this.navigateBasedOnProgress(progress);
   }
 }

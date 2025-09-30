@@ -97,6 +97,12 @@ export class AuthService {
     } else {
       console.log('[AuthService] JWT token expired or missing, checking if should prompt for passkey re-auth');
       
+      // For non-authenticated users, load their localStorage progress into the subject
+      // This ensures getUnifiedProgress() and components have consistent access to progress
+      const localStorageProgress = this.buildProgressFromLocalStorage();
+      this.userProgressSubject.next(localStorageProgress);
+      console.log('[AuthService] Loaded localStorage progress for non-authenticated user:', localStorageProgress);
+      
       // Check if this device should be prompted for passkey re-authentication
       if (this.supportsPasskeys()) {
         this.shouldPromptForReauth().subscribe({
@@ -132,8 +138,29 @@ export class AuthService {
     JwtTokenUtils.storeJwtToken(jwtToken, userId, email);
     this.isLoggedInSubject.next(true);
     
-    // Load user progress after successful authentication
-    this.loadUserProgress();
+    // Check if this is a first-time authentication (user just completed authfinalize)
+    // If so, sync their localStorage progress to the database
+    const hasLocalProgress = localStorage.getItem('getStartedCompleted') === 'true' || 
+                            localStorage.getItem('initialSurveyCompleted') === 'true' ||
+                            localStorage.getItem('fiPlanResultsCompleted') === 'true';
+
+    if (hasLocalProgress) {
+      console.log('[AuthService] First-time authentication detected, syncing localStorage progress to database');
+      this.syncLocalStorageProgressToDatabase().subscribe({
+        next: () => {
+          // After successful sync, load the updated progress from database
+          this.loadUserProgress();
+        },
+        error: (err) => {
+          console.error('[AuthService] Failed to sync localStorage progress:', err);
+          // Still load progress from database even if sync failed
+          this.loadUserProgress();
+        }
+      });
+    } else {
+      // No localStorage progress to sync, just load from database
+      this.loadUserProgress();
+    }
   }
 
   logout(): void {
@@ -149,6 +176,80 @@ export class AuthService {
   getUserProgress(): Observable<UserProgress> {
     return this.http.get<UserProgress>(`${BACKEND_API_URL}/user/progress`, 
       { headers: this.getAuthHeaders() });
+  }
+
+  /**
+   * Sync localStorage progress to database (called after authfinalize completion)
+   * This migrates anonymous pre-auth progress to the authenticated user's database record
+   */
+  syncLocalStorageProgressToDatabase(): Observable<any> {
+    const localProgress: Partial<UserProgress> = {
+      getStartedCompleted: localStorage.getItem('getStartedCompleted') === 'true',
+      surveyInitialCompleted: localStorage.getItem('initialSurveyCompleted') === 'true',
+      fiPlanResultsCompleted: localStorage.getItem('fiPlanResultsCompleted') === 'true',
+      // authFinalizeCompleted is set to true by the backend when this sync happens
+      // Don't sync post-auth flags from localStorage (they should come from database)
+    };
+
+    console.log('[AuthService] Syncing localStorage progress to database:', localProgress);
+    
+    return this.updateProgress(localProgress).pipe(
+      tap(() => {
+        console.log('[AuthService] Successfully synced localStorage progress to database');
+        // Optionally clear localStorage flags after successful sync
+        this.clearLocalStorageProgressFlags();
+      })
+    );
+  }
+
+  /**
+   * Build UserProgress object from localStorage (for non-authenticated users)
+   */
+  private buildProgressFromLocalStorage(): UserProgress {
+    return {
+      getStartedCompleted: localStorage.getItem('getStartedCompleted') === 'true',
+      surveyInitialCompleted: localStorage.getItem('initialSurveyCompleted') === 'true',
+      fiPlanResultsCompleted: localStorage.getItem('fiPlanResultsCompleted') === 'true',
+      authFinalizeCompleted: false, // Can't be true if no JWT token
+      kycVerificationCompleted: false,
+      linkPlaidCompleted: false,
+      investmentScheduleCompleted: false,
+      investmentConfirmationCompleted: false
+    };
+  }
+
+  /**
+   * Refresh localStorage progress in the subject (for non-authenticated users)
+   * Call this when localStorage progress is updated before authentication
+   */
+  refreshLocalStorageProgress(): void {
+    if (!this.isAuthenticated()) {
+      const updatedProgress = this.buildProgressFromLocalStorage();
+      this.userProgressSubject.next(updatedProgress);
+      console.log('[AuthService] Refreshed localStorage progress:', updatedProgress);
+    }
+  }
+
+  /**
+   * Clear localStorage progress flags after successful sync to database
+   * This prevents confusion between localStorage and database as source of truth
+   */
+  private clearLocalStorageProgressFlags(): void {
+    const flagsToRemove = [
+      'getStartedCompleted',
+      'initialSurveyCompleted', 
+      'fiPlanResultsCompleted',
+      'linkplaidCompleted',
+      'investmentSurveyCompleted',
+      'stockSelectionCompleted',
+      'investmentConfirmationCompleted'
+    ];
+
+    flagsToRemove.forEach(flag => {
+      localStorage.removeItem(flag);
+    });
+
+    console.log('[AuthService] Cleared localStorage progress flags - database is now source of truth');
   }
 
   loadUserProgress(): void {
@@ -295,6 +396,29 @@ export class AuthService {
   // Helper method to get current progress synchronously
   getCurrentProgress(): UserProgress | null {
     return this.userProgressSubject.value;
+  }
+
+  /**
+   * Get progress for current user, checking both database (if authenticated) and localStorage (if not)
+   * This provides a unified way to check progress regardless of authentication state
+   */
+  getUnifiedProgress(): UserProgress {
+    const databaseProgress = this.getCurrentProgress();
+    
+    if (databaseProgress) {
+      // User is authenticated - use database progress
+      return databaseProgress;
+    } else {
+      // User not authenticated - check if we have localStorage progress loaded in subject
+      const subjectProgress = this.userProgressSubject.value;
+      if (subjectProgress) {
+        // We already loaded localStorage progress into the subject
+        return subjectProgress;
+      } else {
+        // Fallback: build progress from localStorage directly
+        return this.buildProgressFromLocalStorage();
+      }
+    }
   }
 
   // Session management methods
