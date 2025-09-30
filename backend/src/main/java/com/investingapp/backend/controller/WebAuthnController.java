@@ -23,6 +23,7 @@ import com.investingapp.backend.dto.RegistrationStartRequest;
 import com.investingapp.backend.dto.RegistrationStartResponse;
 import com.investingapp.backend.service.WebAuthnService;
 import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
+import com.yubico.webauthn.data.PublicKeyCredentialRequestOptions;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -42,6 +43,9 @@ public class WebAuthnController {
 
     private final WebAuthnService webAuthnService;
     private final Cache<String, PublicKeyCredentialCreationOptions> challengeCache;
+    
+    // Cache for authentication challenges (email-less authentication)
+    private final Cache<String, PublicKeyCredentialRequestOptions> authChallengeCache;
 
     // these 3 injections are needed for simulating passkey registration
     @Autowired
@@ -58,6 +62,8 @@ public class WebAuthnController {
             Cache<String, PublicKeyCredentialCreationOptions> challengeCache) {
         this.webAuthnService = webAuthnService;
         this.challengeCache = challengeCache;
+        // For simplicity, using same cache implementation - in production you might want separate caches
+        this.authChallengeCache = (Cache<String, PublicKeyCredentialRequestOptions>) challengeCache;
     }
 
     @PostMapping("/register/start")
@@ -146,6 +152,86 @@ public class WebAuthnController {
                     serviceResponse.getMessage());
             // serviceResponse already contains success=false and the message
             return ResponseEntity.badRequest().body(serviceResponse);
+        }
+    }
+
+    // === PASSKEY AUTHENTICATION ENDPOINTS ===
+    
+    /**
+     * Start passkey authentication - NO EMAIL REQUIRED!
+     * Uses discoverable credentials to identify the user from the passkey itself
+     */
+    @PostMapping("/authenticate/start")
+    public ResponseEntity<?> startAuthentication(HttpServletRequest request) {
+        logger.info("Starting usernameless passkey authentication");
+        String origin = request.getHeader("Origin");
+        logger.info("Authentication request from ORIGIN: {}", origin);
+        
+        try {
+            PublicKeyCredentialRequestOptions options = webAuthnService.startAuthenticationFlow();
+            
+            // Generate a temporary session ID to cache the challenge
+            String sessionId = java.util.UUID.randomUUID().toString();
+            authChallengeCache.put(sessionId, options);
+            
+            logger.info("Authentication challenge generated and cached with session ID: {}", sessionId);
+            
+            // Return both the options and session ID to frontend
+            return ResponseEntity.ok(Map.of(
+                "requestOptions", options.toJson(),
+                "sessionId", sessionId
+            ));
+            
+        } catch (JsonProcessingException e) {
+            logger.error("Failed to serialize authentication options to JSON: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error generating authentication options.");
+        } catch (Exception e) {
+            logger.error("Unexpected error during authentication start: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Authentication start failed.");
+        }
+    }
+
+    /**
+     * Finish passkey authentication - discovers user from passkey response
+     */
+    @PostMapping("/authenticate/finish")
+    public ResponseEntity<?> finishAuthentication(@RequestBody Map<String, Object> request) {
+        String sessionId = (String) request.get("sessionId");
+        JsonNode credentialResponse = (JsonNode) request.get("credential");
+        
+        logger.info("Processing passkey authentication finish for session: {}", sessionId);
+        
+        if (sessionId == null || credentialResponse == null) {
+            return ResponseEntity.badRequest().body("Missing sessionId or credential");
+        }
+        
+        // Get original challenge from cache
+        PublicKeyCredentialRequestOptions originalOptions = authChallengeCache.getIfPresent(sessionId);
+        authChallengeCache.invalidate(sessionId); // Invalidate immediately
+        
+        if (originalOptions == null) {
+            logger.warn("No authentication challenge found for session: {}", sessionId);
+            return ResponseEntity.badRequest().body("Authentication challenge expired or not found");
+        }
+        
+        try {
+            WebAuthnService.AuthenticationFinishResponse serviceResponse = 
+                webAuthnService.finishAuthenticationFlow(credentialResponse, originalOptions);
+            
+            if (serviceResponse.isSuccess()) {
+                logger.info("Passkey authentication successful for user: {}", serviceResponse.getEmail());
+                return ResponseEntity.ok(serviceResponse);
+            } else {
+                logger.warn("Passkey authentication failed: {}", serviceResponse.getMessage());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(serviceResponse);
+            }
+            
+        } catch (Exception e) {
+            logger.error("Unexpected error during authentication finish: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Authentication finish failed");
         }
     }
 }

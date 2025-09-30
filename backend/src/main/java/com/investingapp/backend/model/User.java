@@ -52,6 +52,11 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<PasskeyCredential> passkeyCredentials = new HashSet<>();
 
+    // One-to-one mapping with UserProgress entity
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_progress_id", referencedColumnName = "id")
+    private UserProgress userProgress;
+
     // Plaid specific fields
     @Column(length = 255) // Adjust length as needed
     private String plaidAccessToken; // IMPORTANT: Encrypt this at rest!
@@ -84,13 +89,9 @@ public class User {
     @Column(length = 50)
     private String alpacaAchStatus; // "QUEUED", "APPROVED", "PENDING", etc.
 
-    // Onboarding status flags
-    private boolean initialSurveyCompleted = false;
-    private boolean plaidLinked = false;
-    private boolean investmentSurveyCompleted = false;
-    private boolean choseToPickStocks = false;
-    private boolean stockSelectionCompleted = false;
-    private boolean investmentConfirmationCompleted = false;
+    // IP address tracking for security purposes
+    @Column(length = 45) // IPv6 addresses can be up to 45 characters
+    private String registrationIpAddress;
 
     private String planId;
     private String timeToFI;
@@ -108,6 +109,9 @@ public class User {
         this.email = email;
         // Generate a user handle, e.g., from UUID or a transformation of the user ID after first save
         // For now, it can be set later or derived.
+        
+        // Create associated UserProgress
+        this.userProgress = new UserProgress(this);
     }
 
     // public User(String firstName, String lastName, String email) {

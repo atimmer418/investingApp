@@ -7,7 +7,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
+<ion-content class="ion-padding gray-background">
   <div class="container">
     <!-- Header -->
     <div class="header-section">
@@ -35,6 +35,64 @@
           <ion-icon name="information-circle-outline"></ion-icon>
           This allocation follows modern portfolio theory and is suitable for most long-term investors.
         </ion-note>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Search and Add Stocks -->
+    <ion-card class="search-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="search-outline" color="secondary"></ion-icon>
+          Search & Add Investments
+        </ion-card-title>
+        <ion-note>Search for stocks and ETFs by symbol or name</ion-note>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-searchbar
+          [(ngModel)]="searchTerm"
+          (ionInput)="searchStocks()"
+          placeholder="Symbol (AAPL) or company name (Apple)"
+          show-clear-button="focus"
+          debounce="300"
+          class="enhanced-searchbar">
+        </ion-searchbar>
+        
+        <div *ngIf="isSearching" class="loading-container">
+          <ion-spinner name="dots"></ion-spinner>
+          <p>Searching investments...</p>
+        </div>
+        
+        <div class="search-results" *ngIf="searchResults.length > 0 && !isSearching">
+          <ion-list class="search-results-list">
+            <ion-item 
+              *ngFor="let asset of searchResults"
+              (click)="addAssetToPortfolio(asset)"
+              [button]="true"
+              [disabled]="isStockInPortfolio(asset)"
+              class="search-result-item">
+              <ion-label>
+                <h3>{{ asset.symbol }}</h3>
+                <p>{{ asset.name }}</p>
+                <ion-note>{{ asset.exchange }} • {{ asset.class.toUpperCase() }}</ion-note>
+              </ion-label>
+              <ion-chip 
+                slot="end" 
+                [color]="asset.class === 'etf' ? 'secondary' : 'primary'"
+                size="small">
+                {{ asset.class.toUpperCase() }}
+              </ion-chip>
+              <ion-icon 
+                slot="end"
+                [name]="getStockIconName(asset)"
+                [color]="getStockIconColor(asset)">
+              </ion-icon>
+            </ion-item>
+          </ion-list>
+        </div>
+        
+        <div *ngIf="searchTerm.length > 0 && searchResults.length === 0 && !isSearching" class="no-results">
+          <ion-note>No tradable assets found for "{{ searchTerm }}"</ion-note>
+        </div>
       </ion-card-content>
     </ion-card>
 
@@ -92,115 +150,19 @@
             </ion-item-options>
           </ion-item-sliding>
         </ion-reorder-group>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Search and Add Stocks -->
-    <ion-card class="add-stocks-card">
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="search-outline" color="secondary"></ion-icon>
-          Search & Add Investments
-        </ion-card-title>
-        <ion-note>Search for stocks and ETFs to add to your portfolio</ion-note>
-      </ion-card-header>
-      <ion-card-content>
-        <ion-button 
-          fill="outline" 
-          expand="block" 
-          color="primary"
-          (click)="toggleAddStock()">
-          <ion-icon name="add" slot="start"></ion-icon>
-          Search for Stocks & ETFs
-        </ion-button>
         
-        <div class="search-form" *ngIf="showAddStock">
-          <ion-searchbar
-            [(ngModel)]="searchTerm"
-            (ionInput)="searchStocks()"
-            placeholder="Search stocks and ETFs (e.g. AAPL, VTI)"
-            show-clear-button="focus"
-            debounce="500">
-          </ion-searchbar>
-          
-          <div *ngIf="isSearching" class="loading-container">
-            <ion-spinner name="dots"></ion-spinner>
-            <p>Searching investments...</p>
-          </div>
-          
-          <div class="search-results" *ngIf="searchResults.length > 0 && !isSearching">
-            <ion-list>
-              <ion-item 
-                *ngFor="let asset of searchResults"
-                (click)="addAssetToPortfolio(asset)"
-                [button]="true"
-                [disabled]="isStockInPortfolio(asset)">
-                <ion-label>
-                  <h3>{{ asset.symbol }}</h3>
-                  <p>{{ asset.name }}</p>
-                  <ion-note>{{ asset.exchange }} • {{ asset.class.toUpperCase() }}</ion-note>
-                </ion-label>
-                <ion-chip 
-                  slot="end" 
-                  [color]="asset.class === 'etf' ? 'secondary' : 'primary'"
-                  size="small">
-                  {{ asset.class.toUpperCase() }}
-                </ion-chip>
-                <ion-icon 
-                  slot="end"
-                  [name]="getStockIconName(asset)"
-                  [color]="getStockIconColor(asset)">
-                </ion-icon>
-              </ion-item>
-            </ion-list>
-          </div>
-          
-          <div *ngIf="searchTerm.length > 0 && searchResults.length === 0 && !isSearching" class="no-results">
-            <ion-note>No tradable assets found for "{{ searchTerm }}"</ion-note>
-          </div>
-          
-          <!-- Manual Entry Section -->
-          <div class="manual-entry" *ngIf="showAddStock">
-            <ion-item>
-              <ion-label position="stacked">Or enter symbol manually</ion-label>
-              <ion-input 
-                [(ngModel)]="newStock.symbol" 
-                placeholder="e.g. AAPL, TSLA"
-                style="text-transform: uppercase;">
-              </ion-input>
-            </ion-item>
-            
-            <ion-item>
-              <ion-label position="stacked">Initial Allocation (%)</ion-label>
-              <ion-range
-                [min]="1"
-                [max]="50"
-                [value]="newStock.percentage"
-                [pin]="true"
-                [pinFormatter]="pinFormatter"
-                (ionChange)="updateNewStockPercentage($event)"
-                color="primary">
-              </ion-range>
-              <ion-text slot="end">{{ newStock.percentage }}%</ion-text>
-            </ion-item>
-            
-            <div class="form-buttons">
-              <ion-button 
-                size="small" 
-                color="primary" 
-                (click)="addCustomStock()"
-                [disabled]="!isNewStockValid()">
-                Add Stock
-              </ion-button>
-              <ion-button 
-                size="small" 
-                fill="clear" 
-                color="medium" 
-                (click)="hideAddStock()">
-                Cancel
-              </ion-button>
-            </div>
-          </div>
+        <!-- Reset to Default Button - only show if portfolio differs from default -->
+        <div class="portfolio-actions" *ngIf="isPortfolioDifferentFromDefault()">
+          <ion-button 
+            fill="clear" 
+            size="small" 
+            color="medium"
+            (click)="resetToDefault()"
+            [disabled]="isLoading || isSaving"
+            class="reset-portfolio-btn">
+            <ion-icon name="refresh-outline" slot="start"></ion-icon>
+            Reset to Default
+          </ion-button>
         </div>
       </ion-card-content>
     </ion-card>
@@ -217,18 +179,6 @@
         <ion-icon name="checkmark-outline" *ngIf="!isSaving" slot="start"></ion-icon>
         <span *ngIf="!isSaving">Save Portfolio</span>
         <span *ngIf="isSaving">Saving...</span>
-      </ion-button>
-      
-      <ion-button 
-        expand="block" 
-        fill="outline" 
-        color="warning"
-        (click)="resetToDefault()"
-        [disabled]="isLoading || isSaving">
-        <ion-spinner name="crescent" *ngIf="isLoading" slot="start"></ion-spinner>
-        <ion-icon name="refresh-outline" *ngIf="!isLoading" slot="start"></ion-icon>
-        <span *ngIf="!isLoading">Reset to Default</span>
-        <span *ngIf="isLoading">Resetting...</span>
       </ion-button>
       
       <ion-button 

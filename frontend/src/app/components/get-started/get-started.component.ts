@@ -2,6 +2,7 @@ import { Component, ViewChild, ElementRef, AfterViewInit, CUSTOM_ELEMENTS_SCHEMA
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { IonContent, IonButton } from '@ionic/angular/standalone';
+import { AuthService } from '../../services/auth.service';
 import type { SwiperContainer } from 'swiper/element';
 import type { Swiper } from 'swiper';
 
@@ -19,9 +20,12 @@ export class GetStartedComponent implements AfterViewInit {
 
   isLastSlide = false;
 
-  constructor(private router: Router) { }
+  constructor(private router: Router, private authService: AuthService) { }
 
   ngAfterViewInit() {
+    // Refresh localStorage progress when component loads (for non-authenticated users)
+    this.authService.refreshLocalStorageProgress();
+    
     const swiperEl = this.swiperRef?.nativeElement;
 
     if (!swiperEl) return;

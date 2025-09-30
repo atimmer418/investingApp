@@ -11,6 +11,7 @@ import com.investingapp.backend.security.jwt.JwtUtils;
 import com.investingapp.backend.security.services.UserDetailsServiceImpl;
 import com.yubico.webauthn.*;
 import com.yubico.webauthn.data.*;
+import com.yubico.webauthn.exception.AssertionFailedException;
 import com.yubico.webauthn.exception.RegistrationFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -167,5 +168,115 @@ public class WebAuthnService {
             logger.error("Unexpected error during passkey registration finish for user {}: {}", userEmail, e.getMessage(), e);
             return new RegistrationFinishResponse(false, "An unexpected error occurred during registration.", null, null, userEmail);
         }
+    }
+
+    /**
+     * Start authentication flow - NO EMAIL REQUIRED!
+     * WebAuthn with discoverable credentials can identify the user from the passkey itself
+     */
+    public PublicKeyCredentialRequestOptions startAuthenticationFlow() {
+        logger.info("Starting usernameless passkey authentication flow");
+        
+        StartAssertionOptions options = StartAssertionOptions.builder()
+            .userVerification(UserVerificationRequirement.PREFERRED)
+            // No allowCredentials - this enables usernameless/discoverable credential authentication
+            .build();
+            
+        PublicKeyCredentialRequestOptions requestOptions = relyingParty.startAssertion(options);
+        logger.info("Authentication challenge generated for usernameless login");
+        
+        return requestOptions;
+    }
+
+    /**
+     * Finish authentication flow - discovers user from passkey response
+     */
+    @Transactional
+    public AuthenticationFinishResponse finishAuthenticationFlow(JsonNode credentialResponse, PublicKeyCredentialRequestOptions originalRequestOptions) {
+        logger.info("Processing passkey authentication finish");
+        
+        try {
+            PublicKeyCredential<AuthenticatorAssertionResponse, ClientAssertionExtensionOutputs> credential =
+                PublicKeyCredential.parseAssertionResponseJson(credentialResponse.toString());
+            
+            FinishAssertionOptions options = FinishAssertionOptions.builder()
+                .request(originalRequestOptions)
+                .response(credential)
+                .build();
+            
+            AssertionResult result = relyingParty.finishAssertion(options);
+            
+            if (result.isSuccess()) {
+                // Get user handle from the assertion to identify the user
+                ByteArray userHandle = result.getUserHandle();
+                String userHandleStr = userHandle.getBase64Url();
+                
+                logger.info("Passkey authentication successful for user handle: {}", userHandleStr);
+                
+                // Find user by userHandle
+                User user = userRepository.findByUserHandle(userHandleStr).orElse(null);
+                if (user == null) {
+                    logger.warn("User not found for user handle: {}", userHandleStr);
+                    return new AuthenticationFinishResponse(false, "User not found", null, null, null);
+                }
+                
+                logger.info("User identified from passkey: {}", user.getEmail());
+                
+                // Create authentication and set in security context
+                UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                
+                // Generate JWT token
+                String jwt = jwtUtils.generateJwtToken(authentication);
+                logger.info("JWT generated for authenticated user: {}", user.getEmail());
+                
+                return new AuthenticationFinishResponse(
+                    true,
+                    "Passkey authentication successful",
+                    jwt,
+                    user.getId(),
+                    user.getEmail()
+                );
+                
+            } else {
+                logger.warn("Passkey authentication failed - assertion verification failed");
+                return new AuthenticationFinishResponse(false, "Authentication failed", null, null, null);
+            }
+            
+        } catch (AssertionFailedException e) {
+            logger.error("Passkey authentication failed: {}", e.getMessage(), e);
+            return new AuthenticationFinishResponse(false, "Authentication failed: " + e.getMessage(), null, null, null);
+        } catch (Exception e) {
+            logger.error("Unexpected error during passkey authentication: {}", e.getMessage(), e);
+            return new AuthenticationFinishResponse(false, "An unexpected error occurred", null, null, null);
+        }
+    }
+    
+    /**
+     * Response class for authentication finish
+     */
+    public static class AuthenticationFinishResponse {
+        private boolean success;
+        private String message;
+        private String jwtToken;
+        private Long userId;
+        private String email;
+        
+        public AuthenticationFinishResponse(boolean success, String message, String jwtToken, Long userId, String email) {
+            this.success = success;
+            this.message = message;
+            this.jwtToken = jwtToken;
+            this.userId = userId;
+            this.email = email;
+        }
+        
+        // Getters
+        public boolean isSuccess() { return success; }
+        public String getMessage() { return message; }
+        public String getJwtToken() { return jwtToken; }
+        public Long getUserId() { return userId; }
+        public String getEmail() { return email; }
     }
 }

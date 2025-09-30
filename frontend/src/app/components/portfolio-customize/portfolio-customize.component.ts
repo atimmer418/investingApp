@@ -8,9 +8,8 @@ import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  IonButtons, IonBackButton, IonNote, IonChip, IonInput, IonRange, IonReorder, IonReorderGroup,
-  IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInfiniteScroll,
-  IonInfiniteScrollContent
+  IonButtons, IonBackButton, IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
+  IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar
 } from '@ionic/angular/standalone';
 
 interface PortfolioItem {
@@ -74,15 +73,17 @@ interface Stock {
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
     IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    IonButtons, IonBackButton, IonNote, IonChip, IonInput, IonRange, IonReorder, IonReorderGroup,
-    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInfiniteScroll,
-    IonInfiniteScrollContent
+    IonButtons, IonBackButton, IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
+    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar
   ]
 })
 export class PortfolioCustomizeComponent implements OnInit {
   
   // Current portfolio
   portfolio: Stock[] = [];
+  
+  // Track original portfolio for change detection
+  originalPortfolio: Stock[] = [];
   
   // Loading states
   isLoading = false;
@@ -92,7 +93,6 @@ export class PortfolioCustomizeComponent implements OnInit {
   // Stock search
   searchTerm = '';
   searchResults: AlpacaAsset[] = [];
-  showAddStock = false;
   
   // New stock form
   newStock = {
@@ -138,6 +138,9 @@ export class PortfolioCustomizeComponent implements OnInit {
           description: `${item.assetType}: ${item.name}`,
           isDefault: response.isDefault
         }));
+        
+        // Save original state for change detection
+        this.originalPortfolio = JSON.parse(JSON.stringify(this.portfolio));
       }
       
       console.log('[PortfolioCustomizeComponent] Loaded portfolio:', this.portfolio);
@@ -178,9 +181,12 @@ export class PortfolioCustomizeComponent implements OnInit {
         isDefault: true
       }
     ];
+    
+    // Save original state for change detection
+    this.originalPortfolio = JSON.parse(JSON.stringify(this.portfolio));
   }
 
-  // Search stocks using Alpaca API
+  // Search stocks using Alpaca API with enhanced search
   async searchStocks(searchTerm?: string): Promise<void> {
     const term = searchTerm || this.searchTerm;
     if (!term || term.length < 2) {
@@ -188,28 +194,91 @@ export class PortfolioCustomizeComponent implements OnInit {
       return;
     }
 
+    console.log(`[PortfolioCustomizeComponent] Starting search for: "${term}"`);
+    console.log(`[PortfolioCustomizeComponent] Backend URL: ${environment.backendApiUrl}`);
+    console.log(`[PortfolioCustomizeComponent] Auth headers:`, this.getAuthHeaders().keys());
     this.isSearching = true;
     try {
-      const response = await this.http.get<AlpacaAsset[]>(
+      console.log(`[PortfolioCustomizeComponent] Searching stocks with URL: ${environment.backendApiUrl}/alpaca/assets`);
+      
+      // First search for US equity stocks
+      const stocksResponse = await this.http.get<AlpacaAsset[]>(
         `${environment.backendApiUrl}/alpaca/assets`,
         { 
           headers: this.getAuthHeaders(),
-          params: { search: term }
+          params: { 
+            search: term,
+            asset_class: 'us_equity',
+            status: 'active'
+          }
         }
       ).toPromise();
+
+      console.log(`[PortfolioCustomizeComponent] Stocks response:`, stocksResponse);
+
+      // Then search for ETFs
+      const etfsResponse = await this.http.get<AlpacaAsset[]>(
+        `${environment.backendApiUrl}/alpaca/assets`,
+        { 
+          headers: this.getAuthHeaders(),
+          params: { 
+            search: term,
+            asset_class: 'etf',
+            status: 'active'
+          }
+        }
+      ).toPromise();
+
+      console.log(`[PortfolioCustomizeComponent] ETFs response:`, etfsResponse);
       
-      if (response) {
-        // Filter for tradable stocks and ETFs only
-        this.searchResults = response
-          .filter(asset => 
-            asset.tradable && 
-            (asset.class === 'us_equity' || asset.class === 'etf') &&
-            asset.status === 'active'
-          )
-          .slice(0, 20); // Limit to 20 results
+      // Combine results
+      let allResults: AlpacaAsset[] = [];
+      if (stocksResponse) {
+        allResults = allResults.concat(stocksResponse);
+      }
+      if (etfsResponse) {
+        allResults = allResults.concat(etfsResponse);
       }
       
-      console.log('[PortfolioCustomizeComponent] Search results:', this.searchResults);
+      if (allResults.length > 0) {
+        // Filter for tradable assets only
+        let filteredResults = allResults.filter(asset => 
+          asset.tradable && asset.status === 'active'
+        );
+
+        // Enhanced search: prioritize exact symbol matches, then partial symbol matches, then name matches
+        const termUpper = term.toUpperCase();
+        
+        // Sort results by relevance
+        filteredResults.sort((a, b) => {
+          // Exact symbol match gets highest priority
+          const aExactSymbol = a.symbol === termUpper ? 1 : 0;
+          const bExactSymbol = b.symbol === termUpper ? 1 : 0;
+          if (aExactSymbol !== bExactSymbol) return bExactSymbol - aExactSymbol;
+          
+          // Symbol starts with search term
+          const aSymbolStart = a.symbol.startsWith(termUpper) ? 1 : 0;
+          const bSymbolStart = b.symbol.startsWith(termUpper) ? 1 : 0;
+          if (aSymbolStart !== bSymbolStart) return bSymbolStart - aSymbolStart;
+          
+          // Symbol contains search term
+          const aSymbolContains = a.symbol.includes(termUpper) ? 1 : 0;
+          const bSymbolContains = b.symbol.includes(termUpper) ? 1 : 0;
+          if (aSymbolContains !== bSymbolContains) return bSymbolContains - aSymbolContains;
+          
+          // Name contains search term (case insensitive)
+          const aNameContains = a.name.toLowerCase().includes(term.toLowerCase()) ? 1 : 0;
+          const bNameContains = b.name.toLowerCase().includes(term.toLowerCase()) ? 1 : 0;
+          if (aNameContains !== bNameContains) return bNameContains - aNameContains;
+          
+          // Alphabetical by symbol as final sort
+          return a.symbol.localeCompare(b.symbol);
+        });
+
+        this.searchResults = filteredResults.slice(0, 50); // Increased limit for better search results
+      }
+      
+      console.log(`[PortfolioCustomizeComponent] Search for "${term}" returned ${this.searchResults.length} results`);
     } catch (error) {
       console.error('[PortfolioCustomizeComponent] Error searching stocks:', error);
       this.searchResults = [];
@@ -236,20 +305,6 @@ export class PortfolioCustomizeComponent implements OnInit {
     return this.isStockInPortfolio(asset) ? 'success' : 'primary';
   }
 
-  toggleAddStock(): void {
-    this.showAddStock = !this.showAddStock;
-    if (this.showAddStock) {
-      this.searchTerm = '';
-      this.searchResults = [];
-    }
-  }
-
-  hideAddStock(): void {
-    this.showAddStock = false;
-    this.searchTerm = '';
-    this.searchResults = [];
-  }
-
   updateNewStockPercentage(event: any): void {
     this.newStock.percentage = event.detail.value;
   }
@@ -267,6 +322,77 @@ export class PortfolioCustomizeComponent implements OnInit {
   isValidAllocation(): boolean {
     const total = this.getTotalAllocation();
     return total === 100 && this.portfolio.length > 0;
+  }
+
+  // Check if portfolio has been modified from original
+  hasPortfolioChanged(): boolean {
+    if (this.portfolio.length !== this.originalPortfolio.length) {
+      return true;
+    }
+    
+    // Check if any stock symbol, percentage, or order has changed
+    for (let i = 0; i < this.portfolio.length; i++) {
+      const current = this.portfolio[i];
+      const original = this.originalPortfolio[i];
+      
+      if (current.symbol !== original.symbol || 
+          current.percentage !== original.percentage) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  // Check if current portfolio differs from default portfolio
+  isPortfolioDifferentFromDefault(): boolean {
+    const defaultPortfolio = this.getDefaultPortfolioStructure();
+    
+    if (this.portfolio.length !== defaultPortfolio.length) {
+      return true;
+    }
+    
+    // Check if any stock symbol or percentage differs from default
+    for (let i = 0; i < this.portfolio.length; i++) {
+      const current = this.portfolio[i];
+      const defaultStock = defaultPortfolio.find(stock => stock.symbol === current.symbol);
+      
+      if (!defaultStock || current.percentage !== defaultStock.percentage) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  // Get the default portfolio structure for comparison
+  private getDefaultPortfolioStructure(): Stock[] {
+    return [
+      {
+        symbol: 'VTI',
+        name: 'Vanguard Total Stock Market ETF',
+        percentage: 70,
+        assetType: 'ETF',
+        description: 'Tracks the entire U.S. stock market',
+        isDefault: true
+      },
+      {
+        symbol: 'VXUS',
+        name: 'Vanguard Total International Stock ETF',
+        percentage: 20,
+        assetType: 'ETF',
+        description: 'International diversification outside the U.S.',
+        isDefault: true
+      },
+      {
+        symbol: 'BND',
+        name: 'Vanguard Total Bond Market ETF',
+        percentage: 10,
+        assetType: 'ETF',
+        description: 'Broad exposure to U.S. investment grade bonds',
+        isDefault: true
+      }
+    ];
   }
 
   // Update stock allocation
@@ -321,8 +447,9 @@ export class PortfolioCustomizeComponent implements OnInit {
     this.portfolio.push(newStock);
     this.normalizeAllocations();
     
-    // Hide search
-    this.hideAddStock();
+    // Clear search
+    this.searchTerm = '';
+    this.searchResults = [];
   }
 
   // Add custom stock
@@ -350,7 +477,6 @@ export class PortfolioCustomizeComponent implements OnInit {
     
     // Reset form
     this.newStock = { symbol: '', percentage: 10 };
-    this.showAddStock = false;
   }
 
   // Reorder stocks
