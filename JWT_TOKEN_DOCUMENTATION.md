@@ -3,6 +3,26 @@
 ## Overview
 The JWT (JSON Web Token) system manages user authentication and session persistence in the investing app. Tokens have a 24-hour expiration and are stored in the browser's localStorage.
 
+## Token Structure
+
+### JWT Claims (Payload)
+Each JWT token contains the following claims:
+
+```json
+{
+  "sub": "user@example.com",        // Subject: User's email
+  "jti": "a1b2c3d4-e5f6-7890-1234", // JWT ID: Unique token identifier
+  "iat": 1638360000,                // Issued At: When token was created
+  "exp": 1638446400,                // Expiration: When token expires
+  "iss": "investingapp"             // Issuer: Application identifier
+}
+```
+
+### Uniqueness Guarantee
+- **Each token is unique** due to the `jti` (JWT ID) claim containing a UUID
+- **Even if generated for the same user simultaneously**, tokens will have different JTI values
+- **Enables individual token tracking** for security and session management
+
 ## Token Flow
 
 ### 1. Token Generation & Storage
@@ -125,11 +145,14 @@ export class AuthService {
   // Handle successful authentication
   handleSuccessfulAuthentication(jwtToken: string, userId: number, email: string): void
   
-  // Check if should prompt for passkey re-auth
-  shouldPromptForPasskeyReauth(): boolean
+  // Check if should prompt for passkey re-auth (IP-based + passkey support)
+  shouldPromptForPasskeyReauth(): Promise<boolean>
   
-  // Get stored email for re-authentication
-  getStoredEmailForReauth(): string | null
+  // Prompt user for usernameless passkey authentication
+  promptForPasskeyReauth(): Promise<boolean>
+  
+  // Check if device supports WebAuthn passkeys
+  supportsPasskeys(): boolean
 }
 ```
 
@@ -157,23 +180,62 @@ export class AuthService {
 const token = JwtTokenUtils.getValidJwtToken();
 if (!token) {
   // Token expired - check for re-authentication options
-  if (this.shouldPromptForPasskeyReauth()) {
-    // User had previous session - can prompt for passkey
-    const email = this.getStoredEmailForReauth();
-    // Trigger passkey authentication for this email
+  if (await this.shouldPromptForPasskeyReauth()) {
+    // User's IP is in database AND device supports passkeys - can prompt for usernameless auth
+    await this.promptForPasskeyReauth();
   } else {
-    // No previous session - redirect to get-started
+    // New IP or no passkey support - redirect to get-started
+    this.router.navigate(['/get-started']);
   }
 }
 ```
 
 ### Re-authentication Flow
-1. **Detection**: System detects expired token but finds stored user email
-2. **Option**: Can prompt user for passkey re-authentication using stored email
-3. **Benefit**: User doesn't need to re-enter email, just authenticate with passkey
-4. **Implementation**: Framework exists, needs integration with PasskeyService
+1. **Detection**: System detects expired token
+2. **Passkey Check**: Uses WebAuthn discoverable credentials (usernameless authentication)
+3. **Smart Prompt**: Only prompts for re-auth if user's IP address is in database (indicating previous registration)
+4. **Benefit**: User doesn't need to provide any information - passkeys identify the user automatically
+5. **Implementation**: Fully integrated with WebAuthnService usernameless authentication methods
+
+## Usernameless Passkey Authentication
+
+### How It Works
+- **No Email Required**: WebAuthn discoverable credentials allow authentication without username/email
+- **Device Recognition**: Passkeys are stored on the user's device and automatically identify the user
+- **Smart Re-auth**: System only prompts for passkey if user's IP address exists in database
+- **Seamless Flow**: User just needs to authenticate with their passkey (fingerprint, face, etc.)
+
+### Implementation Details
+```typescript
+// Backend - WebAuthnService usernameless authentication
+startAuthenticationFlow(): AssertionRequest
+finishAuthenticationFlow(assertionResponse: AuthenticatorAssertionResponse): AuthenticationResult
+
+// Frontend - AuthService integration
+async shouldPromptForPasskeyReauth(): Promise<boolean> {
+  if (!this.supportsPasskeys()) return false;
+  
+  try {
+    const response = await this.http.get<{shouldPrompt: boolean}>('/api/user/should-prompt-reauth').toPromise();
+    return response?.shouldPrompt || false;
+  } catch {
+    return false;
+  }
+}
+```
+
+### Smart IP-Based Prompting
+- **Purpose**: Only show passkey prompt to users who have previously registered
+- **Logic**: Check if current IP address exists in database from previous authfinalize step
+- **Fallback**: If IP not found or passkeys not supported, redirect to normal flow
+- **Security**: Prevents prompting random users for passkey authentication
 
 ## Security Features
+
+### Token Uniqueness
+- **JWT ID (JTI)**: Each token has a unique UUID identifier
+- **Prevents token confusion**: No two tokens are identical, even for the same user
+- **Enables token revocation**: Individual tokens can be blacklisted by JTI
 
 ### IP Address Tracking
 - **When**: User completes `authfinalize` step
@@ -185,6 +247,13 @@ if (!token) {
 - **5-minute buffer**: Tokens considered expired 5 minutes before actual expiration
 - **Purpose**: Prevents edge cases where token expires during active use
 - **Behavior**: Automatic refresh/re-authentication prompt
+
+### Enhanced Security Benefits
+1. **Session Tracking**: Each login creates a unique token that can be individually monitored
+2. **Token Revocation**: Specific tokens can be invalidated without affecting other user sessions
+3. **Audit Trail**: JWT ID provides clear tracking of which token was used for each action
+4. **Replay Attack Prevention**: Unique tokens prevent reuse even within expiration window
+5. **Multi-Device Support**: Users can have multiple active sessions with unique tokens
 
 ## Development Notes
 

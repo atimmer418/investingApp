@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey; // Standard Java crypto
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtUtils {
@@ -62,19 +63,37 @@ public class JwtUtils {
         logger.info("JwtUtils generateJwtToken - Using key object: {}", System.identityHashCode(this.key));
         logger.info("JwtUtils generateJwtToken - Current jwtSecretString value: '{}'", this.jwtSecretString);
 
+        // Generate unique JWT ID for each token
+        String jwtId = UUID.randomUUID().toString();
+        Date issuedAt = new Date();
+        Date expiration = new Date(issuedAt.getTime() + jwtExpirationMs);
+        
+        logger.info("JwtUtils generateJwtToken - Generated JWT ID: {} for user: {}", jwtId, userPrincipal.getUsername());
+
         return Jwts.builder()
-                .setSubject(userPrincipal.getUsername()) // Use setSubject
-                .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
-                .signWith(key, SignatureAlgorithm.HS256) // Or another HS algorithm
+                .setSubject(userPrincipal.getUsername()) // User identifier (email)
+                .setId(jwtId) // Unique JWT ID - makes each token unique
+                .setIssuedAt(issuedAt) // When token was created
+                .setExpiration(expiration) // When token expires
+                .setIssuer("investingapp") // Optional: identify the issuer
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
     public String generateTokenFromUsername(String username) {
+        // Generate unique JWT ID for each token
+        String jwtId = UUID.randomUUID().toString();
+        Date issuedAt = new Date();
+        Date expiration = new Date(issuedAt.getTime() + jwtExpirationMs);
+        
+        logger.info("JwtUtils generateTokenFromUsername - Generated JWT ID: {} for user: {}", jwtId, username);
+        
         return Jwts.builder()
-                .setSubject(username) // Use setSubject
-                .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .setSubject(username) // User identifier (email)
+                .setId(jwtId) // Unique JWT ID - makes each token unique
+                .setIssuedAt(issuedAt) // When token was created
+                .setExpiration(expiration) // When token expires
+                .setIssuer("investingapp") // Optional: identify the issuer
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -86,6 +105,42 @@ public class JwtUtils {
                 .parseClaimsJws(token)   // Use parseClaimsJws for signed tokens
                 .getBody()               // Use getBody() to get Claims
                 .getSubject();
+    }
+    
+    /**
+     * Extract the unique JWT ID from a token
+     */
+    public String getJwtIdFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getId();
+    }
+    
+    /**
+     * Extract the issued-at timestamp from a token
+     */
+    public Date getIssuedAtFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getIssuedAt();
+    }
+    
+    /**
+     * Extract the expiration timestamp from a token
+     */
+    public Date getExpirationFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration();
     }
 
     public boolean validateJwtToken(String authToken) {
