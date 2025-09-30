@@ -92,7 +92,11 @@ public class PlaidService {
         // Store basic Plaid info
         appUser.setPlaidAccessToken(encryptedAccessToken);
         appUser.setPlaidItemId(exchangeResponse.getItemId());
-        appUser.setPlaidLinked(true);
+        
+        // Update progress in UserProgress entity
+        if (appUser.getUserProgress() != null) {
+            appUser.getUserProgress().setLinkPlaidCompleted(true);
+        }
         
         try {
             // Fetch and store account details and institution information

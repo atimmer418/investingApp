@@ -2,6 +2,7 @@
 package com.investingapp.backend.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 
 // imports below are for simulating passkey
@@ -46,6 +47,9 @@ public class WebAuthnController {
     
     // Cache for authentication challenges (email-less authentication)
     private final Cache<String, PublicKeyCredentialRequestOptions> authChallengeCache;
+    
+    // ObjectMapper for JSON serialization
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     // these 3 injections are needed for simulating passkey registration
     @Autowired
@@ -59,11 +63,11 @@ public class WebAuthnController {
 
     @Autowired
     public WebAuthnController(WebAuthnService webAuthnService,
-            Cache<String, PublicKeyCredentialCreationOptions> challengeCache) {
+            Cache<String, PublicKeyCredentialCreationOptions> challengeCache,
+            Cache<String, PublicKeyCredentialRequestOptions> authChallengeCache) {
         this.webAuthnService = webAuthnService;
         this.challengeCache = challengeCache;
-        // For simplicity, using same cache implementation - in production you might want separate caches
-        this.authChallengeCache = (Cache<String, PublicKeyCredentialRequestOptions>) challengeCache;
+        this.authChallengeCache = authChallengeCache;
     }
 
     @PostMapping("/register/start")
@@ -82,7 +86,7 @@ public class WebAuthnController {
                     registrationRequest.getMonthlyInvestment());
             challengeCache.put(registrationRequest.getEmail(), options);
             logger.info("Registration options stored in cache for user: {}", registrationRequest.getEmail());
-            return ResponseEntity.ok(new RegistrationStartResponse(options.toJson()));
+            return ResponseEntity.ok(new RegistrationStartResponse(objectMapper.writeValueAsString(options)));
         } catch (IllegalArgumentException e) {
             logger.warn("Registration failed for email {}: {}", registrationRequest.getEmail(), e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -178,7 +182,7 @@ public class WebAuthnController {
             
             // Return both the options and session ID to frontend
             return ResponseEntity.ok(Map.of(
-                "requestOptions", options.toJson(),
+                "requestOptions", objectMapper.writeValueAsString(options),
                 "sessionId", sessionId
             ));
             

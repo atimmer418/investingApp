@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.investingapp.backend.model.User;
+import com.investingapp.backend.model.UserProgress;
 import com.investingapp.backend.repository.UserRepository;
 import com.investingapp.backend.security.jwt.JwtUtils;
 import com.investingapp.backend.dto.JwtResponse;
@@ -119,16 +120,19 @@ public class DevAuthController {
             
             // Return simplified user info for easy reference
             var userList = users.stream().map(user -> {
+                UserProgress progress = user.getUserProgress();
                 return new Object() {
                     public final Long id = user.getId();
                     public final String email = user.getEmail();
                     public final String userHandle = user.getUserHandle();
-                    public final boolean initialSurveyCompleted = user.isInitialSurveyCompleted();
-                    public final boolean plaidLinked = user.isPlaidLinked();
-                    public final boolean investmentSurveyCompleted = user.isInvestmentSurveyCompleted();
-                    public final boolean choseToPickStocks = user.isChoseToPickStocks();
-                    public final boolean stockSelectionCompleted = user.isStockSelectionCompleted();
-                    public final boolean investmentConfirmationCompleted = user.isInvestmentConfirmationCompleted();
+                    public final boolean getStartedCompleted = progress != null ? progress.isGetStartedCompleted() : false;
+                    public final boolean surveyInitialCompleted = progress != null ? progress.isSurveyInitialCompleted() : false;
+                    public final boolean fiPlanResultsCompleted = progress != null ? progress.isFiPlanResultsCompleted() : false;
+                    public final boolean authFinalizeCompleted = progress != null ? progress.isAuthFinalizeCompleted() : false;
+                    public final boolean kycVerificationCompleted = progress != null ? progress.isKycVerificationCompleted() : false;
+                    public final boolean linkPlaidCompleted = progress != null ? progress.isLinkPlaidCompleted() : false;
+                    public final boolean investmentScheduleCompleted = progress != null ? progress.isInvestmentScheduleCompleted() : false;
+                    public final boolean investmentConfirmationCompleted = progress != null ? progress.isInvestmentConfirmationCompleted() : false;
                 };
             }).toList();
             

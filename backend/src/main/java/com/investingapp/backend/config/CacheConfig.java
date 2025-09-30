@@ -3,6 +3,7 @@ package com.investingapp.backend.config;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
+import com.yubico.webauthn.data.PublicKeyCredentialRequestOptions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,6 +20,17 @@ public class CacheConfig {
         return Caffeine.newBuilder()
                 .expireAfterWrite(5, TimeUnit.MINUTES)
                 .maximumSize(1000) // Max 1000 outstanding registration attempts
+                .build();
+    }
+
+    @Bean
+    public Cache<String, PublicKeyCredentialRequestOptions> authChallengeCache() {
+        // This cache will store the authentication challenge options.
+        // The key will be a session ID.
+        // Entries will be automatically removed 5 minutes after they are written.
+        return Caffeine.newBuilder()
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .maximumSize(1000) // Max 1000 outstanding authentication attempts
                 .build();
     }
 }

@@ -182,7 +182,8 @@ public class WebAuthnService {
             // No allowCredentials - this enables usernameless/discoverable credential authentication
             .build();
             
-        PublicKeyCredentialRequestOptions requestOptions = relyingParty.startAssertion(options);
+        AssertionRequest assertionRequest = relyingParty.startAssertion(options);
+        PublicKeyCredentialRequestOptions requestOptions = assertionRequest.getPublicKeyCredentialRequestOptions();
         logger.info("Authentication challenge generated for usernameless login");
         
         return requestOptions;
@@ -192,7 +193,7 @@ public class WebAuthnService {
      * Finish authentication flow - discovers user from passkey response
      */
     @Transactional
-    public AuthenticationFinishResponse finishAuthenticationFlow(JsonNode credentialResponse, PublicKeyCredentialRequestOptions originalRequestOptions) {
+    public AuthenticationFinishResponse finishAuthenticationFlow(JsonNode credentialResponse, AssertionRequest originalRequestOptions) {
         logger.info("Processing passkey authentication finish");
         
         try {
