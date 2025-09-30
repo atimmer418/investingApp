@@ -221,8 +221,11 @@ public class WebAuthnController {
         }
         
         try {
+            // Convert PublicKeyCredentialRequestOptions to AssertionRequest
+            com.yubico.webauthn.AssertionRequest assertionRequest =
+                com.investingapp.backend.util.WebAuthnConversionUtil.toAssertionRequest(originalOptions);
             WebAuthnService.AuthenticationFinishResponse serviceResponse = 
-                webAuthnService.finishAuthenticationFlow(credentialResponse, originalOptions);
+                webAuthnService.finishAuthenticationFlow(credentialResponse, assertionRequest);
             
             if (serviceResponse.isSuccess()) {
                 logger.info("Passkey authentication successful for user: {}", serviceResponse.getEmail());
