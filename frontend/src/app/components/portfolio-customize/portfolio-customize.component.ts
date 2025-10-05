@@ -545,7 +545,7 @@ export class PortfolioCustomizeComponent implements OnInit {
       if (response) {
         console.log('[PortfolioCustomizeComponent] Portfolio saved successfully');
         // Navigate back to confirmation
-        this.router.navigate(['/confirm-investment']);
+        this.router.navigate(['/investment-confirmation']);
       }
     } catch (error) {
       console.error('[PortfolioCustomizeComponent] Error saving portfolio:', error);
@@ -557,6 +557,6 @@ export class PortfolioCustomizeComponent implements OnInit {
 
   // Cancel and return to confirmation
   cancel() {
-    this.router.navigate(['/confirm-investment']);
+    this.router.navigate(['/investment-confirmation']);
   }
 }

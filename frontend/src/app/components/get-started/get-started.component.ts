@@ -26,6 +26,23 @@ export class GetStartedComponent implements AfterViewInit {
     // Refresh localStorage progress when component loads (for non-authenticated users)
     this.authService.refreshLocalStorageProgress();
     
+    // Only mark this step as incomplete if user hasn't completed later steps
+    // This prevents regression when authenticated users land on get-started page
+    const currentProgress = this.authService.getUnifiedProgress();
+    const hasCompletedLaterSteps = currentProgress.surveyInitialCompleted || 
+                                  currentProgress.fiPlanResultsCompleted || 
+                                  currentProgress.authFinalizeCompleted ||
+                                  currentProgress.kycVerificationCompleted;
+    
+    if (!hasCompletedLaterSteps) {
+      this.authService.markStepIncomplete('getStarted').subscribe({
+        next: () => console.log('GetStarted step marked as incomplete'),
+        error: (err) => console.log('GetStarted step could not be marked incomplete (likely not authenticated yet):', err)
+      });
+    } else {
+      console.log('GetStarted: User has completed later steps, not marking as incomplete');
+    }
+    
     const swiperEl = this.swiperRef?.nativeElement;
 
     if (!swiperEl) return;
@@ -45,7 +62,19 @@ export class GetStartedComponent implements AfterViewInit {
   // --- No longer need onSlideChange() or checkSlideStatus() ---
 
   getSetUp() {
-    localStorage.setItem('getStartedCompleted', 'true');
-    this.router.navigate(['/survey-initial'], { replaceUrl: true });
+    // Complete the getStarted step using the unified method
+    this.authService.completeStep('getStarted').subscribe({
+      next: () => {
+        console.log('GetStarted step completed successfully');
+        localStorage.setItem('getStartedCompleted', 'true');
+        this.router.navigate(['/survey-initial'], { replaceUrl: true });
+      },
+      error: (err) => {
+        console.log('GetStarted step could not be completed (likely not authenticated yet):', err);
+        // Still update localStorage and navigate even if backend update fails
+        localStorage.setItem('getStartedCompleted', 'true');
+        this.router.navigate(['/survey-initial'], { replaceUrl: true });
+      }
+    });
   }
 }

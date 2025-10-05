@@ -98,6 +98,12 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
   ngOnInit() {
     console.log('[InvestmentConfirmationComponent] Initializing investment confirmation page');
     
+    // Mark this step as incomplete when user enters/returns to this page
+    this.authService.markStepIncomplete('investmentConfirmation').subscribe({
+      next: () => console.log('InvestmentConfirmation step marked as incomplete'),
+      error: (err) => console.error('Failed to mark InvestmentConfirmation step as incomplete:', err)
+    });
+    
     // 🧪 TESTING: Authentication check temporarily disabled for testing
     // Check if user is authenticated
     // if (!this.authService.isAuthenticated()) {
@@ -401,9 +407,20 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
           this.authorizationStatus = 'Recurring investment authorized successfully!';
           this.isAuthorizing = false;
           setTimeout(() => {
-            localStorage.setItem('investmentConfirmationCompleted', 'true');
-            localStorage.setItem('alpacaAccountId', this.alpacaAccountId!);
-            this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
+            // Complete the investmentConfirmation step using the unified method
+            this.authService.completeStep('investmentConfirmation').subscribe({
+              next: () => {
+                console.log('InvestmentConfirmation step completed successfully');
+                localStorage.setItem('alpacaAccountId', this.alpacaAccountId!);
+                this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
+              },
+              error: (err) => {
+                console.error('Failed to complete InvestmentConfirmation step:', err);
+                // Still navigate and save local data even if progress update fails
+                localStorage.setItem('alpacaAccountId', this.alpacaAccountId!);
+                this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
+              }
+            });
           }, 1000);
         }, 2000);
       } else {

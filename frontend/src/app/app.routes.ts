@@ -19,7 +19,7 @@ export const routes: Routes = [
     loadComponent: () => import('./components/kyc-verification/kyc-verification.component').then(m => m.KycVerificationComponent)
   },
   {
-    path: 'confirm-investment',
+    path: 'investment-confirmation',
     loadComponent: () => import('./components/investmentconfirmation/investmentconfirmation.component').then(m => m.InvestmentConfirmationComponent)
     // Or from './pages/investment-confirmation/investment-confirmation.page' if you use .page convention
   },

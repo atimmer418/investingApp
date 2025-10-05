@@ -10,7 +10,17 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
-  <div class="page-intro">
+  <!-- Show error message if data is missing -->
+  <div *ngIf="!timeToFI || !targetPortfolio || timeToFI === 'N/A'" class="error-message">
+    <h2>Missing Survey Data</h2>
+    <p>We need your investment details to show your personalized FI strategies.</p>
+    <ion-button [routerLink]="['/survey-initial']" color="primary">
+      Complete Investment Survey
+    </ion-button>
+  </div>
+
+  <!-- Show normal content if data is available -->
+  <div *ngIf="timeToFI && targetPortfolio && timeToFI !== 'N/A'" class="page-intro">
     <h2>Fast Forward to {{ getFutureYear() }}</h2>
     <p>
       Your portfolio is worth <strong>{{ targetPortfolio | currency:'USD':'symbol':'1.0-0' }}</strong>. 
@@ -18,14 +28,17 @@
     </p>
   </div>
 
-  <!-- Strategy Cards Container -->
-  <div class="strategy-cards-container">
+  <!-- Strategy Cards Container - only show if data is available -->
+  <div *ngIf="timeToFI && targetPortfolio && timeToFI !== 'N/A'" class="strategy-cards-container">
     <div 
       *ngFor="let strategy of strategies" 
       class="strategy-card"
       [class.recommended]="strategy.id === 'optimal'"
       [class.selected]="selectedStrategyId === strategy.id"
-      (click)="selectStrategy(strategy.id)">
+      [attr.data-strategy]="strategy.id"
+      (click)="selectStrategy(strategy.id)"
+      (mousedown)="debugCardClick(strategy.id)"
+      style="cursor: pointer;">
 
       <div *ngIf="strategy.id === 'optimal'" class="recommended-badge">
         <ion-icon name="star"></ion-icon> Recommended
@@ -48,7 +61,7 @@
 
 </ion-content>
 
-<ion-footer class="ion-no-border">
+<ion-footer *ngIf="timeToFI && targetPortfolio && timeToFI !== 'N/A'" class="ion-no-border">
   <div class="footer-container">
     <ion-button expand="block" (click)="confirmSelection()" class="cta-main">
       Continue with {{ getSelectedStrategyName() }}

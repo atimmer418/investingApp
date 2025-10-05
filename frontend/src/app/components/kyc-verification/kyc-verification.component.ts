@@ -1,13 +1,15 @@
 // src/app/components/kyc-verification/kyc-verification.component.ts
 
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonSpinner, 
-  IonText, IonProgressBar, IonBackButton, IonButtons, IonIcon, NavController
+  IonText, IonIcon, IonProgressBar, NavController
 } from '@ionic/angular/standalone';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-kyc-verification',
@@ -17,7 +19,7 @@ import {
   imports: [
     CommonModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonSpinner,
-    IonText, IonProgressBar, IonBackButton, IonButtons, IonIcon
+    IonText, IonIcon, IonProgressBar
   ]
 })
 export class KycVerificationComponent {
@@ -30,8 +32,17 @@ export class KycVerificationComponent {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private navCtrl: NavController
+    private navCtrl: NavController,
+    private authService: AuthService
   ) {}
+
+  ngOnInit() {
+    // Mark this step as incomplete when user enters/returns to this page
+    this.authService.markStepIncomplete('kycVerification').subscribe({
+      next: () => console.log('KycVerification step marked as incomplete'),
+      error: (err) => console.error('Failed to mark KycVerification step as incomplete:', err)
+    });
+  }
 
   startVerification() {
     this.isLoading = true;
@@ -52,8 +63,19 @@ export class KycVerificationComponent {
   }
 
   private continueToSurvey() {
-    // Navigate to the survey page with all required parameters
-    this.router.navigate(['/link-bank'], { replaceUrl: true});
+    // Complete the kycVerification step
+    this.authService.completeStep('kycVerification').subscribe({
+      next: () => {
+        console.log('KycVerification step completed successfully');
+        // Navigate to the survey page with all required parameters
+        this.router.navigate(['/link-bank'], { replaceUrl: true});
+      },
+      error: (err) => {
+        console.error('Failed to complete KycVerification step:', err);
+        // Still navigate even if progress update fails
+        this.router.navigate(['/link-bank'], { replaceUrl: true});
+      }
+    });
   }
 
 }

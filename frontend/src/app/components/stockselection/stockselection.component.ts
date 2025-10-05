@@ -130,7 +130,7 @@ export class StockSelectionComponent implements OnInit {
       console.log('Stock selections processed with Alpaca (simulated).');
       localStorage.setItem('stockSelectionCompleted', 'true'); // Optional flag
       this.isProcessing = false;
-      this.router.navigate(['/confirm-investment'], { replaceUrl: true });
+      this.router.navigate(['/investment-confirmation'], { replaceUrl: true });
     }, 1500);
     // ---- END SIMULATED ALPACA PROCESSING ----
   }
@@ -140,7 +140,7 @@ export class StockSelectionComponent implements OnInit {
     // TODO: Potentially set up a default portfolio via AlpacaService if skipped
     localStorage.setItem('choseToPickStocks', 'false');
     localStorage.setItem('stockSelectionSkipped', 'true'); // Optional flag
-    this.router.navigate(['/confirm-investment'], { replaceUrl: true });
+    this.router.navigate(['/investment-confirmation'], { replaceUrl: true });
   }
 
   goBack() {

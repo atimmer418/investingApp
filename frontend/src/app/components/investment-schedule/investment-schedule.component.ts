@@ -106,6 +106,13 @@ export class InvestmentScheduleComponent implements OnInit {
 
   ngOnInit() {
     console.log('[InvestmentScheduleComponent] ngOnInit - Initializing Investment Schedule Page.');
+    
+    // Mark this step as incomplete when user enters/returns to this page
+    this.authService.markStepIncomplete('investmentSchedule').subscribe({
+      next: () => console.log('InvestmentSchedule step marked as incomplete'),
+      error: (err) => console.error('Failed to mark InvestmentSchedule step as incomplete:', err)
+    });
+    
     this.loadUserFinancialData();
     // Set default next pay date to tomorrow (user can adjust)
     this.schedule.startDate = this.getInvestmentDate();
@@ -535,8 +542,20 @@ export class InvestmentScheduleComponent implements OnInit {
         next: (response) => {
           console.log('[InvestmentScheduleComponent] ✅ Investment schedule saved successfully:', response);
           this.isSubmitting = false;
-          // Navigate to investment confirmation
-          this.router.navigate(['/confirm-investment']);
+          
+          // Complete the investmentSchedule step using the unified method
+          this.authService.completeStep('investmentSchedule').subscribe({
+            next: () => {
+              console.log('InvestmentSchedule step completed successfully');
+              // Navigate to investment confirmation
+              this.router.navigate(['/investment-confirmation']);
+            },
+            error: (err) => {
+              console.error('Failed to complete InvestmentSchedule step:', err);
+              // Still navigate even if progress update fails
+              this.router.navigate(['/investment-confirmation']);
+            }
+          });
         },
         error: (error) => {
           console.error('[InvestmentScheduleComponent] ❌ Error saving investment schedule:', error);

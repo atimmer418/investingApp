@@ -11,6 +11,7 @@ import { Observable, throwError, Subscription } from 'rxjs';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { AuthService } from '../../services/auth.service';
 
 // Make sure Plaid global object is available (from script in index.html)
 declare var Plaid: any;
@@ -47,10 +48,17 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
   constructor(
     private http: HttpClient,
     private router: Router,
-    private navCtrl: NavController
+    private navCtrl: NavController,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
+    // Mark this step as incomplete when user enters/returns to this page
+    this.authService.markStepIncomplete('linkPlaid').subscribe({
+      next: () => console.log('LinkPlaid step marked as incomplete'),
+      error: (err) => console.error('Failed to mark LinkPlaid step as incomplete:', err)
+    });
+
     // This is where you would typically:
     // 1. Load the Plaid Link SDK script (if not loaded globally)
     // 2. Call your backend to get a link_token
@@ -82,8 +90,13 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
         linkToken = linkTokenData.link_token;
         console.log('Received authenticated link_token.');
       } else {
-        linkToken = "";
-        console.log('JWT token expired most likely. Need the user to log in again.');
+        console.error('User is not authenticated. Cannot proceed with Plaid Link.');
+        this.statusMessage = 'Authentication required. Redirecting to login...';
+        // Redirect back to the authentication step
+        setTimeout(() => {
+          window.location.href = '/auth-finalize';
+        }, 2000);
+        return;
       }
 
       if (linkToken === "") {
@@ -159,9 +172,20 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
           console.log('Authenticated public token exchanged successfully:', response);
           this.statusMessage = 'Bank account linked successfully!';
           this.isLoading = false;
-          localStorage.setItem('linkplaidCompleted', 'true'); // Set your flag
-          // Navigate to the investment schedule setup
-          this.router.navigate(['/investment-schedule'], { replaceUrl: true });
+          
+          // Complete the linkPlaid step using the unified method
+          this.authService.completeStep('linkPlaid').subscribe({
+            next: () => {
+              console.log('LinkPlaid step completed successfully');
+              // Navigate to the investment schedule setup
+              this.router.navigate(['/investment-schedule'], { replaceUrl: true });
+            },
+            error: (err) => {
+              console.error('Failed to complete LinkPlaid step:', err);
+              // Still navigate even if progress update fails
+              this.router.navigate(['/investment-schedule'], { replaceUrl: true });
+            }
+          });
         }),
         catchError(err => {
           this.isLoading = false;

@@ -11,11 +11,29 @@
 <ion-content [fullscreen]="true" class="ion-padding">
   <div class="auth-form-container">
     
-    <!-- Page Introduction -->
-    <div class="page-intro">
-      <h2>Let's lock it in...</h2>
-      <p class="helper-text">By creating an account, you'll lock in your strategy and be one step closer to making this plan into reality.</p>
+    <!-- Show error message if required parameters are missing -->
+    <div *ngIf="!hasRequiredParams" class="missing-data-message">
+      <div class="page-intro">
+        <h2>Missing Plan Data</h2>
+        <p class="helper-text">We need your investment plan details to continue with account creation.</p>
+      </div>
+      <div *ngIf="errorMessage" class="error-message-global">
+        <ion-text color="danger">{{ errorMessage }}</ion-text>
+        <div style="margin-top: 16px;">
+          <ion-button [routerLink]="['/survey-initial']" color="primary" size="default">
+            Complete Investment Survey
+          </ion-button>
+        </div>
+      </div>
     </div>
+
+    <!-- Show normal auth form if we have required parameters -->
+    <div *ngIf="hasRequiredParams">
+      <!-- Page Introduction -->
+      <div class="page-intro">
+        <h2>Let's lock it in...</h2>
+        <p class="helper-text">By creating an account, you'll lock in your strategy and be one step closer to making this plan into reality.</p>
+      </div>
 
     <!-- Email Input Section -->
     <div class="input-section">
@@ -68,12 +86,26 @@
     </div>
 
     <!-- Feedback Messages -->
-    <div *ngIf="errorMessage" class="error-message-global">
+    <div *ngIf="errorMessage && !hasRequiredParams" class="error-message-global">
       <ion-text color="danger">{{ errorMessage }}</ion-text>
+      <div style="margin-top: 16px;">
+        <ion-button [routerLink]="['/survey-initial']" color="primary" size="default">
+          Go to Investment Survey
+        </ion-button>
+      </div>
     </div>
-    <div *ngIf="successMessage" class="success-message-global">
-      <ion-text color="success">{{ successMessage }}</ion-text>
+    
+    <!-- Show normal auth form feedback messages if we have required parameters -->
+    <div *ngIf="hasRequiredParams">
+      <div *ngIf="errorMessage" class="error-message-global">
+        <ion-text color="danger">{{ errorMessage }}</ion-text>
+      </div>
+      <div *ngIf="successMessage" class="success-message-global">
+        <ion-text color="success">{{ successMessage }}</ion-text>
+      </div>
     </div>
+    
+    </div> <!-- Close hasRequiredParams conditional -->
 
   </div>
 </ion-content>

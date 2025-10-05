@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
 import { informationCircleOutline, chevronUp } from 'ionicons/icons';
+import { AuthService } from '../../services/auth.service';
 import {
   IonContent,
   IonHeader,
@@ -58,18 +59,80 @@ export class SurveyInitialComponent implements OnInit {
   private readonly AVG_MARKET_YIELD = 0.09; // A standard assumption for a growth portfolio
   private readonly SAFE_WITHDRAWAL_RATE = 0.04; // The classic 4% rule
 
-  constructor(private router: Router) {
+  constructor(private router: Router, private authService: AuthService) {
     addIcons({ informationCircleOutline, chevronUp });
   }
 
   ngOnInit() {
+    // Mark this step as incomplete when user enters/returns to this page
+    this.authService.markStepIncomplete('surveyInitial').subscribe({
+      next: () => console.log('SurveyInitial step marked as incomplete'),
+      error: (err) => console.log('SurveyInitial step could not be marked incomplete (likely not authenticated yet):', err)
+    });
+    
+    this.loadSavedValues();
     this.calculateFITimeline();
+  }
+
+  // Load saved values from localStorage or user progress
+  private loadSavedValues() {
+    // First try to get values from user progress (for authenticated users)
+    this.authService.userProgress$.subscribe(progress => {
+      if (progress && progress.monthlyInvestment !== undefined) {
+        this.monthlyInvestment = progress.monthlyInvestment;
+      }
+      if (progress && progress.retirementIncome !== undefined) {
+        this.retirementIncome = progress.retirementIncome;
+      }
+      this.updateFormattedValues();
+    });
+
+    // Fallback to localStorage for any missing values (for non-authenticated users)
+    const savedMonthlyInvestment = localStorage.getItem('surveyMonthlyInvestment');
+    const savedRetirementIncome = localStorage.getItem('surveyRetirementIncome');
+    
+    if (savedMonthlyInvestment && this.monthlyInvestment === 2500) { // Only override default
+      this.monthlyInvestment = parseInt(savedMonthlyInvestment, 10);
+    }
+    
+    if (savedRetirementIncome && this.retirementIncome === 60000) { // Only override default
+      this.retirementIncome = parseInt(savedRetirementIncome, 10);
+    }
+    
+    this.updateFormattedValues();
+    console.log('[SurveyInitial] Loaded saved values:', {
+      monthlyInvestment: this.monthlyInvestment,
+      retirementIncome: this.retirementIncome
+    });
+  }
+
+  // Save values to localStorage and update user progress
+  private saveValues() {
+    localStorage.setItem('surveyMonthlyInvestment', this.monthlyInvestment.toString());
+    localStorage.setItem('surveyRetirementIncome', this.retirementIncome.toString());
+    
+    // Update user progress with both values
+    this.authService.updateProgress({ 
+      monthlyInvestment: this.monthlyInvestment,
+      retirementIncome: this.retirementIncome
+    }).subscribe({
+      next: (progress) => {
+        console.log('[SurveyInitial] Updated user progress with values:', {
+          monthlyInvestment: this.monthlyInvestment,
+          retirementIncome: this.retirementIncome
+        });
+      },
+      error: (error) => {
+        console.log('[SurveyInitial] Could not update user progress (user may not be authenticated):', error);
+      }
+    });
   }
 
   // --- Event Handlers ---
   onSliderChange() {
     this.updateFormattedValues();
     this.calculateFITimeline();
+    this.saveValues(); // Save to localStorage and sync with user progress
   }
 
   unformatMonthlyInvestment() {
@@ -81,6 +144,7 @@ export class SurveyInitialComponent implements OnInit {
     this.monthlyInvestment = isNaN(numericValue) ? 100 : numericValue;
     this.updateFormattedValues();
     this.calculateFITimeline();
+    this.saveValues(); // Save to localStorage and sync with user progress
   }
 
   unformatRetirementIncome() {
@@ -92,6 +156,7 @@ export class SurveyInitialComponent implements OnInit {
     this.retirementIncome = isNaN(numericValue) ? 40000 : numericValue;
     this.updateFormattedValues();
     this.calculateFITimeline();
+    this.saveValues(); // Save to localStorage and sync with user progress
   }
   
   private updateFormattedValues() {
@@ -133,11 +198,45 @@ export class SurveyInitialComponent implements OnInit {
       years: this.timeToFI
     });
     
-    this.router.navigate(['/fi-plan-results'], { // A new route for your detailed plan page
-      queryParams: {
-        mI: this.monthlyInvestment,
-        rI: this.retirementIncome,
-        t: this.timeToFI
+    // Complete the surveyInitial step
+    this.authService.completeStep('surveyInitial').subscribe({
+      next: (response) => {
+        console.log('SurveyInitial step completed successfully:', response);
+        
+        // Verify localStorage was updated
+        const localStorageValue = localStorage.getItem('surveyInitialCompleted');
+        console.log('SurveyInitial localStorage value after completion:', localStorageValue);
+        
+        // Verify current progress
+        this.authService.userProgress$.subscribe(progress => {
+          if (progress) {
+            console.log('SurveyInitial current progress after completion:', progress.surveyInitialCompleted);
+          }
+        });
+        
+        this.router.navigate(['/fi-plan-results'], { // A new route for your detailed plan page
+          queryParams: {
+            mI: this.monthlyInvestment,
+            rI: this.retirementIncome,
+            t: this.timeToFI
+          }
+        });
+      },
+      error: (err) => {
+        console.log('SurveyInitial step could not be completed (likely not authenticated yet):', err);
+        
+        // Check localStorage even if backend failed
+        const localStorageValue = localStorage.getItem('surveyInitialCompleted');
+        console.log('SurveyInitial localStorage value after failed completion:', localStorageValue);
+        
+        // Still navigate even if progress update fails
+        this.router.navigate(['/fi-plan-results'], { // A new route for your detailed plan page
+          queryParams: {
+            mI: this.monthlyInvestment,
+            rI: this.retirementIncome,
+            t: this.timeToFI
+          }
+        });
       }
     });
   }

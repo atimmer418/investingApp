@@ -45,6 +45,15 @@ export class AppComponent implements OnInit {
     // localStorage.clear();
     console.log('[AppComponent] ngOnInit - Setting up authentication and progress tracking.');
     
+    // Check if this is a testing scenario (add ?testing=true to URL)
+    const urlParams = new URLSearchParams(window.location.search);
+    const isTesting = urlParams.get('testing') === 'true';
+    
+    if (isTesting) {
+      console.log('[AppComponent] Testing mode enabled - skipping navigation logic');
+      return; // Skip all navigation logic for testing
+    }
+    
     // 🧪 SIMULATE EXISTING USER - Login as any user from your database
     // First, check your database users by visiting: http://localhost:8080/api/dev/list-users
     // Then uncomment ONE of these to simulate logging in as that user:
@@ -54,35 +63,40 @@ export class AppComponent implements OnInit {
     // this.simulateUserLogin('test@test.com');              // Login as different user
     
     // OR navigate directly to any page for testing (bypasses auth entirely):
-    // this.router.navigate(['/confirm-investment'], { replaceUrl: true });
+    // this.router.navigate(['/investment-confirmation'], { replaceUrl: true });
     // this.router.navigate(['/investment-schedule'], { replaceUrl: true });
-    // this.router.navigate(['/manual-stock-selection'], { replaceUrl: true });
+    // this.router.navigate(['/stock-selection'], { replaceUrl: true });
     // this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
     
     // 🚫 COMMENT OUT AUTH LOGIC WHEN TESTING SPECIFIC PAGES
     // Subscribe to authentication state changes
     this.authService.isLoggedIn$.subscribe(isLoggedIn => {
       if (isLoggedIn) {
-        // User is logged in, wait for progress data
+        // User is logged in, wait for progress data from backend
         this.authService.userProgress$.subscribe(progress => {
           if (progress) {
             this.navigateBasedOnProgress(progress);
           }
         });
       } else {
-        // User is not logged in - check for localStorage progress
-        // AuthService.checkExistingSession() already handles passkey re-auth logic
-        const unifiedProgress = this.authService.getUnifiedProgress();
-        const hasAnyProgress = unifiedProgress.getStartedCompleted || 
-                             unifiedProgress.surveyInitialCompleted || 
-                             unifiedProgress.fiPlanResultsCompleted;
-        
-        if (hasAnyProgress) {
-          console.log('[AppComponent] User not authenticated but has localStorage progress, continuing from where they left off');
-          this.navigateBasedOnProgress(unifiedProgress);
+        // User is not logged in - check for localStorage progress ONLY
+        // AuthService.checkExistingSession() handles passkey re-auth logic
+        // Don't navigate here if re-auth is in progress
+        if (!this.authService.isReAuthInProgress()) {
+          const unifiedProgress = this.authService.getUnifiedProgress();
+          const hasAnyProgress = unifiedProgress.getStartedCompleted || 
+                               unifiedProgress.surveyInitialCompleted || 
+                               unifiedProgress.fiPlanResultsCompleted;
+          
+          if (hasAnyProgress) {
+            console.log('[AppComponent] User not authenticated but has localStorage progress, continuing from where they left off');
+            this.navigateBasedOnProgress(unifiedProgress);
+          } else {
+            console.log('[AppComponent] User not authenticated and no progress, redirecting to get-started');
+            this.router.navigate(['/get-started'], { replaceUrl: true });
+          }
         } else {
-          console.log('[AppComponent] User not authenticated and no progress, redirecting to get-started');
-          this.router.navigate(['/get-started'], { replaceUrl: true });
+          console.log('[AppComponent] Re-authentication in progress, waiting for completion before navigation');
         }
       }
     });
@@ -152,25 +166,25 @@ export class AppComponent implements OnInit {
       targetRoute = '/get-started';
       decisionReason = "Get started NOT complete.";
     } else if (!surveyInitialCompleted) {
-      targetRoute = '/surveyinitial';
+      targetRoute = '/survey-initial';
       decisionReason = "Get started complete, initial survey NOT complete.";
     } else if (!fiPlanResultsCompleted) {
       targetRoute = '/fi-plan-results';
       decisionReason = "Initial survey complete, FI plan results NOT complete.";
     } else if (!authFinalizeCompleted) {
-      targetRoute = '/authfinalize';
+      targetRoute = '/auth-finalize';
       decisionReason = "FI plan results complete, auth finalize NOT complete.";
     } else if (!kycVerificationCompleted) {
       targetRoute = '/kyc-verification';
       decisionReason = "Auth finalize complete, KYC verification NOT complete.";
     } else if (!linkPlaidCompleted) {
-      targetRoute = '/linkplaid';
+      targetRoute = '/link-bank';
       decisionReason = "KYC verification complete, Plaid linking NOT complete.";
     } else if (!investmentScheduleCompleted) {
       targetRoute = '/investment-schedule';
       decisionReason = "Plaid linked, investment schedule NOT complete.";
     } else if (!investmentConfirmationCompleted) {
-      targetRoute = '/investmentconfirmation';
+      targetRoute = '/investment-confirmation';
       decisionReason = "Investment schedule complete, investment confirmation NOT complete.";
     } else {
       targetRoute = '/tabs/tab1';

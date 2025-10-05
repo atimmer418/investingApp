@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap, catchError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
 
@@ -16,6 +16,7 @@ export interface UserProgress {
   investmentScheduleCompleted: boolean;
   investmentConfirmationCompleted: boolean;
   monthlyInvestment?: number; // User's monthly investment capacity
+  retirementIncome?: number; // User's desired retirement income
 }
 
 export interface PasskeyAuthRequest {
@@ -40,6 +41,8 @@ export class AuthService {
   
   private userProgressSubject = new BehaviorSubject<UserProgress | null>(null);
   public userProgress$ = this.userProgressSubject.asObservable();
+
+  private reAuthInProgress = false;
 
   constructor(private http: HttpClient) {
     // Check if user is already logged in on app start
@@ -141,13 +144,21 @@ export class AuthService {
     // Check if this is a first-time authentication (user just completed authfinalize)
     // If so, sync their localStorage progress to the database
     const hasLocalProgress = localStorage.getItem('getStartedCompleted') === 'true' || 
-                            localStorage.getItem('initialSurveyCompleted') === 'true' ||
+                            localStorage.getItem('surveyInitialCompleted') === 'true' ||
                             localStorage.getItem('fiPlanResultsCompleted') === 'true';
+
+    console.log('[AuthService] Checking for localStorage progress to sync:', {
+      getStartedCompleted: localStorage.getItem('getStartedCompleted'),
+      surveyInitialCompleted: localStorage.getItem('surveyInitialCompleted'),
+      fiPlanResultsCompleted: localStorage.getItem('fiPlanResultsCompleted'),
+      hasLocalProgress: hasLocalProgress
+    });
 
     if (hasLocalProgress) {
       console.log('[AuthService] First-time authentication detected, syncing localStorage progress to database');
       this.syncLocalStorageProgressToDatabase().subscribe({
         next: () => {
+          console.log('[AuthService] Sync completed successfully, loading user progress');
           // After successful sync, load the updated progress from database
           this.loadUserProgress();
         },
@@ -158,6 +169,7 @@ export class AuthService {
         }
       });
     } else {
+      console.log('[AuthService] No localStorage progress to sync, loading user progress from database');
       // No localStorage progress to sync, just load from database
       this.loadUserProgress();
     }
@@ -183,10 +195,24 @@ export class AuthService {
    * This migrates anonymous pre-auth progress to the authenticated user's database record
    */
   syncLocalStorageProgressToDatabase(): Observable<any> {
+    const monthlyInvestment = localStorage.getItem('surveyMonthlyInvestment');
+    const retirementIncome = localStorage.getItem('surveyRetirementIncome');
+    
+    // Debug: Log all relevant localStorage values
+    console.log('[AuthService] Current localStorage values during sync:', {
+      getStartedCompleted: localStorage.getItem('getStartedCompleted'),
+      surveyInitialCompleted: localStorage.getItem('surveyInitialCompleted'),
+      fiPlanResultsCompleted: localStorage.getItem('fiPlanResultsCompleted'),
+      monthlyInvestment: monthlyInvestment,
+      retirementIncome: retirementIncome
+    });
+    
     const localProgress: Partial<UserProgress> = {
       getStartedCompleted: localStorage.getItem('getStartedCompleted') === 'true',
-      surveyInitialCompleted: localStorage.getItem('initialSurveyCompleted') === 'true',
+      surveyInitialCompleted: localStorage.getItem('surveyInitialCompleted') === 'true',
       fiPlanResultsCompleted: localStorage.getItem('fiPlanResultsCompleted') === 'true',
+      monthlyInvestment: monthlyInvestment ? parseInt(monthlyInvestment, 10) : undefined,
+      retirementIncome: retirementIncome ? parseInt(retirementIncome, 10) : undefined
       // authFinalizeCompleted is set to true by the backend when this sync happens
       // Don't sync post-auth flags from localStorage (they should come from database)
     };
@@ -196,8 +222,8 @@ export class AuthService {
     return this.updateProgress(localProgress).pipe(
       tap(() => {
         console.log('[AuthService] Successfully synced localStorage progress to database');
-        // Optionally clear localStorage flags after successful sync
-        this.clearLocalStorageProgressFlags();
+        // Don't clear localStorage flags immediately - wait until after authFinalize is complete
+        // this.clearLocalStorageProgressFlags();
       })
     );
   }
@@ -206,15 +232,20 @@ export class AuthService {
    * Build UserProgress object from localStorage (for non-authenticated users)
    */
   private buildProgressFromLocalStorage(): UserProgress {
+    const monthlyInvestment = localStorage.getItem('surveyMonthlyInvestment');
+    const retirementIncome = localStorage.getItem('surveyRetirementIncome');
+    
     return {
       getStartedCompleted: localStorage.getItem('getStartedCompleted') === 'true',
-      surveyInitialCompleted: localStorage.getItem('initialSurveyCompleted') === 'true',
+      surveyInitialCompleted: localStorage.getItem('surveyInitialCompleted') === 'true',
       fiPlanResultsCompleted: localStorage.getItem('fiPlanResultsCompleted') === 'true',
-      authFinalizeCompleted: false, // Can't be true if no JWT token
-      kycVerificationCompleted: false,
-      linkPlaidCompleted: false,
-      investmentScheduleCompleted: false,
-      investmentConfirmationCompleted: false
+      authFinalizeCompleted: localStorage.getItem('authFinalizeCompleted') === 'true',
+      kycVerificationCompleted: localStorage.getItem('kycVerificationCompleted') === 'true',
+      linkPlaidCompleted: localStorage.getItem('linkPlaidCompleted') === 'true',
+      investmentScheduleCompleted: localStorage.getItem('investmentScheduleCompleted') === 'true',
+      investmentConfirmationCompleted: localStorage.getItem('investmentConfirmationCompleted') === 'true',
+      monthlyInvestment: monthlyInvestment ? parseInt(monthlyInvestment, 10) : undefined,
+      retirementIncome: retirementIncome ? parseInt(retirementIncome, 10) : undefined
     };
   }
 
@@ -234,15 +265,18 @@ export class AuthService {
    * Clear localStorage progress flags after successful sync to database
    * This prevents confusion between localStorage and database as source of truth
    */
-  private clearLocalStorageProgressFlags(): void {
+  clearLocalStorageProgressFlags(): void {
     const flagsToRemove = [
       'getStartedCompleted',
-      'initialSurveyCompleted', 
+      'surveyInitialCompleted', 
       'fiPlanResultsCompleted',
-      'linkplaidCompleted',
-      'investmentSurveyCompleted',
-      'stockSelectionCompleted',
-      'investmentConfirmationCompleted'
+      'authFinalizeCompleted',
+      'kycVerificationCompleted',
+      'linkPlaidCompleted',
+      'investmentScheduleCompleted',
+      'investmentConfirmationCompleted',
+      'surveyMonthlyInvestment',
+      'surveyRetirementIncome'
     ];
 
     flagsToRemove.forEach(flag => {
@@ -270,12 +304,124 @@ export class AuthService {
   }
 
   /**
+   * Comprehensive method to update both localStorage and backend progress
+   * Use this method whenever a user completes or revisits a step
+   */
+  updateStepProgress(step: string, completed: boolean): Observable<any> {
+    // Always update localStorage first
+    localStorage.setItem(`${step}Completed`, completed.toString());
+    console.log(`[AuthService] Updated localStorage ${step} progress: ${completed}`);
+    
+    // Check if user is authenticated before trying to update backend
+    if (!this.isAuthenticated()) {
+      console.log(`[AuthService] User not authenticated, skipping backend update for ${step}`);
+      
+      // Update the userProgressSubject with the latest localStorage data
+      const updatedProgress = this.buildProgressFromLocalStorage();
+      this.userProgressSubject.next(updatedProgress);
+      console.log(`[AuthService] Updated userProgressSubject with localStorage data:`, updatedProgress);
+      
+      // Return a completed observable since localStorage update succeeded
+      return of({ success: true, message: 'localStorage updated, user not authenticated for backend update' });
+    }
+    
+    // Create the progress update object using bracket notation
+    const progressUpdate: any = {};
+    progressUpdate[`${step}Completed`] = completed;
+    
+    console.log(`[AuthService] Sending progress update to backend:`, progressUpdate);
+    
+    // Update backend only if authenticated
+    return this.updateProgress(progressUpdate).pipe(
+      tap((response) => {
+        console.log(`[AuthService] Backend response for ${step} progress:`, response);
+        console.log(`[AuthService] Updated backend ${step} progress: ${completed}`);
+        // Reload user progress to keep it in sync
+        this.loadUserProgress();
+      }),
+      catchError((err: any) => {
+        console.error(`[AuthService] Failed to update backend ${step} progress:`, err);
+        // Don't throw error - localStorage update still succeeded
+        console.log(`[AuthService] localStorage update for ${step} was successful despite backend error`);
+        return of({ success: true, message: 'localStorage updated, backend update failed' });
+      })
+    );
+  }
+
+  /**
+   * Mark a step as completed (user finished the step)
+   */
+  completeStep(step: string): Observable<any> {
+    return this.updateStepProgress(step, true);
+  }
+
+  /**
+   * Mark a step as incomplete (user returned to the step)
+   * Only call this when user is actually going backwards in the flow
+   */
+  markStepIncomplete(step: string): Observable<any> {
+    // Check if this is likely a direct navigation (testing) vs backwards navigation
+    const currentProgress = this.getUnifiedProgress();
+    const isLikelyDirectNavigation = this.isDirectNavigation(step, currentProgress);
+    
+    console.log(`[AuthService] markStepIncomplete('${step}') called`);
+    console.log(`[AuthService] Current progress:`, currentProgress);
+    console.log(`[AuthService] Is likely direct navigation:`, isLikelyDirectNavigation);
+    
+    if (isLikelyDirectNavigation) {
+      console.log(`[AuthService] Detected direct navigation to ${step}, skipping mark as incomplete`);
+      return of({ success: true, message: 'Direct navigation detected, skipping mark as incomplete' });
+    }
+    
+    console.log(`[AuthService] Proceeding to mark ${step} as incomplete`);
+    return this.updateStepProgress(step, false);
+  }
+
+  /**
+   * Detect if this is likely a direct navigation (for testing) vs normal flow navigation
+   */
+  private isDirectNavigation(step: string, progress: UserProgress): boolean {
+    const stepOrder = [
+      'getStarted',
+      'surveyInitial', 
+      'fiPlanResults',
+      'authFinalize',
+      'kycVerification',
+      'linkPlaid',
+      'investmentSchedule',
+      'investmentConfirmation'
+    ];
+    
+    const currentStepIndex = stepOrder.indexOf(step);
+    if (currentStepIndex === -1) return false;
+    
+    // Check if previous steps are completed
+    for (let i = 0; i < currentStepIndex; i++) {
+      const prevStep = stepOrder[i];
+      const isCompleted = (progress as any)[`${prevStep}Completed`];
+      if (!isCompleted) {
+        // Previous step is not completed, this looks like direct navigation
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  /**
    * Check if we should prompt user for passkey re-authentication
    * Now we don't need stored email - passkeys work without it!
    */
   shouldPromptForPasskeyReauth(): boolean {
     // Use the utility method to check if JWT is expired
     return JwtTokenUtils.isJwtExpired();
+  }
+
+  /**
+   * Check if re-authentication is currently in progress
+   */
+  isReAuthInProgress(): boolean {
+    return this.reAuthInProgress;
   }
 
   /**
@@ -299,6 +445,7 @@ export class AuthService {
    */
   async promptForPasskeyReauth(): Promise<boolean> {
     try {
+      this.reAuthInProgress = true;
       console.log('[AuthService] Starting passkey re-authentication');
       
       // 1. Start authentication
@@ -309,17 +456,34 @@ export class AuthService {
       }
       
       // 2. Show browser passkey prompt
-      const credential = await navigator.credentials.get({
-        publicKey: JSON.parse(startResponse.requestOptions)
-      });
+      const credentialRequestOptions = JSON.parse(startResponse.requestOptions);
+      
+      // Convert base64url strings to ArrayBuffers for WebAuthn API
+      if (credentialRequestOptions.publicKey) {
+        if (credentialRequestOptions.publicKey.challenge) {
+          credentialRequestOptions.publicKey.challenge = this.base64urlToArrayBuffer(credentialRequestOptions.publicKey.challenge);
+        }
+        if (credentialRequestOptions.publicKey.allowCredentials) {
+          credentialRequestOptions.publicKey.allowCredentials.forEach((cred: any) => {
+            if (cred.id) {
+              cred.id = this.base64urlToArrayBuffer(cred.id);
+            }
+          });
+        }
+      }
+      
+      const credential = await navigator.credentials.get(credentialRequestOptions);
       
       if (!credential) {
         throw new Error('User cancelled passkey authentication');
       }
       
+      // Convert credential to JSON-serializable format
+      const credentialJson = this.credentialToJson(credential as PublicKeyCredential);
+      
       // 3. Finish authentication 
       const authResponse = await this.http.post<any>(`${BACKEND_API_URL}/passkey/authenticate/finish`, {
-        credential: credential,
+        credential: credentialJson,
         sessionId: startResponse.sessionId
       }).toPromise();
       
@@ -331,12 +495,15 @@ export class AuthService {
           authResponse.email
         );
         console.log('[AuthService] Passkey re-authentication successful');
+        this.reAuthInProgress = false;
         return true;
       } else {
+        this.reAuthInProgress = false;
         throw new Error(authResponse?.message || 'Authentication failed');
       }
       
     } catch (error) {
+      this.reAuthInProgress = false;
       console.error('[AuthService] Passkey re-authentication failed:', error);
       return false;
     }
@@ -495,6 +662,59 @@ export class AuthService {
         }
       })
     );
+  }
+
+  /**
+   * Convert base64url string to ArrayBuffer for WebAuthn API
+   */
+  private base64urlToArrayBuffer(base64url: string): ArrayBuffer {
+    // Add padding if needed
+    let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+    
+    // Add padding
+    while (base64.length % 4) {
+      base64 += '=';
+    }
+    
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    return bytes.buffer;
+  }
+
+  private arrayBufferToBase64url(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    
+    return btoa(binary)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+  }
+
+  private credentialToJson(credential: PublicKeyCredential): any {
+    const response = credential.response as AuthenticatorAssertionResponse;
+    
+    return {
+      id: credential.id,
+      rawId: this.arrayBufferToBase64url(credential.rawId),
+      response: {
+        authenticatorData: this.arrayBufferToBase64url(response.authenticatorData),
+        clientDataJSON: this.arrayBufferToBase64url(response.clientDataJSON),
+        signature: this.arrayBufferToBase64url(response.signature),
+        userHandle: response.userHandle ? this.arrayBufferToBase64url(response.userHandle) : null
+      },
+      clientExtensionResults: credential.getClientExtensionResults(),
+      type: credential.type
+    };
   }
 
   // You could add automatic token refresh logic here in the future
