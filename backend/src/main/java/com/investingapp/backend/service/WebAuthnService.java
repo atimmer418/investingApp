@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.investingapp.backend.dto.RegistrationFinishResponse;
 import com.investingapp.backend.model.PasskeyCredential;
 import com.investingapp.backend.model.User;
+import com.investingapp.backend.model.UserProgress;
 import com.investingapp.backend.repository.PasskeyCredentialRepository;
 import com.investingapp.backend.repository.UserRepository;
+import com.investingapp.backend.repository.UserProgressRepository;
 import com.investingapp.backend.security.jwt.JwtUtils;
 import com.investingapp.backend.security.services.UserDetailsServiceImpl;
 import com.yubico.webauthn.*;
@@ -37,6 +39,7 @@ public class WebAuthnService {
     private final RelyingParty relyingParty;
     private final UserRepository userRepository;
     private final PasskeyCredentialRepository passkeyCredentialRepository;
+    private final UserProgressRepository userProgressRepository;
     private final JwtUtils jwtUtils;
     private final UserDetailsServiceImpl userDetailsService;
     private final PlaidService plaidService;
@@ -46,6 +49,7 @@ public class WebAuthnService {
     public WebAuthnService(RelyingParty relyingParty,
                            UserRepository userRepository,
                            PasskeyCredentialRepository passkeyCredentialRepository,
+                           UserProgressRepository userProgressRepository,
                            JwtUtils jwtUtils,
                            UserDetailsServiceImpl userDetailsService,
                            PlaidService plaidService,
@@ -53,6 +57,7 @@ public class WebAuthnService {
         this.relyingParty = relyingParty;
         this.userRepository = userRepository;
         this.passkeyCredentialRepository = passkeyCredentialRepository;
+        this.userProgressRepository = userProgressRepository;
         this.jwtUtils = jwtUtils;
         this.userDetailsService = userDetailsService;
         this.plaidService = plaidService;
@@ -84,6 +89,10 @@ public class WebAuthnService {
         user.setTargetPortfolio(targetPortfolio);
         user.setRetirementIncome(retirementIncome);
         user.setMonthlyInvestment(monthlyInvestment);
+        
+        // Create and associate UserProgress (will be saved with cascade)
+        UserProgress userProgress = new UserProgress();
+        user.setUserProgress(userProgress);
         
         user = userRepository.save(user);
         logger.info("New user created successfully for email: {}", email);

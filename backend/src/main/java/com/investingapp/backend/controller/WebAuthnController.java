@@ -1,12 +1,12 @@
 // src/main/java/com/investingapp/backend/controller/WebAuthnController.java
 package com.investingapp.backend.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 
 // imports below are for simulating passkey
 import com.investingapp.backend.model.User;
+import com.investingapp.backend.model.UserProgress;
 import org.springframework.http.HttpStatus;
 import java.util.Map;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -48,8 +48,8 @@ public class WebAuthnController {
     // Cache for authentication challenges (email-less authentication)
     private final Cache<String, PublicKeyCredentialRequestOptions> authChallengeCache;
     
-    // ObjectMapper for JSON serialization
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    // ObjectMapper for JSON serialization - injected from Spring configuration
+    private final ObjectMapper objectMapper;
 
     // these 3 injections are needed for simulating passkey registration
     @Autowired
@@ -64,10 +64,12 @@ public class WebAuthnController {
     @Autowired
     public WebAuthnController(WebAuthnService webAuthnService,
             Cache<String, PublicKeyCredentialCreationOptions> challengeCache,
-            Cache<String, PublicKeyCredentialRequestOptions> authChallengeCache) {
+            Cache<String, PublicKeyCredentialRequestOptions> authChallengeCache,
+            ObjectMapper objectMapper) {
         this.webAuthnService = webAuthnService;
         this.challengeCache = challengeCache;
         this.authChallengeCache = authChallengeCache;
+        this.objectMapper = objectMapper;
     }
 
     @PostMapping("/register/start")
@@ -86,13 +88,22 @@ public class WebAuthnController {
                     registrationRequest.getMonthlyInvestment());
             challengeCache.put(registrationRequest.getEmail(), options);
             logger.info("Registration options stored in cache for user: {}", registrationRequest.getEmail());
-            return ResponseEntity.ok(new RegistrationStartResponse(objectMapper.writeValueAsString(options)));
+            
+            // Use the WebAuthn library's built-in JSON serialization
+            String optionsJson = options.toCredentialsCreateJson();
+            
+            // Parse the JSON to extract just the publicKey part
+            JsonNode fullResponse = objectMapper.readTree(optionsJson);
+            JsonNode publicKeyNode = fullResponse.get("publicKey");
+            String publicKeyJson = objectMapper.writeValueAsString(publicKeyNode);
+            
+            return ResponseEntity.ok(new RegistrationStartResponse(publicKeyJson));
         } catch (IllegalArgumentException e) {
             logger.warn("Registration failed for email {}: {}", registrationRequest.getEmail(), e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Email is already taken.");
-        } catch (JsonProcessingException e) {
-            logger.error("Failed to serialize options to JSON for user: {}", registrationRequest.getEmail(), e.getMessage());
+        } catch (Exception e) {
+            logger.error("Failed to generate registration options for user: {}", registrationRequest.getEmail(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error generating registration options.");
         }
@@ -113,6 +124,11 @@ public class WebAuthnController {
             User user = userRepository.findByEmail(email).orElse(null);
             if (user == null) {
                 user = new User(email); // Make sure constructor and fields fit your model
+                
+                // Create and associate UserProgress
+                UserProgress userProgress = new UserProgress();
+                user.setUserProgress(userProgress);
+                
                 userRepository.save(user);
             }
 
@@ -180,16 +196,15 @@ public class WebAuthnController {
             
             logger.info("Authentication challenge generated and cached with session ID: {}", sessionId);
             
+            // Use the WebAuthn library's built-in JSON serialization for proper binary data handling
+            String optionsJson = options.toCredentialsGetJson();
+            
             // Return both the options and session ID to frontend
             return ResponseEntity.ok(Map.of(
-                "requestOptions", objectMapper.writeValueAsString(options),
+                "requestOptions", optionsJson,
                 "sessionId", sessionId
             ));
             
-        } catch (JsonProcessingException e) {
-            logger.error("Failed to serialize authentication options to JSON: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error generating authentication options.");
         } catch (Exception e) {
             logger.error("Unexpected error during authentication start: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -203,12 +218,21 @@ public class WebAuthnController {
     @PostMapping("/authenticate/finish")
     public ResponseEntity<?> finishAuthentication(@RequestBody Map<String, Object> request) {
         String sessionId = (String) request.get("sessionId");
-        JsonNode credentialResponse = (JsonNode) request.get("credential");
+        Object credentialObj = request.get("credential");
         
         logger.info("Processing passkey authentication finish for session: {}", sessionId);
         
-        if (sessionId == null || credentialResponse == null) {
+        if (sessionId == null || credentialObj == null) {
             return ResponseEntity.badRequest().body("Missing sessionId or credential");
+        }
+        
+        // Convert credential object to JsonNode
+        JsonNode credentialResponse;
+        try {
+            credentialResponse = objectMapper.valueToTree(credentialObj);
+        } catch (Exception e) {
+            logger.error("Failed to convert credential to JsonNode: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid credential format");
         }
         
         // Get original challenge from cache

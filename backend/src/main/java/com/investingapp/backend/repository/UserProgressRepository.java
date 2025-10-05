@@ -14,14 +14,16 @@ public interface UserProgressRepository extends JpaRepository<UserProgress, Long
     
     /**
      * Find UserProgress by associated User's email
+     * Since we removed bidirectional mapping, query from User entity
      */
-    @Query("SELECT up FROM UserProgress up JOIN up.user u WHERE u.email = :email")
+    @Query("SELECT u.userProgress FROM User u WHERE u.email = :email")
     Optional<UserProgress> findByUserEmail(@Param("email") String email);
     
     /**
      * Find UserProgress by associated User's ID
+     * Since we removed bidirectional mapping, query from User entity
      */
-    @Query("SELECT up FROM UserProgress up JOIN up.user u WHERE u.id = :userId")
+    @Query("SELECT u.userProgress FROM User u WHERE u.id = :userId")
     Optional<UserProgress> findByUserId(@Param("userId") Long userId);
     
     /**

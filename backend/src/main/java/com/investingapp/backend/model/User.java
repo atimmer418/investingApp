@@ -52,9 +52,8 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<PasskeyCredential> passkeyCredentials = new HashSet<>();
 
-    // One-to-one mapping with UserProgress entity
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_progress_id", referencedColumnName = "id")
+    // One-to-one mapping with UserProgress entity using mappedBy to avoid foreign key constraint
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private UserProgress userProgress;
 
     // Plaid specific fields
@@ -110,8 +109,7 @@ public class User {
         // Generate a user handle, e.g., from UUID or a transformation of the user ID after first save
         // For now, it can be set later or derived.
         
-        // Create associated UserProgress
-        this.userProgress = new UserProgress(this);
+        // Don't create UserProgress here - handle in service layer to avoid circular reference
     }
 
     // public User(String firstName, String lastName, String email) {
@@ -119,4 +117,15 @@ public class User {
     //      this.lastName = lastName;
     //      this.email = email;
     // }
+
+    public UserProgress getUserProgress() {
+        return userProgress;
+    }
+
+    public void setUserProgress(UserProgress userProgress) {
+        this.userProgress = userProgress;
+        if (userProgress != null) {
+            userProgress.setUser(this);
+        }
+    }
 }

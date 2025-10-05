@@ -57,6 +57,14 @@ public class UserController {
                 this.completionPercentage = progress.getCompletionPercentage();
             } else {
                 // Default values if no progress record
+                this.getStartedCompleted = false;
+                this.surveyInitialCompleted = false;
+                this.fiPlanResultsCompleted = false;
+                this.authFinalizeCompleted = false;
+                this.kycVerificationCompleted = false;
+                this.linkPlaidCompleted = false;
+                this.investmentScheduleCompleted = false;
+                this.investmentConfirmationCompleted = false;
                 this.nextStep = "get-started";
                 this.completionPercentage = 0.0;
             }
@@ -102,7 +110,7 @@ public class UserController {
             
             // Ensure user has UserProgress record
             if (user.getUserProgress() == null) {
-                UserProgress newProgress = new UserProgress(user);
+                UserProgress newProgress = new UserProgress();
                 user.setUserProgress(newProgress);
                 userRepository.save(user);
                 logger.info("[UserController] Created new UserProgress record for user: {}", email);
@@ -152,7 +160,7 @@ public class UserController {
             // Ensure user has UserProgress record
             UserProgress userProgress = user.getUserProgress();
             if (userProgress == null) {
-                userProgress = new UserProgress(user);
+                userProgress = new UserProgress();
                 user.setUserProgress(userProgress);
                 userRepository.save(user);
                 logger.info("[UserController] Created new UserProgress record for user: {}", email);
@@ -190,6 +198,9 @@ public class UserController {
             if (progressUpdate.containsKey("investmentConfirmationCompleted")) {
                 userProgress.setInvestmentConfirmationCompleted((Boolean) progressUpdate.get("investmentConfirmationCompleted"));
             }
+            
+            // Ensure logical consistency: if later steps are completed, earlier steps should be too
+            validateAndFixStepDependencies(userProgress, email);
             
             userProgressRepository.save(userProgress);
             userRepository.save(user);
@@ -276,6 +287,84 @@ public class UserController {
                 "shouldPromptReauth", false,
                 "message", "Error occurred, defaulting to no prompt"
             ));
+        }
+    }
+    
+    /**
+     * Ensure logical consistency of step completion
+     * If later steps are completed, automatically complete earlier prerequisite steps
+     */
+    private void validateAndFixStepDependencies(UserProgress userProgress, String userEmail) {
+        boolean wasFixed = false;
+        
+        // Step dependency chain: getStarted → surveyInitial → fiPlanResults → authFinalize → kycVerification → linkPlaid → investmentSchedule → investmentConfirmation
+        
+        // If any step beyond getStarted is completed, getStarted should be completed
+        if (!userProgress.isGetStartedCompleted() && 
+            (userProgress.isSurveyInitialCompleted() || userProgress.isFiPlanResultsCompleted() || 
+             userProgress.isAuthFinalizeCompleted() || userProgress.isKycVerificationCompleted() ||
+             userProgress.isLinkPlaidCompleted() || userProgress.isInvestmentScheduleCompleted() ||
+             userProgress.isInvestmentConfirmationCompleted())) {
+            userProgress.setGetStartedCompleted(true);
+            wasFixed = true;
+            logger.info("[UserController] Auto-completed getStarted for user {}", userEmail);
+        }
+        
+        // If any step beyond surveyInitial is completed, surveyInitial should be completed
+        if (!userProgress.isSurveyInitialCompleted() && 
+            (userProgress.isFiPlanResultsCompleted() || userProgress.isAuthFinalizeCompleted() || 
+             userProgress.isKycVerificationCompleted() || userProgress.isLinkPlaidCompleted() ||
+             userProgress.isInvestmentScheduleCompleted() || userProgress.isInvestmentConfirmationCompleted())) {
+            userProgress.setSurveyInitialCompleted(true);
+            wasFixed = true;
+            logger.info("[UserController] Auto-completed surveyInitial for user {}", userEmail);
+        }
+        
+        // If any step beyond fiPlanResults is completed, fiPlanResults should be completed
+        if (!userProgress.isFiPlanResultsCompleted() && 
+            (userProgress.isAuthFinalizeCompleted() || userProgress.isKycVerificationCompleted() ||
+             userProgress.isLinkPlaidCompleted() || userProgress.isInvestmentScheduleCompleted() ||
+             userProgress.isInvestmentConfirmationCompleted())) {
+            userProgress.setFiPlanResultsCompleted(true);
+            wasFixed = true;
+            logger.info("[UserController] Auto-completed fiPlanResults for user {}", userEmail);
+        }
+        
+        // If any step beyond authFinalize is completed, authFinalize should be completed
+        if (!userProgress.isAuthFinalizeCompleted() && 
+            (userProgress.isKycVerificationCompleted() || userProgress.isLinkPlaidCompleted() ||
+             userProgress.isInvestmentScheduleCompleted() || userProgress.isInvestmentConfirmationCompleted())) {
+            userProgress.setAuthFinalizeCompleted(true);
+            wasFixed = true;
+            logger.info("[UserController] Auto-completed authFinalize for user {}", userEmail);
+        }
+        
+        // If any step beyond kycVerification is completed, kycVerification should be completed
+        if (!userProgress.isKycVerificationCompleted() && 
+            (userProgress.isLinkPlaidCompleted() || userProgress.isInvestmentScheduleCompleted() ||
+             userProgress.isInvestmentConfirmationCompleted())) {
+            userProgress.setKycVerificationCompleted(true);
+            wasFixed = true;
+            logger.info("[UserController] Auto-completed kycVerification for user {}", userEmail);
+        }
+        
+        // If any step beyond linkPlaid is completed, linkPlaid should be completed
+        if (!userProgress.isLinkPlaidCompleted() && 
+            (userProgress.isInvestmentScheduleCompleted() || userProgress.isInvestmentConfirmationCompleted())) {
+            userProgress.setLinkPlaidCompleted(true);
+            wasFixed = true;
+            logger.info("[UserController] Auto-completed linkPlaid for user {}", userEmail);
+        }
+        
+        // If investmentConfirmation is completed, investmentSchedule should be completed
+        if (!userProgress.isInvestmentScheduleCompleted() && userProgress.isInvestmentConfirmationCompleted()) {
+            userProgress.setInvestmentScheduleCompleted(true);
+            wasFixed = true;
+            logger.info("[UserController] Auto-completed investmentSchedule for user {}", userEmail);
+        }
+        
+        if (wasFixed) {
+            logger.info("[UserController] Fixed step dependencies for user {}", userEmail);
         }
     }
 }

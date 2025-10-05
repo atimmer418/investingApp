@@ -118,14 +118,15 @@ public class SecurityConfig {
                 .requestMatchers("/api/plaid/create_link_token_anonymous").permitAll()
                 .requestMatchers("/api/plaid/exchange_public_token_anonymous").permitAll()
                 .requestMatchers("/api/passkey/**").permitAll()
+                .requestMatchers("/api/user/should-prompt-reauth").permitAll() // Allow checking reauth status without authentication
+                .requestMatchers("/api/user/progress").permitAll() // Allow checking user progress without authentication
                 .requestMatchers("/api/dev/**").permitAll() // 🧪 DEV ONLY: Allow dev endpoints without authentication
                 .requestMatchers("/hello").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable)
-            .logout(AbstractHttpConfigurer::disable)
-            .anonymous(AbstractHttpConfigurer::disable);
+            .logout(AbstractHttpConfigurer::disable);
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

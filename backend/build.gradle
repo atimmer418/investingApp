@@ -32,6 +32,8 @@ dependencies {
 	implementation 'com.plaid:plaid-java:18.0.0'
 	implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 	implementation 'com.yubico:webauthn-server-core:2.7.0' // Check for the latest version
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8' // For Java 8 Optional support
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310' // For Java 8 time types (LocalDate, LocalDateTime, etc.)
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5' // Or latest 0.11.x or 0.12.x if available and compatible
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'  // Choose one implementation
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // For Jackson JSON processing with JWTs

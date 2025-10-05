@@ -3,7 +3,6 @@ package com.investingapp.backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -12,15 +11,15 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "user_progress")
 @Data
-@NoArgsConstructor
 public class UserProgress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // One-to-one mapping with User entity
-    @OneToOne(mappedBy = "userProgress")
+    // Bidirectional mapping - UserProgress owns the relationship
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
     // Onboarding status flags - tracking the complete user flow
@@ -28,7 +27,7 @@ public class UserProgress {
     @Column(name = "get_started_completed", nullable = false)
     private boolean getStartedCompleted = false;
     
-    @Column(name = "survey_initial_completed", nullable = false)
+    @Column(name = "initial_survey_completed", nullable = false)
     private boolean surveyInitialCompleted = false;
     
     @Column(name = "fi_plan_results_completed", nullable = false)
@@ -49,6 +48,13 @@ public class UserProgress {
     @Column(name = "investment_confirmation_completed", nullable = false)
     private boolean investmentConfirmationCompleted = false;
 
+    // Survey values stored in user progress
+    @Column(name = "monthly_investment")
+    private Double monthlyInvestment;
+    
+    @Column(name = "retirement_income")
+    private Double retirementIncome;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -57,9 +63,8 @@ public class UserProgress {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public UserProgress(User user) {
-        this.user = user;
-        // All progress flags default to false
+    public UserProgress() {
+        // All progress flags default to false (already set by field initialization)
     }
 
     /**
@@ -108,5 +113,14 @@ public class UserProgress {
         if (investmentConfirmationCompleted) completedSteps++;
         
         return (double) completedSteps / totalSteps * 100;
+    }
+
+    // Explicit getter and setter for User to manage bidirectional relationship
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }
