@@ -179,11 +179,19 @@ public class UserController {
             if (progressUpdate.containsKey("authFinalizeCompleted")) {
                 userProgress.setAuthFinalizeCompleted((Boolean) progressUpdate.get("authFinalizeCompleted"));
                 
-                // Record IP address when user completes authfinalize
+                // Record IP address and device ID when user completes authfinalize
                 if ((Boolean) progressUpdate.get("authFinalizeCompleted")) {
                     String ipAddress = getClientIpAddress(request);
                     user.setRegistrationIpAddress(ipAddress);
                     logger.info("[UserController] Recorded IP address {} for user {} completing authfinalize", ipAddress, email);
+                    
+                    // Also record device ID if available (better for mobile tracking)
+                    String deviceId = request.getHeader("X-Device-ID");
+                    if (deviceId != null && !deviceId.isEmpty()) {
+                        user.setDeviceId(deviceId);
+                        logger.info("[UserController] Recorded device ID {} for user {} completing authfinalize", 
+                                   deviceId.substring(0, Math.min(8, deviceId.length())) + "...", email);
+                    }
                 }
             }
             if (progressUpdate.containsKey("kycVerificationCompleted")) {
@@ -223,12 +231,12 @@ public class UserController {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {
             // X-Forwarded-For can contain multiple IPs, take the first one
-            return xForwardedFor.split(",")[0].trim();
+            return normalizeIpForDeviceTracking(xForwardedFor.split(",")[0].trim());
         }
         
         String xRealIp = request.getHeader("X-Real-IP");
         if (xRealIp != null && !xRealIp.isEmpty() && !"unknown".equalsIgnoreCase(xRealIp)) {
-            return xRealIp;
+            return normalizeIpForDeviceTracking(xRealIp);
         }
         
         String xForwardedProto = request.getHeader("X-Forwarded-Proto");
@@ -236,56 +244,92 @@ public class UserController {
             // If we're behind a proxy, try other headers
             String proxyClientIp = request.getHeader("Proxy-Client-IP");
             if (proxyClientIp != null && !proxyClientIp.isEmpty() && !"unknown".equalsIgnoreCase(proxyClientIp)) {
-                return proxyClientIp;
+                return normalizeIpForDeviceTracking(proxyClientIp);
             }
             
             String wlProxyClientIp = request.getHeader("WL-Proxy-Client-IP");
             if (wlProxyClientIp != null && !wlProxyClientIp.isEmpty() && !"unknown".equalsIgnoreCase(wlProxyClientIp)) {
-                return wlProxyClientIp;
+                return normalizeIpForDeviceTracking(wlProxyClientIp);
             }
         }
         
         // Fall back to remote address
-        return request.getRemoteAddr();
+        return normalizeIpForDeviceTracking(request.getRemoteAddr());
     }
     
     /**
-     * Check if the current IP/device should be prompted for passkey re-authentication
-     * Only prompt if there's an existing user from this IP who has completed auth-finalize
+     * Normalize IP address for reliable device tracking
+     * For IPv6: Use network prefix (/64) to handle privacy extensions
+     * For IPv4: Use full address as it's typically stable
+     */
+    private String normalizeIpForDeviceTracking(String rawIp) {
+        if (rawIp == null || rawIp.isEmpty()) {
+            return rawIp;
+        }
+        
+        // Check if it's IPv6 (contains colons)
+        if (rawIp.contains(":")) {
+            // IPv6 - extract first 4 groups (64 bits) for network identification
+            String[] parts = rawIp.split(":");
+            if (parts.length >= 4) {
+                // Take first 4 groups: xxxx:xxxx:xxxx:xxxx::/64
+                String networkPrefix = parts[0] + ":" + parts[1] + ":" + parts[2] + ":" + parts[3] + "::/64";
+                logger.debug("[UserController] Normalized IPv6 {} to network prefix {}", rawIp, networkPrefix);
+                return networkPrefix;
+            }
+        }
+        
+        // IPv4 or malformed - return as-is
+        return rawIp;
+    }
+    
+    /**
+     * Check if the current device should be prompted for passkey re-authentication
+     * Simple logic: Only prompt if this exact device has completed auth-finalize before
      * GET /user/should-prompt-reauth
      */
     @GetMapping("/should-prompt-reauth")
     public ResponseEntity<?> shouldPromptForReauth(HttpServletRequest request) {
         try {
-            String currentIp = getClientIpAddress(request);
-            logger.info("[UserController] Checking if IP {} should be prompted for passkey re-auth", currentIp);
+            String deviceId = request.getHeader("X-Device-ID");
             
-            // Find users from this IP who have completed auth-finalize
-            List<User> usersFromThisIp = userRepository.findByRegistrationIpAddressAndAuthFinalizeCompleted(currentIp, true);
-            
-            boolean shouldPrompt = !usersFromThisIp.isEmpty();
-            
-            if (shouldPrompt) {
-                logger.info("[UserController] Found {} users from IP {} who completed auth-finalize, should prompt for passkey", 
-                           usersFromThisIp.size(), currentIp);
-                return ResponseEntity.ok(Map.of(
-                    "shouldPromptReauth", true,
-                    "message", "Device has previous users who completed registration"
-                ));
+            if (deviceId != null && !deviceId.isEmpty()) {
+                logger.info("[UserController] Checking device ID {} for passkey re-auth", deviceId);
+                
+                // Simple check: Has THIS specific device completed auth-finalize before?
+                List<User> usersFromThisDevice = userRepository.findByDeviceIdAndAuthFinalizeCompleted(deviceId, true);
+                
+                if (!usersFromThisDevice.isEmpty()) {
+                    logger.info("[UserController] Device ID {} has {} completed users - prompting for passkey", 
+                               deviceId, usersFromThisDevice.size());
+                    return ResponseEntity.ok(Map.of(
+                        "shouldPromptReauth", true,
+                        "message", "This device has completed registration before",
+                        "trackingMethod", "device-id"
+                    ));
+                } else {
+                    logger.info("[UserController] Device ID {} is new - proceeding with fresh onboarding", deviceId);
+                    return ResponseEntity.ok(Map.of(
+                        "shouldPromptReauth", false,
+                        "message", "New device - proceed with registration",
+                        "trackingMethod", "device-id"
+                    ));
+                }
             } else {
-                logger.info("[UserController] No users from IP {} have completed auth-finalize, skip passkey prompt", currentIp);
+                // No device ID provided - treat as new user
+                logger.info("[UserController] No device ID provided - treating as new user");
                 return ResponseEntity.ok(Map.of(
                     "shouldPromptReauth", false,
-                    "message", "New device or no completed registrations"
+                    "message", "No device tracking available - proceed with registration",
+                    "trackingMethod", "none"
                 ));
             }
             
         } catch (Exception e) {
             logger.error("[UserController] Error checking reauth prompt status: {}", e.getMessage(), e);
-            // Default to false on error - don't block new users
             return ResponseEntity.ok(Map.of(
                 "shouldPromptReauth", false,
-                "message", "Error occurred, defaulting to no prompt"
+                "message", "Error occurred, defaulting to fresh registration"
             ));
         }
     }

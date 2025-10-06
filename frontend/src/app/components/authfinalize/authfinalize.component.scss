@@ -110,6 +110,39 @@ ion-progress-bar {
     font-size: 15px;
     --color: var(--ion-color-medium);
   }
+
+  .divider-section {
+    display: flex;
+    align-items: center;
+    margin: 24px 0 20px 0;
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background-color: #e5e5ea;
+    }
+
+    .divider-text {
+      margin: 0 16px;
+      font-size: 14px;
+      color: var(--ion-color-medium);
+      font-weight: 500;
+    }
+  }
+
+  .existing-account-button {
+    --border-radius: 12px;
+    font-weight: 500;
+    height: 48px;
+    text-transform: none;
+    font-size: 15px;
+    --color: var(--ion-color-medium);
+    --border-color: #d1d1d6;
+    
+    ion-icon {
+      margin-right: 8px;
+    }
+  }
 }
 
 .error-message-global, .success-message-global {

@@ -19,9 +19,20 @@
       </div>
       <div *ngIf="errorMessage" class="error-message-global">
         <ion-text color="danger">{{ errorMessage }}</ion-text>
-        <div style="margin-top: 16px;">
-          <ion-button [routerLink]="['/survey-initial']" color="primary" size="default">
-            Complete Investment Survey
+        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <!-- First try to reload data -->
+          <ion-button color="secondary" size="default" (click)="debugMissingParams()">
+            Try Loading Saved Data
+          </ion-button>
+          
+          <!-- Go back to plan results -->
+          <ion-button [routerLink]="['/fi-plan-results']" color="primary" size="default">
+            Back to Plan Selection
+          </ion-button>
+          
+          <!-- Last resort - restart survey -->
+          <ion-button [routerLink]="['/survey-initial']" fill="outline" color="primary" size="default">
+            Restart Investment Survey
           </ion-button>
         </div>
       </div>
@@ -82,6 +93,24 @@
         type="button"  
         (click)="bypassAuthID()">
         <span>I'm at work (no face or touch ID)</span>
+      </ion-button>
+
+      <!-- Manual Re-auth Option -->
+      <div class="divider-section">
+        <div class="divider-line"></div>
+        <span class="divider-text">or</span>
+        <div class="divider-line"></div>
+      </div>
+
+      <ion-button 
+        expand="block" 
+        fill="outline"
+        color="medium"
+        class="existing-account-button" 
+        type="button"  
+        (click)="tryExistingAccount()">
+        <ion-icon name="person-circle-outline" slot="start"></ion-icon>
+        <span>Already have an account? Sign in with passkey</span>
       </ion-button>
     </div>
 

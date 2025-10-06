@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, catchError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
+import { DeviceIdService } from './device-id.service';
 
 const BACKEND_API_URL = environment.backendApiUrl;
 
@@ -44,7 +45,7 @@ export class AuthService {
 
   private reAuthInProgress = false;
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private deviceIdService: DeviceIdService) {
     // Check if user is already logged in on app start
     this.checkExistingSession();
   }
@@ -55,6 +56,11 @@ export class AuthService {
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
+    
+    // Add device ID to all requests for better device tracking
+    const deviceId = this.deviceIdService.getDeviceId();
+    headers = headers.set('X-Device-ID', deviceId);
+    
     if (BACKEND_API_URL.includes("ngrok")) {
       headers = headers.set('ngrok-skip-browser-warning', 'true');
     }
@@ -449,7 +455,8 @@ export class AuthService {
       console.log('[AuthService] Starting passkey re-authentication');
       
       // 1. Start authentication
-      const startResponse = await this.http.post<{requestOptions: string, sessionId: string}>(`${BACKEND_API_URL}/passkey/authenticate/start`, {}).toPromise();
+      const startResponse = await this.http.post<{requestOptions: string, sessionId: string}>(`${BACKEND_API_URL}/passkey/authenticate/start`, {}, 
+        { headers: this.getAuthHeaders() }).toPromise();
       
       if (!startResponse) {
         throw new Error('Failed to start authentication');
@@ -485,7 +492,7 @@ export class AuthService {
       const authResponse = await this.http.post<any>(`${BACKEND_API_URL}/passkey/authenticate/finish`, {
         credential: credentialJson,
         sessionId: startResponse.sessionId
-      }).toPromise();
+      }, { headers: this.getAuthHeaders() }).toPromise();
       
       if (authResponse?.success) {
         // User re-authenticated! Update auth state

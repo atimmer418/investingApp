@@ -202,7 +202,7 @@ public class WebAuthnService {
      * Finish authentication flow - discovers user from passkey response
      */
     @Transactional
-    public AuthenticationFinishResponse finishAuthenticationFlow(JsonNode credentialResponse, AssertionRequest originalRequestOptions) {
+    public AuthenticationFinishResponse finishAuthenticationFlow(JsonNode credentialResponse, AssertionRequest originalRequestOptions, jakarta.servlet.http.HttpServletRequest httpRequest) {
         logger.info("Processing passkey authentication finish");
         
         try {
@@ -241,6 +241,24 @@ public class WebAuthnService {
                 // Generate JWT token
                 String jwt = jwtUtils.generateJwtToken(authentication);
                 logger.info("JWT generated for authenticated user: {}", user.getEmail());
+                
+                // Update device ID if provided (for manual re-auth scenarios)
+                String deviceId = httpRequest.getHeader("X-Device-ID");
+                if (deviceId != null && !deviceId.isEmpty()) {
+                    String currentDeviceId = user.getDeviceId();
+                    if (!deviceId.equals(currentDeviceId)) {
+                        user.setDeviceId(deviceId);
+                        userRepository.save(user);
+                        logger.info("Updated device ID for user {} from {} to {} (manual re-auth)", 
+                                   user.getEmail(), 
+                                   currentDeviceId != null ? currentDeviceId.substring(0, Math.min(8, currentDeviceId.length())) + "..." : "null",
+                                   deviceId.substring(0, Math.min(8, deviceId.length())) + "...");
+                    } else {
+                        logger.debug("Device ID unchanged for user {} during re-auth", user.getEmail());
+                    }
+                } else {
+                    logger.debug("No device ID header provided during authentication for user {}", user.getEmail());
+                }
                 
                 return new AuthenticationFinishResponse(
                     true,

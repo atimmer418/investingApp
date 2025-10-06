@@ -60,6 +60,9 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // Make component accessible from browser console for debugging
+    (window as any)['authFinalizeComponent'] = this;
+    
     this.routeSub = this.route.queryParamMap.subscribe(params => {
       const pParam = params.get('p');
       const rIParam = params.get('rI');
@@ -83,55 +86,88 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
         this.saveDataToLocalStorage();
       }
 
-      if (this.planId && this.timeToFI && this.targetPortfolio && this.retirementIncome && this.monthlyInvestment) {
-        console.log('Received all required parameters:', {
-          planId: this.planId,
-          timeToFI: this.timeToFI,
-          targetPortfolio: this.targetPortfolio,
-          retirementIncome: this.retirementIncome,
-          monthlyInvestment: this.monthlyInvestment
-        });
-
-        this.hasRequiredParams = true;
-      } else {
-        console.warn('Some required parameters are missing.');
-        this.errorMessage = 'Some required parameters are missing. Please restart from the time to FI page.';
-        
-        this.hasRequiredParams = false;
-      }
+      // Validate after loading from both query params and localStorage
+      this.validateRequiredParams();
     });
+  }
+
+  private validateRequiredParams() {
+    if (this.planId && this.timeToFI && this.targetPortfolio && this.retirementIncome && this.monthlyInvestment) {
+      console.log('Auth-finalize: All required parameters available:', {
+        planId: this.planId,
+        timeToFI: this.timeToFI,
+        targetPortfolio: this.targetPortfolio,
+        retirementIncome: this.retirementIncome,
+        monthlyInvestment: this.monthlyInvestment
+      });
+
+      this.hasRequiredParams = true;
+      this.errorMessage = null; // Clear any previous error
+    } else {
+      console.warn('Auth-finalize: Some required parameters are missing:', {
+        planId: this.planId,
+        timeToFI: this.timeToFI,
+        targetPortfolio: this.targetPortfolio,
+        retirementIncome: this.retirementIncome,
+        monthlyInvestment: this.monthlyInvestment
+      });
+      this.errorMessage = 'Some required parameters are missing. Please restart from the time to FI page.';
+      this.hasRequiredParams = false;
+    }
   }
   
   private loadSavedData() {
-    // Try to get from localStorage
+    // Try to get from localStorage - check multiple sources for each piece of data
     const savedPlan = localStorage.getItem('fiPlanSelectedStrategy');
     const savedTimeToFI = localStorage.getItem('fiPlanTimeToFI');
     const savedTargetPortfolio = localStorage.getItem('fiPlanTargetPortfolio');
     const savedRetirement = localStorage.getItem('surveyRetirementIncome');
     const savedMonthly = localStorage.getItem('surveyMonthlyInvestment');
     
-    if (!this.planId && savedPlan) {
-      this.planId = savedPlan;
-    }
-    if (!this.timeToFI && savedTimeToFI) {
-      this.timeToFI = savedTimeToFI;
-    }
-    if (!this.targetPortfolio && savedTargetPortfolio) {
-      this.targetPortfolio = parseFloat(savedTargetPortfolio);
-    }
-    if (!this.retirementIncome && savedRetirement) {
-      this.retirementIncome = parseInt(savedRetirement, 10);
-    }
-    if (!this.monthlyInvestment && savedMonthly) {
-      this.monthlyInvestment = parseInt(savedMonthly, 10);
+    // Also try to load from the auth-finalize specific storage
+    const authFinalizeData = localStorage.getItem('authFinalizeData');
+    let savedAuthData = null;
+    if (authFinalizeData) {
+      try {
+        savedAuthData = JSON.parse(authFinalizeData);
+      } catch (e) {
+        console.warn('Failed to parse authFinalizeData from localStorage:', e);
+      }
     }
     
-    console.log('Auth-finalize loaded saved data:', {
+    // Load each parameter with fallback priority: current -> localStorage -> authFinalizeData
+    if (!this.planId) {
+      this.planId = savedPlan || savedAuthData?.planId || null;
+    }
+    if (!this.timeToFI) {
+      this.timeToFI = savedTimeToFI || savedAuthData?.timeToFI || null;
+    }
+    if (!this.targetPortfolio) {
+      this.targetPortfolio = savedTargetPortfolio ? parseFloat(savedTargetPortfolio) : 
+                            (savedAuthData?.targetPortfolio || null);
+    }
+    if (!this.retirementIncome) {
+      this.retirementIncome = savedRetirement ? parseInt(savedRetirement, 10) : 
+                             (savedAuthData?.retirementIncome || null);
+    }
+    if (!this.monthlyInvestment) {
+      this.monthlyInvestment = savedMonthly ? parseInt(savedMonthly, 10) : 
+                              (savedAuthData?.monthlyInvestment || null);
+    }
+    
+    console.log('Auth-finalize loaded saved data from localStorage:', {
       planId: this.planId,
       timeToFI: this.timeToFI,
       targetPortfolio: this.targetPortfolio,
       retirementIncome: this.retirementIncome,
-      monthlyInvestment: this.monthlyInvestment
+      monthlyInvestment: this.monthlyInvestment,
+      sources: {
+        plan: savedPlan ? 'fiPlanSelectedStrategy' : (savedAuthData?.planId ? 'authFinalizeData' : 'none'),
+        timeToFI: savedTimeToFI ? 'fiPlanTimeToFI' : (savedAuthData?.timeToFI ? 'authFinalizeData' : 'none'),
+        targetPortfolio: savedTargetPortfolio ? 'fiPlanTargetPortfolio' : (savedAuthData?.targetPortfolio ? 'authFinalizeData' : 'none'),
+        retirementIncome: savedRetirement ? 'surveyRetirementIncome' : (savedAuthData?.retirementIncome ? 'authFinalizeData' : 'none'),
+        monthlyInvestment: savedMonthly ? 'surveyMonthlyInvestment' : (savedAuthData?.monthlyInvestment ? 'authFinalizeData' : 'none')
+      }
     });
   }
   
@@ -312,7 +348,112 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Manual option for users to try existing account authentication
+   * This is for edge cases like:
+   * - User reinstalled app (lost device ID)
+   * - User on same network as existing user (apartment scenario)
+   * - User wants to continue existing account instead of creating new one
+   */
+  async tryExistingAccount() {
+    this.errorMessage = null;
+    this.successMessage = null;
+    this.isLoading = true;
+
+    try {
+      console.log('[AuthFinalize] User requesting manual passkey authentication');
+      
+      // Attempt passkey re-authentication
+      const success = await this.authService.promptForPasskeyReauth();
+      
+      if (success) {
+        this.successMessage = 'Welcome back! Redirecting to your progress...';
+        console.log('[AuthFinalize] Manual re-authentication successful');
+        
+        // Let the AppComponent handle navigation based on user progress
+        // No need to navigate manually here
+      } else {
+        this.errorMessage = 'Authentication failed. You can continue creating a new account or try again.';
+        console.log('[AuthFinalize] Manual re-authentication failed');
+      }
+    } catch (error) {
+      console.error('[AuthFinalize] Error during manual re-authentication:', error);
+      this.errorMessage = 'Authentication error. You can continue creating a new account or try again.';
+    }
+    
+    this.isLoading = false;
+  }
+
   ngOnDestroy() {
     if (this.routeSub) this.routeSub.unsubscribe();
+  }
+
+  /**
+   * Attempt to reload missing parameters from localStorage
+   * This is called when user clicks "Try Loading Saved Data" button
+   */
+  debugMissingParams() {
+    console.log('=== AUTH FINALIZE DEBUG INFO ===');
+    console.log('Current URL:', window.location.href);
+    console.log('Query Params:', this.route.snapshot.queryParams);
+    console.log('Current Component State:', {
+      planId: this.planId,
+      timeToFI: this.timeToFI,
+      targetPortfolio: this.targetPortfolio,
+      retirementIncome: this.retirementIncome,
+      monthlyInvestment: this.monthlyInvestment,
+      hasRequiredParams: this.hasRequiredParams,
+      errorMessage: this.errorMessage
+    });
+    
+    console.log('LocalStorage Data:');
+    console.log('- fiPlanSelectedStrategy:', localStorage.getItem('fiPlanSelectedStrategy'));
+    console.log('- fiPlanTimeToFI:', localStorage.getItem('fiPlanTimeToFI'));
+    console.log('- fiPlanTargetPortfolio:', localStorage.getItem('fiPlanTargetPortfolio'));
+    console.log('- surveyRetirementIncome:', localStorage.getItem('surveyRetirementIncome'));
+    console.log('- surveyMonthlyInvestment:', localStorage.getItem('surveyMonthlyInvestment'));
+    console.log('- authFinalizeData:', localStorage.getItem('authFinalizeData'));
+    
+    console.log('=== END DEBUG INFO ===');
+    
+    // Try to reload data and re-validate
+    console.log('Attempting to reload data...');
+    
+    // Clear current error message while we try to load
+    this.errorMessage = null;
+    
+    // Store values before reload attempt
+    const beforeState = {
+      planId: this.planId,
+      timeToFI: this.timeToFI,
+      targetPortfolio: this.targetPortfolio,
+      retirementIncome: this.retirementIncome,
+      monthlyInvestment: this.monthlyInvestment
+    };
+    
+    this.loadSavedData();
+    this.validateRequiredParams();
+    
+    // Check if anything was loaded
+    const afterState = {
+      planId: this.planId,
+      timeToFI: this.timeToFI,
+      targetPortfolio: this.targetPortfolio,
+      retirementIncome: this.retirementIncome,
+      monthlyInvestment: this.monthlyInvestment
+    };
+    
+    const dataWasLoaded = JSON.stringify(beforeState) !== JSON.stringify(afterState);
+    
+    if (this.hasRequiredParams) {
+      this.successMessage = 'Success! Found your saved plan data.';
+      setTimeout(() => {
+        this.successMessage = null;
+      }, 3000);
+    } else if (dataWasLoaded) {
+      this.errorMessage = 'Found some saved data, but still missing required information. Please restart from plan selection.';
+    } else {
+      this.errorMessage = 'No saved plan data found. Please complete the investment survey first.';
+    }
   }
 }

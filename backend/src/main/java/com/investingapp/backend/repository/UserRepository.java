@@ -31,6 +31,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u JOIN u.userProgress up WHERE u.registrationIpAddress = :ipAddress AND up.authFinalizeCompleted = :completed")
     List<User> findByRegistrationIpAddressAndAuthFinalizeCompleted(@Param("ipAddress") String registrationIpAddress, @Param("completed") boolean authFinalizeCompleted);
 
+    // Find users by device ID who have completed auth-finalize (more reliable than IP for mobile)
+    @Query("SELECT u FROM User u JOIN u.userProgress up WHERE u.deviceId = :deviceId AND up.authFinalizeCompleted = :completed")
+    List<User> findByDeviceIdAndAuthFinalizeCompleted(@Param("deviceId") String deviceId, @Param("completed") boolean authFinalizeCompleted);
+
     // You can add more custom query methods here as needed following Spring Data JPA conventions
     // e.g., List<User> findByLastName(String lastName);
 }

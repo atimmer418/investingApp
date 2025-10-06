@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { RegistrationStartRequest } from '../models/passkey/registration-start-request.model';
 import { RegistrationStartResponse } from '../models/passkey/registration-start-response.model';
@@ -7,6 +7,7 @@ import { RegistrationFinishRequest } from '../models/passkey/registration-finish
 import { RegistrationFinishResponse } from '../models/passkey/registration-finish-response.model';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
+import { DeviceIdService } from './device-id.service';
 
 // ngrok
 const BACKEND_API_URL = environment.backendApiUrl;
@@ -16,15 +17,36 @@ const BACKEND_API_URL = environment.backendApiUrl;
 })
 export class PasskeyService {
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private deviceIdService: DeviceIdService) { }
+
+  private getHeaders(): HttpHeaders {
+    let headers = new HttpHeaders();
+    
+    // Add device ID to all passkey requests for proper device tracking
+    const deviceId = this.deviceIdService.getDeviceId();
+    headers = headers.set('X-Device-ID', deviceId);
+    
+    // Add JWT token if available
+    const token = JwtTokenUtils.getValidJwtToken();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    if (BACKEND_API_URL.includes("ngrok")) {
+      headers = headers.set('ngrok-skip-browser-warning', 'true');
+    }
+    
+    return headers;
+  }
 
   startRegistration(data: RegistrationStartRequest): Observable<RegistrationStartResponse> {
-    return this.http.post<RegistrationStartResponse>(`${BACKEND_API_URL}/passkey/register/start`, data);
+    return this.http.post<RegistrationStartResponse>(`${BACKEND_API_URL}/passkey/register/start`, data, 
+      { headers: this.getHeaders() });
   }
 
   finishRegistration(data: RegistrationFinishRequest): Observable<RegistrationFinishResponse> {
     const finishUrl = `${BACKEND_API_URL}/passkey/register/finish`; // Ensure this uses ngrok URL for backend
-    return this.http.post<RegistrationFinishResponse>(finishUrl, data)
+    return this.http.post<RegistrationFinishResponse>(finishUrl, data, { headers: this.getHeaders() })
       .pipe(
         tap(response => {
           if (response.success && response.jwtToken) {
@@ -41,7 +63,8 @@ export class PasskeyService {
    * Uses discoverable credentials to identify user from their passkey
    */
   startAuthentication(): Observable<{requestOptions: string, sessionId: string}> {
-    return this.http.post<{requestOptions: string, sessionId: string}>(`${BACKEND_API_URL}/passkey/authenticate/start`, {});
+    return this.http.post<{requestOptions: string, sessionId: string}>(`${BACKEND_API_URL}/passkey/authenticate/start`, {}, 
+      { headers: this.getHeaders() });
   }
 
   /**
@@ -52,7 +75,7 @@ export class PasskeyService {
     return this.http.post<any>(finishUrl, {
       credential: credentialResponse,
       sessionId: sessionId
-    }).pipe(
+    }, { headers: this.getHeaders() }).pipe(
       tap(response => {
         if (response.success && response.jwtToken) {
           // Store JWT with expiration info and user details

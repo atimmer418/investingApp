@@ -91,6 +91,10 @@ public class User {
     // IP address tracking for security purposes
     @Column(length = 45) // IPv6 addresses can be up to 45 characters
     private String registrationIpAddress;
+    
+    // Device ID tracking for better user experience (more reliable than IP)
+    @Column(length = 64) // Device ID hash, typically 32-64 characters
+    private String deviceId;
 
     private String planId;
     private String timeToFI;

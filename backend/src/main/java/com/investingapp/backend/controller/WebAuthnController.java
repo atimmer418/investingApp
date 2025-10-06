@@ -216,7 +216,7 @@ public class WebAuthnController {
      * Finish passkey authentication - discovers user from passkey response
      */
     @PostMapping("/authenticate/finish")
-    public ResponseEntity<?> finishAuthentication(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<?> finishAuthentication(@RequestBody Map<String, Object> request, HttpServletRequest httpRequest) {
         String sessionId = (String) request.get("sessionId");
         Object credentialObj = request.get("credential");
         
@@ -249,7 +249,7 @@ public class WebAuthnController {
             com.yubico.webauthn.AssertionRequest assertionRequest =
                 com.investingapp.backend.util.WebAuthnConversionUtil.toAssertionRequest(originalOptions);
             WebAuthnService.AuthenticationFinishResponse serviceResponse = 
-                webAuthnService.finishAuthenticationFlow(credentialResponse, assertionRequest);
+                webAuthnService.finishAuthenticationFlow(credentialResponse, assertionRequest, httpRequest);
             
             if (serviceResponse.isSuccess()) {
                 logger.info("Passkey authentication successful for user: {}", serviceResponse.getEmail());

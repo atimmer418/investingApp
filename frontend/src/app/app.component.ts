@@ -7,6 +7,7 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { register } from 'swiper/element/bundle';
 import { AuthService, UserProgress } from './services/auth.service';
 import { JwtTokenUtils } from './utils/jwt-token.utils';
+import { combineLatest, debounceTime, distinctUntilChanged, filter } from 'rxjs';
 
 register();
 
@@ -69,37 +70,8 @@ export class AppComponent implements OnInit {
     // this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
     
     // 🚫 COMMENT OUT AUTH LOGIC WHEN TESTING SPECIFIC PAGES
-    // Subscribe to authentication state changes
-    this.authService.isLoggedIn$.subscribe(isLoggedIn => {
-      if (isLoggedIn) {
-        // User is logged in, wait for progress data from backend
-        this.authService.userProgress$.subscribe(progress => {
-          if (progress) {
-            this.navigateBasedOnProgress(progress);
-          }
-        });
-      } else {
-        // User is not logged in - check for localStorage progress ONLY
-        // AuthService.checkExistingSession() handles passkey re-auth logic
-        // Don't navigate here if re-auth is in progress
-        if (!this.authService.isReAuthInProgress()) {
-          const unifiedProgress = this.authService.getUnifiedProgress();
-          const hasAnyProgress = unifiedProgress.getStartedCompleted || 
-                               unifiedProgress.surveyInitialCompleted || 
-                               unifiedProgress.fiPlanResultsCompleted;
-          
-          if (hasAnyProgress) {
-            console.log('[AppComponent] User not authenticated but has localStorage progress, continuing from where they left off');
-            this.navigateBasedOnProgress(unifiedProgress);
-          } else {
-            console.log('[AppComponent] User not authenticated and no progress, redirecting to get-started');
-            this.router.navigate(['/get-started'], { replaceUrl: true });
-          }
-        } else {
-          console.log('[AppComponent] Re-authentication in progress, waiting for completion before navigation');
-        }
-      }
-    });
+    // Use a single combined subscription to avoid race conditions between auth state and progress
+    this.setupUnifiedNavigationLogic();
   }
 
   /**
@@ -145,8 +117,78 @@ export class AppComponent implements OnInit {
     });
   }
 
+  /**
+   * Set up unified navigation logic that coordinates authentication state and user progress
+   * This prevents race conditions between isLoggedIn$ and userProgress$ observables
+   */
+  private setupUnifiedNavigationLogic(): void {
+    console.log('[AppComponent] Setting up unified navigation logic with RxJS combineLatest');
+    
+    // Combine authentication state and user progress into a single stream
+    // This ensures we only navigate when both pieces of data are consistent
+    combineLatest([
+      this.authService.isLoggedIn$,
+      this.authService.userProgress$
+    ]).pipe(
+      // Debounce to prevent rapid successive calls
+      debounceTime(300),
+      // Only process when the combination actually changes
+      distinctUntilChanged((prev, curr) => {
+        return prev[0] === curr[0] && 
+               JSON.stringify(prev[1]) === JSON.stringify(curr[1]);
+      }),
+      // Filter out cases where we have partial data
+      filter(([isLoggedIn, progress]) => {
+        // Always process when not logged in
+        if (!isLoggedIn) return true;
+        // When logged in, only process if we have progress data
+        return isLoggedIn && progress !== null;
+      })
+    ).subscribe(([isLoggedIn, progress]) => {
+      console.log(`[AppComponent] 🔄 Unified navigation trigger: isLoggedIn=${isLoggedIn}, hasProgress=${!!progress}`);
+      
+      if (isLoggedIn && progress) {
+        // User is authenticated and we have backend progress data
+        console.log('[AppComponent] User authenticated with progress:', progress);
+        this.navigateBasedOnProgress(progress);
+        
+      } else if (!isLoggedIn) {
+        // User is not logged in - use localStorage progress if available
+        if (!this.authService.isReAuthInProgress()) {
+          const unifiedProgress = this.authService.getUnifiedProgress();
+          const hasAnyProgress = unifiedProgress.getStartedCompleted || 
+                               unifiedProgress.surveyInitialCompleted || 
+                               unifiedProgress.fiPlanResultsCompleted;
+          
+          if (hasAnyProgress) {
+            console.log('[AppComponent] User not authenticated but has localStorage progress:', unifiedProgress);
+            this.navigateBasedOnProgress(unifiedProgress);
+          } else {
+            console.log('[AppComponent] User not authenticated and no progress, redirecting to get-started');
+            this.router.navigate(['/get-started'], { replaceUrl: true });
+          }
+        } else {
+          console.log('[AppComponent] Re-authentication in progress, waiting for completion');
+        }
+      }
+    });
+
+    // Separate handler for when user first logs in - trigger fresh data load
+    this.authService.isLoggedIn$.pipe(
+      distinctUntilChanged(),
+      filter(isLoggedIn => isLoggedIn === true) // Only when transitioning to logged in
+    ).subscribe(() => {
+      console.log('[AppComponent] User just logged in, triggering fresh progress load in 1 second...');
+      setTimeout(() => {
+        console.log('[AppComponent] Loading fresh progress after login');
+        this.authService.loadUserProgress();
+      }, 1000); // Wait for backend sync to complete
+    });
+  }
+
   navigateBasedOnProgress(progress: UserProgress): void {
-    console.log('🚀 [AppComponent] navigateBasedOnProgress called with actual user progress:', progress);
+    const currentTimeStamp = new Date().toISOString();
+    console.log(`🚀 [AppComponent] navigateBasedOnProgress called at ${currentTimeStamp} with progress:`, progress);
     
     // Use the ACTUAL progress data from the backend to determine the user's current step
     const getStartedCompleted = progress.getStartedCompleted;
@@ -192,6 +234,8 @@ export class AppComponent implements OnInit {
     }
 
     const currentBaseUrl = this.router.url.split('?')[0].split('#')[0];
+    
+    // Navigate if we're not already on the target route
     if (targetRoute && currentBaseUrl !== targetRoute) {
       console.log(`[AppComponent] DECISION: ${decisionReason} Navigating to ${targetRoute}.`);
       this.router.navigateByUrl(targetRoute, { replaceUrl: true });
