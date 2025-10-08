@@ -1,0 +1,128 @@
+package com.investingapp.backend.model;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "investment_executions")
+public class InvestmentExecution {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+    
+    @Column(name = "scheduled_date", nullable = false)
+    private LocalDateTime scheduledDate;
+    
+    @Column(name = "execution_date")
+    private LocalDateTime executionDate;
+    
+    @Column(name = "amount", precision = 10, scale = 2, nullable = false)
+    private BigDecimal amount;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ExecutionStatus status;
+    
+    @Column(name = "alpaca_transfer_id")
+    private String alpacaTransferId;
+    
+    @Column(name = "alpaca_account_id")
+    private String alpacaAccountId;
+    
+    @Column(name = "error_message", columnDefinition = "TEXT")
+    private String errorMessage;
+    
+    @Column(name = "funding_completed_at")
+    private LocalDateTime fundingCompletedAt;
+    
+    @Column(name = "trading_completed_at")
+    private LocalDateTime tradingCompletedAt;
+    
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+    
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+    
+    public enum ExecutionStatus {
+        SCHEDULED,      // Investment is scheduled for execution
+        FUNDING_INITIATED, // ACH transfer has been initiated
+        FUNDING_COMPLETED, // ACH transfer completed successfully
+        FUNDING_FAILED,    // ACH transfer failed
+        TRADING_INITIATED, // Stock purchase orders have been placed
+        TRADING_COMPLETED, // All stock purchases completed successfully
+        TRADING_FAILED,    // Stock purchase failed
+        COMPLETED,         // Everything completed successfully
+        FAILED             // Final failure state
+    }
+    
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        if (this.status == null) {
+            this.status = ExecutionStatus.SCHEDULED;
+        }
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    // Constructors
+    public InvestmentExecution() {}
+    
+    public InvestmentExecution(User user, LocalDateTime scheduledDate, BigDecimal amount) {
+        this.user = user;
+        this.scheduledDate = scheduledDate;
+        this.amount = amount;
+        this.status = ExecutionStatus.SCHEDULED;
+    }
+    
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    
+    public LocalDateTime getScheduledDate() { return scheduledDate; }
+    public void setScheduledDate(LocalDateTime scheduledDate) { this.scheduledDate = scheduledDate; }
+    
+    public LocalDateTime getExecutionDate() { return executionDate; }
+    public void setExecutionDate(LocalDateTime executionDate) { this.executionDate = executionDate; }
+    
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
+    
+    public ExecutionStatus getStatus() { return status; }
+    public void setStatus(ExecutionStatus status) { this.status = status; }
+    
+    public String getAlpacaTransferId() { return alpacaTransferId; }
+    public void setAlpacaTransferId(String alpacaTransferId) { this.alpacaTransferId = alpacaTransferId; }
+    
+    public String getAlpacaAccountId() { return alpacaAccountId; }
+    public void setAlpacaAccountId(String alpacaAccountId) { this.alpacaAccountId = alpacaAccountId; }
+    
+    public String getErrorMessage() { return errorMessage; }
+    public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
+    
+    public LocalDateTime getFundingCompletedAt() { return fundingCompletedAt; }
+    public void setFundingCompletedAt(LocalDateTime fundingCompletedAt) { this.fundingCompletedAt = fundingCompletedAt; }
+    
+    public LocalDateTime getTradingCompletedAt() { return tradingCompletedAt; }
+    public void setTradingCompletedAt(LocalDateTime tradingCompletedAt) { this.tradingCompletedAt = tradingCompletedAt; }
+    
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+}

@@ -101,6 +101,25 @@ public class User {
     private Double targetPortfolio;
     private Double retirementIncome;
     private Double monthlyInvestment;
+    
+    // Investment scheduling fields
+    @Column(length = 20)
+    private String payFrequency; // "weekly", "biweekly", "monthly", "semimonthly"
+    
+    @Column
+    private java.time.LocalDate nextInvestmentDate; // When the next investment should be executed
+    
+    @Column(length = 50)
+    private String selectedStrategy; // "optimal", "balanced", "adaptive", "safety"
+    
+    // Helper method to get Plaid relationship ID (using existing ACH relationship field)
+    public String getPlaidRelationshipId() {
+        return this.alpacaAchRelationshipId;
+    }
+    
+    public void setPlaidRelationshipId(String relationshipId) {
+        this.alpacaAchRelationshipId = relationshipId;
+    }
 
     @CreationTimestamp // Automatically set by Hibernate on creation
     private LocalDateTime createDate;
