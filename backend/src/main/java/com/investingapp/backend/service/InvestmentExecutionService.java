@@ -416,10 +416,17 @@ public class InvestmentExecutionService {
      * Schedule the next investment for a user
      */
     private void scheduleNextInvestment(User user) {
+        // Check if pay frequency is set
+        String payFrequency = user.getPayFrequency();
+        if (payFrequency == null || payFrequency.trim().isEmpty()) {
+            logger.warn("Cannot schedule next investment for user {} - pay frequency not set", user.getId());
+            return;
+        }
+        
         // Calculate next investment date based on pay frequency
         LocalDate nextDate = calculateNextInvestmentDate(
             LocalDate.now(), 
-            user.getPayFrequency()
+            payFrequency
         );
         
         // Update user's next investment date
@@ -433,6 +440,11 @@ public class InvestmentExecutionService {
      * Calculate next investment date based on pay frequency, skipping weekends and holidays
      */
     private LocalDate calculateNextInvestmentDate(LocalDate currentDate, String payFrequency) {
+        if (payFrequency == null || payFrequency.trim().isEmpty()) {
+            logger.warn("Pay frequency is null or empty, defaulting to monthly");
+            payFrequency = "monthly";
+        }
+        
         LocalDate nextDate;
         
         switch (payFrequency.toLowerCase()) {

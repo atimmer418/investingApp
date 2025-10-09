@@ -286,8 +286,8 @@ public class InvestmentController {
             dashboard.put("pendingCount", pendingCount);
             dashboard.put("failedCount", failedCount);
             dashboard.put("nextInvestmentDate", user.getNextInvestmentDate());
-            dashboard.put("monthlyInvestment", user.getMonthlyInvestment());
-            dashboard.put("payFrequency", user.getPayFrequency().toString());
+            dashboard.put("monthlyInvestment", user.getMonthlyInvestment() != null ? user.getMonthlyInvestment() : 0.0);
+            dashboard.put("payFrequency", user.getPayFrequency() != null ? user.getPayFrequency() : "Not set");
             dashboard.put("recentExecutions", recentExecutions);
 
             return ResponseEntity.ok(dashboard);

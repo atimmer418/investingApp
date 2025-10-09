@@ -3,6 +3,10 @@ package com.investingapp.backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -10,7 +14,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_progress")
-@Data
+@Getter
+@Setter
+@ToString(exclude = "user") // Exclude user to avoid circular reference
 public class UserProgress {
 
     @Id
@@ -122,5 +128,19 @@ public class UserProgress {
 
     public void setUser(User user) {
         this.user = user;
+    }
+    
+    // Custom equals and hashCode to avoid circular reference
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserProgress that = (UserProgress) o;
+        return id != null && id.equals(that.id);
+    }
+    
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

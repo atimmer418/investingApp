@@ -7,6 +7,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -18,8 +22,10 @@ import java.util.Set;   // Import Set
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = "email")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
+@ToString(exclude = "userProgress") // Exclude userProgress to avoid circular reference
 public class User {
 
     @Id
@@ -132,6 +138,11 @@ public class User {
         // Generate a user handle, e.g., from UUID or a transformation of the user ID after first save
         // For now, it can be set later or derived.
         
+        // Set default investment settings
+        this.monthlyInvestment = 0.0;
+        this.payFrequency = "monthly";
+        this.selectedStrategy = "balanced";
+        
         // Don't create UserProgress here - handle in service layer to avoid circular reference
     }
 
@@ -150,5 +161,19 @@ public class User {
         if (userProgress != null) {
             userProgress.setUser(this);
         }
+    }
+    
+    // Custom equals and hashCode to avoid circular reference
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return id != null && id.equals(user.id);
+    }
+    
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
