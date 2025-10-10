@@ -225,10 +225,22 @@ public class InvestmentSchedule {
      * Check if this schedule is ready for investment execution
      */
     public boolean isReadyForInvestment() {
-        return !isPaused && 
-               nextInvestmentDate != null && 
-               !nextInvestmentDate.isAfter(LocalDate.now()) &&
-               achRequestId != null; // ACH must be linked
+        LocalDate today = LocalDate.now();
+        
+        // Must not be paused and must have ACH linked
+        boolean basicRequirements = !isPaused && achRequestId != null;
+        
+        if (!basicRequirements) {
+            return false;
+        }
+        
+        // Check if either:
+        // 1. Start date is today (first-time investment)
+        // 2. Next investment date is today or past due (recurring investment)
+        boolean dateRequirement = (startDate != null && startDate.equals(today)) ||
+                                 (nextInvestmentDate != null && !nextInvestmentDate.isAfter(today));
+        
+        return dateRequirement;
     }
 
     /**

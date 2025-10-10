@@ -24,6 +24,12 @@ public class InvestmentExecutionService {
     private static final Logger logger = LoggerFactory.getLogger(InvestmentExecutionService.class);
     
     @Autowired
+    private InvestmentScheduleService investmentScheduleService;
+    
+    @Autowired
+    private InvestmentScheduleRepository investmentScheduleRepository;
+    
+    @Autowired
     private InvestmentExecutionRepository executionRepository;
     
     @Autowired
@@ -82,27 +88,91 @@ public class InvestmentExecutionService {
     public void processScheduledInvestments() {
         logger.info("Starting scheduled investment processing for {}", LocalDate.now());
         
-        LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-        List<InvestmentExecution> scheduledExecutions = executionRepository
-            .findScheduledExecutionsForDate(today, InvestmentExecution.ExecutionStatus.SCHEDULED);
+        // Get all investment schedules that are ready for execution
+        // This includes schedules where either:
+        // 1. nextInvestmentDate is today or past due (recurring investments)
+        // 2. startDate is today (first-time investments starting today)
+        List<InvestmentSchedule> readySchedules = investmentScheduleService.getSchedulesReadyForInvestment();
         
-        logger.info("Found {} scheduled executions for today", scheduledExecutions.size());
+        logger.info("Found {} investment schedules ready for execution", readySchedules.size());
         
-        for (InvestmentExecution execution : scheduledExecutions) {
+        LocalDate today = LocalDate.now();
+        
+        for (InvestmentSchedule schedule : readySchedules) {
             try {
-                processInvestmentExecution(execution);
-            } catch (Exception e) {
-                logger.error("Error processing investment execution {}", execution.getId(), e);
-                execution.setStatus(InvestmentExecution.ExecutionStatus.FAILED);
-                execution.setErrorMessage("Error during processing: " + e.getMessage());
-                executionRepository.save(execution);
+                User user = schedule.getUser();
                 
-                // Notify user of failure
-                notifyUserOfFailure(execution, "Processing Error", e.getMessage());
+                // Check if this schedule should be processed today
+                boolean shouldProcessToday = false;
+                String reason = "";
+                
+                if (schedule.getStartDate() != null && schedule.getStartDate().equals(today)) {
+                    shouldProcessToday = true;
+                    reason = "start date is today";
+                } else if (schedule.getNextInvestmentDate() != null && 
+                          !schedule.getNextInvestmentDate().isAfter(today)) {
+                    shouldProcessToday = true;
+                    reason = "next investment date is due";
+                }
+                
+                if (!shouldProcessToday) {
+                    logger.debug("Skipping schedule {} for user {} - not due today", 
+                               schedule.getId(), user.getEmail());
+                    continue;
+                }
+                
+                logger.info("Processing investment schedule {} for user {} - {}", 
+                           schedule.getId(), user.getEmail(), reason);
+                
+                // Create new investment execution
+                InvestmentExecution execution = createInvestmentExecution(schedule);
+                
+                // Process the execution
+                processInvestmentExecution(execution);
+                
+                // Update the schedule's next investment date (but not start date)
+                updateScheduleAfterExecution(schedule);
+                
+            } catch (Exception e) {
+                logger.error("Error processing investment schedule {} for user {}", 
+                           schedule.getId(), schedule.getUser().getEmail(), e);
+                
+                // Could add notification logic here for schedule processing failures
             }
         }
         
         logger.info("Completed scheduled investment processing");
+    }
+    
+    /**
+     * Create a new InvestmentExecution from an InvestmentSchedule
+     */
+    private InvestmentExecution createInvestmentExecution(InvestmentSchedule schedule) {
+        InvestmentExecution execution = new InvestmentExecution();
+        execution.setUser(schedule.getUser());
+        execution.setAmount(schedule.getInvestmentAmount());
+        execution.setScheduledDate(LocalDateTime.now()); // Use LocalDateTime
+        execution.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
+        // Note: InvestmentExecution doesn't have a direct link back to schedule
+        
+        return executionRepository.save(execution);
+    }
+    
+    /**
+     * Update schedule's next investment date after successful execution
+     */
+    private void updateScheduleAfterExecution(InvestmentSchedule schedule) {
+        LocalDate currentNextDate = schedule.getNextInvestmentDate();
+        LocalDate newNextDate = schedule.calculateNextInvestmentDate(LocalDate.now());
+        
+        schedule.setNextInvestmentDate(newNextDate);
+        // Note: We don't update startDate - it remains as the original start date
+        
+        // Save the updated schedule
+        investmentScheduleRepository.save(schedule);
+        
+        logger.info("Updated schedule {} next investment date from {} to {}", 
+                   schedule.getId(), currentNextDate, newNextDate);
     }
     
     /**
