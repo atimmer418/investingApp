@@ -43,7 +43,7 @@ public class AlpacaService {
      */
     public AlpacaTransferResponse initiateAchTransfer(String accountId, String relationshipId, BigDecimal amount) {
         try {
-            String url = alpacaBaseUrl + "/v1/accounts/" + accountId + "/transfers";
+            String url = alpacaBaseUrl + "/accounts/" + accountId + "/transfers";
             
             Map<String, Object> request = new HashMap<>();
             request.put("transfer_type", "ach");
@@ -91,7 +91,7 @@ public class AlpacaService {
             BigDecimal expectedAmount, LocalDateTime transferInitiatedTime) {
         try {
             // Check for cash deposit activities (CSD) which indicate completed transfers
-            String url = alpacaBaseUrl + "/v1/accounts/activities/CSD?account_id=" + accountId;
+            String url = alpacaBaseUrl + "/accounts/activities/CSD?account_id=" + accountId;
             
             HttpHeaders headers = createAuthHeaders();
             HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -226,7 +226,7 @@ public class AlpacaService {
      */
     public AlpacaOrderResponse placeBuyOrder(String accountId, String symbol, BigDecimal notionalAmount) {
         try {
-            String url = alpacaBaseUrl + "/v1/trading/accounts/" + accountId + "/orders";
+            String url = alpacaBaseUrl + "/trading/accounts/" + accountId + "/orders";
             
             Map<String, Object> request = new HashMap<>();
             request.put("symbol", symbol);
@@ -277,7 +277,7 @@ public class AlpacaService {
      */
     public AlpacaOrderResponse checkOrderStatus(String accountId, String orderId) {
         try {
-            String url = alpacaBaseUrl + "/v1/trading/accounts/" + accountId + "/orders/" + orderId;
+            String url = alpacaBaseUrl + "/trading/accounts/" + accountId + "/orders/" + orderId;
             
             HttpHeaders headers = createAuthHeaders();
             HttpEntity<Void> entity = new HttpEntity<>(headers);
