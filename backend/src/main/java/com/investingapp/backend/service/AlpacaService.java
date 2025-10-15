@@ -60,10 +60,24 @@ public class AlpacaService {
             
             if (response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.CREATED) {
                 JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+                
+                // Parse amount safely
+                BigDecimal parsedAmount = amount;
+                if (jsonResponse.has("amount") && !jsonResponse.get("amount").isNull()) {
+                    String amountStr = jsonResponse.get("amount").asText();
+                    if (!"null".equals(amountStr) && !amountStr.trim().isEmpty()) {
+                        try {
+                            parsedAmount = new BigDecimal(amountStr);
+                        } catch (NumberFormatException e) {
+                            logger.warn("Failed to parse amount from response: '{}', using original amount: {}", amountStr, amount);
+                        }
+                    }
+                }
+                
                 return new AlpacaTransferResponse(
                     jsonResponse.get("id").asText(),
                     jsonResponse.get("status").asText(),
-                    new BigDecimal(jsonResponse.get("amount").asText()),
+                    parsedAmount,
                     jsonResponse.get("created_at").asText(),
                     null
                 );
@@ -162,7 +176,18 @@ public class AlpacaService {
                                 
                                 // Parse the net_amount - always a string according to API docs
                                 String amountStr = activity.get("net_amount").asText();
-                                BigDecimal activityAmount = new BigDecimal(amountStr);
+                                if ("null".equals(amountStr) || amountStr.trim().isEmpty()) {
+                                    logger.warn("CSD activity has null or empty net_amount, skipping: {}", activity);
+                                    continue;
+                                }
+                                
+                                BigDecimal activityAmount;
+                                try {
+                                    activityAmount = new BigDecimal(amountStr);
+                                } catch (NumberFormatException e) {
+                                    logger.warn("Failed to parse net_amount '{}' as BigDecimal, skipping activity: {}", amountStr, activity);
+                                    continue;
+                                }
                                 
                                 // Check if this CSD activity matches our transfer:
                                 // 1. Occurred on or after our transfer was initiated (same day or later)
@@ -249,10 +274,12 @@ public class AlpacaService {
                     jsonResponse.get("id").asText(),
                     symbol,
                     jsonResponse.get("status").asText(),
-                    jsonResponse.has("qty") ? new BigDecimal(jsonResponse.get("qty").asText()) : null,
+                    (jsonResponse.has("qty") && !jsonResponse.get("qty").isNull() && !"null".equals(jsonResponse.get("qty").asText())) ? 
+                        new BigDecimal(jsonResponse.get("qty").asText()) : null,
                     notionalAmount,
-                    jsonResponse.has("filled_qty") ? new BigDecimal(jsonResponse.get("filled_qty").asText()) : BigDecimal.ZERO,
-                    jsonResponse.has("filled_avg_price") && !jsonResponse.get("filled_avg_price").isNull() ? 
+                    (jsonResponse.has("filled_qty") && !jsonResponse.get("filled_qty").isNull() && !"null".equals(jsonResponse.get("filled_qty").asText())) ? 
+                        new BigDecimal(jsonResponse.get("filled_qty").asText()) : BigDecimal.ZERO,
+                    (jsonResponse.has("filled_avg_price") && !jsonResponse.get("filled_avg_price").isNull() && !"null".equals(jsonResponse.get("filled_avg_price").asText())) ? 
                         new BigDecimal(jsonResponse.get("filled_avg_price").asText()) : null,
                     jsonResponse.get("submitted_at").asText(),
                     null
@@ -290,11 +317,13 @@ public class AlpacaService {
                     jsonResponse.get("id").asText(),
                     jsonResponse.get("symbol").asText(),
                     jsonResponse.get("status").asText(),
-                    jsonResponse.has("qty") ? new BigDecimal(jsonResponse.get("qty").asText()) : null,
-                    jsonResponse.has("notional") && !jsonResponse.get("notional").isNull() ? 
+                    (jsonResponse.has("qty") && !jsonResponse.get("qty").isNull() && !"null".equals(jsonResponse.get("qty").asText())) ? 
+                        new BigDecimal(jsonResponse.get("qty").asText()) : null,
+                    (jsonResponse.has("notional") && !jsonResponse.get("notional").isNull() && !"null".equals(jsonResponse.get("notional").asText())) ? 
                         new BigDecimal(jsonResponse.get("notional").asText()) : null,
-                    jsonResponse.has("filled_qty") ? new BigDecimal(jsonResponse.get("filled_qty").asText()) : BigDecimal.ZERO,
-                    jsonResponse.has("filled_avg_price") && !jsonResponse.get("filled_avg_price").isNull() ? 
+                    (jsonResponse.has("filled_qty") && !jsonResponse.get("filled_qty").isNull() && !"null".equals(jsonResponse.get("filled_qty").asText())) ? 
+                        new BigDecimal(jsonResponse.get("filled_qty").asText()) : BigDecimal.ZERO,
+                    (jsonResponse.has("filled_avg_price") && !jsonResponse.get("filled_avg_price").isNull() && !"null".equals(jsonResponse.get("filled_avg_price").asText())) ? 
                         new BigDecimal(jsonResponse.get("filled_avg_price").asText()) : null,
                     jsonResponse.get("submitted_at").asText(),
                     null
