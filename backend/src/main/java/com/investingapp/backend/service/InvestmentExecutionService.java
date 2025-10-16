@@ -36,9 +36,6 @@ public class InvestmentExecutionService {
     private InvestmentTradeRepository tradeRepository;
     
     @Autowired
-    private UserRepository userRepository;
-    
-    @Autowired
     private AlpacaService alpacaService;
     
     @Autowired
@@ -68,19 +65,7 @@ public class InvestmentExecutionService {
         return currentTime.isAfter(marketOpen) && currentTime.isBefore(marketClose);
     }
     
-    // US market holidays for 2025 (you should update this annually or fetch from an API)
-    private static final Set<LocalDate> US_HOLIDAYS_2025 = Set.of(
-        LocalDate.of(2025, 1, 1),   // New Year's Day
-        LocalDate.of(2025, 1, 20),  // Martin Luther King Jr. Day
-        LocalDate.of(2025, 2, 17),  // Presidents' Day
-        LocalDate.of(2025, 4, 18),  // Good Friday
-        LocalDate.of(2025, 5, 26),  // Memorial Day
-        LocalDate.of(2025, 6, 19),  // Juneteenth
-        LocalDate.of(2025, 7, 4),   // Independence Day
-        LocalDate.of(2025, 9, 1),   // Labor Day
-        LocalDate.of(2025, 11, 27), // Thanksgiving
-        LocalDate.of(2025, 12, 25)  // Christmas
-    );
+
     
     /**
      * Process all scheduled investments for today
@@ -217,8 +202,8 @@ public class InvestmentExecutionService {
             throw new RuntimeException("ACH transfer failed: " + transferResponse.errorMessage);
         }
         
-        // Schedule next investment
-        scheduleNextInvestment(user);
+        // Note: Next investment date will be updated when the schedule is processed
+        // after successful execution via updateScheduleAfterExecution()
     }
     
     /**
@@ -482,81 +467,9 @@ public class InvestmentExecutionService {
         }
     }
     
-    /**
-     * Schedule the next investment for a user
-     */
-    private void scheduleNextInvestment(User user) {
-        // Check if pay frequency is set
-        String payFrequency = user.getPayFrequency();
-        if (payFrequency == null || payFrequency.trim().isEmpty()) {
-            logger.warn("Cannot schedule next investment for user {} - pay frequency not set", user.getId());
-            return;
-        }
-        
-        // Calculate next investment date based on pay frequency
-        LocalDate nextDate = calculateNextInvestmentDate(
-            LocalDate.now(), 
-            payFrequency
-        );
-        
-        // Update user's next investment date
-        user.setNextInvestmentDate(nextDate);
-        userRepository.save(user);
-        
-        logger.info("Scheduled next investment for user {} on {}", user.getId(), nextDate);
-    }
+
     
-    /**
-     * Calculate next investment date based on pay frequency, skipping weekends and holidays
-     */
-    private LocalDate calculateNextInvestmentDate(LocalDate currentDate, String payFrequency) {
-        if (payFrequency == null || payFrequency.trim().isEmpty()) {
-            logger.warn("Pay frequency is null or empty, defaulting to monthly");
-            payFrequency = "monthly";
-        }
-        
-        LocalDate nextDate;
-        
-        switch (payFrequency.toLowerCase()) {
-            case "weekly":
-                nextDate = currentDate.plusWeeks(1);
-                break;
-            case "biweekly":
-                nextDate = currentDate.plusWeeks(2);
-                break;
-            case "monthly":
-                nextDate = currentDate.plusMonths(1);
-                break;
-            case "semimonthly":
-                // 15th and last day of month
-                if (currentDate.getDayOfMonth() <= 15) {
-                    nextDate = currentDate.withDayOfMonth(
-                        Math.min(15, currentDate.lengthOfMonth())
-                    );
-                } else {
-                    nextDate = currentDate.plusMonths(1).withDayOfMonth(1);
-                }
-                break;
-            default:
-                // Default to monthly
-                nextDate = currentDate.plusMonths(1);
-        }
-        
-        // Ensure it's a business day
-        return adjustToBusinessDay(nextDate);
-    }
-    
-    /**
-     * Adjust date to next business day if it falls on weekend or holiday
-     */
-    private LocalDate adjustToBusinessDay(LocalDate date) {
-        while (date.getDayOfWeek() == DayOfWeek.SATURDAY || 
-               date.getDayOfWeek() == DayOfWeek.SUNDAY || 
-               US_HOLIDAYS_2025.contains(date)) {
-            date = date.plusDays(1);
-        }
-        return date;
-    }
+
     
     /**
      * Get user's portfolio allocation from their actual saved portfolio
