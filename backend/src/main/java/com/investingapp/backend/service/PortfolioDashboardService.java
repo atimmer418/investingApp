@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.investingapp.backend.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -33,6 +32,9 @@ public class PortfolioDashboardService {
     @Value("${alpaca.broker.base-url:https://broker-api.sandbox.alpaca.markets/v1}")
     private String alpacaBrokerBaseUrl;
     
+    @Value("${alpaca.trading.base-url:https://paper-api.alpaca.markets/v2}")
+    private String alpacaTradingBaseUrl;
+    
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     
@@ -51,6 +53,17 @@ public class PortfolioDashboardService {
             credentials.getBytes(StandardCharsets.UTF_8)
         );
         headers.set("Authorization", "Basic " + base64Credentials);
+        
+        return headers;
+    }
+    
+    private HttpHeaders createTradingApiHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        
+        // Use API Key headers for Trading API
+        headers.set("APCA-API-KEY-ID", alpacaApiKey);
+        headers.set("APCA-API-SECRET-KEY", alpacaApiSecret);
         
         return headers;
     }
@@ -84,6 +97,24 @@ public class PortfolioDashboardService {
         } catch (Exception e) {
             logger.error("Error fetching portfolio dashboard data for user {}", user.getId(), e);
             throw new RuntimeException("Failed to fetch portfolio data: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Get portfolio history for a specific time period
+     */
+    public PortfolioHistory getPortfolioHistoryForPeriod(User user, String period) {
+        if (user.getAlpacaAccountId() == null) {
+            throw new IllegalArgumentException("User does not have an Alpaca account");
+        }
+        
+        String accountId = user.getAlpacaAccountId();
+        
+        try {
+            return getPortfolioHistory(accountId, period);
+        } catch (Exception e) {
+            logger.error("Error fetching portfolio history for user {} with period {}", user.getId(), period, e);
+            throw new RuntimeException("Failed to fetch portfolio history: " + e.getMessage());
         }
     }
     
@@ -139,31 +170,137 @@ public class PortfolioDashboardService {
     }
     
     /**
-     * Get current positions/holdings
-     */
-    /**
-     * Get current positions/holdings
-     * Note: Alpaca Broker API doesn't have a direct positions endpoint
-     * We'll need to derive positions from transaction history
+     * Get current positions using EOD positions endpoint
+     * Uses the /v1/reporting/eod/positions endpoint from Broker API
      */
     private List<Position> getCurrentPositions(String accountId) {
-        logger.info("Note: Alpaca Broker API doesn't provide a direct positions endpoint");
-        logger.info("Positions would need to be calculated from transaction history");
+        try {
+            // Get yesterday's date since EOD positions are for previous trading day
+            LocalDate yesterday = LocalDate.now().minusDays(1);
+            String asofDate = yesterday.format(DateTimeFormatter.ISO_LOCAL_DATE);
+            
+            String url = alpacaBrokerBaseUrl + "/reporting/eod/positions" +
+                        "?account_id=" + accountId +
+                        "&asof=" + asofDate;
+            
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            
+            logger.info("Fetching EOD positions for account: {} as of: {}", accountId, asofDate);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonNode responseData = objectMapper.readTree(response.getBody());
+                List<Position> positions = new ArrayList<>();
+                
+                JsonNode positionsNode = responseData.get("positions");
+                if (positionsNode != null && positionsNode.isObject()) {
+                    // The positions object contains account IDs as keys
+                    for (JsonNode accountPositions : positionsNode) {
+                        if (accountPositions.isArray()) {
+                            for (JsonNode positionNode : accountPositions) {
+                                String symbol = positionNode.has("symbol") ? positionNode.get("symbol").asText() : "";
+                                BigDecimal quantity = parseDecimalSafely(positionNode, "qty", BigDecimal.ZERO);
+                                BigDecimal marketValue = parseDecimalSafely(positionNode, "market_value", BigDecimal.ZERO);
+                                BigDecimal costBasis = parseDecimalSafely(positionNode, "cost_basis", BigDecimal.ZERO);
+                                BigDecimal unrealizedPL = parseDecimalSafely(positionNode, "unrealized_pl", BigDecimal.ZERO);
+                                BigDecimal currentPrice = parseDecimalSafely(positionNode, "current_price", BigDecimal.ZERO);
+                                
+                                // Calculate unrealized P&L percentage
+                                BigDecimal unrealizedPLPercent = BigDecimal.ZERO;
+                                if (costBasis.compareTo(BigDecimal.ZERO) > 0) {
+                                    unrealizedPLPercent = unrealizedPL.divide(costBasis, 4, RoundingMode.HALF_UP);
+                                }
+                                
+                                Position position = new Position(
+                                    symbol,
+                                    symbol, // Use symbol as name for now
+                                    quantity,
+                                    marketValue,
+                                    costBasis,
+                                    unrealizedPL,
+                                    unrealizedPLPercent,
+                                    currentPrice
+                                );
+                                
+                                positions.add(position);
+                            }
+                        }
+                    }
+                }
+                
+                logger.info("Retrieved {} positions", positions.size());
+                return positions;
+                
+            } else {
+                logger.warn("Failed to fetch positions: {}", response.getStatusCode());
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error fetching current positions", e);
+        }
         
-        // For now, return empty list - we'll calculate from transactions later
+        // Return empty list on error
         return new ArrayList<>();
     }
     
     /**
-     * Get portfolio value history for charting
-     * Note: Alpaca Broker API doesn't provide portfolio history endpoint
-     * We'll need to calculate this from transaction history and current values
+     * Get portfolio value history for charting using Trading API
+     * Uses the /v2/account/portfolio/history endpoint
      */
     private PortfolioHistory getPortfolioHistory(String accountId, String period) {
-        logger.info("Note: Alpaca Broker API doesn't provide portfolio history endpoint");
-        logger.info("Portfolio history would need to be calculated from transaction data");
+        try {
+            // Build URL with parameters for Trading API
+            String url = alpacaTradingBaseUrl + "/account/portfolio/history" +
+                        "?period=" + period +
+                        "&timeframe=1D" +
+                        "&intraday_reporting=market_hours";
+            
+            HttpHeaders headers = createTradingApiHeaders();
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            
+            logger.info("Fetching portfolio history for period: {}", period);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonNode historyData = objectMapper.readTree(response.getBody());
+                
+                List<String> dates = new ArrayList<>();
+                List<BigDecimal> values = new ArrayList<>();
+                
+                // Parse timestamps and equity arrays
+                JsonNode timestamps = historyData.get("timestamp");
+                JsonNode equityValues = historyData.get("equity");
+                
+                if (timestamps != null && timestamps.isArray() && 
+                    equityValues != null && equityValues.isArray() &&
+                    timestamps.size() == equityValues.size()) {
+                    
+                    for (int i = 0; i < timestamps.size(); i++) {
+                        // Convert timestamp to date string (timestamps are in epoch seconds)
+                        long epochSeconds = timestamps.get(i).asLong();
+                        LocalDate date = LocalDate.ofEpochDay(epochSeconds / 86400); // 86400 seconds in a day
+                        String dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
+                        
+                        BigDecimal equity = new BigDecimal(equityValues.get(i).asText());
+                        
+                        dates.add(dateStr);
+                        values.add(equity);
+                    }
+                }
+                
+                logger.info("Retrieved {} portfolio history data points", dates.size());
+                return new PortfolioHistory(dates, values);
+                
+            } else {
+                logger.warn("Failed to fetch portfolio history: {}", response.getStatusCode());
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error fetching portfolio history", e);
+        }
         
-        // For now, return empty history - we'll implement calculation later
+        // Return empty history on error
         return new PortfolioHistory(new ArrayList<>(), new ArrayList<>());
     }
     

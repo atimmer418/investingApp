@@ -1,6 +1,8 @@
 package com.investingapp.backend.controller;
 
 import com.investingapp.backend.model.User;
+import com.investingapp.backend.repository.UserRepository;
+import com.investingapp.backend.security.services.UserDetailsImpl;
 import com.investingapp.backend.service.PortfolioDashboardService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,10 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/portfolio")
@@ -23,13 +27,22 @@ public class PortfolioDashboardController {
     @Autowired
     private PortfolioDashboardService portfolioDashboardService;
     
+    @Autowired
+    private UserRepository userRepository;
+    
     /**
      * Get comprehensive portfolio dashboard data
      */
     @GetMapping("/dashboard")
-    public ResponseEntity<?> getPortfolioDashboard(Authentication authentication) {
+    public ResponseEntity<?> getPortfolioDashboard() {
         try {
-            User user = (User) authentication.getPrincipal();
+            User user = getCurrentUser();
+            
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "User not authenticated"));
+            }
+            
             logger.info("Fetching portfolio dashboard for user: {}", user.getEmail());
             
             PortfolioDashboardService.PortfolioDashboardData dashboardData = 
@@ -52,10 +65,15 @@ public class PortfolioDashboardController {
      */
     @GetMapping("/history")
     public ResponseEntity<?> getPortfolioHistory(
-            @RequestParam(defaultValue = "1M") String period,
-            Authentication authentication) {
+            @RequestParam(defaultValue = "1M") String period) {
         try {
-            User user = (User) authentication.getPrincipal();
+            User user = getCurrentUser();
+            
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "User not authenticated"));
+            }
+            
             logger.info("Fetching portfolio history for user: {} with period: {}", user.getEmail(), period);
             
             // Validate period parameter
@@ -67,12 +85,13 @@ public class PortfolioDashboardController {
                 return ResponseEntity.badRequest().body("{\"error\":\"User does not have an Alpaca account\"}");
             }
             
-            PortfolioDashboardService.PortfolioDashboardData dashboardData = 
-                portfolioDashboardService.getPortfolioDashboard(user);
+            // Get portfolio history for the specific period
+            PortfolioDashboardService.PortfolioHistory portfolioHistory = 
+                portfolioDashboardService.getPortfolioHistoryForPeriod(user, period);
             
-            // Return just the history portion
+            // Return the history with the requested period
             Map<String, Object> result = new HashMap<>();
-            result.put("history", dashboardData.history);
+            result.put("history", portfolioHistory);
             result.put("period", period);
             
             return ResponseEntity.ok(result);
@@ -88,9 +107,15 @@ public class PortfolioDashboardController {
      * Get current positions/holdings
      */
     @GetMapping("/positions")
-    public ResponseEntity<?> getCurrentPositions(Authentication authentication) {
+    public ResponseEntity<?> getCurrentPositions() {
         try {
-            User user = (User) authentication.getPrincipal();
+            User user = getCurrentUser();
+            
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "User not authenticated"));
+            }
+            
             logger.info("Fetching current positions for user: {}", user.getEmail());
             
             if (user.getAlpacaAccountId() == null) {
@@ -118,9 +143,15 @@ public class PortfolioDashboardController {
      * Get performance metrics summary
      */
     @GetMapping("/performance")
-    public ResponseEntity<?> getPerformanceMetrics(Authentication authentication) {
+    public ResponseEntity<?> getPerformanceMetrics() {
         try {
-            User user = (User) authentication.getPrincipal();
+            User user = getCurrentUser();
+            
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "User not authenticated"));
+            }
+            
             logger.info("Fetching performance metrics for user: {}", user.getEmail());
             
             if (user.getAlpacaAccountId() == null) {
@@ -150,5 +181,27 @@ public class PortfolioDashboardController {
     
     private boolean isValidPeriod(String period) {
         return period.matches("^(1D|1W|1M|3M|6M|1Y|ALL)$");
+    }
+
+    /**
+     * Helper method to get current authenticated user
+     */
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (!(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+            logger.warn("Authentication principal is not an instance of UserDetailsImpl");
+            return null;
+        }
+        
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Optional<User> userOpt = userRepository.findById(userDetails.getId());
+        
+        if (userOpt.isEmpty()) {
+            logger.warn("User ID {} not found from authenticated principal", userDetails.getId());
+            return null;
+        }
+        
+        return userOpt.get();
     }
 }
