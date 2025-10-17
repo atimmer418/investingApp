@@ -69,6 +69,15 @@ public class PortfolioDashboardService {
     }
     
     /**
+     * Calculate total invested amount from current positions (sum of cost basis)
+     */
+    private BigDecimal calculateTotalInvestedFromPositions(List<Position> positions) {
+        return positions.stream()
+                .map(position -> position.costBasis)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+    
+    /**
      * Get comprehensive portfolio dashboard data for a user
      */
     public PortfolioDashboardData getPortfolioDashboard(User user) {
@@ -84,14 +93,21 @@ public class PortfolioDashboardService {
             List<Position> positions = getCurrentPositions(accountId);
             PortfolioHistory portfolioHistory = getPortfolioHistory(accountId, "1M");
             List<Transaction> recentTransactions = getRecentTransactions(accountId);
-            BigDecimal totalInvested = calculateTotalInvested(accountId);
+            
+            // Calculate totals from positions data instead of account activities
+            BigDecimal totalInvested = calculateTotalInvestedFromPositions(positions);
+            
+            // Calculate total gain/loss in real-time: current portfolio value - total invested
+            // This ensures consistency with real-time portfolio value rather than using stale EOD unrealized P&L
+            BigDecimal totalGainLoss = accountSummary.portfolioValue.subtract(totalInvested);
             
             return new PortfolioDashboardData(
                 accountSummary,
                 positions,
                 portfolioHistory,
                 recentTransactions,
-                totalInvested
+                totalInvested,
+                totalGainLoss
             );
             
         } catch (Exception e) {
@@ -356,47 +372,6 @@ public class PortfolioDashboardService {
     }
     
     /**
-     * Calculate total amount invested by summing all cash deposits
-     */
-    private BigDecimal calculateTotalInvested(String accountId) {
-        try {
-            String url = alpacaBrokerBaseUrl + "/accounts/" + accountId + "/activities?activity_types=CSD&limit=200";
-            HttpHeaders headers = createAuthHeaders();
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-            
-            logger.info("Calculating total invested for account: {}", accountId);
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                JsonNode activitiesArray = objectMapper.readTree(response.getBody());
-                BigDecimal totalInvested = BigDecimal.ZERO;
-                
-                if (activitiesArray.isArray()) {
-                    for (JsonNode activityNode : activitiesArray) {
-                        // CSD = Cash Disbursement (deposits into account)
-                        if ("CSD".equals(activityNode.get("activity_type").asText())) {
-                            BigDecimal amount = parseDecimalSafely(activityNode, "net_amount", BigDecimal.ZERO);
-                            if (amount.compareTo(BigDecimal.ZERO) > 0) {
-                                totalInvested = totalInvested.add(amount);
-                            }
-                        }
-                    }
-                }
-                
-                logger.info("Total invested calculated: {} for account {}", totalInvested, accountId);
-                return totalInvested;
-            } else {
-                logger.error("Failed to fetch cash activities. Status: {}, Response: {}", 
-                    response.getStatusCode(), response.getBody());
-                return BigDecimal.ZERO;
-            }
-        } catch (Exception e) {
-            logger.error("Error calculating total invested for account {}", accountId, e);
-            return BigDecimal.ZERO;
-        }
-    }
-    
-    /**
      * Safely parse decimal values from JSON, handling null and "null" strings
      */
     private BigDecimal parseDecimalSafely(JsonNode node, String fieldName, BigDecimal defaultValue) {
@@ -431,15 +406,15 @@ public class PortfolioDashboardService {
         
         public PortfolioDashboardData(AccountSummary summary, List<Position> positions, 
                                     PortfolioHistory history, List<Transaction> recentTransactions,
-                                    BigDecimal totalInvested) {
+                                    BigDecimal totalInvested, BigDecimal totalGainLoss) {
             this.summary = summary;
             this.positions = positions;
             this.history = history;
             this.recentTransactions = recentTransactions;
             this.totalInvested = totalInvested;
+            this.totalGainLoss = totalGainLoss;
             
-            // Calculate total gains/losses
-            this.totalGainLoss = summary.portfolioValue.subtract(totalInvested);
+            // Calculate percentage gain/loss
             this.totalGainLossPercent = totalInvested.compareTo(BigDecimal.ZERO) > 0 ?
                 totalGainLoss.divide(totalInvested, 4, RoundingMode.HALF_UP).multiply(new BigDecimal("100")) :
                 BigDecimal.ZERO;
