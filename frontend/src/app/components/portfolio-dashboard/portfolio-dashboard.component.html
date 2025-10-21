@@ -1,0 +1,199 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Portfolio Dashboard</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="loadPortfolioData()" fill="clear">
+        <ion-icon name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner></ion-spinner>
+    <p>Loading portfolio...</p>
+  </div>
+
+  <!-- Error State -->
+  <ion-card *ngIf="error && !loading" color="danger">
+    <ion-card-content>
+      <p>{{ error }}</p>
+      <ion-button (click)="loadPortfolioData()" fill="outline" color="light">
+        Try Again
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Portfolio Dashboard Content -->
+  <div *ngIf="dashboard && !loading">
+    
+    <!-- Tabs -->
+    <ion-tabs (ionTabsDidChange)="onTabChange($event)">
+      <ion-tab tab="overview">
+        <!-- Portfolio Overview -->
+        <div class="portfolio-overview">
+          
+          <!-- Portfolio Value Card -->
+          <ion-card class="portfolio-value-card">
+            <ion-card-content>
+              <div class="portfolio-value">{{ formatCurrency(dashboard.summary.portfolioValue) }}</div>
+              <div class="portfolio-change" [class]="'color-' + getGainLossColor(dashboard.totalGainLoss)">
+                <ion-icon [name]="getGainLossIcon(dashboard.totalGainLoss)"></ion-icon>
+                {{ formatCurrency(dashboard.totalGainLoss) }} ({{ formatPercent(dashboard.totalGainLossPercent) }})
+              </div>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Summary Stats -->
+          <ion-grid class="summary-grid">
+            <ion-row>
+              <ion-col size="6">
+                <ion-card class="summary-card">
+                  <ion-card-content>
+                    <div class="summary-value">{{ formatCurrency(dashboard.totalInvested) }}</div>
+                    <div class="summary-label">Total Invested</div>
+                  </ion-card-content>
+                </ion-card>
+              </ion-col>
+              <ion-col size="6">
+                <ion-card class="summary-card">
+                  <ion-card-content>
+                    <div class="summary-value">{{ formatCurrency(dashboard.summary.buyingPower) }}</div>
+                    <div class="summary-label">Buying Power</div>
+                  </ion-card-content>
+                </ion-card>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+
+          <!-- Portfolio Chart - Coming Soon -->
+          <ion-card class="chart-card">
+            <ion-card-header>
+              <ion-card-title>Portfolio Performance</ion-card-title>
+              
+              <!-- Period Selector -->
+              <ion-segment [(ngModel)]="selectedPeriod" (ionChange)="onPeriodChange($event.detail.value)">
+                <ion-segment-button *ngFor="let period of periodOptions" [value]="period.value">
+                  {{ period.label }}
+                </ion-segment-button>
+              </ion-segment>
+            </ion-card-header>
+            
+            <ion-card-content class="chart-placeholder">
+              <p>Portfolio performance chart coming soon!</p>
+              <p>Selected period: {{ selectedPeriod }}</p>
+              <div *ngIf="dashboard?.history?.values?.length">
+                <p>History data points: {{ dashboard.history.values.length }}</p>
+              </div>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Holdings Table -->
+          <ion-card class="holdings-card">
+            <ion-card-header>
+              <ion-card-title>Holdings</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-list>
+                <ion-item *ngFor="let position of dashboard.positions" lines="full">
+                  <div class="position-info">
+                    <div class="position-header">
+                      <h3>{{ position.symbol }}</h3>
+                      <div class="position-value">{{ formatCurrency(position.marketValue) }}</div>
+                    </div>
+                    <div class="position-details">
+                      <p>{{ position.quantity }} shares &#64; {{ formatCurrency(position.currentPrice) }}</p>
+                      <ion-chip [color]="getGainLossColor(position.unrealizedPL)" size="small">
+                        {{ formatCurrency(position.unrealizedPL) }} ({{ formatPercent(position.unrealizedPLPercent) }})
+                      </ion-chip>
+                    </div>
+                  </div>
+                </ion-item>
+              </ion-list>
+            </ion-card-content>
+          </ion-card>
+
+        </div>
+      </ion-tab>
+
+      <ion-tab tab="analytics">
+        <!-- Performance Analytics -->
+        <div class="analytics-view">
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Performance Analytics</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-list>
+                <ion-item *ngFor="let perf of performanceData" lines="full">
+                  <ion-label>
+                    <h3>{{ perf.period }}</h3>
+                    <p>Return: {{ formatPercent(perf.totalReturnPercent) }}</p>
+                    <p>Value: {{ formatCurrency(perf.startValue) }} → {{ formatCurrency(perf.endValue) }}</p>
+                  </ion-label>
+                  <ion-badge [color]="getGainLossColor(perf.totalReturn)" slot="end">
+                    {{ formatCurrency(perf.totalReturn) }}
+                  </ion-badge>
+                </ion-item>
+              </ion-list>
+            </ion-card-content>
+          </ion-card>
+        </div>
+      </ion-tab>
+
+      <ion-tab tab="transactions">
+        <!-- Recent Transactions -->
+        <div class="transactions-view">
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Recent Transactions</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-list>
+                <ion-item *ngFor="let transaction of dashboard.recentTransactions" lines="full">
+                  <div class="transaction-info">
+                    <div class="transaction-header">
+                      <h3>{{ transaction.type.toUpperCase() }} {{ transaction.symbol }}</h3>
+                      <div class="transaction-amount">{{ formatCurrency(transaction.amount) }}</div>
+                    </div>
+                    <div class="transaction-details">
+                      <p>{{ transaction.quantity }} shares &#64; {{ formatCurrency(transaction.price) }}</p>
+                      <p class="transaction-date">{{ formatDate(transaction.date) }}</p>
+                    </div>
+                  </div>
+                  <ion-badge [color]="transaction.status === 'filled' ? 'success' : 'warning'" slot="end">
+                    {{ transaction.status }}
+                  </ion-badge>
+                </ion-item>
+              </ion-list>
+            </ion-card-content>
+          </ion-card>
+        </div>
+      </ion-tab>
+
+      <ion-tab-bar slot="bottom">
+        <ion-tab-button tab="overview">
+          <ion-icon name="pie-chart-outline"></ion-icon>
+          <ion-label>Overview</ion-label>
+        </ion-tab-button>
+        
+        <ion-tab-button tab="analytics">
+          <ion-icon name="analytics-outline"></ion-icon>
+          <ion-label>Analytics</ion-label>
+        </ion-tab-button>
+        
+        <ion-tab-button tab="transactions">
+          <ion-icon name="list-outline"></ion-icon>
+          <ion-label>Transactions</ion-label>
+        </ion-tab-button>
+      </ion-tab-bar>
+    </ion-tabs>
+
+  </div>
+</ion-content>

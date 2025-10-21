@@ -40,6 +40,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/portfolio-customize/portfolio-customize.component').then(m => m.PortfolioCustomizeComponent)
   },
   {
+    path: 'portfolio-dashboard',
+    loadComponent: () => import('./components/portfolio-dashboard/portfolio-dashboard.component').then(m => m.PortfolioDashboardComponent)
+  },
+  {
     path: 'get-started',
     loadComponent: () => import('./components/get-started/get-started.component').then(m => m.GetStartedComponent)
     // TODO: This route might need to be set as the initial app route for new users,

@@ -1,0 +1,195 @@
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  p {
+    margin-top: 1rem;
+    color: var(--ion-color-medium);
+  }
+}
+
+.portfolio-overview {
+  padding: 0.5rem;
+}
+
+.portfolio-value-card {
+  margin-bottom: 1rem;
+  
+  .portfolio-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--ion-color-primary);
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .portfolio-change {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 500;
+    
+    ion-icon {
+      margin-right: 0.25rem;
+    }
+    
+    &.color-success {
+      color: var(--ion-color-success);
+    }
+    
+    &.color-danger {
+      color: var(--ion-color-danger);
+    }
+  }
+}
+
+.summary-grid {
+  margin-bottom: 1rem;
+  
+  .summary-card {
+    margin: 0.25rem;
+    
+    .summary-value {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: var(--ion-color-dark);
+      text-align: center;
+    }
+    
+    .summary-label {
+      font-size: 0.9rem;
+      color: var(--ion-color-medium);
+      text-align: center;
+      margin-top: 0.25rem;
+    }
+  }
+}
+
+.chart-card {
+  margin-bottom: 1rem;
+  
+  .chart-container {
+    height: 300px;
+    position: relative;
+    
+    canvas {
+      max-height: 100%;
+    }
+  }
+  
+  .chart-placeholder {
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--ion-color-medium);
+    
+    p {
+      margin: 0.5rem 0;
+    }
+  }
+  
+  ion-segment {
+    margin-bottom: 1rem;
+  }
+}
+
+.holdings-card {
+  margin-bottom: 1rem;
+  
+  .position-info {
+    width: 100%;
+    
+    .position-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      
+      h3 {
+        margin: 0;
+        font-weight: bold;
+        color: var(--ion-color-dark);
+      }
+      
+      .position-value {
+        font-weight: bold;
+        color: var(--ion-color-primary);
+      }
+    }
+    
+    .position-details {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+      p {
+        margin: 0;
+        color: var(--ion-color-medium);
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+.analytics-view, .transactions-view {
+  padding: 0.5rem;
+}
+
+.transaction-info {
+  width: 100%;
+  
+  .transaction-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    
+    h3 {
+      margin: 0;
+      font-weight: bold;
+      color: var(--ion-color-dark);
+    }
+    
+    .transaction-amount {
+      font-weight: bold;
+      color: var(--ion-color-primary);
+    }
+  }
+  
+  .transaction-details {
+    p {
+      margin: 0.125rem 0;
+      color: var(--ion-color-medium);
+      font-size: 0.9rem;
+    }
+    
+    .transaction-date {
+      font-size: 0.8rem;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .portfolio-value {
+    font-size: 1.75rem !important;
+  }
+  
+  .chart-container {
+    height: 250px !important;
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .summary-value, .position-header h3, .transaction-header h3 {
+    color: var(--ion-color-light) !important;
+  }
+}
