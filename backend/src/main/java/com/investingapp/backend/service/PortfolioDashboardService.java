@@ -158,13 +158,38 @@ public class PortfolioDashboardService {
                 try {
                     // Get portfolio history for yesterday to calculate today's change
                     PortfolioHistory history = getPortfolioHistory(accountId, "2D"); // Get last 2 days
-                    if (history != null && history.values.size() >= 2) {
-                        // Get yesterday's closing value (second to last value)
-                        BigDecimal yesterdayClose = history.values.get(history.values.size() - 2);
-                        if (yesterdayClose.compareTo(BigDecimal.ZERO) > 0) {
-                            todayChange = portfolioValue.subtract(yesterdayClose);
-                            todayChangePercent = todayChange.divide(yesterdayClose, 4, RoundingMode.HALF_UP)
-                                    .multiply(BigDecimal.valueOf(100));
+                    logger.info("Portfolio history for today's change calculation: {} data points", 
+                        history != null ? history.values.size() : 0);
+                    
+                    if (history != null && history.values.size() >= 1) {
+                        logger.info("Portfolio history values: {}", history.values);
+                        logger.info("Portfolio history timestamps: {}", history.timestamps);
+                        
+                        if (history.values.size() >= 2) {
+                            // Get yesterday's closing value (second to last value)
+                            BigDecimal yesterdayClose = history.values.get(history.values.size() - 2);
+                            logger.info("Using yesterday's close: {} to calculate today's change", yesterdayClose);
+                            if (yesterdayClose.compareTo(BigDecimal.ZERO) > 0) {
+                                todayChange = portfolioValue.subtract(yesterdayClose);
+                                todayChangePercent = todayChange.divide(yesterdayClose, 4, RoundingMode.HALF_UP)
+                                        .multiply(BigDecimal.valueOf(100));
+                                logger.info("Calculated today's change: {} ({}%)", todayChange, todayChangePercent);
+                            }
+                        } else {
+                            // Only 1 data point available - try to use a different approach
+                            logger.warn("Only 1 data point available in 2D history, cannot calculate today's change");
+                            // For now, try to get 1 week of data to find a previous value
+                            PortfolioHistory weekHistory = getPortfolioHistory(accountId, "1W");
+                            if (weekHistory != null && weekHistory.values.size() >= 2) {
+                                logger.info("Using 1W history with {} data points", weekHistory.values.size());
+                                BigDecimal previousValue = weekHistory.values.get(weekHistory.values.size() - 2);
+                                if (previousValue.compareTo(BigDecimal.ZERO) > 0) {
+                                    todayChange = portfolioValue.subtract(previousValue);
+                                    todayChangePercent = todayChange.divide(previousValue, 4, RoundingMode.HALF_UP)
+                                            .multiply(BigDecimal.valueOf(100));
+                                    logger.info("Calculated today's change using 1W data: {} ({}%)", todayChange, todayChangePercent);
+                                }
+                            }
                         }
                     }
                 } catch (Exception e) {
