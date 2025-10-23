@@ -151,11 +151,28 @@ public class PortfolioDashboardService {
                 // Use the more specific USD equity if available, otherwise use general last_equity
                 BigDecimal portfolioValue = usdEquity.compareTo(BigDecimal.ZERO) > 0 ? usdEquity : lastEquity;
                 
-                // Note: Alpaca Broker API doesn't provide buying_power, daily changes, etc.
-                // These would need to be calculated or fetched from Trading API if available
+                // Calculate today's change by getting yesterday's closing value
+                BigDecimal todayChange = BigDecimal.ZERO;
+                BigDecimal todayChangePercent = BigDecimal.ZERO;
+                
+                try {
+                    // Get portfolio history for yesterday to calculate today's change
+                    PortfolioHistory history = getPortfolioHistory(accountId, "2D"); // Get last 2 days
+                    if (history != null && history.values.size() >= 2) {
+                        // Get yesterday's closing value (second to last value)
+                        BigDecimal yesterdayClose = history.values.get(history.values.size() - 2);
+                        if (yesterdayClose.compareTo(BigDecimal.ZERO) > 0) {
+                            todayChange = portfolioValue.subtract(yesterdayClose);
+                            todayChangePercent = todayChange.divide(yesterdayClose, 4, RoundingMode.HALF_UP)
+                                    .multiply(BigDecimal.valueOf(100));
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.warn("Could not calculate today's change for account {}: {}", accountId, e.getMessage());
+                    // Keep default values of 0
+                }
+                
                 BigDecimal buyingPower = BigDecimal.ZERO; // Not available in Broker API
-                BigDecimal todayChange = BigDecimal.ZERO; // Would need historical data
-                BigDecimal todayChangePercent = BigDecimal.ZERO; // Would need historical data
                 
                 String accountStatus = accountData.has("status") ? accountData.get("status").asText() : "UNKNOWN";
                 String currency = accountData.has("currency") ? accountData.get("currency").asText() : "USD";
