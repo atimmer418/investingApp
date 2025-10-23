@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.List;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/portfolio")
@@ -161,16 +163,28 @@ public class PortfolioDashboardController {
             PortfolioDashboardService.PortfolioDashboardData dashboardData = 
                 portfolioDashboardService.getPortfolioDashboard(user);
             
-            // Return performance-focused data
-            Map<String, Object> result = new HashMap<>();
-            result.put("totalInvested", dashboardData.totalInvested);
-            result.put("currentValue", dashboardData.summary.portfolioValue);
-            result.put("totalGainLoss", dashboardData.totalGainLoss);
-            result.put("totalGainLossPercent", dashboardData.totalGainLossPercent);
-            result.put("todayChange", dashboardData.summary.todayChange);
-            result.put("todayChangePercent", dashboardData.summary.todayChangePercent);
+            // Return performance-focused data as an array of period-based metrics
+            List<Map<String, Object>> performanceMetrics = new ArrayList<>();
             
-            return ResponseEntity.ok(result);
+            // Daily performance
+            Map<String, Object> dailyPerf = new HashMap<>();
+            dailyPerf.put("period", "Today");
+            dailyPerf.put("startValue", dashboardData.summary.portfolioValue.subtract(dashboardData.summary.todayChange));
+            dailyPerf.put("endValue", dashboardData.summary.portfolioValue);
+            dailyPerf.put("totalReturn", dashboardData.summary.todayChange);
+            dailyPerf.put("totalReturnPercent", dashboardData.summary.todayChangePercent);
+            performanceMetrics.add(dailyPerf);
+            
+            // Overall performance since investment start
+            Map<String, Object> totalPerf = new HashMap<>();
+            totalPerf.put("period", "Total");
+            totalPerf.put("startValue", dashboardData.totalInvested);
+            totalPerf.put("endValue", dashboardData.summary.portfolioValue);
+            totalPerf.put("totalReturn", dashboardData.totalGainLoss);
+            totalPerf.put("totalReturnPercent", dashboardData.totalGainLossPercent);
+            performanceMetrics.add(totalPerf);
+            
+            return ResponseEntity.ok(performanceMetrics);
             
         } catch (Exception e) {
             logger.error("Error fetching performance metrics", e);

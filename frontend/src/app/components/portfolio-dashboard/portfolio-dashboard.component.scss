@@ -11,7 +11,30 @@
   }
 }
 
-.portfolio-overview {
+// Top segment tabs styling
+ion-segment {
+  margin: 1rem;
+  margin-bottom: 1.5rem;
+  
+  ion-segment-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem;
+    
+    ion-icon {
+      margin-bottom: 0.25rem;
+      font-size: 1.2rem;
+    }
+    
+    ion-label {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+  }
+}
+
+.portfolio-overview, .analytics-view {
   padding: 0.5rem;
 }
 
@@ -173,6 +196,17 @@
     .transaction-date {
       font-size: 0.8rem;
     }
+  }
+}
+
+.no-data {
+  text-align: center;
+  padding: 2rem;
+  color: var(--ion-color-medium);
+  
+  p {
+    margin: 0;
+    font-style: italic;
   }
 }
 

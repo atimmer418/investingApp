@@ -23,6 +23,7 @@ public class PortfolioDashboardService {
     
     private static final Logger logger = LoggerFactory.getLogger(PortfolioDashboardService.class);
     
+    // Paper Trading API credentials
     @Value("${alpaca.api.key}")
     private String alpacaApiKey;
     
@@ -53,17 +54,6 @@ public class PortfolioDashboardService {
             credentials.getBytes(StandardCharsets.UTF_8)
         );
         headers.set("Authorization", "Basic " + base64Credentials);
-        
-        return headers;
-    }
-    
-    private HttpHeaders createTradingApiHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        
-        // Use API Key headers for Trading API
-        headers.set("APCA-API-KEY-ID", alpacaApiKey);
-        headers.set("APCA-API-SECRET-KEY", alpacaApiSecret);
         
         return headers;
     }
@@ -261,18 +251,18 @@ public class PortfolioDashboardService {
     }
     
     /**
-     * Get portfolio value history for charting using Trading API
-     * Uses the /v2/account/portfolio/history endpoint
+     * Get portfolio value history for charting using Broker API
+     * Uses the /v1/trading/accounts/{account_id}/account/portfolio/history endpoint
      */
     private PortfolioHistory getPortfolioHistory(String accountId, String period) {
         try {
-            // Build URL with parameters for Trading API
-            String url = alpacaTradingBaseUrl + "/account/portfolio/history" +
+            // Build URL with account ID for Broker API
+            String url = alpacaBrokerBaseUrl + "/trading/accounts/" + accountId + "/account/portfolio/history" +
                         "?period=" + period +
                         "&timeframe=1D" +
                         "&intraday_reporting=market_hours";
             
-            HttpHeaders headers = createTradingApiHeaders();
+            HttpHeaders headers = createAuthHeaders(); // Use broker API headers
             HttpEntity<Void> entity = new HttpEntity<>(headers);
             
             logger.info("Fetching portfolio history for period: {}", period);

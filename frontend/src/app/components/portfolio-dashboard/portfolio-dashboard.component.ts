@@ -22,8 +22,7 @@ import {
     IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent,
     IonRefresher, IonRefresherContent, IonCard, IonCardContent, IonCardHeader,
     IonCardTitle, IonSpinner, IonItem, IonLabel, IonBadge, IonSegment,
-    IonSegmentButton, IonGrid, IonRow, IonCol, IonList, IonChip,
-    IonTabs, IonTabBar, IonTab, IonTabButton
+    IonSegmentButton, IonGrid, IonRow, IonCol, IonList, IonChip
   ]
 })
 export class PortfolioDashboardComponent implements OnInit {
@@ -67,7 +66,7 @@ export class PortfolioDashboardComponent implements OnInit {
 
       // Load performance data
       const performanceData = await this.portfolioService.getPerformance().toPromise();
-      this.performanceData = performanceData || [];
+      this.performanceData = Array.isArray(performanceData) ? performanceData : [];
       
     } catch (error: any) {
       console.error('Error loading portfolio data:', error);
