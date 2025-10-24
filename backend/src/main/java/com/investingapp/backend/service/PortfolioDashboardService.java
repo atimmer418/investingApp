@@ -164,11 +164,12 @@ public class PortfolioDashboardService {
                     if (history != null && history.values.size() >= 1) {
                         logger.info("Portfolio history values: {}", history.values);
                         logger.info("Portfolio history timestamps: {}", history.timestamps);
+                        logger.info("Current portfolio value for comparison: {}", portfolioValue);
                         
                         if (history.values.size() >= 2) {
                             // Get yesterday's closing value (second to last value)
                             BigDecimal yesterdayClose = history.values.get(history.values.size() - 2);
-                            logger.info("Using yesterday's close: {} to calculate today's change", yesterdayClose);
+                            logger.info("Using yesterday's close: {} to calculate today's change against current value: {}", yesterdayClose, portfolioValue);
                             if (yesterdayClose.compareTo(BigDecimal.ZERO) > 0) {
                                 todayChange = portfolioValue.subtract(yesterdayClose);
                                 todayChangePercent = todayChange.divide(yesterdayClose, 4, RoundingMode.HALF_UP)
@@ -300,10 +301,12 @@ public class PortfolioDashboardService {
         try {
             // Build URL with account ID for Broker API
             // Use timeframe=1D to get daily data points, not intraday minutes
+            // Add cashflow_types=NONE to exclude cash flows from P&L calculation
             String url = alpacaBrokerBaseUrl + "/trading/accounts/" + accountId + "/account/portfolio/history" +
                         "?period=" + period +
                         "&timeframe=1D" +
-                        "&intraday_reporting=market_hours";
+                        "&intraday_reporting=market_hours" +
+                        "&cashflow_types=NONE";
             
             HttpHeaders headers = createAuthHeaders(); // Use broker API headers
             HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -317,10 +320,12 @@ public class PortfolioDashboardService {
                 
                 List<String> dates = new ArrayList<>();
                 List<BigDecimal> values = new ArrayList<>();
+                List<BigDecimal> profitLoss = new ArrayList<>();
                 
-                // Parse timestamps and equity arrays
+                // Parse timestamps, equity arrays, and profit_loss
                 JsonNode timestamps = historyData.get("timestamp");
                 JsonNode equityValues = historyData.get("equity");
+                JsonNode profitLossValues = historyData.get("profit_loss");
                 
                 if (timestamps != null && timestamps.isArray() && 
                     equityValues != null && equityValues.isArray() &&
@@ -336,11 +341,18 @@ public class PortfolioDashboardService {
                         
                         dates.add(dateStr);
                         values.add(equity);
+                        
+                        // Also parse profit/loss data if available
+                        if (profitLossValues != null && profitLossValues.isArray() && i < profitLossValues.size()) {
+                            BigDecimal pl = new BigDecimal(profitLossValues.get(i).asText());
+                            profitLoss.add(pl);
+                        }
                     }
                 }
                 
                 logger.info("Retrieved {} portfolio history data points", dates.size());
-                return new PortfolioHistory(dates, values);
+                logger.info("Profit/Loss data points: {}", profitLoss);
+                return new PortfolioHistory(dates, values, profitLoss);
                 
             } else {
                 logger.warn("Failed to fetch portfolio history: {}", response.getStatusCode());
@@ -499,10 +511,18 @@ public class PortfolioDashboardService {
     public static class PortfolioHistory {
         public final List<String> timestamps;
         public final List<BigDecimal> values;
+        public final List<BigDecimal> profitLoss;
         
         public PortfolioHistory(List<String> timestamps, List<BigDecimal> values) {
             this.timestamps = timestamps;
             this.values = values;
+            this.profitLoss = new ArrayList<>();
+        }
+        
+        public PortfolioHistory(List<String> timestamps, List<BigDecimal> values, List<BigDecimal> profitLoss) {
+            this.timestamps = timestamps;
+            this.values = values;
+            this.profitLoss = profitLoss;
         }
     }
     
