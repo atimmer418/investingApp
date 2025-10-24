@@ -157,7 +157,7 @@ public class PortfolioDashboardService {
                 
                 try {
                     // Calculate today's change based on current positions vs yesterday's close
-                    BigDecimal[] todayChangeData = calculateIntradayPerformance(accountId);
+                    BigDecimal[] todayChangeData = calculateIntradayPerformance(accountId, portfolioValue);
                     todayChange = todayChangeData[0];
                     todayChangePercent = todayChangeData[1];
                     logger.info("Calculated intraday performance: {} ({}%)", todayChange, todayChangePercent);
@@ -518,42 +518,105 @@ public class PortfolioDashboardService {
     }
     
     /**
-     * Calculate intraday performance based on current position values vs yesterday's close
+     * Calculate real intraday performance using current market prices vs yesterday's close
+     * Gets real-time quotes for each position and calculates actual market movement
      * Returns [todayChange, todayChangePercent]
      */
-    private BigDecimal[] calculateIntradayPerformance(String accountId) {
+    private BigDecimal[] calculateIntradayPerformance(String accountId, BigDecimal currentPortfolioValue) {
         try {
-            // Get current positions and their real-time market values
-            List<Position> currentPositions = getCurrentPositions(accountId); // EOD positions with quantities
+            // Get yesterday's EOD positions (quantities and symbols)
+            List<Position> yesterdayPositions = getCurrentPositions(accountId); 
             
-            // Calculate current market value by summing all position market values
-            BigDecimal currentValue = BigDecimal.ZERO;
-            BigDecimal yesterdayCloseValue = BigDecimal.ZERO;
-            
-            for (Position position : currentPositions) {
-                // Current market value (this should be real-time)
-                currentValue = currentValue.add(position.marketValue);
-                // Yesterday's close value is the same as market value for EOD positions
-                yesterdayCloseValue = yesterdayCloseValue.add(position.marketValue);
+            if (yesterdayPositions.isEmpty()) {
+                return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO};
             }
             
-            logger.info("Intraday calculation: Current value = {}, Yesterday close value = {}", 
-                currentValue, yesterdayCloseValue);
+            // Calculate yesterday's total value and prepare for real-time calculation
+            BigDecimal yesterdayTotalValue = BigDecimal.ZERO;
+            BigDecimal currentCalculatedValue = BigDecimal.ZERO;
             
-            // Since we're getting EOD positions, the values will be the same
-            // Let's use a simpler approach: assume small market movements for now
-            BigDecimal todayChange = BigDecimal.ZERO;
-            BigDecimal todayChangePercent = BigDecimal.ZERO;
+            logger.info("Calculating real intraday performance for {} positions", yesterdayPositions.size());
             
-            // For now, return zero change to avoid the infinite loop
-            // We can improve this later with real-time position data
-            logger.info("Calculated intraday change: {} ({}%)", todayChange, todayChangePercent);
-            return new BigDecimal[]{todayChange, todayChangePercent};
+            for (Position position : yesterdayPositions) {
+                // Yesterday's value (from EOD data)
+                BigDecimal yesterdayValue = position.marketValue;
+                yesterdayTotalValue = yesterdayTotalValue.add(yesterdayValue);
+                
+                // Get current real-time price for this symbol
+                BigDecimal currentPrice = getCurrentPrice(position.symbol);
+                
+                if (currentPrice.compareTo(BigDecimal.ZERO) > 0) {
+                    // Calculate current value: quantity × current_price
+                    BigDecimal currentValue = position.quantity.multiply(currentPrice);
+                    currentCalculatedValue = currentCalculatedValue.add(currentValue);
+                    
+                    logger.info("Position {}: {} shares, Yesterday: ${}, Current price: ${}, Current value: ${}", 
+                        position.symbol, position.quantity, position.marketValue, currentPrice, currentValue);
+                } else {
+                    // Fallback to yesterday's value if we can't get current price
+                    currentCalculatedValue = currentCalculatedValue.add(yesterdayValue);
+                    logger.warn("Could not get current price for {}, using yesterday's value", position.symbol);
+                }
+            }
+            
+            logger.info("Intraday calculation: Yesterday total = ${}, Current calculated = ${}", 
+                yesterdayTotalValue, currentCalculatedValue);
+            
+            if (yesterdayTotalValue.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal todayChange = currentCalculatedValue.subtract(yesterdayTotalValue);
+                BigDecimal todayChangePercent = todayChange.divide(yesterdayTotalValue, 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
+                
+                logger.info("Real intraday performance: {} ({}%)", todayChange, todayChangePercent);
+                return new BigDecimal[]{todayChange, todayChangePercent};
+            }
             
         } catch (Exception e) {
-            logger.error("Error calculating intraday performance: {}", e.getMessage());
+            logger.error("Error calculating real intraday performance: {}", e.getMessage());
         }
         
         return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO};
+    }
+    
+    /**
+     * Get current real-time price for a symbol using Alpaca market data API
+     */
+    private BigDecimal getCurrentPrice(String symbol) {
+        try {
+            // Use Alpaca's latest quote endpoint for real-time pricing
+            String url = "https://data.alpaca.markets/v2/stocks/" + symbol + "/quotes/latest";
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("APCA-API-KEY-ID", alpacaApiKey);
+            headers.set("APCA-API-SECRET-KEY", alpacaApiSecret);
+            headers.set("Accept", "application/json");
+            
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonNode responseData = objectMapper.readTree(response.getBody());
+                JsonNode quote = responseData.get("quote");
+                
+                if (quote != null) {
+                    // Use bid-ask midpoint for current price
+                    BigDecimal bidPrice = parseDecimalSafely(quote, "bid_price", BigDecimal.ZERO);
+                    BigDecimal askPrice = parseDecimalSafely(quote, "ask_price", BigDecimal.ZERO);
+                    
+                    if (bidPrice.compareTo(BigDecimal.ZERO) > 0 && askPrice.compareTo(BigDecimal.ZERO) > 0) {
+                        BigDecimal midPrice = bidPrice.add(askPrice).divide(new BigDecimal("2"), 4, RoundingMode.HALF_UP);
+                        logger.debug("Current price for {}: ${} (bid: ${}, ask: ${})", symbol, midPrice, bidPrice, askPrice);
+                        return midPrice;
+                    }
+                }
+            } else {
+                logger.warn("Failed to get current price for {}: HTTP {}", symbol, response.getStatusCode());
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error getting current price for {}: {}", symbol, e.getMessage());
+        }
+        
+        return BigDecimal.ZERO;
     }
 }
