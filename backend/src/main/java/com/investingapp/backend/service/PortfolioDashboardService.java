@@ -23,18 +23,28 @@ public class PortfolioDashboardService {
     
     private static final Logger logger = LoggerFactory.getLogger(PortfolioDashboardService.class);
     
-    // Paper Trading API credentials
+    // Broker API credentials (for account management, portfolio data, etc.)
     @Value("${alpaca.api.key}")
     private String alpacaApiKey;
     
     @Value("${alpaca.api.secret}")
     private String alpacaApiSecret;
     
+    // Market Data API credentials (for real-time stock prices, quotes, etc.)
+    @Value("${alpaca.market.data.key}")
+    private String alpacaMarketDataKey;
+    
+    @Value("${alpaca.market.data.secret}")
+    private String alpacaMarketDataSecret;
+    
     @Value("${alpaca.broker.base-url:https://broker-api.sandbox.alpaca.markets/v1}")
     private String alpacaBrokerBaseUrl;
     
     @Value("${alpaca.trading.base-url:https://paper-api.alpaca.markets/v2}")
     private String alpacaTradingBaseUrl;
+    
+    @Value("${alpaca.market.data.base-url:https://data.alpaca.markets/v2}")
+    private String alpacaMarketDataBaseUrl;
     
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -584,11 +594,12 @@ public class PortfolioDashboardService {
     private BigDecimal getCurrentPrice(String symbol) {
         try {
             // Use Alpaca's latest quote endpoint for real-time pricing
-            String url = "https://data.alpaca.markets/v2/stocks/" + symbol + "/quotes/latest";
+            String url = alpacaMarketDataBaseUrl + "/stocks/" + symbol + "/quotes/latest";
             
             HttpHeaders headers = new HttpHeaders();
-            headers.set("APCA-API-KEY-ID", alpacaApiKey);
-            headers.set("APCA-API-SECRET-KEY", alpacaApiSecret);
+            // Use dedicated market data API credentials
+            headers.set("APCA-API-KEY-ID", alpacaMarketDataKey);
+            headers.set("APCA-API-SECRET-KEY", alpacaMarketDataSecret);
             headers.set("Accept", "application/json");
             
             HttpEntity<Void> entity = new HttpEntity<>(headers);
