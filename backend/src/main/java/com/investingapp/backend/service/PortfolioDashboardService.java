@@ -299,6 +299,7 @@ public class PortfolioDashboardService {
     private PortfolioHistory getPortfolioHistory(String accountId, String period) {
         try {
             // Build URL with account ID for Broker API
+            // Use timeframe=1D to get daily data points, not intraday minutes
             String url = alpacaBrokerBaseUrl + "/trading/accounts/" + accountId + "/account/portfolio/history" +
                         "?period=" + period +
                         "&timeframe=1D" +
@@ -307,10 +308,11 @@ public class PortfolioDashboardService {
             HttpHeaders headers = createAuthHeaders(); // Use broker API headers
             HttpEntity<Void> entity = new HttpEntity<>(headers);
             
-            logger.info("Fetching portfolio history for period: {}", period);
+            logger.info("Fetching portfolio history for period: {} from URL: {}", period, url);
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
             
             if (response.getStatusCode() == HttpStatus.OK) {
+                logger.info("Portfolio history API response: {}", response.getBody());
                 JsonNode historyData = objectMapper.readTree(response.getBody());
                 
                 List<String> dates = new ArrayList<>();
