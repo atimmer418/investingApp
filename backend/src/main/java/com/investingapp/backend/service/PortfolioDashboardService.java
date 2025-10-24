@@ -31,10 +31,10 @@ public class PortfolioDashboardService {
     private String alpacaApiSecret;
     
     // Market Data API credentials (for real-time stock prices, quotes, etc.)
-    @Value("${alpaca.market.data.key}")
+    @Value("${alpaca.market.key}")
     private String alpacaMarketDataKey;
     
-    @Value("${alpaca.market.data.secret}")
+    @Value("${alpaca.market.secret}")
     private String alpacaMarketDataSecret;
     
     @Value("${alpaca.broker.base-url:https://broker-api.sandbox.alpaca.markets/v1}")
@@ -43,7 +43,7 @@ public class PortfolioDashboardService {
     @Value("${alpaca.trading.base-url:https://paper-api.alpaca.markets/v2}")
     private String alpacaTradingBaseUrl;
     
-    @Value("${alpaca.market.data.base-url:https://data.alpaca.markets/v2}")
+    @Value("${alpaca.market.base-url:https://data.alpaca.markets/v2}")
     private String alpacaMarketDataBaseUrl;
     
     private final RestTemplate restTemplate;
