@@ -151,50 +151,18 @@ public class PortfolioDashboardService {
                 // Use the more specific USD equity if available, otherwise use general last_equity
                 BigDecimal portfolioValue = usdEquity.compareTo(BigDecimal.ZERO) > 0 ? usdEquity : lastEquity;
                 
-                // Calculate today's change by getting yesterday's closing value
+                // Calculate today's change by getting position-level performance
                 BigDecimal todayChange = BigDecimal.ZERO;
                 BigDecimal todayChangePercent = BigDecimal.ZERO;
                 
                 try {
-                    // Get portfolio history for yesterday to calculate today's change
-                    PortfolioHistory history = getPortfolioHistory(accountId, "2D"); // Get last 2 days
-                    logger.info("Portfolio history for today's change calculation: {} data points", 
-                        history != null ? history.values.size() : 0);
-                    
-                    if (history != null && history.values.size() >= 1) {
-                        logger.info("Portfolio history values: {}", history.values);
-                        logger.info("Portfolio history timestamps: {}", history.timestamps);
-                        logger.info("Current portfolio value for comparison: {}", portfolioValue);
-                        
-                        if (history.values.size() >= 2) {
-                            // Get yesterday's closing value (second to last value)
-                            BigDecimal yesterdayClose = history.values.get(history.values.size() - 2);
-                            logger.info("Using yesterday's close: {} to calculate today's change against current value: {}", yesterdayClose, portfolioValue);
-                            if (yesterdayClose.compareTo(BigDecimal.ZERO) > 0) {
-                                todayChange = portfolioValue.subtract(yesterdayClose);
-                                todayChangePercent = todayChange.divide(yesterdayClose, 4, RoundingMode.HALF_UP)
-                                        .multiply(BigDecimal.valueOf(100));
-                                logger.info("Calculated today's change: {} ({}%)", todayChange, todayChangePercent);
-                            }
-                        } else {
-                            // Only 1 data point available - try to use a different approach
-                            logger.warn("Only 1 data point available in 2D history, cannot calculate today's change");
-                            // For now, try to get 1 week of data to find a previous value
-                            PortfolioHistory weekHistory = getPortfolioHistory(accountId, "1W");
-                            if (weekHistory != null && weekHistory.values.size() >= 2) {
-                                logger.info("Using 1W history with {} data points", weekHistory.values.size());
-                                BigDecimal previousValue = weekHistory.values.get(weekHistory.values.size() - 2);
-                                if (previousValue.compareTo(BigDecimal.ZERO) > 0) {
-                                    todayChange = portfolioValue.subtract(previousValue);
-                                    todayChangePercent = todayChange.divide(previousValue, 4, RoundingMode.HALF_UP)
-                                            .multiply(BigDecimal.valueOf(100));
-                                    logger.info("Calculated today's change using 1W data: {} ({}%)", todayChange, todayChangePercent);
-                                }
-                            }
-                        }
-                    }
+                    // Calculate today's change based on current positions vs yesterday's close
+                    BigDecimal[] todayChangeData = calculateIntradayPerformance(accountId);
+                    todayChange = todayChangeData[0];
+                    todayChangePercent = todayChangeData[1];
+                    logger.info("Calculated intraday performance: {} ({}%)", todayChange, todayChangePercent);
                 } catch (Exception e) {
-                    logger.warn("Could not calculate today's change for account {}: {}", accountId, e.getMessage());
+                    logger.warn("Could not calculate intraday performance for account {}: {}", accountId, e.getMessage());
                     // Keep default values of 0
                 }
                 
@@ -547,5 +515,44 @@ public class PortfolioDashboardService {
             this.date = date;
             this.status = status;
         }
+    }
+    
+    /**
+     * Calculate intraday performance based on current position values vs yesterday's close
+     * Returns [todayChange, todayChangePercent]
+     */
+    private BigDecimal[] calculateIntradayPerformance(String accountId) {
+        try {
+            // Get current real-time account value
+            AccountSummary currentSummary = getAccountSummary(accountId);
+            BigDecimal currentValue = currentSummary.portfolioValue;
+            
+            // Get yesterday's closing positions to calculate what portfolio was worth at close
+            List<Position> yesterdayPositions = getCurrentPositions(accountId); // This gets EOD positions
+            
+            // Calculate what current positions would have been worth at yesterday's close
+            BigDecimal yesterdayCloseValue = BigDecimal.ZERO;
+            for (Position position : yesterdayPositions) {
+                // The position data includes market_value which is the value at EOD
+                yesterdayCloseValue = yesterdayCloseValue.add(position.marketValue);
+            }
+            
+            logger.info("Intraday calculation: Current value = {}, Yesterday close value = {}", 
+                currentValue, yesterdayCloseValue);
+            
+            if (yesterdayCloseValue.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal todayChange = currentValue.subtract(yesterdayCloseValue);
+                BigDecimal todayChangePercent = todayChange.divide(yesterdayCloseValue, 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
+                
+                logger.info("Calculated intraday change: {} ({}%)", todayChange, todayChangePercent);
+                return new BigDecimal[]{todayChange, todayChangePercent};
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error calculating intraday performance: {}", e.getMessage());
+        }
+        
+        return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO};
     }
 }
