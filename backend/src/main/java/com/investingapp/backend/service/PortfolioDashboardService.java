@@ -202,73 +202,97 @@ public class PortfolioDashboardService {
      */
     private List<Position> getCurrentPositions(String accountId) {
         try {
-            // Get yesterday's date since EOD positions are for previous trading day
-            LocalDate yesterday = LocalDate.now().minusDays(1);
-            String asofDate = yesterday.format(DateTimeFormatter.ISO_LOCAL_DATE);
+            // Try to get EOD positions for the most recent trading day
+            // We'll try up to 5 days back to account for weekends and holidays
+            List<Position> positions = null;
+            Exception lastException = null;
             
-            String url = alpacaBrokerBaseUrl + "/reporting/eod/positions" +
-                        "?account_id=" + accountId +
-                        "&asof=" + asofDate;
-            
-            HttpHeaders headers = createAuthHeaders();
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-            
-            logger.info("Fetching EOD positions for account: {} as of: {}", accountId, asofDate);
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                JsonNode responseData = objectMapper.readTree(response.getBody());
-                List<Position> positions = new ArrayList<>();
-                
-                JsonNode positionsNode = responseData.get("positions");
-                if (positionsNode != null && positionsNode.isObject()) {
-                    // The positions object contains account IDs as keys
-                    for (JsonNode accountPositions : positionsNode) {
-                        if (accountPositions.isArray()) {
-                            for (JsonNode positionNode : accountPositions) {
-                                String symbol = positionNode.has("symbol") ? positionNode.get("symbol").asText() : "";
-                                BigDecimal quantity = parseDecimalSafely(positionNode, "qty", BigDecimal.ZERO);
-                                BigDecimal marketValue = parseDecimalSafely(positionNode, "market_value", BigDecimal.ZERO);
-                                BigDecimal costBasis = parseDecimalSafely(positionNode, "cost_basis", BigDecimal.ZERO);
-                                BigDecimal unrealizedPL = parseDecimalSafely(positionNode, "unrealized_pl", BigDecimal.ZERO);
-                                BigDecimal currentPrice = parseDecimalSafely(positionNode, "current_price", BigDecimal.ZERO);
-                                
-                                // Calculate unrealized P&L percentage
-                                BigDecimal unrealizedPLPercent = BigDecimal.ZERO;
-                                if (costBasis.compareTo(BigDecimal.ZERO) > 0) {
-                                    unrealizedPLPercent = unrealizedPL.divide(costBasis, 4, RoundingMode.HALF_UP);
-                                }
-                                
-                                Position position = new Position(
-                                    symbol,
-                                    symbol, // Use symbol as name for now
-                                    quantity,
-                                    marketValue,
-                                    costBasis,
-                                    unrealizedPL,
-                                    unrealizedPLPercent,
-                                    currentPrice
-                                );
-                                
-                                positions.add(position);
-                            }
-                        }
+            for (int daysBack = 1; daysBack <= 5; daysBack++) {
+                try {
+                    LocalDate targetDate = LocalDate.now().minusDays(daysBack);
+                    String asofDate = targetDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
+                    
+                    String url = alpacaBrokerBaseUrl + "/reporting/eod/positions" +
+                                "?account_id=" + accountId +
+                                "&asof=" + asofDate;
+                    
+                    HttpHeaders headers = createAuthHeaders();
+                    HttpEntity<Void> entity = new HttpEntity<>(headers);
+                    
+                    logger.info("Fetching EOD positions for account: {} as of: {}", accountId, asofDate);
+                    ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+                    
+                    if (response.getStatusCode() == HttpStatus.OK) {
+                        positions = parsePositionsResponse(response.getBody(), accountId);
+                        logger.info("Successfully fetched EOD positions for account: {} as of: {}", accountId, asofDate);
+                        break; // Success, exit the retry loop
                     }
+                } catch (Exception e) {
+                    lastException = e;
+                    logger.warn("Failed to fetch EOD positions for {} days back, trying next date", daysBack);
                 }
-                
-                logger.info("Retrieved {} positions", positions.size());
-                return positions;
-                
-            } else {
-                logger.warn("Failed to fetch positions: {}", response.getStatusCode());
             }
+            
+            if (positions == null) {
+                throw new RuntimeException("Could not fetch EOD positions for any recent date", lastException);
+            }
+            
+            return positions;
             
         } catch (Exception e) {
             logger.error("Error fetching current positions", e);
+            throw new RuntimeException("Failed to fetch positions: " + e.getMessage());
         }
-        
-        // Return empty list on error
-        return new ArrayList<>();
+    }
+    
+    private List<Position> parsePositionsResponse(String responseBody, String accountId) {
+        try {
+            JsonNode responseData = objectMapper.readTree(responseBody);
+            List<Position> positions = new ArrayList<>();
+            
+            JsonNode positionsNode = responseData.get("positions");
+            if (positionsNode != null && positionsNode.isObject()) {
+                // The positions object contains account IDs as keys
+                for (JsonNode accountPositions : positionsNode) {
+                    if (accountPositions.isArray()) {
+                        for (JsonNode positionNode : accountPositions) {
+                            String symbol = positionNode.has("symbol") ? positionNode.get("symbol").asText() : "";
+                            BigDecimal quantity = parseDecimalSafely(positionNode, "qty", BigDecimal.ZERO);
+                            BigDecimal marketValue = parseDecimalSafely(positionNode, "market_value", BigDecimal.ZERO);
+                            BigDecimal costBasis = parseDecimalSafely(positionNode, "cost_basis", BigDecimal.ZERO);
+                            BigDecimal unrealizedPL = parseDecimalSafely(positionNode, "unrealized_pl", BigDecimal.ZERO);
+                            BigDecimal currentPrice = parseDecimalSafely(positionNode, "current_price", BigDecimal.ZERO);
+                            
+                            // Calculate unrealized P&L percentage
+                            BigDecimal unrealizedPLPercent = BigDecimal.ZERO;
+                            if (costBasis.compareTo(BigDecimal.ZERO) > 0) {
+                                unrealizedPLPercent = unrealizedPL.divide(costBasis, 4, RoundingMode.HALF_UP);
+                            }
+                            
+                            Position position = new Position(
+                                symbol,
+                                symbol, // Use symbol as name for now
+                                quantity,
+                                marketValue,
+                                costBasis,
+                                unrealizedPL,
+                                unrealizedPLPercent,
+                                currentPrice
+                            );
+                            
+                            positions.add(position);
+                        }
+                    }
+                }
+            }
+            
+            logger.info("Retrieved {} positions", positions.size());
+            return positions;
+            
+        } catch (Exception e) {
+            logger.error("Error parsing positions response", e);
+            throw new RuntimeException("Failed to parse positions: " + e.getMessage());
+        }
     }
     
     /**
