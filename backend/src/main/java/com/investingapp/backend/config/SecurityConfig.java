@@ -87,12 +87,11 @@ public class SecurityConfig {
                 "ionic://localhost",
                 "http://localhost",               // Sometimes needed by native wrappers
                 iphoneAngularOrigin,               // Your iPhone's access point
-                "https://9803a45dd96e.ngrok-free.app",
                 "http://192.168.1.166:3000",
                 "http://api-test.fredvested.com:3000",
-                "https://potential-engine-97999gqqw9q4hpj7w-8100.app.github.dev"
+                "https://potential-engine-97999gqqw9q4hpj7w-8100.app.github.dev",
+                "https://local.fredvested.com"
         ));
-        // ngrok
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*")); // Allow all headers
         configuration.setAllowCredentials(true); // Important for cookies, authorization headers with HTTPS

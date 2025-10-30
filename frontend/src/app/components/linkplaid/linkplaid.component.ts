@@ -21,7 +21,6 @@ interface LinkTokenAuthenticatedResponse {
   expiration: string;
 }
 
-// ngrok
 const BACKEND_API_URL = environment.backendApiUrl;
 
 @Component({

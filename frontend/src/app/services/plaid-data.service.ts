@@ -5,7 +5,6 @@ import { PaycheckSource } from '../models/plaid/paycheck-source.model';
 import { SelectedPaycheck } from '../models/plaid/selected-paycheck.model';
 import { environment } from '../../environments/environment';
 
-// ngrok
 const BACKEND_API_URL = environment.backendApiUrl;
 
 @Injectable({
@@ -20,10 +19,6 @@ export class PlaidDataService {
     const token = localStorage.getItem('jwtToken');
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-    // --- ADD THIS HEADER TO SKIP NGROK BROWSER WARNING ---
-    if (BACKEND_API_URL.includes("ngrok")) {
-        headers = headers.set('ngrok-skip-browser-warning', 'true'); // Or any non-empty value
     }
     return headers;
   }

@@ -61,9 +61,6 @@ export class AuthService {
     const deviceId = this.deviceIdService.getDeviceId();
     headers = headers.set('X-Device-ID', deviceId);
     
-    if (BACKEND_API_URL.includes("ngrok")) {
-      headers = headers.set('ngrok-skip-browser-warning', 'true');
-    }
     return headers;
   }
 

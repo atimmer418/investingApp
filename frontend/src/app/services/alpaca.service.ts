@@ -56,9 +56,6 @@ export class AlpacaService {
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
-    if (this.baseUrl.includes("ngrok")) {
-      headers = headers.set('ngrok-skip-browser-warning', 'true');
-    }
     return headers;
   }
 

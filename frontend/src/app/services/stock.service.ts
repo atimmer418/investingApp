@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-// ngrok
+// file can be DELETED
 const BACKEND_API_URL = environment.backendApiUrl;
 
 @Injectable({

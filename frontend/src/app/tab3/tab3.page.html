@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      User Settings
+      Account Settings
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -9,13 +9,88 @@
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">User Settings</ion-title>
+      <ion-title size="large">Account Settings</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <ion-list>
-    <ion-item *ngFor="let option of settingsOptions" [button]="true" (click)="onSettingClick(option)">
-      {{ option }}
-    </ion-item>
-  </ion-list>
+  <!-- User Profile Card -->
+  <ion-card class="user-profile-card">
+    <ion-card-content>
+      <div class="profile-info">
+        <ion-avatar class="user-avatar">
+          <img src="assets/images/default-avatar.png" alt="User Avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNmMGYwZjAiLz48Y2lyY2xlIGN4PSIyMCIgY3k9IjE1IiByPSI2IiBmaWxsPSIjY2NjIi8+PHBhdGggZD0iTTYuNSAzMGE0LjUgNC41IDAgMCAxIDItMS4zQTEzIDEzIDAgMCAxIDIwIDI2YTEzIDEzIDAgMCAxIDExLjUgMi43QTQuNSA0LjUgMCAwIDEgMzMuNSAzMEg2LjVaIiBmaWxsPSIjY2NjIi8+PC9zdmc+'" />
+        </ion-avatar>
+        <div class="user-details">
+          <h2>Welcome back!</h2>
+          <p>Manage your account and investment preferences</p>
+          <div class="bank-account-info" *ngIf="currentBankAccount">
+            <ion-icon name="card-outline"></ion-icon>
+            <span>{{ currentBankAccount.institutionName }} •••• {{ currentBankAccount.mask }}</span>
+          </div>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Settings Sections -->
+  <div class="settings-container">
+    <div *ngFor="let section of settingSections" class="settings-section">
+      <h3 class="section-title">{{ section.title }}</h3>
+      
+      <ion-list class="settings-list">
+        <ion-item 
+          *ngFor="let item of section.items" 
+          [button]="true" 
+          (click)="onSettingClick(item.action)"
+          class="setting-item"
+          ion-ripple>
+          
+          <ion-icon [name]="item.icon" slot="start" class="setting-icon"></ion-icon>
+          
+          <ion-label>
+            <h3>{{ item.title }}</h3>
+            <p *ngIf="item.subtitle">{{ item.subtitle }}</p>
+          </ion-label>
+          
+          <ion-badge 
+            *ngIf="item.badge" 
+            [color]="item.badgeColor || 'primary'" 
+            slot="end">
+            {{ item.badge }}
+          </ion-badge>
+          
+          <ion-icon name="chevron-forward-outline" slot="end" class="chevron-icon"></ion-icon>
+        </ion-item>
+      </ion-list>
+    </div>
+  </div>
+
+  <!-- Logout Button -->
+  <div class="logout-section">
+    <ion-button 
+      expand="block" 
+      fill="outline" 
+      color="danger" 
+      (click)="onLogout()"
+      class="logout-button">
+      <ion-icon name="log-out-outline" slot="start"></ion-icon>
+      Sign Out
+    </ion-button>
+  </div>
+
+  <!-- App Version Info -->
+  <div class="app-info">
+    <ion-text color="medium">
+      <p>Version 1.0.0</p>
+    </ion-text>
+  </div>
+
+  <!-- Toast for user feedback -->
+  <ion-toast
+    [isOpen]="isToastOpen"
+    [message]="toastMessage"
+    [duration]="3000"
+    [color]="toastColor"
+    (didDismiss)="isToastOpen = false">
+  </ion-toast>
 </ion-content>

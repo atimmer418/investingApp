@@ -9,7 +9,6 @@ import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
 import { DeviceIdService } from './device-id.service';
 
-// ngrok
 const BACKEND_API_URL = environment.backendApiUrl;
 
 @Injectable({
@@ -32,10 +31,6 @@ export class PasskeyService {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
     
-    if (BACKEND_API_URL.includes("ngrok")) {
-      headers = headers.set('ngrok-skip-browser-warning', 'true');
-    }
-    
     return headers;
   }
 
@@ -45,7 +40,7 @@ export class PasskeyService {
   }
 
   finishRegistration(data: RegistrationFinishRequest): Observable<RegistrationFinishResponse> {
-    const finishUrl = `${BACKEND_API_URL}/passkey/register/finish`; // Ensure this uses ngrok URL for backend
+    const finishUrl = `${BACKEND_API_URL}/passkey/register/finish`;
     return this.http.post<RegistrationFinishResponse>(finishUrl, data, { headers: this.getHeaders() })
       .pipe(
         tap(response => {

@@ -4,8 +4,8 @@
 
 export const environment = {
   production: false, // It's a test build, not a full production build
-  backendApiUrl: 'https://dfbbae9b170f.ngrok-free.app/api',
-  rpId: '9803a45dd96e.ngrok-free.app' // Your test frontend/app origin hostname
+  backendApiUrl: 'https://local.fredvested.com/api',
+  rpId: 'local.fredvested.com' // Your test frontend/app origin hostname
 };
 
 /*
