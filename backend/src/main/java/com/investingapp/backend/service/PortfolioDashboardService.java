@@ -176,7 +176,7 @@ public class PortfolioDashboardService {
                     // Keep default values of 0
                 }
                 
-                BigDecimal buyingPower = BigDecimal.ZERO; // Not available in Broker API
+                BigDecimal buyingPower = getBuyingPower(accountId);
                 
                 String accountStatus = accountData.has("status") ? accountData.get("status").asText() : "UNKNOWN";
                 String currency = accountData.has("currency") ? accountData.get("currency").asText() : "USD";
@@ -194,6 +194,45 @@ public class PortfolioDashboardService {
             logger.error("Error fetching account summary for account {}", accountId, e);
             throw new RuntimeException("Failed to fetch account summary: " + e.getMessage());
         }
+    }
+    
+    /**
+     * Get buying power from Trading API account endpoint
+     */
+    private BigDecimal getBuyingPower(String accountId) {
+        try {
+            // Use Trading API which has buying power information
+            String url = alpacaTradingBaseUrl + "/account";
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("APCA-API-KEY-ID", alpacaApiKey);
+            headers.set("APCA-API-SECRET-KEY", alpacaApiSecret);
+            
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            
+            logger.info("Fetching buying power from Trading API for account: {}", accountId);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonNode accountData = objectMapper.readTree(response.getBody());
+                
+                // Parse buying power from Trading API response
+                BigDecimal buyingPower = parseDecimalSafely(accountData, "buying_power", BigDecimal.ZERO);
+                
+                logger.info("Retrieved buying power: ${}", buyingPower);
+                return buyingPower;
+                
+            } else {
+                logger.warn("Failed to fetch buying power. Status: {}, Response: {}", 
+                    response.getStatusCode(), response.getBody());
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error fetching buying power for account {}: {}", accountId, e.getMessage());
+        }
+        
+        return BigDecimal.ZERO;
     }
     
     /**
