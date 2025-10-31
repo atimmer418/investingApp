@@ -170,13 +170,13 @@ public class PortfolioDashboardController {
             // Daily performance
             Map<String, Object> dailyPerf = new HashMap<>();
             dailyPerf.put("period", "Today");
-            // For today's performance, we want: yesterday's close → current real-time value
-            // yesterdayValue = currentValue - todayChange
-            BigDecimal yesterdayCloseValue = dashboardData.summary.portfolioValue.subtract(dashboardData.summary.todayChange);
-            BigDecimal currentRealTimeValue = dashboardData.summary.portfolioValue;
+            // For today's performance: yesterday's EOD close → current real-time value
+            // portfolioValue is yesterday's EOD, current value = EOD + todayChange
+            BigDecimal yesterdayEODValue = dashboardData.summary.portfolioValue;      // Yesterday's close
+            BigDecimal currentRealTimeValue = dashboardData.summary.portfolioValue.add(dashboardData.summary.todayChange); // Current real-time
             
-            dailyPerf.put("startValue", yesterdayCloseValue);    // Yesterday's closing value
-            dailyPerf.put("endValue", currentRealTimeValue);    // Current real-time value  
+            dailyPerf.put("startValue", yesterdayEODValue);     // Yesterday's EOD closing value
+            dailyPerf.put("endValue", currentRealTimeValue);   // Current real-time value  
             dailyPerf.put("totalReturn", dashboardData.summary.todayChange);
             dailyPerf.put("totalReturnPercent", dashboardData.summary.todayChangePercent);
             performanceMetrics.add(dailyPerf);
