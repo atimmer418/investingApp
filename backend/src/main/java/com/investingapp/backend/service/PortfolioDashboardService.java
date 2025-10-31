@@ -176,7 +176,7 @@ public class PortfolioDashboardService {
                     // Keep default values of 0
                 }
                 
-                BigDecimal buyingPower = getBuyingPower(accountId);
+                BigDecimal buyingPower = getBuyingPowerFromTradingAccount(accountId);
                 
                 String accountStatus = accountData.has("status") ? accountData.get("status").asText() : "UNKNOWN";
                 String currency = accountData.has("currency") ? accountData.get("currency").asText() : "USD";
@@ -197,39 +197,33 @@ public class PortfolioDashboardService {
     }
     
     /**
-     * Get buying power from Trading API account endpoint
+     * Get buying power from Trading Account endpoint in Broker API
      */
-    private BigDecimal getBuyingPower(String accountId) {
+    private BigDecimal getBuyingPowerFromTradingAccount(String accountId) {
         try {
-            // Use Trading API which has buying power information
-            String url = alpacaTradingBaseUrl + "/account";
-            
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("APCA-API-KEY-ID", alpacaApiKey);
-            headers.set("APCA-API-SECRET-KEY", alpacaApiSecret);
-            
+            String url = alpacaBrokerBaseUrl + "/trading/accounts/" + accountId + "/account";
+            HttpHeaders headers = createAuthHeaders();
             HttpEntity<Void> entity = new HttpEntity<>(headers);
             
-            logger.info("Fetching buying power from Trading API for account: {}", accountId);
+            logger.info("Fetching buying power from trading account endpoint for account: {}", accountId);
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
             
             if (response.getStatusCode() == HttpStatus.OK) {
                 JsonNode accountData = objectMapper.readTree(response.getBody());
                 
-                // Parse buying power from Trading API response
-                BigDecimal buyingPower = parseDecimalSafely(accountData, "buying_power", BigDecimal.ZERO);
+                // Parse buying power - use effective_buying_power as it's the most comprehensive
+                BigDecimal buyingPower = parseDecimalSafely(accountData, "effective_buying_power", BigDecimal.ZERO);
                 
                 logger.info("Retrieved buying power: ${}", buyingPower);
                 return buyingPower;
                 
             } else {
-                logger.warn("Failed to fetch buying power. Status: {}, Response: {}", 
+                logger.warn("Failed to fetch buying power from trading account. Status: {}, Response: {}", 
                     response.getStatusCode(), response.getBody());
             }
             
         } catch (Exception e) {
-            logger.error("Error fetching buying power for account {}: {}", accountId, e.getMessage());
+            logger.error("Error fetching buying power from trading account {}: {}", accountId, e.getMessage());
         }
         
         return BigDecimal.ZERO;

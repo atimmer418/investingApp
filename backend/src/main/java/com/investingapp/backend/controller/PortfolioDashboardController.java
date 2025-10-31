@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.List;
 import java.util.ArrayList;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/portfolio")
@@ -169,8 +170,13 @@ public class PortfolioDashboardController {
             // Daily performance
             Map<String, Object> dailyPerf = new HashMap<>();
             dailyPerf.put("period", "Today");
-            dailyPerf.put("startValue", dashboardData.summary.portfolioValue.subtract(dashboardData.summary.todayChange));
-            dailyPerf.put("endValue", dashboardData.summary.portfolioValue);
+            // For today's performance, we want: yesterday's close → current real-time value
+            // yesterdayValue = currentValue - todayChange
+            BigDecimal yesterdayCloseValue = dashboardData.summary.portfolioValue.subtract(dashboardData.summary.todayChange);
+            BigDecimal currentRealTimeValue = dashboardData.summary.portfolioValue;
+            
+            dailyPerf.put("startValue", yesterdayCloseValue);    // Yesterday's closing value
+            dailyPerf.put("endValue", currentRealTimeValue);    // Current real-time value  
             dailyPerf.put("totalReturn", dashboardData.summary.todayChange);
             dailyPerf.put("totalReturnPercent", dashboardData.summary.todayChangePercent);
             performanceMetrics.add(dailyPerf);
