@@ -617,8 +617,8 @@ public class PortfolioDashboardService {
      */
     private BigDecimal getCurrentPrice(String symbol) {
         try {
-            // Use Alpaca's latest quote endpoint for real-time pricing
-            String url = alpacaMarketDataBaseUrl + "/stocks/" + symbol + "/quotes/latest";
+            // Use Alpaca's latest trade endpoint for real-time pricing
+            String url = alpacaMarketDataBaseUrl + "/stocks/" + symbol + "/trades/latest";
             
             HttpHeaders headers = new HttpHeaders();
             // Use dedicated market data API credentials
@@ -631,17 +631,15 @@ public class PortfolioDashboardService {
             
             if (response.getStatusCode() == HttpStatus.OK) {
                 JsonNode responseData = objectMapper.readTree(response.getBody());
-                JsonNode quote = responseData.get("quote");
+                JsonNode trade = responseData.get("trade");
                 
-                if (quote != null) {
-                    // Use bid-ask midpoint for current price
-                    BigDecimal bidPrice = parseDecimalSafely(quote, "bid_price", BigDecimal.ZERO);
-                    BigDecimal askPrice = parseDecimalSafely(quote, "ask_price", BigDecimal.ZERO);
+                if (trade != null && trade.has("p")) {
+                    // Get the current trade price
+                    BigDecimal currentPrice = parseDecimalSafely(trade, "p", BigDecimal.ZERO);
                     
-                    if (bidPrice.compareTo(BigDecimal.ZERO) > 0 && askPrice.compareTo(BigDecimal.ZERO) > 0) {
-                        BigDecimal midPrice = bidPrice.add(askPrice).divide(new BigDecimal("2"), 4, RoundingMode.HALF_UP);
-                        logger.debug("Current price for {}: ${} (bid: ${}, ask: ${})", symbol, midPrice, bidPrice, askPrice);
-                        return midPrice;
+                    if (currentPrice.compareTo(BigDecimal.ZERO) > 0) {
+                        logger.debug("Current trade price for {}: ${}", symbol, currentPrice);
+                        return currentPrice;
                     }
                 }
             } else {
