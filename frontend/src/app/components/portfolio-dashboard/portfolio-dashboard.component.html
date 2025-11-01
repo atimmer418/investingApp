@@ -82,7 +82,7 @@
         </ion-row>
       </ion-grid>
 
-      <!-- Portfolio Chart - Coming Soon -->
+      <!-- Portfolio Chart -->
       <ion-card class="chart-card">
         <ion-card-header>
           <ion-card-title>Portfolio Performance</ion-card-title>
@@ -95,12 +95,11 @@
           </ion-segment>
         </ion-card-header>
         
-        <ion-card-content class="chart-placeholder">
-          <p>Portfolio performance chart coming soon!</p>
-          <p>Selected period: {{ selectedPeriod }}</p>
-          <div *ngIf="dashboard?.history?.values?.length">
-            <p>History data points: {{ dashboard.history.values.length }}</p>
-          </div>
+        <ion-card-content>
+          <app-portfolio-chart 
+            [data]="chartData" 
+            [selectedPeriod]="selectedPeriod">
+          </app-portfolio-chart>
         </ion-card-content>
       </ion-card>
 

@@ -1,0 +1,27 @@
+<div class="portfolio-chart-container">
+  <!-- Chart Canvas -->
+  <div class="chart-wrapper">
+    <canvas #chartCanvas class="portfolio-chart"></canvas>
+  </div>
+  
+  <!-- Interactive Data Point Display -->
+  <div class="chart-info" *ngIf="selectedDataPoint">
+    <div class="data-point-info">
+      <div class="date">{{ selectedDataPoint.formattedDate }}</div>
+      <div class="value">{{ formatCurrency(selectedDataPoint.value) }}</div>
+    </div>
+  </div>
+  
+  <!-- Default Display when no point is selected -->
+  <div class="chart-info default-info" *ngIf="!selectedDataPoint && data.length > 0">
+    <div class="data-point-info">
+      <div class="date">Latest</div>
+      <div class="value">{{ formatCurrency(data[data.length - 1].value || 0) }}</div>
+    </div>
+  </div>
+  
+  <!-- Empty state -->
+  <div class="empty-state" *ngIf="data.length === 0">
+    <p>No portfolio data available</p>
+  </div>
+</div>

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 // Portfolio Dashboard Types
@@ -85,13 +86,29 @@ export class PortfolioService {
   }
 
   /**
-   * Get portfolio history for a specific time period
+   * Get portfolio history data for charting
    */
-  getPortfolioHistory(period: string): Observable<PortfolioHistory> {
-    return this.http.get<PortfolioHistory>(`${this.apiUrl}/history`, {
+  getPortfolioHistory(period: string = 'ALL'): Observable<PortfolioHistory> {
+    return this.http.get<any>(`${this.apiUrl}/history`, {
       headers: this.getAuthHeaders(),
       params: { period }
-    });
+    }).pipe(
+      map(response => {
+        // Handle the backend response format which returns an array with the first element containing the data
+        const historyData = Array.isArray(response) ? response[0] : response;
+        
+        // Convert backend format to frontend format
+        const timestamps = (historyData.timestamp || []).map((ts: number) => 
+          new Date(ts * 1000).toISOString()
+        );
+        const values = historyData.equity || [];
+        
+        return {
+          timestamps,
+          values
+        } as PortfolioHistory;
+      })
+    );
   }
 
   /**

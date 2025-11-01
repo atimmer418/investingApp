@@ -31,6 +31,8 @@
     "@github/webauthn-json": "^2.1.1",
     "@ionic/angular": "^8.5.7",
     "chart.js": "^4.5.1",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "date-fns": "^4.1.0",
     "ionicons": "^7.0.0",
     "rxjs": "~7.8.0",
     "serve": "^14.2.4",

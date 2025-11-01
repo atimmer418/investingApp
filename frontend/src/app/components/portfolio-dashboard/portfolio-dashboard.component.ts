@@ -1,8 +1,9 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PortfolioService, PortfolioDashboardData, Position, PerformanceData } from '../../services/portfolio.service';
+import { PortfolioService, PortfolioDashboardData, Position, PerformanceData, PortfolioHistory } from '../../services/portfolio.service';
 import { LoadingController, ToastController } from '@ionic/angular';
+import { PortfolioChartComponent, PortfolioDataPoint } from '../portfolio-chart/portfolio-chart.component';
 import { 
   IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent,
   IonRefresher, IonRefresherContent, IonCard, IonCardContent, IonCardHeader,
@@ -19,6 +20,7 @@ import {
   imports: [
     CommonModule,
     FormsModule,
+    PortfolioChartComponent,
     IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent,
     IonRefresher, IonRefresherContent, IonCard, IonCardContent, IonCardHeader,
     IonCardTitle, IonSpinner, IonItem, IonLabel, IonBadge, IonSegment,
@@ -32,7 +34,8 @@ export class PortfolioDashboardComponent implements OnInit {
   loading = true;
   error: string | null = null;
   selectedTab = 'overview';
-  selectedPeriod = '1M';
+  selectedPeriod = 'ALL';
+  chartData: PortfolioDataPoint[] = [];
   
   // Time period options for chart
   periodOptions = [
@@ -64,9 +67,19 @@ export class PortfolioDashboardComponent implements OnInit {
       const dashboardData = await this.portfolioService.getPortfolioDashboard().toPromise();
       this.dashboard = dashboardData || null;
 
-      // Load performance data
-      const performanceData = await this.portfolioService.getPerformance().toPromise();
-      this.performanceData = Array.isArray(performanceData) ? performanceData : [];
+      // Load performance data - handle gracefully if endpoint doesn't exist
+      try {
+        const performanceData = await this.portfolioService.getPerformance().toPromise();
+        this.performanceData = Array.isArray(performanceData) ? performanceData : [];
+      } catch (perfError) {
+        console.warn('Performance endpoint not available:', perfError);
+        this.performanceData = [];
+      }
+      
+      // Load initial chart data for the default period
+      if (this.dashboard) {
+        await this.loadHistoryForPeriod(this.selectedPeriod);
+      }
       
     } catch (error: any) {
       console.error('Error loading portfolio data:', error);
@@ -96,12 +109,29 @@ export class PortfolioDashboardComponent implements OnInit {
       const history = await this.portfolioService.getPortfolioHistory(period).toPromise();
       if (history) {
         this.dashboard.history = history;
-        // Chart will be updated when we implement it
+        this.chartData = this.processChartData(history);
       }
     } catch (error: any) {
-      console.error('Error loading history:', error);
-      this.showToast('Failed to load portfolio history', 'danger');
+      console.error('Error loading portfolio history:', error);
+      this.chartData = [];
     }
+  }
+
+  private processChartData(history: PortfolioHistory): PortfolioDataPoint[] {
+    if (!history.timestamps || !history.values || history.timestamps.length !== history.values.length) {
+      return [];
+    }
+    
+    // Check if all values are 0 (empty portfolio)
+    const hasNonZeroValues = history.values.some(value => value > 0);
+    if (!hasNonZeroValues) {
+      return []; // Return empty array to show "No portfolio data available"
+    }
+    
+    return history.timestamps.map((timestamp: string, index: number) => ({
+      date: timestamp,
+      value: history.values[index]
+    }));
   }
 
 
