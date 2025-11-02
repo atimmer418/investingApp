@@ -94,8 +94,9 @@ export class PortfolioService {
       params: { period }
     }).pipe(
       map(response => {
-        // Handle the backend response format which returns an array with the first element containing the data
-        const historyData = Array.isArray(response) ? response[0] : response;
+        // Backend returns: { history: {...}, period: "ALL" }
+        // Extract the history object from the response
+        const historyData = response.history || response;
         
         // Convert backend format to frontend format
         const timestamps = (historyData.timestamp || []).map((ts: number) => 

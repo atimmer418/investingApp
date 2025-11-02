@@ -176,14 +176,14 @@ public class PortfolioDashboardController {
             
             // Check if today is a trading day
             if (!isTradingDay()) {
-                // Market is closed today, but still show actual portfolio values
+                // Market is closed today, so no intraday change
                 BigDecimal yesterdayEODValue = dashboardData.summary.portfolioValue;
                 
                 dailyPerf.put("startValue", yesterdayEODValue);
                 dailyPerf.put("endValue", yesterdayEODValue);  // No change since market is closed
-                dailyPerf.put("totalReturn", dashboardData.summary.todayChange); 
-                dailyPerf.put("totalReturnPercent", dashboardData.summary.todayChangePercent);
-                logger.info("Market is closed today, showing yesterday's closing values with no intraday change");
+                dailyPerf.put("totalReturn", BigDecimal.ZERO);   // No change when market is closed
+                dailyPerf.put("totalReturnPercent", BigDecimal.ZERO);  // No change when market is closed
+                logger.info("Market is closed today, setting today's performance to zero");
             } else {
                 // Market is open, calculate real performance
                 // For today's performance: yesterday's EOD close → current real-time value
