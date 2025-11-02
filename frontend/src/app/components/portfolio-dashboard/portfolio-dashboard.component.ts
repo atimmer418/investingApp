@@ -122,10 +122,11 @@ export class PortfolioDashboardComponent implements OnInit {
       return [];
     }
     
-    // Check if all values are 0 (empty portfolio)
-    const hasNonZeroValues = history.values.some(value => value > 0);
-    if (!hasNonZeroValues) {
-      return []; // Return empty array to show "No portfolio data available"
+    // Check if ALL values are 0 (completely empty portfolio)
+    // Allow for some zeros at the beginning (before first investment)
+    const hasAnyNonZeroValues = history.values.some(value => value > 0);
+    if (!hasAnyNonZeroValues) {
+      return []; // Return empty array only if ALL values are 0
     }
     
     return history.timestamps.map((timestamp: string, index: number) => ({

@@ -13,6 +13,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -170,15 +173,31 @@ public class PortfolioDashboardController {
             // Daily performance
             Map<String, Object> dailyPerf = new HashMap<>();
             dailyPerf.put("period", "Today");
-            // For today's performance: yesterday's EOD close → current real-time value
-            // portfolioValue is yesterday's EOD, current value = EOD + todayChange
-            BigDecimal yesterdayEODValue = dashboardData.summary.portfolioValue;      // Yesterday's close
-            BigDecimal currentRealTimeValue = dashboardData.summary.portfolioValue.add(dashboardData.summary.todayChange); // Current real-time
             
-            dailyPerf.put("startValue", yesterdayEODValue);     // Yesterday's EOD closing value
-            dailyPerf.put("endValue", currentRealTimeValue);   // Current real-time value  
-            dailyPerf.put("totalReturn", dashboardData.summary.todayChange);
-            dailyPerf.put("totalReturnPercent", dashboardData.summary.todayChangePercent);
+            // Check if today is a trading day
+            if (!isTradingDay()) {
+                // Market is closed today, but still show actual portfolio values
+                BigDecimal yesterdayEODValue = dashboardData.summary.portfolioValue;
+                
+                dailyPerf.put("startValue", yesterdayEODValue);
+                dailyPerf.put("endValue", yesterdayEODValue);  // No change since market is closed
+                dailyPerf.put("totalReturn", dashboardData.summary.todayChange); 
+                dailyPerf.put("totalReturnPercent", dashboardData.summary.todayChangePercent);
+                logger.info("Market is closed today, showing yesterday's closing values with no intraday change");
+            } else {
+                // Market is open, calculate real performance
+                // For today's performance: yesterday's EOD close → current real-time value
+                // portfolioValue is yesterday's EOD, current value = EOD + todayChange
+                BigDecimal yesterdayEODValue = dashboardData.summary.portfolioValue;      // Yesterday's close
+                BigDecimal currentRealTimeValue = dashboardData.summary.portfolioValue.add(dashboardData.summary.todayChange); // Current real-time
+                
+                dailyPerf.put("startValue", yesterdayEODValue);     // Yesterday's EOD closing value
+                dailyPerf.put("endValue", currentRealTimeValue);   // Current real-time value  
+                dailyPerf.put("totalReturn", dashboardData.summary.todayChange);
+                dailyPerf.put("totalReturnPercent", dashboardData.summary.todayChangePercent);
+                logger.info("Market is open, calculated today's performance: {} ({}%)", 
+                    dashboardData.summary.todayChange, dashboardData.summary.todayChangePercent);
+            }
             performanceMetrics.add(dailyPerf);
             
             // Overall performance since investment start
@@ -197,6 +216,98 @@ public class PortfolioDashboardController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("{\"error\":\"Failed to fetch performance metrics\"}");
         }
+    }
+    
+    /**
+     * Check if today is a trading day using the same logic as InvestmentSchedule
+     * Based on US federal holidays and weekends
+     */
+    private boolean isTradingDay() {
+        LocalDate today = LocalDate.now(ZoneId.of("America/New_York"));
+        
+        // Check if it's a weekend
+        if (today.getDayOfWeek().getValue() >= 6) {  // Saturday = 6, Sunday = 7
+            return false;
+        }
+        
+        // Check if it's a US federal holiday using same logic as InvestmentSchedule
+        return !isUSHoliday(today);
+    }
+    
+    /**
+     * Check if date is a US federal holiday (same logic as InvestmentSchedule)
+     */
+    private boolean isUSHoliday(LocalDate date) {
+        int month = date.getMonthValue();
+        int day = date.getDayOfMonth();
+        
+        // New Year's Day
+        if (month == 1 && day == 1) return true;
+        
+        // Independence Day
+        if (month == 7 && day == 4) return true;
+        
+        // Christmas Day
+        if (month == 12 && day == 25) return true;
+        
+        // Martin Luther King Jr. Day (3rd Monday in January)
+        if (month == 1 && isNthWeekdayOfMonth(date, DayOfWeek.MONDAY, 3)) return true;
+        
+        // Presidents Day (3rd Monday in February)
+        if (month == 2 && isNthWeekdayOfMonth(date, DayOfWeek.MONDAY, 3)) return true;
+        
+        // Memorial Day (last Monday in May)
+        if (month == 5 && isLastWeekdayOfMonth(date, DayOfWeek.MONDAY)) return true;
+        
+        // Labor Day (1st Monday in September)
+        if (month == 9 && isNthWeekdayOfMonth(date, DayOfWeek.MONDAY, 1)) return true;
+        
+        // Columbus Day (2nd Monday in October)
+        if (month == 10 && isNthWeekdayOfMonth(date, DayOfWeek.MONDAY, 2)) return true;
+        
+        // Veterans Day (November 11)
+        if (month == 11 && day == 11) return true;
+        
+        // Thanksgiving (4th Thursday in November)
+        if (month == 11 && isNthWeekdayOfMonth(date, DayOfWeek.THURSDAY, 4)) return true;
+        
+        return false;
+    }
+    
+    /**
+     * Check if date is the nth occurrence of a weekday in the month
+     */
+    private boolean isNthWeekdayOfMonth(LocalDate date, DayOfWeek weekday, int n) {
+        if (date.getDayOfWeek() != weekday) return false;
+        
+        LocalDate firstOfMonth = date.withDayOfMonth(1);
+        LocalDate nthWeekday = firstOfMonth;
+        
+        // Find first occurrence of the weekday
+        while (nthWeekday.getDayOfWeek() != weekday) {
+            nthWeekday = nthWeekday.plusDays(1);
+        }
+        
+        // Add (n-1) weeks to get nth occurrence
+        nthWeekday = nthWeekday.plusWeeks(n - 1);
+        
+        return date.equals(nthWeekday);
+    }
+    
+    /**
+     * Check if date is the last occurrence of a weekday in the month
+     */
+    private boolean isLastWeekdayOfMonth(LocalDate date, DayOfWeek weekday) {
+        if (date.getDayOfWeek() != weekday) return false;
+        
+        LocalDate lastOfMonth = date.withDayOfMonth(date.lengthOfMonth());
+        
+        // Find last occurrence of the weekday
+        while (lastOfMonth.getDayOfWeek() != weekday) {
+            lastOfMonth = lastOfMonth.minusDays(1);
+        }
+        
+        return date.equals(lastOfMonth);
     }
     
     private boolean isValidPeriod(String period) {
