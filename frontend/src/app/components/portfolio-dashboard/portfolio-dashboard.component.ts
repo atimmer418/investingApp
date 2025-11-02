@@ -129,10 +129,12 @@ export class PortfolioDashboardComponent implements OnInit {
       return []; // Return empty array only if ALL values are 0
     }
     
-    return history.timestamps.map((timestamp: string, index: number) => ({
+    const chartData = history.timestamps.map((timestamp: string, index: number) => ({
       date: timestamp,
       value: history.values[index]
     }));
+    
+    return chartData;
   }
 
 

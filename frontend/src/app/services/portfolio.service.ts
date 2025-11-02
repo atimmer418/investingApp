@@ -98,15 +98,16 @@ export class PortfolioService {
         // Extract the history object from the response
         const historyData = response.history || response;
         
-        // Convert backend format to frontend format
-        const timestamps = (historyData.timestamp || []).map((ts: number) => 
-          new Date(ts * 1000).toISOString()
-        );
-        const values = historyData.equity || [];
+        // Backend PortfolioHistory class has: timestamps, values, profitLoss
+        // Backend sends ISO date strings (YYYY-MM-DD), convert to full ISO datetime for Chart.js
+        const timestamps = (historyData.timestamps || []).map((dateStr: string) => {
+          // Convert ISO date (YYYY-MM-DD) to full ISO datetime (YYYY-MM-DDTHH:mm:ss.sssZ)
+          return new Date(dateStr + 'T00:00:00.000Z').toISOString();
+        });
         
         return {
           timestamps,
-          values
+          values: historyData.values || []
         } as PortfolioHistory;
       })
     );
