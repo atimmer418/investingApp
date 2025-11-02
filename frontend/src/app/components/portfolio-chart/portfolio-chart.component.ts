@@ -173,7 +173,7 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
 
     try {
       this.chart.data.datasets[0].data = this.data.map(point => ({
-        x: new Date(point.date).getTime(),
+        x: new Date(point.date), // Use Date object directly for time scale
         y: point.value
       })) as any;
 
