@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, OnDestroy, ViewChild, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Chart, ChartConfiguration, ChartData, registerables, TooltipItem } from 'chart.js';
+import { Chart, ChartConfiguration, ChartData, registerables, TooltipItem, TimeScale } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 
 export interface PortfolioDataPoint {
@@ -36,6 +36,7 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
   ngOnDestroy() {
     if (this.chart) {
       this.chart.destroy();
+      this.chart = null;
     }
   }
 
@@ -49,6 +50,12 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
     // Don't initialize if no data
     if (!this.data || this.data.length === 0) {
       return;
+    }
+
+    // Destroy existing chart before creating new one
+    if (this.chart) {
+      this.chart.destroy();
+      this.chart = null;
     }
 
     const ctx = this.chartCanvas?.nativeElement?.getContext('2d');
@@ -105,7 +112,7 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
             time: {
               displayFormats: {
                 day: 'MMM dd',
-                week: 'MMM dd',
+                week: 'MMM dd', 
                 month: 'MMM yyyy'
               }
             },
