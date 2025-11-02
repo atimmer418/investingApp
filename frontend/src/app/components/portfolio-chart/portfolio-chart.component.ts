@@ -1,7 +1,12 @@
 import { Component, Input, OnInit, OnDestroy, ViewChild, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Chart, ChartConfiguration, ChartData, registerables, TooltipItem, TimeScale } from 'chart.js';
-import 'chartjs-adapter-date-fns';
+import { 
+  Chart, 
+  ChartConfiguration, 
+  ChartData, 
+  registerables,
+  TooltipItem 
+} from 'chart.js';
 
 export interface PortfolioDataPoint {
   date: string;
@@ -21,15 +26,10 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
   @Input() selectedPeriod: string = '1M';
   
   private chart: Chart | null = null;
-  private chartRegistered = false;
   public selectedDataPoint: { date: string; value: number; formattedDate: string } | null = null;
 
   ngOnInit() {
-    // Register Chart.js components within Angular context
-    if (!this.chartRegistered) {
-      Chart.register(...registerables);
-      this.chartRegistered = true;
-    }
+    // Chart.js is now registered globally in main.ts
     this.initializeChart();
   }
 
@@ -64,14 +64,21 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
       return;
     }
 
+    // Clear any existing chart from the canvas
+    Chart.getChart(this.chartCanvas.nativeElement)?.destroy();
+
     try {
       const chartData: ChartData<'line'> = {
+      labels: this.data.map(point => {
+        const date = new Date(point.date);
+        return date.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        });
+      }),
       datasets: [{
         label: 'Portfolio Value',
-        data: this.data.map(point => ({
-          x: new Date(point.date), // Use Date object directly for time scale
-          y: point.value
-        })) as any,
+        data: this.data.map(point => point.value),
         borderColor: '#3880ff',
         backgroundColor: 'rgba(56, 128, 255, 0.1)',
         borderWidth: 2,
@@ -84,6 +91,9 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
         pointHoverBorderWidth: 2
       }]
     };
+
+    // Store reference to component data for use in callbacks
+    const componentData = this.data;
 
     const config: ChartConfiguration<'line'> = {
       type: 'line',
@@ -108,14 +118,6 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
         },
         scales: {
           x: {
-            type: 'time',
-            time: {
-              displayFormats: {
-                day: 'MMM dd',
-                week: 'MMM dd', 
-                month: 'MMM yyyy'
-              }
-            },
             grid: {
               display: false
             },
@@ -179,10 +181,14 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
     }
 
     try {
-      this.chart.data.datasets[0].data = this.data.map(point => ({
-        x: new Date(point.date), // Use Date object directly for time scale
-        y: point.value
-      })) as any;
+      this.chart.data.labels = this.data.map(point => {
+        const date = new Date(point.date);
+        return date.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        });
+      });
+      this.chart.data.datasets[0].data = this.data.map(point => point.value);
 
       this.chart.update('none');
     } catch (error) {
