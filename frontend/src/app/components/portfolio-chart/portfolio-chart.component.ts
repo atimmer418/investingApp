@@ -62,7 +62,7 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
       datasets: [{
         label: 'Portfolio Value',
         data: this.data.map(point => ({
-          x: new Date(point.date).getTime(),
+          x: new Date(point.date), // Use Date object directly for time scale
           y: point.value
         })) as any,
         borderColor: '#3880ff',
