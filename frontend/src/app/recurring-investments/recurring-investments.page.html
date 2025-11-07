@@ -50,7 +50,6 @@
               <div class="detail-content">
                 <h4>Amount</h4>
                 <p>{{ formatCurrency(currentInvestment.investmentAmount) }}</p>
-                <span class="detail-frequency">per {{ getFrequencyLabel().toLowerCase() }}</span>
               </div>
             </div>
             
@@ -150,7 +149,7 @@
                 min="1">
               </ion-input>
             </div>
-            <p class="input-helper">Amount to invest per {{ getFrequencyLabel().toLowerCase() }}</p>
+            <p class="input-helper">Amount to invest every {{ getEditedFrequencyText() }}</p>
           </div>
           
           <!-- Frequency Selection -->

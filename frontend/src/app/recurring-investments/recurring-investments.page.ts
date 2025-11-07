@@ -168,6 +168,40 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     return option?.label || 'Not set';
   }
 
+  getFrequencyText(): string {
+    if (!this.currentInvestment) return 'period';
+    
+    switch (this.currentInvestment.frequency) {
+      case 'WEEKLY':
+        return 'week';
+      case 'BIWEEKLY':
+        return 'two weeks';
+      case 'MONTHLY':
+        return 'month';
+      case 'SEMI_MONTHLY':
+        return '1st and 15th of the month';
+      default:
+        return 'period';
+    }
+  }
+
+  getEditedFrequencyText(): string {
+    if (!this.editedInvestment?.frequency) return 'period';
+    
+    switch (this.editedInvestment.frequency) {
+      case 'WEEKLY':
+        return 'week';
+      case 'BIWEEKLY':
+        return 'two weeks';
+      case 'MONTHLY':
+        return 'month';
+      case 'SEMI_MONTHLY':
+        return '1st and 15th of the month';
+      default:
+        return 'period';
+    }
+  }
+
   getFrequencyDescription(): string {
     if (!this.currentInvestment) return '';
     

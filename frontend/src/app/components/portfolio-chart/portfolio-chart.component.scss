@@ -8,7 +8,6 @@
   position: relative;
   width: 100%;
   height: 300px;
-  margin-bottom: 16px;
 }
 
 .portfolio-chart {
@@ -17,42 +16,55 @@
   cursor: crosshair;
 }
 
-.chart-info {
-  display: flex;
-  justify-content: center;
-  margin-top: 12px;
+// Floating tooltip that appears above clicked points
+.chart-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-in-out;
   
-  .data-point-info {
+  .tooltip-content {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
     text-align: center;
-    padding: 12px 20px;
-    background: var(--ion-color-light);
-    border-radius: 12px;
-    border: 1px solid var(--ion-color-medium);
-    min-width: 140px;
+    min-width: 120px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     
-    .date {
+    .tooltip-date {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-bottom: 2px;
+    }
+    
+    .tooltip-value {
       font-size: 14px;
-      color: var(--ion-color-medium-shade);
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-    
-    .value {
-      font-size: 20px;
       font-weight: 600;
-      color: var(--ion-color-dark);
     }
+  }
+  
+  .tooltip-arrow {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid rgba(0, 0, 0, 0.8);
   }
 }
 
-.default-info {
-  .data-point-info {
-    background: var(--ion-color-primary-tint);
-    border-color: var(--ion-color-primary-shade);
-    
-    .value {
-      color: var(--ion-color-primary-shade);
-    }
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -73,13 +85,13 @@
     height: 250px;
   }
   
-  .chart-info {
-    .data-point-info {
-      padding: 10px 16px;
-      min-width: 120px;
+  .chart-tooltip {
+    .tooltip-content {
+      padding: 6px 10px;
+      min-width: 100px;
       
-      .value {
-        font-size: 18px;
+      .tooltip-value {
+        font-size: 13px;
       }
     }
   }
@@ -88,18 +100,6 @@
 // Touch interaction improvements
 .portfolio-chart {
   touch-action: pan-x pan-y;
-}
-
-// Animation for data point selection
-.chart-info {
-  .data-point-info {
-    transition: all 0.2s ease-in-out;
-    
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-  }
 }
 
 // Chart loading state

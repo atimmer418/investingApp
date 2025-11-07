@@ -27,6 +27,7 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
   
   private chart: Chart | null = null;
   public selectedDataPoint: { date: string; value: number; formattedDate: string } | null = null;
+  public tooltipPosition: { x: number; y: number } = { x: 0, y: 0 };
 
   ngOnInit() {
     // Chart.js is now registered globally in main.ts
@@ -152,13 +153,32 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
           if (elements.length > 0) {
             const elementIndex = elements[0].index;
             const dataPoint = this.data[elementIndex];
-            if (dataPoint) {
+            const element = elements[0];
+            
+            if (dataPoint && this.chart) {
               this.selectedDataPoint = {
                 date: dataPoint.date,
                 value: dataPoint.value,
                 formattedDate: this.formatDate(dataPoint.date)
               };
+              
+              // Calculate tooltip position relative to canvas
+              const canvasRect = this.chartCanvas.nativeElement.getBoundingClientRect();
+              const chartArea = this.chart.chartArea;
+              
+              // Get the x position from the chart element
+              const pointX = element.element.x;
+              const pointY = element.element.y;
+              
+              // Position tooltip above the point
+              this.tooltipPosition = {
+                x: pointX - 75, // Center the tooltip (assuming ~150px width)
+                y: pointY - 80  // Position above the point
+              };
             }
+          } else {
+            // Clear selection if clicking outside a point
+            this.selectedDataPoint = null;
           }
         }
       }
@@ -197,26 +217,9 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private handleTooltip(context: any) {
-    const tooltip = context.tooltip;
-    
-    if (tooltip.opacity === 0) {
-      this.selectedDataPoint = null;
-      return;
-    }
-
-    if (tooltip.dataPoints && tooltip.dataPoints.length > 0) {
-      const dataPoint = tooltip.dataPoints[0];
-      const index = dataPoint.dataIndex;
-      const data = this.data[index];
-      
-      if (data) {
-        this.selectedDataPoint = {
-          date: data.date,
-          value: data.value,
-          formattedDate: this.formatDate(data.date)
-        };
-      }
-    }
+    // We're now using click-to-show instead of hover tooltips
+    // This method can be simplified or removed
+    return;
   }
 
   private formatDate(dateString: string): string {

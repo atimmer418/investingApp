@@ -2,21 +2,17 @@
   <!-- Chart Canvas -->
   <div class="chart-wrapper">
     <canvas #chartCanvas class="portfolio-chart"></canvas>
-  </div>
-  
-  <!-- Interactive Data Point Display -->
-  <div class="chart-info" *ngIf="selectedDataPoint">
-    <div class="data-point-info">
-      <div class="date">{{ selectedDataPoint.formattedDate }}</div>
-      <div class="value">{{ formatCurrency(selectedDataPoint.value) }}</div>
-    </div>
-  </div>
-  
-  <!-- Default Display when no point is selected -->
-  <div class="chart-info default-info" *ngIf="!selectedDataPoint && data.length > 0">
-    <div class="data-point-info">
-      <div class="date">Latest</div>
-      <div class="value">{{ formatCurrency(data[data.length - 1].value || 0) }}</div>
+    
+    <!-- Floating tooltip above clicked point -->
+    <div class="chart-tooltip" 
+         *ngIf="selectedDataPoint" 
+         [style.left.px]="tooltipPosition.x" 
+         [style.top.px]="tooltipPosition.y">
+      <div class="tooltip-content">
+        <div class="tooltip-date">{{ selectedDataPoint.formattedDate }}</div>
+        <div class="tooltip-value">{{ formatCurrency(selectedDataPoint.value) }}</div>
+      </div>
+      <div class="tooltip-arrow"></div>
     </div>
   </div>
   
