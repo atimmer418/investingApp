@@ -71,7 +71,7 @@
               </div>
               <div class="detail-content">
                 <h4>Next Investment</h4>
-                <p>{{ currentInvestment.nextInvestmentDate | date:'MMM d, y' }}</p>
+                <p>{{ formatDate(currentInvestment.nextInvestmentDate) }}</p>
               </div>
             </div>
           </div>
@@ -169,6 +169,20 @@
             </ion-select>
             <p class="input-helper">How often you want to invest</p>
           </div>
+
+          <!-- Next Investment Date -->
+          <div class="input-wrapper">
+            <label class="input-label">Next Investment Date</label>
+            <ion-button 
+              fill="outline" 
+              color="primary"
+              expand="block"
+              (click)="openDatePicker()">
+              <ion-icon name="calendar-outline" slot="start"></ion-icon>
+              {{ formatDate((editedInvestment.nextInvestmentDate || (currentInvestment && currentInvestment.nextInvestmentDate)) || '') }}
+            </ion-button>
+            <p class="input-helper">When your next investment will occur</p>
+          </div>
           
           <!-- Save Changes Button -->
           <div class="save-actions">
@@ -208,3 +222,26 @@
   position="top"
   (didDismiss)="showErrorToast = false">
 </ion-toast>
+
+<!-- Date Picker Modal -->
+<ion-modal [isOpen]="isDatePickerOpen" (didDismiss)="closeDatePicker()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Select Next Investment Date</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeDatePicker()">Done</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-datetime
+        [value]="getDateForPicker(editedInvestment.nextInvestmentDate || (currentInvestment && currentInvestment.nextInvestmentDate) || undefined)"
+        (ionChange)="onNextInvestmentDateChange($event)"
+        [min]="todayISO"
+        presentation="date"
+        color="primary">
+      </ion-datetime>
+    </ion-content>
+  </ng-template>
+</ion-modal>

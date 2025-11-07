@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface InvestmentExecution {
@@ -62,8 +62,8 @@ export interface InvestmentSchedule {
   monthlyAmount: number;
   investmentAmount: number;
   frequency: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'SEMI_MONTHLY';
-  startDate: string;
-  nextInvestmentDate: string;
+  startDate: string | number[]; // Can be ISO string or Java LocalDate array [year, month, day]
+  nextInvestmentDate: string | number[]; // Can be ISO string or Java LocalDate array [year, month, day]
   achRequestId?: string;
   isPaused: boolean;
   scheduleDescription: string;
@@ -75,6 +75,12 @@ export interface CreateInvestmentScheduleRequest {
   investmentAmount: number;
   frequency: string;
   startDate: string;
+}
+
+export interface UpdateInvestmentScheduleRequest {
+  investmentAmount?: number;
+  frequency?: string;
+  nextInvestmentDate?: string;
 }
 
 @Injectable({
@@ -151,7 +157,15 @@ export class InvestmentService {
   getCurrentSchedule(): Observable<InvestmentSchedule> {
     return this.http.get<InvestmentSchedule>(`${this.scheduleApiUrl}/current`, {
       headers: this.getAuthHeaders()
-    });
+    }).pipe(
+      catchError(error => {
+        console.error('Error fetching current investment schedule:', error);
+        if (error.status === 404) {
+          console.log('No investment schedule found for user');
+        }
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
