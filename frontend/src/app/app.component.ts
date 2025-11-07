@@ -16,7 +16,7 @@ register();
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
   standalone: true,
-  imports: [IonApp, IonRouterOutlet, CommonModule], // Added Platform to imports
+  imports: [IonApp, IonRouterOutlet, CommonModule],
 })
 export class AppComponent implements OnInit {
   constructor(

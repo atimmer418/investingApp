@@ -1,5 +1,10 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { BehaviorSubject, Observable, catchError, of, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { JwtTokenUtils } from '../utils/jwt-token.utils';
+
+const BACKEND_API_URL = environment.backendApiUrl;
 
 export interface BankAccount {
   id: string;
@@ -26,7 +31,7 @@ export class PlaidService {
   private bankAccountsSubject = new BehaviorSubject<BankAccount[]>([]);
   private currentAccountSubject = new BehaviorSubject<BankAccount | null>(null);
 
-  constructor() {
+  constructor(private http: HttpClient) {
     this.loadBankAccounts();
   }
 
@@ -40,8 +45,67 @@ export class PlaidService {
     return this.currentAccountSubject.asObservable();
   }
 
-  // Simulate loading bank accounts (in real app, this would call backend)
+  private getAuthHeaders(): HttpHeaders {
+    let headers = new HttpHeaders();
+    const token = JwtTokenUtils.getValidJwtToken();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  }
+
+  // Load bank accounts - try backend first, then fall back to localStorage
   private loadBankAccounts(): void {
+    // Check if user is authenticated
+    const token = JwtTokenUtils.getValidJwtToken();
+    if (token && !JwtTokenUtils.isJwtExpired()) {
+      // User is authenticated - fetch from backend
+      this.loadBankAccountFromBackend();
+    } else {
+      // User not authenticated - load from localStorage
+      this.loadBankAccountsFromLocalStorage();
+    }
+  }
+
+  // Fetch bank account from backend
+  private loadBankAccountFromBackend(): void {
+    this.http.get<any>(`${BACKEND_API_URL}/plaid/primary-bank-account`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap(response => {
+        if (response && response.institutionName) {
+          // Convert backend response to BankAccount format
+          const bankAccount: BankAccount = {
+            id: response.accountId || 'backend-account',
+            name: response.accountName || `${response.institutionName} ${response.accountSubtype || 'Account'}`,
+            type: response.accountSubtype === 'checking' ? 'checking' : 
+                  response.accountSubtype === 'savings' ? 'savings' : 'checking',
+            mask: '****', // Backend doesn't store mask for security
+            institutionName: response.institutionName,
+            isLinked: true,
+            linkDate: new Date(), // Could be enhanced to store actual link date
+            status: 'active'
+          };
+
+          this.bankAccountsSubject.next([bankAccount]);
+          this.currentAccountSubject.next(bankAccount);
+          console.log('[PlaidService] Loaded bank account from backend:', bankAccount);
+        } else {
+          console.log('[PlaidService] No bank account found in backend, falling back to localStorage');
+          this.loadBankAccountsFromLocalStorage();
+        }
+      }),
+      catchError(error => {
+        console.error('[PlaidService] Error loading bank account from backend:', error);
+        console.log('[PlaidService] Falling back to localStorage');
+        this.loadBankAccountsFromLocalStorage();
+        return of(null);
+      })
+    ).subscribe();
+  }
+
+  // Load bank accounts from localStorage (fallback)
+  private loadBankAccountsFromLocalStorage(): void {
     try {
       const stored = localStorage.getItem('plaidBankAccounts');
       if (stored) {
@@ -61,7 +125,7 @@ export class PlaidService {
         this.createDemoAccount();
       }
     } catch (error) {
-      console.error('Error loading bank accounts:', error);
+      console.error('Error loading bank accounts from localStorage:', error);
       this.createDemoAccount();
     }
   }
@@ -135,14 +199,7 @@ export class PlaidService {
 
   // Simulate Plaid Link process
   async initiatePlaidLink(): Promise<PlaidLinkResult> {
-    // In a real app, this would:
-    // 1. Create Plaid Link token from backend
-    // 2. Open Plaid Link modal
-    // 3. Handle the result
-    // 4. Exchange public token for access token on backend
-    
     return new Promise((resolve) => {
-      // Simulate async Plaid Link process
       setTimeout(() => {
         const success = Math.random() > 0.1; // 90% success rate for demo
         
@@ -174,7 +231,7 @@ export class PlaidService {
             error: 'Failed to link bank account. Please try again.'
           });
         }
-      }, 2000); // Simulate 2 second process
+      }, 2000);
     });
   }
 
@@ -191,6 +248,11 @@ export class PlaidService {
   // Check if user has any linked accounts
   hasLinkedAccounts(): boolean {
     return this.bankAccountsSubject.value.some(acc => acc.status === 'active');
+  }
+
+  // Method to refresh data after user authentication
+  refreshBankAccountData(): void {
+    this.loadBankAccounts();
   }
 
   // Private helper methods

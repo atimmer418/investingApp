@@ -25,7 +25,7 @@ export interface UserPreferences {
 export interface RecurringInvestment {
   id: string;
   amount: number;
-  frequency: 'weekly' | 'biweekly' | 'monthly';
+  frequency: 'weekly' | 'biweekly' | 'monthly' | 'semi_monthly';
   nextDate: Date;
   isActive: boolean;
   portfolioAllocation?: {

@@ -1,34 +1,367 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      Stock Search
+      <ion-icon name="trending-up" class="icon-enhanced primary"></ion-icon>
+      Retirement Planning
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Stock Search</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <!-- Beautiful Header Section -->
+  <div class="retirement-header">
+    <h1>
+      <ion-icon name="calculator-outline" class="icon-enhanced"></ion-icon>
+      Retirement Planning Suite
+    </h1>
+    <p>Test your strategy with Monte Carlo simulation and learn proven withdrawal approaches</p>
+  </div>
 
-  <ion-searchbar
-    placeholder="Enter stock symbol (e.g., AAPL)"
-    (ionInput)="handleSearchInput($event)"
-    [debounce]="300">
-  </ion-searchbar>
+  <!-- Enhanced Section Navigation -->
+  <div class="section-tabs">
+    <ion-segment [(ngModel)]="selectedSection">
+      <ion-segment-button value="simulator">
+        <ion-icon name="dice-outline"></ion-icon>
+        <ion-label>Monte Carlo</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="education">
+        <ion-icon name="school-outline"></ion-icon>
+        <ion-label>Education</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </div>
 
-  <ion-list>
-    <ion-item *ngIf="searchResults && searchResults.length === 0 && lastSearchQuery && lastSearchQuery.length > 0">
-      <ion-label>No stocks found for "{{ lastSearchQuery }}".</ion-label>
-    </ion-item>
-    <ion-item *ngFor="let stock of searchResults">
-      <ion-label>
-        <h2>{{ stock.symbol }}</h2>
-        <p>{{ stock.name }}</p>
-        <!-- You can add more fields here as they become available, e.g., stock.price -->
-      </ion-label>
-    </ion-item>
-  </ion-list>
+  <!-- Monte Carlo Simulator Section -->
+  <div *ngIf="selectedSection === 'simulator'" class="simulator-section fade-in">
+    <div class="simulator-header">
+      <h2>
+        <ion-icon name="dice-outline" class="icon-enhanced primary"></ion-icon>
+        Monte Carlo Retirement Simulator
+      </h2>
+      <p>Test if your money will last through retirement using real market scenarios</p>
+    </div>
+
+    <!-- How It Works Explanation -->
+    <ion-card class="explanation-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="help-circle-outline" class="icon-enhanced primary"></ion-icon>
+          How This Simulator Works
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p><strong>Monte Carlo simulation</strong> tests your retirement plan by running 1,000 different market scenarios. Here's what happens:</p>
+        
+        <ul>
+          <li><strong>Random Market Conditions:</strong> Each scenario uses different stock/bond returns based on historical market volatility</li>
+          <li><strong>Inflation Protection:</strong> Your withdrawal amount increases by 2.5% annually to maintain purchasing power</li>
+          <li><strong>Balanced Portfolio:</strong> Assumes 70% stocks (10% average return) and 30% bonds (4% average return)</li>
+          <li><strong>Success Rate:</strong> Shows the percentage of scenarios where your money lasts the full retirement period</li>
+        </ul>
+        
+        <div class="confidence-guide">
+          <h4>
+            <ion-icon name="shield-checkmark-outline" class="icon-enhanced success"></ion-icon>
+            Confidence Guide
+          </h4>
+          <p><strong>90%+ Success Rate:</strong> Very confident - your plan should work in most market conditions</p>
+          <p><strong>75-89% Success Rate:</strong> Moderately confident - consider small adjustments</p>
+          <p><strong>Below 75%:</strong> High risk - significant plan changes recommended</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+    
+    <div class="input-section">
+      <h3>
+        <ion-icon name="wallet-outline" class="icon-enhanced primary"></ion-icon>
+        Financial Inputs
+      </h3>
+      
+      <div class="simulation-inputs">
+        <ion-grid>
+          <ion-row>
+            <ion-col size="12" size-md="4">
+              <ion-item>
+                <ion-label position="stacked">
+                  <ion-icon name="pie-chart-outline" class="icon-enhanced primary"></ion-icon>
+                  Portfolio Value
+                </ion-label>
+                <ion-input 
+                  type="number" 
+                  [(ngModel)]="portfolioValue"
+                  placeholder="1,000,000"></ion-input>
+              </ion-item>
+              <div class="input-help">Your total investment portfolio value</div>
+            </ion-col>
+            
+            <ion-col size="12" size-md="4">
+              <ion-item>
+                <ion-label position="stacked">
+                  <ion-icon name="cash-outline" class="icon-enhanced primary"></ion-icon>
+                  Annual Withdrawal
+                </ion-label>
+                <ion-input 
+                  type="number" 
+                  [(ngModel)]="annualWithdrawal"
+                  placeholder="40,000"></ion-input>
+              </ion-item>
+              <div class="input-help">Amount you need per year (inflation-adjusted)</div>
+            </ion-col>
+            
+            <ion-col size="12" size-md="4">
+              <ion-item>
+                <ion-label position="stacked">
+                  <ion-icon name="time-outline" class="icon-enhanced primary"></ion-icon>
+                  Retirement Duration
+                </ion-label>
+                <ion-input 
+                  type="number" 
+                  [(ngModel)]="yearsToLast"
+                  placeholder="30"></ion-input>
+              </ion-item>
+              <div class="input-help">How many years your money needs to last in retirement</div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+    </div>
+
+    <ion-button 
+      expand="block" 
+      size="large"
+      class="simulate-button"
+      (click)="runSimulation()"
+      [disabled]="isSimulating || portfolioValue <= 0 || annualWithdrawal <= 0 || yearsToLast <= 0">
+      <ion-icon name="play-circle-outline" slot="start"></ion-icon>
+      <span *ngIf="!isSimulating">Run Retirement Simulation</span>
+      <span *ngIf="isSimulating">
+        <ion-spinner name="crescent"></ion-spinner>
+        Testing {{ yearsToLast }} years across 1,000 scenarios...
+      </span>
+    </ion-button>
+
+    <!-- Enhanced Simulation Results -->
+    <div *ngIf="simulationResult" class="results-section slide-up">
+      <!-- Main Success Rate Display -->
+      <ion-card class="result-metric">
+        <div class="result-icon">
+          <ion-icon [name]="getSuccessIcon()" [class]="'icon-enhanced ' + getSuccessColor()"></ion-icon>
+        </div>
+        <div class="success-percentage" [class]="'color-' + getSuccessColor()">
+          {{ formatPercent(simulationResult.successProbability) }}
+        </div>
+        <p><strong>Success Rate</strong></p>
+        <p class="result-explanation">
+          In {{ getSuccessfulScenarios() }} of 1,000 market scenarios, 
+          your money lasted the full {{ yearsToLast }} years
+        </p>
+        
+        <div class="performance-indicator">
+          <div class="indicator-item">
+            <ion-icon 
+              [name]="simulationResult.successProbability >= 80 ? 'checkmark-circle' : simulationResult.successProbability >= 60 ? 'warning' : 'close-circle'"
+              [class]="simulationResult.successProbability >= 80 ? 'success' : simulationResult.successProbability >= 60 ? 'warning' : 'danger'">
+            </ion-icon>
+            <span>{{ getSuccessMessage() }}</span>
+          </div>
+        </div>
+      </ion-card>
+
+      <!-- What This Means for You -->
+      <ion-card class="explanation-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="bulb-outline" class="icon-enhanced primary"></ion-icon>
+            What This Means for You
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div *ngIf="simulationResult.successProbability >= 90" class="success-explanation">
+            <h4 class="color-success">
+              <ion-icon name="checkmark-circle" class="success"></ion-icon>
+              Excellent Plan Confidence
+            </h4>
+            <p>Your retirement plan looks very strong! With a {{ formatPercent(simulationResult.successProbability) }} success rate, you can be confident your money will last through retirement, even in difficult market conditions.</p>
+          </div>
+          
+          <div *ngIf="simulationResult.successProbability >= 75 && simulationResult.successProbability < 90" class="moderate-explanation">
+            <h4 class="color-warning">
+              <ion-icon name="warning" class="warning"></ion-icon>
+              Good Plan with Minor Adjustments
+            </h4>
+            <p>Your plan is solid but could benefit from small improvements. Consider reducing expenses slightly or working 1-2 years longer to improve your success rate.</p>
+          </div>
+          
+          <div *ngIf="simulationResult.successProbability < 75" class="risk-explanation">
+            <h4 class="color-danger">
+              <ion-icon name="alert-circle" class="danger"></ion-icon>
+              Plan Needs Significant Changes
+            </h4>
+            <p>Your current plan has significant risk of running out of money. Consider: reducing annual spending, working longer, or increasing your portfolio before retirement.</p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Practical Retirement Insights -->
+      <div class="scenario-summary">
+        <h3>
+          <ion-icon name="lightbulb-outline" class="icon-enhanced primary"></ion-icon>
+          Your Retirement Plan Breakdown
+        </h3>
+        <ion-list>
+          <ion-item>
+            <ion-label>
+              <h4>Monthly Income in Retirement</h4>
+              <p>{{ formatCurrency(annualWithdrawal / 12) }} per month (starting amount)</p>
+              <small>This grows to {{ formatCurrency(getFinalYearWithdrawal() / 12) }} per month by year {{ yearsToLast }} due to inflation</small>
+            </ion-label>
+          </ion-item>
+          
+          <ion-item>
+            <ion-label>
+              <h4>Total Money You'll Withdraw</h4>
+              <p>{{ formatCurrency(getTotalWithdrawal()) }} over {{ yearsToLast }} years</p>
+              <small>This is {{ formatPercent((getTotalWithdrawal() / portfolioValue) * 100) }} of your starting portfolio</small>
+            </ion-label>
+          </ion-item>
+          
+          <ion-item>
+            <ion-label>
+              <h4>What Happens in a Typical Market</h4>
+              <p>You'd have {{ formatCurrency(simulationResult.medianEndValue) }} left over</p>
+              <small>In 50% of scenarios, you end up with more than this amount</small>
+            </ion-label>
+          </ion-item>
+          
+          <ion-item>
+            <ion-label>
+              <h4>What Happens in Bad Markets</h4>
+              <p *ngIf="simulationResult.minimumEndValue > 0">Even in the worst 1% of scenarios, you'd have {{ formatCurrency(simulationResult.minimumEndValue) }} remaining</p>
+              <p *ngIf="simulationResult.minimumEndValue <= 0" class="color-danger">In the worst scenarios, you could run out of money before year {{ yearsToLast }}</p>
+              <small *ngIf="simulationResult.minimumEndValue > 0">This shows your plan has good downside protection</small>
+              <small *ngIf="simulationResult.minimumEndValue <= 0">Consider reducing spending or working longer to protect against this risk</small>
+            </ion-label>
+          </ion-item>
+          
+          <ion-item>
+            <ion-label>
+              <h4>Your Safety Margin</h4>
+              <p *ngIf="(annualWithdrawal / portfolioValue) <= 0.04" class="color-success">Conservative ({{ formatPercent((annualWithdrawal / portfolioValue) * 100) }} withdrawal rate)</p>
+              <p *ngIf="(annualWithdrawal / portfolioValue) > 0.04 && (annualWithdrawal / portfolioValue) <= 0.05" class="color-warning">Moderate ({{ formatPercent((annualWithdrawal / portfolioValue) * 100) }} withdrawal rate)</p>
+              <p *ngIf="(annualWithdrawal / portfolioValue) > 0.05" class="color-danger">Aggressive ({{ formatPercent((annualWithdrawal / portfolioValue) * 100) }} withdrawal rate)</p>
+              <small>The "4% rule" suggests withdrawing no more than 4% annually for safety</small>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </div>
+      </div>
+
+      <!-- Actionable Recommendations -->
+      <ion-card *ngIf="simulationResult" class="recommendations-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="bulb-outline" class="icon-enhanced primary"></ion-icon>
+            Specific Next Steps
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div *ngIf="simulationResult && simulationResult.successProbability >= 90">
+            <h4 class="color-success">Your Plan Looks Great! 🎉</h4>
+            <ul>
+              <li>Consider if you could retire earlier or increase your lifestyle</li>
+              <li>Review your plan every 2-3 years as markets change</li>
+              <li>Think about legacy planning - you may have significant assets left over</li>
+            </ul>
+          </div>
+          
+          <div *ngIf="simulationResult && simulationResult.successProbability >= 75 && simulationResult.successProbability < 90">
+            <h4 class="color-warning">Small Improvements Recommended</h4>
+            <ul>
+              <li><strong>Option 1:</strong> Reduce annual spending by {{ formatCurrency((annualWithdrawal * 0.1)) }} (10%)</li>
+              <li><strong>Option 2:</strong> Work 2-3 more years to build a bigger cushion</li>
+              <li><strong>Option 3:</strong> Consider a slightly more aggressive investment allocation</li>
+            </ul>
+          </div>
+          
+          <div *ngIf="simulationResult && simulationResult.successProbability < 75">
+            <h4 class="color-danger">Significant Changes Needed</h4>
+            <ul>
+              <li><strong>Reduce spending:</strong> Try {{ formatCurrency(portfolioValue * 0.04) }} annually (4% rule)</li>
+              <li><strong>Work longer:</strong> Each extra year dramatically improves your odds</li>
+              <li><strong>Save more now:</strong> Increase portfolio to {{ formatCurrency(annualWithdrawal / 0.04) }} for safety</li>
+              <li><strong>Consider part-time work</strong> in early retirement to reduce portfolio withdrawals</li>
+            </ul>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <div class="simulation-note">
+        <ion-icon name="information-circle-outline" class="icon-enhanced primary"></ion-icon>
+        <strong>Simulation Details:</strong> This analysis used 1,000 random market scenarios with a balanced portfolio (70% stocks, 30% bonds) 
+        and included sequence of returns risk - the challenge of poor market performance early in retirement.
+      </div>
+    </div>
+
+  <!-- Strategy Education Section -->
+  <div *ngIf="selectedSection === 'education'" class="strategy-section fade-in">
+    <div class="strategy-header">
+      <h2>
+        <ion-icon name="school-outline" class="icon-enhanced primary"></ion-icon>
+        Retirement Strategy Education
+      </h2>
+      <p>Learn about different retirement withdrawal strategies and their trade-offs</p>
+    </div>
+
+    <ion-card
+      *ngFor="let card of strategyCards" 
+      class="strategy-card"
+      (click)="selectCard(card)"
+      [class.selected-card]="selectedCard?.id === card.id">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon [name]="card.icon" class="icon-enhanced primary"></ion-icon>
+          {{ card.title }}
+        </ion-card-title>
+        <p class="card-subtitle">{{ card.subtitle }}</p>
+      </ion-card-header>
+      <ion-card-content>
+        <p>{{ card.description }}</p>
+        
+        <div *ngIf="selectedCard?.id === card.id" class="card-details slide-up">
+          <h4>
+            <ion-icon name="checkmark-circle-outline" class="icon-enhanced success"></ion-icon>
+            Benefits
+          </h4>
+          <ul>
+            <li *ngFor="let benefit of card.benefits">{{ benefit }}</li>
+          </ul>
+          
+          <h4>
+            <ion-icon name="alert-circle-outline" class="icon-enhanced warning"></ion-icon>
+            Considerations
+          </h4>
+          <ul>
+            <li *ngFor="let consideration of card.considerations">{{ consideration }}</li>
+          </ul>
+
+          <h4>
+            <ion-icon name="pie-chart-outline" class="icon-enhanced primary"></ion-icon>
+            Optimal Portfolio
+          </h4>
+          <p class="portfolio-recommendation">{{ card.portfolioRecommendation }}</p>
+
+          <h4>
+            <ion-icon name="person-outline" class="icon-enhanced primary"></ion-icon>
+            Who This Strategy Fits
+          </h4>
+          <p class="best-for">{{ card.bestFor }}</p>
+          
+          <ion-button fill="clear" color="primary" size="small">
+            <ion-icon name="book-outline" slot="start"></ion-icon>
+            Learn More
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
 </ion-content>

@@ -1,0 +1,377 @@
+.recurring-investments-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+}
+
+// Header Styling
+ion-header {
+  ion-toolbar {
+    --background: var(--ion-color-primary);
+    --color: white;
+    
+    ion-title {
+      font-weight: 600;
+    }
+    
+    ion-back-button {
+      --color: white;
+    }
+  }
+}
+
+// Section Headers
+.section-header {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  ion-icon {
+    color: var(--ion-color-primary);
+    font-size: 1.4rem;
+  }
+}
+
+// Status Banner
+.status-banner {
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  overflow: hidden;
+  
+  &.active {
+    --background: linear-gradient(135deg, var(--ion-color-success-tint), var(--ion-color-success));
+    --color: white;
+  }
+  
+  &.paused {
+    --background: linear-gradient(135deg, var(--ion-color-warning-tint), var(--ion-color-warning));
+    --color: white;
+  }
+  
+  .status-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .status-info {
+      flex: 1;
+      
+      h2 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+      
+      p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 0.95rem;
+      }
+    }
+    
+    ion-icon {
+      font-size: 3rem;
+      opacity: 0.8;
+    }
+  }
+}
+
+// Details Card
+.details-card {
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  
+  .detail-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    
+    .detail-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      
+      .detail-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--ion-color-primary-tint);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        
+        ion-icon {
+          font-size: 1.2rem;
+        }
+      }
+      
+      .detail-content {
+        flex: 1;
+        
+        h4 {
+          margin: 0 0 0.25rem 0;
+          font-size: 0.9rem;
+          color: var(--ion-color-medium);
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        
+        p {
+          margin: 0 0 0.25rem 0;
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: var(--ion-color-dark);
+        }
+        
+        .detail-frequency {
+          font-size: 0.85rem;
+          color: var(--ion-color-medium);
+          font-style: italic;
+        }
+      }
+    }
+  }
+}
+
+// Projections Section
+.projections-section {
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ion-color-light-shade);
+  
+  h4 {
+    margin: 0 0 1rem 0;
+    color: var(--ion-color-dark);
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  
+  .projection-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    
+    .projection-card {
+      background: var(--ion-color-light);
+      border-radius: 12px;
+      padding: 1.2rem;
+      text-align: center;
+      
+      .projection-amount {
+        display: block;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--ion-color-success);
+        margin-bottom: 0.5rem;
+      }
+      
+      .projection-label {
+        display: block;
+        font-size: 0.9rem;
+        color: var(--ion-color-medium);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// Actions Card
+.actions-card {
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  
+  .action-buttons {
+    ion-button {
+      --border-radius: 12px;
+      --padding-top: 1rem;
+      --padding-bottom: 1rem;
+      font-weight: 600;
+      font-size: 1rem;
+      
+      ion-icon {
+        margin-right: 0.5rem;
+        font-size: 1.2rem;
+      }
+    }
+  }
+}
+
+// Empty State
+.empty-state-card {
+  margin-top: 2rem;
+  border-radius: 12px;
+  
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    
+    ion-icon {
+      margin-bottom: 1.5rem;
+      font-size: 4rem;
+    }
+    
+    h3 {
+      color: var(--ion-color-dark);
+      margin: 0 0 1rem 0;
+      font-weight: 600;
+      font-size: 1.3rem;
+    }
+    
+    p {
+      color: var(--ion-color-medium);
+      margin-bottom: 2rem;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+    
+    ion-button {
+      --border-radius: 12px;
+      --padding-top: 1rem;
+      --padding-bottom: 1rem;
+      font-weight: 600;
+    }
+  }
+}
+
+// Edit Section
+.edit-card {
+  border-radius: 12px;
+  
+  .input-wrapper {
+    margin-bottom: 2rem;
+    
+    .input-label {
+      display: block;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+    }
+    
+    .currency-input {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: var(--ion-color-light);
+      border-radius: 12px;
+      border: 2px solid transparent;
+      transition: border-color 0.2s;
+      
+      &:focus-within {
+        border-color: var(--ion-color-primary);
+      }
+      
+      .currency-symbol {
+        padding: 0 1rem;
+        font-weight: 600;
+        color: var(--ion-color-medium);
+        font-size: 1.1rem;
+      }
+      
+      .amount-input {
+        --background: transparent;
+        --color: var(--ion-color-dark);
+        --padding-start: 0;
+        --padding-end: 1rem;
+        --padding-top: 1rem;
+        --padding-bottom: 1rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        flex: 1;
+      }
+    }
+    
+    .frequency-select {
+      --background: var(--ion-color-light);
+      --color: var(--ion-color-dark);
+      --border-radius: 12px;
+      --padding-start: 1rem;
+      --padding-end: 1rem;
+      --padding-top: 1rem;
+      --padding-bottom: 1rem;
+      font-weight: 500;
+      border: 2px solid transparent;
+      
+      &:focus-within {
+        --border-color: var(--ion-color-primary);
+      }
+    }
+    
+    .input-helper {
+      margin: 0.5rem 0 0 0;
+      font-size: 0.85rem;
+      color: var(--ion-color-medium);
+      font-style: italic;
+    }
+  }
+  
+  .save-actions {
+    margin-top: 2rem;
+    
+    ion-button {
+      --border-radius: 12px;
+      --padding-top: 1rem;
+      --padding-bottom: 1rem;
+      font-weight: 600;
+      font-size: 1rem;
+      
+      ion-icon {
+        margin-right: 0.5rem;
+        font-size: 1.2rem;
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .recurring-investments-container {
+    padding: 0;
+  }
+  
+  .projection-cards {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .detail-grid {
+    gap: 1rem;
+  }
+  
+  .status-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+    
+    ion-icon {
+      font-size: 2.5rem;
+    }
+  }
+}
+
+// Dark Theme Support
+@media (prefers-color-scheme: dark) {
+  .details-card,
+  .actions-card,
+  .edit-card,
+  .empty-state-card {
+    --background: var(--ion-color-dark-tint);
+  }
+  
+  .projection-cards .projection-card,
+  .currency-input,
+  .frequency-select {
+    --background: var(--ion-color-dark-shade);
+  }
+  
+  .detail-icon {
+    background: var(--ion-color-primary-shade) !important;
+  }
+}

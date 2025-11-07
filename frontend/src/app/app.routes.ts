@@ -50,6 +50,10 @@ export const routes: Routes = [
     // or integrated into a guard that redirects new users here.
   },
   {
+    path: 'recurring-investments',
+    loadComponent: () => import('./recurring-investments/recurring-investments.page').then(m => m.RecurringInvestmentsPage)
+  },
+  {
     path: 'tabs',
     loadChildren: () => import('./tabs/tabs.routes').then((m) => m.routes),
   },

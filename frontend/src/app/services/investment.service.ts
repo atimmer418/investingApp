@@ -57,11 +57,32 @@ export interface ExecutionDetails {
   trades: InvestmentTrade[];
 }
 
+export interface InvestmentSchedule {
+  id: number;
+  monthlyAmount: number;
+  investmentAmount: number;
+  frequency: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'SEMI_MONTHLY';
+  startDate: string;
+  nextInvestmentDate: string;
+  achRequestId?: string;
+  isPaused: boolean;
+  scheduleDescription: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateInvestmentScheduleRequest {
+  investmentAmount: number;
+  frequency: string;
+  startDate: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class InvestmentService {
   private apiUrl = `${environment.backendApiUrl}/investments`;
+  private scheduleApiUrl = `${environment.backendApiUrl}/investment-schedule`;
 
   constructor(private http: HttpClient) {}
 
@@ -118,6 +139,74 @@ export class InvestmentService {
    */
   getDashboard(): Observable<InvestmentDashboard> {
     return this.http.get<InvestmentDashboard>(`${this.apiUrl}/dashboard`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Investment Schedule Management Methods
+
+  /**
+   * Get current investment schedule for the authenticated user
+   */
+  getCurrentSchedule(): Observable<InvestmentSchedule> {
+    return this.http.get<InvestmentSchedule>(`${this.scheduleApiUrl}/current`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  /**
+   * Get all investment schedules for the authenticated user
+   */
+  getAllSchedules(): Observable<InvestmentSchedule[]> {
+    return this.http.get<InvestmentSchedule[]>(`${this.scheduleApiUrl}/all`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  /**
+   * Create or update investment schedule
+   */
+  createSchedule(request: CreateInvestmentScheduleRequest): Observable<InvestmentSchedule> {
+    return this.http.post<InvestmentSchedule>(`${this.scheduleApiUrl}/create`, request, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  /**
+   * Pause an investment schedule
+   */
+  pauseSchedule(scheduleId: number): Observable<InvestmentSchedule> {
+    return this.http.post<InvestmentSchedule>(`${this.scheduleApiUrl}/${scheduleId}/pause`, {}, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  /**
+   * Resume an investment schedule
+   */
+  resumeSchedule(scheduleId: number): Observable<InvestmentSchedule> {
+    return this.http.post<InvestmentSchedule>(`${this.scheduleApiUrl}/${scheduleId}/resume`, {}, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  /**
+   * Update ACH request ID for investment schedule
+   */
+  updateAchRequestId(achRequestId: string): Observable<InvestmentSchedule> {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    // Decode token to get user email (simplified - you might want to use a proper JWT library)
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const userEmail = payload.sub;
+
+    return this.http.post<InvestmentSchedule>(`${this.scheduleApiUrl}/update-ach-request-id`, {
+      userEmail,
+      achRequestId
+    }, {
       headers: this.getAuthHeaders()
     });
   }

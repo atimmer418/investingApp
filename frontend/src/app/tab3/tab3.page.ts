@@ -47,6 +47,7 @@ import {
 } from 'ionicons/icons';
 import { SettingsService, UserPreferences, RecurringInvestment } from '../services/settings.service';
 import { PlaidService, BankAccount } from '../services/plaid.service';
+import { AuthService } from '../services/auth.service';
 
 interface SettingSection {
   title: string;
@@ -231,7 +232,12 @@ export class Tab3Page implements OnInit, OnDestroy {
     }
   ];
 
-  constructor(private router: Router, private settingsService: SettingsService, private plaidService: PlaidService) {
+  constructor(
+    private router: Router, 
+    private settingsService: SettingsService, 
+    private plaidService: PlaidService,
+    private authService: AuthService
+  ) {
     addIcons({
       settingsOutline,
       walletOutline,
@@ -283,6 +289,12 @@ export class Tab3Page implements OnInit, OnDestroy {
       .subscribe(account => {
         this.currentBankAccount = account;
       });
+  }
+
+  ionViewWillEnter() {
+    // Refresh bank account data when entering this page
+    // This ensures we get the latest data from the backend if user is authenticated
+    this.plaidService.refreshBankAccountData();
   }
 
   ngOnDestroy() {
@@ -372,15 +384,8 @@ export class Tab3Page implements OnInit, OnDestroy {
   }
 
   private handleRecurringInvestments() {
-    if (this.recurringInvestment) {
-      const status = this.recurringInvestment.isActive ? 'active' : 'paused';
-      const amount = this.settingsService.formatCurrency(this.recurringInvestment.amount);
-      const nextDate = this.settingsService.formatDate(this.recurringInvestment.nextDate);
-      
-      this.displayToast(`Recurring investment: ${amount} ${this.recurringInvestment.frequency} (${status}). Next: ${nextDate}`, 'primary');
-    } else {
-      this.displayToast('No recurring investment set up yet', 'warning');
-    }
+    // Navigate to the recurring investments management page
+    this.router.navigate(['/recurring-investments']);
   }
 
   private handleLumpSumInvestment() {
