@@ -162,17 +162,14 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
                 formattedDate: this.formatDate(dataPoint.date)
               };
               
-              // Calculate tooltip position relative to canvas
-              const canvasRect = this.chartCanvas.nativeElement.getBoundingClientRect();
-              const chartArea = this.chart.chartArea;
-              
-              // Get the x position from the chart element
+              // Get the x position from the chart element (this is already centered on the point)
               const pointX = element.element.x;
               const pointY = element.element.y;
               
-              // Position tooltip above the point
+              // Position tooltip centered above the point
+              // pointX is already the center of the dot, so we just need to offset by half the tooltip width
               this.tooltipPosition = {
-                x: pointX - 75, // Center the tooltip (assuming ~150px width)
+                x: pointX - 50, // Center the tooltip (assuming ~100px width)
                 y: pointY - 80  // Position above the point
               };
             }

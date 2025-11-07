@@ -29,8 +29,10 @@
     padding: 8px 12px;
     border-radius: 6px;
     text-align: center;
-    min-width: 120px;
+    min-width: 100px;
+    max-width: 140px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
     
     .tooltip-date {
       font-size: 12px;
