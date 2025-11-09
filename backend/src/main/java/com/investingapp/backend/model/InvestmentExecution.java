@@ -38,6 +38,12 @@ public class InvestmentExecution {
     @Column(name = "error_message", columnDefinition = "TEXT")
     private String errorMessage;
     
+    @Column(name = "investment_type")
+    private String investmentType; // "portfolio" or "stock"
+    
+    @Column(name = "target_symbol")
+    private String targetSymbol; // Stock symbol for individual stock investments
+    
     @Column(name = "funding_completed_at")
     private LocalDateTime fundingCompletedAt;
     
@@ -84,6 +90,16 @@ public class InvestmentExecution {
         this.scheduledDate = scheduledDate;
         this.amount = amount;
         this.status = ExecutionStatus.SCHEDULED;
+        this.investmentType = "portfolio"; // default
+    }
+    
+    public InvestmentExecution(User user, LocalDateTime scheduledDate, BigDecimal amount, String investmentType, String targetSymbol) {
+        this.user = user;
+        this.scheduledDate = scheduledDate;
+        this.amount = amount;
+        this.status = ExecutionStatus.SCHEDULED;
+        this.investmentType = investmentType;
+        this.targetSymbol = targetSymbol;
     }
     
     // Getters and Setters
@@ -113,6 +129,12 @@ public class InvestmentExecution {
     
     public String getErrorMessage() { return errorMessage; }
     public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
+    
+    public String getInvestmentType() { return investmentType; }
+    public void setInvestmentType(String investmentType) { this.investmentType = investmentType; }
+    
+    public String getTargetSymbol() { return targetSymbol; }
+    public void setTargetSymbol(String targetSymbol) { this.targetSymbol = targetSymbol; }
     
     public LocalDateTime getFundingCompletedAt() { return fundingCompletedAt; }
     public void setFundingCompletedAt(LocalDateTime fundingCompletedAt) { this.fundingCompletedAt = fundingCompletedAt; }

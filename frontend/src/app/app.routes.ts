@@ -54,6 +54,14 @@ export const routes: Routes = [
     loadComponent: () => import('./recurring-investments/recurring-investments.page').then(m => m.RecurringInvestmentsPage)
   },
   {
+    path: 'lump-sum-investment',
+    loadComponent: () => import('./lump-sum-investment/lump-sum-investment.page').then(m => m.LumpSumInvestmentPage)
+  },
+  {
+    path: 'change-bank-account',
+    loadComponent: () => import('./change-bank-account/change-bank-account.page').then(m => m.ChangeBankAccountPage)
+  },
+  {
     path: 'tabs',
     loadChildren: () => import('./tabs/tabs.routes').then((m) => m.routes),
   },

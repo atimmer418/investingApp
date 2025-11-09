@@ -1,0 +1,499 @@
+.lump-sum-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+}
+
+// Header Styling
+ion-header {
+  ion-toolbar {
+    --background: var(--ion-color-primary);
+    --color: white;
+    
+    ion-title {
+      font-weight: 600;
+    }
+    
+    ion-back-button {
+      --color: white;
+    }
+  }
+}
+
+// Section Headers
+.section-header {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  ion-icon {
+    color: var(--ion-color-primary);
+    font-size: 1.4rem;
+  }
+}
+
+/* Info Card */
+.info-card {
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  
+  .info-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    
+    .info-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--ion-color-primary);
+      color: white !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.2rem;
+      text-align: center;
+      line-height: 1;
+      padding: 0;
+      margin: 0;
+      position: relative;
+      
+      /* Adjust the icon position by shifting the container's content */
+      padding-top: 1px;
+      padding-left: 1px;
+    }
+    
+    h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+    }
+  }
+  
+  p {
+    margin: 0;
+    color: var(--ion-color-medium);
+    line-height: 1.5;
+    font-size: 0.95rem;
+  }
+}
+
+/* Investment Card */
+.investment-card {
+  border-radius: 12px;
+}
+
+/* Input Styling - Matching recurring investments exactly */
+.input-wrapper {
+  margin-bottom: 2rem;
+  
+  .input-label {
+    display: block;
+    font-weight: 600;
+    color: var(--ion-color-dark);
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+  }
+  
+  .currency-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: var(--ion-color-light);
+    border-radius: 12px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+    
+    &:focus-within {
+      border-color: var(--ion-color-primary);
+    }
+    
+    .currency-symbol {
+      padding: 0 1rem;
+      font-weight: 600;
+      color: var(--ion-color-medium);
+      font-size: 1.1rem;
+    }
+    
+    .amount-input {
+      --background: transparent;
+      --color: var(--ion-color-dark);
+      --padding-start: 0;
+      --padding-end: 1rem;
+      --padding-top: 1rem;
+      --padding-bottom: 1rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+      flex: 1;
+      
+      &::part(native) {
+        border: none !important;
+        box-shadow: none !important;
+      }
+    }
+  }
+  
+  .input-helper {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.85rem;
+    color: var(--ion-color-medium);
+    font-style: italic;
+  }
+}
+
+/* Investment Type Segment */
+.investment-type-segment {
+  --background: var(--ion-color-light);
+  --color-checked: white;
+  --background-checked: var(--ion-color-primary);
+  --border-radius: 12px;
+  margin-bottom: 0.5rem;
+  
+  ion-segment-button {
+    --color: var(--ion-color-medium-shade);
+    font-weight: 500;
+  }
+}
+
+/* Stock Search Components */
+.stock-searchbar {
+  --background: var(--ion-color-light);
+  --color: var(--ion-color-dark);
+  --border-radius: 12px;
+  --box-shadow: none;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+  margin-bottom: 1rem;
+  
+  &.searchbar-has-focus {
+    border-color: var(--ion-color-primary);
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--ion-color-medium);
+  
+  ion-spinner {
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+}
+
+.search-results {
+  margin: 1rem 0;
+  
+  .search-results-list {
+    background: var(--ion-color-light);
+    border-radius: 12px;
+    overflow: hidden;
+    
+    .search-result-item {
+      --background: transparent;
+      --border-color: var(--ion-color-light-shade);
+      --color: var(--ion-color-dark);
+      cursor: pointer;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        --background: var(--ion-color-light-tint);
+      }
+      
+      &:last-child {
+        --border-style: none;
+      }
+      
+      ion-label {
+        h3 {
+          font-weight: 600;
+          color: var(--ion-color-dark);
+          margin: 0 0 0.25rem 0;
+          font-size: 1rem;
+        }
+        
+        p {
+          color: var(--ion-color-medium);
+          margin: 0 0 0.25rem 0;
+          font-size: 0.85rem;
+          line-height: 1.2;
+        }
+        
+        ion-note {
+          color: var(--ion-color-primary);
+          font-size: 0.75rem;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+      }
+    }
+  }
+}
+
+.no-results {
+  text-align: center;
+  padding: 2rem;
+  color: var(--ion-color-medium);
+  
+  p {
+    margin: 0;
+    font-style: italic;
+  }
+}
+
+.selected-stock {
+  background: var(--ion-color-light);
+  border: 2px solid var(--ion-color-primary);
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+  .selected-stock-info {
+    flex: 1;
+    
+    h4 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ion-color-primary);
+    }
+    
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--ion-color-medium);
+      line-height: 1.3;
+    }
+  }
+  
+  ion-button {
+    --color: var(--ion-color-medium);
+    font-size: 0.85rem;
+  }
+}
+
+/* Stock Selection */
+.stock-select {
+  --background: var(--ion-color-light);
+  --color: var(--ion-color-dark);
+  --border-radius: 12px;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --padding-top: 1rem;
+  --padding-bottom: 1rem;
+  font-weight: 500;
+  border: 2px solid transparent;
+  
+  &:focus-within {
+    --border-color: var(--ion-color-primary);
+  }
+}
+
+/* Stock Details */
+.stock-details {
+  background: var(--ion-color-light);
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 1rem 0;
+  
+  .detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--ion-color-light-shade);
+      margin-bottom: 0.5rem;
+      padding-bottom: 1rem;
+    }
+    
+    .detail-label {
+      font-size: 0.9rem;
+      color: var(--ion-color-medium);
+      font-weight: 500;
+    }
+    
+    .detail-value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+    }
+  }
+}
+
+/* Projection Section - Matching recurring investments style */
+.projection-section {
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ion-color-light-shade);
+  margin: 1.5rem 0;
+  
+  h4 {
+    margin: 0 0 1rem 0;
+    color: var(--ion-color-dark);
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  
+  .projection-card {
+    background: var(--ion-color-light);
+    border-radius: 12px;
+    padding: 1.2rem;
+    
+    .projection-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      
+      &:not(:last-child) {
+        border-bottom: 1px solid var(--ion-color-light-shade);
+        margin-bottom: 0.5rem;
+        padding-bottom: 1rem;
+      }
+      
+      &.gain {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid var(--ion-color-success);
+        border-bottom: none;
+      }
+      
+      .projection-label {
+        font-size: 0.9rem;
+        color: var(--ion-color-medium);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 500;
+      }
+      
+      .projection-amount {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--ion-color-dark);
+        
+        &.projected {
+          color: var(--ion-color-primary);
+        }
+        
+        &.target {
+          color: var(--ion-color-secondary);
+          font-size: 1rem;
+          font-weight: 600;
+        }
+        
+        &.gain-amount {
+          color: var(--ion-color-success);
+          font-size: 1.4rem;
+        }
+      }
+    }
+  }
+  
+  .disclaimer {
+    font-size: 0.8rem;
+    color: var(--ion-color-medium);
+    margin: 1rem 0 0 0;
+    line-height: 1.4;
+    font-style: italic;
+    text-align: center;
+  }
+}
+
+/* Investment Actions - Matching recurring investments exactly */
+.investment-actions {
+  margin-top: 2rem;
+  
+  ion-button {
+    --border-radius: 12px;
+    --padding-top: 1rem;
+    --padding-bottom: 1rem;
+    font-weight: 600;
+    font-size: 1rem;
+    
+    ion-icon {
+      margin-right: 0.5rem;
+      font-size: 1.2rem;
+    }
+    
+    &[disabled] {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  }
+}
+
+/* Responsive Design - Matching recurring investments */
+@media (max-width: 768px) {
+  .lump-sum-container {
+    padding: 0;
+  }
+  
+  .projection-section {
+    margin: 1rem 0;
+  }
+  
+  .info-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+    
+    ion-icon {
+      font-size: 2.5rem;
+    }
+  }
+}
+
+/* Dark Theme Support - Matching recurring investments */
+@media (prefers-color-scheme: dark) {
+  .info-card,
+  .investment-card {
+    --background: var(--ion-color-dark-tint);
+  }
+  
+  .projection-card,
+  .currency-input,
+  .stock-select,
+  .investment-type-segment,
+  .stock-details {
+    --background: var(--ion-color-dark-shade);
+  }
+  
+  .info-header ion-icon {
+    background: var(--ion-color-primary-shade) !important;
+  }
+}
+
+/* Animation for projection appearance */
+.projection-section {
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

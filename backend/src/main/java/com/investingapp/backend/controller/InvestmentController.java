@@ -185,7 +185,8 @@ public class InvestmentController {
     }
     
     /**
-     * Create a one-time investment execution (for testing or manual investments)
+     * Create a one-time investment execution (lump sum investment)
+     * This immediately initiates ACH transfer and begins the investment process
      */
     @PostMapping("/execute")
     public ResponseEntity<Map<String, Object>> createManualInvestment(
@@ -201,6 +202,12 @@ public class InvestmentController {
             }
             
             User user = userOpt.get();
+            
+            // Validate user has required setup for investments
+            if (user.getAlpacaAccountId() == null || user.getPlaidRelationshipId() == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Account setup incomplete. Please complete your bank account and investment account setup first."));
+            }
             
             // Validate required fields
             if (!request.containsKey("amount")) {
@@ -223,26 +230,73 @@ public class InvestmentController {
                     .body(Map.of("success", false, "message", "Minimum investment amount is $1"));
             }
             
-            // Create investment execution
+            // Validate maximum amount (reasonable limit)
+            if (amount.compareTo(new BigDecimal("1000000")) > 0) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Maximum investment amount is $1,000,000"));
+            }
+            
+            // Parse investment type (portfolio vs individual stock)
+            String investmentType = "portfolio"; // default
+            if (request.containsKey("type")) {
+                investmentType = (String) request.get("type");
+            }
+            
+            String selectedSymbol = null;
+            if ("stock".equals(investmentType)) {
+                if (!request.containsKey("symbol") || request.get("symbol") == null) {
+                    return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Symbol is required for individual stock investments"));
+                }
+                selectedSymbol = (String) request.get("symbol");
+                
+                if (selectedSymbol.trim().isEmpty()) {
+                    return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Invalid stock symbol"));
+                }
+            }
+            
+            // Create investment execution with type and symbol information
             InvestmentExecution execution = new InvestmentExecution(
                 user, 
                 LocalDateTime.now(), 
-                amount
+                amount,
+                investmentType,
+                selectedSymbol
             );
             
             execution = executionRepository.save(execution);
             
-            return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Manual investment created successfully",
-                "executionId", execution.getId(),
-                "amount", execution.getAmount(),
-                "status", execution.getStatus()
-            ));
+            // Immediately process the investment execution
+            // This will initiate ACH transfer right away instead of waiting for cron job
+            try {
+                investmentExecutionService.processInvestmentExecutionImmediately(execution);
+                
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Lump sum investment initiated successfully. ACH transfer has been started and you will receive updates as it processes.",
+                    "executionId", execution.getId(),
+                    "amount", execution.getAmount(),
+                    "status", execution.getStatus()
+                ));
+                
+            } catch (Exception processingException) {
+                // If processing fails, update execution status and inform user
+                execution.setStatus(InvestmentExecution.ExecutionStatus.FAILED);
+                execution.setErrorMessage("Failed to initiate investment: " + processingException.getMessage());
+                executionRepository.save(execution);
+                
+                return ResponseEntity.internalServerError()
+                    .body(Map.of(
+                        "success", false, 
+                        "message", "Failed to initiate investment: " + processingException.getMessage(),
+                        "executionId", execution.getId()
+                    ));
+            }
             
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "Error creating manual investment: " + e.getMessage()));
+                .body(Map.of("success", false, "message", "Error creating lump sum investment: " + e.getMessage()));
         }
     }
     

@@ -1,0 +1,87 @@
+<!-- Change Bank Account Page -->
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button (click)="goBack()" defaultHref="/tabs/tab3"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Change Bank Account</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <!-- Header collapse for large screens -->
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Change Bank Account</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div class="change-bank-form-container">
+    
+    <!-- Page Introduction -->
+    <div class="page-intro">
+      <h2>Update Your Primary Checking Account</h2>
+      <p class="helper-text">Change the checking account used for your automatic investments. Your current investment schedule will continue with the new account.</p>
+    </div>
+
+    <!-- Current Account Section -->
+    <ion-card class="current-account-card" *ngIf="currentBankAccount">
+      <ion-card-content>
+        <div class="current-account-header">
+          <div class="account-icon">
+            <ion-icon name="card-outline"></ion-icon>
+          </div>
+          <div class="account-details">
+            <h3>Current Account</h3>
+            <p>{{ formatAccountDisplay() }}</p>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Benefits Section -->
+    <div class="benefits-section">
+      <div class="benefit-features">
+        <div class="feature-item">
+          <ion-icon name="sync" class="feature-icon"></ion-icon>
+          <span>Seamless transition - no interruption to your investment schedule</span>
+        </div>
+        <div class="feature-item">
+          <ion-icon name="shield-checkmark" class="feature-icon"></ion-icon>
+          <span>Bank-level security with Plaid encryption</span>
+        </div>
+        <div class="feature-item">
+          <ion-icon name="time" class="feature-icon"></ion-icon>
+          <span>Changes take effect with your next scheduled investment</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Connection Button Section -->
+    <div class="connection-button-section">
+      <ion-button 
+        expand="block" 
+        class="connection-button" 
+        type="button"  
+        (click)="openPlaid()" 
+        [disabled]="isLoading || !isPlaidReady">
+        <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+        <span *ngIf="!isLoading && isPlaidReady">Select New Bank Account</span>
+        <span *ngIf="!isLoading && !isPlaidReady">Preparing secure connection...</span>
+        <span *ngIf="isLoading">{{ statusMessage || 'Processing...' }}</span>
+      </ion-button>
+      
+      <p class="connection-note">
+        Your banking credentials are never stored. Powered by Plaid's trusted, encrypted connection.
+      </p>
+    </div>
+
+    <!-- Feedback Messages -->
+    <div *ngIf="statusMessage && !isLoading" class="status-message">
+      <ion-text [color]="statusMessage && (statusMessage.includes('error') || statusMessage.includes('Could not') || statusMessage.includes('Failed')) ? 'danger' : 'success'">
+        {{ statusMessage }}
+      </ion-text>
+    </div>
+    
+  </div>
+</ion-content>

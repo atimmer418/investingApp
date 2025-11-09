@@ -1,0 +1,199 @@
+<!-- Lump Sum Investment Page -->
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button (click)="goBack()" defaultHref="/tabs/tab3"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Lump Sum Investment</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <!-- Header collapse for large screens -->
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Lump Sum Investment</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div class="lump-sum-container">
+    
+    <!-- Investment Information Card -->
+    <ion-card class="info-card">
+      <ion-card-content>
+        <div class="info-header">
+          <ion-icon name="information-circle-outline" class="info-icon"></ion-icon>
+          <h3>One-Time Investment</h3>
+        </div>
+        <p>Make a one-time lump sum investment from your linked bank account into your current portfolio or a stock of your choosing.</p>
+      </ion-card-content>
+    </ion-card>
+    
+    <!-- Investment Form Card -->
+    <ion-card class="investment-card">
+      <ion-card-content>
+        <h3 class="section-header">Investment Details</h3>
+        
+        <!-- Investment Type Selection -->
+        <div class="input-wrapper">
+          <label class="input-label">Investment Type</label>
+          <ion-segment 
+            [(ngModel)]="investmentType" 
+            (ionChange)="onInvestmentTypeChange()"
+            class="investment-type-segment">
+            <ion-segment-button value="portfolio">
+              <ion-label>Portfolio</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="stock">
+              <ion-label>Individual Stock</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+          <p class="input-helper">
+            {{ investmentType === 'portfolio' ? 'Invest according to your current portfolio allocation' : 'Choose a specific stock to invest in' }}
+          </p>
+        </div>
+
+        <!-- Stock Selection (only shown when stock type is selected) -->
+        <div class="input-wrapper" *ngIf="investmentType === 'stock'">
+          <label class="input-label">Select Stock</label>
+          
+          <!-- Search Bar -->
+          <ion-searchbar
+            [(ngModel)]="searchTerm"
+            (ionInput)="searchStocks()"
+            placeholder="Search stocks by symbol or name"
+            show-clear-button="focus"
+            debounce="300"
+            class="stock-searchbar">
+          </ion-searchbar>
+
+          <!-- Loading indicator -->
+          <div *ngIf="isSearching" class="loading-container">
+            <ion-spinner name="dots"></ion-spinner>
+            <p>Searching investments...</p>
+          </div>
+
+          <!-- Search Results -->
+          <div class="search-results" *ngIf="searchResults.length > 0 && !isSearching">
+            <ion-list class="search-results-list">
+              <ion-item 
+                *ngFor="let asset of searchResults"
+                button
+                (click)="selectStock(asset)"
+                class="search-result-item">
+                <ion-label>
+                  <h3>{{ asset.symbol }}</h3>
+                  <p>{{ asset.name }}</p>
+                  <ion-note>{{ asset.class === 'us_equity' ? 'Stock' : 'ETF' }}</ion-note>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+          </div>
+
+          <!-- No Results -->
+          <div *ngIf="searchTerm.length > 0 && searchResults.length === 0 && !isSearching" class="no-results">
+            <p>No investments found for "{{ searchTerm }}"</p>
+          </div>
+
+          <!-- Selected Stock Display -->
+          <div *ngIf="selectedStock" class="selected-stock">
+            <div class="selected-stock-info">
+              <h4>{{ selectedStockInfo?.symbol }}</h4>
+              <p>{{ selectedStockInfo?.name }}</p>
+            </div>
+            <ion-button fill="clear" size="small" (click)="selectedStock = ''; selectedStockInfo = null; searchTerm = ''">
+              Change
+            </ion-button>
+          </div>
+          
+          <p class="input-helper" *ngIf="selectedStock">
+            Selected: {{ selectedStockInfo?.name }}
+          </p>
+          <p class="input-helper" *ngIf="!selectedStock">
+            Search for stocks and ETFs by typing a symbol or company name
+          </p>
+        </div>
+        
+        <!-- Amount Input -->
+        <div class="input-wrapper">
+          <label class="input-label">Investment Amount</label>
+          <div class="currency-input">
+            <span class="currency-symbol">$</span>
+            <ion-input
+              type="number"
+              [(ngModel)]="investmentAmount"
+              (ionBlur)="onAmountChange()"
+              placeholder="0"
+              class="amount-input"
+              min="1">
+            </ion-input>
+          </div>
+          <p class="input-helper">Enter the amount you want to invest in {{ getInvestmentTarget() }}</p>
+        </div>
+
+        <!-- Investment Projection -->
+        <div class="projection-section" *ngIf="investmentAmount > 0">
+          <h4>Investment Projection</h4>
+          <div class="projection-card">
+            <div class="projection-item">
+              <span class="projection-label">Investment Amount</span>
+              <span class="projection-amount">{{ formatCurrency(investmentAmount) }}</span>
+            </div>
+            <div class="projection-item">
+              <span class="projection-label">Investment Target</span>
+              <span class="projection-amount target">{{ getInvestmentTarget() }}</span>
+            </div>
+            <div class="projection-item" *ngIf="investmentType === 'portfolio'">
+              <span class="projection-label">Projected Value (1 Year)</span>
+              <span class="projection-amount projected">{{ formatCurrency(getProjectedGrowth()) }}</span>
+            </div>
+            <div class="projection-item gain" *ngIf="investmentType === 'portfolio'">
+              <span class="projection-label">Potential Gain</span>
+              <span class="projection-amount gain-amount">+{{ formatCurrency(getProjectedGrowth() - investmentAmount) }}</span>
+            </div>
+          </div>
+          <p class="disclaimer" *ngIf="investmentType === 'portfolio'">
+            *Projections are estimates based on historical market performance. Actual returns may vary.
+          </p>
+          <p class="disclaimer" *ngIf="investmentType === 'stock'">
+            *Individual stock investments carry higher risk. Past performance does not guarantee future results.
+          </p>
+        </div>
+        
+        <!-- Investment Button -->
+        <div class="investment-actions">
+          <ion-button 
+            expand="block" 
+            color="primary"
+            size="large"
+            (click)="makeInvestment()"
+            [disabled]="isLoading || !investmentAmount || investmentAmount <= 0 || (investmentType === 'stock' && !selectedStock)">
+            <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+            {{ isLoading ? 'Processing...' : 'Make Investment' }}
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+    
+  </div>
+</ion-content>
+
+<!-- Success Toast -->
+<ion-toast
+  [isOpen]="showSuccessToast"
+  [message]="toastMessage"
+  duration="4000"
+  color="success"
+  position="top"
+  (didDismiss)="showSuccessToast = false">
+</ion-toast>
+
+<!-- Error Toast -->
+<ion-toast
+  [isOpen]="showErrorToast"
+  [message]="toastMessage"
+  duration="5000"
+  color="danger"
+  position="top"
+  (didDismiss)="showErrorToast = false">
+</ion-toast>

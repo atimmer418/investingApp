@@ -121,13 +121,6 @@ export class Tab3Page implements OnInit, OnDestroy {
           icon: 'pie-chart-outline',
           action: 'portfolioAllocation',
           type: 'navigation'
-        },
-        {
-          title: 'Investment Goals',
-          subtitle: 'Set and track your financial targets',
-          icon: 'star-outline',
-          action: 'investmentGoals',
-          type: 'navigation'
         }
       ]
     },
@@ -146,13 +139,6 @@ export class Tab3Page implements OnInit, OnDestroy {
           subtitle: 'Password, biometrics, and 2FA',
           icon: 'shield-checkmark-outline',
           action: 'security',
-          type: 'navigation'
-        },
-        {
-          title: 'Bank Accounts',
-          subtitle: 'Manage connected bank accounts',
-          icon: 'business-outline',
-          action: 'bankAccounts',
           type: 'navigation'
         },
         {
@@ -337,7 +323,7 @@ export class Tab3Page implements OnInit, OnDestroy {
         this.handleLumpSumInvestment();
         break;
       case 'portfolioAllocation':
-        this.showComingSoon('Portfolio Allocation');
+        this.router.navigate(['/portfolio-customize']);
         break;
       case 'investmentGoals':
         this.showComingSoon('Investment Goals');
@@ -389,9 +375,7 @@ export class Tab3Page implements OnInit, OnDestroy {
   }
 
   private handleLumpSumInvestment() {
-    this.displayToast('Redirecting to investment interface...', 'success');
-    // In a real app, navigate to investment page
-    // this.router.navigate(['/invest/lump-sum']);
+    this.router.navigate(['/lump-sum-investment']);
   }
 
   private handleNotifications() {
@@ -417,21 +401,8 @@ export class Tab3Page implements OnInit, OnDestroy {
   }
 
   private handleChangeBankAccount() {
-    if (this.currentBankAccount) {
-      const accountSummary = this.plaidService.getAccountSummary();
-      this.displayToast(`Current: ${accountSummary}. Starting Plaid Link...`, 'primary');
-    } else {
-      this.displayToast('No bank account linked. Starting Plaid Link...', 'warning');
-    }
-    
-    // Simulate Plaid Link process
-    this.plaidService.initiatePlaidLink().then(result => {
-      if (result.success) {
-        this.displayToast('✅ New bank account linked successfully!', 'success');
-      } else {
-        this.displayToast(`❌ ${result.error || 'Failed to link bank account'}`, 'danger');
-      }
-    });
+    // Navigate to the dedicated change bank account page
+    this.router.navigate(['/change-bank-account']);
   }
 
   private showComingSoon(feature: string) {

@@ -65,6 +65,22 @@ public class InvestmentExecutionService {
         return currentTime.isAfter(marketOpen) && currentTime.isBefore(marketClose);
     }
     
+    /**
+     * Process a single investment execution immediately (for lump sum investments)
+     * This is called directly from the API controller to initiate ACH transfer immediately
+     */
+    public void processInvestmentExecutionImmediately(InvestmentExecution execution) {
+        logger.info("Processing lump sum investment execution {} immediately for user {}", 
+            execution.getId(), execution.getUser().getEmail());
+        
+        try {
+            processInvestmentExecution(execution);
+            logger.info("Successfully initiated lump sum investment processing for execution {}", execution.getId());
+        } catch (Exception e) {
+            logger.error("Failed to process lump sum investment execution {}: {}", execution.getId(), e.getMessage(), e);
+            throw e; // Re-throw so controller can handle the error appropriately
+        }
+    }
 
     
     /**
@@ -291,28 +307,36 @@ public class InvestmentExecutionService {
         
         User user = execution.getUser();
         
-        // Get user's portfolio allocation (you'll need to implement this based on your User model)
-        Map<String, BigDecimal> portfolioAllocation = getUserPortfolioAllocation(user);
-        
         execution.setStatus(InvestmentExecution.ExecutionStatus.TRADING_INITIATED);
         executionRepository.save(execution);
         
         boolean hasFailures = false;
         
-        // Create trades for each allocation
-        for (Map.Entry<String, BigDecimal> allocation : portfolioAllocation.entrySet()) {
-            String symbol = allocation.getKey();
-            BigDecimal percentage = allocation.getValue();
-            BigDecimal amount = execution.getAmount().multiply(percentage).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        // Handle different investment types
+        String investmentType = execution.getInvestmentType() != null ? execution.getInvestmentType() : "portfolio";
+        
+        if ("stock".equals(investmentType)) {
+            // Individual stock investment
+            String targetSymbol = execution.getTargetSymbol();
+            if (targetSymbol == null || targetSymbol.trim().isEmpty()) {
+                execution.setStatus(InvestmentExecution.ExecutionStatus.TRADING_FAILED);
+                execution.setErrorMessage("Missing target symbol for stock investment");
+                executionRepository.save(execution);
+                
+                notifyUserOfFailure(execution, "Trading Failed", "Missing stock symbol information");
+                return;
+            }
+            
+            logger.info("Creating individual stock trade for symbol {} with amount {}", targetSymbol, execution.getAmount());
             
             try {
-                // Create trade record
-                InvestmentTrade trade = new InvestmentTrade(execution, symbol, amount);
+                // Create single trade for the target stock
+                InvestmentTrade trade = new InvestmentTrade(execution, targetSymbol, execution.getAmount());
                 trade = tradeRepository.save(trade);
                 
                 // Place order with Alpaca
                 AlpacaService.AlpacaOrderResponse orderResponse = alpacaService.placeBuyOrder(
-                    execution.getAlpacaAccountId(), symbol, amount
+                    execution.getAlpacaAccountId(), targetSymbol, execution.getAmount()
                 );
                 
                 if (orderResponse.isSuccess()) {
@@ -321,8 +345,8 @@ public class InvestmentExecutionService {
                     trade.setSubmittedAt(LocalDateTime.now());
                     tradeRepository.save(trade);
                     
-                    logger.info("Successfully placed order {} for symbol {} with amount {}", 
-                        orderResponse.id, symbol, amount);
+                    logger.info("Successfully placed order {} for stock {} with amount {}", 
+                        orderResponse.id, targetSymbol, execution.getAmount());
                 } else {
                     trade.setStatus(InvestmentTrade.TradeStatus.FAILED);
                     trade.setErrorMessage(orderResponse.errorMessage);
@@ -330,12 +354,58 @@ public class InvestmentExecutionService {
                     tradeRepository.save(trade);
                     
                     hasFailures = true;
-                    logger.error("Failed to place order for symbol {}: {}", symbol, orderResponse.errorMessage);
+                    logger.error("Failed to place order for stock {}: {}", targetSymbol, orderResponse.errorMessage);
                 }
                 
             } catch (Exception e) {
-                logger.error("Error placing trade for symbol {} in execution {}", symbol, execution.getId(), e);
+                logger.error("Error placing trade for stock {} in execution {}", targetSymbol, execution.getId(), e);
                 hasFailures = true;
+            }
+            
+        } else {
+            // Portfolio investment (default behavior)
+            logger.info("Creating portfolio trades based on user's allocation");
+            
+            Map<String, BigDecimal> portfolioAllocation = getUserPortfolioAllocation(user);
+            
+            // Create trades for each allocation
+            for (Map.Entry<String, BigDecimal> allocation : portfolioAllocation.entrySet()) {
+                String symbol = allocation.getKey();
+                BigDecimal percentage = allocation.getValue();
+                BigDecimal amount = execution.getAmount().multiply(percentage).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                
+                try {
+                    // Create trade record
+                    InvestmentTrade trade = new InvestmentTrade(execution, symbol, amount);
+                    trade = tradeRepository.save(trade);
+                    
+                    // Place order with Alpaca
+                    AlpacaService.AlpacaOrderResponse orderResponse = alpacaService.placeBuyOrder(
+                        execution.getAlpacaAccountId(), symbol, amount
+                    );
+                    
+                    if (orderResponse.isSuccess()) {
+                        trade.setAlpacaOrderId(orderResponse.id);
+                        trade.setStatus(InvestmentTrade.TradeStatus.SUBMITTED);
+                        trade.setSubmittedAt(LocalDateTime.now());
+                        tradeRepository.save(trade);
+                        
+                        logger.info("Successfully placed order {} for symbol {} with amount {}", 
+                            orderResponse.id, symbol, amount);
+                    } else {
+                        trade.setStatus(InvestmentTrade.TradeStatus.FAILED);
+                        trade.setErrorMessage(orderResponse.errorMessage);
+                        trade.setFailedAt(LocalDateTime.now());
+                        tradeRepository.save(trade);
+                        
+                        hasFailures = true;
+                        logger.error("Failed to place order for symbol {}: {}", symbol, orderResponse.errorMessage);
+                    }
+                    
+                } catch (Exception e) {
+                    logger.error("Error placing trade for symbol {} in execution {}", symbol, execution.getId(), e);
+                    hasFailures = true;
+                }
             }
         }
         
