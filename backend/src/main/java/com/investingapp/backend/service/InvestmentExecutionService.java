@@ -74,11 +74,160 @@ public class InvestmentExecutionService {
             execution.getId(), execution.getUser().getEmail());
         
         try {
-            processInvestmentExecution(execution);
-            logger.info("Successfully initiated lump sum investment processing for execution {}", execution.getId());
+            // Check if user has any pending funding executions today
+            List<InvestmentExecution> pendingFundingToday = executionRepository
+                .findPendingFundingExecutionsForUserToday(
+                    execution.getUser().getId(),
+                    LocalDateTime.now().toLocalDate().atStartOfDay(),
+                    LocalDateTime.now().toLocalDate().atTime(23, 59, 59)
+                );
+            
+            // Also check for other scheduled executions from today that might be waiting to batch
+            List<InvestmentExecution> scheduledToday = executionRepository.findByUserIdAndStatus(
+                execution.getUser().getId(), InvestmentExecution.ExecutionStatus.SCHEDULED
+            ).stream()
+            .filter(exec -> exec.getCreatedAt().toLocalDate().equals(LocalDateTime.now().toLocalDate()))
+            .toList();
+            
+            if (!pendingFundingToday.isEmpty()) {
+                // There's already a pending ACH transfer today - queue this execution
+                logger.info("User {} already has pending ACH transfer today. Queuing execution {} for batch processing.", 
+                    execution.getUser().getEmail(), execution.getId());
+                
+                execution.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
+                execution.setErrorMessage("Queued for batch processing with today's ACH transfer");
+                executionRepository.save(execution);
+                
+                // Note: This will be picked up by the funding completion logic
+                return;
+                
+            } else if (!scheduledToday.isEmpty()) {
+                // There are other investments queued for batching today
+                logger.info("User {} has {} other investments queued today. Creating batch ACH transfer.", 
+                    execution.getUser().getEmail(), scheduledToday.size());
+                
+                // Add current execution to the batch
+                execution.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
+                execution.setErrorMessage("Batched with other investments for single ACH transfer");
+                executionRepository.save(execution);
+                
+                // Process entire batch with combined ACH transfer
+                processBatchedInvestments(execution.getUser(), scheduledToday);
+                return;
+                
+            } else {
+                // First investment - process immediately or wait for potential batching
+                logger.info("First investment today for user {}. Checking for batching window.", 
+                    execution.getUser().getEmail());
+                
+                // Set a 10-minute delay to allow for batching
+                execution.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
+                execution.setErrorMessage("Waiting for potential batch processing (10-minute window)");
+                executionRepository.save(execution);
+                
+                // Schedule batch processing after 10-minute window
+                scheduleBatchProcessing(execution.getUser());
+                return;
+            }
+            
         } catch (Exception e) {
             logger.error("Failed to process lump sum investment execution {}: {}", execution.getId(), e.getMessage(), e);
             throw e; // Re-throw so controller can handle the error appropriately
+        }
+    }
+    
+    /**
+     * Process batched investments with a single ACH transfer for the total amount
+     */
+    private void processBatchedInvestments(User user, List<InvestmentExecution> batchExecutions) {
+        logger.info("Processing {} batched investments for user {}", batchExecutions.size(), user.getEmail());
+        
+        // Calculate total amount for all batched investments
+        BigDecimal totalAmount = batchExecutions.stream()
+            .map(InvestmentExecution::getAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        logger.info("Total amount for batched investments: {}", totalAmount);
+        
+        // Create a primary execution for the ACH transfer
+        InvestmentExecution primaryExecution = batchExecutions.get(0);
+        
+        try {
+            // Store the original amount before modifying it
+            BigDecimal originalAmount = primaryExecution.getAmount();
+            
+            // Update primary execution with total amount for ACH transfer
+            primaryExecution.setAmount(totalAmount);
+            primaryExecution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_INITIATED);
+            primaryExecution.setExecutionDate(LocalDateTime.now());
+            primaryExecution.setAlpacaAccountId(user.getAlpacaAccountId());
+            primaryExecution.setErrorMessage("Primary execution for batch ACH transfer $" + totalAmount + ". Original amount: $" + originalAmount);
+            executionRepository.save(primaryExecution);
+            
+            // Mark other executions as waiting for batch funding
+            for (int i = 1; i < batchExecutions.size(); i++) {
+                InvestmentExecution batchExec = batchExecutions.get(i);
+                batchExec.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
+                batchExec.setErrorMessage("Waiting for batch ACH transfer (execution " + primaryExecution.getId() + ")");
+                executionRepository.save(batchExec);
+            }
+            
+            // Initiate single ACH transfer for total amount
+            AlpacaService.AlpacaTransferResponse transferResponse = alpacaService.initiateAchTransfer(
+                user.getAlpacaAccountId(),
+                user.getPlaidRelationshipId(),
+                totalAmount
+            );
+            
+            if (transferResponse.isSuccess()) {
+                primaryExecution.setAlpacaTransferId(transferResponse.id);
+                executionRepository.save(primaryExecution);
+                
+                logger.info("Successfully initiated batch ACH transfer {} for total amount {} covering {} investments", 
+                    transferResponse.id, totalAmount, batchExecutions.size());
+            } else {
+                // Mark all batched executions as failed
+                for (InvestmentExecution batchExec : batchExecutions) {
+                    batchExec.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_FAILED);
+                    batchExec.setErrorMessage("Batch ACH transfer failed: " + transferResponse.errorMessage);
+                    executionRepository.save(batchExec);
+                }
+                
+                logger.error("Batch ACH transfer failed for user {}: {}", user.getEmail(), transferResponse.errorMessage);
+                throw new RuntimeException("Batch ACH transfer failed: " + transferResponse.errorMessage);
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error processing batched investments for user {}: {}", user.getEmail(), e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Schedule batch processing with a delay to allow multiple investments to accumulate
+     */
+    private void scheduleBatchProcessing(User user) {
+        // For now, we'll process immediately rather than implementing complex scheduling
+        // In a production system, you'd use @Async or a message queue with delay
+        logger.info("Scheduling batch processing for user {} with 10-minute window", user.getEmail());
+        
+        try {
+            // 10-minute delay to allow for multiple investments
+            Thread.sleep(600000); // 10 minutes = 600,000ms
+            
+            // Find all scheduled executions for today
+            List<InvestmentExecution> scheduledToday = executionRepository.findByUserIdAndStatus(
+                user.getId(), InvestmentExecution.ExecutionStatus.SCHEDULED
+            ).stream()
+            .filter(exec -> exec.getCreatedAt().toLocalDate().equals(LocalDateTime.now().toLocalDate()))
+            .toList();
+            
+            if (!scheduledToday.isEmpty()) {
+                processBatchedInvestments(user, scheduledToday);
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error in scheduled batch processing for user {}: {}", user.getEmail(), e.getMessage(), e);
         }
     }
 
@@ -269,6 +418,9 @@ public class InvestmentExecutionService {
             logger.info("Funding completed for execution {}, initiating trading", execution.getId());
             initiateTradingForExecution(execution);
             
+            // Check for any queued executions for the same user that can now be processed
+            processQueuedExecutionsForUser(execution.getUser());
+            
         } else if ("FAILED".equalsIgnoreCase(transferStatus.status) || 
                    "REJECTED".equalsIgnoreCase(transferStatus.status)) {
             // Funding failed
@@ -288,6 +440,100 @@ public class InvestmentExecutionService {
                 
                 notifyUserOfFailure(execution, "Funding Timeout", 
                     "Your investment could not be processed due to banking delays.");
+            }
+        }
+    }
+    
+    /**
+     * Process any queued executions for a user (called when ACH funding completes)
+     */
+    private void processQueuedExecutionsForUser(User user) {
+        logger.info("Checking for queued executions for user {}", user.getEmail());
+        
+        // Find scheduled executions that were queued due to ACH limits or batching
+        List<InvestmentExecution> queuedExecutions = executionRepository.findByUserIdAndStatus(
+            user.getId(), InvestmentExecution.ExecutionStatus.SCHEDULED
+        );
+        
+        // Filter for executions that were queued today (have error message indicating batching)
+        List<InvestmentExecution> todaysQueuedExecutions = queuedExecutions.stream()
+            .filter(exec -> exec.getErrorMessage() != null && 
+                           (exec.getErrorMessage().contains("Queued for batch processing") ||
+                            exec.getErrorMessage().contains("Waiting for batch ACH transfer")))
+            .toList();
+        
+        if (todaysQueuedExecutions.isEmpty()) {
+            logger.info("No queued executions found for user {}", user.getEmail());
+            return;
+        }
+        
+        logger.info("Found {} queued executions for user {}, processing them now", 
+                   todaysQueuedExecutions.size(), user.getEmail());
+        
+        for (InvestmentExecution queuedExecution : todaysQueuedExecutions) {
+            try {
+                // For batch executions, we need to restore the original amount
+                // (it might have been modified during batching)
+                restoreOriginalInvestmentAmount(queuedExecution);
+                
+                // Clear the queue message and process directly to trading
+                queuedExecution.setErrorMessage(null);
+                queuedExecution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_COMPLETED);
+                queuedExecution.setFundingCompletedAt(LocalDateTime.now());
+                executionRepository.save(queuedExecution);
+                
+                logger.info("Processing queued execution {} for user {} with amount {}", 
+                           queuedExecution.getId(), user.getEmail(), queuedExecution.getAmount());
+                
+                initiateTradingForExecution(queuedExecution);
+                
+            } catch (Exception e) {
+                logger.error("Error processing queued execution {} for user {}: {}", 
+                           queuedExecution.getId(), user.getEmail(), e.getMessage(), e);
+                
+                queuedExecution.setStatus(InvestmentExecution.ExecutionStatus.TRADING_FAILED);
+                queuedExecution.setErrorMessage("Failed to process queued execution: " + e.getMessage());
+                executionRepository.save(queuedExecution);
+            }
+        }
+    }
+    
+    /**
+     * Restore the original investment amount for a batched execution
+     * This is needed because the primary execution amount was modified to include the batch total
+     */
+    private void restoreOriginalInvestmentAmount(InvestmentExecution execution) {
+        // Check if this execution has its original amount stored in the error message
+        if (execution.getErrorMessage() != null && 
+            execution.getErrorMessage().contains("Primary execution for batch ACH transfer")) {
+            
+            // Extract the original amount from the error message
+            // Format: "Primary execution for batch ACH transfer $800.00. Original amount: $500.00"
+            String errorMessage = execution.getErrorMessage();
+            int originalAmountIndex = errorMessage.indexOf("Original amount: $");
+            
+            if (originalAmountIndex != -1) {
+                try {
+                    String amountStr = errorMessage.substring(originalAmountIndex + 18); // Skip "Original amount: $"
+                    int endIndex = amountStr.indexOf(".");
+                    if (endIndex != -1) {
+                        endIndex += 3; // Include ".00"
+                        String originalAmountStr = amountStr.substring(0, endIndex);
+                        BigDecimal originalAmount = new BigDecimal(originalAmountStr);
+                        
+                        logger.info("Restoring original amount ${} for primary execution {} (was ${})", 
+                                   originalAmount, execution.getId(), execution.getAmount());
+                        
+                        execution.setAmount(originalAmount);
+                        
+                    }
+                } catch (Exception e) {
+                    logger.error("Failed to parse original amount from error message for execution {}: {}", 
+                               execution.getId(), e.getMessage());
+                }
+            } else {
+                logger.warn("Primary batch execution {} does not have original amount in error message", 
+                           execution.getId());
             }
         }
     }

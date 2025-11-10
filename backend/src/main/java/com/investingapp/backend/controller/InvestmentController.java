@@ -272,13 +272,31 @@ public class InvestmentController {
             try {
                 investmentExecutionService.processInvestmentExecutionImmediately(execution);
                 
-                return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Lump sum investment initiated successfully. ACH transfer has been started and you will receive updates as it processes.",
-                    "executionId", execution.getId(),
-                    "amount", execution.getAmount(),
-                    "status", execution.getStatus()
-                ));
+                // Check if execution was queued due to daily ACH limits
+                execution = executionRepository.findById(execution.getId()).orElse(execution);
+                
+                if (InvestmentExecution.ExecutionStatus.SCHEDULED.equals(execution.getStatus()) && 
+                    execution.getErrorMessage() != null && 
+                    execution.getErrorMessage().contains("Queued for batch processing")) {
+                    
+                    return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "message", "Investment queued successfully. You already have an ACH transfer in progress today, so this investment will be processed when that transfer completes.",
+                        "executionId", execution.getId(),
+                        "amount", execution.getAmount(),
+                        "status", execution.getStatus(),
+                        "queued", true
+                    ));
+                } else {
+                    return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "message", "Lump sum investment initiated successfully. ACH transfer has been started and you will receive updates as it processes.",
+                        "executionId", execution.getId(),
+                        "amount", execution.getAmount(),
+                        "status", execution.getStatus(),
+                        "queued", false
+                    ));
+                }
                 
             } catch (Exception processingException) {
                 // If processing fails, update execution status and inform user

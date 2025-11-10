@@ -53,6 +53,19 @@ public interface InvestmentExecutionRepository extends JpaRepository<InvestmentE
     List<InvestmentExecution> findByUserIdAndStatus(Long userId, ExecutionStatus status);
     
     /**
+     * Find pending funding executions for a user today (to detect multiple ACH attempts)
+     */
+    @Query("SELECT ie FROM InvestmentExecution ie WHERE " +
+           "ie.user.id = :userId AND " +
+           "ie.executionDate >= :startOfDay AND ie.executionDate <= :endOfDay AND " +
+           "(ie.status = 'FUNDING_INITIATED' OR ie.status = 'FUNDING_COMPLETED')")
+    List<InvestmentExecution> findPendingFundingExecutionsForUserToday(
+        @Param("userId") Long userId,
+        @Param("startOfDay") LocalDateTime startOfDay,
+        @Param("endOfDay") LocalDateTime endOfDay
+    );
+    
+    /**
      * Find recent executions for a user
      */
     @Query("SELECT ie FROM InvestmentExecution ie WHERE " +
