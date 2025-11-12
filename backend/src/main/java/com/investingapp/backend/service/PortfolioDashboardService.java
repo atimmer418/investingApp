@@ -233,24 +233,36 @@ public class PortfolioDashboardService {
     /**
      * Get current positions using EOD positions endpoint
      * Uses the /v1/reporting/eod/positions endpoint from Broker API
+     * 
+     * API Documentation notes:
+     * - EOD positions are accessible after 4:00 AM ET the following day
+     * - Only supports retrieving EOD positions for the last trading date
+     * - Uses 'YYYY-MM-DD' format for asof parameter
+     * - EOD data is typically 1-5+ days behind due to weekends, holidays, and processing delays
+     * - Sandbox environments may restrict explicit asof parameter usage
      */
     private List<Position> getCurrentPositions(String accountId) {
         try {
-            // Try to get EOD positions for the most recent trading day
-            // We'll try up to 10 days back to account for weekends and holidays
             List<Position> positions = null;
             Exception lastException = null;
             
-            // Start from 1 days back (yesterday) and work backwards (original behavior)
-            // Today's EOD data is typically not available until after market close + processing time
+            // First try: Explicit dates (preferred for production environments)
+            // Try to get EOD positions for the most recent trading day
+            // We'll try up to 10 days back to account for weekends, holidays, and processing delays
+            // Note: EOD data is often 4-5 days behind due to:
+            //   - Weekends (Sat/Sun - no trading)
+            //   - Market holidays (e.g., Veterans Day, etc.)
+            //   - Processing time (available after 4 AM ET next business day)
             for (int daysBack = 1; daysBack <= 10; daysBack++) {
                 try {
                     LocalDate targetDate = LocalDate.now().minusDays(daysBack);
                     String asofDate = targetDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
                     
+                    // Build URL with explicit asof parameter
                     String url = alpacaBrokerBaseUrl + "/reporting/eod/positions" +
                                 "?account_id=" + accountId +
-                                "&asof=" + asofDate;
+                                "&asof=" + asofDate +
+                                "&limit=10000"; // Maximum limit to ensure we get all positions
                     
                     HttpHeaders headers = createAuthHeaders();
                     HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -259,22 +271,60 @@ public class PortfolioDashboardService {
                     ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
                     
                     if (response.getStatusCode() == HttpStatus.OK) {
-                        positions = parsePositionsResponse(response.getBody(), accountId);
-                        logger.info("Successfully fetched EOD positions for account: {} as of: {}", accountId, asofDate);
-                        break; // Success, exit the retry loop
+                        positions = parseEODPositionsResponse(response.getBody(), accountId);
+                        logger.info("Successfully fetched {} EOD positions for account: {} as of: {}", 
+                                   positions.size(), accountId, asofDate);
+                        return positions; // Success, return immediately
                     }
                 } catch (HttpClientErrorException e) {
                     lastException = e;
                     if (e.getStatusCode().value() == 422) {
-                        logger.warn("Invalid date for {} days back ({}): {}", daysBack, 
-                                   LocalDate.now().minusDays(daysBack), e.getMessage());
+                        logger.warn("Invalid asof date for {} days back ({}): {} - Response: {}", daysBack, 
+                                   LocalDate.now().minusDays(daysBack), e.getMessage(), e.getResponseBodyAsString());
+                        // Continue to next date - 422 is expected for invalid dates in sandbox
+                    } else if (e.getStatusCode().value() == 401) {
+                        logger.error("Authentication failed for EOD positions API: {}", e.getMessage());
+                        throw new RuntimeException("Alpaca API authentication failed", e);
                     } else {
-                        logger.warn("HTTP error for {} days back: {}", daysBack, e.getMessage());
+                        logger.warn("HTTP {} error for {} days back: {}", e.getStatusCode().value(), daysBack, e.getMessage());
                     }
                 } catch (Exception e) {
                     lastException = e;
                     logger.warn("Failed to fetch EOD positions for {} days back: {}", daysBack, e.getMessage());
                 }
+            }
+            
+            // Fallback: Get the default EOD positions without specifying asof parameter
+            // This works better in sandbox environments that restrict explicit date specification
+            // but still provide the latest available EOD data
+            try {
+                String url = alpacaBrokerBaseUrl + "/reporting/eod/positions" +
+                            "?account_id=" + accountId +
+                            "&limit=10000"; // Maximum limit to ensure we get all positions
+                
+                HttpHeaders headers = createAuthHeaders();
+                HttpEntity<Void> entity = new HttpEntity<>(headers);
+                
+                logger.info("Fetching default EOD positions for account: {} (fallback to latest available)", accountId);
+                ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+                
+                if (response.getStatusCode() == HttpStatus.OK) {
+                    positions = parseEODPositionsResponse(response.getBody(), accountId);
+                    logger.info("Successfully fetched {} default EOD positions for account: {}", 
+                               positions.size(), accountId);
+                    return positions; // Success, return immediately
+                }
+            } catch (HttpClientErrorException e) {
+                lastException = e;
+                if (e.getStatusCode().value() == 401) {
+                    logger.error("Authentication failed for EOD positions API: {}", e.getMessage());
+                    throw new RuntimeException("Alpaca API authentication failed", e);
+                } else {
+                    logger.warn("Failed to fetch default EOD positions: {} - {}", e.getStatusCode(), e.getMessage());
+                }
+            } catch (Exception e) {
+                lastException = e;
+                logger.warn("Failed to fetch default EOD positions: {}", e.getMessage());
             }
             
             if (positions == null) {
@@ -374,7 +424,12 @@ public class PortfolioDashboardService {
         }
     }
 
-    private List<Position> parsePositionsResponse(String responseBody, String accountId) {
+    /**
+     * Parse EOD positions response from the /v1/reporting/eod/positions endpoint
+     * 
+     * Response format typically includes positions nested under account IDs
+     */
+    private List<Position> parseEODPositionsResponse(String responseBody, String accountId) {
         try {
             JsonNode responseData = objectMapper.readTree(responseBody);
             List<Position> positions = new ArrayList<>();
