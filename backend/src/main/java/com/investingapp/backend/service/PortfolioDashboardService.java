@@ -241,8 +241,9 @@ public class PortfolioDashboardService {
             List<Position> positions = null;
             Exception lastException = null;
             
-            // Start from 0 days back (today) and work backwards
-            for (int daysBack = 0; daysBack <= 10; daysBack++) {
+            // Start from 1 days back (yesterday) and work backwards (original behavior)
+            // Today's EOD data is typically not available until after market close + processing time
+            for (int daysBack = 1; daysBack <= 10; daysBack++) {
                 try {
                     LocalDate targetDate = LocalDate.now().minusDays(daysBack);
                     String asofDate = targetDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -277,9 +278,20 @@ public class PortfolioDashboardService {
             }
             
             if (positions == null) {
-                logger.error("Could not fetch EOD positions for any recent date. Last error: {}", 
+                logger.warn("Could not fetch EOD positions for any recent date. Last error: {}. Falling back to current positions API.",
                            lastException != null ? lastException.getMessage() : "Unknown");
-                throw new RuntimeException("Could not fetch EOD positions for any recent date", lastException);
+                
+                // Fallback to current positions API (real-time positions)
+                try {
+                    positions = getCurrentPositionsFallback(accountId);
+                    logger.info("Successfully fetched current positions as fallback for account: {}", accountId);
+                } catch (Exception fallbackException) {
+                    logger.error("Fallback to current positions also failed: {}", fallbackException.getMessage());
+                    
+                    // Last resort: return empty positions for sandbox environments
+                    logger.warn("Returning empty positions for sandbox environment");
+                    return new ArrayList<>();
+                }
             }
             
             return positions;
@@ -289,7 +301,79 @@ public class PortfolioDashboardService {
             throw new RuntimeException("Failed to fetch positions: " + e.getMessage());
         }
     }
-    
+
+    /**
+     * Fallback method to get current positions using the positions API instead of EOD
+     * Used when EOD data is not available in sandbox environments
+     */
+    private List<Position> getCurrentPositionsFallback(String accountId) {
+        try {
+            String url = alpacaBrokerBaseUrl + "/accounts/" + accountId + "/positions";
+            
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            
+            logger.info("Fetching current positions (fallback) for account: {}", accountId);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            
+            if (response.getStatusCode() == HttpStatus.OK) {
+                List<Position> positions = parseCurrentPositionsResponse(response.getBody(), accountId);
+                logger.info("Successfully fetched current positions (fallback) for account: {}", accountId);
+                return positions;
+            } else {
+                throw new RuntimeException("Failed to fetch current positions. Status: " + response.getStatusCode());
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error fetching current positions (fallback) for account {}: {}", accountId, e.getMessage());
+            throw new RuntimeException("Failed to fetch current positions: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Parse current positions response (different format than EOD positions)
+     */
+    private List<Position> parseCurrentPositionsResponse(String responseBody, String accountId) {
+        try {
+            JsonNode responseArray = objectMapper.readTree(responseBody);
+            List<Position> positions = new ArrayList<>();
+            
+            if (responseArray.isArray()) {
+                for (JsonNode positionNode : responseArray) {
+                    String symbol = positionNode.has("symbol") ? positionNode.get("symbol").asText() : "";
+                    BigDecimal quantity = parseDecimalSafely(positionNode, "qty", BigDecimal.ZERO);
+                    BigDecimal marketValue = parseDecimalSafely(positionNode, "market_value", BigDecimal.ZERO);
+                    BigDecimal costBasis = parseDecimalSafely(positionNode, "cost_basis", BigDecimal.ZERO);
+                    BigDecimal unrealizedPL = parseDecimalSafely(positionNode, "unrealized_pl", BigDecimal.ZERO);
+                    BigDecimal currentPrice = parseDecimalSafely(positionNode, "current_price", BigDecimal.ZERO);
+                    
+                    if (!symbol.isEmpty() && quantity.compareTo(BigDecimal.ZERO) != 0) {
+                        // Calculate unrealized P/L percentage
+                        BigDecimal unrealizedPLPercent = BigDecimal.ZERO;
+                        if (costBasis.compareTo(BigDecimal.ZERO) > 0) {
+                            unrealizedPLPercent = unrealizedPL.divide(costBasis, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+                        }
+                        
+                        // Use symbol as name for current positions (we don't have company names in this API)
+                        Position position = new Position(symbol, symbol, quantity, marketValue, costBasis, 
+                                                       unrealizedPL, unrealizedPLPercent, currentPrice);
+                        positions.add(position);
+                        
+                        logger.debug("Added position: {} shares of {} with market value ${}", 
+                                   quantity, symbol, marketValue);
+                    }
+                }
+            }
+            
+            logger.info("Parsed {} positions from current positions API for account {}", positions.size(), accountId);
+            return positions;
+            
+        } catch (Exception e) {
+            logger.error("Error parsing current positions response for account {}: {}", accountId, e.getMessage());
+            throw new RuntimeException("Failed to parse current positions: " + e.getMessage(), e);
+        }
+    }
+
     private List<Position> parsePositionsResponse(String responseBody, String accountId) {
         try {
             JsonNode responseData = objectMapper.readTree(responseBody);
