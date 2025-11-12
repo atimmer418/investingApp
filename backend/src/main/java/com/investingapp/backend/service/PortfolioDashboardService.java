@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -236,11 +237,12 @@ public class PortfolioDashboardService {
     private List<Position> getCurrentPositions(String accountId) {
         try {
             // Try to get EOD positions for the most recent trading day
-            // We'll try up to 5 days back to account for weekends and holidays
+            // We'll try up to 10 days back to account for weekends and holidays
             List<Position> positions = null;
             Exception lastException = null;
             
-            for (int daysBack = 1; daysBack <= 5; daysBack++) {
+            // Start from 0 days back (today) and work backwards
+            for (int daysBack = 0; daysBack <= 10; daysBack++) {
                 try {
                     LocalDate targetDate = LocalDate.now().minusDays(daysBack);
                     String asofDate = targetDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -252,7 +254,7 @@ public class PortfolioDashboardService {
                     HttpHeaders headers = createAuthHeaders();
                     HttpEntity<Void> entity = new HttpEntity<>(headers);
                     
-                    logger.info("Fetching EOD positions for account: {} as of: {}", accountId, asofDate);
+                    logger.info("Fetching EOD positions for account: {} as of: {} (daysBack: {})", accountId, asofDate, daysBack);
                     ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
                     
                     if (response.getStatusCode() == HttpStatus.OK) {
@@ -260,13 +262,23 @@ public class PortfolioDashboardService {
                         logger.info("Successfully fetched EOD positions for account: {} as of: {}", accountId, asofDate);
                         break; // Success, exit the retry loop
                     }
+                } catch (HttpClientErrorException e) {
+                    lastException = e;
+                    if (e.getStatusCode().value() == 422) {
+                        logger.warn("Invalid date for {} days back ({}): {}", daysBack, 
+                                   LocalDate.now().minusDays(daysBack), e.getMessage());
+                    } else {
+                        logger.warn("HTTP error for {} days back: {}", daysBack, e.getMessage());
+                    }
                 } catch (Exception e) {
                     lastException = e;
-                    logger.warn("Failed to fetch EOD positions for {} days back, trying next date", daysBack);
+                    logger.warn("Failed to fetch EOD positions for {} days back: {}", daysBack, e.getMessage());
                 }
             }
             
             if (positions == null) {
+                logger.error("Could not fetch EOD positions for any recent date. Last error: {}", 
+                           lastException != null ? lastException.getMessage() : "Unknown");
                 throw new RuntimeException("Could not fetch EOD positions for any recent date", lastException);
             }
             

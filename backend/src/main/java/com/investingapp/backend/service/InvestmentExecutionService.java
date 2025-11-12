@@ -5,12 +5,15 @@ import com.investingapp.backend.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -22,6 +25,15 @@ import java.util.*;
 public class InvestmentExecutionService {
     
     private static final Logger logger = LoggerFactory.getLogger(InvestmentExecutionService.class);
+    
+    // Configuration for lump sum batching behavior
+    // Set to true to batch multiple lump sum investments within the window (cost optimization)
+    // Set to false for immediate processing (better user experience)
+    private static final boolean ENABLE_LUMP_SUM_BATCHING = true;
+    
+    // Window in minutes to wait for additional lump sum investments before processing
+    // Only used when ENABLE_LUMP_SUM_BATCHING = true
+    private static final int LUMP_SUM_BATCHING_WINDOW_MINUTES = 5;
     
     @Autowired
     private InvestmentScheduleService investmentScheduleService;
@@ -43,6 +55,9 @@ public class InvestmentExecutionService {
     
     @Autowired
     private PortfolioRepository portfolioRepository;
+    
+    @Autowired
+    private TaskScheduler taskScheduler;
     
     /**
      * Check if markets are currently open (US Eastern Time)
@@ -90,15 +105,14 @@ public class InvestmentExecutionService {
             .toList();
             
             if (!pendingFundingToday.isEmpty()) {
-                // There's already a pending ACH transfer today - queue this execution
-                logger.info("User {} already has pending ACH transfer today. Queuing execution {} for batch processing.", 
+                // There's already a pending ACH transfer today
+                // For lump sum investments, we'll initiate a separate ACH transfer
+                // since they're time-sensitive and Alpaca allows multiple ACH transfers per day
+                logger.info("User {} has existing ACH transfer today. Initiating separate ACH for lump sum execution {}", 
                     execution.getUser().getEmail(), execution.getId());
                 
-                execution.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
-                execution.setErrorMessage("Queued for batch processing with today's ACH transfer");
-                executionRepository.save(execution);
-                
-                // Note: This will be picked up by the funding completion logic
+                // Process this lump sum investment immediately with its own ACH
+                processInvestmentExecution(execution);
                 return;
                 
             } else if (!scheduledToday.isEmpty()) {
@@ -116,17 +130,26 @@ public class InvestmentExecutionService {
                 return;
                 
             } else {
-                // First investment - process immediately or wait for potential batching
-                logger.info("First investment today for user {}. Checking for batching window.", 
-                    execution.getUser().getEmail());
-                
-                // Set a 10-minute delay to allow for batching
-                execution.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
-                execution.setErrorMessage("Waiting for potential batch processing (10-minute window)");
-                executionRepository.save(execution);
-                
-                // Schedule batch processing after 10-minute window
-                scheduleBatchProcessing(execution.getUser());
+                // No pending ACH and no queued investments today
+                // Decision: Process immediately vs wait for batching
+                if (ENABLE_LUMP_SUM_BATCHING) {
+                    logger.info("First lump sum investment today for user {}. Using {}-minute batching window.", 
+                        execution.getUser().getEmail(), LUMP_SUM_BATCHING_WINDOW_MINUTES);
+                    
+                    execution.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
+                    execution.setErrorMessage("Waiting for potential batch processing (" + 
+                                             LUMP_SUM_BATCHING_WINDOW_MINUTES + "-minute window for lump sum)");
+                    executionRepository.save(execution);
+                    
+                    // Schedule batch processing after configured window
+                    scheduleLumpSumBatchProcessing(execution.getUser());
+                } else {
+                    // Process immediately for fastest user experience
+                    logger.info("Processing lump sum investment immediately for user {} (batching disabled)", 
+                        execution.getUser().getEmail());
+                    
+                    processInvestmentExecution(execution);
+                }
                 return;
             }
             
@@ -202,36 +225,40 @@ public class InvestmentExecutionService {
             throw e;
         }
     }
-    
+
     /**
-     * Schedule batch processing with a delay to allow multiple investments to accumulate
+     * Schedule lump sum batch processing with a configurable delay
      */
-    private void scheduleBatchProcessing(User user) {
-        // For now, we'll process immediately rather than implementing complex scheduling
-        // In a production system, you'd use @Async or a message queue with delay
-        logger.info("Scheduling batch processing for user {} with 10-minute window", user.getEmail());
+    private void scheduleLumpSumBatchProcessing(User user) {
+        logger.info("Scheduling lump sum batch processing for user {} with {}-minute window", 
+                   user.getEmail(), LUMP_SUM_BATCHING_WINDOW_MINUTES);
         
-        try {
-            // 10-minute delay to allow for multiple investments
-            Thread.sleep(600000); // 10 minutes = 600,000ms
-            
-            // Find all scheduled executions for today
-            List<InvestmentExecution> scheduledToday = executionRepository.findByUserIdAndStatus(
-                user.getId(), InvestmentExecution.ExecutionStatus.SCHEDULED
-            ).stream()
-            .filter(exec -> exec.getCreatedAt().toLocalDate().equals(LocalDateTime.now().toLocalDate()))
-            .toList();
-            
-            if (!scheduledToday.isEmpty()) {
-                processBatchedInvestments(user, scheduledToday);
+        // Schedule the batch processing to run after the configured window
+        Instant scheduledTime = Instant.now().plus(Duration.ofMinutes(LUMP_SUM_BATCHING_WINDOW_MINUTES));
+        
+        taskScheduler.schedule(() -> {
+            try {
+                // Find all scheduled executions for today
+                List<InvestmentExecution> scheduledToday = executionRepository.findByUserIdAndStatus(
+                    user.getId(), InvestmentExecution.ExecutionStatus.SCHEDULED
+                ).stream()
+                .filter(exec -> exec.getCreatedAt().toLocalDate().equals(LocalDateTime.now().toLocalDate()))
+                .toList();
+                
+                if (!scheduledToday.isEmpty()) {
+                    logger.info("Processing {} lump sum investments in batch for user {}", 
+                               scheduledToday.size(), user.getEmail());
+                    processBatchedInvestments(user, scheduledToday);
+                } else {
+                    logger.info("No scheduled lump sum investments found for user {} during batch processing", user.getEmail());
+                }
+                
+            } catch (Exception e) {
+                logger.error("Error in scheduled lump sum batch processing for user {}: {}", user.getEmail(), e.getMessage(), e);
             }
-            
-        } catch (Exception e) {
-            logger.error("Error in scheduled batch processing for user {}: {}", user.getEmail(), e.getMessage(), e);
-        }
+        }, scheduledTime);
     }
 
-    
     /**
      * Process all scheduled investments for today
      */
