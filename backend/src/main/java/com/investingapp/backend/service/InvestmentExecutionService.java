@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -97,11 +98,14 @@ public class InvestmentExecutionService {
                     LocalDateTime.now().toLocalDate().atTime(23, 59, 59)
                 );
             
-            // Also check for other scheduled executions from today that might be waiting to batch
-            List<InvestmentExecution> scheduledToday = executionRepository.findByUserIdAndStatus(
+            // Also check for other scheduled executions from today that are within the batching window
+            // Only consider scheduled investments that are recent (within batching window) for batching
+            LocalDateTime batchingWindowStart = LocalDateTime.now().minus(LUMP_SUM_BATCHING_WINDOW_MINUTES, ChronoUnit.MINUTES);
+            List<InvestmentExecution> recentScheduledToday = executionRepository.findByUserIdAndStatus(
                 execution.getUser().getId(), InvestmentExecution.ExecutionStatus.SCHEDULED
             ).stream()
             .filter(exec -> exec.getCreatedAt().toLocalDate().equals(LocalDateTime.now().toLocalDate()))
+            .filter(exec -> exec.getCreatedAt().isAfter(batchingWindowStart)) // Only recent ones within batching window
             .toList();
             
             if (!pendingFundingToday.isEmpty()) {
@@ -115,10 +119,10 @@ public class InvestmentExecutionService {
                 processInvestmentExecution(execution);
                 return;
                 
-            } else if (!scheduledToday.isEmpty()) {
-                // There are other investments queued for batching today
-                logger.info("User {} has {} other investments queued today. Creating batch ACH transfer.", 
-                    execution.getUser().getEmail(), scheduledToday.size());
+            } else if (!recentScheduledToday.isEmpty()) {
+                // There are other investments recently queued for batching today (within batching window)
+                logger.info("User {} has {} other investments recently queued within batching window. Creating batch ACH transfer.", 
+                    execution.getUser().getEmail(), recentScheduledToday.size());
                 
                 // Add current execution to the batch
                 execution.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
@@ -126,7 +130,7 @@ public class InvestmentExecutionService {
                 executionRepository.save(execution);
                 
                 // Process entire batch with combined ACH transfer
-                processBatchedInvestments(execution.getUser(), scheduledToday);
+                processBatchedInvestments(execution.getUser(), recentScheduledToday);
                 return;
                 
             } else {
