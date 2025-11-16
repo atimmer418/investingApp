@@ -25,6 +25,7 @@ public class AlpacaApiService {
     private static final Logger logger = LoggerFactory.getLogger(AlpacaApiService.class);
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final AlpacaService alpacaService;
     private final String apiKey;
     private final String apiSecret;
     private final String brokerBaseUrl;
@@ -34,7 +35,8 @@ public class AlpacaApiService {
         @Value("${alpaca.api.key}") String apiKey,
         @Value("${alpaca.api.secret}") String apiSecret,
         @Value("${alpaca.broker.base-url:https://broker-api.sandbox.alpaca.markets/v1}") String brokerBaseUrl,
-        @Value("${alpaca.trading.base-url:https://paper-api.alpaca.markets/v2}") String tradingBaseUrl
+        @Value("${alpaca.trading.base-url:https://paper-api.alpaca.markets/v2}") String tradingBaseUrl,
+        AlpacaService alpacaService
     ) {
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
@@ -42,6 +44,7 @@ public class AlpacaApiService {
         this.apiSecret = apiSecret;
         this.brokerBaseUrl = brokerBaseUrl;
         this.tradingBaseUrl = tradingBaseUrl;
+        this.alpacaService = alpacaService;
         
         // Log configuration (without exposing secrets)
         logger.info("AlpacaApiService initialized:");
@@ -173,11 +176,18 @@ public class AlpacaApiService {
             String responseBody = response.getBody();
             JsonNode responseNode = objectMapper.readTree(responseBody);
             Map<String, Object> result = new HashMap<>();
-            result.put("account_id", responseNode.get("id").asText());
+            String accountId = responseNode.get("id").asText();
+            result.put("account_id", accountId);
             result.put("status", responseNode.get("status").asText());
             result.put("created_at", responseNode.get("created_at").asText());
             result.put("raw_response", responseBody);
-            logger.info("Successfully created Alpaca account: {}", result.get("account_id"));
+            
+            logger.info("Successfully created Alpaca account: {}", accountId);
+            
+            // IMPORTANT: Configure account for cash-only trading (no margin)
+            logger.info("Configuring account {} for cash-only trading...", accountId);
+            alpacaService.setupCashOnlyAccount(accountId);
+            
             return result;
             
         } catch (JsonProcessingException e) {

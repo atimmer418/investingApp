@@ -62,6 +62,18 @@ export const routes: Routes = [
     loadComponent: () => import('./change-bank-account/change-bank-account.page').then(m => m.ChangeBankAccountPage)
   },
   {
+    path: 'beneficiaries',
+    loadComponent: () => import('./beneficiaries/beneficiaries.page').then(m => m.BeneficiariesPage)
+  },
+  {
+    path: 'beneficiaries/add',
+    loadComponent: () => import('./beneficiaries/add-beneficiary.page').then(m => m.AddBeneficiaryPage)
+  },
+  {
+    path: 'beneficiaries/edit/:id',
+    loadComponent: () => import('./beneficiaries/add-beneficiary.page').then(m => m.AddBeneficiaryPage)
+  },
+  {
     path: 'tabs',
     loadChildren: () => import('./tabs/tabs.routes').then((m) => m.routes),
   },

@@ -409,4 +409,118 @@ public class AlpacaService {
             return "partially_filled".equalsIgnoreCase(status);
         }
     }
+    
+    /**
+     * Disable margin trading for an account to make it cash-only
+     * This prevents users from borrowing money to buy stocks
+     */
+    public boolean disableMarginTrading(String accountId) {
+        try {
+            String url = alpacaBaseUrl + "/accounts/" + accountId + "/configurations";
+            
+            Map<String, Object> config = new HashMap<>();
+            config.put("max_margin_multiplier", "1.0");  // Cash-only (no borrowing)
+            config.put("pdt_check", "both");             // Pattern day trader protection
+            
+            HttpHeaders headers = createAuthHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(config, headers);
+            
+            ResponseEntity<String> response = restTemplate.exchange(
+                url, HttpMethod.PATCH, request, String.class);
+            
+            if (response.getStatusCode() == HttpStatus.OK) {
+                logger.info("Successfully disabled margin trading for account: {}", accountId);
+                return true;
+            } else {
+                logger.error("Failed to disable margin trading. Status: {}, Response: {}", 
+                    response.getStatusCode(), response.getBody());
+                return false;
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error disabling margin trading for account: {}", accountId, e);
+            return false;
+        }
+    }
+    
+    /**
+     * Configure account for cash-only trading during account creation
+     * Call this immediately after creating a new Alpaca account
+     */
+    public void setupCashOnlyAccount(String accountId) {
+        logger.info("Setting up cash-only trading for account: {}", accountId);
+        
+        // Wait a moment for account to be fully created
+        try {
+            Thread.sleep(2000); // 2 second delay
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
+        boolean success = disableMarginTrading(accountId);
+        if (!success) {
+            logger.warn("Failed to disable margin trading for account: {}. Will retry later.", accountId);
+            // Could implement retry logic here if needed
+        }
+    }
+    
+    /**
+     * Update account beneficiaries using Alpaca PATCH API
+     * @param accountId Alpaca account ID
+     * @param beneficiaries List of beneficiaries to set on the account
+     * @return true if successful, false otherwise
+     */
+    public boolean updateAccountBeneficiaries(String accountId, java.util.List<com.investingapp.backend.model.Beneficiary> beneficiaries) {
+        try {
+            String url = alpacaBaseUrl + "/accounts/" + accountId;
+            logger.info("Updating beneficiaries for account: {} with {} beneficiaries", accountId, beneficiaries.size());
+            
+            // Transform internal beneficiaries to Alpaca format
+            java.util.List<Map<String, Object>> alpacaBeneficiaries = new java.util.ArrayList<>();
+            
+            for (com.investingapp.backend.model.Beneficiary beneficiary : beneficiaries) {
+                Map<String, Object> alpacaBeneficiary = new HashMap<>();
+                
+                // Required fields according to Alpaca API
+                alpacaBeneficiary.put("given_name", beneficiary.getFirstName());
+                alpacaBeneficiary.put("family_name", beneficiary.getLastName());
+                alpacaBeneficiary.put("date_of_birth", beneficiary.getDateOfBirth().toString()); // Format: YYYY-MM-DD
+                alpacaBeneficiary.put("tax_id", beneficiary.getSocialSecurityNumber());
+                alpacaBeneficiary.put("tax_id_type", "ssn"); // Assuming SSN for US users
+                alpacaBeneficiary.put("relationship", beneficiary.getRelationship().name().toLowerCase());
+                alpacaBeneficiary.put("share_pct", beneficiary.getPercentageAllocation().toString());
+                
+                // Set type based on beneficiary type
+                String type = beneficiary.getBeneficiaryType() == com.investingapp.backend.model.Beneficiary.BeneficiaryType.PRIMARY ? "primary" : "contingent";
+                alpacaBeneficiary.put("type", type);
+                
+                alpacaBeneficiaries.add(alpacaBeneficiary);
+            }
+            
+            // Build request body
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("beneficiaries", alpacaBeneficiaries);
+            
+            HttpHeaders headers = createAuthHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+            
+            ResponseEntity<String> response = restTemplate.exchange(
+                url, HttpMethod.PATCH, request, String.class);
+            
+            if (response.getStatusCode() == HttpStatus.OK) {
+                logger.info("Successfully updated beneficiaries for account: {}", accountId);
+                return true;
+            } else {
+                logger.error("Failed to update beneficiaries. Status: {}, Response: {}", 
+                    response.getStatusCode(), response.getBody());
+                return false;
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error updating beneficiaries for account: {}", accountId, e);
+            return false;
+        }
+    }
 }

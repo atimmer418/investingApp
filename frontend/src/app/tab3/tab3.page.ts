@@ -154,6 +154,13 @@ export class Tab3Page implements OnInit, OnDestroy {
           icon: 'document-text-outline',
           action: 'taxDocuments',
           type: 'navigation'
+        },
+        {
+          title: 'Beneficiaries',
+          subtitle: 'Manage account beneficiaries and TOD',
+          icon: 'people-outline',
+          action: 'beneficiaries',
+          type: 'navigation'
         }
       ]
     },
@@ -343,6 +350,9 @@ export class Tab3Page implements OnInit, OnDestroy {
       case 'taxDocuments':
         this.showComingSoon('Tax Documents');
         break;
+      case 'beneficiaries':
+        this.handleBeneficiaries();
+        break;
       case 'notifications':
         this.handleNotifications();
         break;
@@ -407,6 +417,11 @@ export class Tab3Page implements OnInit, OnDestroy {
 
   private showComingSoon(feature: string) {
     this.displayToast(`${feature} feature coming soon!`, 'warning');
+  }
+
+  private handleBeneficiaries() {
+    console.log('Navigating to beneficiaries management');
+    this.router.navigate(['/beneficiaries']);
   }
 
   private toggleTheme() {

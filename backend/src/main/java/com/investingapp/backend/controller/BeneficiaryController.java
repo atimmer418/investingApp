@@ -1,0 +1,289 @@
+package com.investingapp.backend.controller;
+
+import com.investingapp.backend.model.Beneficiary;
+import com.investingapp.backend.model.User;
+import com.investingapp.backend.service.BeneficiaryService;
+import com.investingapp.backend.service.BeneficiaryService.BeneficiaryAllocationSummary;
+import com.investingapp.backend.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * REST Controller for managing account beneficiaries
+ */
+@RestController
+@RequestMapping("/api/beneficiaries")
+public class BeneficiaryController {
+    
+    private static final Logger logger = LoggerFactory.getLogger(BeneficiaryController.class);
+    
+    @Autowired
+    private BeneficiaryService beneficiaryService;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    /**
+     * Get all beneficiaries for the authenticated user
+     */
+    @GetMapping
+    public ResponseEntity<List<Beneficiary>> getBeneficiaries(Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            List<Beneficiary> beneficiaries = beneficiaryService.getBeneficiariesForUser(user);
+            
+            logger.info("Retrieved {} beneficiaries for user: {}", beneficiaries.size(), user.getEmail());
+            return ResponseEntity.ok(beneficiaries);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving beneficiaries: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Get active beneficiaries for the authenticated user
+     */
+    @GetMapping("/active")
+    public ResponseEntity<List<Beneficiary>> getActiveBeneficiaries(Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            List<Beneficiary> beneficiaries = beneficiaryService.getActiveBeneficiariesForUser(user);
+            
+            logger.info("Retrieved {} active beneficiaries for user: {}", beneficiaries.size(), user.getEmail());
+            return ResponseEntity.ok(beneficiaries);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving active beneficiaries: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Get beneficiary allocation summary
+     */
+    @GetMapping("/summary")
+    public ResponseEntity<BeneficiaryAllocationSummary> getAllocationSummary(Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            BeneficiaryAllocationSummary summary = beneficiaryService.getAllocationSummary(user);
+            
+            logger.info("Retrieved allocation summary for user: {}", user.getEmail());
+            return ResponseEntity.ok(summary);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving allocation summary: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Create a new beneficiary
+     */
+    @PostMapping
+    public ResponseEntity<?> createBeneficiary(
+            @Valid @RequestBody Beneficiary beneficiary,
+            Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            Beneficiary createdBeneficiary = beneficiaryService.createBeneficiary(user, beneficiary);
+            
+            logger.info("Created beneficiary {} for user: {}", createdBeneficiary.getId(), user.getEmail());
+            return ResponseEntity.ok(createdBeneficiary);
+            
+        } catch (RuntimeException e) {
+            logger.warn("Validation error creating beneficiary: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+            
+        } catch (Exception e) {
+            logger.error("Error creating beneficiary: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(new ErrorResponse("Failed to create beneficiary"));
+        }
+    }
+    
+    /**
+     * Update an existing beneficiary
+     */
+    @PutMapping("/{beneficiaryId}")
+    public ResponseEntity<?> updateBeneficiary(
+            @PathVariable Long beneficiaryId,
+            @Valid @RequestBody Beneficiary beneficiary,
+            Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            Beneficiary updatedBeneficiary = beneficiaryService.updateBeneficiary(user, beneficiaryId, beneficiary);
+            
+            logger.info("Updated beneficiary {} for user: {}", beneficiaryId, user.getEmail());
+            return ResponseEntity.ok(updatedBeneficiary);
+            
+        } catch (RuntimeException e) {
+            logger.warn("Error updating beneficiary {}: {}", beneficiaryId, e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+            
+        } catch (Exception e) {
+            logger.error("Error updating beneficiary {}: {}", beneficiaryId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(new ErrorResponse("Failed to update beneficiary"));
+        }
+    }
+    
+    /**
+     * Delete a beneficiary
+     */
+    @DeleteMapping("/{beneficiaryId}")
+    public ResponseEntity<?> deleteBeneficiary(
+            @PathVariable Long beneficiaryId,
+            Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            beneficiaryService.deleteBeneficiary(user, beneficiaryId);
+            
+            logger.info("Deleted beneficiary {} for user: {}", beneficiaryId, user.getEmail());
+            return ResponseEntity.ok().build();
+            
+        } catch (RuntimeException e) {
+            logger.warn("Error deleting beneficiary {}: {}", beneficiaryId, e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+            
+        } catch (Exception e) {
+            logger.error("Error deleting beneficiary {}: {}", beneficiaryId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(new ErrorResponse("Failed to delete beneficiary"));
+        }
+    }
+    
+    /**
+     * Submit beneficiary to Alpaca broker system
+     */
+    @PostMapping("/{beneficiaryId}/submit")
+    public ResponseEntity<?> submitToAlpaca(
+            @PathVariable Long beneficiaryId,
+            Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            beneficiaryService.submitToAlpaca(beneficiaryId);
+            
+            logger.info("Submitted beneficiary {} to Alpaca for user: {}", beneficiaryId, user.getEmail());
+            return ResponseEntity.ok().body(new SuccessResponse("Beneficiary submitted to Alpaca successfully"));
+            
+        } catch (RuntimeException e) {
+            logger.warn("Error submitting beneficiary {} to Alpaca: {}", beneficiaryId, e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+            
+        } catch (Exception e) {
+            logger.error("Error submitting beneficiary {} to Alpaca: {}", beneficiaryId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(new ErrorResponse("Failed to submit beneficiary to Alpaca"));
+        }
+    }
+    
+    /**
+     * Submit all approved beneficiaries to Alpaca broker system
+     * This is more efficient than submitting individually since Alpaca replaces the entire beneficiaries array
+     */
+    @PostMapping("/submit-all")
+    public ResponseEntity<?> submitAllToAlpaca(Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            beneficiaryService.submitAllBeneficiariesToAlpaca(user);
+            
+            logger.info("Submitted all beneficiaries to Alpaca for user: {}", user.getEmail());
+            return ResponseEntity.ok().body(new SuccessResponse("All beneficiaries submitted to Alpaca successfully"));
+            
+        } catch (RuntimeException e) {
+            logger.warn("Error submitting all beneficiaries to Alpaca for user {}: {}", authentication.getName(), e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+            
+        } catch (Exception e) {
+            logger.error("Error submitting all beneficiaries to Alpaca for user {}: {}", authentication.getName(), e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(new ErrorResponse("Failed to submit all beneficiaries to Alpaca"));
+        }
+    }
+    
+    /**
+     * Get primary beneficiaries
+     */
+    @GetMapping("/primary")
+    public ResponseEntity<List<Beneficiary>> getPrimaryBeneficiaries(Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            List<Beneficiary> beneficiaries = beneficiaryService.getPrimaryBeneficiaries(user);
+            
+            logger.info("Retrieved {} primary beneficiaries for user: {}", beneficiaries.size(), user.getEmail());
+            return ResponseEntity.ok(beneficiaries);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving primary beneficiaries: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Get contingent beneficiaries
+     */
+    @GetMapping("/contingent")
+    public ResponseEntity<List<Beneficiary>> getContingentBeneficiaries(Authentication authentication) {
+        try {
+            User user = getCurrentUser(authentication);
+            List<Beneficiary> beneficiaries = beneficiaryService.getContingentBeneficiaries(user);
+            
+            logger.info("Retrieved {} contingent beneficiaries for user: {}", beneficiaries.size(), user.getEmail());
+            return ResponseEntity.ok(beneficiaries);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving contingent beneficiaries: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Helper method to get current authenticated user
+     */
+    private User getCurrentUser(Authentication authentication) {
+        String email = authentication.getName();
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("User not found: " + email);
+        }
+        
+        return userOpt.get();
+    }
+    
+    /**
+     * Error response DTO
+     */
+    public static class ErrorResponse {
+        private final String error;
+        private final long timestamp;
+        
+        public ErrorResponse(String error) {
+            this.error = error;
+            this.timestamp = System.currentTimeMillis();
+        }
+        
+        public String getError() { return error; }
+        public long getTimestamp() { return timestamp; }
+    }
+    
+    /**
+     * Success response DTO
+     */
+    public static class SuccessResponse {
+        private final String message;
+        private final long timestamp;
+        
+        public SuccessResponse(String message) {
+            this.message = message;
+            this.timestamp = System.currentTimeMillis();
+        }
+        
+        public String getMessage() { return message; }
+        public long getTimestamp() { return timestamp; }
+    }
+}
