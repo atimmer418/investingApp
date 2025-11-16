@@ -126,6 +126,10 @@ export class AddBeneficiaryPage implements OnInit {
       
       if (beneficiary) {
         this.beneficiary = { ...beneficiary };
+        // Fix date parsing - convert date strings to proper format for the input
+        if (this.beneficiary.dateOfBirth) {
+          this.beneficiary.dateOfBirth = this.parseBackendDate(this.beneficiary.dateOfBirth);
+        }
       } else {
         this.displayToast('Beneficiary not found', 'danger');
         this.router.navigate(['/beneficiaries']);
@@ -144,20 +148,45 @@ export class AddBeneficiaryPage implements OnInit {
     try {
       this.isLoading = true;
 
+      // Clean the beneficiary data to only include fields that should be sent to the server
+      const cleanBeneficiary: Beneficiary = {
+        beneficiaryType: this.beneficiary.beneficiaryType!,
+        firstName: this.beneficiary.firstName!,
+        lastName: this.beneficiary.lastName!,
+        email: this.beneficiary.email,
+        phone: this.beneficiary.phone,
+        dateOfBirth: this.formatDateForBackend(this.beneficiary.dateOfBirth),
+        socialSecurityNumber: this.beneficiary.socialSecurityNumber,
+        addressLine1: this.beneficiary.addressLine1,
+        addressLine2: this.beneficiary.addressLine2,
+        city: this.beneficiary.city,
+        state: this.beneficiary.state,
+        postalCode: this.beneficiary.postalCode,
+        country: this.beneficiary.country,
+        relationship: this.beneficiary.relationship!,
+        percentageAllocation: this.beneficiary.percentageAllocation!,
+        status: this.beneficiary.status!,
+        notes: this.beneficiary.notes
+      };
+
+      // Include ID for updates
+      if (this.editMode && this.beneficiaryId) {
+        cleanBeneficiary.id = this.beneficiaryId;
+      }
+
       if (this.editMode && this.beneficiaryId) {
         // Update existing beneficiary
-        await this.beneficiaryService.updateBeneficiary(this.beneficiaryId, this.beneficiary as Beneficiary).toPromise();
+        await this.beneficiaryService.updateBeneficiary(this.beneficiaryId, cleanBeneficiary).toPromise();
         this.displayToast('Beneficiary updated successfully', 'success');
       } else {
         // Create new beneficiary
-        await this.beneficiaryService.createBeneficiary(this.beneficiary as Beneficiary).toPromise();
+        await this.beneficiaryService.createBeneficiary(cleanBeneficiary).toPromise();
         this.displayToast('Beneficiary added successfully', 'success');
       }
 
-      // Navigate back to beneficiaries page
-      setTimeout(() => {
-        this.router.navigate(['/beneficiaries']);
-      }, 1500);
+      // Navigate back to beneficiaries page immediately
+      // The beneficiaries page will auto-refresh when we navigate back
+      this.router.navigate(['/beneficiaries']);
 
     } catch (error) {
       console.error('Error saving beneficiary:', error);
@@ -225,6 +254,78 @@ export class AddBeneficiaryPage implements OnInit {
 
   onCancel() {
     this.router.navigate(['/beneficiaries']);
+  }
+
+  /**
+   * Parse date from backend - handles both string formats and arrays
+   */
+  private parseBackendDate(date: any): string {
+    if (!date) return '';
+    
+    // If it's already a string in YYYY-MM-DD format, return as is
+    if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return date;
+    }
+    
+    // If it's an array (e.g., [2025, 11, 16]), convert to YYYY-MM-DD
+    if (Array.isArray(date) && date.length >= 3) {
+      const year = date[0];
+      const month = date[1].toString().padStart(2, '0');
+      const day = date[2].toString().padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    
+    // If it's a comma-separated string like "2025,11,16,22,22,13,637928000"
+    if (typeof date === 'string' && date.includes(',')) {
+      const parts = date.split(',');
+      if (parts.length >= 3) {
+        const year = parts[0];
+        const month = parts[1].padStart(2, '0');
+        const day = parts[2].padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+    }
+    
+    // Try to parse as a Date object
+    try {
+      const parsedDate = new Date(date);
+      if (!isNaN(parsedDate.getTime())) {
+        return parsedDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+      }
+    } catch (e) {
+      console.warn('Could not parse date:', date);
+    }
+    
+    return '';
+  }
+
+  /**
+   * Format date for backend submission
+   * Ensures the date is in YYYY-MM-DD format
+   */
+  private formatDateForBackend(dateValue: any): string | undefined {
+    if (!dateValue) return undefined;
+    
+    // If it's already a string in YYYY-MM-DD format, return as is
+    if (typeof dateValue === 'string') {
+      // Check if it's already in YYYY-MM-DD format
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+        return dateValue;
+      }
+      
+      // Try to parse and reformat if it's in a different string format
+      const date = new Date(dateValue);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split('T')[0]; // YYYY-MM-DD
+      }
+    }
+    
+    // If it's a Date object, format it
+    if (dateValue instanceof Date) {
+      return dateValue.toISOString().split('T')[0]; // YYYY-MM-DD
+    }
+    
+    return undefined;
   }
 
   formatSSN(event: any) {

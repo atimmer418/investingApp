@@ -17,7 +17,9 @@ import {
   IonButtons,
   IonBackButton,
   IonToast,
-  IonNote
+  IonNote,
+  IonSpinner,
+  ViewWillEnter
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
@@ -49,14 +51,15 @@ import { BeneficiaryService, Beneficiary, BeneficiaryAllocationSummary } from '.
     CommonModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton,
     IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIcon, 
-    IonBadge, IonProgressBar, IonButtons, IonBackButton, IonToast, IonNote
+    IonBadge, IonProgressBar, IonButtons, IonBackButton, IonToast, IonNote, IonSpinner
   ]
 })
-export class BeneficiariesPage implements OnInit {
+export class BeneficiariesPage implements OnInit, ViewWillEnter {
   
   public beneficiaries: Beneficiary[] = [];
   public allocationSummary: BeneficiaryAllocationSummary | null = null;
   public isLoading = true;
+  public isSubmitting = false;
   public isToastOpen = false;
   public toastMessage = '';
   public toastColor = 'primary';
@@ -69,6 +72,12 @@ export class BeneficiariesPage implements OnInit {
   }
   
   ngOnInit() {
+    this.loadBeneficiaries();
+  }
+
+  ionViewWillEnter() {
+    // This will run every time the user navigates to this page
+    // including when returning from add/edit beneficiary pages
     this.loadBeneficiaries();
   }
   
@@ -97,8 +106,9 @@ export class BeneficiariesPage implements OnInit {
     }
   }
   
-  onAddBeneficiary() {
-    this.router.navigate(['/beneficiaries/add']);
+  onAddBeneficiary(type?: 'primary' | 'contingent') {
+    const queryParams = type ? { type } : {};
+    this.router.navigate(['/beneficiaries/add'], { queryParams });
   }
   
   onEditBeneficiary(beneficiary: Beneficiary) {
@@ -163,6 +173,20 @@ export class BeneficiariesPage implements OnInit {
   getApprovedBeneficiaries(): Beneficiary[] {
     return this.beneficiaries.filter(b => b.status === 'APPROVED');
   }
+
+  /**
+   * Check if beneficiary setup is truly complete:
+   * - Primary allocation must be 100%
+   * - All primary beneficiaries must be approved (not just pending)
+   */
+  isBeneficiarySetupComplete(): boolean {
+    const isPrimaryAllocationComplete = this.allocationSummary?.primaryAllocationComplete ?? false;
+    const primaryBeneficiaries = this.getPrimaryBeneficiaries();
+    const allPrimaryApproved = primaryBeneficiaries.length > 0 && 
+      primaryBeneficiaries.every(b => b.status === 'APPROVED');
+    
+    return isPrimaryAllocationComplete && allPrimaryApproved;
+  }
   
   /**
    * Submit a specific beneficiary to Alpaca
@@ -174,32 +198,69 @@ export class BeneficiariesPage implements OnInit {
     }
     
     try {
+      // Show submission loading state
+      this.isSubmitting = true;
+      
       await this.beneficiaryService.submitBeneficiary(beneficiary.id).toPromise();
       this.displayToast(`Successfully submitted ${beneficiary.firstName} ${beneficiary.lastName} to Alpaca`, 'success');
       
       // Refresh the data to show updated status
       await this.loadBeneficiaries();
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting beneficiary:', error);
-      this.displayToast('Failed to submit beneficiary. Please try again.', 'danger');
+      
+      // Show more detailed error information
+      let errorMessage = 'Failed to submit beneficiary. Please try again.';
+      if (error?.error?.message) {
+        errorMessage = `Submission failed: ${error.error.message}`;
+      } else if (error?.message) {
+        errorMessage = `Submission failed: ${error.message}`;
+      }
+      
+      this.displayToast(errorMessage, 'danger');
+    } finally {
+      // Clear submission loading state
+      this.isSubmitting = false;
     }
   }
   
   /**
-   * Submit all approved beneficiaries to Alpaca
+   * Submit all pending beneficiaries to Alpaca
    */
   async onSubmitAllBeneficiaries() {
+    const pendingCount = this.getPendingBeneficiaries().length;
+    
+    if (pendingCount === 0) {
+      this.displayToast('No pending beneficiaries to submit', 'warning');
+      return;
+    }
+    
     try {
+      // Show submission loading state
+      this.isSubmitting = true;
+      
       await this.beneficiaryService.submitAllBeneficiaries().toPromise();
-      this.displayToast('Successfully submitted all beneficiaries to Alpaca', 'success');
+      this.displayToast(`Successfully submitted ${pendingCount} beneficiar${pendingCount === 1 ? 'y' : 'ies'} to Alpaca`, 'success');
       
       // Refresh the data to show updated status
       await this.loadBeneficiaries();
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting all beneficiaries:', error);
-      this.displayToast('Failed to submit beneficiaries. Please try again.', 'danger');
+      
+      // Show more detailed error information  
+      let errorMessage = 'Failed to submit beneficiaries. Please try again.';
+      if (error?.error?.message) {
+        errorMessage = `Submission failed: ${error.error.message}`;
+      } else if (error?.message) {
+        errorMessage = `Submission failed: ${error.message}`;
+      }
+      
+      this.displayToast(errorMessage, 'danger');
+    } finally {
+      // Clear submission loading state
+      this.isSubmitting = false;
     }
   }
   
@@ -234,6 +295,75 @@ export class BeneficiariesPage implements OnInit {
    */
   async refreshData() {
     await this.loadBeneficiaries();
+  }
+
+  /**
+   * Convert date to a valid Date object for the date pipe
+   */
+  formatDate(dateValue: any): Date | null {
+    if (!dateValue) return null;
+    
+    // If it's already a Date object, return it
+    if (dateValue instanceof Date) return dateValue;
+    
+    // If it's a string in format "2002,4,18" or similar, convert it
+    if (typeof dateValue === 'string') {
+      // Handle comma-separated format like "2002,4,18"
+      if (dateValue.includes(',')) {
+        const parts = dateValue.split(',').map(p => parseInt(p.trim()));
+        if (parts.length === 3) {
+          // Create date: year, month (0-based), day
+          return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+      }
+      
+      // Try parsing as ISO string or other standard format
+      const parsed = new Date(dateValue);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+    
+    // For any other type, try to convert to Date
+    const parsed = new Date(dateValue);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  /**
+   * Format date for display without timezone issues
+   * Returns a formatted string directly without Date conversion
+   */
+  formatDateForDisplay(dateValue: any): string {
+    if (!dateValue) return '';
+    
+    // If it's a string in YYYY-MM-DD format, format it nicely
+    if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateValue.split('-');
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthName = monthNames[parseInt(month) - 1];
+      return `${monthName} ${parseInt(day)}, ${year}`;
+    }
+    
+    // If it's a comma-separated format like "2002,4,18"
+    if (typeof dateValue === 'string' && dateValue.includes(',')) {
+      const parts = dateValue.split(',').map(p => parseInt(p.trim()));
+      if (parts.length >= 3) {
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December'];
+        const monthName = monthNames[parts[1] - 1];
+        return `${monthName} ${parts[2]}, ${parts[0]}`;
+      }
+    }
+    
+    // If it's an array like [2002, 4, 18]
+    if (Array.isArray(dateValue) && dateValue.length >= 3) {
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthName = monthNames[dateValue[1] - 1];
+      return `${monthName} ${dateValue[2]}, ${dateValue[0]}`;
+    }
+    
+    // Fallback
+    return dateValue.toString();
   }
   
   private displayToast(message: string, color: string = 'primary') {

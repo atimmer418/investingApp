@@ -17,18 +17,39 @@
   <div class="beneficiaries-container">
     
     <!-- Status Overview Card -->
-    <ion-card class="status-banner" [class.complete]="allocationSummary?.primaryAllocationComplete" [class.incomplete]="!allocationSummary?.primaryAllocationComplete">
+    <ion-card class="status-banner" [class.complete]="isBeneficiarySetupComplete()" [class.incomplete]="!isBeneficiarySetupComplete()">
       <ion-card-content>
         <div class="status-content">
           <div class="status-info">
-            <h2>{{ allocationSummary?.primaryAllocationComplete ? 'Setup Complete' : 'Setup Needed' }}</h2>
-            <p>{{ allocationSummary?.primaryAllocationComplete ? 'Your beneficiaries are properly configured' : 'Complete your beneficiary designations for account protection' }}</p>
+            <h2>{{ isBeneficiarySetupComplete() ? 'Setup Complete' : 'Setup Needed' }}</h2>
+            <p>{{ isBeneficiarySetupComplete() ? 'Your beneficiaries are properly configured' : 'Complete your beneficiary designations for account protection' }}</p>
           </div>
           <ion-icon 
-            [name]="allocationSummary?.primaryAllocationComplete ? 'shield-checkmark-outline' : 'shield-outline'" 
-            [color]="allocationSummary?.primaryAllocationComplete ? 'success' : 'warning'">
+            [name]="isBeneficiarySetupComplete() ? 'shield-checkmark-outline' : 'shield-outline'" 
+            [color]="isBeneficiarySetupComplete() ? 'success' : 'warning'">
           </ion-icon>
         </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Pending Submission Alert Card -->
+    <ion-card class="alert-card" *ngIf="getPendingBeneficiaries().length > 0">
+      <ion-card-header class="alert-header">
+        <ion-card-title class="alert-title">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          {{ getPendingBeneficiaries().length }} Beneficiar{{ getPendingBeneficiaries().length === 1 ? 'y' : 'ies' }} Pending Submission
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content class="alert-content">
+        <p class="alert-description">These beneficiaries haven't been submitted to your brokerage account yet.</p>
+        <ion-button 
+          class="fred-button fred-button-primary"
+          [disabled]="isSubmitting"
+          (click)="onSubmitAllBeneficiaries()">
+          <ion-icon *ngIf="!isSubmitting" name="checkmark-outline" slot="start"></ion-icon>
+          <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
+          {{ isSubmitting ? 'Submitting...' : 'Submit All to Alpaca' }}
+        </ion-button>
       </ion-card-content>
     </ion-card>
     
@@ -101,65 +122,13 @@
         </div>
 
         <!-- Overall Status -->
-        <div class="overall-status" [class.complete]="allocationSummary.primaryAllocationComplete">
+        <!-- <div class="overall-status" [class.complete]="allocationSummary.primaryAllocationComplete">
           <ion-icon 
             [name]="allocationSummary.primaryAllocationComplete ? 'checkmark-circle' : 'alert-circle'" 
             [color]="allocationSummary.primaryAllocationComplete ? 'success' : 'warning'">
           </ion-icon>
           <span>{{ allocationSummary.primaryAllocationComplete ? 'Beneficiary setup complete' : 'Primary allocation incomplete' }}</span>
-        </div>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Pending Submission Warning Banner -->
-    <ion-card class="warning-banner" *ngIf="getPendingBeneficiaries().length > 0">
-      <ion-card-content>
-        <div class="warning-content">
-          <div class="warning-info">
-            <ion-icon name="alert-circle-outline" color="warning"></ion-icon>
-            <div class="warning-text">
-              <h4>{{ getPendingBeneficiaries().length }} Beneficiar{{ getPendingBeneficiaries().length === 1 ? 'y' : 'ies' }} Pending Submission</h4>
-              <p>These beneficiaries haven't been submitted to your brokerage account yet.</p>
-            </div>
-          </div>
-          <ion-button 
-            fill="solid" 
-            color="primary" 
-            size="small"
-            (click)="onSubmitAllBeneficiaries()">
-            <ion-icon name="checkmark-outline" slot="start"></ion-icon>
-            Submit All to Alpaca
-          </ion-button>
-        </div>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Quick Actions Card (when there are beneficiaries) -->
-    <ion-card class="quick-actions-card" *ngIf="beneficiaries.length > 0">
-      <ion-card-content>
-        <div class="quick-actions">
-          <h4 class="actions-title">Quick Actions</h4>
-          <div class="action-buttons-row">
-            <ion-button 
-              fill="outline" 
-              size="small"
-              (click)="onAddBeneficiary()"
-              class="action-btn">
-              <ion-icon name="person-add-outline" slot="start"></ion-icon>
-              Add Another
-            </ion-button>
-            <ion-button 
-              fill="outline" 
-              size="small"
-              color="success"
-              (click)="onSubmitAllBeneficiaries()"
-              [disabled]="getPendingBeneficiaries().length === 0"
-              class="action-btn">
-              <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-              Submit All ({{ getPendingBeneficiaries().length }})
-            </ion-button>
-          </div>
-        </div>
+        </div> -->
       </ion-card-content>
     </ion-card>
 
@@ -178,7 +147,7 @@
       <div *ngIf="getPrimaryBeneficiaries().length === 0" class="empty-state">
         <ion-icon name="person-add-outline" color="medium"></ion-icon>
         <p>No primary beneficiaries added</p>
-        <ion-button fill="outline" (click)="onAddBeneficiary()">
+        <ion-button fill="outline" (click)="onAddBeneficiary('primary')">
           Add Primary Beneficiary
         </ion-button>
       </div>
@@ -200,7 +169,7 @@
           <div class="beneficiary-details">
             <div class="detail-row" *ngIf="beneficiary.dateOfBirth">
               <ion-icon name="calendar-outline" color="medium"></ion-icon>
-              <span>Born {{ beneficiary.dateOfBirth | date:'mediumDate' }}</span>
+              <span>Born {{ formatDateForDisplay(beneficiary.dateOfBirth) }}</span>
             </div>
             <div class="detail-row" *ngIf="beneficiary.email">
               <ion-icon name="mail-outline" color="medium"></ion-icon>
@@ -221,14 +190,16 @@
                 fill="outline" 
                 size="small" 
                 color="primary"
+                [disabled]="isSubmitting"
                 (click)="$event.stopPropagation(); onSubmitBeneficiary(beneficiary)">
-                <ion-icon name="checkmark-outline" slot="start"></ion-icon>
-                Submit
+                <ion-icon *ngIf="!isSubmitting" name="checkmark-outline" slot="start"></ion-icon>
+                <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
+                {{ isSubmitting ? 'Submitting...' : 'Submit' }}
               </ion-button>
               
               <!-- Last Submitted Info for Approved -->
               <div *ngIf="beneficiary.status === 'APPROVED' && beneficiary.submittedToAlpacaAt" class="submitted-info">
-                <span class="submitted-text">Submitted {{ beneficiary.submittedToAlpacaAt | date:'short' }}</span>
+                <span class="submitted-text">Submitted</span>
               </div>
             </div>
           </div>
@@ -252,7 +223,7 @@
         <ion-icon name="shield-outline" color="medium"></ion-icon>
         <p>No contingent beneficiaries added</p>
         <p class="empty-description">Contingent beneficiaries receive assets if primary beneficiaries cannot</p>
-        <ion-button fill="outline" color="secondary" (click)="onAddBeneficiary()">
+        <ion-button fill="outline" color="secondary" (click)="onAddBeneficiary('contingent')">
           Add Contingent Beneficiary
         </ion-button>
       </div>
@@ -274,7 +245,7 @@
           <div class="beneficiary-details">
             <div class="detail-row" *ngIf="beneficiary.dateOfBirth">
               <ion-icon name="calendar-outline" color="medium"></ion-icon>
-              <span>Born {{ beneficiary.dateOfBirth | date:'mediumDate' }}</span>
+              <span>Born {{ formatDateForDisplay(beneficiary.dateOfBirth) }}</span>
             </div>
             <div class="detail-row" *ngIf="beneficiary.email">
               <ion-icon name="mail-outline" color="medium"></ion-icon>
@@ -295,9 +266,11 @@
                 fill="outline" 
                 size="small" 
                 color="primary"
+                [disabled]="isSubmitting"
                 (click)="$event.stopPropagation(); onSubmitBeneficiary(beneficiary)">
-                <ion-icon name="checkmark-outline" slot="start"></ion-icon>
-                Submit
+                <ion-icon *ngIf="!isSubmitting" name="checkmark-outline" slot="start"></ion-icon>
+                <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
+                {{ isSubmitting ? 'Submitting...' : 'Submit' }}
               </ion-button>
               
               <!-- Last Submitted Info for Approved -->

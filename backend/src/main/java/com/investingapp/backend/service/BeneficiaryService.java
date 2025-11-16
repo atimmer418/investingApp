@@ -14,6 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -111,6 +115,9 @@ public class BeneficiaryService {
             throw new RuntimeException("Unauthorized access to beneficiary");
         }
         
+        // Check if changes require re-submission to Alpaca BEFORE updating fields
+        boolean hasSignificantChanges = hasSignificantChanges(existing, updatedBeneficiary);
+        
         // Update fields
         updateBeneficiaryFields(existing, updatedBeneficiary);
         
@@ -118,7 +125,7 @@ public class BeneficiaryService {
         validateBeneficiary(user, existing);
         
         // Mark as pending if significant changes were made
-        if (hasSignificantChanges(existing, updatedBeneficiary)) {
+        if (hasSignificantChanges) {
             existing.setStatus(BeneficiaryStatus.PENDING);
         }
         
@@ -251,6 +258,7 @@ public class BeneficiaryService {
      * This is more efficient than submitting one by one since Alpaca replaces the entire beneficiaries array
      * @param user The user whose beneficiaries to submit
      */
+    @Transactional
     public void submitAllBeneficiariesToAlpaca(User user) {
         // Check if user has an Alpaca account
         if (user.getAlpacaAccountId() == null || user.getAlpacaAccountId().trim().isEmpty()) {
@@ -261,12 +269,14 @@ public class BeneficiaryService {
             logger.info("Submitting all beneficiaries to Alpaca for user: {} (account: {})", 
                 user.getEmail(), user.getAlpacaAccountId());
             
-            // Get all approved beneficiaries for the user
-            List<Beneficiary> activeBeneficiaries = beneficiaryRepository.findByUserIdAndStatusOrderByBeneficiaryTypeAscPercentageAllocationDesc(
-                user.getId(), BeneficiaryStatus.APPROVED);
+            // Get all beneficiaries for the user and filter for approved and pending
+            List<Beneficiary> allBeneficiaries = beneficiaryRepository.findByUserIdOrderByBeneficiaryTypeAscPercentageAllocationDesc(user.getId());
+            List<Beneficiary> activeBeneficiaries = allBeneficiaries.stream()
+                .filter(b -> b.getStatus() == BeneficiaryStatus.APPROVED || b.getStatus() == BeneficiaryStatus.PENDING)
+                .collect(Collectors.toList());
             
             if (activeBeneficiaries.isEmpty()) {
-                logger.info("No approved beneficiaries to submit for user: {}", user.getEmail());
+                logger.info("No approved or pending beneficiaries to submit for user: {}", user.getEmail());
                 return;
             }
             
@@ -293,13 +303,17 @@ public class BeneficiaryService {
             boolean success = alpacaService.updateAccountBeneficiaries(user.getAlpacaAccountId(), activeBeneficiaries);
             
             if (success) {
-                // Update all submitted beneficiaries with submission timestamp
+                // Update all submitted beneficiaries with submission timestamp and approved status
                 LocalDateTime submissionTime = LocalDateTime.now();
                 for (Beneficiary b : activeBeneficiaries) {
+                    b.setStatus(BeneficiaryStatus.APPROVED);
                     b.setSubmittedToAlpacaAt(submissionTime);
                     b.setUpdatedAt(submissionTime);
                     beneficiaryRepository.save(b);
                 }
+                
+                // Force flush to ensure changes are persisted
+                beneficiaryRepository.flush();
                 
                 logger.info("Successfully submitted {} beneficiaries to Alpaca for user: {}", 
                     activeBeneficiaries.size(), user.getEmail());
@@ -393,12 +407,16 @@ public class BeneficiaryService {
     
     /**
      * Check if changes require re-submission to Alpaca
+     * This checks all fields that are sent to Alpaca and would affect the beneficiary designation
      */
     private boolean hasSignificantChanges(Beneficiary existing, Beneficiary updated) {
-        return !existing.getFirstName().equals(updated.getFirstName()) ||
-               !existing.getLastName().equals(updated.getLastName()) ||
-               !existing.getPercentageAllocation().equals(updated.getPercentageAllocation()) ||
-               !existing.getBeneficiaryType().equals(updated.getBeneficiaryType());
+        return !Objects.equals(existing.getFirstName(), updated.getFirstName()) ||
+               !Objects.equals(existing.getLastName(), updated.getLastName()) ||
+               !Objects.equals(existing.getDateOfBirth(), updated.getDateOfBirth()) ||
+               !Objects.equals(existing.getSocialSecurityNumber(), updated.getSocialSecurityNumber()) ||
+               !Objects.equals(existing.getRelationship(), updated.getRelationship()) ||
+               !Objects.equals(existing.getPercentageAllocation(), updated.getPercentageAllocation()) ||
+               !Objects.equals(existing.getBeneficiaryType(), updated.getBeneficiaryType());
     }
     
     /**

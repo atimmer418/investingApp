@@ -60,6 +60,7 @@ export class BeneficiaryService {
   private getAuthHeaders(): HttpHeaders {
     let headers = new HttpHeaders();
     const token = JwtTokenUtils.getValidJwtToken();
+    
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }

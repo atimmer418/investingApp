@@ -138,6 +138,65 @@ ion-header {
   }
 }
 
+// Alert Card for Pending Submissions (FRED-style)
+.alert-card {
+  margin-bottom: 24px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid var(--ion-color-warning);
+
+  .alert-header {
+    padding: 20px 20px 8px 20px;
+
+    .alert-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+
+      ion-icon {
+        font-size: 1.3rem;
+        color: var(--ion-color-warning);
+      }
+    }
+  }
+
+  .alert-content {
+    padding: 0 20px 20px 20px;
+
+    .alert-description {
+      margin: 0 0 20px 0;
+      color: var(--ion-color-medium);
+      line-height: 1.5;
+    }
+
+    .fred-button {
+      height: 44px;
+      font-weight: 600;
+      border-radius: 12px;
+      text-transform: none;
+      letter-spacing: 0.02em;
+      transition: all 0.2s ease;
+
+      &.fred-button-primary {
+        --background: var(--ion-color-primary);
+        --background-hover: var(--ion-color-primary-shade);
+        --color: white;
+        box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.3);
+
+        &:hover {
+          --background: var(--ion-color-primary-shade);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.4);
+        }
+      }
+    }
+  }
+}
+
 // Explanation Card
 .explanation-card {
   margin-bottom: 24px;

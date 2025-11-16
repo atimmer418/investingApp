@@ -6,8 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -31,10 +33,40 @@ public class AlpacaService {
     private String alpacaBaseUrl;
     
     private final RestTemplate restTemplate;
+    private final WebClient webClient;
     private final ObjectMapper objectMapper;
     
     public AlpacaService() {
         this.restTemplate = new RestTemplate();
+        
+        // Create a custom request factory that supports PATCH
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory() {
+            @Override
+            protected void prepareConnection(java.net.HttpURLConnection connection, String httpMethod) throws java.io.IOException {
+                super.prepareConnection(connection, httpMethod);
+                
+                // Enable PATCH method using reflection
+                if ("PATCH".equals(httpMethod)) {
+                    try {
+                        // Use reflection to set the method field directly
+                        java.lang.reflect.Field methodField = java.net.HttpURLConnection.class.getDeclaredField("method");
+                        methodField.setAccessible(true);
+                        methodField.set(connection, "PATCH");
+                    } catch (Exception e) {
+                        logger.warn("Could not enable PATCH method via reflection: {}", e.getMessage());
+                        throw new java.io.IOException("PATCH method not supported", e);
+                    }
+                }
+            }
+        };
+        
+        this.restTemplate.setRequestFactory(requestFactory);
+        
+        // Create WebClient for PATCH requests (better PATCH support)
+        this.webClient = WebClient.builder()
+            .baseUrl(alpacaBaseUrl)
+            .build();
+            
         this.objectMapper = new ObjectMapper();
     }
     
@@ -480,6 +512,32 @@ public class AlpacaService {
             java.util.List<Map<String, Object>> alpacaBeneficiaries = new java.util.ArrayList<>();
             
             for (com.investingapp.backend.model.Beneficiary beneficiary : beneficiaries) {
+                // Validate required fields before creating the Alpaca beneficiary object
+                if (beneficiary.getFirstName() == null || beneficiary.getFirstName().trim().isEmpty()) {
+                    logger.error("Beneficiary missing first name: {}", beneficiary.getId());
+                    throw new IllegalArgumentException("Beneficiary first name is required");
+                }
+                if (beneficiary.getLastName() == null || beneficiary.getLastName().trim().isEmpty()) {
+                    logger.error("Beneficiary missing last name: {}", beneficiary.getId());
+                    throw new IllegalArgumentException("Beneficiary last name is required");
+                }
+                if (beneficiary.getDateOfBirth() == null) {
+                    logger.error("Beneficiary missing date of birth: {}", beneficiary.getId());
+                    throw new IllegalArgumentException("Beneficiary date of birth is required");
+                }
+                if (beneficiary.getSocialSecurityNumber() == null || beneficiary.getSocialSecurityNumber().trim().isEmpty()) {
+                    logger.error("Beneficiary missing SSN: {}", beneficiary.getId());
+                    throw new IllegalArgumentException("Beneficiary Social Security Number is required");
+                }
+                if (beneficiary.getRelationship() == null) {
+                    logger.error("Beneficiary missing relationship: {}", beneficiary.getId());
+                    throw new IllegalArgumentException("Beneficiary relationship is required");
+                }
+                if (beneficiary.getPercentageAllocation() == null || beneficiary.getPercentageAllocation().compareTo(BigDecimal.ZERO) <= 0) {
+                    logger.error("Beneficiary missing or invalid percentage allocation: {}", beneficiary.getId());
+                    throw new IllegalArgumentException("Beneficiary percentage allocation must be greater than 0");
+                }
+                
                 Map<String, Object> alpacaBeneficiary = new HashMap<>();
                 
                 // Required fields according to Alpaca API
@@ -496,27 +554,28 @@ public class AlpacaService {
                 alpacaBeneficiary.put("type", type);
                 
                 alpacaBeneficiaries.add(alpacaBeneficiary);
+                
+                logger.debug("Added beneficiary to submission: {} {} ({}), DOB: {}, Allocation: {}%", 
+                    beneficiary.getFirstName(), beneficiary.getLastName(), type, 
+                    beneficiary.getDateOfBirth(), beneficiary.getPercentageAllocation());
             }
             
             // Build request body
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("beneficiaries", alpacaBeneficiaries);
             
-            HttpHeaders headers = createAuthHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+            // Use WebClient for PATCH request (better PATCH support)
+            String response = webClient.patch()
+                .uri(url)
+                .header("Authorization", "Basic " + java.util.Base64.getEncoder().encodeToString((alpacaApiKey + ":" + alpacaApiSecret).getBytes()))
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
             
-            ResponseEntity<String> response = restTemplate.exchange(
-                url, HttpMethod.PATCH, request, String.class);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                logger.info("Successfully updated beneficiaries for account: {}", accountId);
-                return true;
-            } else {
-                logger.error("Failed to update beneficiaries. Status: {}, Response: {}", 
-                    response.getStatusCode(), response.getBody());
-                return false;
-            }
+            logger.info("Successfully updated beneficiaries for account: {}", accountId);
+            return true;
             
         } catch (Exception e) {
             logger.error("Error updating beneficiaries for account: {}", accountId, e);

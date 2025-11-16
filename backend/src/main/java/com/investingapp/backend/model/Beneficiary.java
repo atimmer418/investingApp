@@ -9,6 +9,8 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.DecimalMax;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -58,10 +60,13 @@ public class Beneficiary {
     @Size(max = 20, message = "Phone number must be 20 characters or less")
     private String phone;
     
-    @Column(name = "date_of_birth")
+    @Column(name = "date_of_birth", nullable = false)
+    @NotNull(message = "Date of birth is required")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
     
-    @Column(name = "social_security_number", length = 11)
+    @Column(name = "social_security_number", length = 11, nullable = false)
+    @NotBlank(message = "Social Security Number is required")
     @Pattern(regexp = "^\\d{3}-\\d{2}-\\d{4}$", message = "SSN must be in format XXX-XX-XXXX")
     private String socialSecurityNumber;
     
@@ -117,15 +122,19 @@ public class Beneficiary {
     
     // Audit Fields
     @Column(name = "created_at", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
     
     @Column(name = "submitted_to_alpaca_at")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime submittedToAlpacaAt;
     
     @Column(name = "approved_at")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime approvedAt;
     
     // Constructors
@@ -220,6 +229,7 @@ public class Beneficiary {
         return firstName + " " + lastName;
     }
     
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     public String getFullAddress() {
         StringBuilder address = new StringBuilder();
         if (addressLine1 != null && !addressLine1.trim().isEmpty()) {
