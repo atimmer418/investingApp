@@ -32,7 +32,47 @@
   </div>
 
   <!-- Monte Carlo Simulator Section -->
-  <div *ngIf="selectedSection === 'simulator'" class="simulator-section fade-in">
+  <div *ngIf="isSimulatorSection()" class="simulator-section fade-in">
+    <div class="simulator-header">
+      <h2>
+        <ion-icon name="dice-outline" class="icon-enhanced primary"></ion-icon>
+        Monte Carlo Retirement Simulator
+      </h2>
+      <p>Test if your money will last through retirement using real market scenarios</p>
+    </div>
+
+    <!-- How It Works Explanation -->
+    <ion-card class="explanation-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="help-circle-outline" class="icon-enhanced primary"></ion-icon>
+          How This Simulator Works
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p><strong>Monte Carlo simulation</strong> tests your retirement plan by running 1,000 different market scenarios. Here's what happens:</p>
+        
+        <ul>
+          <li><strong>Random Market Conditions:</strong> Each scenario uses different stock/bond returns based on historical market volatility</li>
+          <li><strong>Inflation Protection:</strong> Your withdrawal amount increases by 2.5% annually to maintain purchasing power</li>
+          <li><strong>Balanced Portfolio:</strong> Assumes 70% stocks (10% average return) and 30% bonds (4% average return)</li>
+          <li><strong>Success Rate:</strong> Shows the percentage of scenarios where your money lasts the full retirement period</li>
+        </ul>
+        
+        <div class="confidence-guide">
+          <h4>
+            <ion-icon name="shield-checkmark-outline" class="icon-enhanced success"></ion-icon>
+            Confidence Guide
+          </h4>
+          <p><strong>90%+ Success Rate:</strong> Very confident - your plan should work in most market conditions</p>
+          <p><strong>75-89% Success Rate:</strong> Moderately confident - consider small adjustments</p>
+          <p><strong>Below 75%:</strong> High risk - significant plan changes recommended</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Rest of simulator content continues... -->
+  <div *ngIf="isSimulatorSection()" class="simulator-section fade-in">
     <div class="simulator-header">
       <h2>
         <ion-icon name="dice-outline" class="icon-enhanced primary"></ion-icon>
@@ -303,7 +343,7 @@
     </div>
 
   <!-- Strategy Education Section -->
-  <div *ngIf="selectedSection === 'education'" class="strategy-section fade-in">
+  <div *ngIf="isEducationSection()" class="strategy-section fade-in">
     <div class="strategy-header">
       <h2>
         <ion-icon name="school-outline" class="icon-enhanced primary"></ion-icon>
@@ -364,4 +404,3 @@
       </ion-card-content>
     </ion-card>
   </div>
-</ion-content>

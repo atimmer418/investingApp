@@ -1,208 +1,409 @@
+:host {
+  --portfolio-background: var(--app-background);
+  --portfolio-card-background: var(--app-card-background);
+  --portfolio-text-primary: var(--app-gray-900);
+  --portfolio-text-secondary: var(--app-gray-400);
+  --portfolio-success: var(--app-success);
+  --portfolio-danger: var(--app-danger);
+  --portfolio-primary: var(--app-primary);
+}
+
+.portfolio-content {
+  --background: var(--portfolio-background);
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--app-spacing-xl));
+}
+
+/* =============================================================================
+   LOADING AND ERROR STATES
+   ============================================================================= */
+
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  min-height: 200px;
   
-  p {
-    margin-top: 1rem;
-    color: var(--ion-color-medium);
+  ion-spinner {
+    --color: var(--portfolio-primary);
+    transform: scale(1.2);
   }
 }
 
-// Top segment tabs styling
-ion-segment {
-  margin: 1rem;
-  margin-bottom: 1.5rem;
-  
-  ion-segment-button {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0.75rem;
-    
-    ion-icon {
-      margin-bottom: 0.25rem;
-      font-size: 1.2rem;
-    }
-    
-    ion-label {
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-  }
+.error-icon {
+  font-size: 48px;
+  margin-bottom: var(--app-spacing-md);
 }
 
-.portfolio-overview, .analytics-view {
-  padding: 0.5rem;
-}
+/* =============================================================================
+   PORTFOLIO HERO SECTION
+   ============================================================================= */
 
-.portfolio-value-card {
-  margin-bottom: 1rem;
+.portfolio-hero {
+  background: linear-gradient(135deg, var(--portfolio-card-background) 0%, rgba(0, 122, 255, 0.05) 100%);
+  border: 1px solid var(--app-card-border);
+  margin-bottom: var(--app-spacing-md);
   
   .portfolio-value {
-    font-size: 2rem;
-    font-weight: bold;
-    color: var(--ion-color-primary);
+    padding: var(--app-spacing-lg) 0;
+    
+    .value-amount {
+      margin: 0 0 var(--app-spacing-xs) 0;
+      letter-spacing: -1px;
+    }
+    
+    .portfolio-change {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--app-spacing-xs);
+      margin: var(--app-spacing-sm) 0;
+      
+      ion-icon {
+        font-size: var(--app-font-size-lg);
+      }
+      
+      &.change-success {
+        color: var(--portfolio-success);
+      }
+      
+      &.change-danger {
+        color: var(--portfolio-danger);
+      }
+    }
+    
+    .value-subtitle {
+      opacity: 0.8;
+    }
+  }
+}
+
+/* =============================================================================
+   QUICK STATS ROW
+   ============================================================================= */
+
+.quick-stats {
+  display: flex;
+  gap: var(--app-spacing-sm);
+  margin-bottom: var(--app-spacing-md);
+  
+  .stat-card {
+    flex: 1;
     text-align: center;
-    margin-bottom: 0.5rem;
+    padding: var(--app-spacing-md);
+    
+    .stat-value {
+      color: var(--portfolio-text-primary);
+      margin-bottom: var(--app-spacing-xs);
+    }
+    
+    .stat-label {
+      color: var(--portfolio-text-secondary);
+      font-size: var(--app-font-size-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+/* =============================================================================
+   IOS-STYLE HEADER TAB SWITCHER
+   ============================================================================= */
+
+.header-tab-container {
+  background: var(--app-background);
+  border-bottom: 1px solid var(--app-card-border);
+  padding: var(--app-spacing-xs) var(--app-spacing-md) var(--app-spacing-sm);
+  display: flex;
+  justify-content: center;
+}
+
+.ios-tab-switcher {
+  display: flex;
+  background: var(--app-gray-100);
+  border-radius: 16px;
+  padding: 2px;
+  width: 100%;
+  max-width: 320px;
+  position: relative;
+  
+  @media (prefers-color-scheme: dark) {
+    background: var(--app-gray-800);
+  }
+}
+
+.ios-tab-button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 14px;
+  padding: var(--app-spacing-xs) var(--app-spacing-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 48px;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  cursor: pointer;
+  color: var(--app-gray-500);
+  font-family: var(--app-font-family);
+  font-weight: 500;
+  font-size: var(--app-font-size-sm);
+  position: relative;
+  z-index: 1;
+  
+  ion-icon {
+    font-size: 18px;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
   }
   
-  .portfolio-change {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
+  span {
+    font-size: 10px;
     font-weight: 500;
+    line-height: 1;
+    margin: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  }
+  
+  &:hover {
+    color: var(--app-gray-600);
+    transform: scale(0.98);
+  }
+  
+  &:active {
+    transform: scale(0.96);
+  }
+  
+  &.active {
+    background: var(--app-card-background);
+    color: var(--app-primary);
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.1),
+      0 1px 3px rgba(0, 0, 0, 0.06);
+    
+    @media (prefers-color-scheme: dark) {
+      background: var(--app-gray-700);
+      box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.3),
+        0 1px 3px rgba(0, 0, 0, 0.2);
+    }
     
     ion-icon {
-      margin-right: 0.25rem;
+      transform: scale(1.05);
     }
     
-    &.color-success {
-      color: var(--ion-color-success);
+    span {
+      font-weight: 600;
     }
     
-    &.color-danger {
-      color: var(--ion-color-danger);
+    &:hover {
+      transform: scale(1.0);
+      color: var(--app-primary);
     }
   }
 }
 
-.summary-grid {
-  margin-bottom: 1rem;
-  
-  .summary-card {
-    margin: 0.25rem;
-    
-    .summary-value {
-      font-size: 1.25rem;
-      font-weight: bold;
-      color: var(--ion-color-dark);
-      text-align: center;
-    }
-    
-    .summary-label {
-      font-size: 0.9rem;
-      color: var(--ion-color-medium);
-      text-align: center;
-      margin-top: 0.25rem;
-    }
-  }
+/* =============================================================================
+   CHART SECTION
+   ============================================================================= */
+
+/* =============================================================================
+   TAB CONTENT AREAS
+   ============================================================================= */
+
+.tab-content-area {
+  padding-bottom: var(--app-spacing-xl);
 }
 
-.chart-card {
-  margin-bottom: 1rem;
+/* =============================================================================
+   CHART SECTION
+   ============================================================================= */
+
+.chart-section {
+  margin-bottom: var(--app-spacing-md);
+  min-height: 450px;  // Ensure card is tall enough to properly contain header + chart
+  display: flex;
+  flex-direction: column;
   
-  .chart-container {
-    height: 300px;
-    position: relative;
-    
-    canvas {
-      max-height: 100%;
-    }
-  }
-  
-  .chart-placeholder {
-    height: 200px;
+  .chart-header {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: var(--ion-color-medium);
-    
-    p {
-      margin: 0.5rem 0;
-    }
-  }
-  
-  ion-segment {
-    margin-bottom: 1rem;
-  }
-}
-
-.holdings-card {
-  margin-bottom: 1rem;
-  
-  .position-info {
-    width: 100%;
-    
-    .position-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
-      
-      h3 {
-        margin: 0;
-        font-weight: bold;
-        color: var(--ion-color-dark);
-      }
-      
-      .position-value {
-        font-weight: bold;
-        color: var(--ion-color-primary);
-      }
-    }
-    
-    .position-details {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      
-      p {
-        margin: 0;
-        color: var(--ion-color-medium);
-        font-size: 0.9rem;
-      }
-    }
-  }
-}
-
-.analytics-view, .transactions-view {
-  padding: 0.5rem;
-}
-
-.transaction-info {
-  width: 100%;
-  
-  .transaction-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
+    gap: var(--app-spacing-md);
+    margin-bottom: var(--app-spacing-md);
+    flex-shrink: 0;  // Prevent header from shrinking
     
     h3 {
       margin: 0;
-      font-weight: bold;
-      color: var(--ion-color-dark);
+      color: var(--portfolio-text-primary);
     }
     
-    .transaction-amount {
-      font-weight: bold;
-      color: var(--ion-color-primary);
+    .period-selector {
+      align-self: stretch;
+      
+      ion-segment-button {
+        min-height: 32px;
+        font-size: var(--app-font-size-xs);
+        font-weight: 500;
+      }
     }
   }
   
-  .transaction-details {
-    p {
-      margin: 0.125rem 0;
-      color: var(--ion-color-medium);
-      font-size: 0.9rem;
-    }
+  .chart-container {
+    height: 350px;  // Increased height to properly contain the full chart
+    position: relative;
+    margin: 0;
+    padding: var(--app-spacing-md);  // More padding for better visual containment
+    overflow: visible;  // Allow chart to display fully
     
-    .transaction-date {
-      font-size: 0.8rem;
+    app-portfolio-chart {
+      display: block;
+      height: 100%;
+      width: 100%;
     }
   }
 }
 
-.no-data {
-  text-align: center;
-  padding: 2rem;
-  color: var(--ion-color-medium);
+/* =============================================================================
+   HOLDINGS SECTION
+   ============================================================================= */
+
+.holdings-section {
+  margin-bottom: var(--app-spacing-md);
+  
+  h3 {
+    margin: 0 0 var(--app-spacing-md) 0;
+    color: var(--portfolio-text-primary);
+  }
+  
+  .holding-item {
+    padding: var(--app-spacing-md) 0;
+    border-bottom: 1px solid var(--app-card-border);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .holding-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--app-spacing-md);
+      
+      .holding-info {
+        flex: 1;
+        
+        .holding-symbol {
+          margin: 0 0 var(--app-spacing-xs) 0;
+          color: var(--portfolio-text-primary);
+        }
+        
+        .holding-details {
+          margin: 0;
+        }
+      }
+      
+      .holding-values {
+        flex-shrink: 0;
+        
+        .holding-value {
+          color: var(--portfolio-text-primary);
+          margin-bottom: var(--app-spacing-xs);
+        }
+        
+        .holding-change {
+          &.change-success {
+            color: var(--portfolio-success);
+          }
+          
+          &.change-danger {
+            color: var(--portfolio-danger);
+          }
+        }
+      }
+    }
+  }
+}
+
+/* =============================================================================
+   ANALYTICS SECTIONS
+   ============================================================================= */
+
+.analytics-section, .transactions-section {
+  margin-bottom: var(--app-spacing-md);
+  
+  h3 {
+    margin: 0 0 var(--app-spacing-md) 0;
+    color: var(--portfolio-text-primary);
+  }
+  
+  .performance-item, .transaction-item {
+    padding: var(--app-spacing-md) 0;
+    border-bottom: 1px solid var(--app-card-border);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .performance-main, .transaction-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--app-spacing-md);
+      
+      .performance-info, .transaction-info {
+        flex: 1;
+        
+        h4 {
+          margin: 0 0 var(--app-spacing-xs) 0;
+          color: var(--portfolio-text-primary);
+        }
+        
+        p {
+          margin: var(--app-spacing-xs) 0;
+        }
+      }
+      
+      .performance-values, .transaction-values {
+        flex-shrink: 0;
+        text-align: right;
+        
+        .performance-return, .transaction-amount {
+          color: var(--portfolio-text-primary);
+          margin-bottom: var(--app-spacing-xs);
+        }
+        
+        .performance-amount {
+          &.change-success {
+            color: var(--portfolio-success);
+          }
+          
+          &.change-danger {
+            color: var(--portfolio-danger);
+          }
+        }
+        
+        ion-chip {
+          margin: var(--app-spacing-xs) 0 0 0;
+        }
+      }
+    }
+  }
+}
+
+/* =============================================================================
+   EMPTY STATES
+   ============================================================================= */
+
+.empty-state {
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: var(--app-spacing-md);
+    opacity: 0.6;
+  }
   
   p {
     margin: 0;
@@ -210,20 +411,85 @@ ion-segment {
   }
 }
 
-// Responsive design
-@media (max-width: 768px) {
-  .portfolio-value {
-    font-size: 1.75rem !important;
+/* =============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================= */
+
+@media (max-width: 480px) {
+  .portfolio-hero .portfolio-value .value-amount {
+    font-size: var(--app-font-size-3xl);
   }
   
   .chart-container {
-    height: 250px !important;
+    height: 200px !important;
+  }
+  
+  .quick-stats {
+    flex-direction: column;
+    gap: var(--app-spacing-xs);
+    
+    .stat-card {
+      padding: var(--app-spacing-sm);
+    }
+  }
+  
+  .chart-header {
+    .period-selector ion-segment-button {
+      font-size: 10px !important;
+    }
+  }
+  
+  .ios-tab-switcher {
+    max-width: 280px;
+    
+    .ios-tab-button {
+      min-height: 50px;
+      gap: 4px;
+      
+      ion-icon {
+        font-size: 18px;
+      }
+      
+      span {
+        font-size: 10px;
+      }
+    }
   }
 }
 
-// Dark mode support
+@media (min-width: 768px) {
+  .mobile-container {
+    max-width: 600px;
+  }
+  
+  .chart-container {
+    height: 300px;
+  }
+  
+  .ios-tab-switcher {
+    max-width: 360px;
+    
+    .ios-tab-button {
+      min-height: 60px;
+      
+      ion-icon {
+        font-size: 22px;
+      }
+      
+      span {
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+/* =============================================================================
+   DARK MODE SUPPORT
+   ============================================================================= */
+
 @media (prefers-color-scheme: dark) {
-  .summary-value, .position-header h3, .transaction-header h3 {
-    color: var(--ion-color-light) !important;
+  :host {
+    --portfolio-text-primary: var(--app-gray-100);
+    --portfolio-text-secondary: var(--app-gray-400);
   }
 }

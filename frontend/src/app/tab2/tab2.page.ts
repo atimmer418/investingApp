@@ -20,7 +20,6 @@ import {
   IonCol,
   IonIcon,
   IonSpinner,
-  IonBadge,
   IonList,
   IonSegment,
   IonSegmentButton
@@ -72,14 +71,22 @@ interface StrategyCard {
     IonCol,
     IonIcon,
     IonSpinner,
-    IonBadge,
     IonList,
     IonSegment,
     IonSegmentButton
   ]
 })
 export class Tab2Page {
-  selectedSection: string = 'simulator';
+  selectedSection: 'simulator' | 'education' = 'simulator';
+  
+  // Helper method for template type checking
+  isEducationSection(): boolean {
+    return this.selectedSection === 'education';
+  }
+  
+  isSimulatorSection(): boolean {
+    return this.selectedSection === 'simulator';
+  }
   
   // Monte Carlo simulation inputs
   portfolioValue: number = 1000000;

@@ -59,7 +59,7 @@ export class AppComponent implements OnInit {
     // First, check your database users by visiting: http://localhost:8080/api/dev/list-users
     // Then uncomment ONE of these to simulate logging in as that user:
     
-    // this.simulateUserLogin('heywoah@msn.com');           // Login by email
+    this.simulateUserLogin('ewleyshon@coastal.edu');           // Login by email
     // this.simulateUserLogin('', 'user_handle_123');        // Login by user_handle  
     // this.simulateUserLogin('test@test.com');              // Login as different user
     
@@ -69,7 +69,7 @@ export class AppComponent implements OnInit {
     // this.router.navigate(['/stock-selection'], { replaceUrl: true });
     // this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
     
-    // 🚫 COMMENT OUT AUTH LOGIC WHEN TESTING SPECIFIC PAGES
+    // ✅ ENABLE AUTH LOGIC FOR PROPER NAVIGATION
     // Use a single combined subscription to avoid race conditions between auth state and progress
     this.setupUnifiedNavigationLogic();
   }

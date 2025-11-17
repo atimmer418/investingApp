@@ -35,3 +35,414 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
+
+/* =============================================================================
+   MOBILE-FIRST GLOBAL STYLES FOR INVESTING APP
+   ============================================================================= */
+
+/* iOS-inspired design variables */
+:root {
+  /* Core iOS-style colors */
+  --app-primary: #007aff;
+  --app-primary-shade: #0056b3;
+  --app-primary-tint: #4d94ff;
+  
+  /* iOS system grays */
+  --app-gray-50: #f9f9f9;
+  --app-gray-100: #f2f2f7;
+  --app-gray-200: #e5e5ea;
+  --app-gray-300: #d1d1d6;
+  --app-gray-400: #8e8e93;
+  --app-gray-500: #636366;
+  --app-gray-600: #48484a;
+  --app-gray-700: #3a3a3c;
+  --app-gray-800: #2c2c2e;
+  --app-gray-900: #1c1c1e;
+  
+  /* Semantic colors */
+  --app-success: #34c759;
+  --app-warning: #ff9500;
+  --app-danger: #ff3b30;
+  
+  /* Card and surface colors */
+  --app-background: #f2f2f7;
+  --app-card-background: #ffffff;
+  --app-card-border: #e5e5ea;
+  
+  /* Typography */
+  --app-font-size-xs: 12px;
+  --app-font-size-sm: 14px;
+  --app-font-size-base: 16px;
+  --app-font-size-lg: 18px;
+  --app-font-size-xl: 20px;
+  --app-font-size-2xl: 24px;
+  --app-font-size-3xl: 28px;
+  --app-font-size-4xl: 32px;
+  
+  /* Spacing scale (iOS-inspired) */
+  --app-spacing-xs: 4px;
+  --app-spacing-sm: 8px;
+  --app-spacing-md: 16px;
+  --app-spacing-lg: 24px;
+  --app-spacing-xl: 32px;
+  --app-spacing-2xl: 48px;
+  
+  /* Border radius */
+  --app-radius-sm: 8px;
+  --app-radius-md: 12px;
+  --app-radius-lg: 16px;
+  --app-radius-xl: 20px;
+  
+  /* Shadows (iOS-style) */
+  --app-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --app-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --app-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-background: #000000;
+    --app-card-background: #1c1c1e;
+    --app-card-border: #3a3a3c;
+  }
+}
+
+/* =============================================================================
+   MOBILE-OPTIMIZED COMPONENT OVERRIDES
+   ============================================================================= */
+
+/* Ion Content - Mobile optimized padding */
+ion-content {
+  --padding-start: var(--app-spacing-md);
+  --padding-end: var(--app-spacing-md);
+  --padding-top: var(--app-spacing-md);
+  --padding-bottom: var(--app-spacing-md);
+  --background: var(--app-background);
+}
+
+/* Ion Toolbar - iOS-style */
+ion-toolbar {
+  --background: var(--app-background);
+  --color: var(--app-gray-900);
+  --border-width: 0;
+  --min-height: 56px;
+  
+  ion-title {
+    font-size: var(--app-font-size-lg);
+    font-weight: 600;
+  }
+}
+
+/* Ion Header - Remove borders for clean look */
+ion-header {
+  &.ion-no-border::after {
+    display: none;
+  }
+}
+
+/* Ion Cards - iOS-style cards */
+ion-card {
+  --background: var(--app-card-background);
+  --color: var(--app-gray-900);
+  border-radius: var(--app-radius-md);
+  box-shadow: var(--app-shadow-sm);
+  margin: var(--app-spacing-sm) 0;
+  
+  ion-card-header {
+    padding: var(--app-spacing-md) var(--app-spacing-md) var(--app-spacing-sm);
+    
+    ion-card-title {
+      font-size: var(--app-font-size-lg);
+      font-weight: 600;
+      margin: 0;
+      color: var(--app-gray-900);
+    }
+    
+    ion-card-subtitle {
+      font-size: var(--app-font-size-sm);
+      color: var(--app-gray-400);
+      margin: var(--app-spacing-xs) 0 0 0;
+    }
+  }
+  
+  ion-card-content {
+    padding: var(--app-spacing-sm) var(--app-spacing-md) var(--app-spacing-md);
+  }
+}
+
+/* Ion Buttons - iOS-style */
+ion-button {
+  --border-radius: var(--app-radius-md);
+  --padding-start: var(--app-spacing-lg);
+  --padding-end: var(--app-spacing-lg);
+  height: 50px;
+  font-weight: 600;
+  text-transform: none;
+  font-size: var(--app-font-size-base);
+  
+  &[fill="solid"] {
+    --background: var(--app-primary);
+    --background-hover: var(--app-primary-shade);
+    --color: #ffffff;
+  }
+  
+  &[fill="outline"] {
+    --border-color: var(--app-primary);
+    --color: var(--app-primary);
+    --background-hover: rgba(0, 122, 255, 0.1);
+  }
+  
+  &[fill="clear"] {
+    --color: var(--app-primary);
+    --background-hover: rgba(0, 122, 255, 0.1);
+  }
+}
+
+/* Ion Lists - iOS-style */
+ion-list {
+  background: var(--app-card-background);
+  border-radius: var(--app-radius-md);
+  
+  ion-item {
+    --background: transparent;
+    --border-color: var(--app-card-border);
+    --padding-start: var(--app-spacing-md);
+    --padding-end: var(--app-spacing-md);
+    --min-height: 56px;
+    
+    ion-label {
+      h2, h3, h4, h5, h6 {
+        font-weight: 600;
+        margin: 0;
+        color: var(--app-gray-900);
+      }
+      
+      p {
+        color: var(--app-gray-400);
+        font-size: var(--app-font-size-sm);
+        margin: var(--app-spacing-xs) 0 0 0;
+      }
+    }
+  }
+}
+
+/* Ion Progress Bar - iOS-style */
+ion-progress-bar {
+  height: 3px;
+  --progress-background: var(--app-primary);
+  --background: var(--app-gray-200);
+}
+
+/* Ion Segments - iOS-style */
+ion-segment {
+  --background: var(--app-gray-100);
+  border-radius: var(--app-radius-sm);
+  padding: var(--app-spacing-xs);
+  margin: var(--app-spacing-md) 0;
+  
+  ion-segment-button {
+    --background: transparent;
+    --background-checked: var(--app-card-background);
+    --color: var(--app-gray-400);
+    --color-checked: var(--app-gray-900);
+    --border-radius: var(--app-spacing-xs);
+    font-weight: 500;
+    font-size: var(--app-font-size-sm);
+    min-height: 32px;
+  }
+}
+
+/* Ion Input/Textarea - iOS-style */
+ion-input, ion-textarea {
+  --background: var(--app-card-background);
+  --color: var(--app-gray-900);
+  --placeholder-color: var(--app-gray-400);
+  --border-radius: var(--app-radius-md);
+  --padding-start: var(--app-spacing-md);
+  --padding-end: var(--app-spacing-md);
+  border: 1px solid var(--app-card-border);
+  border-radius: var(--app-radius-md);
+  font-size: var(--app-font-size-base);
+}
+
+/* Ion Select - iOS-style */
+ion-select {
+  --background: var(--app-card-background);
+  --color: var(--app-gray-900);
+  --placeholder-color: var(--app-gray-400);
+  border: 1px solid var(--app-card-border);
+  border-radius: var(--app-radius-md);
+  --padding-start: var(--app-spacing-md);
+  --padding-end: var(--app-spacing-md);
+}
+
+/* Ion Checkbox/Radio - iOS-style */
+ion-checkbox, ion-radio {
+  --color: var(--app-primary);
+  --color-checked: var(--app-primary);
+  --border-radius: var(--app-spacing-xs);
+}
+
+/* Ion Toggle - iOS-style */
+ion-toggle {
+  --background: var(--app-gray-200);
+  --background-checked: var(--app-primary);
+  --handle-background: #ffffff;
+}
+
+/* =============================================================================
+   MOBILE-FIRST UTILITY CLASSES
+   ============================================================================= */
+
+/* Spacing utilities */
+.p-xs { padding: var(--app-spacing-xs) !important; }
+.p-sm { padding: var(--app-spacing-sm) !important; }
+.p-md { padding: var(--app-spacing-md) !important; }
+.p-lg { padding: var(--app-spacing-lg) !important; }
+.p-xl { padding: var(--app-spacing-xl) !important; }
+
+.m-xs { margin: var(--app-spacing-xs) !important; }
+.m-sm { margin: var(--app-spacing-sm) !important; }
+.m-md { margin: var(--app-spacing-md) !important; }
+.m-lg { margin: var(--app-spacing-lg) !important; }
+.m-xl { margin: var(--app-spacing-xl) !important; }
+
+/* Typography utilities */
+.text-xs { font-size: var(--app-font-size-xs) !important; }
+.text-sm { font-size: var(--app-font-size-sm) !important; }
+.text-base { font-size: var(--app-font-size-base) !important; }
+.text-lg { font-size: var(--app-font-size-lg) !important; }
+.text-xl { font-size: var(--app-font-size-xl) !important; }
+.text-2xl { font-size: var(--app-font-size-2xl) !important; }
+.text-3xl { font-size: var(--app-font-size-3xl) !important; }
+.text-4xl { font-size: var(--app-font-size-4xl) !important; }
+
+.font-medium { font-weight: 500 !important; }
+.font-semibold { font-weight: 600 !important; }
+.font-bold { font-weight: 700 !important; }
+
+.text-center { text-align: center !important; }
+.text-left { text-align: left !important; }
+.text-right { text-align: right !important; }
+
+/* Color utilities */
+.text-primary { color: var(--app-primary) !important; }
+.text-success { color: var(--app-success) !important; }
+.text-warning { color: var(--app-warning) !important; }
+.text-danger { color: var(--app-danger) !important; }
+.text-gray { color: var(--app-gray-400) !important; }
+.text-dark { color: var(--app-gray-900) !important; }
+
+/* Mobile-specific utilities */
+.mobile-container {
+  max-width: 100%;
+  padding: 0 var(--app-spacing-md);
+  margin: 0 auto;
+}
+
+.mobile-card {
+  background: var(--app-card-background);
+  border-radius: var(--app-radius-md);
+  padding: var(--app-spacing-md);
+  margin: var(--app-spacing-sm) 0;
+  box-shadow: var(--app-shadow-sm);
+  border: 1px solid var(--app-card-border);
+}
+
+.mobile-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--app-card-background);
+  padding: var(--app-spacing-md) var(--app-spacing-md) calc(env(safe-area-inset-bottom, 0px) + var(--app-spacing-md));
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid var(--app-card-border);
+  z-index: 1000;
+}
+
+/* Safe area support for iPhone */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px) !important;
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left, 0px) !important;
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right, 0px) !important;
+}
+
+/* =============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================= */
+
+/* Mobile-first responsive breakpoints */
+@media (max-width: 767px) {
+  /* Ensure touch targets are at least 44px (iOS guidelines) */
+  ion-button, .touch-target {
+    min-height: 44px;
+  }
+  
+  /* Reduce padding on very small screens */
+  ion-content {
+    --padding-start: var(--app-spacing-sm);
+    --padding-end: var(--app-spacing-sm);
+  }
+  
+  /* Stack elements vertically on mobile */
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+  
+  /* Full width on mobile */
+  .mobile-full-width {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .mobile-container {
+    max-width: 600px;
+  }
+  
+  ion-content {
+    --padding-start: var(--app-spacing-lg);
+    --padding-end: var(--app-spacing-lg);
+  }
+}
+
+/* =============================================================================
+   ACCESSIBILITY IMPROVEMENTS
+   ============================================================================= */
+
+/* Focus indicators */
+*:focus-visible {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+  :root {
+    --app-card-border: var(--app-gray-600);
+  }
+}
