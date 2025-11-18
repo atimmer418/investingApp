@@ -330,7 +330,177 @@ public class AlpacaService {
                 BigDecimal.ZERO, null, null, e.getMessage());
         }
     }
-    
+
+    /**
+     * Place a market sell order by percentage of position
+     */
+    public AlpacaOrderResponse placeSellOrderByPercentage(String accountId, String symbol, BigDecimal percentage) {
+        try {
+            String url = alpacaBaseUrl + "/trading/accounts/" + accountId + "/orders";
+            
+            Map<String, Object> request = new HashMap<>();
+            request.put("symbol", symbol);
+            request.put("qty", percentage.toString());
+            request.put("side", "sell");
+            request.put("type", "market");
+            request.put("time_in_force", "day");
+            request.put("position_intent", "percent");
+            
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+            
+            logger.info("Placing sell order for account {} - Symbol: {}, Percentage: {}%", 
+                accountId, symbol, percentage);
+            
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+            
+            if (response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.CREATED) {
+                JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+                return new AlpacaOrderResponse(
+                    jsonResponse.get("id").asText(),
+                    symbol,
+                    jsonResponse.get("status").asText(),
+                    (jsonResponse.has("qty") && !jsonResponse.get("qty").isNull() && !"null".equals(jsonResponse.get("qty").asText())) ? 
+                        new BigDecimal(jsonResponse.get("qty").asText()) : null,
+                    null,
+                    (jsonResponse.has("filled_qty") && !jsonResponse.get("filled_qty").isNull() && !"null".equals(jsonResponse.get("filled_qty").asText())) ? 
+                        new BigDecimal(jsonResponse.get("filled_qty").asText()) : BigDecimal.ZERO,
+                    (jsonResponse.has("filled_avg_price") && !jsonResponse.get("filled_avg_price").isNull() && !"null".equals(jsonResponse.get("filled_avg_price").asText())) ? 
+                        new BigDecimal(jsonResponse.get("filled_avg_price").asText()) : null,
+                    jsonResponse.get("submitted_at").asText(),
+                    null
+                );
+            } else {
+                logger.error("Failed to place sell order. Status: {}, Response: {}", 
+                    response.getStatusCode(), response.getBody());
+                return new AlpacaOrderResponse(null, symbol, "FAILED", null, null, 
+                    BigDecimal.ZERO, null, null, 
+                    "HTTP " + response.getStatusCode() + ": " + response.getBody());
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error placing sell order for account {} - Symbol: {}", accountId, symbol, e);
+            return new AlpacaOrderResponse(null, symbol, "FAILED", null, null, 
+                BigDecimal.ZERO, null, null, e.getMessage());
+        }
+    }
+
+    /**
+     * Get current positions for an account
+     */
+    public String getCurrentPositions(String accountId) {
+        try {
+            String url = alpacaBaseUrl + "/trading/accounts/" + accountId + "/positions";
+            
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            
+            if (response.getStatusCode() == HttpStatus.OK) {
+                logger.info("Successfully retrieved positions for account: {}", accountId);
+                return response.getBody();
+            } else {
+                logger.error("Failed to get positions. Status: {}", response.getStatusCode());
+                return null;
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error getting positions for account: {}", accountId, e);
+            return null;
+        }
+    }
+
+    /**
+     * Initiate ACH withdrawal (transfer money from trading account to bank)
+     */
+    public AlpacaTransferResponse initiateWithdrawal(String accountId, String relationshipId, BigDecimal amount) {
+        try {
+            String url = alpacaBaseUrl + "/accounts/" + accountId + "/ach_relationships/" + relationshipId + "/transfers";
+            
+            Map<String, Object> request = new HashMap<>();
+            request.put("transfer_type", "ach");
+            request.put("direction", "OUTGOING");
+            request.put("amount", amount.toString());
+            request.put("timing", "immediate");
+            
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+            
+            logger.info("Initiating withdrawal for account {} - Amount: ${}", accountId, amount);
+            
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+            
+            if (response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.CREATED) {
+                JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+                return new AlpacaTransferResponse(
+                    jsonResponse.get("id").asText(),
+                    "QUEUED",
+                    amount,
+                    jsonResponse.get("created_at").asText(),
+                    null
+                );
+            } else {
+                logger.error("Failed to initiate withdrawal. Status: {}, Response: {}", 
+                    response.getStatusCode(), response.getBody());
+                return new AlpacaTransferResponse(null, "FAILED", amount, null, 
+                    "HTTP " + response.getStatusCode() + ": " + response.getBody());
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error initiating withdrawal for account: {}", accountId, e);
+            return new AlpacaTransferResponse(null, "FAILED", amount, null, e.getMessage());
+        }
+    }
+
+    /**
+     * Liquidate entire portfolio (sell all positions)
+     */
+    public AlpacaOrderResponse liquidatePortfolio(String accountId) {
+        try {
+            String url = alpacaBaseUrl + "/trading/accounts/" + accountId + "/orders";
+            
+            Map<String, Object> request = new HashMap<>();
+            request.put("side", "sell");
+            request.put("type", "market");
+            request.put("time_in_force", "day");
+            request.put("position_intent", "close_all");
+            
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+            
+            logger.info("Liquidating entire portfolio for account: {}", accountId);
+            
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+            
+            if (response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.CREATED) {
+                JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+                return new AlpacaOrderResponse(
+                    jsonResponse.get("id").asText(),
+                    "ALL_POSITIONS",
+                    jsonResponse.get("status").asText(),
+                    null,
+                    null,
+                    BigDecimal.ZERO,
+                    null,
+                    jsonResponse.get("submitted_at").asText(),
+                    null
+                );
+            } else {
+                logger.error("Failed to liquidate portfolio. Status: {}, Response: {}", 
+                    response.getStatusCode(), response.getBody());
+                return new AlpacaOrderResponse(null, "ALL_POSITIONS", "FAILED", null, null, 
+                    BigDecimal.ZERO, null, null, 
+                    "HTTP " + response.getStatusCode() + ": " + response.getBody());
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error liquidating portfolio for account: {}", accountId, e);
+            return new AlpacaOrderResponse(null, "ALL_POSITIONS", "FAILED", null, null, 
+                BigDecimal.ZERO, null, null, e.getMessage());
+        }
+    }
+
     /**
      * Check order status
      */

@@ -122,6 +122,13 @@ export class Tab3Page implements OnInit, OnDestroy {
           icon: 'pie-chart-outline',
           action: 'portfolioAllocation',
           type: 'navigation'
+        },
+        {
+          title: 'Sell & Withdraw',
+          subtitle: 'Sell stocks and withdraw money',
+          icon: 'cash-outline',
+          action: 'sellWithdraw',
+          type: 'navigation'
         }
       ]
     },
@@ -333,6 +340,9 @@ export class Tab3Page implements OnInit, OnDestroy {
         break;
       case 'portfolioAllocation':
         this.router.navigate(['/portfolio-customize']);
+        break;
+      case 'sellWithdraw':
+        this.router.navigate(['/sell-withdraw']);
         break;
       case 'investmentGoals':
         this.showComingSoon('Investment Goals');

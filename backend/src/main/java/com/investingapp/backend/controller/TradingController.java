@@ -1,0 +1,234 @@
+package com.investingapp.backend.controller;
+
+import com.investingapp.backend.service.AlpacaService;
+import com.investingapp.backend.service.AlpacaApiService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.*;
+
+/**
+ * Controller for trading operations (buy, sell, withdraw)
+ */
+@RestController
+@RequestMapping("/api/trading")
+@CrossOrigin(origins = "*", maxAge = 3600)
+public class TradingController {
+
+    private static final Logger logger = LoggerFactory.getLogger(TradingController.class);
+    
+    @Autowired
+    private AlpacaService alpacaService;
+    
+    @Autowired
+    private AlpacaApiService alpacaApiService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    /**
+     * Get current positions for user's account
+     */
+    @GetMapping("/positions")
+    public ResponseEntity<Map<String, Object>> getPositions() {
+        try {
+            // In a real app, you'd get the user's account ID from authentication
+            // For now, we'll use a placeholder
+            String accountId = "demo-account-id";
+            
+            String positionsJson = alpacaService.getCurrentPositions(accountId);
+            
+            if (positionsJson != null) {
+                JsonNode positions = objectMapper.readTree(positionsJson);
+                Map<String, Object> result = new HashMap<>();
+                result.put("positions", positions);
+                result.put("account_id", accountId);
+                
+                return ResponseEntity.ok(result);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "No positions found or unable to retrieve positions"));
+            }
+        } catch (Exception e) {
+            logger.error("Error getting positions: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to get positions"));
+        }
+    }
+
+    /**
+     * Sell a percentage of a specific stock position
+     */
+    @PostMapping("/sell/percentage")
+    public ResponseEntity<Map<String, Object>> sellByPercentage(@RequestBody SellPercentageRequest request) {
+        try {
+            // Validate request
+            if (request.getSymbol() == null || request.getSymbol().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Symbol is required"));
+            }
+            
+            if (request.getPercentage() == null || request.getPercentage().compareTo(BigDecimal.ZERO) <= 0 
+                || request.getPercentage().compareTo(new BigDecimal("100")) > 0) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Percentage must be between 0.01 and 100"));
+            }
+
+            // In a real app, get account ID from authenticated user
+            String accountId = "demo-account-id";
+            
+            AlpacaService.AlpacaOrderResponse orderResponse = alpacaService.placeSellOrderByPercentage(
+                accountId, request.getSymbol().toUpperCase(), request.getPercentage());
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("order_id", orderResponse.id);
+            result.put("symbol", orderResponse.symbol);
+            result.put("status", orderResponse.status);
+            result.put("percentage", request.getPercentage());
+            result.put("submitted_at", orderResponse.submittedAt);
+            result.put("success", orderResponse.isSuccess());
+            
+            if (orderResponse.errorMessage != null) {
+                result.put("error", orderResponse.errorMessage);
+            }
+            
+            return ResponseEntity.ok(result);
+            
+        } catch (Exception e) {
+            logger.error("Error placing sell order: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to place sell order"));
+        }
+    }
+
+    /**
+     * Liquidate entire portfolio (sell all positions)
+     */
+    @PostMapping("/liquidate")
+    public ResponseEntity<Map<String, Object>> liquidatePortfolio() {
+        try {
+            // In a real app, get account ID from authenticated user
+            String accountId = "demo-account-id";
+            
+            AlpacaService.AlpacaOrderResponse orderResponse = alpacaService.liquidatePortfolio(accountId);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("order_id", orderResponse.id);
+            result.put("status", orderResponse.status);
+            result.put("submitted_at", orderResponse.submittedAt);
+            result.put("success", orderResponse.isSuccess());
+            result.put("message", "Portfolio liquidation initiated");
+            
+            if (orderResponse.errorMessage != null) {
+                result.put("error", orderResponse.errorMessage);
+            }
+            
+            return ResponseEntity.ok(result);
+            
+        } catch (Exception e) {
+            logger.error("Error liquidating portfolio: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to liquidate portfolio"));
+        }
+    }
+
+    /**
+     * Withdraw cash to bank account
+     */
+    @PostMapping("/withdraw")
+    public ResponseEntity<Map<String, Object>> withdrawCash(@RequestBody WithdrawRequest request) {
+        try {
+            // Validate request
+            if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Amount must be greater than 0"));
+            }
+
+            // In a real app, get account ID and bank relationship from authenticated user
+            String accountId = "demo-account-id";
+            String relationshipId = "demo-bank-relationship-id";
+            
+            AlpacaService.AlpacaTransferResponse transferResponse = alpacaService.initiateWithdrawal(
+                accountId, relationshipId, request.getAmount());
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("transfer_id", transferResponse.id);
+            result.put("status", transferResponse.status);
+            result.put("amount", transferResponse.amount);
+            result.put("initiated_at", transferResponse.createdAt);
+            result.put("success", transferResponse.isSuccess());
+            result.put("message", "Withdrawal initiated - funds should arrive in 1-3 business days");
+            
+            if (transferResponse.errorMessage != null) {
+                result.put("error", transferResponse.errorMessage);
+            }
+            
+            return ResponseEntity.ok(result);
+            
+        } catch (Exception e) {
+            logger.error("Error initiating withdrawal: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to initiate withdrawal"));
+        }
+    }
+
+    /**
+     * Get account balance and buying power
+     */
+    @GetMapping("/account/balance")
+    public ResponseEntity<Map<String, Object>> getAccountBalance() {
+        try {
+            String accountInfo = alpacaApiService.getAccountInfo();
+            
+            if (accountInfo != null) {
+                JsonNode accountJson = objectMapper.readTree(accountInfo);
+                
+                Map<String, Object> result = new HashMap<>();
+                result.put("cash", accountJson.path("cash").asText("0"));
+                result.put("buying_power", accountJson.path("buying_power").asText("0"));
+                result.put("portfolio_value", accountJson.path("portfolio_value").asText("0"));
+                result.put("equity", accountJson.path("equity").asText("0"));
+                result.put("account_status", accountJson.path("status").asText("unknown"));
+                
+                return ResponseEntity.ok(result);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Account information not available"));
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error getting account balance: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to get account balance"));
+        }
+    }
+
+    // DTOs for request bodies
+    public static class SellPercentageRequest {
+        private String symbol;
+        private BigDecimal percentage;
+        
+        public SellPercentageRequest() {}
+        
+        public String getSymbol() { return symbol; }
+        public void setSymbol(String symbol) { this.symbol = symbol; }
+        
+        public BigDecimal getPercentage() { return percentage; }
+        public void setPercentage(BigDecimal percentage) { this.percentage = percentage; }
+    }
+
+    public static class WithdrawRequest {
+        private BigDecimal amount;
+        
+        public WithdrawRequest() {}
+        
+        public BigDecimal getAmount() { return amount; }
+        public void setAmount(BigDecimal amount) { this.amount = amount; }
+    }
+}

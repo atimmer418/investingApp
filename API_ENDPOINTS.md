@@ -138,7 +138,40 @@ https://your-production-domain.com (production)
 
 ---
 
-## 7. System & Health
+## 7. Trading Operations
+
+### Trading Controller (`/api/trading`)
+
+| Method | Endpoint | Description | Authentication Required | Request Body | Response |
+|--------|----------|-------------|------------------------|--------------|----------|
+| `GET` | `/api/trading/positions` | Get current stock positions | ✅ | None | List of positions |
+| `POST` | `/api/trading/sell/percentage` | Sell percentage of stock position | ✅ | SellPercentageRequest | Order details |
+| `POST` | `/api/trading/liquidate` | Sell all positions (liquidate portfolio) | ✅ | None | Order details |
+| `POST` | `/api/trading/withdraw` | Withdraw cash to bank account | ✅ | WithdrawRequest | Transfer details |
+| `GET` | `/api/trading/account/balance` | Get account balance and buying power | ✅ | None | Balance information |
+
+**DTOs:**
+- `SellPercentageRequest`: `{ symbol, percentage }` (percentage: 0.01-100.00)
+- `WithdrawRequest`: `{ amount }` (amount: positive decimal)
+
+**Example SellPercentageRequest:**
+```json
+{
+  "symbol": "VTI",
+  "percentage": 25.00
+}
+```
+
+**Example WithdrawRequest:**
+```json
+{
+  "amount": 1000.00
+}
+```
+
+---
+
+## 8. System & Health
 
 ### Health Check Controller
 

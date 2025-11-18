@@ -1,0 +1,316 @@
+<ion-header class="ion-no-border safe-area-top">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button default-href="/tabs/tab3" text="Settings"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Sell & Withdraw</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="sell-withdraw-content">
+  
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="loading-container mobile-container">
+    <div class="loading-card mobile-card">
+      <div class="loading-content">
+        <ion-spinner name="crescent"></ion-spinner>
+        <p class="loading-text text-gray">Loading your portfolio...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content when not loading -->
+  <div *ngIf="!isLoading" class="mobile-container">
+    
+    <!-- Account Balance Summary -->
+    <div class="balance-summary mobile-card">
+      <h2 class="balance-title font-semibold text-dark">Account Summary</h2>
+      <div class="balance-grid">
+        <div class="balance-item">
+          <span class="balance-label text-gray">Portfolio Value</span>
+          <span class="balance-value font-medium text-dark">{{formatCurrency(balance?.portfolio_value || '0')}}</span>
+        </div>
+        <div class="balance-item">
+          <span class="balance-label text-gray">Available Cash</span>
+          <span class="balance-value font-medium text-dark">{{formatCurrency(balance?.cash || '0')}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sell Individual Stocks Section -->
+    <div class="section-card mobile-card">
+      <div class="section-header">
+        <h3 class="section-title font-semibold text-dark">Sell Individual Holdings</h3>
+        <p class="section-subtitle text-gray">Choose a stock and the percentage to sell</p>
+      </div>
+
+      <!-- No positions message -->
+      <div *ngIf="positions.length === 0" class="no-positions">
+        <div class="empty-state">
+          <ion-icon name="pie-chart-outline" class="empty-icon text-gray"></ion-icon>
+          <h4 class="empty-title font-medium text-dark">No Holdings Found</h4>
+          <p class="empty-description text-gray">You don't have any stock positions to sell yet.</p>
+        </div>
+      </div>
+
+      <!-- Positions list -->
+      <div *ngIf="positions.length > 0" class="positions-list">
+        <div 
+          *ngFor="let position of positions" 
+          class="position-item"
+          [class.selected]="selectedPosition?.symbol === position.symbol"
+          (click)="selectPosition(position)">
+          
+          <div class="position-info">
+            <div class="position-main">
+              <h4 class="position-symbol font-semibold text-dark">{{position.symbol}}</h4>
+              <p class="position-value text-gray">{{formatCurrency(position.market_value)}}</p>
+            </div>
+            <div class="position-details">
+              <span class="position-shares text-sm text-gray">{{position.qty}} shares</span>
+              <span 
+                class="position-gain text-sm" 
+                [class.gain-positive]="isPositiveGain(position.unrealized_plpc)"
+                [class.gain-negative]="!isPositiveGain(position.unrealized_plpc)">
+                {{formatPercentage(position.unrealized_plpc)}}
+              </span>
+            </div>
+          </div>
+          
+          <div class="position-action">
+            <ion-icon 
+              [name]="selectedPosition?.symbol === position.symbol ? 'checkmark-circle' : 'radio-button-off'" 
+              class="select-icon"
+              [class.selected-icon]="selectedPosition?.symbol === position.symbol">
+            </ion-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sell percentage controls -->
+      <div *ngIf="selectedPosition" class="sell-controls">
+        <div class="percentage-selector">
+          <label class="percentage-label font-medium text-dark">Percentage to Sell</label>
+          <div class="percentage-input-container">
+            <ion-range 
+              [(ngModel)]="sellPercentage"
+              [min]="1"
+              [max]="100"
+              [step]="1"
+              [pin]="true"
+              class="percentage-range">
+            </ion-range>
+          </div>
+          <div class="percentage-display">
+            <span class="percentage-value font-semibold text-primary">{{sellPercentage}}%</span>
+            <span class="percentage-amount text-gray">
+              ≈ {{formatCurrency(calculateSellAmount())}}
+            </span>
+          </div>
+        </div>
+
+        <div class="quick-percentages">
+          <button 
+            *ngFor="let percent of quickPercentages" 
+            class="quick-percent-btn"
+            [class.active]="sellPercentage === percent"
+            (click)="setSellPercentage(percent)">
+            {{percent}}%
+          </button>
+        </div>
+
+        <ion-button 
+          expand="block" 
+          class="sell-btn"
+          [disabled]="isSelling"
+          (click)="sellPosition()">
+          <ion-spinner *ngIf="isSelling" name="crescent" slot="start"></ion-spinner>
+          {{isSelling ? 'Processing...' : 'Sell ' + sellPercentage + '% of ' + selectedPosition.symbol}}
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Portfolio Actions Section -->
+    <div class="section-card mobile-card">
+      <div class="section-header">
+        <h3 class="section-title font-semibold text-dark">Portfolio Actions</h3>
+        <p class="section-subtitle text-gray">Manage your entire portfolio</p>
+      </div>
+
+      <div class="portfolio-actions">
+        <!-- Liquidate Portfolio -->
+        <div class="action-item">
+          <div class="action-info">
+            <h4 class="action-title font-medium text-dark">Liquidate Portfolio</h4>
+            <p class="action-description text-gray">Sell all holdings and convert to cash</p>
+          </div>
+          <ion-button 
+            fill="outline" 
+            color="danger"
+            [disabled]="isLiquidating || positions.length === 0"
+            (click)="liquidatePortfolio()">
+            <ion-spinner *ngIf="isLiquidating" name="crescent" slot="start"></ion-spinner>
+            {{isLiquidating ? 'Processing...' : 'Liquidate All'}}
+          </ion-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Retirement Planning Section -->
+    <div class="section-card mobile-card">
+      <div class="section-header">
+        <h3 class="section-title font-semibold text-dark">Retirement Planning</h3>
+        <p class="section-subtitle text-gray">Systematic withdrawals for retirement</p>
+      </div>
+
+      <div class="retirement-planning">
+        <div class="retirement-info">
+          <div class="retirement-stat">
+            <span class="stat-label text-gray">4% Rule (Monthly)</span>
+            <span class="stat-value font-semibold text-dark">
+              {{formatCurrency(calculateRetirementWithdrawal())}}
+            </span>
+          </div>
+        </div>
+
+        <div class="retirement-controls">
+          <div class="withdrawal-rate">
+            <label class="rate-label font-medium text-dark">Annual Withdrawal Rate</label>
+            <ion-range 
+              [(ngModel)]="retirementRate"
+              [min]="3"
+              [max]="6"
+              [step]="0.5"
+              [pin]="true"
+              class="rate-range">
+            </ion-range>
+            <div class="rate-display">
+              <span class="rate-value font-semibold text-primary">{{retirementRate}}%</span>
+              <span class="rate-amount text-gray">
+                {{formatCurrency(calculateCustomRetirementWithdrawal())}} monthly
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <ion-button 
+          expand="block" 
+          fill="outline"
+          color="primary"
+          class="retirement-btn"
+          (click)="showRetirementModal = true">
+          Setup Retirement Plan
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Withdraw Cash Section -->
+    <div class="section-card mobile-card">
+      <div class="section-header">
+        <h3 class="section-title font-semibold text-dark">Withdraw Cash</h3>
+        <p class="section-subtitle text-gray">Transfer money to your bank account</p>
+      </div>
+
+      <div class="withdraw-controls">
+        <div class="withdraw-amount">
+          <label class="amount-label font-medium text-dark">Withdrawal Amount</label>
+          <div class="amount-input-container">
+            <ion-input
+              type="number"
+              [(ngModel)]="withdrawAmount"
+              [min]="1"
+              [max]="maxWithdrawAmount"
+              placeholder="Enter amount"
+              class="amount-input">
+            </ion-input>
+          </div>
+          <div class="withdraw-info">
+            <span class="available-text text-sm text-gray">
+              Available: {{formatCurrency(balance?.cash || '0')}}
+            </span>
+            <span class="timing-text text-sm text-gray">
+              Transfers take 1-3 business days
+            </span>
+          </div>
+        </div>
+
+        <div class="quick-amounts">
+          <button 
+            *ngFor="let amount of quickWithdrawAmounts" 
+            class="quick-amount-btn"
+            [class.active]="withdrawAmount === amount"
+            (click)="setWithdrawAmount(amount)"
+            [disabled]="amount > maxWithdrawAmount">
+            {{formatCurrency(amount)}}
+          </button>
+        </div>
+
+        <ion-button 
+          expand="block" 
+          class="withdraw-btn"
+          [disabled]="isWithdrawing || !withdrawAmount || withdrawAmount > maxWithdrawAmount"
+          (click)="withdrawCash()">
+          <ion-spinner *ngIf="isWithdrawing" name="crescent" slot="start"></ion-spinner>
+          {{isWithdrawing ? 'Processing...' : 'Withdraw ' + formatCurrency(withdrawAmount || 0)}}
+        </ion-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success/Error Toast -->
+  <ion-toast
+    [isOpen]="isToastOpen"
+    [message]="toastMessage"
+    [duration]="4000"
+    [color]="toastColor"
+    (didDismiss)="isToastOpen = false"
+    position="top">
+  </ion-toast>
+
+  <!-- Retirement Planning Modal -->
+  <ion-modal [isOpen]="showRetirementModal" (didDismiss)="showRetirementModal = false">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Retirement Planning</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="showRetirementModal = false">Close</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      
+      <ion-content class="modal-content">
+        <div class="retirement-modal">
+          <div class="modal-section">
+            <h3>The 4% Rule Explained</h3>
+            <p>The 4% rule suggests withdrawing 4% of your portfolio value annually during retirement. This approach aims to make your savings last 30+ years.</p>
+          </div>
+          
+          <div class="modal-section">
+            <h4>Your Retirement Calculations</h4>
+            <div class="calculation-grid">
+              <div class="calc-item">
+                <span class="calc-label">Portfolio Value</span>
+                <span class="calc-value">{{formatCurrency(balance?.portfolio_value || '0')}}</span>
+              </div>
+              <div class="calc-item">
+                <span class="calc-label">4% Annual</span>
+                <span class="calc-value">{{formatCurrency(getPortfolioValue() * 0.04)}}</span>
+              </div>
+              <div class="calc-item">
+                <span class="calc-label">Monthly (4%)</span>
+                <span class="calc-value">{{formatCurrency(calculateRetirementWithdrawal())}}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-section">
+            <h4>Setup Systematic Withdrawals</h4>
+            <p class="coming-soon text-gray">This feature is coming soon! You'll be able to set up automatic monthly withdrawals based on your retirement plan.</p>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>
