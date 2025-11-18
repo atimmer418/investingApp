@@ -2,6 +2,8 @@ package com.investingapp.backend.controller;
 
 import com.investingapp.backend.service.AlpacaService;
 import com.investingapp.backend.service.AlpacaApiService;
+import com.investingapp.backend.model.User;
+import com.investingapp.backend.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -9,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -30,17 +34,30 @@ public class TradingController {
     @Autowired
     private AlpacaApiService alpacaApiService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Get current positions for user's account
      */
     @GetMapping("/positions")
-    public ResponseEntity<Map<String, Object>> getPositions() {
+    public ResponseEntity<Map<String, Object>> getPositions(Authentication authentication) {
         try {
-            // In a real app, you'd get the user's account ID from authentication
-            // For now, we'll use a placeholder
-            String accountId = "demo-account-id";
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+
+            if (user == null || user.getAlpacaAccountId() == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User or Alpaca account not found"));
+            }
+
+            String accountId = user.getAlpacaAccountId();
             
             String positionsJson = alpacaService.getCurrentPositions(accountId);
             
@@ -66,7 +83,7 @@ public class TradingController {
      * Sell a percentage of a specific stock position
      */
     @PostMapping("/sell/percentage")
-    public ResponseEntity<Map<String, Object>> sellByPercentage(@RequestBody SellPercentageRequest request) {
+    public ResponseEntity<Map<String, Object>> sellByPercentage(@RequestBody SellPercentageRequest request, Authentication authentication) {
         try {
             // Validate request
             if (request.getSymbol() == null || request.getSymbol().trim().isEmpty()) {
@@ -80,8 +97,19 @@ public class TradingController {
                     .body(Map.of("error", "Percentage must be between 0.01 and 100"));
             }
 
-            // In a real app, get account ID from authenticated user
-            String accountId = "demo-account-id";
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+
+            if (user == null || user.getAlpacaAccountId() == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User or Alpaca account not found"));
+            }
+
+            String accountId = user.getAlpacaAccountId();
             
             AlpacaService.AlpacaOrderResponse orderResponse = alpacaService.placeSellOrderByPercentage(
                 accountId, request.getSymbol().toUpperCase(), request.getPercentage());
@@ -111,10 +139,21 @@ public class TradingController {
      * Liquidate entire portfolio (sell all positions)
      */
     @PostMapping("/liquidate")
-    public ResponseEntity<Map<String, Object>> liquidatePortfolio() {
+    public ResponseEntity<Map<String, Object>> liquidatePortfolio(Authentication authentication) {
         try {
-            // In a real app, get account ID from authenticated user
-            String accountId = "demo-account-id";
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+
+            if (user == null || user.getAlpacaAccountId() == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User or Alpaca account not found"));
+            }
+
+            String accountId = user.getAlpacaAccountId();
             
             AlpacaService.AlpacaOrderResponse orderResponse = alpacaService.liquidatePortfolio(accountId);
             
@@ -142,7 +181,7 @@ public class TradingController {
      * Withdraw cash to bank account
      */
     @PostMapping("/withdraw")
-    public ResponseEntity<Map<String, Object>> withdrawCash(@RequestBody WithdrawRequest request) {
+    public ResponseEntity<Map<String, Object>> withdrawCash(@RequestBody WithdrawRequest request, Authentication authentication) {
         try {
             // Validate request
             if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
@@ -150,9 +189,25 @@ public class TradingController {
                     .body(Map.of("error", "Amount must be greater than 0"));
             }
 
-            // In a real app, get account ID and bank relationship from authenticated user
-            String accountId = "demo-account-id";
-            String relationshipId = "demo-bank-relationship-id";
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+
+            if (user == null || user.getAlpacaAccountId() == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User or Alpaca account not found"));
+            }
+
+            String accountId = user.getAlpacaAccountId();
+            String relationshipId = user.getAlpacaAchRelationshipId();
+
+            if (relationshipId == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "No bank account linked for withdrawal"));
+            }
             
             AlpacaService.AlpacaTransferResponse transferResponse = alpacaService.initiateWithdrawal(
                 accountId, relationshipId, request.getAmount());
@@ -182,9 +237,21 @@ public class TradingController {
      * Get account balance and buying power
      */
     @GetMapping("/account/balance")
-    public ResponseEntity<Map<String, Object>> getAccountBalance() {
+    public ResponseEntity<Map<String, Object>> getAccountBalance(Authentication authentication) {
         try {
-            String accountInfo = alpacaApiService.getAccountInfo();
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+
+            if (user == null || user.getAlpacaAccountId() == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User or Alpaca account not found"));
+            }
+
+            String accountInfo = alpacaApiService.getAccountStatus(user.getAlpacaAccountId());
             
             if (accountInfo != null) {
                 JsonNode accountJson = objectMapper.readTree(accountInfo);
