@@ -15,21 +15,19 @@
         class="ios-tab-button" 
         [class.active]="selectedTab === 'overview'"
         (click)="onTabChange({detail: {value: 'overview'}})">
-        <ion-icon name="pie-chart-outline"></ion-icon>
-        <span>Overview</span>
+        <ion-icon name="bar-chart-outline"></ion-icon>
       </button>
       <button 
         class="ios-tab-button" 
         [class.active]="selectedTab === 'analytics'"
         (click)="onTabChange({detail: {value: 'analytics'}})">
         <ion-icon name="analytics-outline"></ion-icon>
-        <span>Analytics</span>
       </button>
     </div>
   </div>
 </ion-header>
 
-<ion-content class="portfolio-content">
+<ion-content class="portfolio-content" [scrollY]="selectedTab === 'analytics'">
   <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
@@ -53,7 +51,7 @@
   </div>
 
   <!-- Portfolio Dashboard Content -->
-  <div *ngIf="dashboard && !loading" class="portfolio-dashboard mobile-container" style="margin-top: var(--app-spacing-md);">
+  <div *ngIf="dashboard && !loading" class="portfolio-dashboard mobile-container">
     
     <!-- Portfolio Value Hero Card -->
     <div class="portfolio-hero mobile-card">
@@ -86,7 +84,7 @@
       
       <!-- Portfolio Chart -->
       <div class="chart-section mobile-card">
-        <div class="chart-header">
+        <div class="chart-header" style="margin-bottom: 0px;">
           <h3 class="text-lg font-semibold">Performance</h3>
           
           <!-- Period Selector -->
@@ -102,31 +100,6 @@
             [data]="chartData" 
             [selectedPeriod]="selectedPeriod">
           </app-portfolio-chart>
-        </div>
-      </div>
-
-      <!-- Holdings Section -->
-      <div class="holdings-section mobile-card">
-        <h3 class="text-lg font-semibold m-md">Holdings</h3>
-        
-        <div *ngFor="let position of dashboard.positions" class="holding-item">
-          <div class="holding-main">
-            <div class="holding-info">
-              <h4 class="holding-symbol text-lg font-semibold">{{ position.symbol }}</h4>
-              <p class="holding-details text-sm text-gray">{{ position.quantity }} shares &#64; {{ formatCurrency(position.currentPrice) }}</p>
-            </div>
-            <div class="holding-values text-right">
-              <div class="holding-value text-lg font-semibold">{{ formatCurrency(position.marketValue) }}</div>
-              <div class="holding-change text-sm" [class]="'change-' + getGainLossColor(position.unrealizedPL)">
-                {{ formatCurrency(position.unrealizedPL) }} ({{ formatPercent(position.unrealizedPLPercent) }})
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div *ngIf="!dashboard.positions || dashboard.positions.length === 0" class="empty-state text-center p-xl">
-          <ion-icon name="pie-chart-outline" class="empty-icon text-gray"></ion-icon>
-          <p class="text-gray">No holdings yet</p>
         </div>
       </div>
 

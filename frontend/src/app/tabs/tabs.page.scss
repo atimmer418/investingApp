@@ -30,34 +30,20 @@
   --color-selected: var(--tab-text-color-selected);
   --background-focused: var(--tab-background-selected);
   --background-focused-opacity: 1;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 56px;
-  padding: var(--app-spacing-xs) var(--app-spacing-sm);
+  padding: var(--app-spacing-sm);
   transition: all 0.2s ease;
   
   .tab-icon {
-    font-size: 24px;
-    margin-bottom: var(--app-spacing-xs);
+    font-size: 30px;
     transition: all 0.2s ease;
-  }
-  
-  .tab-label {
-    font-size: 10px;
-    font-weight: 500;
-    text-transform: none;
-    line-height: 1;
-    margin: 0;
   }
   
   &.tab-selected {
     .tab-icon {
       transform: scale(1.1);
-    }
-    
-    .tab-label {
-      font-weight: 600;
     }
   }
   

@@ -35,7 +35,7 @@ import {
   peopleOutline,
   starOutline,
   logOutOutline,
-  chevronForwardOutline,
+  chevronForward,
   personOutline,
   businessOutline,
   pieChartOutline,
@@ -43,7 +43,8 @@ import {
   cashOutline,
   phonePortraitOutline,
   moonOutline,
-  languageOutline
+  languageOutline,
+  checkmarkCircle
 } from 'ionicons/icons';
 import { SettingsService, UserPreferences, RecurringInvestment } from '../services/settings.service';
 import { PlaidService, BankAccount } from '../services/plaid.service';
@@ -246,7 +247,7 @@ export class Tab3Page implements OnInit, OnDestroy {
       peopleOutline,
       starOutline,
       logOutOutline,
-      chevronForwardOutline,
+      chevronForward,
       personOutline,
       businessOutline,
       pieChartOutline,
@@ -254,7 +255,8 @@ export class Tab3Page implements OnInit, OnDestroy {
       cashOutline,
       phonePortraitOutline,
       moonOutline,
-      languageOutline
+      languageOutline,
+      checkmarkCircle
     });
   }
 

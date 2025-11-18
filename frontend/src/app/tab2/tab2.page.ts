@@ -88,6 +88,10 @@ export class Tab2Page {
     return this.selectedSection === 'simulator';
   }
   
+  setSelectedSection(section: 'simulator' | 'education'): void {
+    this.selectedSection = section;
+  }
+  
   // Monte Carlo simulation inputs
   portfolioValue: number = 1000000;
   annualWithdrawal: number = 40000;

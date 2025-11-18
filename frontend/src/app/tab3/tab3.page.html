@@ -1,96 +1,78 @@
-<ion-header [translucent]="true">
+<ion-header class="ion-no-border safe-area-top profile-header">
   <ion-toolbar>
-    <ion-title>
-      Account Settings
-    </ion-title>
+    <ion-title class="profile-title">Profile</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Account Settings</ion-title>
-    </ion-toolbar>
-  </ion-header>
-
-  <!-- User Profile Card -->
-  <ion-card class="user-profile-card">
-    <ion-card-content>
-      <div class="profile-info">
-        <ion-avatar class="user-avatar">
-          <img src="assets/images/default-avatar.png" alt="User Avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNmMGYwZjAiLz48Y2lyY2xlIGN4PSIyMCIgY3k9IjE1IiByPSI2IiBmaWxsPSIjY2NjIi8+PHBhdGggZD0iTTYuNSAzMGE0LjUgNC41IDAgMCAxIDItMS4zQTEzIDEzIDAgMCAxIDIwIDI2YTEzIDEzIDAgMCAxIDExLjUgMi43QTQuNSA0LjUgMCAwIDEgMzMuNSAzMEg2LjVaIiBmaWxsPSIjY2NjIi8+PC9zdmc+'" />
-        </ion-avatar>
-        <div class="user-details">
-          <h2>Welcome back!</h2>
-          <p>Manage your account and investment preferences</p>
-          <div class="bank-account-info" *ngIf="currentBankAccount">
-            <ion-icon name="card-outline"></ion-icon>
-            <span>{{ currentBankAccount.institutionName }}</span>
+<ion-content class="settings-content">
+  <!-- User Profile Hero Section -->
+  <div class="profile-hero mobile-container">
+      <div class="profile-card">
+    <div class="profile-info">
+      <div class="user-details">
+        <h2 class="user-name">Welcome back, Alex!</h2>
+        <div class="bank-status">
+          <div class="status-pill">
+            <ion-icon name="business" class="bank-icon"></ion-icon>
+            <span class="bank-name">Chase Bank Connected</span>
           </div>
         </div>
       </div>
-    </ion-card-content>
-  </ion-card>
+    </div>
+  </div>
+  </div>
 
   <!-- Settings Sections -->
-  <div class="settings-container">
-    <div *ngFor="let section of settingSections" class="settings-section">
-      <h3 class="section-title">{{ section.title }}</h3>
+  <div class="settings-sections mobile-container">
+    <div *ngFor="let section of settingSections" class="settings-group">
+      <h3 class="group-header text-gray text-xs font-semibold">{{ section.title }}</h3>
       
-      <ion-list class="settings-list">
-        <ion-item 
-          *ngFor="let item of section.items" 
-          [button]="true" 
-          (click)="onSettingClick(item.action)"
-          class="setting-item"
-          ion-ripple>
-          
-          <ion-icon [name]="item.icon" slot="start" class="setting-icon"></ion-icon>
-          
-          <ion-label>
-            <h3>{{ item.title }}</h3>
-            <p *ngIf="item.subtitle">{{ item.subtitle }}</p>
-          </ion-label>
-          
-          <ion-badge 
-            *ngIf="item.badge" 
-            [color]="item.badgeColor || 'primary'" 
-            slot="end">
-            {{ item.badge }}
-          </ion-badge>
-          
-          <ion-icon name="chevron-forward-outline" slot="end" class="chevron-icon"></ion-icon>
-        </ion-item>
-      </ion-list>
+      <div class="settings-card mobile-card">
+        <div class="settings-list">
+          <button 
+            *ngFor="let item of section.items; let last = last" 
+            class="setting-item mobile-touch-target"
+            [class.last-item]="last"
+            (click)="onSettingClick(item.action)">
+            
+            <div class="setting-icon-container">
+              <ion-icon [name]="item.icon" class="setting-icon"></ion-icon>
+            </div>
+            
+            <div class="setting-content">
+              <div class="setting-main">
+                <h4 class="setting-title font-medium text-dark">{{ item.title }}</h4>
+                <p *ngIf="item.subtitle" class="setting-subtitle text-gray">{{ item.subtitle }}</p>
+              </div>
+              
+              <div class="setting-trailing">
+                <ion-badge 
+                  *ngIf="item.badge" 
+                  [color]="item.badgeColor || 'primary'" 
+                  class="setting-badge">
+                  {{ item.badge }}
+                </ion-badge>
+                <ion-icon name="chevron-forward" class="chevron-icon text-gray"></ion-icon>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Logout Button -->
-  <div class="logout-section">
-    <ion-button 
-      expand="block" 
-      fill="outline" 
-      color="danger" 
-      (click)="onLogout()"
-      class="logout-button">
-      <ion-icon name="log-out-outline" slot="start"></ion-icon>
-      Sign Out
-    </ion-button>
-  </div>
+  <!-- Logout Section -->
+  <!-- <div class="logout-section mobile-container">
+    <button class="logout-button mobile-card mobile-touch-target" (click)="onLogout()">
+      <div class="logout-content">
+        <ion-icon name="log-out-outline" class="logout-icon text-danger"></ion-icon>
+        <span class="logout-text text-base font-medium text-danger">Sign Out</span>
+      </div>
+    </button>
+  </div> -->
 
-  <!-- App Version Info -->
-  <div class="app-info">
-    <ion-text color="medium">
-      <p>Version 1.0.0</p>
-    </ion-text>
+  <!-- App Version -->
+  <div class="app-version mobile-container">
+    <p class="version-text text-xs text-gray text-center">Version 1.0.0</p>
   </div>
-
-  <!-- Toast for user feedback -->
-  <ion-toast
-    [isOpen]="isToastOpen"
-    [message]="toastMessage"
-    [duration]="3000"
-    [color]="toastColor"
-    (didDismiss)="isToastOpen = false">
-  </ion-toast>
 </ion-content>

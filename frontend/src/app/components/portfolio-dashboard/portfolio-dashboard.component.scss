@@ -17,6 +17,14 @@
 }
 
 /* =============================================================================
+   PORTFOLIO DASHBOARD CONTAINER
+   ============================================================================= */
+
+.portfolio-dashboard {
+  margin-top: var(--app-spacing-md);
+}
+
+/* =============================================================================
    LOADING AND ERROR STATES
    ============================================================================= */
 
@@ -124,10 +132,10 @@
 .ios-tab-switcher {
   display: flex;
   background: var(--app-gray-100);
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 2px;
-  width: 100%;
-  max-width: 320px;
+  width: calc(100% - var(--app-spacing-md));
+  margin: 0 auto;
   position: relative;
   
   @media (prefers-color-scheme: dark) {
@@ -139,33 +147,22 @@
   flex: 1;
   background: transparent;
   border: none;
-  border-radius: 14px;
-  padding: var(--app-spacing-xs) var(--app-spacing-sm);
+  border-radius: 10px;
+  padding: var(--app-spacing-sm);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  min-height: 48px;
+  min-height: 40px;
   transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
   cursor: pointer;
   color: var(--app-gray-500);
   font-family: var(--app-font-family);
   font-weight: 500;
-  font-size: var(--app-font-size-sm);
   position: relative;
   z-index: 1;
   
   ion-icon {
-    font-size: 18px;
-    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  }
-  
-  span {
-    font-size: 10px;
-    font-weight: 500;
-    line-height: 1;
-    margin: 0;
+    font-size: 24px;
     transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
   }
   
@@ -440,18 +437,13 @@
   }
   
   .ios-tab-switcher {
-    max-width: 280px;
+    width: calc(100% - var(--app-spacing-sm));
     
     .ios-tab-button {
-      min-height: 50px;
-      gap: 4px;
+      min-height: 40px;
       
       ion-icon {
-        font-size: 18px;
-      }
-      
-      span {
-        font-size: 10px;
+        font-size: 24px;
       }
     }
   }

@@ -1,13 +1,29 @@
-<ion-header [translucent]="true">
+<ion-header class="ion-no-border safe-area-top">
   <ion-toolbar>
-    <ion-title>
-      <ion-icon name="trending-up" class="icon-enhanced primary"></ion-icon>
-      Retirement Planning
-    </ion-title>
+    <ion-title>Retirement</ion-title>
   </ion-toolbar>
+  
+  <!-- iOS-Style Tab Switcher -->
+  <div class="header-tab-container">
+    <div class="ios-tab-switcher">
+      <button 
+        class="ios-tab-button" 
+        [class.active]="selectedSection === 'simulator'"
+        (click)="setSelectedSection('simulator')">
+        <ion-icon name="dice-outline"></ion-icon>
+      </button>
+      <button 
+        class="ios-tab-button" 
+        [class.active]="selectedSection === 'education'"
+        (click)="setSelectedSection('education')">
+        <ion-icon name="school-outline"></ion-icon>
+      </button>
+    </div>
+  </div>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" [scrollY]="true">
+
   <!-- Beautiful Header Section -->
   <div class="retirement-header">
     <h1>
@@ -15,20 +31,6 @@
       Retirement Planning Suite
     </h1>
     <p>Test your strategy with Monte Carlo simulation and learn proven withdrawal approaches</p>
-  </div>
-
-  <!-- Enhanced Section Navigation -->
-  <div class="section-tabs">
-    <ion-segment [(ngModel)]="selectedSection">
-      <ion-segment-button value="simulator">
-        <ion-icon name="dice-outline"></ion-icon>
-        <ion-label>Monte Carlo</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="education">
-        <ion-icon name="school-outline"></ion-icon>
-        <ion-label>Education</ion-label>
-      </ion-segment-button>
-    </ion-segment>
   </div>
 
   <!-- Monte Carlo Simulator Section -->
