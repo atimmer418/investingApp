@@ -16,7 +16,8 @@ import {
   IonInput,
   IonRange,
   IonToast,
-  IonModal
+  IonModal,
+  AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -27,7 +28,9 @@ import {
   trendingUpOutline,
   trendingDownOutline,
   walletOutline,
-  timeOutline
+  timeOutline,
+  warningOutline,
+  informationCircleOutline
 } from 'ionicons/icons';
 
 import { TradingService, Position, AccountBalance } from '../services/trading.service';
@@ -81,7 +84,8 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
   
   constructor(
     private router: Router,
-    private tradingService: TradingService
+    private tradingService: TradingService,
+    private alertController: AlertController
   ) {
     addIcons({
       pieChartOutline,
@@ -91,7 +95,9 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
       trendingUpOutline,
       trendingDownOutline,
       walletOutline,
-      timeOutline
+      timeOutline,
+      warningOutline,
+      informationCircleOutline
     });
   }
 
@@ -201,10 +207,31 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
   async liquidatePortfolio() {
     if (this.isLiquidating || this.positions.length === 0) return;
     
-    // Show confirmation
-    const confirmed = await this.showConfirmation('Liquidate Portfolio', 'Are you sure you want to sell all your holdings? This action cannot be undone.');
-    if (!confirmed) return;
-    
+    const alert = await this.alertController.create({
+      header: 'Liquidate Portfolio',
+      subHeader: 'Are you sure?',
+      message: 'This will sell ALL your current holdings and convert them to cash. This action cannot be undone.',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary'
+        },
+        {
+          text: 'Liquidate All',
+          role: 'destructive',
+          cssClass: 'alert-button-danger',
+          handler: () => {
+            this.processLiquidation();
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  private async processLiquidation() {
     try {
       this.isLiquidating = true;
       

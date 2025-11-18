@@ -24,92 +24,100 @@
     
     <!-- Account Balance Summary -->
     <div class="balance-summary mobile-card">
-      <h2 class="balance-title font-semibold text-dark">Account Summary</h2>
+      <h2 class="balance-title font-semibold text-dark m-b-sm">Account Summary</h2>
       <div class="balance-grid">
         <div class="balance-item">
-          <span class="balance-label text-gray">Portfolio Value</span>
-          <span class="balance-value font-medium text-dark">{{formatCurrency(balance?.portfolio_value || '0')}}</span>
+          <span class="balance-label text-gray text-sm">Portfolio Value</span>
+          <span class="balance-value font-bold text-dark text-xl">{{formatCurrency(balance?.portfolio_value || '0')}}</span>
         </div>
         <div class="balance-item">
-          <span class="balance-label text-gray">Available Cash</span>
-          <span class="balance-value font-medium text-dark">{{formatCurrency(balance?.cash || '0')}}</span>
+          <span class="balance-label text-gray text-sm">Buying Power (Cash)</span>
+          <span class="balance-value font-bold text-success text-xl">{{formatCurrency(balance?.cash || '0')}}</span>
         </div>
       </div>
     </div>
 
     <!-- Sell Individual Stocks Section -->
     <div class="section-card mobile-card">
-      <div class="section-header">
-        <h3 class="section-title font-semibold text-dark">Sell Individual Holdings</h3>
-        <p class="section-subtitle text-gray">Choose a stock and the percentage to sell</p>
+      <div class="section-header p-b-sm border-bottom">
+        <h3 class="section-title font-semibold text-dark text-lg">Sell Holdings</h3>
+        <p class="section-subtitle text-gray text-sm">Select a stock to sell a percentage of your position. Proceeds will be added to your Buying Power.</p>
       </div>
 
       <!-- No positions message -->
-      <div *ngIf="positions.length === 0" class="no-positions">
+      <div *ngIf="positions.length === 0" class="no-positions p-md text-center">
         <div class="empty-state">
-          <ion-icon name="pie-chart-outline" class="empty-icon text-gray"></ion-icon>
+          <ion-icon name="pie-chart-outline" class="empty-icon text-gray text-4xl m-b-sm"></ion-icon>
           <h4 class="empty-title font-medium text-dark">No Holdings Found</h4>
-          <p class="empty-description text-gray">You don't have any stock positions to sell yet.</p>
+          <p class="empty-description text-gray text-sm">You don't have any stock positions to sell yet.</p>
         </div>
       </div>
 
       <!-- Positions list -->
-      <div *ngIf="positions.length > 0" class="positions-list">
+      <div *ngIf="positions.length > 0" class="positions-list m-t-sm">
         <div 
           *ngFor="let position of positions" 
-          class="position-item"
+          class="position-item p-sm border-bottom"
           [class.selected]="selectedPosition?.symbol === position.symbol"
           (click)="selectPosition(position)">
           
-          <div class="position-info">
-            <div class="position-main">
-              <h4 class="position-symbol font-semibold text-dark">{{position.symbol}}</h4>
-              <p class="position-value text-gray">{{formatCurrency(position.market_value)}}</p>
+          <div class="position-row display-flex justify-between align-center">
+            <div class="position-info">
+              <div class="position-main display-flex align-center">
+                <div class="symbol-circle m-r-sm">{{position.symbol.substring(0,1)}}</div>
+                <div>
+                  <h4 class="position-symbol font-semibold text-dark m-0">{{position.symbol}}</h4>
+                  <p class="position-shares text-xs text-gray m-0">{{position.qty}} shares</p>
+                </div>
+              </div>
             </div>
-            <div class="position-details">
-              <span class="position-shares text-sm text-gray">{{position.qty}} shares</span>
-              <span 
-                class="position-gain text-sm" 
-                [class.gain-positive]="isPositiveGain(position.unrealized_plpc)"
-                [class.gain-negative]="!isPositiveGain(position.unrealized_plpc)">
+            
+            <div class="position-values text-right">
+              <p class="position-value font-medium text-dark m-0">{{formatCurrency(position.market_value)}}</p>
+              <p 
+                class="position-gain text-xs m-0" 
+                [class.text-success]="isPositiveGain(position.unrealized_plpc)"
+                [class.text-danger]="!isPositiveGain(position.unrealized_plpc)">
                 {{formatPercentage(position.unrealized_plpc)}}
-              </span>
+              </p>
             </div>
-          </div>
-          
-          <div class="position-action">
-            <ion-icon 
-              [name]="selectedPosition?.symbol === position.symbol ? 'checkmark-circle' : 'radio-button-off'" 
-              class="select-icon"
-              [class.selected-icon]="selectedPosition?.symbol === position.symbol">
-            </ion-icon>
+
+            <div class="position-check m-l-sm">
+              <ion-icon 
+                [name]="selectedPosition?.symbol === position.symbol ? 'checkmark-circle' : 'radio-button-off'" 
+                class="select-icon text-xl"
+                [class.text-primary]="selectedPosition?.symbol === position.symbol"
+                [class.text-gray]="selectedPosition?.symbol !== position.symbol">
+              </ion-icon>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Sell percentage controls -->
-      <div *ngIf="selectedPosition" class="sell-controls">
-        <div class="percentage-selector">
-          <label class="percentage-label font-medium text-dark">Percentage to Sell</label>
-          <div class="percentage-input-container">
-            <ion-range 
-              [(ngModel)]="sellPercentage"
-              [min]="1"
-              [max]="100"
-              [step]="1"
-              [pin]="true"
-              class="percentage-range">
-            </ion-range>
+      <div *ngIf="selectedPosition" class="sell-controls p-t-md fade-in">
+        <div class="percentage-selector m-b-md">
+          <div class="display-flex justify-between align-center m-b-xs">
+            <label class="percentage-label font-medium text-dark">Amount to Sell</label>
+            <span class="percentage-value font-bold text-primary">{{sellPercentage}}%</span>
           </div>
-          <div class="percentage-display">
-            <span class="percentage-value font-semibold text-primary">{{sellPercentage}}%</span>
-            <span class="percentage-amount text-gray">
-              ≈ {{formatCurrency(calculateSellAmount())}}
-            </span>
+          
+          <ion-range 
+            [(ngModel)]="sellPercentage"
+            [min]="1"
+            [max]="100"
+            [step]="1"
+            [pin]="true"
+            class="percentage-range">
+          </ion-range>
+          
+          <div class="estimated-value text-center m-t-xs">
+            <span class="text-gray text-sm">Estimated Proceeds: </span>
+            <span class="font-semibold text-dark">{{formatCurrency(calculateSellAmount())}}</span>
           </div>
         </div>
 
-        <div class="quick-percentages">
+        <div class="quick-percentages display-flex justify-between m-b-md">
           <button 
             *ngFor="let percent of quickPercentages" 
             class="quick-percent-btn"
@@ -125,116 +133,50 @@
           [disabled]="isSelling"
           (click)="sellPosition()">
           <ion-spinner *ngIf="isSelling" name="crescent" slot="start"></ion-spinner>
-          {{isSelling ? 'Processing...' : 'Sell ' + sellPercentage + '% of ' + selectedPosition.symbol}}
-        </ion-button>
-      </div>
-    </div>
-
-    <!-- Portfolio Actions Section -->
-    <div class="section-card mobile-card">
-      <div class="section-header">
-        <h3 class="section-title font-semibold text-dark">Portfolio Actions</h3>
-        <p class="section-subtitle text-gray">Manage your entire portfolio</p>
-      </div>
-
-      <div class="portfolio-actions">
-        <!-- Liquidate Portfolio -->
-        <div class="action-item">
-          <div class="action-info">
-            <h4 class="action-title font-medium text-dark">Liquidate Portfolio</h4>
-            <p class="action-description text-gray">Sell all holdings and convert to cash</p>
-          </div>
-          <ion-button 
-            fill="outline" 
-            color="danger"
-            [disabled]="isLiquidating || positions.length === 0"
-            (click)="liquidatePortfolio()">
-            <ion-spinner *ngIf="isLiquidating" name="crescent" slot="start"></ion-spinner>
-            {{isLiquidating ? 'Processing...' : 'Liquidate All'}}
-          </ion-button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Retirement Planning Section -->
-    <div class="section-card mobile-card">
-      <div class="section-header">
-        <h3 class="section-title font-semibold text-dark">Retirement Planning</h3>
-        <p class="section-subtitle text-gray">Systematic withdrawals for retirement</p>
-      </div>
-
-      <div class="retirement-planning">
-        <div class="retirement-info">
-          <div class="retirement-stat">
-            <span class="stat-label text-gray">4% Rule (Monthly)</span>
-            <span class="stat-value font-semibold text-dark">
-              {{formatCurrency(calculateRetirementWithdrawal())}}
-            </span>
-          </div>
-        </div>
-
-        <div class="retirement-controls">
-          <div class="withdrawal-rate">
-            <label class="rate-label font-medium text-dark">Annual Withdrawal Rate</label>
-            <ion-range 
-              [(ngModel)]="retirementRate"
-              [min]="3"
-              [max]="6"
-              [step]="0.5"
-              [pin]="true"
-              class="rate-range">
-            </ion-range>
-            <div class="rate-display">
-              <span class="rate-value font-semibold text-primary">{{retirementRate}}%</span>
-              <span class="rate-amount text-gray">
-                {{formatCurrency(calculateCustomRetirementWithdrawal())}} monthly
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <ion-button 
-          expand="block" 
-          fill="outline"
-          color="primary"
-          class="retirement-btn"
-          (click)="showRetirementModal = true">
-          Setup Retirement Plan
+          {{isSelling ? 'Processing...' : 'Sell ' + selectedPosition.symbol}}
         </ion-button>
       </div>
     </div>
 
     <!-- Withdraw Cash Section -->
     <div class="section-card mobile-card">
-      <div class="section-header">
-        <h3 class="section-title font-semibold text-dark">Withdraw Cash</h3>
-        <p class="section-subtitle text-gray">Transfer money to your bank account</p>
+      <div class="section-header p-b-sm border-bottom">
+        <h3 class="section-title font-semibold text-dark text-lg">Withdraw Cash</h3>
+        <p class="section-subtitle text-gray text-sm">Transfer settled cash to your linked bank account.</p>
       </div>
 
-      <div class="withdraw-controls">
-        <div class="withdraw-amount">
-          <label class="amount-label font-medium text-dark">Withdrawal Amount</label>
-          <div class="amount-input-container">
+      <div class="withdraw-controls p-t-md">
+        
+        <div class="info-box bg-gray-50 p-sm rounded m-b-md">
+          <div class="display-flex align-start">
+            <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
+            <p class="text-xs text-gray m-0">
+              <strong>Note:</strong> You can only withdraw "Buying Power" (settled cash). If you just sold stock, it may take 1-2 business days for funds to settle and become available for withdrawal.
+            </p>
+          </div>
+        </div>
+
+        <div class="withdraw-amount m-b-md">
+          <label class="amount-label font-medium text-dark display-block m-b-xs">Amount</label>
+          <div class="amount-input-wrapper display-flex align-center border rounded p-xs">
+            <span class="currency-symbol text-dark font-semibold p-l-sm">$</span>
             <ion-input
               type="number"
               [(ngModel)]="withdrawAmount"
               [min]="1"
               [max]="maxWithdrawAmount"
-              placeholder="Enter amount"
-              class="amount-input">
+              placeholder="0.00"
+              class="amount-input no-border">
             </ion-input>
           </div>
-          <div class="withdraw-info">
-            <span class="available-text text-sm text-gray">
+          <div class="withdraw-info text-right m-t-xs">
+            <span class="available-text text-xs text-gray">
               Available: {{formatCurrency(balance?.cash || '0')}}
-            </span>
-            <span class="timing-text text-sm text-gray">
-              Transfers take 1-3 business days
             </span>
           </div>
         </div>
 
-        <div class="quick-amounts">
+        <div class="quick-amounts display-flex justify-between flex-wrap m-b-md gap-xs">
           <button 
             *ngFor="let amount of quickWithdrawAmounts" 
             class="quick-amount-btn"
@@ -251,10 +193,63 @@
           [disabled]="isWithdrawing || !withdrawAmount || withdrawAmount > maxWithdrawAmount"
           (click)="withdrawCash()">
           <ion-spinner *ngIf="isWithdrawing" name="crescent" slot="start"></ion-spinner>
-          {{isWithdrawing ? 'Processing...' : 'Withdraw ' + formatCurrency(withdrawAmount || 0)}}
+          {{isWithdrawing ? 'Processing...' : 'Initiate Transfer'}}
         </ion-button>
       </div>
     </div>
+
+    <!-- Retirement Planning Section -->
+    <div class="section-card mobile-card">
+      <div class="section-header p-b-sm border-bottom">
+        <h3 class="section-title font-semibold text-dark text-lg">Retirement Planning</h3>
+        <p class="section-subtitle text-gray text-sm">Plan systematic withdrawals using the 4% rule.</p>
+      </div>
+
+      <div class="retirement-planning p-t-md">
+        <div class="retirement-info m-b-md">
+          <div class="retirement-stat text-center p-md bg-gray-50 rounded">
+            <span class="stat-label text-gray text-sm display-block m-b-xs">Safe Monthly Withdrawal (4%)</span>
+            <span class="stat-value font-bold text-dark text-2xl">
+              {{formatCurrency(calculateRetirementWithdrawal())}}
+            </span>
+          </div>
+        </div>
+
+        <ion-button 
+          expand="block" 
+          fill="outline"
+          class="retirement-btn"
+          (click)="showRetirementModal = true">
+          <ion-icon name="calculator-outline" slot="start"></ion-icon>
+          Retirement Calculator
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Danger Zone: Liquidate Portfolio -->
+    <div class="section-card mobile-card danger-zone m-t-xl m-b-xl">
+      <div class="section-header p-b-sm border-bottom">
+        <h3 class="section-title font-semibold text-danger text-lg">Danger Zone</h3>
+      </div>
+
+      <div class="portfolio-actions p-t-md">
+        <div class="action-item">
+          <div class="action-info m-b-md">
+            <h4 class="action-title font-medium text-dark">Liquidate Entire Portfolio</h4>
+            <p class="action-description text-gray text-sm">This will sell ALL your positions immediately. This action is irreversible.</p>
+          </div>
+          <ion-button 
+            expand="block"
+            color="danger"
+            [disabled]="isLiquidating || positions.length === 0"
+            (click)="liquidatePortfolio()">
+            <ion-spinner *ngIf="isLiquidating" name="crescent" slot="start"></ion-spinner>
+            {{isLiquidating ? 'Processing...' : 'Liquidate All Assets'}}
+          </ion-button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Success/Error Toast -->
@@ -279,34 +274,37 @@
         </ion-toolbar>
       </ion-header>
       
-      <ion-content class="modal-content">
+      <ion-content class="modal-content ion-padding">
         <div class="retirement-modal">
-          <div class="modal-section">
-            <h3>The 4% Rule Explained</h3>
-            <p>The 4% rule suggests withdrawing 4% of your portfolio value annually during retirement. This approach aims to make your savings last 30+ years.</p>
+          <div class="modal-section m-b-lg">
+            <h3 class="text-lg font-semibold m-b-sm">The 4% Rule Explained</h3>
+            <p class="text-gray text-sm">The 4% rule suggests withdrawing 4% of your portfolio value annually during retirement. This approach aims to make your savings last 30+ years.</p>
           </div>
           
-          <div class="modal-section">
-            <h4>Your Retirement Calculations</h4>
-            <div class="calculation-grid">
-              <div class="calc-item">
-                <span class="calc-label">Portfolio Value</span>
-                <span class="calc-value">{{formatCurrency(balance?.portfolio_value || '0')}}</span>
+          <div class="modal-section m-b-lg">
+            <h4 class="text-md font-semibold m-b-sm">Your Retirement Calculations</h4>
+            <div class="calculation-grid bg-gray-50 p-md rounded">
+              <div class="calc-item display-flex justify-between m-b-xs">
+                <span class="calc-label text-gray">Portfolio Value</span>
+                <span class="calc-value font-medium">{{formatCurrency(balance?.portfolio_value || '0')}}</span>
               </div>
-              <div class="calc-item">
-                <span class="calc-label">4% Annual</span>
-                <span class="calc-value">{{formatCurrency(getPortfolioValue() * 0.04)}}</span>
+              <div class="calc-item display-flex justify-between m-b-xs">
+                <span class="calc-label text-gray">4% Annual</span>
+                <span class="calc-value font-medium">{{formatCurrency(getPortfolioValue() * 0.04)}}</span>
               </div>
-              <div class="calc-item">
-                <span class="calc-label">Monthly (4%)</span>
-                <span class="calc-value">{{formatCurrency(calculateRetirementWithdrawal())}}</span>
+              <div class="calc-item display-flex justify-between border-top p-t-xs m-t-xs">
+                <span class="calc-label font-semibold text-primary">Monthly Income</span>
+                <span class="calc-value font-bold text-primary">{{formatCurrency(calculateRetirementWithdrawal())}}</span>
               </div>
             </div>
           </div>
 
           <div class="modal-section">
-            <h4>Setup Systematic Withdrawals</h4>
-            <p class="coming-soon text-gray">This feature is coming soon! You'll be able to set up automatic monthly withdrawals based on your retirement plan.</p>
+            <h4 class="text-md font-semibold m-b-sm">Setup Systematic Withdrawals</h4>
+            <p class="coming-soon text-gray text-sm bg-gray-100 p-sm rounded text-center">
+              <ion-icon name="time-outline" class="m-r-xs"></ion-icon>
+              Coming Soon
+            </p>
           </div>
         </div>
       </ion-content>
