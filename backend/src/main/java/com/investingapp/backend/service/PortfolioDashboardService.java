@@ -95,7 +95,10 @@ public class PortfolioDashboardService {
         try {
             // Get all required data from Alpaca
             AccountSummary accountSummary = getAccountSummary(accountId);
-            List<Position> positions = getCurrentPositions(accountId);
+            
+            // Use real-time positions for the dashboard display to ensure accuracy
+            List<Position> positions = getRealTimePositions(accountId);
+            
             PortfolioHistory portfolioHistory = getPortfolioHistory(accountId, "1M");
             List<Transaction> recentTransactions = getRecentTransactions(accountId);
             
@@ -237,15 +240,8 @@ public class PortfolioDashboardService {
     /**
      * Get current positions using EOD positions endpoint
      * Uses the /v1/reporting/eod/positions endpoint from Broker API
-     * 
-     * API Documentation notes:
-     * - EOD positions are accessible after 4:00 AM ET the following day
-     * - Only supports retrieving EOD positions for the last trading date
-     * - Uses 'YYYY-MM-DD' format for asof parameter
-     * - EOD data is typically 1-5+ days behind due to weekends, holidays, and processing delays
-     * - Sandbox environments may restrict explicit asof parameter usage
      */
-    private List<Position> getCurrentPositions(String accountId) {
+    private List<Position> getEODPositions(String accountId) {
         try {
             List<Position> positions = null;
             Exception lastException = null;
@@ -337,7 +333,7 @@ public class PortfolioDashboardService {
                 
                 // Fallback to current positions API (real-time positions)
                 try {
-                    positions = getCurrentPositionsFallback(accountId);
+                    positions = getRealTimePositions(accountId);
                     logger.info("Successfully fetched current positions as fallback for account: {}", accountId);
                 } catch (Exception fallbackException) {
                     logger.error("Fallback to current positions also failed: {}", fallbackException.getMessage());
@@ -357,10 +353,9 @@ public class PortfolioDashboardService {
     }
 
     /**
-     * Fallback method to get current positions using the positions API instead of EOD
-     * Used when EOD data is not available in sandbox environments
+     * Get current positions using the positions API (real-time)
      */
-    private List<Position> getCurrentPositionsFallback(String accountId) {
+    private List<Position> getRealTimePositions(String accountId) {
         try {
             String url = alpacaBrokerBaseUrl + "/accounts/" + accountId + "/positions";
             
@@ -748,7 +743,7 @@ public class PortfolioDashboardService {
     private BigDecimal[] calculateIntradayPerformance(String accountId, BigDecimal currentPortfolioValue) {
         try {
             // Get yesterday's EOD positions (quantities and symbols)
-            List<Position> yesterdayPositions = getCurrentPositions(accountId); 
+            List<Position> yesterdayPositions = getEODPositions(accountId); 
             
             if (yesterdayPositions.isEmpty()) {
                 return new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO};
