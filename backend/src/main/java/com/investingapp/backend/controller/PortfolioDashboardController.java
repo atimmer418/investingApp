@@ -187,9 +187,9 @@ public class PortfolioDashboardController {
             } else {
                 // Market is open, calculate real performance
                 // For today's performance: yesterday's EOD close → current real-time value
-                // portfolioValue is yesterday's EOD, current value = EOD + todayChange
-                BigDecimal yesterdayEODValue = dashboardData.summary.portfolioValue;      // Yesterday's close
-                BigDecimal currentRealTimeValue = dashboardData.summary.portfolioValue.add(dashboardData.summary.todayChange); // Current real-time
+                // portfolioValue is now the Current Real-Time Value (updated in Service)
+                BigDecimal currentRealTimeValue = dashboardData.summary.portfolioValue;
+                BigDecimal yesterdayEODValue = currentRealTimeValue.subtract(dashboardData.summary.todayChange);
                 
                 dailyPerf.put("startValue", yesterdayEODValue);     // Yesterday's EOD closing value
                 dailyPerf.put("endValue", currentRealTimeValue);   // Current real-time value  

@@ -169,8 +169,12 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
   }
 
   get maxWithdrawAmount(): number {
-    if (!this.balance?.buyingPower) return 0;
-    return this.balance.buyingPower;
+    if (this.balance && typeof this.balance.cash !== 'undefined') {
+      return this.balance.cash;
+    }
+    // Fallback to buyingPower if cash is not available (though it should be)
+    if (this.balance?.buyingPower) return this.balance.buyingPower;
+    return 0;
   }
 
   async sellPosition() {

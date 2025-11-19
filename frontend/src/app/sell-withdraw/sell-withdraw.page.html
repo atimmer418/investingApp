@@ -31,8 +31,12 @@
           <span class="balance-value font-bold text-dark text-xl">{{formatCurrency(balance?.portfolioValue || 0)}}</span>
         </div>
         <div class="balance-item">
-          <span class="balance-label text-gray text-sm">Buying Power (Cash)</span>
+          <span class="balance-label text-gray text-sm">Buying Power</span>
           <span class="balance-value font-bold text-success text-xl">{{formatCurrency(balance?.buyingPower || 0)}}</span>
+        </div>
+        <div class="balance-item">
+          <span class="balance-label text-gray text-sm">Settled Cash</span>
+          <span class="balance-value font-bold text-primary text-xl">{{formatCurrency(balance?.cash || 0)}}</span>
         </div>
       </div>
     </div>
@@ -97,7 +101,7 @@
           <div class="display-flex align-start">
             <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
             <p class="text-xs text-gray m-0">
-              Selling a portion of your position converts the stock value into cash (Buying Power), which can then be withdrawn or reinvested.
+              Selling a portion of your position converts the stock value into Buying Power immediately (for trading) and Settled Cash after 1 business day (for withdrawal).
             </p>
           </div>
         </div>
@@ -157,7 +161,7 @@
           <div class="display-flex align-start">
             <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
             <p class="text-xs text-gray m-0">
-              <strong>Note:</strong> You can only withdraw "Buying Power" (settled cash). If you just sold stock, it may take 1-2 business days for funds to settle and become available for withdrawal.
+              <strong>Note:</strong> You can only withdraw "Settled Cash". If you just sold stock, it may take 1 business day for funds to settle and become available for withdrawal.
             </p>
           </div>
         </div>
@@ -177,7 +181,7 @@
           </div>
           <div class="withdraw-info text-right m-t-xs">
             <span class="available-text text-xs text-gray">
-              Available: {{formatCurrency(balance?.buyingPower || 0)}}
+              Available: {{formatCurrency(balance?.cash || 0)}}
             </span>
           </div>
         </div>
