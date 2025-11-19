@@ -357,7 +357,7 @@ public class PortfolioDashboardService {
      */
     private List<Position> getRealTimePositions(String accountId) {
         try {
-            String url = alpacaBrokerBaseUrl + "/accounts/" + accountId + "/positions";
+            String url = alpacaBrokerBaseUrl + "/trading/accounts/" + accountId + "/positions";
             
             HttpHeaders headers = createAuthHeaders();
             HttpEntity<Void> entity = new HttpEntity<>(headers);
