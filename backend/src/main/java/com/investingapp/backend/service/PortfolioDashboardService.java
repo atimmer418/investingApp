@@ -105,9 +105,11 @@ public class PortfolioDashboardService {
             // Calculate totals from positions data instead of account activities
             BigDecimal totalInvested = calculateTotalInvestedFromPositions(positions);
             
-            // Calculate total gain/loss in real-time: current portfolio value - total invested
-            // This ensures consistency with real-time portfolio value rather than using stale EOD unrealized P&L
-            BigDecimal totalGainLoss = accountSummary.portfolioValue.subtract(totalInvested);
+            // Calculate total gain/loss based on positions' unrealized P&L
+            // This ensures consistency with the positions list display
+            BigDecimal totalGainLoss = positions.stream()
+                    .map(position -> position.unrealizedPL)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             
             return new PortfolioDashboardData(
                 accountSummary,

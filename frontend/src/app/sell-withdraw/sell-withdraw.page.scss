@@ -333,3 +333,18 @@
   flex-direction: column;
   align-items: flex-end;
 }
+
+.position-info {
+  flex: 1;
+  min-width: 0;
+  margin-right: 8px;
+}
+
+.position-values {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.position-check {
+  flex-shrink: 0;
+}

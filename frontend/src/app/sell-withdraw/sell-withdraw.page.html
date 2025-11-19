@@ -75,7 +75,7 @@
             <div class="position-values text-right">
               <p class="position-value font-medium text-dark m-0">{{formatCurrency(position.marketValue)}}</p>
               <p class="position-sub-values text-xs text-gray m-0">
-                {{formatCurrency(position.costBasis)}} &bull; <span [class.text-success]="position.unrealizedPL >= 0" [class.text-danger]="position.unrealizedPL < 0">{{position.unrealizedPL >= 0 ? '+' : ''}}{{formatCurrency(position.unrealizedPL)}}</span>
+                {{formatCurrency(position.costBasis)}}<span [class.text-success]="position.unrealizedPL >= 0" [class.text-danger]="position.unrealizedPL < 0">{{position.unrealizedPL >= 0 ? '+' : ''}}{{formatCurrency(position.unrealizedPL)}}</span>
               </p>
             </div>
 
