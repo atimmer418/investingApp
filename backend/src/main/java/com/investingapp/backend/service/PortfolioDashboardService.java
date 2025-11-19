@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Base64;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class PortfolioDashboardService {
@@ -49,6 +50,9 @@ public class PortfolioDashboardService {
     
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    
+    // Cache for company names to avoid repeated lookups
+    private final Map<String, String> companyNameCache = new ConcurrentHashMap<>();
     
     public PortfolioDashboardService() {
         this.restTemplate = new RestTemplate();
@@ -404,8 +408,9 @@ public class PortfolioDashboardService {
                             unrealizedPLPercent = unrealizedPL.divide(costBasis, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
                         }
                         
-                        // Use symbol as name for current positions (we don't have company names in this API)
-                        Position position = new Position(symbol, symbol, quantity, marketValue, costBasis, 
+                        // Get company name
+                        String name = getCompanyName(symbol);
+                        Position position = new Position(symbol, name, quantity, marketValue, costBasis, 
                                                        unrealizedPL, unrealizedPLPercent, currentPrice);
                         positions.add(position);
                         
@@ -455,7 +460,7 @@ public class PortfolioDashboardService {
                             
                             Position position = new Position(
                                 symbol,
-                                symbol, // Use symbol as name for now
+                                getCompanyName(symbol),
                                 quantity,
                                 marketValue,
                                 costBasis,
@@ -835,5 +840,38 @@ public class PortfolioDashboardService {
         }
         
         return BigDecimal.ZERO;
+    }
+    
+    /**
+     * Get company name for a symbol, using cache if available
+     */
+    private String getCompanyName(String symbol) {
+        if (companyNameCache.containsKey(symbol)) {
+            return companyNameCache.get(symbol);
+        }
+        
+        try {
+            // Try to get asset details from Broker API
+            String url = alpacaBrokerBaseUrl + "/assets/" + symbol;
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            
+            // logger.debug("Fetching company name for symbol: {}", symbol);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonNode assetNode = objectMapper.readTree(response.getBody());
+                if (assetNode.has("name")) {
+                    String name = assetNode.get("name").asText();
+                    companyNameCache.put(symbol, name);
+                    return name;
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to fetch company name for {}: {}", symbol, e.getMessage());
+        }
+        
+        // Fallback to symbol if name fetch fails
+        return symbol;
     }
 }

@@ -126,7 +126,7 @@ export class Tab3Page implements OnInit, OnDestroy {
         {
           title: 'Sell & Withdraw',
           subtitle: 'Sell stocks and withdraw money',
-          icon: 'cash-outline',
+          icon: 'card-outline',
           action: 'sellWithdraw',
           type: 'navigation'
         }
@@ -152,7 +152,7 @@ export class Tab3Page implements OnInit, OnDestroy {
         {
           title: 'Change Bank Account',
           subtitle: 'Link a different bank account with Plaid',
-          icon: 'card-outline',
+          icon: 'business-outline',
           action: 'changeBankAccount',
           type: 'navigation'
         },

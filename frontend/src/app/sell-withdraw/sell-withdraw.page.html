@@ -28,20 +28,20 @@
       <div class="balance-grid">
         <div class="balance-item">
           <span class="balance-label text-gray text-sm">Portfolio Value</span>
-          <span class="balance-value font-bold text-dark text-xl">{{formatCurrency(balance?.portfolio_value || '0')}}</span>
+          <span class="balance-value font-bold text-dark text-xl">{{formatCurrency(balance?.portfolioValue || 0)}}</span>
         </div>
         <div class="balance-item">
           <span class="balance-label text-gray text-sm">Buying Power (Cash)</span>
-          <span class="balance-value font-bold text-success text-xl">{{formatCurrency(balance?.cash || '0')}}</span>
+          <span class="balance-value font-bold text-success text-xl">{{formatCurrency(balance?.buyingPower || 0)}}</span>
         </div>
       </div>
     </div>
 
     <!-- Sell Individual Stocks Section -->
     <div class="section-card mobile-card">
-      <div class="section-header p-b-sm border-bottom">
+      <div class="section-header p-b-sm border-bottom" style="margin-bottom: 0px; padding-bottom: 0px;">
         <h3 class="section-title font-semibold text-dark text-lg">Sell Holdings</h3>
-        <p class="section-subtitle text-gray text-sm">Select a stock to sell a percentage of your position. Proceeds will be added to your Buying Power.</p>
+        <p class="section-subtitle text-gray text-sm">Select a stock to sell. Proceeds will be added to your Buying Power.</p>
       </div>
 
       <!-- No positions message -->
@@ -54,7 +54,7 @@
       </div>
 
       <!-- Positions list -->
-      <div *ngIf="positions.length > 0" class="positions-list m-t-sm">
+      <div *ngIf="positions.length > 0" class="positions-list m-t-sm" style="margin-top: 0px;">
         <div 
           *ngFor="let position of positions" 
           class="position-item p-sm border-bottom"
@@ -65,21 +65,21 @@
             <div class="position-info">
               <div class="position-main display-flex align-center">
                 <div class="symbol-circle m-r-sm">{{position.symbol.substring(0,1)}}</div>
-                <div>
+                <div class="position-text-container">
                   <h4 class="position-symbol font-semibold text-dark m-0">{{position.symbol}}</h4>
-                  <p class="position-shares text-xs text-gray m-0">{{position.qty}} shares</p>
+                  <p class="position-name text-xs text-gray m-0">{{position.name}}</p>
                 </div>
               </div>
             </div>
             
             <div class="position-values text-right">
-              <p class="position-value font-medium text-dark m-0">{{formatCurrency(position.market_value)}}</p>
-              <p 
-                class="position-gain text-xs m-0" 
-                [class.text-success]="isPositiveGain(position.unrealized_plpc)"
-                [class.text-danger]="!isPositiveGain(position.unrealized_plpc)">
-                {{formatPercentage(position.unrealized_plpc)}}
-              </p>
+              <p class="position-value font-medium text-dark m-0">{{formatCurrency(position.marketValue)}}</p>
+              <div class="position-details text-xs m-t-xs">
+                <span class="text-gray m-r-xs">Invested: {{formatCurrency(position.costBasis)}}</span>
+                <span [class.text-success]="position.unrealizedPL >= 0" [class.text-danger]="position.unrealizedPL < 0">
+                  {{position.unrealizedPL >= 0 ? '+' : ''}}{{formatCurrency(position.unrealizedPL)}}
+                </span>
+              </div>
             </div>
 
             <div class="position-check m-l-sm">
@@ -96,6 +96,15 @@
 
       <!-- Sell percentage controls -->
       <div *ngIf="selectedPosition" class="sell-controls p-t-md fade-in">
+        <div class="info-box bg-gray-50 p-sm rounded m-b-md">
+          <div class="display-flex align-start">
+            <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
+            <p class="text-xs text-gray m-0">
+              Selling a portion of your position converts the stock value into cash (Buying Power), which can then be withdrawn or reinvested.
+            </p>
+          </div>
+        </div>
+
         <div class="percentage-selector m-b-md">
           <div class="display-flex justify-between align-center m-b-xs">
             <label class="percentage-label font-medium text-dark">Amount to Sell</label>
@@ -171,7 +180,7 @@
           </div>
           <div class="withdraw-info text-right m-t-xs">
             <span class="available-text text-xs text-gray">
-              Available: {{formatCurrency(balance?.cash || '0')}}
+              Available: {{formatCurrency(balance?.buyingPower || 0)}}
             </span>
           </div>
         </div>
@@ -286,7 +295,7 @@
             <div class="calculation-grid bg-gray-50 p-md rounded">
               <div class="calc-item display-flex justify-between m-b-xs">
                 <span class="calc-label text-gray">Portfolio Value</span>
-                <span class="calc-value font-medium">{{formatCurrency(balance?.portfolio_value || '0')}}</span>
+                <span class="calc-value font-medium">{{formatCurrency(balance?.portfolioValue || '0')}}</span>
               </div>
               <div class="calc-item display-flex justify-between m-b-xs">
                 <span class="calc-label text-gray">4% Annual</span>

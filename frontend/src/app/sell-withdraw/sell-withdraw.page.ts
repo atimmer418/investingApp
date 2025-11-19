@@ -33,7 +33,8 @@ import {
   informationCircleOutline
 } from 'ionicons/icons';
 
-import { TradingService, Position, AccountBalance } from '../services/trading.service';
+import { TradingService, SellRequest, WithdrawRequest } from '../services/trading.service';
+import { PortfolioService, PortfolioDashboardData, Position, AccountSummary } from '../services/portfolio.service';
 
 @Component({
   selector: 'app-sell-withdraw',
@@ -63,7 +64,7 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
   // State
   public isLoading = true;
   public positions: Position[] = [];
-  public balance: AccountBalance | null = null;
+  public balance: AccountSummary | null = null;
   public selectedPosition: Position | null = null;
   public sellPercentage = 25;
   public withdrawAmount: number | null = null;
@@ -85,6 +86,7 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private tradingService: TradingService,
+    private portfolioService: PortfolioService,
     private alertController: AlertController
   ) {
     addIcons({
@@ -114,17 +116,13 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     try {
       this.isLoading = true;
       
-      // Load positions and balance in parallel
-      const [positionsResponse, balance] = await Promise.all([
-        this.tradingService.getPositions().toPromise(),
-        this.tradingService.getAccountBalance().toPromise()
-      ]);
+      // Load dashboard data from PortfolioService
+      const dashboardData = await this.portfolioService.getPortfolioDashboard().toPromise();
       
-      if (positionsResponse?.positions) {
-        this.positions = positionsResponse.positions;
+      if (dashboardData) {
+        this.positions = dashboardData.positions || [];
+        this.balance = dashboardData.summary || null;
       }
-      
-      this.balance = balance || null;
       
     } catch (error) {
       console.error('Error loading trading data:', error);
@@ -149,30 +147,30 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
 
   calculateSellAmount(): number {
     if (!this.selectedPosition) return 0;
-    const marketValue = parseFloat(this.selectedPosition.market_value);
+    const marketValue = this.selectedPosition.marketValue;
     return (marketValue * this.sellPercentage) / 100;
   }
 
   calculateRetirementWithdrawal(): number {
-    if (!this.balance?.portfolio_value) return 0;
-    const portfolioValue = parseFloat(this.balance.portfolio_value);
+    if (!this.balance?.portfolioValue) return 0;
+    const portfolioValue = this.balance.portfolioValue;
     return this.tradingService.calculateRetirementWithdrawal(portfolioValue);
   }
 
   calculateCustomRetirementWithdrawal(): number {
-    if (!this.balance?.portfolio_value) return 0;
-    const portfolioValue = parseFloat(this.balance.portfolio_value);
+    if (!this.balance?.portfolioValue) return 0;
+    const portfolioValue = this.balance.portfolioValue;
     return this.tradingService.calculateSystematicWithdrawal(portfolioValue, this.retirementRate, 'monthly');
   }
 
   getPortfolioValue(): number {
-    if (!this.balance?.portfolio_value) return 0;
-    return parseFloat(this.balance.portfolio_value);
+    if (!this.balance?.portfolioValue) return 0;
+    return this.balance.portfolioValue;
   }
 
   get maxWithdrawAmount(): number {
-    if (!this.balance?.cash) return 0;
-    return parseFloat(this.balance.cash);
+    if (!this.balance?.buyingPower) return 0;
+    return this.balance.buyingPower;
   }
 
   async sellPosition() {
