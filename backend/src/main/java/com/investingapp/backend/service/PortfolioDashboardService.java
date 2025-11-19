@@ -94,7 +94,8 @@ public class PortfolioDashboardService {
         
         try {
             // Get all required data from Alpaca
-            AccountSummary accountSummary = getAccountSummary(accountId);
+            // initialSummary contains buyingPower and last_equity (as portfolioValue)
+            AccountSummary initialSummary = getAccountSummary(accountId);
             
             // Use real-time positions for the dashboard display to ensure accuracy
             List<Position> positions = getRealTimePositions(accountId);
@@ -105,6 +106,37 @@ public class PortfolioDashboardService {
             // Calculate totals from positions data instead of account activities
             BigDecimal totalInvested = calculateTotalInvestedFromPositions(positions);
             
+            // Calculate Real-Time Portfolio Value (Equity)
+            // Equity = Sum(Position Market Values) + Cash
+            // We use Cash (not Buying Power) because Buying Power can include margin leverage
+            BigDecimal positionsTotalValue = positions.stream()
+                    .map(p -> p.marketValue)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            BigDecimal realTimeEquity = positionsTotalValue.add(initialSummary.cash);
+            
+            // Calculate Today's Change
+            // Change = RealTimeEquity - Yesterday's Equity
+            // Note: initialSummary.portfolioValue holds 'last_equity' (Yesterday's Close) from getAccountSummary
+            BigDecimal yesterdayEquity = initialSummary.portfolioValue;
+            BigDecimal todayChange = realTimeEquity.subtract(yesterdayEquity);
+            
+            BigDecimal todayChangePercent = BigDecimal.ZERO;
+            if (yesterdayEquity.compareTo(BigDecimal.ZERO) > 0) {
+                todayChangePercent = todayChange.divide(yesterdayEquity, 4, RoundingMode.HALF_UP)
+                        .multiply(new BigDecimal("100"));
+            }
+            
+            // Create Updated Account Summary with Real-Time values
+            AccountSummary realTimeSummary = new AccountSummary(
+                realTimeEquity,
+                todayChange,
+                todayChangePercent,
+                initialSummary.buyingPower,
+                initialSummary.cash,
+                realTimeEquity
+            );
+            
             // Calculate total gain/loss based on positions' unrealized P&L
             // This ensures consistency with the positions list display
             BigDecimal totalGainLoss = positions.stream()
@@ -112,7 +144,7 @@ public class PortfolioDashboardService {
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             
             return new PortfolioDashboardData(
-                accountSummary,
+                realTimeSummary,
                 positions,
                 portfolioHistory,
                 recentTransactions,
@@ -188,13 +220,16 @@ public class PortfolioDashboardService {
                 
                 BigDecimal buyingPower = getBuyingPowerFromTradingAccount(accountId);
                 
+                // Parse cash balance for accurate equity calculation
+                BigDecimal cash = parseDecimalSafely(accountData, "cash", BigDecimal.ZERO);
+                
                 String accountStatus = accountData.has("status") ? accountData.get("status").asText() : "UNKNOWN";
                 String currency = accountData.has("currency") ? accountData.get("currency").asText() : "USD";
                 
-                logger.info("Account summary retrieved - Status: {}, Currency: {}, Last Equity: {}", 
-                    accountStatus, currency, portfolioValue);
+                logger.info("Account summary retrieved - Status: {}, Currency: {}, Last Equity: {}, Cash: {}", 
+                    accountStatus, currency, portfolioValue, cash);
                 
-                return new AccountSummary(portfolioValue, todayChange, todayChangePercent, buyingPower, portfolioValue);
+                return new AccountSummary(portfolioValue, todayChange, todayChangePercent, buyingPower, cash, portfolioValue);
             } else {
                 logger.error("Failed to fetch account summary. Status: {}, Response: {}", 
                     response.getStatusCode(), response.getBody());
@@ -660,14 +695,16 @@ public class PortfolioDashboardService {
         public final BigDecimal todayChange;
         public final BigDecimal todayChangePercent;
         public final BigDecimal buyingPower;
+        public final BigDecimal cash;
         public final BigDecimal equity;
         
         public AccountSummary(BigDecimal portfolioValue, BigDecimal todayChange, 
-                            BigDecimal todayChangePercent, BigDecimal buyingPower, BigDecimal equity) {
+                            BigDecimal todayChangePercent, BigDecimal buyingPower, BigDecimal cash, BigDecimal equity) {
             this.portfolioValue = portfolioValue;
             this.todayChange = todayChange;
             this.todayChangePercent = todayChangePercent;
             this.buyingPower = buyingPower;
+            this.cash = cash;
             this.equity = equity;
         }
     }
