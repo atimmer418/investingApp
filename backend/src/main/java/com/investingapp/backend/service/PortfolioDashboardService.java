@@ -218,10 +218,11 @@ public class PortfolioDashboardService {
                     // Keep default values of 0
                 }
                 
-                BigDecimal buyingPower = getBuyingPowerFromTradingAccount(accountId);
-                
-                // Parse cash balance for accurate equity calculation
-                BigDecimal cash = parseDecimalSafely(accountData, "cash", BigDecimal.ZERO);
+                // Get trading account data (buying power and cash) from Trading API
+                // This is more accurate for "cash" than the Broker API response
+                TradingAccountData tradingData = getTradingAccountData(accountId);
+                BigDecimal buyingPower = tradingData.buyingPower;
+                BigDecimal cash = tradingData.cash;
                 
                 String accountStatus = accountData.has("status") ? accountData.get("status").asText() : "UNKNOWN";
                 String currency = accountData.has("currency") ? accountData.get("currency").asText() : "USD";
@@ -242,15 +243,15 @@ public class PortfolioDashboardService {
     }
     
     /**
-     * Get buying power from Trading Account endpoint in Broker API
+     * Get trading account data (buying power, cash) from Trading Account endpoint
      */
-    private BigDecimal getBuyingPowerFromTradingAccount(String accountId) {
+    private TradingAccountData getTradingAccountData(String accountId) {
         try {
             String url = alpacaBrokerBaseUrl + "/trading/accounts/" + accountId + "/account";
             HttpHeaders headers = createAuthHeaders();
             HttpEntity<Void> entity = new HttpEntity<>(headers);
             
-            logger.info("Fetching buying power from trading account endpoint for account: {}", accountId);
+            logger.info("Fetching trading account data for account: {}", accountId);
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
             
             if (response.getStatusCode() == HttpStatus.OK) {
@@ -259,19 +260,33 @@ public class PortfolioDashboardService {
                 // Parse buying power - use effective_buying_power as it's the most comprehensive
                 BigDecimal buyingPower = parseDecimalSafely(accountData, "effective_buying_power", BigDecimal.ZERO);
                 
-                logger.info("Retrieved buying power: ${}", buyingPower);
-                return buyingPower;
+                // Parse cash from Trading API - this is the source of truth for settled/available cash
+                BigDecimal cash = parseDecimalSafely(accountData, "cash", BigDecimal.ZERO);
+                
+                logger.info("Retrieved trading data - Buying Power: ${}, Cash: ${}", buyingPower, cash);
+                return new TradingAccountData(buyingPower, cash);
                 
             } else {
-                logger.warn("Failed to fetch buying power from trading account. Status: {}, Response: {}", 
+                logger.warn("Failed to fetch trading account data. Status: {}, Response: {}", 
                     response.getStatusCode(), response.getBody());
             }
             
         } catch (Exception e) {
-            logger.error("Error fetching buying power from trading account {}: {}", accountId, e.getMessage());
+            logger.error("Error fetching trading account data for {}: {}", accountId, e.getMessage());
         }
         
-        return BigDecimal.ZERO;
+        return new TradingAccountData(BigDecimal.ZERO, BigDecimal.ZERO);
+    }
+
+    // Helper class for trading account data
+    private static class TradingAccountData {
+        public final BigDecimal buyingPower;
+        public final BigDecimal cash;
+        
+        public TradingAccountData(BigDecimal buyingPower, BigDecimal cash) {
+            this.buyingPower = buyingPower;
+            this.cash = cash;
+        }
     }
     
     /**
