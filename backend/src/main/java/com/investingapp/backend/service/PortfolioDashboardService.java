@@ -128,8 +128,9 @@ public class PortfolioDashboardService {
             }
             
             // Create Updated Account Summary with Real-Time values
+            // Portfolio Value = Positions Only (excluding cash)
             AccountSummary realTimeSummary = new AccountSummary(
-                realTimeEquity,
+                positionsTotalValue,
                 todayChange,
                 todayChangePercent,
                 initialSummary.buyingPower,
