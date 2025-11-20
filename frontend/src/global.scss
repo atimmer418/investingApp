@@ -446,3 +446,7 @@ ion-toggle {
     --app-card-border: var(--app-gray-600);
   }
 }
+
+/* Opacity utilities */
+.opacity-50 { opacity: 0.5 !important; }
+.opacity-75 { opacity: 0.75 !important; }

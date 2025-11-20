@@ -18,6 +18,7 @@ export interface Position {
   symbol: string;
   name: string;
   quantity: number;
+  quantityAvailable: number;
   marketValue: number;
   costBasis: number;
   unrealizedPL: number;

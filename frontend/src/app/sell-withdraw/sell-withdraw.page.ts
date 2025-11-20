@@ -108,6 +108,10 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     this.loadData();
   }
 
+  ionViewWillEnter() {
+    this.loadData();
+  }
+
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
@@ -135,6 +139,12 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
   }
 
   selectPosition(position: Position) {
+    // Check if position has available quantity
+    if (position.quantityAvailable !== undefined && position.quantityAvailable <= 0 && position.quantity > 0) {
+      this.showToast('This position has pending sell orders and cannot be sold right now.', 'warning');
+      return;
+    }
+    
     this.selectedPosition = position;
     this.sellPercentage = 25; // Reset to default
   }

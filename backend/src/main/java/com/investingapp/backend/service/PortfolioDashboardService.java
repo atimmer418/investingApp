@@ -448,6 +448,7 @@ public class PortfolioDashboardService {
                     BigDecimal costBasis = parseDecimalSafely(positionNode, "cost_basis", BigDecimal.ZERO);
                     BigDecimal unrealizedPL = parseDecimalSafely(positionNode, "unrealized_pl", BigDecimal.ZERO);
                     BigDecimal currentPrice = parseDecimalSafely(positionNode, "current_price", BigDecimal.ZERO);
+                    BigDecimal quantityAvailable = parseDecimalSafely(positionNode, "qty_available", quantity);
                     
                     if (!symbol.isEmpty() && quantity.compareTo(BigDecimal.ZERO) != 0) {
                         // Calculate unrealized P/L percentage
@@ -458,12 +459,12 @@ public class PortfolioDashboardService {
                         
                         // Get company name
                         String name = getCompanyName(symbol);
-                        Position position = new Position(symbol, name, quantity, marketValue, costBasis, 
+                        Position position = new Position(symbol, name, quantity, quantityAvailable, marketValue, costBasis, 
                                                        unrealizedPL, unrealizedPLPercent, currentPrice);
                         positions.add(position);
                         
-                        logger.debug("Added position: {} shares of {} with market value ${}", 
-                                   quantity, symbol, marketValue);
+                        logger.debug("Added position: {} shares ({} available) of {} with market value ${}", 
+                                   quantity, quantityAvailable, symbol, marketValue);
                     }
                 }
             }
@@ -499,6 +500,7 @@ public class PortfolioDashboardService {
                             BigDecimal costBasis = parseDecimalSafely(positionNode, "cost_basis", BigDecimal.ZERO);
                             BigDecimal unrealizedPL = parseDecimalSafely(positionNode, "unrealized_pl", BigDecimal.ZERO);
                             BigDecimal currentPrice = parseDecimalSafely(positionNode, "current_price", BigDecimal.ZERO);
+                            BigDecimal quantityAvailable = parseDecimalSafely(positionNode, "qty_available", quantity);
                             
                             // Calculate unrealized P&L percentage
                             BigDecimal unrealizedPLPercent = BigDecimal.ZERO;
@@ -510,6 +512,7 @@ public class PortfolioDashboardService {
                                 symbol,
                                 getCompanyName(symbol),
                                 quantity,
+                                quantityAvailable,
                                 marketValue,
                                 costBasis,
                                 unrealizedPL,
@@ -729,18 +732,20 @@ public class PortfolioDashboardService {
         public final String symbol;
         public final String name;
         public final BigDecimal quantity;
+        public final BigDecimal quantityAvailable;
         public final BigDecimal marketValue;
         public final BigDecimal costBasis;
         public final BigDecimal unrealizedPL;
         public final BigDecimal unrealizedPLPercent;
         public final BigDecimal currentPrice;
         
-        public Position(String symbol, String name, BigDecimal quantity, BigDecimal marketValue,
+        public Position(String symbol, String name, BigDecimal quantity, BigDecimal quantityAvailable, BigDecimal marketValue,
                        BigDecimal costBasis, BigDecimal unrealizedPL, BigDecimal unrealizedPLPercent,
                        BigDecimal currentPrice) {
             this.symbol = symbol;
             this.name = name;
             this.quantity = quantity;
+            this.quantityAvailable = quantityAvailable;
             this.marketValue = marketValue;
             this.costBasis = costBasis;
             this.unrealizedPL = unrealizedPL;
