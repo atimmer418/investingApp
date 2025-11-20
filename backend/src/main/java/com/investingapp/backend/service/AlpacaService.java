@@ -337,15 +337,21 @@ public class AlpacaService {
      */
     public AlpacaOrderResponse placeSellOrderByPercentage(String accountId, String symbol, BigDecimal percentage) {
         try {
-            // Use the close position endpoint with percentage parameter
-            // Note: percentage should be 0-100
-            String url = alpacaBaseUrl + "/trading/accounts/" + accountId + "/positions/" + symbol + "?percentage=" + percentage.toPlainString();
+            String url;
+            // If percentage is 100 (or very close), use full liquidation (no percentage param)
+            // This is more robust for full closes
+            if (percentage.compareTo(new BigDecimal("99.99")) >= 0) {
+                url = alpacaBaseUrl + "/trading/accounts/" + accountId + "/positions/" + symbol;
+                logger.info("Placing sell order (FULL liquidation) for account {} - Symbol: {}", accountId, symbol);
+            } else {
+                // Use the close position endpoint with percentage parameter
+                url = alpacaBaseUrl + "/trading/accounts/" + accountId + "/positions/" + symbol + "?percentage=" + percentage.toPlainString();
+                logger.info("Placing sell order (partial liquidation) for account {} - Symbol: {}, Percentage: {}%", 
+                    accountId, symbol, percentage);
+            }
             
             HttpHeaders headers = createAuthHeaders();
             HttpEntity<Void> entity = new HttpEntity<>(headers);
-            
-            logger.info("Placing sell order (partial liquidation) for account {} - Symbol: {}, Percentage: {}%", 
-                accountId, symbol, percentage);
             
             // The API returns the Order object created for this liquidation
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);

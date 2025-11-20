@@ -184,18 +184,36 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     
     try {
       this.isSelling = true;
+      const symbolToSell = this.selectedPosition.symbol;
+      const isFullSell = this.sellPercentage === 100;
+      const estimatedProceeds = this.calculateSellAmount();
       
       const sellRequest = {
-        symbol: this.selectedPosition.symbol,
+        symbol: symbolToSell,
         percentage: this.sellPercentage
       };
       
       const response = await this.tradingService.sellByPercentage(sellRequest).toPromise();
       
       if (response?.success) {
-        this.showToast(`Successfully placed sell order for ${this.sellPercentage}% of ${this.selectedPosition.symbol}`, 'success');
+        this.showToast(`Successfully placed sell order for ${this.sellPercentage}% of ${symbolToSell}`, 'success');
         this.selectedPosition = null; // Clear selection
-        await this.loadData(); // Refresh data
+        
+        // Optimistic update: if 100% sell, remove from list immediately
+        if (isFullSell) {
+          this.positions = this.positions.filter(p => p.symbol !== symbolToSell);
+        }
+        
+        // Optimistic update: update buying power immediately
+        if (this.balance) {
+          this.balance.buyingPower += estimatedProceeds;
+        }
+        
+        // Add a delay before reloading to allow order to fill
+        setTimeout(async () => {
+          await this.loadData(); 
+        }, 2000);
+        
       } else {
         this.showToast(response?.error || 'Failed to place sell order', 'danger');
       }
