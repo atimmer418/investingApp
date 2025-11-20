@@ -15,7 +15,6 @@ import {
   IonSpinner,
   IonInput,
   IonRange,
-  IonToast,
   IonModal,
   AlertController
 } from '@ionic/angular/standalone';
@@ -35,6 +34,7 @@ import {
 
 import { TradingService, SellRequest, WithdrawRequest } from '../services/trading.service';
 import { PortfolioService, PortfolioDashboardData, Position, AccountSummary } from '../services/portfolio.service';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-sell-withdraw',
@@ -54,7 +54,6 @@ import { PortfolioService, PortfolioDashboardData, Position, AccountSummary } fr
     IonSpinner,
     IonInput,
     IonRange,
-    IonToast,
     IonModal
   ]
 })
@@ -75,20 +74,20 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
   public isSelling = false;
   public isLiquidating = false;
   public isWithdrawing = false;
-  public isToastOpen = false;
-  public toastMessage = '';
-  public toastColor = 'primary';
   public showRetirementModal = false;
   
   // Quick select options
   public quickPercentages = [25, 50, 75, 100];
   public quickWithdrawAmounts = [100, 500, 1000, 2500];
   
+  public maxSellPercentage = 100;
+
   constructor(
     private router: Router,
     private tradingService: TradingService,
     private portfolioService: PortfolioService,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private toastService: ToastService
   ) {
     addIcons({
       pieChartOutline,
@@ -139,14 +138,34 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
   }
 
   selectPosition(position: Position) {
-    // Check if position has available quantity
-    if (position.quantityAvailable !== undefined && position.quantityAvailable <= 0 && position.quantity > 0) {
-      this.showToast('This position has pending sell orders and cannot be sold right now.', 'warning');
+    // Calculate pending percentage first to check for 100% pending (rounding issues)
+    let pendingPercent = 0;
+    if (position.quantityAvailable !== undefined && position.quantity > 0) {
+      pendingPercent = Math.round(((position.quantity - position.quantityAvailable) / position.quantity) * 100);
+    }
+
+    // Check if position has available quantity or is effectively 100% pending
+    if ((position.quantityAvailable !== undefined && position.quantityAvailable <= 0 && position.quantity > 0) || pendingPercent === 100) {
+      this.showToast('This full position is pending sale.', 'warning');
       return;
     }
     
     this.selectedPosition = position;
-    this.sellPercentage = 25; // Reset to default
+    
+    // Calculate max sell percentage based on available quantity
+    if (position.quantityAvailable !== undefined && position.quantity > 0) {
+      this.maxSellPercentage = Math.floor((position.quantityAvailable / position.quantity) * 100);
+    } else {
+      this.maxSellPercentage = 100;
+    }
+    
+    // Reset to default (25%) or max if max is lower than 25%
+    this.sellPercentage = Math.min(25, this.maxSellPercentage);
+    
+    // If partially pending, warn the user but allow selection
+    if (position.quantityAvailable !== undefined && position.quantityAvailable < position.quantity) {
+      this.showToast(`Note: ${pendingPercent}% of your position is currently pending sale.`, 'warning');
+    }
   }
 
   setSellPercentage(percentage: number) {
@@ -225,12 +244,14 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
         }, 2000);
         
       } else {
-        this.showToast(response?.error || 'Failed to place sell order', 'danger');
+        // Gentle error message instead of raw backend error
+        console.error('Sell error:', response?.error);
+        this.showToast('Unable to process sale. You may have pending orders for this position.', 'danger');
       }
       
     } catch (error) {
       console.error('Error selling position:', error);
-      this.showToast('Failed to place sell order', 'danger');
+      this.showToast('Unable to process sale. Please try again later.', 'danger');
     } finally {
       this.isSelling = false;
     }
@@ -326,10 +347,17 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     return num >= 0;
   }
 
+  isFullyPending(position: Position): boolean {
+    if (position.quantityAvailable === undefined) return false;
+    if (position.quantityAvailable <= 0) return true;
+    if (position.quantity <= 0) return false;
+    
+    const pendingPercent = Math.round(((position.quantity - position.quantityAvailable) / position.quantity) * 100);
+    return pendingPercent === 100;
+  }
+
   private showToast(message: string, color: string = 'primary') {
-    this.toastMessage = message;
-    this.toastColor = color;
-    this.isToastOpen = true;
+    this.toastService.showToast(message, color);
   }
 
   private async showConfirmation(header: string, message: string): Promise<boolean> {

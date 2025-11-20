@@ -59,7 +59,7 @@ public class InvestmentScheduleService {
             // Update start date if provided (except for semi-monthly)
             if (startDate != null) {
                 if ("SEMI_MONTHLY".equalsIgnoreCase(frequency)) {
-                    // For semi-monthly, ignore provided start date and enforce 15th/last day
+                    // For semi-monthly, ignore provided start date and enforce 1st/15th
                     LocalDate enforcedStartDate = getNextSemiMonthlyDate();
                     schedule.setStartDate(enforcedStartDate);
                     schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(enforcedStartDate));
@@ -89,7 +89,7 @@ public class InvestmentScheduleService {
             // Set dates (enforce semi-monthly rules)
             LocalDate effectiveStartDate;
             if ("SEMI_MONTHLY".equalsIgnoreCase(frequency)) {
-                // For semi-monthly, ignore provided start date and enforce 15th/last day
+                // For semi-monthly, ignore provided start date and enforce 1st/15th
                 effectiveStartDate = getNextSemiMonthlyDate();
             } else {
                 effectiveStartDate = startDate != null ? startDate : LocalDate.now();
@@ -275,21 +275,20 @@ public class InvestmentScheduleService {
     }
 
     /**
-     * Get the next semi-monthly date (15th or last day of month)
+     * Get the next semi-monthly date (1st or 15th)
      */
     private LocalDate getNextSemiMonthlyDate() {
         LocalDate today = LocalDate.now();
         int currentDay = today.getDayOfMonth();
         
-        if (currentDay < 15) {
-            // Next payment is 15th of current month
+        if (currentDay == 1) {
+            return today;
+        } else if (currentDay < 15) {
             return today.withDayOfMonth(15);
-        } else if (currentDay < today.lengthOfMonth()) {
-            // Next payment is last day of current month
-            return today.withDayOfMonth(today.lengthOfMonth());
+        } else if (currentDay == 15) {
+            return today;
         } else {
-            // Current day is last day, next payment is 15th of next month
-            return today.plusMonths(1).withDayOfMonth(15);
+            return today.plusMonths(1).withDayOfMonth(1);
         }
     }
 }

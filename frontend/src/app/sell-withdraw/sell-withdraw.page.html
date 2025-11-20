@@ -50,7 +50,7 @@
           *ngFor="let position of positions" 
           class="position-item p-sm border-bottom"
           [class.selected]="selectedPosition?.symbol === position.symbol"
-          [class.opacity-50]="position.quantityAvailable !== undefined && position.quantityAvailable <= 0"
+          [class.opacity-50]="isFullyPending(position)"
           (click)="selectPosition(position)">
           
           <div class="position-row display-flex justify-between align-center">
@@ -59,8 +59,12 @@
                 <div class="symbol-circle m-r-sm">{{position.symbol.substring(0,1)}}</div>
                 <div class="position-text-container">
                   <h4 class="position-symbol font-semibold text-dark m-0">{{position.symbol}}</h4>
-                  <p class="position-name text-xs text-gray m-0">{{position.name}}</p>
-                  <p *ngIf="position.quantityAvailable !== undefined && position.quantityAvailable <= 0" class="text-xs text-warning m-0">Pending Sale</p>
+                  <p class="position-name text-xs text-gray m-0">{{position.name}} • {{position.quantity}} Shares</p>
+                  <p *ngIf="position.quantityAvailable !== undefined && position.quantityAvailable < position.quantity" 
+                     [class]="isFullyPending(position) ? 'position-name text-xs text-warning m-0' : 'text-xs text-warning m-0'">
+                    <ion-icon name="time-outline" class="text-xs align-text-bottom text-warning"></ion-icon>
+                    {{ isFullyPending(position) ? 'Pending Sale' : (((position.quantity - position.quantityAvailable) / position.quantity * 100) | number:'1.0-0') + '% Pending' }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -73,7 +77,7 @@
             </div>
 
             <div class="position-check m-l-sm">
-              <ng-container *ngIf="position.quantityAvailable === undefined || position.quantityAvailable > 0">
+              <ng-container *ngIf="!isFullyPending(position)">
                 <ion-icon 
                   [name]="selectedPosition?.symbol === position.symbol ? 'checkmark-circle' : 'radio-button-off'" 
                   class="select-icon text-xl"
@@ -81,7 +85,7 @@
                   [class.text-gray]="selectedPosition?.symbol !== position.symbol">
                 </ion-icon>
               </ng-container>
-              <ng-container *ngIf="position.quantityAvailable !== undefined && position.quantityAvailable <= 0">
+              <ng-container *ngIf="isFullyPending(position)">
                 <ion-icon name="time-outline" class="select-icon text-xl text-warning"></ion-icon>
               </ng-container>
             </div>
@@ -101,7 +105,7 @@
           <ion-range 
             [(ngModel)]="sellPercentage"
             [min]="1"
-            [max]="100"
+            [max]="maxSellPercentage"
             [step]="1"
             [pin]="true"
             class="percentage-range">
@@ -118,6 +122,7 @@
             *ngFor="let percent of quickPercentages" 
             class="quick-percent-btn"
             [class.active]="sellPercentage === percent"
+            [disabled]="percent > maxSellPercentage"
             (click)="setSellPercentage(percent)">
             {{percent}}%
           </button>
@@ -136,7 +141,7 @@
           <div class="display-flex align-start">
             <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
             <p class="text-xs text-gray m-0">
-              Selling a portion of your position converts the stock value into Buying Power immediately (for trading) and Settled Cash after 1 business day (for withdrawal).
+              Selling a portion of your position converts the stock value into Buying Power (subject to settlement rules) and Settled Cash after 1 business day.
             </p>
           </div>
         </div>
@@ -256,16 +261,6 @@
     </div>
 
   </div>
-
-  <!-- Success/Error Toast -->
-  <ion-toast
-    [isOpen]="isToastOpen"
-    [message]="toastMessage"
-    [duration]="4000"
-    [color]="toastColor"
-    (didDismiss)="isToastOpen = false"
-    position="top">
-  </ion-toast>
 
   <!-- Retirement Planning Modal -->
   <ion-modal [isOpen]="showRetirementModal" (didDismiss)="showRetirementModal = false">

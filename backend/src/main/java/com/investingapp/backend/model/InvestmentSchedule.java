@@ -76,34 +76,76 @@ public class InvestmentSchedule {
     public LocalDate calculateNextInvestmentDate(LocalDate fromDate) {
         if (fromDate == null) fromDate = LocalDate.now();
         
-        LocalDate nextDate = switch (frequency.toUpperCase()) {
-            case "WEEKLY" -> fromDate.plusWeeks(1);
-            case "BIWEEKLY" -> fromDate.plusWeeks(2);
-            case "SEMI_MONTHLY" -> {
-                // Semi-monthly: Always 15th and last day of month (ignore input date)
-                LocalDate today = LocalDate.now();
-                int currentDay = today.getDayOfMonth();
-                int lastDayOfMonth = today.lengthOfMonth();
-                
-                if (currentDay < 15) {
-                    // Next payment is 15th of current month
-                    yield today.withDayOfMonth(15);
-                } else if (currentDay < lastDayOfMonth) {
-                    // Next payment is last day of current month
-                    yield today.withDayOfMonth(lastDayOfMonth);
-                } else {
-                    // Already at or past last day, schedule for 15th of next month
-                    yield today.plusMonths(1).withDayOfMonth(15);
+        LocalDate nextIdealDate;
+        
+        if (startDate == null) {
+            // Fallback if startDate is missing
+            nextIdealDate = switch (frequency.toUpperCase()) {
+                case "WEEKLY" -> fromDate.plusWeeks(1);
+                case "BIWEEKLY" -> fromDate.plusWeeks(2);
+                case "MONTHLY" -> fromDate.plusMonths(1);
+                default -> fromDate.plusWeeks(1);
+            };
+        } else {
+            switch (frequency.toUpperCase()) {
+                case "WEEKLY" -> {
+                    // Find next date matching startDate's day of week strictly after fromDate
+                    long weeks = java.time.temporal.ChronoUnit.WEEKS.between(startDate, fromDate);
+                    LocalDate candidate = startDate.plusWeeks(weeks);
+                    if (!candidate.isAfter(fromDate)) {
+                        candidate = candidate.plusWeeks(1);
+                    }
+                    while (!candidate.isAfter(fromDate)) {
+                        candidate = candidate.plusWeeks(1);
+                    }
+                    nextIdealDate = candidate;
                 }
+                case "BIWEEKLY" -> {
+                    long weeks = java.time.temporal.ChronoUnit.WEEKS.between(startDate, fromDate);
+                    // Round down to even number of weeks
+                    long biweeks = weeks / 2;
+                    LocalDate candidate = startDate.plusWeeks(biweeks * 2);
+                    
+                    if (!candidate.isAfter(fromDate)) {
+                        candidate = candidate.plusWeeks(2);
+                    }
+                    while (!candidate.isAfter(fromDate)) {
+                        candidate = candidate.plusWeeks(2);
+                    }
+                    nextIdealDate = candidate;
+                }
+                case "MONTHLY" -> {
+                    long months = java.time.temporal.ChronoUnit.MONTHS.between(startDate, fromDate);
+                    LocalDate candidate = startDate.plusMonths(months);
+                    
+                    if (!candidate.isAfter(fromDate)) {
+                        candidate = candidate.plusMonths(1);
+                    }
+                    while (!candidate.isAfter(fromDate)) {
+                        candidate = candidate.plusMonths(1);
+                    }
+                    nextIdealDate = candidate;
+                }
+                case "SEMI_MONTHLY" -> {
+                    // Semi-monthly: 1st and 15th
+                    LocalDate d1 = fromDate.withDayOfMonth(1);
+                    LocalDate d2 = fromDate.withDayOfMonth(15);
+                    LocalDate d3 = fromDate.plusMonths(1).withDayOfMonth(1);
+                    LocalDate d4 = fromDate.plusMonths(1).withDayOfMonth(15);
+                    
+                    if (d1.isAfter(fromDate)) nextIdealDate = d1;
+                    else if (d2.isAfter(fromDate)) nextIdealDate = d2;
+                    else if (d3.isAfter(fromDate)) nextIdealDate = d3;
+                    else nextIdealDate = d4;
+                }
+                default -> nextIdealDate = fromDate.plusWeeks(1);
             }
-            case "MONTHLY" -> fromDate.plusMonths(1);
-            default -> fromDate.plusWeeks(2); // Default to biweekly
-        };
+        }
         
         // Adjust for weekends and holidays
-        nextDate = adjustForBusinessDay(nextDate);
+        LocalDate nextDate = adjustForBusinessDay(nextIdealDate);
         
-        System.out.println("calculateNextInvestmentDate: fromDate=" + fromDate + ", frequency=" + frequency + ", nextDate=" + nextDate);
+        System.out.println("calculateNextInvestmentDate: fromDate=" + fromDate + ", frequency=" + frequency + ", nextIdeal=" + nextIdealDate + ", adjusted=" + nextDate);
         return nextDate;
     }
 
@@ -275,8 +317,8 @@ public class InvestmentSchedule {
             case "BIWEEKLY" -> String.format("Starting %s, %s — recurring every 2 weeks on %s", 
                 dayName, startDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d")), dayName);
             case "SEMI_MONTHLY" -> {
-                // Semi-monthly is typically 15th and last day of month
-                yield String.format("Starting %s — recurring every month on the 15th and last day", 
+                // Semi-monthly is typically 1st and 15th
+                yield String.format("Starting %s — recurring every month on the 1st and 15th", 
                       startDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d")));
             }
             case "MONTHLY" -> String.format("Starting %s, %s — recurring every month on the %s", 

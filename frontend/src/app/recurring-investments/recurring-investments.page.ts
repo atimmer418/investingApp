@@ -85,9 +85,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
   isDatePickerOpen = false;
   
   // Helper property for date picker minimum date
-  get todayISO(): string {
-    return new Date().toISOString();
-  }
+  readonly todayISO = new Date().toISOString();
 
   frequencyOptions: InvestmentFrequencyOption[] = [
     {
@@ -209,20 +207,23 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     const baseDescription = option?.description || '';
     
     // Add specific day information based on frequency and start date
-    if (this.currentInvestment.startDate) {
-      let startDate: Date;
+    // Use nextInvestmentDate if available, otherwise startDate
+    const dateInput = this.currentInvestment.nextInvestmentDate || this.currentInvestment.startDate;
+    
+    if (dateInput) {
+      let date: Date;
       
       // Handle array format from Java LocalDate serialization [year, month, day]
-      if (Array.isArray(this.currentInvestment.startDate) && this.currentInvestment.startDate.length === 3) {
-        const [year, month, day] = this.currentInvestment.startDate;
+      if (Array.isArray(dateInput) && dateInput.length === 3) {
+        const [year, month, day] = dateInput;
         // Construct UTC date at noon
-        startDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
-      } else if (typeof this.currentInvestment.startDate === 'string') {
+        date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+      } else if (typeof dateInput === 'string') {
         // Parse string manually to avoid UTC conversion issues
         // If it contains 'T', split by 'T' first to get the date part
-        const datePart = this.currentInvestment.startDate.includes('T') ? 
-          this.currentInvestment.startDate.split('T')[0] : 
-          this.currentInvestment.startDate;
+        const datePart = dateInput.includes('T') ? 
+          dateInput.split('T')[0] : 
+          dateInput;
           
         const parts = datePart.split('-');
         if (parts.length === 3) {
@@ -230,20 +231,20 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
           const month = parseInt(parts[1]);
           const day = parseInt(parts[2]);
           // Construct UTC date at noon
-          startDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+          date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
         } else {
-          startDate = new Date(this.currentInvestment.startDate);
+          date = new Date(dateInput);
         }
       } else {
         return baseDescription;
       }
       
-      if (isNaN(startDate.getTime())) {
+      if (isNaN(date.getTime())) {
         return baseDescription;
       }
       
-      const dayOfWeek = startDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
-      const dayOfMonth = startDate.getUTCDate();
+      const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+      const dayOfMonth = date.getUTCDate();
       
       switch (this.currentInvestment.frequency) {
         case 'WEEKLY':
@@ -252,9 +253,9 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
           return `Every other ${dayOfWeek}`;
         case 'MONTHLY':
           const ordinal = this.getOrdinal(dayOfMonth);
-          return `${ordinal} of each month`;
+          return `Every ${ordinal}`;
         case 'SEMI_MONTHLY':
-          return 'On the 1st and 15th of each month';
+          return 'Each 1st and 15th';
         default:
           return baseDescription;
       }
@@ -381,7 +382,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     }).format(amount);
   }
 
-  formatDate(dateInput: string | number[]): string {
+  formatDate(dateInput: string | number[], includeYear: boolean = true): string {
     if (!dateInput) return 'Not set';
     
     try {
@@ -415,12 +416,17 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
         return 'Invalid date';
       }
       
-      return new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
+      const options: Intl.DateTimeFormatOptions = {
         month: 'short',
         day: 'numeric',
-        timeZone: 'UTC' // Force UTC formatting to match the UTC date we constructed
-      }).format(date);
+        timeZone: 'UTC'
+      };
+
+      if (includeYear) {
+        options.year = 'numeric';
+      }
+      
+      return new Intl.DateTimeFormat('en-US', options).format(date);
     } catch (error) {
       console.error('Error formatting date:', error);
       return 'Date error';
@@ -510,12 +516,9 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
         dateToAdjust = new Date();
       }
 
-      // Adjust to next business day
-      const adjustedDate = this.adjustForBusinessDay(dateToAdjust);
-      
-      const year = adjustedDate.getUTCFullYear();
-      const month = (adjustedDate.getUTCMonth() + 1).toString().padStart(2, '0');
-      const day = adjustedDate.getUTCDate().toString().padStart(2, '0');
+      const year = dateToAdjust.getUTCFullYear();
+      const month = (dateToAdjust.getUTCMonth() + 1).toString().padStart(2, '0');
+      const day = dateToAdjust.getUTCDate().toString().padStart(2, '0');
       nextInvestmentDateString = `${year}-${month}-${day}`;
     }
     
@@ -531,10 +534,9 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (updatedSchedule: InvestmentSchedule) => {
-          this.currentInvestment = updatedSchedule;
           this.toastMessage = 'Investment schedule updated successfully!';
           this.showSuccessToast = true;
-          this.isLoading = false;
+          this.loadCurrentInvestment();
         },
         error: (error) => {
           console.error('Error updating investment:', error);
@@ -543,122 +545,6 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
           this.isLoading = false;
         }
       });
-  }
-
-  /**
-   * Adjust date to next business day if it falls on weekend or holiday
-   */
-  private adjustForBusinessDay(date: Date): Date {
-    let adjustedDate = new Date(date);
-    
-    // Skip weekends (Saturday = 6, Sunday = 0 in JS)
-    while (adjustedDate.getUTCDay() === 0 || adjustedDate.getUTCDay() === 6) {
-      adjustedDate.setUTCDate(adjustedDate.getUTCDate() + 1);
-    }
-    
-    // Check for common US holidays and adjust
-    adjustedDate = this.adjustForHolidays(adjustedDate);
-    
-    return adjustedDate;
-  }
-
-  /**
-   * Adjust for common US holidays
-   */
-  private adjustForHolidays(date: Date): Date {
-    if (this.isUSHoliday(date)) {
-      // Move to next business day
-      const nextDay = new Date(date);
-      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
-      // Recursively check if next day is also weekend/holiday
-      return this.adjustForBusinessDay(nextDay);
-    }
-    return date;
-  }
-
-  /**
-   * Check if date is a US federal holiday
-   */
-  private isUSHoliday(date: Date): boolean {
-    const year = date.getUTCFullYear();
-    const month = date.getUTCMonth() + 1; // JS months are 0-11
-    const day = date.getUTCDate();
-    
-    // New Year's Day
-    if (month === 1 && day === 1) return true;
-    
-    // Independence Day
-    if (month === 7 && day === 4) return true;
-    
-    // Christmas Day
-    if (month === 12 && day === 25) return true;
-    
-    // Martin Luther King Jr. Day (3rd Monday in January)
-    if (month === 1 && this.isNthWeekdayOfMonth(date, 1, 3)) return true; // Monday is 1
-    
-    // Presidents Day (3rd Monday in February)
-    if (month === 2 && this.isNthWeekdayOfMonth(date, 1, 3)) return true;
-    
-    // Memorial Day (last Monday in May)
-    if (month === 5 && this.isLastWeekdayOfMonth(date, 1)) return true;
-    
-    // Labor Day (1st Monday in September)
-    if (month === 9 && this.isNthWeekdayOfMonth(date, 1, 1)) return true;
-    
-    // Columbus Day (2nd Monday in October)
-    if (month === 10 && this.isNthWeekdayOfMonth(date, 1, 2)) return true;
-    
-    // Veterans Day (November 11)
-    if (month === 11 && day === 11) return true;
-    
-    // Thanksgiving (4th Thursday in November)
-    if (month === 11 && this.isNthWeekdayOfMonth(date, 4, 4)) return true; // Thursday is 4
-    
-    return false;
-  }
-
-  /**
-   * Check if date is the nth occurrence of a weekday in the month
-   * weekday: 0=Sunday, 1=Monday, ..., 6=Saturday
-   */
-  private isNthWeekdayOfMonth(date: Date, weekday: number, n: number): boolean {
-    if (date.getUTCDay() !== weekday) return false;
-    
-    const firstOfMonth = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1, 12, 0, 0));
-    let nthWeekday = new Date(firstOfMonth);
-    
-    // Find first occurrence of the weekday
-    while (nthWeekday.getUTCDay() !== weekday) {
-      nthWeekday.setUTCDate(nthWeekday.getUTCDate() + 1);
-    }
-    
-    // Add (n-1) weeks to get nth occurrence
-    nthWeekday.setUTCDate(nthWeekday.getUTCDate() + (n - 1) * 7);
-    
-    return date.getUTCFullYear() === nthWeekday.getUTCFullYear() &&
-           date.getUTCMonth() === nthWeekday.getUTCMonth() &&
-           date.getUTCDate() === nthWeekday.getUTCDate();
-  }
-
-  /**
-   * Check if date is the last occurrence of a weekday in the month
-   */
-  private isLastWeekdayOfMonth(date: Date, weekday: number): boolean {
-    if (date.getUTCDay() !== weekday) return false;
-    
-    // Get last day of month
-    const nextMonth = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1, 12, 0, 0));
-    let lastOfMonth = new Date(nextMonth);
-    lastOfMonth.setUTCDate(lastOfMonth.getUTCDate() - 1);
-    
-    // Find last occurrence of the weekday
-    while (lastOfMonth.getUTCDay() !== weekday) {
-      lastOfMonth.setUTCDate(lastOfMonth.getUTCDate() - 1);
-    }
-    
-    return date.getUTCFullYear() === lastOfMonth.getUTCFullYear() &&
-           date.getUTCMonth() === lastOfMonth.getUTCMonth() &&
-           date.getUTCDate() === lastOfMonth.getUTCDate();
   }
 
   goBack() {

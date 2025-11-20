@@ -143,6 +143,13 @@
     background: #007aff;
     color: white;
   }
+
+  &:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+    background: #e5e5ea;
+    color: #8e8e93;
+  }
 }
 
 /* Withdraw Controls */
