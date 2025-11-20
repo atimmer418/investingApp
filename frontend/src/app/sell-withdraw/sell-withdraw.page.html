@@ -132,24 +132,20 @@
 
     <!-- Withdraw Cash Section -->
     <div class="section-card mobile-card">
-      <div class="section-header p-b-sm border-bottom">
-        <h3 class="section-title font-semibold text-dark text-lg">Withdraw Cash</h3>
+      <div class="section-header p-b-sm border-bottom" style="padding-bottom: 0px;">
+        <h3 class="section-title font-semibold text-dark text-lg" style="margin-top: 0px;">Withdraw Cash</h3>
         <p class="section-subtitle text-gray text-sm">Transfer settled cash to your linked bank account.</p>
       </div>
 
-      <div class="withdraw-controls p-t-md">
+      <div class="withdraw-controls p-t-md" style="padding-top: 0px;">
         
-        <div class="info-box bg-gray-50 p-sm rounded m-b-md">
-          <div class="display-flex align-start">
-            <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
-            <p class="text-xs text-gray m-0">
-              <strong>Note:</strong> You can only withdraw "Settled Cash". If you just sold stock, it may take 1 business day for funds to settle and become available for withdrawal.
-            </p>
-          </div>
-        </div>
-
         <div class="withdraw-amount m-b-md">
-          <label class="amount-label font-medium text-dark display-block m-b-xs">Amount</label>
+          <div class="display-flex justify-between align-center m-b-xs">
+            <label class="amount-label font-medium text-dark">Amount</label>
+            <span class="available-text text-xs text-gray">
+              Available: {{formatCurrency(balance?.cash || 0)}}
+            </span>
+          </div>
           <div class="amount-input-wrapper display-flex align-center border rounded p-xs">
             <span class="currency-symbol text-dark font-semibold p-l-sm">$</span>
             <ion-input
@@ -160,11 +156,6 @@
               placeholder="0.00"
               class="amount-input no-border">
             </ion-input>
-          </div>
-          <div class="withdraw-info text-right m-t-xs">
-            <span class="available-text text-xs text-gray">
-              Available: {{formatCurrency(balance?.cash || 0)}}
-            </span>
           </div>
         </div>
 
@@ -187,6 +178,15 @@
           <ion-spinner *ngIf="isWithdrawing" name="crescent" slot="start"></ion-spinner>
           {{isWithdrawing ? 'Processing...' : 'Initiate Transfer'}}
         </ion-button>
+
+        <div class="info-box bg-gray-50 p-sm rounded m-t-md">
+          <div class="display-flex align-start">
+            <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
+            <p class="text-xs text-gray m-0">
+              <strong>Note:</strong> You can only withdraw "Settled Cash". If you just sold stock, it may take 1 business day for funds to settle and become available for withdrawal.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 

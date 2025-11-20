@@ -333,26 +333,22 @@ public class AlpacaService {
 
     /**
      * Place a market sell order by percentage of position
+     * Uses the DELETE position endpoint which allows partial liquidation via percentage
      */
     public AlpacaOrderResponse placeSellOrderByPercentage(String accountId, String symbol, BigDecimal percentage) {
         try {
-            String url = alpacaBaseUrl + "/trading/accounts/" + accountId + "/orders";
-            
-            Map<String, Object> request = new HashMap<>();
-            request.put("symbol", symbol);
-            request.put("qty", percentage.toString());
-            request.put("side", "sell");
-            request.put("type", "market");
-            request.put("time_in_force", "day");
-            request.put("position_intent", "percent");
+            // Use the close position endpoint with percentage parameter
+            // Note: percentage should be 0-100
+            String url = alpacaBaseUrl + "/trading/accounts/" + accountId + "/positions/" + symbol + "?percentage=" + percentage.toPlainString();
             
             HttpHeaders headers = createAuthHeaders();
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
             
-            logger.info("Placing sell order for account {} - Symbol: {}, Percentage: {}%", 
+            logger.info("Placing sell order (partial liquidation) for account {} - Symbol: {}, Percentage: {}%", 
                 accountId, symbol, percentage);
             
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+            // The API returns the Order object created for this liquidation
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
             
             if (response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.CREATED) {
                 JsonNode jsonResponse = objectMapper.readTree(response.getBody());

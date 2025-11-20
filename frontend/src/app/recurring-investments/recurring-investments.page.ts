@@ -489,16 +489,34 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     
     // Use the edited next investment date (which defaults to current if not changed)
     if (this.editedInvestment.nextInvestmentDate) {
+      let dateToAdjust: Date;
+
       if (typeof this.editedInvestment.nextInvestmentDate === 'string') {
         // Handle ISO string or YYYY-MM-DD
         const datePart = this.editedInvestment.nextInvestmentDate.includes('T') ? 
           this.editedInvestment.nextInvestmentDate.split('T')[0] : 
           this.editedInvestment.nextInvestmentDate;
-        nextInvestmentDateString = datePart;
+        
+        const parts = datePart.split('-');
+        const year = parseInt(parts[0]);
+        const month = parseInt(parts[1]);
+        const day = parseInt(parts[2]);
+        dateToAdjust = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
       } else if (Array.isArray(this.editedInvestment.nextInvestmentDate)) {
         const [year, month, day] = this.editedInvestment.nextInvestmentDate;
-        nextInvestmentDateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+        dateToAdjust = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+      } else {
+        // Fallback if type is unknown, though it should be string or array
+        dateToAdjust = new Date();
       }
+
+      // Adjust to next business day
+      const adjustedDate = this.adjustForBusinessDay(dateToAdjust);
+      
+      const year = adjustedDate.getUTCFullYear();
+      const month = (adjustedDate.getUTCMonth() + 1).toString().padStart(2, '0');
+      const day = adjustedDate.getUTCDate().toString().padStart(2, '0');
+      nextInvestmentDateString = `${year}-${month}-${day}`;
     }
     
     // Create update request
@@ -525,6 +543,122 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
           this.isLoading = false;
         }
       });
+  }
+
+  /**
+   * Adjust date to next business day if it falls on weekend or holiday
+   */
+  private adjustForBusinessDay(date: Date): Date {
+    let adjustedDate = new Date(date);
+    
+    // Skip weekends (Saturday = 6, Sunday = 0 in JS)
+    while (adjustedDate.getUTCDay() === 0 || adjustedDate.getUTCDay() === 6) {
+      adjustedDate.setUTCDate(adjustedDate.getUTCDate() + 1);
+    }
+    
+    // Check for common US holidays and adjust
+    adjustedDate = this.adjustForHolidays(adjustedDate);
+    
+    return adjustedDate;
+  }
+
+  /**
+   * Adjust for common US holidays
+   */
+  private adjustForHolidays(date: Date): Date {
+    if (this.isUSHoliday(date)) {
+      // Move to next business day
+      const nextDay = new Date(date);
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+      // Recursively check if next day is also weekend/holiday
+      return this.adjustForBusinessDay(nextDay);
+    }
+    return date;
+  }
+
+  /**
+   * Check if date is a US federal holiday
+   */
+  private isUSHoliday(date: Date): boolean {
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth() + 1; // JS months are 0-11
+    const day = date.getUTCDate();
+    
+    // New Year's Day
+    if (month === 1 && day === 1) return true;
+    
+    // Independence Day
+    if (month === 7 && day === 4) return true;
+    
+    // Christmas Day
+    if (month === 12 && day === 25) return true;
+    
+    // Martin Luther King Jr. Day (3rd Monday in January)
+    if (month === 1 && this.isNthWeekdayOfMonth(date, 1, 3)) return true; // Monday is 1
+    
+    // Presidents Day (3rd Monday in February)
+    if (month === 2 && this.isNthWeekdayOfMonth(date, 1, 3)) return true;
+    
+    // Memorial Day (last Monday in May)
+    if (month === 5 && this.isLastWeekdayOfMonth(date, 1)) return true;
+    
+    // Labor Day (1st Monday in September)
+    if (month === 9 && this.isNthWeekdayOfMonth(date, 1, 1)) return true;
+    
+    // Columbus Day (2nd Monday in October)
+    if (month === 10 && this.isNthWeekdayOfMonth(date, 1, 2)) return true;
+    
+    // Veterans Day (November 11)
+    if (month === 11 && day === 11) return true;
+    
+    // Thanksgiving (4th Thursday in November)
+    if (month === 11 && this.isNthWeekdayOfMonth(date, 4, 4)) return true; // Thursday is 4
+    
+    return false;
+  }
+
+  /**
+   * Check if date is the nth occurrence of a weekday in the month
+   * weekday: 0=Sunday, 1=Monday, ..., 6=Saturday
+   */
+  private isNthWeekdayOfMonth(date: Date, weekday: number, n: number): boolean {
+    if (date.getUTCDay() !== weekday) return false;
+    
+    const firstOfMonth = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1, 12, 0, 0));
+    let nthWeekday = new Date(firstOfMonth);
+    
+    // Find first occurrence of the weekday
+    while (nthWeekday.getUTCDay() !== weekday) {
+      nthWeekday.setUTCDate(nthWeekday.getUTCDate() + 1);
+    }
+    
+    // Add (n-1) weeks to get nth occurrence
+    nthWeekday.setUTCDate(nthWeekday.getUTCDate() + (n - 1) * 7);
+    
+    return date.getUTCFullYear() === nthWeekday.getUTCFullYear() &&
+           date.getUTCMonth() === nthWeekday.getUTCMonth() &&
+           date.getUTCDate() === nthWeekday.getUTCDate();
+  }
+
+  /**
+   * Check if date is the last occurrence of a weekday in the month
+   */
+  private isLastWeekdayOfMonth(date: Date, weekday: number): boolean {
+    if (date.getUTCDay() !== weekday) return false;
+    
+    // Get last day of month
+    const nextMonth = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1, 12, 0, 0));
+    let lastOfMonth = new Date(nextMonth);
+    lastOfMonth.setUTCDate(lastOfMonth.getUTCDate() - 1);
+    
+    // Find last occurrence of the weekday
+    while (lastOfMonth.getUTCDay() !== weekday) {
+      lastOfMonth.setUTCDate(lastOfMonth.getUTCDate() - 1);
+    }
+    
+    return date.getUTCFullYear() === lastOfMonth.getUTCFullYear() &&
+           date.getUTCMonth() === lastOfMonth.getUTCMonth() &&
+           date.getUTCDate() === lastOfMonth.getUTCDate();
   }
 
   goBack() {
