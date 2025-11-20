@@ -65,6 +65,7 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
   public isLoading = true;
   public positions: Position[] = [];
   public balance: AccountSummary | null = null;
+  public dashboardData: PortfolioDashboardData | null = null;
   public selectedPosition: Position | null = null;
   public sellPercentage = 25;
   public withdrawAmount: number | null = null;
@@ -120,6 +121,7 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
       const dashboardData = await this.portfolioService.getPortfolioDashboard().toPromise();
       
       if (dashboardData) {
+        this.dashboardData = dashboardData;
         this.positions = dashboardData.positions || [];
         this.balance = dashboardData.summary || null;
       }

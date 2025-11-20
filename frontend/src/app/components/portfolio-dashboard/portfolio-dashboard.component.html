@@ -53,27 +53,52 @@
   <!-- Portfolio Dashboard Content -->
   <div *ngIf="dashboard && !loading" class="portfolio-dashboard mobile-container">
     
-    <!-- Portfolio Value Hero Card -->
-    <div class="portfolio-hero mobile-card">
-      <div class="portfolio-value text-center">
-        <h1 class="value-amount text-4xl font-bold text-dark">{{ formatCurrency(dashboard.summary.portfolioValue) }}</h1>
-        <div class="portfolio-change" [class]="'change-' + getGainLossColor(dashboard.totalGainLoss)">
-          <ion-icon [name]="getGainLossIcon(dashboard.totalGainLoss)"></ion-icon>
-          <span class="text-lg font-medium">{{ formatCurrency(dashboard.totalGainLoss) }} ({{ formatPercent(dashboard.totalGainLossPercent) }})</span>
+    <!-- Portfolio Value Hero Card (Flip) -->
+    <div class="portfolio-hero-container ion-activatable ripple-parent" (click)="toggleFlip()">
+      <ion-ripple-effect></ion-ripple-effect>
+      <div class="portfolio-hero-flipper" [class.flipped]="isFlipped">
+        
+        <!-- Front Side -->
+        <div class="portfolio-hero-front">
+          <div class="portfolio-value text-center">
+            <h1 class="value-amount text-4xl font-bold text-dark">{{ formatCurrency(dashboard.summary.portfolioValue) }}</h1>
+            <div class="portfolio-change" [class]="'change-' + getGainLossColor(dashboard.totalGainLoss)">
+              <ion-icon [name]="getGainLossIcon(dashboard.totalGainLoss)"></ion-icon>
+              <span class="text-lg font-medium">{{ formatCurrency(dashboard.totalGainLoss) }} ({{ formatPercent(dashboard.totalGainLossPercent) }})</span>
+            </div>
+            <p class="value-subtitle text-gray text-sm m-xs">Total Portfolio Value</p>
+          </div>
         </div>
-        <p class="value-subtitle text-gray text-sm m-xs">Total Portfolio Value</p>
-      </div>
-    </div>
 
-    <!-- Quick Stats Row (Analytics Tab Only) -->
-    <div *ngIf="selectedTab === 'analytics'" class="quick-stats">
-      <div class="stat-card mobile-card">
-        <div class="stat-value text-xl font-semibold">{{ formatCurrency(dashboard.totalInvested) }}</div>
-        <div class="stat-label text-gray text-sm">Invested</div>
-      </div>
-      <div class="stat-card mobile-card">
-        <div class="stat-value text-xl font-semibold">{{ formatCurrency(dashboard.summary.buyingPower) }}</div>
-        <div class="stat-label text-gray text-sm">Buying Power</div>
+        <!-- Back Side -->
+        <div class="portfolio-hero-back">
+          <div class="hero-grid">
+            <!-- Top Left: Total Invested -->
+            <div class="hero-grid-item top-left">
+              <span class="hero-label">Total Invested</span>
+              <span class="hero-value">{{ formatCurrency(dashboard.totalInvested) }}</span>
+            </div>
+            
+            <!-- Top Right: Equity -->
+            <div class="hero-grid-item top-right">
+              <span class="hero-label">Total Equity</span>
+              <span class="hero-value">{{ formatCurrency(dashboard.summary.equity) }}</span>
+            </div>
+            
+            <!-- Bottom Left: Buying Power -->
+            <div class="hero-grid-item bottom-left">
+              <span class="hero-label">Buying Power</span>
+              <span class="hero-value">{{ formatCurrency(dashboard.summary.buyingPower) }}</span>
+            </div>
+            
+            <!-- Bottom Right: Settled Cash -->
+            <div class="hero-grid-item bottom-right">
+              <span class="hero-label">Settled Cash</span>
+              <span class="hero-value">{{ formatCurrency(dashboard.summary.cash) }}</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 

@@ -75,6 +75,7 @@ export interface CreateInvestmentScheduleRequest {
   investmentAmount: number;
   frequency: string;
   startDate: string;
+  nextInvestmentDate?: string;
 }
 
 export interface UpdateInvestmentScheduleRequest {

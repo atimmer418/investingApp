@@ -32,7 +32,7 @@ import {
   alertCircleOutline,
   settingsOutline,
   informationCircleOutline, addOutline } from 'ionicons/icons';
-import { InvestmentService, InvestmentSchedule } from '../services/investment.service';
+import { InvestmentService, InvestmentSchedule, CreateInvestmentScheduleRequest } from '../services/investment.service';
 
 interface InvestmentFrequencyOption {
   value: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'SEMI_MONTHLY';
@@ -215,9 +215,25 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       // Handle array format from Java LocalDate serialization [year, month, day]
       if (Array.isArray(this.currentInvestment.startDate) && this.currentInvestment.startDate.length === 3) {
         const [year, month, day] = this.currentInvestment.startDate;
-        startDate = new Date(year, month - 1, day); // month - 1 because JS months are 0-based
+        // Construct UTC date at noon
+        startDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
       } else if (typeof this.currentInvestment.startDate === 'string') {
-        startDate = new Date(this.currentInvestment.startDate);
+        // Parse string manually to avoid UTC conversion issues
+        // If it contains 'T', split by 'T' first to get the date part
+        const datePart = this.currentInvestment.startDate.includes('T') ? 
+          this.currentInvestment.startDate.split('T')[0] : 
+          this.currentInvestment.startDate;
+          
+        const parts = datePart.split('-');
+        if (parts.length === 3) {
+          const year = parseInt(parts[0]);
+          const month = parseInt(parts[1]);
+          const day = parseInt(parts[2]);
+          // Construct UTC date at noon
+          startDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+        } else {
+          startDate = new Date(this.currentInvestment.startDate);
+        }
       } else {
         return baseDescription;
       }
@@ -226,8 +242,8 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
         return baseDescription;
       }
       
-      const dayOfWeek = startDate.toLocaleDateString('en-US', { weekday: 'long' });
-      const dayOfMonth = startDate.getDate();
+      const dayOfWeek = startDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+      const dayOfMonth = startDate.getUTCDate();
       
       switch (this.currentInvestment.frequency) {
         case 'WEEKLY':
@@ -273,9 +289,22 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       
       if (Array.isArray(dateInput) && dateInput.length === 3) {
         const [year, month, day] = dateInput;
-        date = new Date(year, month - 1, day);
+        // Construct UTC date at noon
+        date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
       } else if (typeof dateInput === 'string') {
-        date = new Date(dateInput);
+        // Parse string manually to avoid UTC conversion issues
+        // If it contains 'T', split by 'T' first to get the date part
+        const datePart = dateInput.includes('T') ? dateInput.split('T')[0] : dateInput;
+        const parts = datePart.split('-');
+        if (parts.length === 3) {
+          const year = parseInt(parts[0]);
+          const month = parseInt(parts[1]);
+          const day = parseInt(parts[2]);
+          // Construct UTC date at noon
+          date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+        } else {
+          date = new Date(dateInput);
+        }
       } else {
         return '';
       }
@@ -284,7 +313,12 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
         return '';
       }
       
-      return date.toISOString();
+      // Return ISO string for the picker (which expects YYYY-MM-DD or full ISO)
+      // Use UTC methods to get the date parts we constructed
+      const year = date.getUTCFullYear();
+      const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+      const day = date.getUTCDate().toString().padStart(2, '0');
+      return `${year}-${month}-${day}`;
     } catch (error) {
       console.error('Error converting date for picker:', error);
       return '';
@@ -317,13 +351,25 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
   }
 
   getMonthlyProjection(): number {
-    if (!this.currentInvestment) return 0;
-    const option = this.frequencyOptions.find(opt => opt.value === this.currentInvestment?.frequency);
-    return this.currentInvestment.investmentAmount * (option?.paychecksPerMonth || 1);
+    return Math.floor(this.getAnnualProjection() / 12);
   }
 
   getAnnualProjection(): number {
-    return this.getMonthlyProjection() * 12;
+    if (!this.currentInvestment) return 0;
+    const amount = this.currentInvestment.investmentAmount;
+    
+    switch (this.currentInvestment.frequency) {
+      case 'WEEKLY':
+        return amount * 52;
+      case 'BIWEEKLY':
+        return amount * 26;
+      case 'SEMI_MONTHLY':
+        return amount * 24;
+      case 'MONTHLY':
+        return amount * 12;
+      default:
+        return 0;
+    }
   }
 
   formatCurrency(amount: number): string {
@@ -344,11 +390,22 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       // Handle array format from Java LocalDate serialization [year, month, day]
       if (Array.isArray(dateInput) && dateInput.length === 3) {
         const [year, month, day] = dateInput;
-        // Note: JavaScript Date constructor expects month to be 0-based, but Java sends 1-based
-        date = new Date(year, month - 1, day);
+        // Construct UTC date at noon to avoid timezone issues
+        date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
       } else if (typeof dateInput === 'string') {
-        // Handle string format
-        date = new Date(dateInput);
+        // Handle string format - parse manually to avoid UTC issues
+        // If it contains 'T', split by 'T' first to get the date part
+        const datePart = dateInput.includes('T') ? dateInput.split('T')[0] : dateInput;
+        const parts = datePart.split('-');
+        if (parts.length === 3) {
+          const year = parseInt(parts[0]);
+          const month = parseInt(parts[1]);
+          const day = parseInt(parts[2]);
+          // Construct UTC date at noon
+          date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+        } else {
+          date = new Date(dateInput);
+        }
       } else {
         console.error('Unexpected date format:', dateInput);
         return 'Invalid date format';
@@ -361,7 +418,8 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: 'UTC' // Force UTC formatting to match the UTC date we constructed
       }).format(date);
     } catch (error) {
       console.error('Error formatting date:', error);
@@ -417,43 +475,38 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
 
     this.isLoading = true;
     
-    // Determine what start date to use
+    // Determine what start date to use - ALWAYS use existing start date to preserve history
     let startDateString: string;
+    if (Array.isArray(this.currentInvestment.startDate)) {
+      const [year, month, day] = this.currentInvestment.startDate;
+      startDateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    } else {
+      startDateString = this.currentInvestment.startDate;
+    }
     
-    // If user changed the next investment date, use that as the new start date
-    if (this.editedInvestment.nextInvestmentDate && 
-        this.editedInvestment.nextInvestmentDate !== this.currentInvestment.nextInvestmentDate) {
-      // Convert the selected next investment date to start date format
+    // Determine next investment date
+    let nextInvestmentDateString: string | undefined;
+    
+    // Use the edited next investment date (which defaults to current if not changed)
+    if (this.editedInvestment.nextInvestmentDate) {
       if (typeof this.editedInvestment.nextInvestmentDate === 'string') {
-        const nextDate = new Date(this.editedInvestment.nextInvestmentDate);
-        startDateString = nextDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+        // Handle ISO string or YYYY-MM-DD
+        const datePart = this.editedInvestment.nextInvestmentDate.includes('T') ? 
+          this.editedInvestment.nextInvestmentDate.split('T')[0] : 
+          this.editedInvestment.nextInvestmentDate;
+        nextInvestmentDateString = datePart;
       } else if (Array.isArray(this.editedInvestment.nextInvestmentDate)) {
         const [year, month, day] = this.editedInvestment.nextInvestmentDate;
-        startDateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-      } else {
-        // Fallback to existing start date
-        if (Array.isArray(this.currentInvestment.startDate)) {
-          const [year, month, day] = this.currentInvestment.startDate;
-          startDateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-        } else {
-          startDateString = this.currentInvestment.startDate;
-        }
-      }
-    } else {
-      // No date change - use the existing start date
-      if (Array.isArray(this.currentInvestment.startDate)) {
-        const [year, month, day] = this.currentInvestment.startDate;
-        startDateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-      } else {
-        startDateString = this.currentInvestment.startDate;
+        nextInvestmentDateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
       }
     }
     
     // Create update request
-    const updateRequest = {
+    const updateRequest: CreateInvestmentScheduleRequest = {
       investmentAmount: this.editedInvestment.investmentAmount!,
       frequency: this.editedInvestment.frequency || this.currentInvestment.frequency,
-      startDate: startDateString
+      startDate: startDateString,
+      nextInvestmentDate: nextInvestmentDateString
     };
 
     this.investmentService.createSchedule(updateRequest)

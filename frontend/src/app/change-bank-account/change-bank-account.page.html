@@ -1,22 +1,14 @@
-<!-- Change Bank Account Page -->
-<ion-header [translucent]="true">
-  <ion-toolbar>
+<ion-header class="ion-no-border">
+  <ion-toolbar class="safe-area-top">
     <ion-buttons slot="start">
-      <ion-back-button (click)="goBack()" defaultHref="/tabs/tab3"></ion-back-button>
+      <ion-back-button (click)="goBack()" defaultHref="/tabs/tab3" text="Settings" color="primary"></ion-back-button>
     </ion-buttons>
     <ion-title>Change Bank Account</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-  <!-- Header collapse for large screens -->
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Change Bank Account</ion-title>
-    </ion-toolbar>
-  </ion-header>
-
-  <div class="change-bank-form-container">
+<ion-content class="change-bank-content">
+  <div class="mobile-container">
     
     <!-- Page Introduction -->
     <div class="page-intro">
@@ -25,19 +17,21 @@
     </div>
 
     <!-- Current Account Section -->
-    <ion-card class="current-account-card" *ngIf="currentBankAccount">
-      <ion-card-content>
-        <div class="current-account-header">
-          <div class="account-icon">
-            <ion-icon name="card-outline"></ion-icon>
-          </div>
-          <div class="account-details">
-            <h3>Current Account</h3>
-            <p>{{ formatAccountDisplay() }}</p>
-          </div>
+    <div class="mobile-card" *ngIf="currentBankAccount">
+      <div class="section-header">
+        <h3 class="section-title">Current Account</h3>
+      </div>
+      
+      <div class="current-account-header">
+        <div class="account-icon">
+          <ion-icon name="card-outline"></ion-icon>
         </div>
-      </ion-card-content>
-    </ion-card>
+        <div class="account-details">
+          <h3>Current Account</h3>
+          <p>{{ formatAccountDisplay() }}</p>
+        </div>
+      </div>
+    </div>
 
     <!-- Benefits Section -->
     <div class="benefits-section">

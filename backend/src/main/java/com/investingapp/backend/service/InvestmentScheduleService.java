@@ -35,7 +35,7 @@ public class InvestmentScheduleService {
      * Create or update investment schedule for a user (upsert operation)
      */
     public InvestmentSchedule createInvestmentSchedule(User user, BigDecimal investmentAmount, 
-                                                      String frequency, LocalDate startDate) {
+                                                      String frequency, LocalDate startDate, LocalDate nextInvestmentDate) {
         logger.info("Creating/updating investment schedule for user: {} with investment amount: {}", 
                    user.getEmail(), investmentAmount);
         
@@ -65,7 +65,14 @@ public class InvestmentScheduleService {
                     schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(enforcedStartDate));
                 } else {
                     schedule.setStartDate(startDate);
-                    schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(startDate));
+                    
+                    // If nextInvestmentDate is explicitly provided, use it
+                    if (nextInvestmentDate != null) {
+                        schedule.setNextInvestmentDate(nextInvestmentDate);
+                    } else {
+                        // Otherwise calculate from start date
+                        schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(startDate));
+                    }
                 }
             }
             
@@ -88,7 +95,12 @@ public class InvestmentScheduleService {
                 effectiveStartDate = startDate != null ? startDate : LocalDate.now();
             }
             schedule.setStartDate(effectiveStartDate);
-            schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(effectiveStartDate));
+            
+            if (nextInvestmentDate != null) {
+                schedule.setNextInvestmentDate(nextInvestmentDate);
+            } else {
+                schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(effectiveStartDate));
+            }
             
             schedule.setIsPaused(true); // Always start paused until ACH is confirmed
             

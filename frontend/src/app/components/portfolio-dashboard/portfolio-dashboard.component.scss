@@ -47,13 +47,51 @@
 }
 
 /* =============================================================================
-   PORTFOLIO HERO SECTION
+   PORTFOLIO HERO SECTION (FLIP CARD)
    ============================================================================= */
 
-.portfolio-hero {
+.portfolio-hero-container {
+  perspective: 1000px;
+  margin-bottom: var(--app-spacing-md);
+  cursor: pointer;
+  height: 200px; // Fixed height to ensure flip works well
+  position: relative; // Ensure positioning context
+  z-index: 1;
+}
+
+.portfolio-hero-flipper {
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+  position: relative;
+  height: 100%;
+  width: 100%;
+  will-change: transform;
+
+  &.flipped {
+    transform: rotateY(180deg);
+  }
+}
+
+.portfolio-hero-front, .portfolio-hero-back {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   background: linear-gradient(135deg, var(--portfolio-card-background) 0%, rgba(0, 122, 255, 0.05) 100%);
   border: 1px solid var(--app-card-border);
-  margin-bottom: var(--app-spacing-md);
+  overflow: hidden;
+}
+
+.portfolio-hero-front {
+  transform: rotateY(0deg);
   
   .portfolio-value {
     padding: var(--app-spacing-lg) 0;
@@ -85,6 +123,45 @@
     
     .value-subtitle {
       opacity: 0.8;
+    }
+  }
+}
+
+.portfolio-hero-back {
+  transform: rotateY(180deg);
+  padding: var(--app-spacing-lg);
+  
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    height: 100%;
+    gap: var(--app-spacing-md);
+    
+    .hero-grid-item {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      
+      .hero-label {
+        font-size: var(--app-font-size-xs);
+        color: var(--portfolio-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+        font-weight: 500;
+      }
+      
+      .hero-value {
+        font-size: var(--app-font-size-lg);
+        font-weight: 600;
+        color: var(--portfolio-text-primary);
+      }
+      
+      &.top-left { align-items: flex-start; text-align: left; }
+      &.top-right { align-items: flex-end; text-align: right; }
+      &.bottom-left { align-items: flex-start; text-align: left; }
+      &.bottom-right { align-items: flex-end; text-align: right; }
     }
   }
 }

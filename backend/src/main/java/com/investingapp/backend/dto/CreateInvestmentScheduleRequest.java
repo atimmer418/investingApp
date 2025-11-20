@@ -27,5 +27,8 @@ public class CreateInvestmentScheduleRequest {
     @NotNull(message = "Start date is required")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate nextInvestmentDate;
     
 }

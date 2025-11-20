@@ -1,103 +1,97 @@
-.lump-sum-container {
+.lump-sum-content {
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --background: #f2f2f7;
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+  background: white;
+}
+
+.mobile-container {
   max-width: 600px;
   margin: 0 auto;
-  padding-bottom: 2rem;
+  padding: 16px;
 }
 
-// Header Styling
-ion-header {
-  ion-toolbar {
-    --background: var(--ion-color-primary);
-    --color: white;
-    
-    ion-title {
-      font-weight: 600;
-    }
-    
-    ion-back-button {
-      --color: white;
-    }
-  }
+.mobile-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  padding: 16px;
+  overflow: hidden;
 }
 
-// Section Headers
 .section-header {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--ion-color-dark);
-  margin: 0 0 1.5rem 0;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  
-  ion-icon {
-    color: var(--ion-color-primary);
-    font-size: 1.4rem;
-  }
+}
+
+.section-title {
+  font-weight: 600;
+  color: #1c1c1e;
+  font-size: 18px;
+  margin: 0;
 }
 
 /* Info Card */
-.info-card {
+.info-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   margin-bottom: 1rem;
-  border-radius: 12px;
   
-  .info-header {
+  .info-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #007aff;
+    color: white !important;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+    text-align: center;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    position: relative;
     
-    .info-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: var(--ion-color-primary);
-      color: white !important;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-size: 1.2rem;
-      text-align: center;
-      line-height: 1;
-      padding: 0;
-      margin: 0;
-      position: relative;
-      
-      /* Adjust the icon position by shifting the container's content */
-      padding-top: 1px;
-      padding-left: 1px;
-    }
-    
-    h3 {
-      margin: 0;
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--ion-color-dark);
-    }
+    /* Adjust the icon position by shifting the container's content */
+    padding-top: 1px;
+    padding-left: 1px;
   }
   
-  p {
+  h3 {
     margin: 0;
-    color: var(--ion-color-medium);
-    line-height: 1.5;
-    font-size: 0.95rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1c1c1e;
   }
 }
 
-/* Investment Card */
-.investment-card {
-  border-radius: 12px;
+p {
+  margin: 0;
+  color: #8e8e93;
+  line-height: 1.5;
+  font-size: 0.95rem;
 }
 
-/* Input Styling - Matching recurring investments exactly */
+/* Input Styling */
 .input-wrapper {
   margin-bottom: 2rem;
   
   .input-label {
     display: block;
     font-weight: 600;
-    color: var(--ion-color-dark);
+    color: #1c1c1e;
     margin-bottom: 0.75rem;
     font-size: 1rem;
   }
@@ -106,25 +100,26 @@ ion-header {
     position: relative;
     display: flex;
     align-items: center;
-    background: var(--ion-color-light);
+    background: #f9f9f9;
     border-radius: 12px;
-    border: 2px solid transparent;
+    border: 1px solid #e0e0e0;
     transition: border-color 0.2s;
     
     &:focus-within {
-      border-color: var(--ion-color-primary);
+      border-color: #007aff;
+      background: white;
     }
     
     .currency-symbol {
       padding: 0 1rem;
       font-weight: 600;
-      color: var(--ion-color-medium);
+      color: #8e8e93;
       font-size: 1.1rem;
     }
     
     .amount-input {
       --background: transparent;
-      --color: var(--ion-color-dark);
+      --color: #1c1c1e;
       --padding-start: 0;
       --padding-end: 1rem;
       --padding-top: 1rem;
@@ -143,37 +138,37 @@ ion-header {
   .input-helper {
     margin: 0.5rem 0 0 0;
     font-size: 0.85rem;
-    color: var(--ion-color-medium);
+    color: #8e8e93;
     font-style: italic;
   }
 }
 
 /* Investment Type Segment */
 .investment-type-segment {
-  --background: var(--ion-color-light);
+  --background: #f9f9f9;
   --color-checked: white;
-  --background-checked: var(--ion-color-primary);
+  --background-checked: #007aff;
   --border-radius: 12px;
   margin-bottom: 0.5rem;
   
   ion-segment-button {
-    --color: var(--ion-color-medium-shade);
+    --color: #8e8e93;
     font-weight: 500;
   }
 }
 
 /* Stock Search Components */
 .stock-searchbar {
-  --background: var(--ion-color-light);
-  --color: var(--ion-color-dark);
+  --background: #f9f9f9;
+  --color: #1c1c1e;
   --border-radius: 12px;
   --box-shadow: none;
-  border: 2px solid transparent;
+  border: 1px solid #e0e0e0;
   transition: border-color 0.2s;
   margin-bottom: 1rem;
   
   &.searchbar-has-focus {
-    border-color: var(--ion-color-primary);
+    border-color: #007aff;
   }
 }
 
@@ -183,7 +178,7 @@ ion-header {
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  color: var(--ion-color-medium);
+  color: #8e8e93;
   
   ion-spinner {
     margin-bottom: 1rem;
@@ -199,19 +194,19 @@ ion-header {
   margin: 1rem 0;
   
   .search-results-list {
-    background: var(--ion-color-light);
+    background: #f9f9f9;
     border-radius: 12px;
     overflow: hidden;
     
     .search-result-item {
       --background: transparent;
-      --border-color: var(--ion-color-light-shade);
-      --color: var(--ion-color-dark);
+      --border-color: #e0e0e0;
+      --color: #1c1c1e;
       cursor: pointer;
       transition: background-color 0.2s;
       
       &:hover {
-        --background: var(--ion-color-light-tint);
+        --background: #f0f0f0;
       }
       
       &:last-child {
@@ -221,20 +216,20 @@ ion-header {
       ion-label {
         h3 {
           font-weight: 600;
-          color: var(--ion-color-dark);
+          color: #1c1c1e;
           margin: 0 0 0.25rem 0;
           font-size: 1rem;
         }
         
         p {
-          color: var(--ion-color-medium);
+          color: #8e8e93;
           margin: 0 0 0.25rem 0;
           font-size: 0.85rem;
           line-height: 1.2;
         }
         
         ion-note {
-          color: var(--ion-color-primary);
+          color: #007aff;
           font-size: 0.75rem;
           font-weight: 500;
           text-transform: uppercase;
@@ -248,7 +243,7 @@ ion-header {
 .no-results {
   text-align: center;
   padding: 2rem;
-  color: var(--ion-color-medium);
+  color: #8e8e93;
   
   p {
     margin: 0;
@@ -257,8 +252,8 @@ ion-header {
 }
 
 .selected-stock {
-  background: var(--ion-color-light);
-  border: 2px solid var(--ion-color-primary);
+  background: #f9f9f9;
+  border: 2px solid #007aff;
   border-radius: 12px;
   padding: 1rem;
   margin: 1rem 0;
@@ -273,88 +268,38 @@ ion-header {
       margin: 0 0 0.25rem 0;
       font-size: 1.1rem;
       font-weight: 600;
-      color: var(--ion-color-primary);
+      color: #007aff;
     }
     
     p {
       margin: 0;
       font-size: 0.9rem;
-      color: var(--ion-color-medium);
+      color: #8e8e93;
       line-height: 1.3;
     }
   }
   
   ion-button {
-    --color: var(--ion-color-medium);
+    --color: #8e8e93;
     font-size: 0.85rem;
   }
 }
 
-/* Stock Selection */
-.stock-select {
-  --background: var(--ion-color-light);
-  --color: var(--ion-color-dark);
-  --border-radius: 12px;
-  --padding-start: 1rem;
-  --padding-end: 1rem;
-  --padding-top: 1rem;
-  --padding-bottom: 1rem;
-  font-weight: 500;
-  border: 2px solid transparent;
-  
-  &:focus-within {
-    --border-color: var(--ion-color-primary);
-  }
-}
-
-/* Stock Details */
-.stock-details {
-  background: var(--ion-color-light);
-  border-radius: 12px;
-  padding: 1rem;
-  margin: 1rem 0;
-  
-  .detail-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-    
-    &:not(:last-child) {
-      border-bottom: 1px solid var(--ion-color-light-shade);
-      margin-bottom: 0.5rem;
-      padding-bottom: 1rem;
-    }
-    
-    .detail-label {
-      font-size: 0.9rem;
-      color: var(--ion-color-medium);
-      font-weight: 500;
-    }
-    
-    .detail-value {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--ion-color-dark);
-    }
-  }
-}
-
-/* Projection Section - Matching recurring investments style */
+/* Projection Section */
 .projection-section {
   padding-top: 1.5rem;
-  border-top: 1px solid var(--ion-color-light-shade);
+  border-top: 1px solid #f0f0f0;
   margin: 1.5rem 0;
   
   h4 {
     margin: 0 0 1rem 0;
-    color: var(--ion-color-dark);
+    color: #1c1c1e;
     font-weight: 600;
     font-size: 1rem;
   }
   
   .projection-card {
-    background: var(--ion-color-light);
+    background: #f9f9f9;
     border-radius: 12px;
     padding: 1.2rem;
     
@@ -365,7 +310,7 @@ ion-header {
       padding: 0.5rem 0;
       
       &:not(:last-child) {
-        border-bottom: 1px solid var(--ion-color-light-shade);
+        border-bottom: 1px solid #e0e0e0;
         margin-bottom: 0.5rem;
         padding-bottom: 1rem;
       }
@@ -379,7 +324,7 @@ ion-header {
       
       .projection-label {
         font-size: 0.9rem;
-        color: var(--ion-color-medium);
+        color: #8e8e93;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         font-weight: 500;
@@ -388,10 +333,10 @@ ion-header {
       .projection-amount {
         font-size: 1.2rem;
         font-weight: 700;
-        color: var(--ion-color-dark);
+        color: #1c1c1e;
         
         &.projected {
-          color: var(--ion-color-primary);
+          color: #007aff;
         }
         
         &.target {
@@ -410,7 +355,7 @@ ion-header {
   
   .disclaimer {
     font-size: 0.8rem;
-    color: var(--ion-color-medium);
+    color: #8e8e93;
     margin: 1rem 0 0 0;
     line-height: 1.4;
     font-style: italic;
@@ -418,14 +363,12 @@ ion-header {
   }
 }
 
-/* Investment Actions - Matching recurring investments exactly */
+/* Investment Actions */
 .investment-actions {
   margin-top: 2rem;
   
   ion-button {
-    --border-radius: 12px;
-    --padding-top: 1rem;
-    --padding-bottom: 1rem;
+    --border-radius: 10px;
     font-weight: 600;
     font-size: 1rem;
     
@@ -441,12 +384,8 @@ ion-header {
   }
 }
 
-/* Responsive Design - Matching recurring investments */
+/* Responsive Design */
 @media (max-width: 768px) {
-  .lump-sum-container {
-    padding: 0;
-  }
-  
   .projection-section {
     margin: 1rem 0;
   }
@@ -459,26 +398,6 @@ ion-header {
     ion-icon {
       font-size: 2.5rem;
     }
-  }
-}
-
-/* Dark Theme Support - Matching recurring investments */
-@media (prefers-color-scheme: dark) {
-  .info-card,
-  .investment-card {
-    --background: var(--ion-color-dark-tint);
-  }
-  
-  .projection-card,
-  .currency-input,
-  .stock-select,
-  .investment-type-segment,
-  .stock-details {
-    --background: var(--ion-color-dark-shade);
-  }
-  
-  .info-header ion-icon {
-    background: var(--ion-color-primary-shade) !important;
   }
 }
 

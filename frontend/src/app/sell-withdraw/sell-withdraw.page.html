@@ -22,25 +22,6 @@
   <!-- Main content when not loading -->
   <div *ngIf="!isLoading" class="mobile-container">
     
-    <!-- Account Balance Summary -->
-    <div class="balance-summary mobile-card">
-      <h2 class="balance-title font-semibold text-dark m-b-sm">Account Summary</h2>
-      <div class="balance-grid">
-        <div class="balance-item">
-          <span class="balance-label text-gray text-sm">Portfolio Value</span>
-          <span class="balance-value font-bold text-dark text-xl">{{formatCurrency(balance?.portfolioValue || 0)}}</span>
-        </div>
-        <div class="balance-item">
-          <span class="balance-label text-gray text-sm">Buying Power</span>
-          <span class="balance-value font-bold text-success text-xl">{{formatCurrency(balance?.buyingPower || 0)}}</span>
-        </div>
-        <div class="balance-item">
-          <span class="balance-label text-gray text-sm">Settled Cash</span>
-          <span class="balance-value font-bold text-primary text-xl">{{formatCurrency(balance?.cash || 0)}}</span>
-        </div>
-      </div>
-    </div>
-
     <!-- Sell Individual Stocks Section -->
     <div class="section-card mobile-card">
       <div class="section-header p-b-sm border-bottom" style="margin-bottom: 0px; padding-bottom: 0px;">
@@ -96,16 +77,8 @@
       </div>
 
       <!-- Sell percentage controls -->
-      <div *ngIf="selectedPosition" class="sell-controls p-t-md fade-in">
-        <div class="info-box bg-gray-50 p-sm rounded m-b-md">
-          <div class="display-flex align-start">
-            <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
-            <p class="text-xs text-gray m-0">
-              Selling a portion of your position converts the stock value into Buying Power immediately (for trading) and Settled Cash after 1 business day (for withdrawal).
-            </p>
-          </div>
-        </div>
-
+      <div *ngIf="selectedPosition" class="sell-controls p-t-md fade-in" style="margin-top: 0px;">
+        
         <div class="percentage-selector m-b-md">
           <div class="display-flex justify-between align-center m-b-xs">
             <label class="percentage-label font-medium text-dark">Amount to Sell</label>
@@ -145,6 +118,15 @@
           <ion-spinner *ngIf="isSelling" name="crescent" slot="start"></ion-spinner>
           {{isSelling ? 'Processing...' : 'Sell ' + selectedPosition.symbol}}
         </ion-button>
+
+        <div class="info-box bg-gray-50 p-sm rounded m-t-md">
+          <div class="display-flex align-start">
+            <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
+            <p class="text-xs text-gray m-0">
+              Selling a portion of your position converts the stock value into Buying Power immediately (for trading) and Settled Cash after 1 business day (for withdrawal).
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 

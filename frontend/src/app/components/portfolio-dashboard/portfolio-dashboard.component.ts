@@ -9,7 +9,7 @@ import {
   IonRefresher, IonRefresherContent, IonCard, IonCardContent, IonCardHeader,
   IonCardTitle, IonSpinner, IonItem, IonLabel, IonBadge, IonSegment,
   IonSegmentButton, IonGrid, IonRow, IonCol, IonList, IonChip,
-  IonTabs, IonTabBar, IonTab, IonTabButton
+  IonTabs, IonTabBar, IonTab, IonTabButton, IonRippleEffect
 } from "@ionic/angular/standalone";
 
 @Component({
@@ -24,7 +24,7 @@ import {
     IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent,
     IonRefresher, IonRefresherContent, IonCard, IonCardContent, IonCardHeader,
     IonCardTitle, IonSpinner, IonItem, IonLabel, IonBadge, IonSegment,
-    IonSegmentButton, IonGrid, IonRow, IonCol, IonList, IonChip
+    IonSegmentButton, IonGrid, IonRow, IonCol, IonList, IonChip, IonRippleEffect
   ]
 })
 export class PortfolioDashboardComponent implements OnInit {
@@ -36,6 +36,7 @@ export class PortfolioDashboardComponent implements OnInit {
   selectedTab = 'overview';
   selectedPeriod = 'ALL';
   chartData: PortfolioDataPoint[] = [];
+  isFlipped = false;
   
   // Time period options for chart
   periodOptions = [
@@ -71,6 +72,30 @@ export class PortfolioDashboardComponent implements OnInit {
       try {
         const performanceData = await this.portfolioService.getPerformance().toPromise();
         this.performanceData = Array.isArray(performanceData) ? performanceData : [];
+        
+        // Sync performance data with dashboard summary for consistency
+        if (this.dashboard) {
+          // Sync 'Total' performance
+          let totalPerf = this.performanceData.find(p => p.period === 'Total');
+          if (!totalPerf) {
+            totalPerf = { period: 'Total', startValue: 0, endValue: 0, totalReturn: 0, totalReturnPercent: 0 };
+            this.performanceData.push(totalPerf);
+          }
+          // Use dashboard values as source of truth
+          totalPerf.startValue = this.dashboard.totalInvested;
+          totalPerf.endValue = this.dashboard.summary.portfolioValue;
+          totalPerf.totalReturn = this.dashboard.totalGainLoss;
+          totalPerf.totalReturnPercent = this.dashboard.totalGainLossPercent;
+
+          // Sync 'Today' performance
+          let todayPerf = this.performanceData.find(p => p.period === 'Today');
+          if (todayPerf) {
+            todayPerf.endValue = this.dashboard.summary.portfolioValue;
+            todayPerf.totalReturn = this.dashboard.summary.todayChange;
+            todayPerf.totalReturnPercent = this.dashboard.summary.todayChangePercent;
+            todayPerf.startValue = this.dashboard.summary.portfolioValue - this.dashboard.summary.todayChange;
+          }
+        }
       } catch (perfError) {
         console.warn('Performance endpoint not available:', perfError);
         this.performanceData = [];
@@ -93,6 +118,11 @@ export class PortfolioDashboardComponent implements OnInit {
   async onRefresh(event: any) {
     await this.loadPortfolioData();
     event.target.complete();
+  }
+
+  toggleFlip() {
+    this.isFlipped = !this.isFlipped;
+    console.log('Card flipped:', this.isFlipped);
   }
 
   onPeriodChange(period: string | number | undefined): void {
@@ -167,6 +197,10 @@ export class PortfolioDashboardComponent implements OnInit {
 
   onTabChange(event: any) {
     this.selectedTab = event.detail.value;
+    // Flip card based on tab selection
+    // Overview (default) -> Front side (isFlipped = false)
+    // Analytics -> Back side (isFlipped = true)
+    this.isFlipped = this.selectedTab === 'analytics';
   }
 
   async showToast(message: string, color: string = 'primary') {
