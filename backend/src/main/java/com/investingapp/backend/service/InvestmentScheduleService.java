@@ -64,14 +64,22 @@ public class InvestmentScheduleService {
                     schedule.setStartDate(enforcedStartDate);
                     schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(enforcedStartDate));
                 } else {
-                    schedule.setStartDate(startDate);
+                    // Only update start date if it's not already set, or if we want to allow re-anchoring.
+                    // User requested that start date should NOT update from original time.
+                    // However, if the user explicitly changes the day of week (by picking a new next date),
+                    // we might need to respect that. But for now, let's respect the "don't update" request
+                    // unless it's null.
+                    if (schedule.getStartDate() == null) {
+                        schedule.setStartDate(startDate);
+                    }
                     
-                    // If nextInvestmentDate is explicitly provided, use it
+                    // If nextInvestmentDate is explicitly provided, use it but adjust for holidays
                     if (nextInvestmentDate != null) {
-                        schedule.setNextInvestmentDate(nextInvestmentDate);
+                        // Adjust the provided date for business days/holidays
+                        schedule.setNextInvestmentDate(schedule.adjustForBusinessDay(nextInvestmentDate));
                     } else {
                         // Otherwise calculate from start date
-                        schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(startDate));
+                        schedule.setNextInvestmentDate(schedule.calculateNextInvestmentDate(schedule.getStartDate()));
                     }
                 }
             }

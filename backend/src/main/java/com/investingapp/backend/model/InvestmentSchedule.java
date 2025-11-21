@@ -152,7 +152,7 @@ public class InvestmentSchedule {
     /**
      * Adjust date to next business day if it falls on weekend or holiday
      */
-    private LocalDate adjustForBusinessDay(LocalDate date) {
+    public LocalDate adjustForBusinessDay(LocalDate date) {
         LocalDate adjustedDate = date;
         
         // Skip weekends (Saturday = 6, Sunday = 7)
