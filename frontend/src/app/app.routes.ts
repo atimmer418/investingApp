@@ -78,6 +78,10 @@ export const routes: Routes = [
     loadComponent: () => import('./sell-withdraw/sell-withdraw.page').then(m => m.SellWithdrawPage)
   },
   {
+    path: 'faq',
+    loadComponent: () => import('./faq/faq.page').then(m => m.FaqPage)
+  },
+  {
     path: 'tabs',
     loadChildren: () => import('./tabs/tabs.routes').then((m) => m.routes),
   },

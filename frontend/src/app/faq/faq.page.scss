@@ -1,0 +1,177 @@
+// Variables matching FRED theme
+$primary-color: #0054e9;
+$text-dark: #111827;
+$text-gray: #6b7280;
+$bg-light: #f3f4f6;
+$card-bg: #ffffff;
+$border-color: #e5e7eb;
+
+ion-content {
+  --background: #{$bg-light};
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+  background: $bg-light;
+}
+
+ion-toolbar {
+  --background: #{$bg-light};
+  --color: #{$text-dark};
+  
+  ion-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+}
+
+.mobile-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+// Hero Section
+.faq-hero {
+  text-align: center;
+  margin-bottom: 32px;
+  padding: 20px 0;
+
+  .hero-icon {
+    font-size: 48px;
+    color: $primary-color;
+    margin-bottom: 16px;
+    
+    ion-icon {
+      background: rgba($primary-color, 0.1);
+      padding: 16px;
+      border-radius: 50%;
+    }
+  }
+
+  h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: $text-dark;
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    font-size: 16px;
+    color: $text-gray;
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+// FAQ List
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.faq-card {
+  background: $card-bg;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+
+  &.active {
+    border-color: rgba($primary-color, 0.3);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  }
+}
+
+.faq-header {
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background: $card-bg;
+  
+  // Ripple effect could be added here if using ion-item, but div is fine for custom styling
+  &:active {
+    background-color: #f9fafb;
+  }
+
+  .question-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    padding-right: 16px;
+
+    .icon-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: #eff6ff; // Light blue
+      border-radius: 12px;
+      color: $primary-color;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .question-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: $text-dark;
+      margin: 0;
+      line-height: 1.4;
+    }
+  }
+
+  .toggle-icon {
+    color: $text-gray;
+    font-size: 20px;
+    transition: transform 0.3s ease;
+  }
+}
+
+.faq-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #fafafa; // Slightly different bg for answer
+
+  &.expanded {
+    max-height: 500px; // Arbitrary large height
+    border-top: 1px solid $border-color;
+  }
+
+  .answer-content {
+    padding: 20px;
+    
+    p {
+      margin: 0;
+      color: #4b5563; // Slightly darker gray for readability
+      line-height: 1.6;
+      font-size: 15px;
+    }
+  }
+}
+
+// Support Section
+.support-section {
+  margin-top: 40px;
+  text-align: center;
+  padding-bottom: 40px;
+
+  p {
+    color: $text-gray;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+
+  .contact-btn {
+    --border-radius: 12px;
+    font-weight: 600;
+    height: 48px;
+  }
+}

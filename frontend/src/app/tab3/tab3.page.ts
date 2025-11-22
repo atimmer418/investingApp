@@ -2,12 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { 
-  IonHeader, 
-  IonToolbar, 
-  IonTitle, 
-  IonContent, 
-  IonItem, 
+import {
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonItem,
   IonList,
   IonIcon,
   IonLabel,
@@ -20,7 +20,7 @@ import {
   IonToast
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { 
+import {
   settingsOutline,
   walletOutline,
   cardOutline,
@@ -70,12 +70,12 @@ interface SettingItem {
   templateUrl: 'tab3.page.html',
   styleUrls: ['tab3.page.scss'],
   imports: [
-    CommonModule, 
-    IonHeader, 
-    IonToolbar, 
-    IonTitle, 
-    IonContent, 
-    IonItem, 
+    CommonModule,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonItem,
     IonList,
     IonIcon,
     IonLabel,
@@ -90,14 +90,14 @@ interface SettingItem {
 })
 export class Tab3Page implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   public userPreferences: UserPreferences | null = null;
   public recurringInvestment: RecurringInvestment | null = null;
   public currentBankAccount: BankAccount | null = null;
   public isToastOpen = false;
   public toastMessage = '';
   public toastColor = 'primary';
-  
+
   public settingSections: SettingSection[] = [
     {
       title: 'Investment Management',
@@ -202,10 +202,10 @@ export class Tab3Page implements OnInit, OnDestroy {
       title: 'Support & Legal',
       items: [
         {
-          title: 'Help Center',
-          subtitle: 'FAQs and troubleshooting',
+          title: 'FAQs',
+          subtitle: 'Common questions answered',
           icon: 'help-circle-outline',
-          action: 'helpCenter',
+          action: 'faq',
           type: 'navigation'
         },
         {
@@ -234,8 +234,8 @@ export class Tab3Page implements OnInit, OnDestroy {
   ];
 
   constructor(
-    private router: Router, 
-    private settingsService: SettingsService, 
+    private router: Router,
+    private settingsService: SettingsService,
     private plaidService: PlaidService,
     private authService: AuthService
   ) {
@@ -270,7 +270,7 @@ export class Tab3Page implements OnInit, OnDestroy {
   ngOnInit() {
     this.initializeSettingSections();
     this.setupDemoData();
-    
+
     // Subscribe to user preferences
     this.settingsService.getPreferences()
       .pipe(takeUntil(this.destroy$))
@@ -330,7 +330,7 @@ export class Tab3Page implements OnInit, OnDestroy {
 
   onSettingClick(action: string) {
     console.log('Clicked setting:', action);
-    
+
     switch (action) {
       case 'recurringInvestments':
         this.handleRecurringInvestments();
@@ -373,6 +373,9 @@ export class Tab3Page implements OnInit, OnDestroy {
         break;
       case 'language':
         this.showComingSoon('Language Settings');
+        break;
+      case 'faq':
+        this.router.navigate(['/faq']);
         break;
       case 'helpCenter':
         this.showComingSoon('Help Center');
