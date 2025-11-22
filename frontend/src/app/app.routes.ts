@@ -74,6 +74,10 @@ export const routes: Routes = [
     loadComponent: () => import('./beneficiaries/add-beneficiary.page').then(m => m.AddBeneficiaryPage)
   },
   {
+    path: 'sell-withdraw',
+    loadComponent: () => import('./sell-withdraw/sell-withdraw.page').then(m => m.SellWithdrawPage)
+  },
+  {
     path: 'tabs',
     loadChildren: () => import('./tabs/tabs.routes').then((m) => m.routes),
   },
