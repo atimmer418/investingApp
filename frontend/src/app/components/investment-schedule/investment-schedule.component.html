@@ -8,12 +8,12 @@
 
 <ion-content [fullscreen]="true" class="ion-padding">
   <div class="investment-schedule-container">
-    
+
     <!-- Page Introduction -->
     <div class="page-intro">
       <h2>Set Up Your Investment Schedule</h2>
       <p class="helper-text">
-        We'll automatically invest from your linked checking account on your pay dates. 
+        We'll automatically invest from your linked checking account on your pay dates.
         This ensures consistent wealth building aligned with your income schedule.
       </p>
     </div>
@@ -24,16 +24,11 @@
         <h3>How often are you paid?</h3>
         <p class="helper-text">Your investments should happen on the same schedule as your paychecks</p>
       </div>
-      
+
       <div class="input-display-wrapper">
-        <ion-select
-          [(ngModel)]="schedule.payFrequency"
-          (ionChange)="onFrequencyChange($event.detail.value)"
-          placeholder="Select your pay frequency"
-          interface="popover">
-          <ion-select-option 
-            *ngFor="let freq of frequencyOptions" 
-            [value]="freq.value">
+        <ion-select [(ngModel)]="schedule.payFrequency" (ionChange)="onFrequencyChange($event.detail.value)"
+          placeholder="Select your pay frequency" interface="popover">
+          <ion-select-option *ngFor="let freq of frequencyOptions" [value]="freq.value">
             {{ freq.label }}
           </ion-select-option>
         </ion-select>
@@ -44,25 +39,14 @@
     <div class="input-section">
       <div class="section-label">
         <h3>When is your next pay date?</h3>
-        <p class="helper-text" *ngIf="schedule.payFrequency !== 'SEMI_MONTHLY'">We'll start your investments on this date and continue based on your pay frequency</p>
-        <p class="helper-text" *ngIf="schedule.payFrequency === 'SEMI_MONTHLY'">Semi-monthly investments are automatically scheduled for the 15th and last day of each month</p>
+        <p class="helper-text">We'll start your investments on this date and continue based on your pay frequency</p>
       </div>
-      
-      <div class="input-display-wrapper" *ngIf="schedule.payFrequency !== 'SEMI_MONTHLY'">
-        <ion-input
-          type="date"
-          [(ngModel)]="schedule.startDate"
-          (ionChange)="onStartDateChange($event.detail.value || '')"
-          [min]="getMinDate()"
+
+      <div class="input-display-wrapper">
+        <ion-input type="date" [(ngModel)]="schedule.startDate"
+          (ionChange)="onStartDateChange($event.detail.value || '')" [min]="getMinDate()"
           placeholder="Select your next pay date">
         </ion-input>
-      </div>
-      
-      <div class="input-display-wrapper" *ngIf="schedule.payFrequency === 'SEMI_MONTHLY'">
-        <ion-note color="medium">
-          <ion-icon name="calendar-outline"></ion-icon>
-          Automatically scheduled for 15th and last day of each month
-        </ion-note>
       </div>
     </div>
 
@@ -70,24 +54,21 @@
     <div class="input-section">
       <div class="section-label">
         <h3>Investment amount</h3>
-        <p class="helper-text">Amount to invest per {{ getSelectedFrequencyDetails()?.label?.toLowerCase() || 'payment' }}</p>
+        <p class="helper-text">Amount to invest per {{ getSelectedFrequencyDetails()?.label?.toLowerCase() || 'payment'
+          }}</p>
       </div>
-      
+
       <div class="input-display-wrapper">
         <span class="currency-symbol">$</span>
-        <ion-input
-          type="number"
-          [(ngModel)]="schedule.investmentAmount"
-          (ionBlur)="onAmountChange()"
-          placeholder="0"
+        <ion-input type="number" [(ngModel)]="schedule.investmentAmount" (ionBlur)="onAmountChange()" placeholder="0"
           min="1">
         </ion-input>
       </div>
-      
+
       <div class="amount-recommendations" *ngIf="monthlyGoal > 0">
         <p class="helper-text">
           <ion-icon name="lightbulb-outline"></ion-icon>
-          Recommended: {{ formatCurrency(monthlyGoal / (getSelectedFrequencyDetails()?.paychecksPerMonth || 1)) }} 
+          Recommended: {{ formatCurrency(monthlyGoal / (getSelectedFrequencyDetails()?.paychecksPerMonth || 1)) }}
           to meet your monthly goal of {{ formatCurrency(monthlyGoal) }}
         </p>
       </div>
@@ -99,7 +80,7 @@
         <h3>Projections</h3>
         <p class="helper-text">How much you'll invest over time</p>
       </div>
-      
+
       <div class="projection-grid">
         <div class="projection-item">
           <div class="projection-value">{{ formatCurrency(getMonthlyProjection()) }}</div>
@@ -110,21 +91,20 @@
           <div class="projection-label">Per Year</div>
         </div>
       </div>
-      
+
       <div class="goal-comparison" *ngIf="monthlyGoal > 0">
-        <p class="helper-text" [class.success-text]="getMonthlyProjection() >= monthlyGoal" [class.warning-text]="getMonthlyProjection() < monthlyGoal">
+        <p class="helper-text" [class.success-text]="getMonthlyProjection() >= monthlyGoal"
+          [class.warning-text]="getMonthlyProjection() < monthlyGoal">
           <ion-icon [name]="getMonthlyProjection() >= monthlyGoal ? 'checkmark-circle' : 'warning'"></ion-icon>
-          {{ getMonthlyProjection() >= monthlyGoal ? 'You\'re on track to meet your goal!' : 'Consider increasing to meet your goal (' + formatCurrency(monthlyGoal - getMonthlyProjection()) + ' short)' }}
+          {{ getMonthlyProjection() >= monthlyGoal ? 'You\'re on track to meet your goal!' : 'Consider increasing to
+          meet your goal (' + formatCurrency(monthlyGoal - getMonthlyProjection()) + ' short)' }}
         </p>
       </div>
     </div>
 
     <!-- Navigation Controls -->
     <div class="navigation-controls">
-      <ion-button 
-        expand="block" 
-        [disabled]="!canProceed() || isSubmitting"
-        (click)="goToStockPreferences()">
+      <ion-button expand="block" [disabled]="!canProceed() || isSubmitting" (click)="goToStockPreferences()">
         <ion-spinner name="crescent" *ngIf="isSubmitting" slot="start"></ion-spinner>
         <span *ngIf="!isSubmitting">Review & Finalize</span>
         <span *ngIf="isSubmitting">Setting up schedule...</span>

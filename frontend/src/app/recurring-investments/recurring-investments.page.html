@@ -147,10 +147,9 @@
             fill="outline" 
             color="primary"
             expand="block"
-            (click)="openDatePicker()"
-            [disabled]="editedInvestment.frequency === 'SEMI_MONTHLY'">
+            (click)="openDatePicker()">
             <ion-icon name="calendar-outline" slot="start"></ion-icon>
-            {{ editedInvestment.frequency === 'SEMI_MONTHLY' ? '1st and 15th of month' : formatDate((editedInvestment.nextInvestmentDate || (currentInvestment && currentInvestment.nextInvestmentDate)) || '') }}
+            {{ formatDate((editedInvestment.nextInvestmentDate || (currentInvestment && currentInvestment.nextInvestmentDate)) || '') }}
           </ion-button>
           <p class="input-helper">When your next investment will occur</p>
         </div>

@@ -31,7 +31,8 @@ import {
   checkmarkCircleOutline,
   alertCircleOutline,
   settingsOutline,
-  informationCircleOutline, addOutline } from 'ionicons/icons';
+  informationCircleOutline, addOutline
+} from 'ionicons/icons';
 import { InvestmentService, InvestmentSchedule, CreateInvestmentScheduleRequest } from '../services/investment.service';
 
 interface InvestmentFrequencyOption {
@@ -69,7 +70,7 @@ interface InvestmentFrequencyOption {
 })
 export class RecurringInvestmentsPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   currentInvestment: InvestmentSchedule | null = null;
   editedInvestment: Partial<InvestmentSchedule> = {
     investmentAmount: 0,
@@ -77,13 +78,13 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     isPaused: false,
     nextInvestmentDate: undefined
   };
-  
+
   showSuccessToast = false;
   showErrorToast = false;
   toastMessage = '';
   isLoading = false;
   isDatePickerOpen = false;
-  
+
   // Helper property for date picker minimum date
   readonly todayISO = new Date().toISOString();
 
@@ -118,7 +119,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     private router: Router,
     private investmentService: InvestmentService
   ) {
-    addIcons({cashOutline,timeOutline,calendarOutline,addOutline,checkmarkCircleOutline,pauseOutline,playOutline,alertCircleOutline,settingsOutline,informationCircleOutline});
+    addIcons({ cashOutline, timeOutline, calendarOutline, addOutline, checkmarkCircleOutline, pauseOutline, playOutline, alertCircleOutline, settingsOutline, informationCircleOutline });
   }
 
   ngOnInit() {
@@ -138,7 +139,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
         next: (investment: InvestmentSchedule) => {
           this.currentInvestment = investment;
           if (investment) {
-            this.editedInvestment = { 
+            this.editedInvestment = {
               investmentAmount: investment.investmentAmount,
               frequency: investment.frequency,
               isPaused: investment.isPaused,
@@ -168,7 +169,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
 
   getFrequencyText(): string {
     if (!this.currentInvestment) return 'period';
-    
+
     switch (this.currentInvestment.frequency) {
       case 'WEEKLY':
         return 'week';
@@ -185,7 +186,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
 
   getEditedFrequencyText(): string {
     if (!this.editedInvestment?.frequency) return 'period';
-    
+
     switch (this.editedInvestment.frequency) {
       case 'WEEKLY':
         return 'week';
@@ -202,17 +203,17 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
 
   getFrequencyDescription(): string {
     if (!this.currentInvestment) return '';
-    
+
     const option = this.frequencyOptions.find(opt => opt.value === this.currentInvestment?.frequency);
     const baseDescription = option?.description || '';
-    
+
     // Add specific day information based on frequency and start date
-    // Use nextInvestmentDate if available, otherwise startDate
-    const dateInput = this.currentInvestment.nextInvestmentDate || this.currentInvestment.startDate;
-    
+    // Use chosenDate (user preference) if available, otherwise fallback to nextInvestmentDate or startDate
+    const dateInput = this.currentInvestment.chosenDate || this.currentInvestment.nextInvestmentDate || this.currentInvestment.startDate;
+
     if (dateInput) {
       let date: Date;
-      
+
       // Handle array format from Java LocalDate serialization [year, month, day]
       if (Array.isArray(dateInput) && dateInput.length === 3) {
         const [year, month, day] = dateInput;
@@ -221,10 +222,10 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       } else if (typeof dateInput === 'string') {
         // Parse string manually to avoid UTC conversion issues
         // If it contains 'T', split by 'T' first to get the date part
-        const datePart = dateInput.includes('T') ? 
-          dateInput.split('T')[0] : 
+        const datePart = dateInput.includes('T') ?
+          dateInput.split('T')[0] :
           dateInput;
-          
+
         const parts = datePart.split('-');
         if (parts.length === 3) {
           const year = parseInt(parts[0]);
@@ -238,14 +239,14 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       } else {
         return baseDescription;
       }
-      
+
       if (isNaN(date.getTime())) {
         return baseDescription;
       }
-      
+
       const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
       const dayOfMonth = date.getUTCDate();
-      
+
       switch (this.currentInvestment.frequency) {
         case 'WEEKLY':
           return `Every ${dayOfWeek}`;
@@ -255,12 +256,12 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
           const ordinal = this.getOrdinal(dayOfMonth);
           return `Every ${ordinal}`;
         case 'SEMI_MONTHLY':
-          return 'Each 1st and 15th';
+          return 'Every 1st and 15th';
         default:
           return baseDescription;
       }
     }
-    
+
     return baseDescription;
   }
 
@@ -284,10 +285,10 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
    */
   getDateForPicker(dateInput: string | number[] | undefined): string {
     if (!dateInput) return '';
-    
+
     try {
       let date: Date;
-      
+
       if (Array.isArray(dateInput) && dateInput.length === 3) {
         const [year, month, day] = dateInput;
         // Construct UTC date at noon
@@ -309,11 +310,11 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       } else {
         return '';
       }
-      
+
       if (isNaN(date.getTime())) {
         return '';
       }
-      
+
       // Return ISO string for the picker (which expects YYYY-MM-DD or full ISO)
       // Use UTC methods to get the date parts we constructed
       const year = date.getUTCFullYear();
@@ -358,7 +359,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
   getAnnualProjection(): number {
     if (!this.currentInvestment) return 0;
     const amount = this.currentInvestment.investmentAmount;
-    
+
     switch (this.currentInvestment.frequency) {
       case 'WEEKLY':
         return amount * 52;
@@ -384,10 +385,10 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
 
   formatDate(dateInput: string | number[], includeYear: boolean = true): string {
     if (!dateInput) return 'Not set';
-    
+
     try {
       let date: Date;
-      
+
       // Handle array format from Java LocalDate serialization [year, month, day]
       if (Array.isArray(dateInput) && dateInput.length === 3) {
         const [year, month, day] = dateInput;
@@ -411,11 +412,11 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
         console.error('Unexpected date format:', dateInput);
         return 'Invalid date format';
       }
-      
+
       if (isNaN(date.getTime())) {
         return 'Invalid date';
       }
-      
+
       const options: Intl.DateTimeFormatOptions = {
         month: 'short',
         day: 'numeric',
@@ -425,7 +426,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       if (includeYear) {
         options.year = 'numeric';
       }
-      
+
       return new Intl.DateTimeFormat('en-US', options).format(date);
     } catch (error) {
       console.error('Error formatting date:', error);
@@ -444,19 +445,19 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     if (!this.currentInvestment) return;
 
     const newStatus = !this.currentInvestment.isPaused;
-    
+
     this.isLoading = true;
-    
-    const operation = newStatus ? 
+
+    const operation = newStatus ?
       this.investmentService.pauseSchedule(this.currentInvestment.id) :
       this.investmentService.resumeSchedule(this.currentInvestment.id);
-    
+
     operation.pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (updatedSchedule: InvestmentSchedule) => {
           this.currentInvestment = updatedSchedule;
-          this.toastMessage = newStatus ? 
-            'Investment schedule paused successfully!' : 
+          this.toastMessage = newStatus ?
+            'Investment schedule paused successfully!' :
             'Investment schedule resumed successfully!';
           this.showSuccessToast = true;
           this.isLoading = false;
@@ -480,7 +481,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     if (!this.currentInvestment) return;
 
     this.isLoading = true;
-    
+
     // Determine what start date to use - ALWAYS use existing start date to preserve history
     let startDateString: string;
     if (Array.isArray(this.currentInvestment.startDate)) {
@@ -489,20 +490,20 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     } else {
       startDateString = this.currentInvestment.startDate;
     }
-    
+
     // Determine next investment date
     let nextInvestmentDateString: string | undefined;
-    
+
     // Use the edited next investment date (which defaults to current if not changed)
     if (this.editedInvestment.nextInvestmentDate) {
       let dateToAdjust: Date;
 
       if (typeof this.editedInvestment.nextInvestmentDate === 'string') {
         // Handle ISO string or YYYY-MM-DD
-        const datePart = this.editedInvestment.nextInvestmentDate.includes('T') ? 
-          this.editedInvestment.nextInvestmentDate.split('T')[0] : 
+        const datePart = this.editedInvestment.nextInvestmentDate.includes('T') ?
+          this.editedInvestment.nextInvestmentDate.split('T')[0] :
           this.editedInvestment.nextInvestmentDate;
-        
+
         const parts = datePart.split('-');
         const year = parseInt(parts[0]);
         const month = parseInt(parts[1]);
@@ -521,7 +522,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       const day = dateToAdjust.getUTCDate().toString().padStart(2, '0');
       nextInvestmentDateString = `${year}-${month}-${day}`;
     }
-    
+
     // Create update request
     const updateRequest: CreateInvestmentScheduleRequest = {
       investmentAmount: this.editedInvestment.investmentAmount!,

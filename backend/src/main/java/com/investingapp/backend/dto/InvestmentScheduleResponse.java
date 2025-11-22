@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 
 public class InvestmentScheduleResponse {
-    
+
     private Long id;
     private BigDecimal monthlyAmount;
     private BigDecimal investmentAmount;
@@ -23,6 +23,7 @@ public class InvestmentScheduleResponse {
     private LocalDate nextInvestmentDate;
     private String achRequestId;
     private Boolean isPaused;
+    private LocalDate chosenDate; // The user's preferred anchor date
     private String scheduleDescription; // User-friendly schedule description
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -35,6 +36,7 @@ public class InvestmentScheduleResponse {
         this.frequency = schedule.getFrequency();
         this.startDate = schedule.getStartDate();
         this.nextInvestmentDate = schedule.getNextInvestmentDate();
+        this.chosenDate = schedule.getChosenDate();
         this.achRequestId = schedule.getAchRequestId();
         this.isPaused = schedule.getIsPaused();
         this.scheduleDescription = schedule.getScheduleDescription(); // Add schedule description

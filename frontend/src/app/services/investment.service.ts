@@ -64,6 +64,7 @@ export interface InvestmentSchedule {
   frequency: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'SEMI_MONTHLY';
   startDate: string | number[]; // Can be ISO string or Java LocalDate array [year, month, day]
   nextInvestmentDate: string | number[]; // Can be ISO string or Java LocalDate array [year, month, day]
+  chosenDate?: string | number[]; // The user's preferred anchor date, unaffected by holiday adjustments
   achRequestId?: string;
   isPaused: boolean;
   scheduleDescription: string;
@@ -91,7 +92,7 @@ export class InvestmentService {
   private apiUrl = `${environment.backendApiUrl}/investments`;
   private scheduleApiUrl = `${environment.backendApiUrl}/investment-schedule`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('jwtToken');
