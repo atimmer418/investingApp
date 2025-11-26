@@ -15,7 +15,8 @@ import {
     documentTextOutline,
     shieldCheckmarkOutline,
     informationCircleOutline,
-    businessOutline
+    businessOutline,
+    cashOutline
 } from 'ionicons/icons';
 
 interface FaqItem {
@@ -76,6 +77,12 @@ export class FaqPage implements OnInit {
             answer: 'Your Alpaca account through FRED is set up as a margin account, which legally gives you access to features like same-day settlement and extended trading hours. However, the margin borrowing feature is disabled by default since most FRED users don\'t need it. This setup provides you with the benefits of a margin account (faster settlement) without the risks of margin trading, keeping your investment strategy simple and safe.',
             isOpen: false,
             icon: 'business-outline'
+        },
+        {
+            question: 'What do the different portfolio values mean?',
+            answer: 'Total Equity is your complete account value (investments + cash). Total Portfolio Value is just your stock holdings\' market value. Total Invested is how much cash you\'ve deposited. Buying Power is funds available for immediate trading. Settled Cash is withdrawn-ready funds (typically available 1 day after selling stocks).',
+            isOpen: false,
+            icon: 'cash-outline'
         }
     ];
 
@@ -91,7 +98,8 @@ export class FaqPage implements OnInit {
             documentTextOutline,
             shieldCheckmarkOutline,
             informationCircleOutline,
-            businessOutline
+            businessOutline,
+            cashOutline
         });
     }
 

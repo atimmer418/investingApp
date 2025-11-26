@@ -164,35 +164,6 @@ export class PortfolioDashboardComponent implements OnInit {
       value: history.values[index]
     }));
 
-    // IMPORTANT: Add today's current portfolio value as the latest data point
-    // This ensures the chart reflects the most recent portfolio value,
-    // including any sales or purchases that happened today
-    if (this.dashboard) {
-      const today = new Date().toISOString();
-      const currentValue = this.dashboard.summary.portfolioValue;
-
-      // Check if we already have today's data to avoid duplicates
-      const lastDataPoint = chartData.length > 0 ? chartData[chartData.length - 1] : null;
-      const todayDate = today.split('T')[0]; // Get YYYY-MM-DD format
-      const lastDate = lastDataPoint ? lastDataPoint.date.split('T')[0] : '';
-
-      // Only add if today's date is not already in the chart data
-      if (lastDate !== todayDate) {
-        chartData.push({
-          date: today,
-          value: currentValue
-        });
-        console.log(`[Portfolio Chart] Added today's portfolio value: ${currentValue} at ${today}`);
-      } else {
-        // Update the last point with current value if it's today's date
-        // This ensures we show the most recent value, not historical
-        if (lastDataPoint) {
-          lastDataPoint.value = currentValue;
-          console.log(`[Portfolio Chart] Updated today's portfolio value: ${currentValue}`);
-        }
-      }
-    }
-
     return chartData;
   }
 
