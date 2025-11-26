@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,14 +21,17 @@ import java.util.List;
 @RequestMapping("/api/user")
 @CrossOrigin(origins = "*")
 public class UserController {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
-    
+
     @Autowired
     private UserRepository userRepository;
-    
+
     @Autowired
     private UserProgressRepository userProgressRepository;
+
+    @Autowired
+    private jakarta.persistence.EntityManager entityManager;
 
     public static class UserProgressResponse {
         private boolean getStartedCompleted;
@@ -41,7 +45,7 @@ public class UserController {
         private Double monthlyInvestment;
         private String nextStep;
         private double completionPercentage;
-        
+
         public UserProgressResponse(User user) {
             UserProgress progress = user.getUserProgress();
             if (progress != null) {
@@ -70,25 +74,58 @@ public class UserController {
             }
             this.monthlyInvestment = user.getMonthlyInvestment();
         }
-        
+
         // Getters
-        public boolean isGetStartedCompleted() { return getStartedCompleted; }
-        public boolean isSurveyInitialCompleted() { return surveyInitialCompleted; }
-        public boolean isFiPlanResultsCompleted() { return fiPlanResultsCompleted; }
-        public boolean isAuthFinalizeCompleted() { return authFinalizeCompleted; }
-        public boolean isKycVerificationCompleted() { return kycVerificationCompleted; }
-        public boolean isLinkPlaidCompleted() { return linkPlaidCompleted; }
-        public boolean isInvestmentScheduleCompleted() { return investmentScheduleCompleted; }
-        public boolean isInvestmentConfirmationCompleted() { return investmentConfirmationCompleted; }
-        public Double getMonthlyInvestment() { return monthlyInvestment; }
-        public String getNextStep() { return nextStep; }
-        public double getCompletionPercentage() { return completionPercentage; }
+        public boolean isGetStartedCompleted() {
+            return getStartedCompleted;
+        }
+
+        public boolean isSurveyInitialCompleted() {
+            return surveyInitialCompleted;
+        }
+
+        public boolean isFiPlanResultsCompleted() {
+            return fiPlanResultsCompleted;
+        }
+
+        public boolean isAuthFinalizeCompleted() {
+            return authFinalizeCompleted;
+        }
+
+        public boolean isKycVerificationCompleted() {
+            return kycVerificationCompleted;
+        }
+
+        public boolean isLinkPlaidCompleted() {
+            return linkPlaidCompleted;
+        }
+
+        public boolean isInvestmentScheduleCompleted() {
+            return investmentScheduleCompleted;
+        }
+
+        public boolean isInvestmentConfirmationCompleted() {
+            return investmentConfirmationCompleted;
+        }
+
+        public Double getMonthlyInvestment() {
+            return monthlyInvestment;
+        }
+
+        public String getNextStep() {
+            return nextStep;
+        }
+
+        public double getCompletionPercentage() {
+            return completionPercentage;
+        }
     }
 
     /**
      * Get the current user's progress through the onboarding flow
      * GET /user/progress
      */
+    @Transactional(readOnly = true)
     @GetMapping("/progress")
     public ResponseEntity<UserProgressResponse> getUserProgress(Authentication authentication) {
         try {
@@ -96,18 +133,18 @@ public class UserController {
                 logger.warn("[UserController] No authentication found for progress request");
                 return ResponseEntity.status(401).build();
             }
-            
+
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String email = userDetails.getUsername();
-            
+
             logger.info("[UserController] Getting progress for user: {}", email);
-            
+
             User user = userRepository.findByEmail(email).orElse(null);
             if (user == null) {
                 logger.warn("[UserController] User not found: {}", email);
                 return ResponseEntity.notFound().build();
             }
-            
+
             // Ensure user has UserProgress record
             if (user.getUserProgress() == null) {
                 UserProgress newProgress = new UserProgress();
@@ -115,17 +152,30 @@ public class UserController {
                 userRepository.save(user);
                 logger.info("[UserController] Created new UserProgress record for user: {}", email);
             }
-            
+
+            // IMPORTANT: Clear the persistence context and re-fetch with EAGER loading
+            // This prevents returning stale cached data from Hibernate's first-level cache
+            entityManager.clear();
+            user = userRepository.findByEmailWithProgress(email).orElse(null);
+            if (user == null) {
+                logger.error("[UserController] User disappeared after refresh: {}", email);
+                return ResponseEntity.notFound().build();
+            }
+            logger.info("[UserController] Re-fetched user with EAGER UserProgress from database for: {}", email);
+
             UserProgressResponse progress = new UserProgressResponse(user);
             UserProgress userProgress = user.getUserProgress();
-            logger.info("[UserController] Returning progress for user {}: getStarted={}, surveyInitial={}, fiPlanResults={}, authFinalize={}, kycVerification={}, linkPlaid={}, investmentSchedule={}, investmentConfirmation={}, nextStep={}, completion={}%", 
-                       email, progress.isGetStartedCompleted(), progress.isSurveyInitialCompleted(), progress.isFiPlanResultsCompleted(), 
-                       progress.isAuthFinalizeCompleted(), progress.isKycVerificationCompleted(), progress.isLinkPlaidCompleted(), 
-                       progress.isInvestmentScheduleCompleted(), progress.isInvestmentConfirmationCompleted(), 
-                       userProgress.getNextStep(), userProgress.getCompletionPercentage());
-            
+            logger.info(
+                    "[UserController] Returning progress for user {}: getStarted={}, surveyInitial={}, fiPlanResults={}, authFinalize={}, kycVerification={}, linkPlaid={}, investmentSchedule={}, investmentConfirmation={}, nextStep={}, completion={}%",
+                    email, progress.isGetStartedCompleted(), progress.isSurveyInitialCompleted(),
+                    progress.isFiPlanResultsCompleted(),
+                    progress.isAuthFinalizeCompleted(), progress.isKycVerificationCompleted(),
+                    progress.isLinkPlaidCompleted(),
+                    progress.isInvestmentScheduleCompleted(), progress.isInvestmentConfirmationCompleted(),
+                    userProgress.getNextStep(), userProgress.getCompletionPercentage());
+
             return ResponseEntity.ok(progress);
-            
+
         } catch (Exception e) {
             logger.error("[UserController] Error getting user progress: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
@@ -137,26 +187,26 @@ public class UserController {
      * PUT /user/progress
      */
     @PutMapping("/progress")
-    public ResponseEntity<?> updateUserProgress(@RequestBody Map<String, Object> progressUpdate, 
-                                              Authentication authentication, 
-                                              HttpServletRequest request) {
+    public ResponseEntity<?> updateUserProgress(@RequestBody Map<String, Object> progressUpdate,
+            Authentication authentication,
+            HttpServletRequest request) {
         try {
             if (authentication == null || authentication.getPrincipal() == null) {
                 logger.warn("[UserController] No authentication found for progress update request");
                 return ResponseEntity.status(401).build();
             }
-            
+
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String email = userDetails.getUsername();
-            
+
             logger.info("[UserController] Updating progress for user: {}", email);
-            
+
             User user = userRepository.findByEmail(email).orElse(null);
             if (user == null) {
                 logger.warn("[UserController] User not found: {}", email);
                 return ResponseEntity.notFound().build();
             }
-            
+
             // Ensure user has UserProgress record
             UserProgress userProgress = user.getUserProgress();
             if (userProgress == null) {
@@ -165,7 +215,7 @@ public class UserController {
                 userRepository.save(user);
                 logger.info("[UserController] Created new UserProgress record for user: {}", email);
             }
-            
+
             // Update progress fields based on the request
             if (progressUpdate.containsKey("getStartedCompleted")) {
                 userProgress.setGetStartedCompleted((Boolean) progressUpdate.get("getStartedCompleted"));
@@ -178,19 +228,20 @@ public class UserController {
             }
             if (progressUpdate.containsKey("authFinalizeCompleted")) {
                 userProgress.setAuthFinalizeCompleted((Boolean) progressUpdate.get("authFinalizeCompleted"));
-                
+
                 // Record IP address and device ID when user completes authfinalize
                 if ((Boolean) progressUpdate.get("authFinalizeCompleted")) {
                     String ipAddress = getClientIpAddress(request);
                     user.setRegistrationIpAddress(ipAddress);
-                    logger.info("[UserController] Recorded IP address {} for user {} completing authfinalize", ipAddress, email);
-                    
+                    logger.info("[UserController] Recorded IP address {} for user {} completing authfinalize",
+                            ipAddress, email);
+
                     // Also record device ID if available (better for mobile tracking)
                     String deviceId = request.getHeader("X-Device-ID");
                     if (deviceId != null && !deviceId.isEmpty()) {
                         user.setDeviceId(deviceId);
-                        logger.info("[UserController] Recorded device ID {} for user {} completing authfinalize", 
-                                   deviceId.substring(0, Math.min(8, deviceId.length())) + "...", email);
+                        logger.info("[UserController] Recorded device ID {} for user {} completing authfinalize",
+                                deviceId.substring(0, Math.min(8, deviceId.length())) + "...", email);
                     }
                 }
             }
@@ -201,31 +252,35 @@ public class UserController {
                 userProgress.setLinkPlaidCompleted((Boolean) progressUpdate.get("linkPlaidCompleted"));
             }
             if (progressUpdate.containsKey("investmentScheduleCompleted")) {
-                userProgress.setInvestmentScheduleCompleted((Boolean) progressUpdate.get("investmentScheduleCompleted"));
+                userProgress
+                        .setInvestmentScheduleCompleted((Boolean) progressUpdate.get("investmentScheduleCompleted"));
             }
             if (progressUpdate.containsKey("investmentConfirmationCompleted")) {
-                userProgress.setInvestmentConfirmationCompleted((Boolean) progressUpdate.get("investmentConfirmationCompleted"));
+                userProgress.setInvestmentConfirmationCompleted(
+                        (Boolean) progressUpdate.get("investmentConfirmationCompleted"));
             }
-            
-            // Ensure logical consistency: if later steps are completed, earlier steps should be too
+
+            // Ensure logical consistency: if later steps are completed, earlier steps
+            // should be too
             validateAndFixStepDependencies(userProgress, email);
-            
+
             userProgressRepository.save(userProgress);
             userRepository.save(user);
-            
+
             UserProgressResponse updatedProgress = new UserProgressResponse(user);
             logger.info("[UserController] Successfully updated progress for user {}", email);
-            
+
             return ResponseEntity.ok(updatedProgress);
-            
+
         } catch (Exception e) {
             logger.error("[UserController] Error updating user progress: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     /**
-     * Extract the client's IP address from the HTTP request, handling proxies and load balancers
+     * Extract the client's IP address from the HTTP request, handling proxies and
+     * load balancers
      */
     private String getClientIpAddress(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
@@ -233,12 +288,12 @@ public class UserController {
             // X-Forwarded-For can contain multiple IPs, take the first one
             return normalizeIpForDeviceTracking(xForwardedFor.split(",")[0].trim());
         }
-        
+
         String xRealIp = request.getHeader("X-Real-IP");
         if (xRealIp != null && !xRealIp.isEmpty() && !"unknown".equalsIgnoreCase(xRealIp)) {
             return normalizeIpForDeviceTracking(xRealIp);
         }
-        
+
         String xForwardedProto = request.getHeader("X-Forwarded-Proto");
         if (xForwardedProto != null) {
             // If we're behind a proxy, try other headers
@@ -246,17 +301,17 @@ public class UserController {
             if (proxyClientIp != null && !proxyClientIp.isEmpty() && !"unknown".equalsIgnoreCase(proxyClientIp)) {
                 return normalizeIpForDeviceTracking(proxyClientIp);
             }
-            
+
             String wlProxyClientIp = request.getHeader("WL-Proxy-Client-IP");
             if (wlProxyClientIp != null && !wlProxyClientIp.isEmpty() && !"unknown".equalsIgnoreCase(wlProxyClientIp)) {
                 return normalizeIpForDeviceTracking(wlProxyClientIp);
             }
         }
-        
+
         // Fall back to remote address
         return normalizeIpForDeviceTracking(request.getRemoteAddr());
     }
-    
+
     /**
      * Normalize IP address for reliable device tracking
      * For IPv6: Use network prefix (/64) to handle privacy extensions
@@ -266,7 +321,7 @@ public class UserController {
         if (rawIp == null || rawIp.isEmpty()) {
             return rawIp;
         }
-        
+
         // Check if it's IPv6 (contains colons)
         if (rawIp.contains(":")) {
             // IPv6 - extract first 4 groups (64 bits) for network identification
@@ -278,135 +333,142 @@ public class UserController {
                 return networkPrefix;
             }
         }
-        
+
         // IPv4 or malformed - return as-is
         return rawIp;
     }
-    
+
     /**
      * Check if the current device should be prompted for passkey re-authentication
-     * Simple logic: Only prompt if this exact device has completed auth-finalize before
+     * Simple logic: Only prompt if this exact device has completed auth-finalize
+     * before
      * GET /user/should-prompt-reauth
      */
     @GetMapping("/should-prompt-reauth")
     public ResponseEntity<?> shouldPromptForReauth(HttpServletRequest request) {
         try {
             String deviceId = request.getHeader("X-Device-ID");
-            
+
             if (deviceId != null && !deviceId.isEmpty()) {
                 logger.info("[UserController] Checking device ID {} for passkey re-auth", deviceId);
-                
+
                 // Simple check: Has THIS specific device completed auth-finalize before?
                 List<User> usersFromThisDevice = userRepository.findByDeviceIdAndAuthFinalizeCompleted(deviceId, true);
-                
+
                 if (!usersFromThisDevice.isEmpty()) {
-                    logger.info("[UserController] Device ID {} has {} completed users - prompting for passkey", 
-                               deviceId, usersFromThisDevice.size());
+                    logger.info("[UserController] Device ID {} has {} completed users - prompting for passkey",
+                            deviceId, usersFromThisDevice.size());
                     return ResponseEntity.ok(Map.of(
-                        "shouldPromptReauth", true,
-                        "message", "This device has completed registration before",
-                        "trackingMethod", "device-id"
-                    ));
+                            "shouldPromptReauth", true,
+                            "message", "This device has completed registration before",
+                            "trackingMethod", "device-id"));
                 } else {
                     logger.info("[UserController] Device ID {} is new - proceeding with fresh onboarding", deviceId);
                     return ResponseEntity.ok(Map.of(
-                        "shouldPromptReauth", false,
-                        "message", "New device - proceed with registration",
-                        "trackingMethod", "device-id"
-                    ));
+                            "shouldPromptReauth", false,
+                            "message", "New device - proceed with registration",
+                            "trackingMethod", "device-id"));
                 }
             } else {
                 // No device ID provided - treat as new user
                 logger.info("[UserController] No device ID provided - treating as new user");
                 return ResponseEntity.ok(Map.of(
-                    "shouldPromptReauth", false,
-                    "message", "No device tracking available - proceed with registration",
-                    "trackingMethod", "none"
-                ));
+                        "shouldPromptReauth", false,
+                        "message", "No device tracking available - proceed with registration",
+                        "trackingMethod", "none"));
             }
-            
+
         } catch (Exception e) {
             logger.error("[UserController] Error checking reauth prompt status: {}", e.getMessage(), e);
             return ResponseEntity.ok(Map.of(
-                "shouldPromptReauth", false,
-                "message", "Error occurred, defaulting to fresh registration"
-            ));
+                    "shouldPromptReauth", false,
+                    "message", "Error occurred, defaulting to fresh registration"));
         }
     }
-    
+
     /**
      * Ensure logical consistency of step completion
-     * If later steps are completed, automatically complete earlier prerequisite steps
+     * If later steps are completed, automatically complete earlier prerequisite
+     * steps
      */
     private void validateAndFixStepDependencies(UserProgress userProgress, String userEmail) {
         boolean wasFixed = false;
-        
-        // Step dependency chain: getStarted → surveyInitial → fiPlanResults → authFinalize → kycVerification → linkPlaid → investmentSchedule → investmentConfirmation
-        
+
+        // Step dependency chain: getStarted → surveyInitial → fiPlanResults →
+        // authFinalize → kycVerification → linkPlaid → investmentSchedule →
+        // investmentConfirmation
+
         // If any step beyond getStarted is completed, getStarted should be completed
-        if (!userProgress.isGetStartedCompleted() && 
-            (userProgress.isSurveyInitialCompleted() || userProgress.isFiPlanResultsCompleted() || 
-             userProgress.isAuthFinalizeCompleted() || userProgress.isKycVerificationCompleted() ||
-             userProgress.isLinkPlaidCompleted() || userProgress.isInvestmentScheduleCompleted() ||
-             userProgress.isInvestmentConfirmationCompleted())) {
+        if (!userProgress.isGetStartedCompleted() &&
+                (userProgress.isSurveyInitialCompleted() || userProgress.isFiPlanResultsCompleted() ||
+                        userProgress.isAuthFinalizeCompleted() || userProgress.isKycVerificationCompleted() ||
+                        userProgress.isLinkPlaidCompleted() || userProgress.isInvestmentScheduleCompleted() ||
+                        userProgress.isInvestmentConfirmationCompleted())) {
             userProgress.setGetStartedCompleted(true);
             wasFixed = true;
             logger.info("[UserController] Auto-completed getStarted for user {}", userEmail);
         }
-        
-        // If any step beyond surveyInitial is completed, surveyInitial should be completed
-        if (!userProgress.isSurveyInitialCompleted() && 
-            (userProgress.isFiPlanResultsCompleted() || userProgress.isAuthFinalizeCompleted() || 
-             userProgress.isKycVerificationCompleted() || userProgress.isLinkPlaidCompleted() ||
-             userProgress.isInvestmentScheduleCompleted() || userProgress.isInvestmentConfirmationCompleted())) {
+
+        // If any step beyond surveyInitial is completed, surveyInitial should be
+        // completed
+        if (!userProgress.isSurveyInitialCompleted() &&
+                (userProgress.isFiPlanResultsCompleted() || userProgress.isAuthFinalizeCompleted() ||
+                        userProgress.isKycVerificationCompleted() || userProgress.isLinkPlaidCompleted() ||
+                        userProgress.isInvestmentScheduleCompleted()
+                        || userProgress.isInvestmentConfirmationCompleted())) {
             userProgress.setSurveyInitialCompleted(true);
             wasFixed = true;
             logger.info("[UserController] Auto-completed surveyInitial for user {}", userEmail);
         }
-        
-        // If any step beyond fiPlanResults is completed, fiPlanResults should be completed
-        if (!userProgress.isFiPlanResultsCompleted() && 
-            (userProgress.isAuthFinalizeCompleted() || userProgress.isKycVerificationCompleted() ||
-             userProgress.isLinkPlaidCompleted() || userProgress.isInvestmentScheduleCompleted() ||
-             userProgress.isInvestmentConfirmationCompleted())) {
+
+        // If any step beyond fiPlanResults is completed, fiPlanResults should be
+        // completed
+        if (!userProgress.isFiPlanResultsCompleted() &&
+                (userProgress.isAuthFinalizeCompleted() || userProgress.isKycVerificationCompleted() ||
+                        userProgress.isLinkPlaidCompleted() || userProgress.isInvestmentScheduleCompleted() ||
+                        userProgress.isInvestmentConfirmationCompleted())) {
             userProgress.setFiPlanResultsCompleted(true);
             wasFixed = true;
             logger.info("[UserController] Auto-completed fiPlanResults for user {}", userEmail);
         }
-        
-        // If any step beyond authFinalize is completed, authFinalize should be completed
-        if (!userProgress.isAuthFinalizeCompleted() && 
-            (userProgress.isKycVerificationCompleted() || userProgress.isLinkPlaidCompleted() ||
-             userProgress.isInvestmentScheduleCompleted() || userProgress.isInvestmentConfirmationCompleted())) {
+
+        // If any step beyond authFinalize is completed, authFinalize should be
+        // completed
+        if (!userProgress.isAuthFinalizeCompleted() &&
+                (userProgress.isKycVerificationCompleted() || userProgress.isLinkPlaidCompleted() ||
+                        userProgress.isInvestmentScheduleCompleted()
+                        || userProgress.isInvestmentConfirmationCompleted())) {
             userProgress.setAuthFinalizeCompleted(true);
             wasFixed = true;
             logger.info("[UserController] Auto-completed authFinalize for user {}", userEmail);
         }
-        
-        // If any step beyond kycVerification is completed, kycVerification should be completed
-        if (!userProgress.isKycVerificationCompleted() && 
-            (userProgress.isLinkPlaidCompleted() || userProgress.isInvestmentScheduleCompleted() ||
-             userProgress.isInvestmentConfirmationCompleted())) {
+
+        // If any step beyond kycVerification is completed, kycVerification should be
+        // completed
+        if (!userProgress.isKycVerificationCompleted() &&
+                (userProgress.isLinkPlaidCompleted() || userProgress.isInvestmentScheduleCompleted() ||
+                        userProgress.isInvestmentConfirmationCompleted())) {
             userProgress.setKycVerificationCompleted(true);
             wasFixed = true;
             logger.info("[UserController] Auto-completed kycVerification for user {}", userEmail);
         }
-        
+
         // If any step beyond linkPlaid is completed, linkPlaid should be completed
-        if (!userProgress.isLinkPlaidCompleted() && 
-            (userProgress.isInvestmentScheduleCompleted() || userProgress.isInvestmentConfirmationCompleted())) {
+        if (!userProgress.isLinkPlaidCompleted() &&
+                (userProgress.isInvestmentScheduleCompleted() || userProgress.isInvestmentConfirmationCompleted())) {
             userProgress.setLinkPlaidCompleted(true);
             wasFixed = true;
             logger.info("[UserController] Auto-completed linkPlaid for user {}", userEmail);
         }
-        
-        // If investmentConfirmation is completed, investmentSchedule should be completed
+
+        // If investmentConfirmation is completed, investmentSchedule should be
+        // completed
         if (!userProgress.isInvestmentScheduleCompleted() && userProgress.isInvestmentConfirmationCompleted()) {
             userProgress.setInvestmentScheduleCompleted(true);
             wasFixed = true;
             logger.info("[UserController] Auto-completed investmentSchedule for user {}", userEmail);
         }
-        
+
         if (wasFixed) {
             logger.info("[UserController] Fixed step dependencies for user {}", userEmail);
         }

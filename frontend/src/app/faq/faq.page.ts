@@ -14,7 +14,8 @@ import {
     calendarOutline,
     documentTextOutline,
     shieldCheckmarkOutline,
-    informationCircleOutline
+    informationCircleOutline,
+    businessOutline
 } from 'ionicons/icons';
 
 interface FaqItem {
@@ -69,6 +70,12 @@ export class FaqPage implements OnInit {
             answer: 'Your brokerage account is held with Alpaca Securities LLC, a member of SIPC, which protects securities customers of its members up to $500,000 (including $250,000 for claims for cash). FRED uses bank-level encryption to secure your data.',
             isOpen: false,
             icon: 'shield-checkmark-outline'
+        },
+        {
+            question: 'What type of account do I get with Alpaca through FRED?',
+            answer: 'Your Alpaca account through FRED is set up as a margin account, which legally gives you access to features like same-day settlement and extended trading hours. However, the margin borrowing feature is disabled by default since most FRED users don\'t need it. This setup provides you with the benefits of a margin account (faster settlement) without the risks of margin trading, keeping your investment strategy simple and safe.',
+            isOpen: false,
+            icon: 'business-outline'
         }
     ];
 
@@ -83,7 +90,8 @@ export class FaqPage implements OnInit {
             calendarOutline,
             documentTextOutline,
             shieldCheckmarkOutline,
-            informationCircleOutline
+            informationCircleOutline,
+            businessOutline
         });
     }
 

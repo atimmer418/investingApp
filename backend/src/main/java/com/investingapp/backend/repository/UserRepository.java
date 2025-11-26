@@ -18,6 +18,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Returns an Optional, which can be empty if no user is found
     Optional<User> findByEmail(String email);
 
+    // Find a user by email with UserProgress eagerly fetched (avoids lazy loading
+    // cache issues)
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.userProgress WHERE u.email = :email")
+    Optional<User> findByEmailWithProgress(@Param("email") String email);
+
     // Check if a user exists with the given email address
     Boolean existsByEmail(String email);
 
@@ -26,15 +31,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Find a user by their Plaid item ID for webhook processing
     User findByPlaidItemId(String plaidItemId);
-    
-    // Find users by registration IP who have completed auth-finalize (for passkey re-auth prompting)
+
+    // Find users by registration IP who have completed auth-finalize (for passkey
+    // re-auth prompting)
     @Query("SELECT u FROM User u JOIN u.userProgress up WHERE u.registrationIpAddress = :ipAddress AND up.authFinalizeCompleted = :completed")
-    List<User> findByRegistrationIpAddressAndAuthFinalizeCompleted(@Param("ipAddress") String registrationIpAddress, @Param("completed") boolean authFinalizeCompleted);
+    List<User> findByRegistrationIpAddressAndAuthFinalizeCompleted(@Param("ipAddress") String registrationIpAddress,
+            @Param("completed") boolean authFinalizeCompleted);
 
-    // Find users by device ID who have completed auth-finalize (more reliable than IP for mobile)
+    // Find users by device ID who have completed auth-finalize (more reliable than
+    // IP for mobile)
     @Query("SELECT u FROM User u JOIN u.userProgress up WHERE u.deviceId = :deviceId AND up.authFinalizeCompleted = :completed")
-    List<User> findByDeviceIdAndAuthFinalizeCompleted(@Param("deviceId") String deviceId, @Param("completed") boolean authFinalizeCompleted);
+    List<User> findByDeviceIdAndAuthFinalizeCompleted(@Param("deviceId") String deviceId,
+            @Param("completed") boolean authFinalizeCompleted);
 
-    // You can add more custom query methods here as needed following Spring Data JPA conventions
+    // You can add more custom query methods here as needed following Spring Data
+    // JPA conventions
     // e.g., List<User> findByLastName(String lastName);
 }
