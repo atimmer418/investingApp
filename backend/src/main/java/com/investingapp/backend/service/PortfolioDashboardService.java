@@ -508,8 +508,9 @@ public class PortfolioDashboardService {
                                 unrealizedPL, unrealizedPLPercent, currentPrice, averageCostBasis, BigDecimal.ZERO);
                         positions.add(position);
 
-                        logger.debug("Added position: {} shares ({} available) of {} with market value ${}",
-                                quantity, quantityAvailable, symbol, marketValue);
+                        logger.info(
+                                "Added position: {} shares ({} available) of {} with market value ${}, avgCost=${}, costBasis=${}",
+                                quantity, quantityAvailable, symbol, marketValue, averageCostBasis, costBasis);
                     }
                 }
             }
@@ -814,6 +815,51 @@ public class PortfolioDashboardService {
             this.currentPrice = currentPrice;
             this.averageCostBasis = averageCostBasis;
             this.percentOfAccount = percentOfAccount;
+        }
+
+        // Getters for JSON serialization
+        public String getSymbol() {
+            return symbol;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public BigDecimal getQuantity() {
+            return quantity;
+        }
+
+        public BigDecimal getQuantityAvailable() {
+            return quantityAvailable;
+        }
+
+        public BigDecimal getMarketValue() {
+            return marketValue;
+        }
+
+        public BigDecimal getCostBasis() {
+            return costBasis;
+        }
+
+        public BigDecimal getUnrealizedPL() {
+            return unrealizedPL;
+        }
+
+        public BigDecimal getUnrealizedPLPercent() {
+            return unrealizedPLPercent;
+        }
+
+        public BigDecimal getCurrentPrice() {
+            return currentPrice;
+        }
+
+        public BigDecimal getAverageCostBasis() {
+            return averageCostBasis;
+        }
+
+        public BigDecimal getPercentOfAccount() {
+            return percentOfAccount;
         }
     }
 
