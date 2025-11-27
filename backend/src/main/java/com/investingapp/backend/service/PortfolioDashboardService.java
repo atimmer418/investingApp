@@ -486,7 +486,10 @@ public class PortfolioDashboardService {
                     BigDecimal currentPrice = parseDecimalSafely(positionNode, "current_price", BigDecimal.ZERO);
                     BigDecimal quantityAvailable = parseDecimalSafely(positionNode, "qty_available", quantity);
 
-                    if (!symbol.isEmpty() && quantity.compareTo(BigDecimal.ZERO) != 0) {
+                    // Filter out positions with negligible quantity (dust/rounding errors)
+                    // Minimum threshold: 0.001 shares to avoid showing positions like 1e-9 shares
+                    BigDecimal minShareThreshold = new BigDecimal("0.001");
+                    if (!symbol.isEmpty() && quantity.compareTo(minShareThreshold) >= 0) {
                         // Calculate unrealized P/L percentage
                         BigDecimal unrealizedPLPercent = BigDecimal.ZERO;
                         if (costBasis.compareTo(BigDecimal.ZERO) > 0) {
@@ -511,6 +514,9 @@ public class PortfolioDashboardService {
                         logger.info(
                                 "Added position: {} shares ({} available) of {} with market value ${}, avgCost=${}, costBasis=${}",
                                 quantity, quantityAvailable, symbol, marketValue, averageCostBasis, costBasis);
+                    } else if (!symbol.isEmpty() && quantity.compareTo(BigDecimal.ZERO) > 0) {
+                        logger.debug("Filtered out dust position: {} shares of {} (below threshold of {})",
+                                quantity, symbol, minShareThreshold);
                     }
                 }
             }
@@ -549,6 +555,18 @@ public class PortfolioDashboardService {
                             BigDecimal currentPrice = parseDecimalSafely(positionNode, "current_price",
                                     BigDecimal.ZERO);
                             BigDecimal quantityAvailable = parseDecimalSafely(positionNode, "qty_available", quantity);
+
+                            // Filter out positions with negligible quantity (dust/rounding errors)
+                            // Minimum threshold: 0.001 shares
+                            BigDecimal minShareThreshold = new BigDecimal("0.001");
+                            if (symbol.isEmpty() || quantity.compareTo(minShareThreshold) < 0) {
+                                if (!symbol.isEmpty() && quantity.compareTo(BigDecimal.ZERO) > 0) {
+                                    logger.debug(
+                                            "Filtered out dust position from EOD: {} shares of {} (below threshold)",
+                                            quantity, symbol);
+                                }
+                                continue; // Skip this position
+                            }
 
                             // Calculate unrealized P&L percentage
                             BigDecimal unrealizedPLPercent = BigDecimal.ZERO;
