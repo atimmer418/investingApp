@@ -34,7 +34,7 @@
   align-items: center;
   justify-content: center;
   min-height: 200px;
-  
+
   ion-spinner {
     --color: var(--portfolio-primary);
     transform: scale(1.2);
@@ -72,7 +72,8 @@
   }
 }
 
-.portfolio-hero-front, .portfolio-hero-back {
+.portfolio-hero-front,
+.portfolio-hero-back {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   position: absolute;
@@ -92,35 +93,35 @@
 
 .portfolio-hero-front {
   transform: rotateY(0deg);
-  
+
   .portfolio-value {
     padding: var(--app-spacing-lg) 0;
-    
+
     .value-amount {
       margin: 0 0 var(--app-spacing-xs) 0;
       letter-spacing: -1px;
     }
-    
+
     .portfolio-change {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: var(--app-spacing-xs);
       margin: var(--app-spacing-sm) 0;
-      
+
       ion-icon {
         font-size: var(--app-font-size-lg);
       }
-      
+
       &.change-success {
         color: var(--portfolio-success);
       }
-      
+
       &.change-danger {
         color: var(--portfolio-danger);
       }
     }
-    
+
     .value-subtitle {
       opacity: 0.8;
     }
@@ -130,19 +131,19 @@
 .portfolio-hero-back {
   transform: rotateY(180deg);
   padding: var(--app-spacing-lg);
-  
+
   .hero-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
     height: 100%;
     gap: var(--app-spacing-md);
-    
+
     .hero-grid-item {
       display: flex;
       flex-direction: column;
       justify-content: center;
-      
+
       .hero-label {
         font-size: var(--app-font-size-xs);
         color: var(--portfolio-text-secondary);
@@ -151,17 +152,32 @@
         margin-bottom: 4px;
         font-weight: 500;
       }
-      
+
       .hero-value {
         font-size: var(--app-font-size-lg);
         font-weight: 600;
         color: var(--portfolio-text-primary);
       }
-      
-      &.top-left { align-items: flex-start; text-align: left; }
-      &.top-right { align-items: flex-end; text-align: right; }
-      &.bottom-left { align-items: flex-start; text-align: left; }
-      &.bottom-right { align-items: flex-end; text-align: right; }
+
+      &.top-left {
+        align-items: flex-start;
+        text-align: left;
+      }
+
+      &.top-right {
+        align-items: flex-end;
+        text-align: right;
+      }
+
+      &.bottom-left {
+        align-items: flex-start;
+        text-align: left;
+      }
+
+      &.bottom-right {
+        align-items: flex-end;
+        text-align: right;
+      }
     }
   }
 }
@@ -174,17 +190,17 @@
   display: flex;
   gap: var(--app-spacing-sm);
   margin-bottom: var(--app-spacing-md);
-  
+
   .stat-card {
     flex: 1;
     text-align: center;
     padding: var(--app-spacing-md);
-    
+
     .stat-value {
       color: var(--portfolio-text-primary);
       margin-bottom: var(--app-spacing-xs);
     }
-    
+
     .stat-label {
       color: var(--portfolio-text-secondary);
       font-size: var(--app-font-size-sm);
@@ -214,7 +230,7 @@
   width: calc(100% - var(--app-spacing-md));
   margin: 0 auto;
   position: relative;
-  
+
   @media (prefers-color-scheme: dark) {
     background: var(--app-gray-800);
   }
@@ -237,43 +253,43 @@
   font-weight: 500;
   position: relative;
   z-index: 1;
-  
+
   ion-icon {
     font-size: 24px;
     transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
   }
-  
+
   &:hover {
     color: var(--app-gray-600);
     transform: scale(0.98);
   }
-  
+
   &:active {
     transform: scale(0.96);
   }
-  
+
   &.active {
     background: var(--app-card-background);
     color: var(--app-primary);
-    box-shadow: 
+    box-shadow:
       0 2px 8px rgba(0, 0, 0, 0.1),
       0 1px 3px rgba(0, 0, 0, 0.06);
-    
+
     @media (prefers-color-scheme: dark) {
       background: var(--app-gray-700);
-      box-shadow: 
+      box-shadow:
         0 2px 8px rgba(0, 0, 0, 0.3),
         0 1px 3px rgba(0, 0, 0, 0.2);
     }
-    
+
     ion-icon {
       transform: scale(1.05);
     }
-    
+
     span {
       font-weight: 600;
     }
-    
+
     &:hover {
       transform: scale(1.0);
       color: var(--app-primary);
@@ -299,25 +315,25 @@
 
 .chart-section {
   margin-bottom: var(--app-spacing-md);
-  min-height: 450px;  // Ensure card is tall enough to properly contain header + chart
+  min-height: 450px; // Ensure card is tall enough to properly contain header + chart
   display: flex;
   flex-direction: column;
-  
+
   .chart-header {
     display: flex;
     flex-direction: column;
     gap: var(--app-spacing-md);
     margin-bottom: var(--app-spacing-md);
-    flex-shrink: 0;  // Prevent header from shrinking
-    
+    flex-shrink: 0; // Prevent header from shrinking
+
     h3 {
       margin: 0;
       color: var(--portfolio-text-primary);
     }
-    
+
     .period-selector {
       align-self: stretch;
-      
+
       ion-segment-button {
         min-height: 32px;
         font-size: var(--app-font-size-xs);
@@ -325,14 +341,14 @@
       }
     }
   }
-  
+
   .chart-container {
-    height: 350px;  // Increased height to properly contain the full chart
+    height: 350px; // Increased height to properly contain the full chart
     position: relative;
     margin: 0;
-    padding: var(--app-spacing-md);  // More padding for better visual containment
-    overflow: visible;  // Allow chart to display fully
-    
+    padding: var(--app-spacing-md); // More padding for better visual containment
+    overflow: visible; // Allow chart to display fully
+
     app-portfolio-chart {
       display: block;
       height: 100%;
@@ -347,52 +363,52 @@
 
 .holdings-section {
   margin-bottom: var(--app-spacing-md);
-  
+
   h3 {
     margin: 0 0 var(--app-spacing-md) 0;
     color: var(--portfolio-text-primary);
   }
-  
+
   .holding-item {
     padding: var(--app-spacing-md) 0;
     border-bottom: 1px solid var(--app-card-border);
-    
+
     &:last-child {
       border-bottom: none;
     }
-    
+
     .holding-main {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       gap: var(--app-spacing-md);
-      
+
       .holding-info {
         flex: 1;
-        
+
         .holding-symbol {
           margin: 0 0 var(--app-spacing-xs) 0;
           color: var(--portfolio-text-primary);
         }
-        
+
         .holding-details {
           margin: 0;
         }
       }
-      
+
       .holding-values {
         flex-shrink: 0;
-        
+
         .holding-value {
           color: var(--portfolio-text-primary);
           margin-bottom: var(--app-spacing-xs);
         }
-        
+
         .holding-change {
           &.change-success {
             color: var(--portfolio-success);
           }
-          
+
           &.change-danger {
             color: var(--portfolio-danger);
           }
@@ -406,60 +422,66 @@
    ANALYTICS SECTIONS
    ============================================================================= */
 
-.analytics-section, .transactions-section {
+.analytics-section,
+.transactions-section {
   margin-bottom: var(--app-spacing-md);
-  
+
   h3 {
     margin: 0 0 var(--app-spacing-md) 0;
     color: var(--portfolio-text-primary);
   }
-  
-  .performance-item, .transaction-item {
+
+  .performance-item,
+  .transaction-item {
     padding: var(--app-spacing-md) 0;
     border-bottom: 1px solid var(--app-card-border);
-    
+
     &:last-child {
       border-bottom: none;
     }
-    
-    .performance-main, .transaction-main {
+
+    .performance-main,
+    .transaction-main {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       gap: var(--app-spacing-md);
-      
-      .performance-info, .transaction-info {
+
+      .performance-info,
+      .transaction-info {
         flex: 1;
-        
+
         h4 {
           margin: 0 0 var(--app-spacing-xs) 0;
           color: var(--portfolio-text-primary);
         }
-        
+
         p {
           margin: var(--app-spacing-xs) 0;
         }
       }
-      
-      .performance-values, .transaction-values {
+
+      .performance-values,
+      .transaction-values {
         flex-shrink: 0;
         text-align: right;
-        
-        .performance-return, .transaction-amount {
+
+        .performance-return,
+        .transaction-amount {
           color: var(--portfolio-text-primary);
           margin-bottom: var(--app-spacing-xs);
         }
-        
+
         .performance-amount {
           &.change-success {
             color: var(--portfolio-success);
           }
-          
+
           &.change-danger {
             color: var(--portfolio-danger);
           }
         }
-        
+
         ion-chip {
           margin: var(--app-spacing-xs) 0 0 0;
         }
@@ -478,7 +500,7 @@
     margin-bottom: var(--app-spacing-md);
     opacity: 0.6;
   }
-  
+
   p {
     margin: 0;
     font-style: italic;
@@ -493,32 +515,32 @@
   .portfolio-hero .portfolio-value .value-amount {
     font-size: var(--app-font-size-3xl);
   }
-  
+
   .chart-container {
     height: 200px !important;
   }
-  
+
   .quick-stats {
     flex-direction: column;
     gap: var(--app-spacing-xs);
-    
+
     .stat-card {
       padding: var(--app-spacing-sm);
     }
   }
-  
+
   .chart-header {
     .period-selector ion-segment-button {
       font-size: 10px !important;
     }
   }
-  
+
   .ios-tab-switcher {
     width: calc(100% - var(--app-spacing-sm));
-    
+
     .ios-tab-button {
       min-height: 40px;
-      
+
       ion-icon {
         font-size: 24px;
       }
@@ -530,26 +552,139 @@
   .mobile-container {
     max-width: 600px;
   }
-  
+
   .chart-container {
     height: 300px;
   }
-  
+
   .ios-tab-switcher {
     max-width: 360px;
-    
+
     .ios-tab-button {
       min-height: 60px;
-      
+
       ion-icon {
         font-size: 22px;
       }
-      
+
       span {
         font-size: 12px;
       }
     }
   }
+}
+
+/* =============================================================================
+   PORTFOLIO INSIGHT TABLE
+   ============================================================================= */
+
+.portfolio-insight-section {
+  margin-bottom: var(--app-spacing-md);
+
+  h3 {
+    margin: 0 0 var(--app-spacing-md) 0;
+    color: var(--portfolio-text-primary);
+  }
+}
+
+.positions-table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 calc(-1 * var(--app-spacing-md));
+  padding: 0 var(--app-spacing-md);
+}
+
+.positions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--app-font-size-sm);
+  min-width: 720px; // Ensure table doesn't get too cramped
+
+  thead {
+    tr {
+      border-bottom: 2px solid var(--app-card-border);
+    }
+
+    th {
+      padding: var(--app-spacing-sm) var(--app-spacing-xs);
+      font-size: var(--app-font-size-xs);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--portfolio-text-secondary);
+      white-space: nowrap;
+
+      &:first-child {
+        padding-left: var(--app-spacing-sm);
+      }
+
+      &:last-child {
+        padding-right: var(--app-spacing-sm);
+      }
+    }
+  }
+
+  tbody {
+    .position-row {
+      border-bottom: 1px solid var(--app-card-border);
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: var(--app-gray-50);
+
+        @media (prefers-color-scheme: dark) {
+          background-color: var(--app-gray-800);
+        }
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: var(--app-spacing-md) var(--app-spacing-xs);
+      color: var(--portfolio-text-primary);
+      white-space: nowrap;
+
+      &:first-child {
+        padding-left: var(--app-spacing-sm);
+      }
+
+      &:last-child {
+        padding-right: var(--app-spacing-sm);
+      }
+    }
+  }
+}
+
+.position-symbol {
+  .symbol-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .symbol-text {
+      color: var(--portfolio-text-primary);
+      font-size: var(--app-font-size-base);
+    }
+
+    .symbol-name {
+      font-size: var(--app-font-size-xs);
+      color: var(--portfolio-text-secondary);
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+.gain-loss-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
 }
 
 /* =============================================================================

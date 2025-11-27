@@ -24,6 +24,8 @@ export interface Position {
   unrealizedPL: number;
   unrealizedPLPercent: number;
   currentPrice: number;
+  averageCostBasis: number;
+  percentOfAccount: number;
 }
 
 export interface PortfolioHistory {
@@ -68,7 +70,7 @@ export interface PerformanceData {
 export class PortfolioService {
   private apiUrl = `${environment.backendApiUrl}/portfolio`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('jwtToken');
@@ -99,14 +101,14 @@ export class PortfolioService {
         // Backend returns: { history: {...}, period: "ALL" }
         // Extract the history object from the response
         const historyData = response.history || response;
-        
+
         // Backend PortfolioHistory class has: timestamps, values, profitLoss
         // Backend sends ISO date strings (YYYY-MM-DD), convert to full ISO datetime for Chart.js
         const timestamps = (historyData.timestamps || []).map((dateStr: string) => {
           // Convert ISO date (YYYY-MM-DD) to full ISO datetime (YYYY-MM-DDTHH:mm:ss.sssZ)
           return new Date(dateStr + 'T00:00:00.000Z').toISOString();
         });
-        
+
         return {
           timestamps,
           values: historyData.values || []

@@ -158,31 +158,64 @@
         </div>
       </div>
 
-      <!-- Recent Transactions -->
-      <div class="transactions-section mobile-card">
-        <h3 class="text-lg font-semibold m-md">Recent Transactions</h3>
+      <!-- Portfolio Insight Table -->
+      <div class="portfolio-insight-section mobile-card">
+        <h3 class="text-lg font-semibold m-md">Portfolio Insight</h3>
 
-        <div *ngFor="let transaction of dashboard.recentTransactions" class="transaction-item">
-          <div class="transaction-main">
-            <div class="transaction-info">
-              <h4 class="text-base font-medium">{{ transaction.type.toUpperCase() }} {{ transaction.symbol }}</h4>
-              <p class="text-sm text-gray">{{ transaction.quantity }} shares &#64; {{ formatCurrency(transaction.price)
-                }}</p>
-              <p class="text-xs text-gray">{{ formatDate(transaction.date) }}</p>
-            </div>
-            <div class="transaction-values text-right">
-              <div class="transaction-amount text-lg font-semibold">{{ formatCurrency(transaction.amount) }}</div>
-              <ion-chip [color]="transaction.status === 'filled' ? 'success' : 'warning'" size="small">
-                {{ transaction.status }}
-              </ion-chip>
-            </div>
-          </div>
+        <div *ngIf="dashboard.positions && dashboard.positions.length > 0" class="positions-table-container">
+          <table class="positions-table">
+            <thead>
+              <tr>
+                <th class="text-left">Symbol</th>
+                <th class="text-right">Quantity</th>
+                <th class="text-right">Avg Cost</th>
+                <th class="text-right">Current</th>
+                <th class="text-right">Value</th>
+                <th class="text-right">Gain/Loss</th>
+                <th class="text-right">% Account</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let position of dashboard.positions" class="position-row">
+                <td class="position-symbol">
+                  <div class="symbol-info">
+                    <span class="symbol-text font-semibold">{{ position.symbol }}</span>
+                    <span class="symbol-name text-sm text-gray">{{ position.name }}</span>
+                  </div>
+                </td>
+                <td class="text-right">
+                  <span class="text-base">{{ position.quantity }}</span>
+                </td>
+                <td class="text-right">
+                  <span class="text-base">{{ formatCurrency(position.averageCostBasis) }}</span>
+                </td>
+                <td class="text-right">
+                  <span class="text-base">{{ formatCurrency(position.currentPrice) }}</span>
+                </td>
+                <td class="text-right">
+                  <span class="text-base font-medium">{{ formatCurrency(position.marketValue) }}</span>
+                </td>
+                <td class="text-right">
+                  <div class="gain-loss-cell">
+                    <span class="text-base font-semibold" [class]="'change-' + getGainLossColor(position.unrealizedPL)">
+                      {{ formatCurrency(position.unrealizedPL) }}
+                    </span>
+                    <span class="text-sm" [class]="'change-' + getGainLossColor(position.unrealizedPL)">
+                      {{ formatPercent(position.unrealizedPLPercent) }}
+                    </span>
+                  </div>
+                </td>
+                <td class="text-right">
+                  <span class="text-base">{{ formatPercent(position.percentOfAccount) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <div *ngIf="!dashboard.recentTransactions || dashboard.recentTransactions.length === 0"
-          class="empty-state text-center p-xl">
-          <ion-icon name="receipt-outline" class="empty-icon text-gray"></ion-icon>
-          <p class="text-gray">No recent transactions</p>
+        <div *ngIf="!dashboard.positions || dashboard.positions.length === 0" class="empty-state text-center p-xl">
+          <ion-icon name="briefcase-outline" class="empty-icon text-gray"></ion-icon>
+          <p class="text-gray">No positions yet</p>
         </div>
       </div>
 
