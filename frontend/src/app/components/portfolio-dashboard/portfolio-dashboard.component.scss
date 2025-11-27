@@ -315,7 +315,6 @@
 
 .chart-section {
   margin-bottom: var(--app-spacing-md);
-  min-height: 450px; // Ensure card is tall enough to properly contain header + chart
   display: flex;
   flex-direction: column;
 
