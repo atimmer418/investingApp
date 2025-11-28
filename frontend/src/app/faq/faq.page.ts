@@ -16,7 +16,8 @@ import {
     shieldCheckmarkOutline,
     informationCircleOutline,
     businessOutline,
-    cashOutline
+    cashOutline,
+    statsChartOutline
 } from 'ionicons/icons';
 
 interface FaqItem {
@@ -83,6 +84,12 @@ export class FaqPage implements OnInit {
             answer: 'Total Equity is your complete account value (investments + cash). Total Portfolio Value is just your stock holdings\' market value. Total Invested is how much cash you\'ve deposited. Buying Power is funds available for immediate trading. Settled Cash is withdrawn-ready funds (typically available 1 day after selling stocks).',
             isOpen: false,
             icon: 'cash-outline'
+        },
+        {
+            question: 'What do the Portfolio Insight table columns mean?',
+            answer: 'Symbol shows your stock ticker and company name. Quantity is how many shares you own. Avg Cost is the average price you paid per share. Current is today\'s market price per share. Value is your position\'s total market value (Quantity × Current). Gain/Loss shows your profit or loss in dollars and percentage. % Account shows what percentage of your total portfolio this position represents.',
+            isOpen: false,
+            icon: 'stats-chart-outline'
         }
     ];
 
@@ -99,7 +106,8 @@ export class FaqPage implements OnInit {
             shieldCheckmarkOutline,
             informationCircleOutline,
             businessOutline,
-            cashOutline
+            cashOutline,
+            statsChartOutline
         });
     }
 

@@ -18,7 +18,7 @@ ion-content {
 ion-toolbar {
   --background: #{$bg-light};
   --color: #{$text-dark};
-  
+
   ion-title {
     font-weight: 600;
     font-size: 1.1rem;
@@ -41,7 +41,7 @@ ion-toolbar {
     font-size: 48px;
     color: $primary-color;
     margin-bottom: 16px;
-    
+
     ion-icon {
       background: rgba($primary-color, 0.1);
       padding: 16px;
@@ -76,7 +76,8 @@ ion-toolbar {
   border-radius: 16px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   overflow: hidden;
-  transition: all 0.3s ease;
+  // iOS-style transition for card state changes
+  transition: all 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
   border: 1px solid transparent;
 
   &.active {
@@ -92,7 +93,7 @@ ion-toolbar {
   align-items: center;
   cursor: pointer;
   background: $card-bg;
-  
+
   // Ripple effect could be added here if using ion-item, but div is fine for custom styling
   &:active {
     background-color: #f9fafb;
@@ -130,24 +131,41 @@ ion-toolbar {
   .toggle-icon {
     color: $text-gray;
     font-size: 20px;
-    transition: transform 0.3s ease;
+    // iOS-style spring animation for icon rotation
+    transition: transform 0.45s cubic-bezier(0.25, 0.8, 0.25, 1),
+      color 0.2s ease;
+
+    ion-icon {
+      display: block;
+    }
+  }
+
+  &:hover .toggle-icon {
+    color: $primary-color;
   }
 }
 
 .faq-body {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  // iOS-style spring animation - smoother and more natural
+  transition: max-height 0.45s cubic-bezier(0.25, 0.8, 0.25, 1),
+    opacity 0.35s ease-out,
+    padding 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
   background-color: #fafafa; // Slightly different bg for answer
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 
   &.expanded {
     max-height: 500px; // Arbitrary large height
+    opacity: 1;
     border-top: 1px solid $border-color;
   }
 
   .answer-content {
     padding: 20px;
-    
+
     p {
       margin: 0;
       color: #4b5563; // Slightly darker gray for readability
