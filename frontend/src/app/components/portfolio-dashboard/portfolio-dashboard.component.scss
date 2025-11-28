@@ -306,7 +306,7 @@
    ============================================================================= */
 
 .tab-content-area {
-  padding-bottom: var(--app-spacing-xl);
+  padding-bottom: calc(var(--app-spacing-xl) * 3); // Extra padding for bottom tab bar + dynamic content
 }
 
 /* =============================================================================
