@@ -170,12 +170,17 @@ export class PortfolioDashboardComponent implements OnInit {
 
 
   formatCurrency(amount: number): string {
+    // Handle edge case where value is very small negative (rounds to 0) 
+    // to avoid displaying "-$0.00"
+    const roundedAmount = Math.round(amount * 100) / 100;
+    const displayAmount = roundedAmount === 0 ? 0 : amount;
+
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
-    }).format(amount);
+    }).format(displayAmount);
   }
 
   formatPercent(value: number): string {
