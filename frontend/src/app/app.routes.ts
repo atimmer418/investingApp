@@ -90,4 +90,8 @@ export const routes: Routes = [
     redirectTo: 'get-started',
     pathMatch: 'full'
   },
+  {
+    path: 'strategy-detail',
+    loadComponent: () => import('./pages/strategy-detail/strategy-detail.page').then( m => m.StrategyDetailPage)
+  },
 ];
