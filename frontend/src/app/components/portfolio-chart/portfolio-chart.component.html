@@ -1,14 +1,20 @@
 <div class="portfolio-chart-container">
   <!-- Chart Canvas -->
   <div class="chart-wrapper">
-    <canvas #chartCanvas class="portfolio-chart"></canvas>
+    <canvas #chartCanvas class="portfolio-chart"
+      (mousedown)="handleStart($event)"
+      (touchstart)="handleStart($event)"
+      (mouseleave)="clearSelection()"
+      (touchend)="clearSelection()"
+      (mouseup)="clearSelection()"
+    ></canvas>
     
     <!-- Floating tooltip above clicked point -->
     <div class="chart-tooltip" 
-         *ngIf="selectedDataPoint" 
+         [class.visible]="isTooltipVisible"
          [style.left.px]="tooltipPosition.x" 
          [style.top.px]="tooltipPosition.y">
-      <div class="tooltip-content">
+      <div class="tooltip-content" *ngIf="selectedDataPoint">
         <div class="tooltip-date">{{ selectedDataPoint.formattedDate }}</div>
         <div class="tooltip-value">{{ formatCurrency(selectedDataPoint.value) }}</div>
       </div>

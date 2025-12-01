@@ -27,7 +27,9 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
   
   private chart: Chart | null = null;
   public selectedDataPoint: { date: string; value: number; formattedDate: string } | null = null;
+  public isTooltipVisible = false;
   public tooltipPosition: { x: number; y: number } = { x: 0, y: 0 };
+  private isInteracting = false;
 
   ngOnInit() {
     // Chart.js is now registered globally in main.ts
@@ -74,7 +76,8 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
         const date = new Date(point.date);
         return date.toLocaleDateString('en-US', { 
           month: 'short', 
-          day: 'numeric' 
+          day: 'numeric',
+          timeZone: 'UTC'
         });
       }),
       datasets: [{
@@ -148,35 +151,19 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
           if (canvas) {
             canvas.style.cursor = elements.length > 0 ? 'pointer' : 'default';
           }
+          
+          // Update tooltip on hover/drag ONLY if interacting
+          if (this.isInteracting && elements.length > 0) {
+             this.handleInteraction(elements);
+          } else if (!this.isInteracting && this.chart && this.chart.getActiveElements().length > 0) {
+             // If not interacting, ensure no points are selected/highlighted
+             this.chart.setActiveElements([]);
+             this.chart.update();
+          }
         },
         onClick: (event, elements) => {
-          if (elements.length > 0) {
-            const elementIndex = elements[0].index;
-            const dataPoint = this.data[elementIndex];
-            const element = elements[0];
-            
-            if (dataPoint && this.chart) {
-              this.selectedDataPoint = {
-                date: dataPoint.date,
-                value: dataPoint.value,
-                formattedDate: this.formatDate(dataPoint.date)
-              };
-              
-              // Get the x position from the chart element (this is already centered on the point)
-              const pointX = element.element.x;
-              const pointY = element.element.y;
-              
-              // Position tooltip centered above the point
-              // pointX is already the center of the dot, so we just need to offset by half the tooltip width
-              this.tooltipPosition = {
-                x: pointX - 50, // Center the tooltip (assuming ~100px width)
-                y: pointY - 80  // Position above the point
-              };
-            }
-          } else {
-            // Clear selection if clicking outside a point
-            this.selectedDataPoint = null;
-          }
+          // Click handling is now managed by mousedown/touchstart and mouseup/touchend
+          // to support "press to view, release to hide" behavior
         }
       }
     };
@@ -184,6 +171,63 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
     this.chart = new Chart(ctx, config);
     } catch (error) {
       console.error('Error initializing chart:', error);
+    }
+  }
+
+  public clearSelection() {
+    this.isInteracting = false;
+    this.isTooltipVisible = false;
+    if (this.chart) {
+      this.chart.setActiveElements([]);
+      this.chart.update();
+    }
+  }
+
+  public handleStart(event: Event) {
+    this.isInteracting = true;
+    if (!this.chart) return;
+    
+    const points = this.chart.getElementsAtEventForMode(
+      event as unknown as Event, 
+      'index', 
+      { intersect: false }, 
+      false
+    );
+    
+    if (points.length > 0) {
+      this.handleInteraction(points);
+    }
+  }
+
+  private handleInteraction(elements: any[]) {
+    if (elements.length > 0) {
+      const elementIndex = elements[0].index;
+      const dataPoint = this.data[elementIndex];
+      const element = elements[0];
+      
+      if (dataPoint && this.chart) {
+        this.selectedDataPoint = {
+          date: dataPoint.date,
+          value: dataPoint.value,
+          formattedDate: this.formatDate(dataPoint.date)
+        };
+        
+        this.isTooltipVisible = true;
+
+        // Explicitly highlight the point
+        this.chart.setActiveElements(elements);
+        this.chart.update();
+
+        // Get the x position from the chart element (this is already centered on the point)
+        const pointX = element.element.x;
+        const pointY = element.element.y;
+        
+        // Position tooltip centered above the point
+        this.tooltipPosition = {
+          x: pointX - 50, // Center the tooltip (assuming ~100px width)
+          y: pointY - 80  // Position above the point
+        };
+      }
     }
   }
 
@@ -202,7 +246,8 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
         const date = new Date(point.date);
         return date.toLocaleDateString('en-US', { 
           month: 'short', 
-          day: 'numeric' 
+          day: 'numeric',
+          timeZone: 'UTC'
         });
       });
       this.chart.data.datasets[0].data = this.data.map(point => point.value);
@@ -221,23 +266,12 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
 
   private formatDate(dateString: string): string {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) {
-      return 'Today';
-    } else if (diffDays === 1) {
-      return 'Yesterday';
-    } else if (diffDays < 7) {
-      return date.toLocaleDateString('en-US', { weekday: 'long' });
-    } else {
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        year: diffDays > 365 ? 'numeric' : undefined
-      });
-    }
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric',
+      timeZone: 'UTC'
+    });
   }
 
   public formatCurrency(value: number): string {

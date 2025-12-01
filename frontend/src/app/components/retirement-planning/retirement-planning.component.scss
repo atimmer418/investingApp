@@ -50,7 +50,7 @@ ion-content {
 
 .ios-tab-switcher {
   display: flex;
-  background: #f0f0f0;
+  background: #f2f2f7;
   /* Gray background for tab switcher */
   border-radius: 12px;
   padding: 2px;
@@ -59,7 +59,7 @@ ion-content {
   position: relative;
 
   @media (prefers-color-scheme: dark) {
-    background: var(--app-gray-700);
+    background: var(--app-gray-800);
   }
 }
 
@@ -67,7 +67,7 @@ ion-content {
   flex: 1;
   background: transparent;
   border: none;
-  border-radius: var(--app-radius-sm);
+  border-radius: 10px;
   padding: var(--app-spacing-sm);
   display: flex;
   align-items: center;
@@ -98,7 +98,9 @@ ion-content {
   &.active {
     background: var(--app-card-background);
     color: var(--app-primary);
-    box-shadow: var(--app-shadow-md);
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.1),
+      0 1px 3px rgba(0, 0, 0, 0.06);
 
     @media (prefers-color-scheme: dark) {
       background: var(--app-gray-700);
@@ -109,6 +111,15 @@ ion-content {
 
     ion-icon {
       transform: scale(1.05);
+    }
+
+    span {
+      font-weight: 600;
+    }
+
+    &:hover {
+      transform: scale(1.0);
+      color: var(--app-primary);
     }
   }
 }

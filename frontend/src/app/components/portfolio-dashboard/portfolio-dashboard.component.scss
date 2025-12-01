@@ -342,7 +342,8 @@
   }
 
   .chart-container {
-    height: 350px; // Increased height to properly contain the full chart
+    min-height: 350px; // Increased height to properly contain the full chart
+    height: auto;
     position: relative;
     margin: 0;
     padding: var(--app-spacing-md); // More padding for better visual containment
@@ -516,7 +517,8 @@
   }
 
   .chart-container {
-    height: 200px !important;
+    min-height: 200px !important;
+    height: auto !important;
   }
 
   .quick-stats {
@@ -553,7 +555,8 @@
   }
 
   .chart-container {
-    height: 300px;
+    min-height: 300px;
+    height: auto;
   }
 
   .ios-tab-switcher {
