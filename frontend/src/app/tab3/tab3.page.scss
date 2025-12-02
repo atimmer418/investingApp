@@ -10,24 +10,102 @@
 }
 
 // Enhanced Header Styling for Tab 3
-.profile-header {
+ion-header {
   ion-toolbar {
-    --background: #f8f9fa;
-    --border-color: transparent;
-    --color: #1a1a1a;
-    --min-height: 56px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    --background: var(--app-background);
+    --color: var(--app-gray-900);
     
-    .profile-title {
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-      font-size: 34px;
-      font-weight: 700;
-      letter-spacing: -0.025em;
-      color: #1a1a1a;
-      text-align: left;
-      padding-left: var(--app-spacing-md);
-      padding-top: 0;
-      margin-top: 0;
+    ion-title {
+      font-weight: 600;
+    }
+    
+    --border-width: 0;
+  }
+}
+
+/* =============================================================================
+   IOS-STYLE HEADER TAB SWITCHER
+   ============================================================================= */
+
+.header-tab-container {
+  background: var(--app-background);
+  border-bottom: 1px solid var(--app-card-border);
+  padding: var(--app-spacing-xs) var(--app-spacing-md) var(--app-spacing-sm);
+  display: flex;
+  justify-content: center;
+}
+
+.ios-tab-switcher {
+  display: flex;
+  background: var(--app-gray-100);
+  border-radius: 12px;
+  padding: 2px;
+  width: calc(100% - var(--app-spacing-md));
+  margin: 0 auto;
+  position: relative;
+
+  @media (prefers-color-scheme: dark) {
+    background: var(--app-gray-800);
+  }
+}
+
+.ios-tab-button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  padding: var(--app-spacing-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  cursor: pointer;
+  color: var(--app-gray-500);
+  font-family: var(--app-font-family);
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+
+  ion-icon {
+    font-size: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  }
+
+  &:hover {
+    color: var(--app-gray-600);
+    transform: scale(0.98);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &.active {
+    background: var(--app-card-background);
+    color: var(--app-primary);
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.1),
+      0 1px 3px rgba(0, 0, 0, 0.06);
+
+    @media (prefers-color-scheme: dark) {
+      background: var(--app-gray-700);
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.3),
+        0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    ion-icon {
+      transform: scale(1.05);
+    }
+
+    span {
+      font-weight: 600;
+    }
+
+    &:hover {
+      transform: scale(1.0);
+      color: var(--app-primary);
     }
   }
 }

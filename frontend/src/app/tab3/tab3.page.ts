@@ -43,7 +43,6 @@ import {
   cashOutline,
   phonePortraitOutline,
   moonOutline,
-  languageOutline,
   checkmarkCircle
 } from 'ionicons/icons';
 import { SettingsService, UserPreferences, RecurringInvestment } from '../services/settings.service';
@@ -188,13 +187,6 @@ export class Tab3Page implements OnInit, OnDestroy {
           icon: 'moon-outline',
           action: 'theme',
           type: 'toggle'
-        },
-        {
-          title: 'Language',
-          subtitle: 'Select your preferred language',
-          icon: 'language-outline',
-          action: 'language',
-          type: 'navigation'
         }
       ]
     },
@@ -262,7 +254,6 @@ export class Tab3Page implements OnInit, OnDestroy {
       cashOutline,
       phonePortraitOutline,
       moonOutline,
-      languageOutline,
       checkmarkCircle
     });
   }
@@ -370,9 +361,6 @@ export class Tab3Page implements OnInit, OnDestroy {
         break;
       case 'theme':
         this.toggleTheme();
-        break;
-      case 'language':
-        this.showComingSoon('Language Settings');
         break;
       case 'faq':
         this.router.navigate(['/faq']);

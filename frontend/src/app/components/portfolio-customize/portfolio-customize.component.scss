@@ -1,5 +1,22 @@
 // Portfolio customization component styling
 
+// Header Styling
+ion-header {
+  ion-toolbar {
+    --background: var(--ion-color-primary);
+    --color: white;
+    
+    ion-title {
+      font-weight: 600;
+    }
+    
+    ion-back-button {
+      --color: white;
+    }
+    --border-width: 0;
+  }
+}
+
 // Gray background for the page
 .gray-background {
   --background: #f5f5f5;

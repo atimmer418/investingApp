@@ -15,9 +15,22 @@ ion-content {
   background: $bg-light;
 }
 
-ion-toolbar {
-  --background: #{$bg-light};
-  --color: #{$text-dark};
+ion-header {
+  ion-toolbar {
+    --background: var(--ion-color-primary);
+    --color: white;
+    
+    ion-title {
+      font-weight: 600;
+    }
+    
+    ion-back-button, ion-button {
+      --color: white;
+      color: white;
+    }
+    --border-width: 0;
+  }
+}
 
   ion-title {
     font-weight: 600;

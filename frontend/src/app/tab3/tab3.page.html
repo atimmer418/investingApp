@@ -1,12 +1,21 @@
-<ion-header class="ion-no-border safe-area-top profile-header">
+<ion-header class="ion-no-border safe-area-top">
   <ion-toolbar>
-    <ion-title class="profile-title">Profile</ion-title>
+    <ion-title>Profile</ion-title>
   </ion-toolbar>
+
+  <!-- iOS-Style Tab Switcher (Single Item) -->
+  <div class="header-tab-container">
+    <div class="ios-tab-switcher">
+      <button class="ios-tab-button active">
+        <ion-icon name="settings-outline"></ion-icon>
+      </button>
+    </div>
+  </div>
 </ion-header>
 
 <ion-content class="settings-content">
   <!-- User Profile Hero Section -->
-  <div class="profile-hero mobile-container">
+  <!-- <div class="profile-hero mobile-container">
       <div class="profile-card">
     <div class="profile-info">
       <div class="user-details">
@@ -20,7 +29,7 @@
       </div>
     </div>
   </div>
-  </div>
+  </div> -->
 
   <!-- Settings Sections -->
   <div class="settings-sections mobile-container">

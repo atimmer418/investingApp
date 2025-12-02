@@ -1,3 +1,20 @@
+// Header Styling
+ion-header {
+  ion-toolbar {
+    --background: var(--ion-color-primary);
+    --color: white;
+    
+    ion-title {
+      font-weight: 600;
+    }
+    
+    ion-back-button {
+      --color: white;
+    }
+    --border-width: 0;
+  }
+}
+
 .change-bank-content {
   --padding-top: 0;
   --padding-bottom: 0;
