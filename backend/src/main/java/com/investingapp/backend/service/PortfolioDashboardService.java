@@ -14,7 +14,9 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Base64;
@@ -650,7 +652,13 @@ public class PortfolioDashboardService {
                     for (int i = 0; i < timestamps.size(); i++) {
                         // Convert timestamp to date string (timestamps are in epoch seconds)
                         long epochSeconds = timestamps.get(i).asLong();
-                        LocalDate date = LocalDate.ofEpochDay(epochSeconds / 86400); // 86400 seconds in a day
+                        
+                        // Use NY timezone to determine the date, as Alpaca returns UTC timestamps 
+                        // that might be 1am UTC of the next day for the previous trading day's close.
+                        // e.g. 1764637200 is Dec 2 01:00 UTC, which is Dec 1 20:00 NY -> Dec 1
+                        LocalDate date = Instant.ofEpochSecond(epochSeconds)
+                                .atZone(ZoneId.of("America/New_York"))
+                                .toLocalDate();
                         String dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
                         BigDecimal equity = new BigDecimal(equityValues.get(i).asText());

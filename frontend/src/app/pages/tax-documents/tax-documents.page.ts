@@ -44,7 +44,10 @@ export class TaxDocumentsPage implements OnInit {
 
     this.portfolioService.getTaxDocuments(start, end).subscribe({
       next: (docs) => {
-        this.documents = docs || [];
+        // Filter out trade confirmations, keep only tax documents (account_statement, tax_form, etc.)
+        this.documents = (docs || []).filter(doc => 
+          !doc.type.includes('trade_confirmation')
+        );
         this.loading = false;
       },
       error: (err) => {
