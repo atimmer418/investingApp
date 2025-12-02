@@ -134,4 +134,28 @@ export class PortfolioService {
       headers: this.getAuthHeaders()
     });
   }
+
+  /**
+   * Get tax documents
+   */
+  getTaxDocuments(start?: string, end?: string): Observable<any[]> {
+    let params: any = {};
+    if (start) params.start = start;
+    if (end) params.end = end;
+
+    return this.http.get<any[]>(`${environment.backendApiUrl}/documents/tax`, {
+      headers: this.getAuthHeaders(),
+      params: params
+    });
+  }
+
+  /**
+   * Download a document
+   */
+  downloadDocument(documentId: string): Observable<Blob> {
+    return this.http.get(`${environment.backendApiUrl}/documents/tax/${documentId}/download`, {
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    });
+  }
 }

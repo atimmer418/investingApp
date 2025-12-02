@@ -296,6 +296,56 @@ public class AlpacaApiService {
     }
 
     /**
+     * Get documents for an account (Tax statements, Trade confirmations, etc.)
+     */
+    public String getAccountDocuments(String accountId) {
+        return getAccountDocuments(accountId, null, null);
+    }
+
+    public String getAccountDocuments(String accountId, String start, String end) {
+        StringBuilder urlBuilder = new StringBuilder(brokerBaseUrl + "/accounts/" + accountId + "/documents");
+        
+        if (start != null || end != null) {
+            urlBuilder.append("?");
+            if (start != null) {
+                urlBuilder.append("start=").append(start).append("&");
+            }
+            if (end != null) {
+                urlBuilder.append("end=").append(end).append("&");
+            }
+        }
+        
+        String url = urlBuilder.toString();
+        if (url.endsWith("&")) {
+            url = url.substring(0, url.length() - 1);
+        }
+
+        HttpEntity<String> entity = new HttpEntity<>(createHeaders());
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            return response.getBody();
+        } catch (Exception e) {
+            logger.error("Error fetching documents for account {}: {}", accountId, e.getMessage());
+            throw new RuntimeException("Failed to fetch documents", e);
+        }
+    }
+
+    /**
+     * Download a specific document
+     */
+    public byte[] downloadDocument(String accountId, String documentId) {
+        String url = brokerBaseUrl + "/accounts/" + accountId + "/documents/" + documentId + "/download";
+        HttpEntity<String> entity = new HttpEntity<>(createHeaders());
+        try {
+            ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, byte[].class);
+            return response.getBody();
+        } catch (Exception e) {
+            logger.error("Error downloading document {} for account {}: {}", documentId, accountId, e.getMessage());
+            throw new RuntimeException("Failed to download document", e);
+        }
+    }
+
+    /**
      * Get ACH relationships for an account
      */
     public String getAchRelationships(String accountId) {

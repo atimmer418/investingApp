@@ -360,7 +360,7 @@ export class Tab3Page implements OnInit, OnDestroy {
         this.handleChangeBankAccount();
         break;
       case 'taxDocuments':
-        this.showComingSoon('Tax Documents');
+        this.router.navigate(['/tax-documents']);
         break;
       case 'beneficiaries':
         this.handleBeneficiaries();

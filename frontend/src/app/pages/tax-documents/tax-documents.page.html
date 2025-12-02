@@ -1,0 +1,40 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tab3"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Tax Documents</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="info-card">
+    <h3>Important Tax Information</h3>
+    <p>
+      Tax documents for the previous year are typically available by mid-February.
+      These documents (Form 1099) report your capital gains, dividends, and other investment income.
+    </p>
+  </div>
+
+  <div *ngIf="loading" class="ion-text-center ion-padding">
+    <ion-spinner></ion-spinner>
+    <p>Loading documents...</p>
+  </div>
+
+  <div *ngIf="!loading && documents.length === 0" class="empty-state">
+    <ion-icon name="document-text-outline"></ion-icon>
+    <h3>No Documents Yet</h3>
+    <p>Check back later in the tax season.</p>
+  </div>
+
+  <ion-list *ngIf="!loading && documents.length > 0">
+    <ion-item *ngFor="let doc of documents" button (click)="download(doc)">
+      <ion-icon name="document-attach-outline" slot="start"></ion-icon>
+      <ion-label>
+        <h2>{{ doc.type || 'Tax Statement' }}</h2>
+        <p>{{ doc.date | date:'mediumDate' }}</p>
+      </ion-label>
+      <ion-icon name="download-outline" slot="end"></ion-icon>
+    </ion-item>
+  </ion-list>
+</ion-content>

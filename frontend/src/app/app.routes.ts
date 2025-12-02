@@ -44,6 +44,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/portfolio-dashboard/portfolio-dashboard.component').then(m => m.PortfolioDashboardComponent)
   },
   {
+    path: 'tax-documents',
+    loadComponent: () => import('./pages/tax-documents/tax-documents.page').then(m => m.TaxDocumentsPage)
+  },
+  {
     path: 'get-started',
     loadComponent: () => import('./components/get-started/get-started.component').then(m => m.GetStartedComponent)
     // TODO: This route might need to be set as the initial app route for new users,
