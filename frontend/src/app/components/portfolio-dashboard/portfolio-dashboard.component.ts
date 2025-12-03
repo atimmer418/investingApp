@@ -2,7 +2,8 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService, PortfolioDashboardData, Position, PerformanceData, PortfolioHistory } from '../../services/portfolio.service';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { LoadingController } from '@ionic/angular';
+import { ToastService } from '../../services/toast.service';
 import { PortfolioChartComponent, PortfolioDataPoint } from '../portfolio-chart/portfolio-chart.component';
 import {
   IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent,
@@ -52,7 +53,7 @@ export class PortfolioDashboardComponent implements OnInit {
   constructor(
     private portfolioService: PortfolioService,
     private loadingController: LoadingController,
-    private toastController: ToastController
+    private toastService: ToastService
   ) { }
 
   ngOnInit() {
@@ -109,7 +110,7 @@ export class PortfolioDashboardComponent implements OnInit {
     } catch (error: any) {
       console.error('Error loading portfolio data:', error);
       this.error = error.error?.message || 'Failed to load portfolio data';
-      this.showToast('Failed to load portfolio data', 'danger');
+      this.toastService.showToast('Failed to load portfolio data', 'danger');
     } finally {
       this.loading = false;
     }
@@ -206,15 +207,5 @@ export class PortfolioDashboardComponent implements OnInit {
     // Overview (default) -> Front side (isFlipped = false)
     // Analytics -> Back side (isFlipped = true)
     this.isFlipped = this.selectedTab === 'analytics';
-  }
-
-  async showToast(message: string, color: string = 'primary') {
-    const toast = await this.toastController.create({
-      message,
-      duration: 3000,
-      color,
-      position: 'bottom'
-    });
-    await toast.present();
   }
 }

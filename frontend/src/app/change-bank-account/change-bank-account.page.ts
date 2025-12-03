@@ -22,7 +22,7 @@ import {
   IonText,
   IonProgressBar
 } from '@ionic/angular/standalone';
-import { ToastController } from '@ionic/angular';
+import { ToastService } from '../services/toast.service';
 
 declare var Plaid: any;
 
@@ -66,7 +66,7 @@ export class ChangeBankAccountPage implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private http: HttpClient,
-    private toastController: ToastController,
+    private toastService: ToastService,
     private plaidService: PlaidService
   ) {}
 
@@ -196,13 +196,7 @@ export class ChangeBankAccountPage implements OnInit, OnDestroy {
         this.isLoading = false;
         
         // Show success toast
-        const toast = await this.toastController.create({
-          message: 'Your bank account has been updated successfully.',
-          duration: 3000,
-          color: 'success',
-          position: 'top'
-        });
-        await toast.present();
+        await this.toastService.showToast('Your bank account has been updated successfully.', 'success', 3000);
 
         // Reload current bank account info locally
         await this.loadCurrentBankAccount();
@@ -215,13 +209,7 @@ export class ChangeBankAccountPage implements OnInit, OnDestroy {
         this.statusMessage = `Error: ${err.error?.message || 'Failed to update bank account.'}`;
         
         // Show error toast
-        const toast = await this.toastController.create({
-          message: 'Failed to update bank account. Please try again.',
-          duration: 5000,
-          color: 'danger',
-          position: 'top'
-        });
-        await toast.present();
+        await this.toastService.showToast('Failed to update bank account. Please try again.', 'danger', 5000);
 
         return of(null);
       })

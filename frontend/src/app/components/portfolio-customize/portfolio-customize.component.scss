@@ -1,160 +1,120 @@
-// Portfolio customization component styling
+// iOS-style Portfolio Customization
 
-// Header Styling
 ion-header {
   ion-toolbar {
-    --background: var(--ion-color-primary);
-    --color: white;
+    --background: var(--app-background);
+    --color: var(--app-gray-900);
+    --border-width: 0;
     
     ion-title {
       font-weight: 600;
+      font-size: 17px;
     }
     
     ion-back-button {
-      --color: white;
+      --color: var(--app-primary);
     }
-    --border-width: 0;
   }
 }
 
-// Gray background for the page
 .gray-background {
-  --background: #f5f5f5;
+  --background: var(--app-background-alt, #f2f2f7);
 }
 
 .container {
-  max-width: 100%;
-  margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+// iOS Search Section
+.ios-search-section {
+  padding: 0 16px 8px;
+  background: var(--app-background);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.ios-searchbar {
+  --background: #e3e3e8;
+  --placeholder-color: #8e8e93;
+  --icon-color: #8e8e93;
+  --border-radius: 10px;
+  --box-shadow: none;
   padding: 0;
-}
-
-.header-section {
-  text-align: center;
-  margin-bottom: 24px;
+  height: 36px;
   
-  h1 {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--ion-color-dark);
-    margin-bottom: 8px;
-  }
-  
-  .subtitle {
-    font-size: 16px;
-    color: var(--ion-color-medium);
-    margin: 0;
-    line-height: 1.5;
+  &.searchbar-has-focus {
+    --cancel-button-color: var(--app-primary);
   }
 }
-
-// Enhanced search card styling
-.search-card {
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  margin-bottom: 20px;
-  border: none;
   
-  .enhanced-searchbar {
-    --background: var(--ion-color-light);
-    --border-radius: 12px;
-    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 12px;
-  }
+// iOS List Styles
+.ios-list {
+  background: transparent;
+  padding: 0 16px;
   
-  .search-results {
-    margin-top: 16px;
+  ion-item {
+    --background: white;
+    --border-color: #c6c6c8;
+    --padding-start: 16px;
+    --inner-padding-end: 16px;
     
-    .search-results-list {
-      background: transparent;
-      
-      .search-result-item {
-        --background: white;
-        --border-radius: 12px;
-        margin-bottom: 8px;
-        border-radius: 12px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-        
-        &:hover:not([disabled]) {
-          --background: #f8f9fa;
-          transform: translateY(-1px);
-          transition: all 0.2s ease;
-        }
-        
-        &[disabled] {
-          opacity: 0.6;
-        }
-      }
-    }
-  }
-  
-  .no-results {
-    text-align: center;
-    padding: 20px;
-    
-    ion-note {
-      font-size: 14px;
-      font-style: italic;
-    }
-  }
-  
-  .loading-container {
-    text-align: center;
-    padding: 20px;
-    
-    ion-spinner {
-      margin-bottom: 12px;
+    &:first-child {
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
     }
     
-    p {
-      color: var(--ion-color-medium);
-      margin: 0;
+    &:last-child {
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+      --border-width: 0;
+    }
+    
+    &:not(:last-child) {
+      --border-width: 0 0 0.5px 0;
     }
   }
 }
 
-// Card styling
-ion-card {
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 16px;
-  border: none;
+.stock-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  background: var(--app-gray-100);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  
+  .stock-initials {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--app-gray-900);
+  }
+}
+
+// iOS Card Styles
+.ios-card {
+  border-radius: 10px;
+  box-shadow: none;
+  margin: 16px;
+  background: white;
   
   ion-card-header {
-    padding-bottom: 8px;
+    padding: 16px 16px 8px;
     
     ion-card-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: black;
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--ion-color-dark);
-      
-      ion-icon {
-        font-size: 20px;
-      }
-      
-      .total-chip {
-        margin-left: auto;
-        font-weight: 700;
-      }
+      justify-content: space-between;
     }
-    
-    ion-note {
-      font-size: 14px;
-      color: var(--ion-color-medium);
-      margin-top: 4px;
-      
-      &[color="danger"] {
-        color: var(--ion-color-danger);
-        font-weight: 500;
-      }
-      
-      ion-icon {
-        margin-right: 4px;
-        font-size: 14px;
-      }
-    }
+  }
+  
+  ion-card-content {
+    padding: 0 16px 16px;
   }
 }
 
@@ -177,338 +137,116 @@ ion-card {
   }
 }
 
-// Portfolio card styling
-.portfolio-card {
-  ion-item {
-    --padding-start: 8px;
-    --inner-padding-end: 8px;
-    
-    ion-label {
-      h3 {
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--ion-color-primary);
-        margin: 0 0 4px 0;
-      }
-      
-      .stock-name {
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--ion-color-dark);
-        margin: 0 0 4px 0;
-      }
-      
-      ion-note {
-        font-size: 12px;
-        color: var(--ion-color-medium);
-        line-height: 1.3;
-      }
-    }
-    
-    .allocation-controls {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-width: 120px;
-      
-      ion-range {
-        width: 100px;
-        --bar-height: 6px;
-        --knob-size: 20px;
-      }
-      
-      .allocation-text {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--ion-color-primary);
-        margin-top: 4px;
-      }
-    }
-  }
+// Portfolio Item Styles
+.portfolio-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
   
-  ion-item-options {
-    ion-item-option {
-      --color: white;
-    }
-  }
-  
-  // Portfolio actions styling (reset button)
-  .portfolio-actions {
-    display: flex;
-    justify-content: center;
-    margin-top: 16px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(var(--ion-color-medium-rgb), 0.2);
-    
-    .reset-portfolio-btn {
-      --color: var(--ion-color-medium);
-      font-size: 0.85rem;
-      
-      ion-icon {
-        margin-right: 4px;
-        font-size: 0.9rem;
-      }
-    }
-  }
-}
-
-// Popular stocks styling
-.add-stocks-card {
-  .popular-stocks {
+  .stock-info {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    padding: 8px 0;
     
-    .stock-chip {
+    .stock-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 12px 16px;
-      background: var(--ion-color-light);
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      margin-bottom: 4px;
       
-      &:not(.disabled):hover {
-        background: var(--ion-color-primary-tint);
+      .stock-symbol {
+        font-size: 17px;
+        font-weight: 600;
+        color: black;
+        margin-right: 8px;
       }
       
-      &.disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-      
-      .stock-info {
-        display: flex;
-        flex-direction: column;
-        
-        .symbol {
-          font-size: 16px;
-          font-weight: 700;
-          color: var(--ion-color-primary);
-        }
-        
-        .name {
-          font-size: 13px;
-          color: var(--ion-color-medium);
-          margin-top: 2px;
-        }
-      }
-      
-      ion-icon {
-        font-size: 24px;
+      .stock-badge {
+        font-size: 10px;
+        font-weight: 500;
+        --padding-start: 6px;
+        --padding-end: 6px;
+        --padding-top: 2px;
+        --padding-bottom: 2px;
+        color: #8e8e93;
+        background: #f2f2f7;
       }
     }
-  }
-}
-
-// Custom stock form styling
-.custom-stock-card {
-  .add-stock-form {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--ion-color-light);
     
-    ion-item {
+    .stock-name {
+      font-size: 13px;
+      color: #8e8e93;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+  }
+  
+  .allocation-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: #f2f2f7;
+    border-radius: 8px;
+    padding: 4px 8px;
+    width: 80px;
+    
+    .allocation-input {
       --padding-start: 0;
-      --inner-padding-end: 0;
-      margin-bottom: 16px;
-      
-      ion-label {
-        font-weight: 600;
-        color: var(--ion-color-dark);
-      }
-      
-      ion-range {
-        margin: 8px 0;
-        --bar-height: 6px;
-        --knob-size: 20px;
-      }
+      --padding-end: 0;
+      --padding-top: 0;
+      --padding-bottom: 0;
+      text-align: right;
+      font-size: 17px;
+      font-weight: 600;
+      color: black;
+      --background: transparent;
     }
     
-    .form-buttons {
-      display: flex;
-      gap: 12px;
-      margin-top: 16px;
-      
-      ion-button {
-        flex: 1;
-        font-weight: 600;
-      }
+    .percent-sign {
+      font-size: 17px;
+      font-weight: 600;
+      color: #8e8e93;
+      margin-left: 2px;
     }
   }
 }
 
-// Action buttons styling
+.total-chip {
+  font-weight: 600;
+  height: 24px;
+}
+
 .action-buttons {
-  margin-top: 32px;
-  padding-bottom: 20px;
+  padding: 16px;
   
   ion-button {
     margin-bottom: 12px;
-    font-weight: 600;
-    
-    &[color="primary"] {
-      --border-radius: 12px;
-      height: 56px;
-      font-size: 16px;
-      
-      &[disabled] {
-        opacity: 0.6;
-      }
-    }
-    
-    &[fill="outline"] {
-      --border-width: 2px;
-      --border-style: solid;
-      height: 48px;
-    }
-    
-    &[fill="clear"] {
-      height: 44px;
-      font-size: 14px;
-    }
-  }
-}
-
-// Responsive adjustments
-@media (max-width: 768px) {
-  .header-section {
-    h1 {
-      font-size: 24px;
-    }
-    
-    .subtitle {
-      font-size: 14px;
-    }
-  }
-  
-  .portfolio-card {
-    .allocation-controls {
-      min-width: 100px;
-      
-      ion-range {
-        width: 80px;
-      }
-    }
-  }
-  
-  .popular-stocks .stock-chip {
-    .stock-info {
-      .symbol {
-        font-size: 14px;
-      }
-      
-      .name {
-        font-size: 12px;
-      }
-    }
-  }
-}
-
-// Search functionality styles
-.search-form {
-  margin-top: 16px;
-  
-  ion-searchbar {
-    --background: var(--ion-color-light);
     --border-radius: 12px;
-    --box-shadow: none;
-    --icon-color: var(--ion-color-medium);
-    margin-bottom: 16px;
+    font-weight: 600;
   }
+}
+
+.search-results-container {
+  background: var(--app-background-alt, #f2f2f7);
+  max-height: 300px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.no-results {
+  text-align: center;
+  padding: 32px;
+  color: #8e8e93;
 }
 
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px;
-  
-  ion-spinner {
-    margin-bottom: 12px;
-  }
+  justify-content: center;
+  padding: 20px;
   
   p {
-    margin: 0;
-    color: var(--ion-color-medium);
-    font-size: 14px;
-  }
-}
-
-.search-results {
-  max-height: 300px;
-  overflow-y: auto;
-  border-radius: 12px;
-  background: var(--ion-color-light);
-  margin-bottom: 16px;
-  
-  ion-list {
-    background: transparent;
-    
-    ion-item {
-      --background: transparent;
-      --border-color: var(--ion-color-light-shade);
-      --padding-start: 16px;
-      --padding-end: 16px;
-      
-      &:hover {
-        --background: var(--ion-color-primary-tint);
-      }
-      
-      &[disabled] {
-        opacity: 0.5;
-        
-        &:hover {
-          --background: transparent;
-        }
-      }
-      
-      ion-label {
-        h3 {
-          font-weight: 600;
-          font-size: 16px;
-          margin-bottom: 4px;
-        }
-        
-        p {
-          font-size: 14px;
-          color: var(--ion-color-dark);
-          margin-bottom: 4px;
-        }
-        
-        ion-note {
-          font-size: 12px;
-          color: var(--ion-color-medium);
-        }
-      }
-      
-      ion-chip {
-        margin-right: 8px;
-      }
-    }
-  }
-}
-
-.no-results {
-  text-align: center;
-  padding: 24px;
-  
-  ion-note {
-    font-size: 14px;
-    color: var(--ion-color-medium);
-  }
-}
-
-.manual-entry {
-  border-top: 1px solid var(--ion-color-light-shade);
-  padding-top: 16px;
-  margin-top: 16px;
-  
-  ion-item {
-    --border-color: var(--ion-color-light-shade);
-    --background: var(--ion-color-light);
-    border-radius: 8px;
-    margin-bottom: 12px;
+    margin-top: 10px;
+    color: var(--app-gray-400);
   }
 }

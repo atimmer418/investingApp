@@ -62,7 +62,7 @@ export class AppComponent implements OnInit {
     this.simulateUserLogin('ewleyshon@coastal.edu');           // Login by email
     // this.simulateUserLogin('', 'user_handle_123');        // Login by user_handle  
     // this.simulateUserLogin('test@test.com');              // Login as different user
-    
+
     // OR navigate directly to any page for testing (bypasses auth entirely):
     // this.router.navigate(['/investment-confirmation'], { replaceUrl: true });
     // this.router.navigate(['/investment-schedule'], { replaceUrl: true });

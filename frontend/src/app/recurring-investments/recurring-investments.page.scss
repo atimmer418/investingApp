@@ -65,46 +65,60 @@ ion-header {
 
 // Status Banner
 .status-banner {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   
   &.active {
-    background: linear-gradient(135deg, var(--ion-color-success-tint), var(--ion-color-success));
-    color: white;
+    --background: linear-gradient(135deg, var(--ion-color-success-tint), var(--ion-color-success));
+    --color: white;
   }
   
   &.paused {
-    background: linear-gradient(135deg, var(--ion-color-warning-tint), var(--ion-color-warning));
-    color: white;
+    --background: linear-gradient(135deg, var(--ion-color-warning-tint), var(--ion-color-warning));
+    --color: white;
+  }
+
+  ion-card-content {
+    padding: 16px !important;
   }
   
   .status-content {
-    padding: 20px;
     display: flex;
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
     
     .status-info {
       flex: 1;
+      padding-right: 16px;
+      text-align: left;
       
       h2 {
-        margin: 0 0 0.5rem 0;
+        margin: 0 0 4px 0;
         font-size: 1.5rem;
         font-weight: 700;
+        color: white;
       }
       
       p {
         margin: 0;
         opacity: 0.9;
         font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.4;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
     
     ion-icon {
       font-size: 3rem;
-      opacity: 0.8;
+      opacity: 0.9;
+      color: white;
+      flex-shrink: 0;
     }
   }
 }

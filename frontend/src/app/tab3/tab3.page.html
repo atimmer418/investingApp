@@ -1,36 +1,24 @@
-<ion-header class="ion-no-border safe-area-top">
-  <ion-toolbar>
-    <ion-title>Profile</ion-title>
-  </ion-toolbar>
-
-  <!-- iOS-Style Tab Switcher (Single Item) -->
-  <div class="header-tab-container">
-    <div class="ios-tab-switcher">
-      <button class="ios-tab-button active">
-        <ion-icon name="settings-outline"></ion-icon>
-      </button>
+<ion-header class="ion-no-border">
+  <!-- iOS-Style Profile Header (Replaces Toolbar) -->
+  <div class="profile-header-container safe-area-top">
+    <div class="profile-card">
+      <ion-avatar class="profile-avatar">
+        <img src="https://ionicframework.com/docs/img/demos/avatar.svg" alt="Profile" />
+      </ion-avatar>
+      <div class="profile-info">
+        <h2 class="profile-name">Alex Doe</h2>
+        <p class="profile-email">alex.doe&#64;example.com</p>
+      </div>
+      
+      <!-- Settings Gear Icon (Visual Only) -->
+      <div class="profile-actions">
+        <ion-icon name="settings-outline" class="settings-icon"></ion-icon>
+      </div>
     </div>
   </div>
 </ion-header>
 
 <ion-content class="settings-content">
-  <!-- User Profile Hero Section -->
-  <!-- <div class="profile-hero mobile-container">
-      <div class="profile-card">
-    <div class="profile-info">
-      <div class="user-details">
-        <h2 class="user-name">Welcome back, Alex!</h2>
-        <div class="bank-status">
-          <div class="status-pill">
-            <ion-icon name="business" class="bank-icon"></ion-icon>
-            <span class="bank-name">Chase Bank Connected</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  </div> -->
-
   <!-- Settings Sections -->
   <div class="settings-sections mobile-container">
     <div *ngFor="let section of settingSections" class="settings-group">

@@ -116,7 +116,7 @@
 ion-content {
   --padding-start: var(--app-spacing-md);
   --padding-end: var(--app-spacing-md);
-  --padding-top: var(--app-spacing-md);
+  --padding-top: 2px;
   --padding-bottom: var(--app-spacing-md);
   --background: var(--app-background);
 }
@@ -456,4 +456,17 @@ ion-toast.stacked-toast {
   --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transform: var(--toast-transform, translateY(0));
   transition: transform 0.3s ease-in-out;
+}
+
+/* =============================================================================
+   GLOBAL OVERRIDES
+   ============================================================================= */
+
+/* 
+   Fix for persistent 16px padding on inner-scroll div in nested ion-content.
+   See: https://forum.ionicframework.com/t/ionic-4-beta-12-styling-of-inner-scroll-div/144087/6
+*/
+.portfolio-content,
+.retirement-content {
+  --padding-top: 8px !important;
 }

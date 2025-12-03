@@ -11,8 +11,13 @@
   --background: var(--portfolio-background);
   --padding-start: 0;
   --padding-end: 0;
-  --padding-top: 0;
+  --padding-top: 8px !important;
+  --offset-top: 0px !important;
   --padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--app-spacing-xl));
+
+  &::part(scroll) {
+    padding-top: 8px !important;
+  }
 }
 
 /* =============================================================================
@@ -43,14 +48,14 @@ ion-content {
 .header-tab-container {
   background: var(--app-background) !important;
   border-bottom: 1px solid var(--app-card-border);
-  padding: var(--app-spacing-xs) var(--app-spacing-md) var(--app-spacing-sm);
+  padding: 0 var(--app-spacing-md) var(--app-spacing-sm);
   display: flex;
   justify-content: center;
 }
 
 .ios-tab-switcher {
   display: flex;
-  background: #f2f2f7;
+  background: var(--app-gray-200);
   /* Gray background for tab switcher */
   border-radius: 12px;
   padding: 2px;
@@ -290,7 +295,7 @@ ion-item {
 }
 
 .simulator-section {
-  padding: 20px 16px;
+  padding: 0 16px 20px 16px;
   padding-bottom: calc(var(--app-spacing-xl) * 4); // Extra padding to clear bottom tab bar
   background: var(--app-background); // Gray background to match education section
 }

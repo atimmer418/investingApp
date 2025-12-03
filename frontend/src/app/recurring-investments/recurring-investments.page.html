@@ -16,17 +16,19 @@
     <div class="current-schedule-section" *ngIf="currentInvestment">
       
       <!-- Status Banner -->
-      <div class="status-banner" [class.active]="!currentInvestment.isPaused" [class.paused]="currentInvestment.isPaused">
-        <div class="status-content">
-          <div class="status-info">
-            <h2>{{ !currentInvestment.isPaused ? 'Active' : 'Paused' }}</h2>
-            <p>{{ !currentInvestment.isPaused ? 'Your investments are running automatically' : 'Your investments are currently paused' }}</p>
+      <ion-card class="status-banner" [class.active]="!currentInvestment.isPaused" [class.paused]="currentInvestment.isPaused">
+        <ion-card-content>
+          <div class="status-content">
+            <div class="status-info">
+              <h2>{{ !currentInvestment.isPaused ? 'Active' : 'Paused' }}</h2>
+              <p>{{ !currentInvestment.isPaused ? 'Your investments are running' : 'Your investments are currently paused' }}</p>
+            </div>
+            <ion-icon 
+              [name]="!currentInvestment.isPaused ? 'checkmark-circle-outline' : 'pause-circle-outline'">
+            </ion-icon>
           </div>
-          <ion-icon 
-            [name]="!currentInvestment.isPaused ? 'checkmark-circle-outline' : 'pause-circle-outline'">
-          </ion-icon>
-        </div>
-      </div>
+        </ion-card-content>
+      </ion-card>
 
       <!-- Investment Details -->
       <div class="section-card mobile-card">

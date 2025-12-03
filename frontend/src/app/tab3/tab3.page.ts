@@ -17,7 +17,8 @@ import {
   IonAvatar,
   IonText,
   IonBadge,
-  IonToast
+  IonToast,
+  IonRippleEffect
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -84,7 +85,8 @@ interface SettingItem {
     IonAvatar,
     IonText,
     IonBadge,
-    IonToast
+    IonToast,
+    IonRippleEffect
   ],
 })
 export class Tab3Page implements OnInit, OnDestroy {
@@ -135,13 +137,6 @@ export class Tab3Page implements OnInit, OnDestroy {
       title: 'Account & Security',
       items: [
         {
-          title: 'Personal Information',
-          subtitle: 'Update your profile details',
-          icon: 'person-outline',
-          action: 'personalInfo',
-          type: 'navigation'
-        },
-        {
           title: 'Security Settings',
           subtitle: 'Password, biometrics, and 2FA',
           icon: 'shield-checkmark-outline',
@@ -168,25 +163,6 @@ export class Tab3Page implements OnInit, OnDestroy {
           icon: 'people-outline',
           action: 'beneficiaries',
           type: 'navigation'
-        }
-      ]
-    },
-    {
-      title: 'Preferences',
-      items: [
-        {
-          title: 'Notifications',
-          subtitle: 'Customize your alerts and updates',
-          icon: 'notifications-outline',
-          action: 'notifications',
-          type: 'navigation'
-        },
-        {
-          title: 'App Theme',
-          subtitle: 'Choose light or dark mode',
-          icon: 'moon-outline',
-          action: 'theme',
-          type: 'toggle'
         }
       ]
     },

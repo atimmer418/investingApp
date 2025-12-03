@@ -23,7 +23,7 @@
   </div>
 </ion-header>
 
-<ion-content class="portfolio-content">
+<ion-content class="portfolio-content" [class.scroll-disabled]="selectedTab === 'overview'">
   <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>

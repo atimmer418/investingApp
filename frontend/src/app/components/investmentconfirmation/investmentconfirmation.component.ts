@@ -6,8 +6,9 @@ import { ViewWillEnter } from '@ionic/angular';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  IonButtons, IonBackButton, IonNote, ToastController, IonSpinner
+  IonButtons, IonBackButton, IonNote, IonSpinner
 } from '@ionic/angular/standalone';
+import { ToastService } from '../../services/toast.service';
 import { AlpacaService, CreateAccountRequest } from '../../services/alpaca.service';
 import { AuthService } from '../../services/auth.service';
 import { PlaidDataService } from '../../services/plaid-data.service';
@@ -92,7 +93,7 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
     private authService: AuthService,
     private plaidDataService: PlaidDataService,
     private http: HttpClient,
-    private toastController: ToastController
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
@@ -433,12 +434,7 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
       this.isAuthorizing = false;
       
       // Show error toast
-      const toast = await this.toastController.create({
-        message: 'Failed to create trading account. Please try again.',
-        duration: 3000,
-        color: 'danger'
-      });
-      await toast.present();
+      await this.toastService.showToast('Failed to create trading account. Please try again.', 'danger', 3000);
     }
   }
 
@@ -472,12 +468,7 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
         console.log('Alpaca account created successfully:', response.account_id);
         
         // Show success toast
-        const toast = await this.toastController.create({
-          message: 'Trading account created successfully!',
-          duration: 2000,
-          color: 'success'
-        });
-        await toast.present();
+        await this.toastService.showToast('Trading account created successfully!', 'success', 2000);
 
         // Create ACH relationship using Plaid data
         await this.createAchRelationship(response.account_id);
@@ -544,12 +535,7 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
       if (!plaidData?.accessToken || !plaidData?.accountId) {
         console.warn('⚠️ No Plaid banking data found in database. User may need to re-link their bank account.');
         
-        const toast = await this.toastController.create({
-          message: 'Bank account linking skipped - please link your bank account in settings later.',
-          duration: 3000,
-          color: 'warning'
-        });
-        await toast.present();
+        await this.toastService.showToast('Bank account linking skipped - please link your bank account in settings later.', 'warning', 3000);
         return;
       }
 
@@ -579,12 +565,7 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
           await this.updateInvestmentScheduleWithAchId(achResult.id);
         }
         
-        const toast = await this.toastController.create({
-          message: 'Bank account linked successfully! You can now fund your investment account.',
-          duration: 3000,
-          color: 'success'
-        });
-        await toast.present();
+        await this.toastService.showToast('Bank account linked successfully! You can now fund your investment account.', 'success', 3000);
       } else {
         throw new Error(achResult?.error || 'Unknown ACH creation error');
       }
@@ -601,12 +582,7 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
       });
       
       // Show user a more specific error since this shouldn't fail if Plaid worked
-      const toast = await this.toastController.create({
-        message: `Bank linking failed unexpectedly: ${errorMessage}. Please contact support.`,
-        duration: 4000,
-        color: 'danger'
-      });
-      await toast.present();
+      await this.toastService.showToast(`Bank linking failed unexpectedly: ${errorMessage}. Please contact support.`, 'danger', 4000);
       
       // TODO: Consider adding retry logic or automatic support ticket creation
     }
@@ -622,30 +598,15 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
   }
 
   private async showSuccess(message: string): Promise<void> {
-    const toast = await this.toastController.create({
-      message,
-      duration: 3000,
-      color: 'success'
-    });
-    await toast.present();
+    await this.toastService.showToast(message, 'success', 3000);
   }
 
   private async showWarning(message: string): Promise<void> {
-    const toast = await this.toastController.create({
-      message,
-      duration: 3000,
-      color: 'warning'
-    });
-    await toast.present();
+    await this.toastService.showToast(message, 'warning', 3000);
   }
 
   private async showError(message: string): Promise<void> {
-    const toast = await this.toastController.create({
-      message,
-      duration: 4000,
-      color: 'danger'
-    });
-    await toast.present();
+    await this.toastService.showToast(message, 'danger', 4000);
   }
 
   /**

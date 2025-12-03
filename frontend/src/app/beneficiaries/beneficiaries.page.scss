@@ -107,17 +107,25 @@ ion-header {
     --background: linear-gradient(135deg, var(--ion-color-warning-tint), var(--ion-color-warning));
     --color: white;
   }
+
+  ion-card-content {
+    padding: 16px !important;
+  }
   
   .status-content {
     display: flex;
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
     
     .status-info {
       flex: 1;
+      padding-right: 16px;
+      text-align: left;
       
       h2 {
-        margin: 0 0 0.5rem 0;
+        margin: 0 0 4px 0;
         font-size: 1.5rem;
         font-weight: 700;
         color: white;
@@ -128,13 +136,18 @@ ion-header {
         opacity: 0.9;
         font-size: 0.95rem;
         color: rgba(255, 255, 255, 0.9);
+        line-height: 1.4;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
     
     ion-icon {
       font-size: 3rem;
-      opacity: 0.8;
-      color: rgba(255, 255, 255, 0.9);
+      opacity: 0.9;
+      color: white;
+      flex-shrink: 0;
     }
   }
 }

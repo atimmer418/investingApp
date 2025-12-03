@@ -12,16 +12,30 @@
   --background: var(--portfolio-background);
   --padding-start: 0;
   --padding-end: 0;
-  --padding-top: 0;
-  --padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--app-spacing-xl));
+  --padding-top: 8px !important;
+  --offset-top: 0px !important;
+  --padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+
+  &::part(scroll) {
+    padding-top: 8px !important;
+  }
+
+  &.scroll-disabled::part(scroll) {
+    overflow-y: hidden;
+  }
+
+  &:not(.scroll-disabled)::part(scroll) {
+    overflow-y: auto;
+  }
 }
+
 
 /* =============================================================================
    PORTFOLIO DASHBOARD CONTAINER
    ============================================================================= */
 
 .portfolio-dashboard {
-  margin-top: var(--app-spacing-md);
+  margin-top: 0;
 }
 
 /* =============================================================================
@@ -214,17 +228,27 @@
    IOS-STYLE HEADER TAB SWITCHER
    ============================================================================= */
 
+ion-header {
+  --background: var(--app-background);
+  background: var(--app-background) !important;
+
+  ion-toolbar {
+    --background: var(--app-background);
+    --border-width: 0;
+  }
+}
+
 .header-tab-container {
   background: var(--app-background);
   border-bottom: 1px solid var(--app-card-border);
-  padding: var(--app-spacing-xs) var(--app-spacing-md) var(--app-spacing-sm);
+  padding: 0 var(--app-spacing-md) var(--app-spacing-sm);
   display: flex;
   justify-content: center;
 }
 
 .ios-tab-switcher {
   display: flex;
-  background: var(--app-gray-100);
+  background: var(--app-gray-200);
   border-radius: 12px;
   padding: 2px;
   width: calc(100% - var(--app-spacing-md));
@@ -306,7 +330,7 @@
    ============================================================================= */
 
 .tab-content-area {
-  padding-bottom: calc(var(--app-spacing-xl) * 3); // Extra padding for bottom tab bar + dynamic content
+  padding-bottom: 10px;
 }
 
 /* =============================================================================

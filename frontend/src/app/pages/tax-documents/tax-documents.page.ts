@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { PortfolioService } from '../../services/portfolio.service';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { LoadingController } from '@ionic/angular';
+import { ToastService } from '../../services/toast.service';
 import { addIcons } from 'ionicons';
 import { documentTextOutline, documentAttachOutline, downloadOutline } from 'ionicons/icons';
 
@@ -20,7 +21,7 @@ export class TaxDocumentsPage implements OnInit {
   constructor(
     private portfolioService: PortfolioService,
     private loadingController: LoadingController,
-    private toastController: ToastController
+    private toastService: ToastService
   ) {
     addIcons({ documentTextOutline, documentAttachOutline, downloadOutline });
   }
@@ -79,12 +80,7 @@ export class TaxDocumentsPage implements OnInit {
       },
       error: async (err) => {
         loading.dismiss();
-        const toast = await this.toastController.create({
-          message: 'Failed to download document',
-          duration: 2000,
-          color: 'danger'
-        });
-        toast.present();
+        await this.toastService.showToast('Failed to download document', 'danger', 2000);
       }
     });
   }

@@ -17,13 +17,23 @@
         <div class="status-content">
           <div class="status-info">
             <h2>{{ isBeneficiarySetupComplete() ? 'Setup Complete' : 'Setup Needed' }}</h2>
-            <p>{{ isBeneficiarySetupComplete() ? 'Your beneficiaries are properly configured' : 'Complete your beneficiary designations for account protection' }}</p>
+            <p>{{ isBeneficiarySetupComplete() ? 'Your beneficiaries are properly configured' : 'Complete your beneficiary designations' }}</p>
           </div>
           <ion-icon 
-            [name]="isBeneficiarySetupComplete() ? 'shield-checkmark-outline' : 'shield-outline'" 
-            [color]="isBeneficiarySetupComplete() ? 'success' : 'warning'">
+            [name]="isBeneficiarySetupComplete() ? 'checkmark-circle-outline' : 'shield-outline'">
           </ion-icon>
         </div>
+      </ion-card-content>
+    </ion-card>
+    
+    <!-- Explanation Card -->
+    <ion-card class="explanation-card">
+      <ion-card-content>
+        <div class="explanation-header">
+          <ion-icon name="people-outline" color="primary"></ion-icon>
+          <h3>Manage Your Beneficiaries</h3>
+        </div>
+        <p>Add and manage the people who will inherit your investment account assets. Each beneficiary can be assigned a percentage of your total account value.</p>
       </ion-card-content>
     </ion-card>
 
@@ -45,40 +55,6 @@
           <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
           {{ isSubmitting ? 'Submitting...' : 'Submit All to Alpaca' }}
         </ion-button>
-      </ion-card-content>
-    </ion-card>
-    
-    <!-- Explanation Card -->
-    <ion-card class="explanation-card">
-      <ion-card-content>
-        <div class="explanation-header">
-          <ion-icon name="people-outline" color="primary"></ion-icon>
-          <h3>Manage Your Beneficiaries</h3>
-        </div>
-        <p>Add and manage the people who will inherit your investment account assets. Each beneficiary can be assigned a percentage of your total account value.</p>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Important Information Card -->
-    <ion-card class="info-card">
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="information-circle-outline" color="tertiary"></ion-icon>
-          Important Information
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <p>Understanding your Transfer on Death (TOD) beneficiary designations:</p>
-        <ul class="info-list">
-          <li><strong>Primary beneficiaries</strong> must total 100% allocation</li>
-          <li><strong>Contingent beneficiaries</strong> only receive assets if no primary beneficiaries can claim them</li>
-          <li><strong>Processing time:</strong> Changes may take 1-2 business days to process with your broker</li>
-          <li><strong>Keep updated:</strong> Review beneficiary information after major life events</li>
-        </ul>
-        <ion-note>
-          <ion-icon name="shield-checkmark-outline"></ion-icon>
-          This ensures your investments transfer quickly without going through probate.
-        </ion-note>
       </ion-card-content>
     </ion-card>
 
@@ -124,6 +100,29 @@
           </ion-icon>
           <span>{{ allocationSummary.primaryAllocationComplete ? 'Beneficiary setup complete' : 'Primary allocation incomplete' }}</span>
         </div> -->
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Important Information Card -->
+    <ion-card class="info-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="information-circle-outline" color="tertiary"></ion-icon>
+          Important Information
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>Understanding your Transfer on Death (TOD) beneficiary designations:</p>
+        <ul class="info-list">
+          <li><strong>Primary beneficiaries</strong> must total 100% allocation</li>
+          <li><strong>Contingent beneficiaries</strong> only receive assets if no primary beneficiaries can claim them</li>
+          <li><strong>Processing time:</strong> Changes may take 1-2 business days to process with your broker</li>
+          <li><strong>Keep updated:</strong> Review beneficiary information after major life events</li>
+        </ul>
+        <ion-note>
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          This ensures your investments transfer quickly without going through probate.
+        </ion-note>
       </ion-card-content>
     </ion-card>
 

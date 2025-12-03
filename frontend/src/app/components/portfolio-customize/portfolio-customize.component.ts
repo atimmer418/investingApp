@@ -9,7 +9,7 @@ import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
   IonButtons, IonBackButton, IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
-  IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar
+  IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge
 } from '@ionic/angular/standalone';
 
 interface PortfolioItem {
@@ -74,7 +74,7 @@ interface Stock {
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
     IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
     IonButtons, IonBackButton, IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
-    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar
+    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge
   ]
 })
 export class PortfolioCustomizeComponent implements OnInit {
@@ -398,7 +398,7 @@ export class PortfolioCustomizeComponent implements OnInit {
   // Update stock allocation
   updateAllocation(stock: Stock, event: any) {
     stock.percentage = parseInt(event.detail.value);
-    this.normalizeAllocations();
+    // Removed normalizeAllocations() to allow manual adjustment without side effects
   }
 
   // Normalize allocations to ensure they add up to 100%
