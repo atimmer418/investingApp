@@ -7,104 +7,22 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding gray-background">
+<ion-content class="gray-background">
   <div class="container">
     
-    <!-- Search Section (iOS Style) -->
-    <div class="ios-search-section">
-      <ion-searchbar
-        [(ngModel)]="searchTerm"
-        (ionInput)="searchStocks()"
-        placeholder="Search stocks & ETFs"
-        show-cancel-button="focus"
-        animated="true"
-        debounce="300"
-        class="ios-searchbar">
-      </ion-searchbar>
-    </div>
-
-    <!-- Search Results (Overlay or List) -->
-    <div class="search-results-container" *ngIf="searchTerm.length > 0 || isSearching">
-      <div *ngIf="isSearching" class="loading-container">
+    <!-- Main Portfolio List -->
+    <div class="section-group portfolio-section">
+      <div class="section-header">YOUR ALLOCATION ({{ getTotalAllocation() }}%)</div>
+      
+      <div *ngIf="isLoading" class="loading-container">
         <ion-spinner name="crescent"></ion-spinner>
+        <p>Loading portfolio...</p>
       </div>
       
-      <ion-list *ngIf="searchResults.length > 0 && !isSearching" class="ios-list search-results-list">
-        <ion-item 
-          *ngFor="let asset of searchResults"
-          (click)="addAssetToPortfolio(asset)"
-          [button]="true"
-          [disabled]="isStockInPortfolio(asset)"
-          lines="full"
-          detail="false">
-          <div class="stock-icon-wrapper" slot="start">
-            <div class="stock-initials">{{ asset.symbol.substring(0, 2) }}</div>
-          </div>
-          <ion-label>
-            <h3 class="font-bold">{{ asset.symbol }}</h3>
-            <p class="text-gray">{{ asset.name }}</p>
-          </ion-label>
-          <ion-button 
-            slot="end" 
-            fill="clear" 
-            [color]="isStockInPortfolio(asset) ? 'success' : 'primary'">
-            <ion-icon [name]="isStockInPortfolio(asset) ? 'checkmark-circle' : 'add-circle'"></ion-icon>
-          </ion-button>
-        </ion-item>
-      </ion-list>
-      
-      <div *ngIf="searchTerm.length > 0 && searchResults.length === 0 && !isSearching" class="no-results">
-        <p>No results found for "{{ searchTerm }}"</p>
-      </div>
-    </div>
-
-    <!-- Why Default Portfolio Card -->
-    <ion-card class="info-card ios-card">
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="bulb-outline" color="warning"></ion-icon>
-          Why We Recommend This Portfolio
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <p>Our default portfolio is designed by financial experts to provide:</p>
-        <ul class="benefit-list">
-          <li><strong>Diversification:</strong> Spread risk across different asset classes</li>
-          <li><strong>Low Costs:</strong> Index funds with minimal expense ratios</li>
-          <li><strong>Global Exposure:</strong> Both domestic and international markets</li>
-          <li><strong>Balanced Growth:</strong> Mix of stocks, bonds, and real estate</li>
-        </ul>
-        <ion-note>
-          <ion-icon name="information-circle-outline"></ion-icon>
-          This allocation follows modern portfolio theory and is suitable for most long-term investors.
-        </ion-note>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Current Portfolio -->
-    <ion-card class="portfolio-card ios-card">
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="pie-chart-outline" color="primary"></ion-icon>
-          Your Portfolio
-          <ion-chip [color]="isValidAllocation() ? 'success' : 'danger'" class="total-chip">
-            {{ getTotalAllocation() }}%
-          </ion-chip>
-        </ion-card-title>
-        <ion-note *ngIf="!isValidAllocation()" color="danger">
-          Allocations must add up to 100%
-        </ion-note>
-      </ion-card-header>
-      <ion-card-content>
-        <div *ngIf="isLoading" class="loading-container">
-          <ion-spinner name="crescent"></ion-spinner>
-          <p>Loading portfolio...</p>
-        </div>
-        
-        <ion-reorder-group *ngIf="!isLoading" [disabled]="false" (ionItemReorder)="reorderStocks($event)">
-          <ion-item-sliding *ngFor="let stock of portfolio" class="ios-item-sliding">
+      <ion-list inset="true" class="ios-list portfolio-list" *ngIf="!isLoading">
+        <ion-reorder-group [disabled]="false" (ionItemReorder)="reorderStocks($event)">
+          <ion-item-sliding *ngFor="let stock of portfolio" class="ios-item-sliding" @deleteAnimation>
             <ion-item lines="full" class="portfolio-item">
-              <ion-reorder slot="start"></ion-reorder>
               <div class="stock-info">
                 <div class="stock-header">
                   <span class="stock-symbol">{{ stock.symbol }}</span>
@@ -126,42 +44,110 @@
               </div>
             </ion-item>
             
-            <ion-item-options side="end">
-              <ion-item-option color="danger" (click)="removeStock(stock)">
+            <ion-item-options side="end" (ionSwipe)="removeStock(stock)">
+              <ion-item-option color="danger" expandable="true" (click)="removeStock(stock)">
                 <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
               </ion-item-option>
             </ion-item-options>
           </ion-item-sliding>
         </ion-reorder-group>
-        
-        <!-- Reset to Default Button - only show if portfolio differs from default -->
-        <div class="portfolio-actions" *ngIf="isPortfolioDifferentFromDefault()">
-          <ion-button 
-            fill="clear" 
-            size="small" 
-            color="medium"
-            (click)="resetToDefault()"
-            [disabled]="isLoading || isSaving"
-            class="reset-portfolio-btn">
-            <ion-icon name="refresh-outline" slot="start"></ion-icon>
-            Reset to Default
-          </ion-button>
-        </div>
-      </ion-card-content>
-    </ion-card>
+      </ion-list>
+    </div>
 
-    <!-- Action Buttons -->
-    <div class="action-buttons">
+    <!-- Search Section -->
+    <div class="section-group search-group">
+      <ion-list inset="true" class="ios-list search-list">
+        <ion-item lines="none">
+          <ion-searchbar
+            [(ngModel)]="searchTerm"
+            (ionInput)="searchStocks()"
+            placeholder="Add stocks & ETFs"
+            show-cancel-button="focus"
+            animated="true"
+            debounce="300"
+            class="ios-searchbar">
+          </ion-searchbar>
+        </ion-item>
+      </ion-list>
+
+      <!-- Search Results (Virtual Scroll Area) -->
+      <div class="search-results-container" *ngIf="searchTerm.length > 0 || isSearching">
+        <div *ngIf="isSearching" class="loading-container">
+          <ion-spinner name="crescent"></ion-spinner>
+        </div>
+        
+        <ion-list *ngIf="searchResults.length > 0 && !isSearching" class="ios-list search-results-list" lines="full">
+          <ion-item 
+            *ngFor="let asset of searchResults"
+            (click)="addAssetToPortfolio(asset)"
+            [button]="true"
+            [disabled]="isStockInPortfolio(asset)"
+            detail="false">
+            <div class="stock-icon-wrapper" slot="start">
+              <div class="stock-initials">{{ asset.symbol.substring(0, 2) }}</div>
+            </div>
+            <ion-label>
+              <h3 class="font-bold">{{ asset.symbol }}</h3>
+              <p class="text-gray">{{ asset.name }}</p>
+            </ion-label>
+            <ion-button 
+              slot="end" 
+              fill="clear" 
+              [color]="isStockInPortfolio(asset) ? 'success' : 'primary'">
+              <ion-icon [name]="isStockInPortfolio(asset) ? 'checkmark-circle' : 'add-circle'"></ion-icon>
+            </ion-button>
+          </ion-item>
+        </ion-list>
+        
+        <div *ngIf="searchTerm.length > 0 && searchResults.length === 0 && !isSearching" class="no-results">
+          <p>No results found for "{{ searchTerm }}"</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Use Case 1: Explanation (Moved to bottom) -->
+    <div class="section-group">
+      <div class="section-header">RECOMMENDATION</div>
+      <ion-list inset="true" class="ios-list info-list">
+        <ion-item lines="none">
+          <ion-label class="ion-text-wrap">
+            <h2 class="info-title">
+              <ion-icon name="bulb-outline" color="warning" class="info-icon"></ion-icon>
+              Why We Recommend This
+            </h2>
+            <p class="info-text">Our default portfolio is designed by financial experts to provide:</p>
+            <ul class="benefit-list">
+              <li><strong>Diversification:</strong> Spread risk across different asset classes</li>
+              <li><strong>Low Costs:</strong> Index funds with minimal expense ratios</li>
+              <li><strong>Global Exposure:</strong> Both domestic and international markets</li>
+              <li><strong>Balanced Growth:</strong> Mix of stocks, bonds, and real estate</li>
+            </ul>
+            <div class="ion-margin-top" *ngIf="isPortfolioDifferentFromDefault()">
+              <ion-button 
+                fill="clear" 
+                size="small" 
+                color="warning"
+                (click)="resetToDefault()"
+                [disabled]="isLoading || isSaving">
+                <ion-icon name="refresh-outline" slot="start"></ion-icon>
+                Reset to Default
+              </ion-button>
+            </div>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <!-- Save Portfolio Button -->
+    <div class="ion-padding-vertical ion-margin-horizontal">
       <ion-button 
         expand="block" 
-        size="large" 
+        shape="round"
         color="primary"
         (click)="savePortfolio()"
-        [disabled]="!isValidAllocation() || isSaving || isLoading">
-        <ion-spinner name="crescent" *ngIf="isSaving" slot="start"></ion-spinner>
-        <ion-icon name="checkmark-outline" *ngIf="!isSaving" slot="start"></ion-icon>
+        [disabled]="!isValidAllocation() || !hasPortfolioChanged() || isSaving">
         <span *ngIf="!isSaving">Save Portfolio</span>
-        <span *ngIf="isSaving">Saving...</span>
+        <ion-spinner name="crescent" *ngIf="isSaving"></ion-spinner>
       </ion-button>
     </div>
   </div>

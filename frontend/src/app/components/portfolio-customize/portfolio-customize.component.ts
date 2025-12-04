@@ -1,15 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { trigger, style, animate, transition } from '@angular/animations';
 import { environment } from '../../../environments/environment';
+import { ToastService } from '../../services/toast.service';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
   IonButtons, IonBackButton, IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
-  IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge
+  IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge,
+  IonFooter, IonListHeader
 } from '@ionic/angular/standalone';
 
 interface PortfolioItem {
@@ -74,7 +77,16 @@ interface Stock {
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
     IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
     IonButtons, IonBackButton, IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
-    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge
+    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge,
+    IonFooter, IonListHeader
+  ],
+  animations: [
+    trigger('deleteAnimation', [
+      transition(':leave', [
+        style({ height: '*', opacity: 1, overflow: 'hidden' }),
+        animate('300ms ease-out', style({ height: '0', opacity: 0, padding: 0, margin: 0 }))
+      ])
+    ])
   ]
 })
 export class PortfolioCustomizeComponent implements OnInit {
@@ -94,6 +106,9 @@ export class PortfolioCustomizeComponent implements OnInit {
   searchTerm = '';
   searchResults: AlpacaAsset[] = [];
   
+  // UI State
+  showExplanation = false;
+  
   // New stock form
   newStock = {
     symbol: '',
@@ -102,11 +117,19 @@ export class PortfolioCustomizeComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private http: HttpClient
+    private route: ActivatedRoute,
+    private http: HttpClient,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
     console.log('[PortfolioCustomizeComponent] Initializing portfolio customization');
+    
+    // Check if this is the initial setup flow
+    this.route.queryParamMap.subscribe(params => {
+      this.showExplanation = params.get('initial') === 'true';
+    });
+
     this.loadCurrentPortfolio();
   }
 
@@ -241,13 +264,16 @@ export class PortfolioCustomizeComponent implements OnInit {
       }
       
       if (allResults.length > 0) {
-        // Filter for tradable assets only
+        const termUpper = term.toUpperCase();
+        
+        // Filter for tradable assets only AND ensure strict relevance to search term
         let filteredResults = allResults.filter(asset => 
-          asset.tradable && asset.status === 'active'
+          asset.tradable && 
+          asset.status === 'active' &&
+          (asset.symbol.includes(termUpper) || asset.name.toUpperCase().includes(termUpper))
         );
 
         // Enhanced search: prioritize exact symbol matches, then partial symbol matches, then name matches
-        const termUpper = term.toUpperCase();
         
         // Sort results by relevance
         filteredResults.sort((a, b) => {
@@ -434,13 +460,16 @@ export class PortfolioCustomizeComponent implements OnInit {
     const exists = this.portfolio.find(s => s.symbol === asset.symbol);
     if (exists) return;
 
+    // Determine asset type (check class or if name contains "ETF")
+    const isEtf = asset.class === 'etf' || asset.name.toUpperCase().includes('ETF');
+
     // Add with 10% allocation
     const newStock: Stock = {
       symbol: asset.symbol,
       name: asset.name,
       percentage: 10,
-      assetType: asset.class === 'etf' ? 'ETF' : 'STOCK',
-      description: `${asset.class.toUpperCase()}: ${asset.name}`,
+      assetType: isEtf ? 'ETF' : 'STOCK',
+      description: `${isEtf ? 'ETF' : 'STOCK'}: ${asset.name}`,
       tradable: asset.tradable
     };
     
@@ -487,39 +516,22 @@ export class PortfolioCustomizeComponent implements OnInit {
   }
 
   // Reset to default portfolio
-  async resetToDefault() {
-    this.isLoading = true;
-    try {
-      const response = await this.http.post<PortfolioResponse>(
-        `${environment.backendApiUrl}/portfolio/reset-to-default`,
-        {},
-        { headers: this.getAuthHeaders() }
-      ).toPromise();
-      
-      if (response) {
-        this.portfolio = response.portfolioItems.map(item => ({
-          symbol: item.symbol,
-          name: item.name,
-          percentage: item.percentage,
-          assetType: item.assetType,
-          description: `${item.assetType}: ${item.name}`,
-          isDefault: true
-        }));
-      }
-      
-      console.log('[PortfolioCustomizeComponent] Reset to default portfolio');
-    } catch (error) {
-      console.error('[PortfolioCustomizeComponent] Error resetting portfolio:', error);
-      this.setDefaultPortfolio();
-    } finally {
-      this.isLoading = false;
-    }
+  resetToDefault() {
+    // Reset local state only - changes are not persisted until "Save" is clicked
+    this.portfolio = this.getDefaultPortfolioStructure();
+    console.log('[PortfolioCustomizeComponent] Reset to default portfolio (frontend only)');
+    this.toastService.showToast('Portfolio reset to default. Click Save to apply.', 'warning');
   }
 
   // Save portfolio and return to confirmation
   async savePortfolio() {
     if (!this.isValidAllocation()) {
-      alert('Portfolio allocations must add up to 100%');
+      this.toastService.showToast('Portfolio allocations must add up to 100%', 'danger');
+      return;
+    }
+
+    if (!this.hasPortfolioChanged()) {
+      this.toastService.showToast('No changes to save', 'warning');
       return;
     }
 
@@ -544,12 +556,21 @@ export class PortfolioCustomizeComponent implements OnInit {
       
       if (response) {
         console.log('[PortfolioCustomizeComponent] Portfolio saved successfully');
-        // Navigate back to confirmation
-        this.router.navigate(['/investment-confirmation']);
+        
+        // Update original portfolio to match current state
+        this.originalPortfolio = JSON.parse(JSON.stringify(this.portfolio));
+
+        if (this.showExplanation) {
+          // If in initial flow, navigate to confirmation
+          this.router.navigate(['/investment-confirmation']);
+        } else {
+          // Otherwise stay on page and show success
+          this.toastService.showToast('Portfolio saved successfully', 'success');
+        }
       }
     } catch (error) {
       console.error('[PortfolioCustomizeComponent] Error saving portfolio:', error);
-      alert('Failed to save portfolio. Please try again.');
+      this.toastService.showToast('Failed to save portfolio. Please try again.', 'danger');
     } finally {
       this.isSaving = false;
     }

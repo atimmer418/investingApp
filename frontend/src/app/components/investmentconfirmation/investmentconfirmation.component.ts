@@ -361,7 +361,7 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
   // Navigation methods
   editPortfolio(): void {
     console.log('[InvestmentConfirmationComponent] Navigating to portfolio customization');
-    this.router.navigate(['/portfolio-customize']);
+    this.router.navigate(['/portfolio-customize'], { queryParams: { initial: 'true' } });
   }
 
   async authorizeRecurringInvestment() {

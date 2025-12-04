@@ -2,7 +2,7 @@
 
 ion-header {
   ion-toolbar {
-    --background: var(--app-background);
+    --background: var(--app-background-alt, #f2f2f7);
     --color: var(--app-gray-900);
     --border-width: 0;
     
@@ -22,16 +22,50 @@ ion-header {
 }
 
 .container {
-  padding-bottom: 40px;
+  padding-bottom: 80px; // Space for footer
 }
 
-// iOS Search Section
-.ios-search-section {
-  padding: 0 16px 8px;
-  background: var(--app-background);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+// Section Grouping
+.section-group {
+  margin-bottom: 24px;
+  
+  .section-header {
+    padding: 0 16px 8px;
+    font-size: 13px;
+    font-weight: 400;
+    color: #6d6d72;
+    text-transform: uppercase;
+    letter-spacing: -0.08px;
+  }
+
+  &.portfolio-section {
+    padding-bottom: 8px;
+    margin-bottom: 0; // Reduce margin since we have padding and want search closer
+  }
+}
+
+// Search Group Specifics
+.search-group {
+  padding: 0; // Let ion-list handle inset margins
+}
+
+.search-list {
+  ion-item {
+    --padding-start: 0;
+    --padding-end: 0;
+    --inner-padding-end: 0;
+    --background: white;
+    --max-height: 50px;
+    --border-radius: 10px !important;
+    
+    ion-searchbar {
+      padding-top: 0px !important;
+      padding-bottom: 0px !important;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+      height: 100%;
+    }
+  }
 }
 
 .ios-searchbar {
@@ -40,99 +74,74 @@ ion-header {
   --icon-color: #8e8e93;
   --border-radius: 10px;
   --box-shadow: none;
-  padding: 0;
-  height: 36px;
+  height: auto; // Allow height to adjust with padding
   
   &.searchbar-has-focus {
     --cancel-button-color: var(--app-primary);
   }
 }
-  
-// iOS List Styles
+
+// iOS Inset List Styles
 .ios-list {
   background: transparent;
-  padding: 0 16px;
+  margin: 0;
+  --ion-item-background: white;
   
   ion-item {
-    --background: white;
-    --border-color: #c6c6c8;
-    --padding-start: 16px;
-    --inner-padding-end: 16px;
-    
-    &:first-child {
-      border-top-left-radius: 10px;
-      border-top-right-radius: 10px;
+    --background: white !important;
+    --border-radius: 0 !important;
+  }
+  
+  &.info-list {
+    ion-item {
+      --padding-start: 16px;
+      --inner-padding-end: 16px;
+      --padding-top: 8px;
+      --padding-bottom: 8px;
     }
-    
-    &:last-child {
-      border-bottom-left-radius: 10px;
-      border-bottom-right-radius: 10px;
-      --border-width: 0;
-    }
-    
-    &:not(:last-child) {
-      --border-width: 0 0 0.5px 0;
+  }
+  
+  &.portfolio-list {
+    ion-item {
+      --padding-start: 16px;
+      --inner-padding-end: 16px;
     }
   }
 }
 
-.stock-icon-wrapper {
-  width: 40px;
-  height: 40px;
-  background: var(--app-gray-100);
-  border-radius: 50%;
+// Info Content
+.info-title {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-right: 12px;
   
-  .stock-initials {
+  .info-icon {
+    margin-right: 8px;
+    font-size: 20px;
+  }
+}
+
+.info-text {
+  font-size: 15px;
+  line-height: 1.4;
+  color: black;
+  margin-bottom: 12px;
+}
+
+.benefit-list {
+  margin: 0;
+  padding-left: 20px;
+  
+  li {
+    margin-bottom: 6px;
     font-size: 14px;
-    font-weight: 600;
-    color: var(--app-gray-900);
-  }
-}
-
-// iOS Card Styles
-.ios-card {
-  border-radius: 10px;
-  box-shadow: none;
-  margin: 16px;
-  background: white;
-  
-  ion-card-header {
-    padding: 16px 16px 8px;
+    line-height: 1.4;
+    color: #3c3c43;
     
-    ion-card-title {
-      font-size: 20px;
-      font-weight: 700;
+    strong {
       color: black;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-  }
-  
-  ion-card-content {
-    padding: 0 16px 16px;
-  }
-}
-
-// Info card styling
-.info-card {
-  .benefit-list {
-    margin: 16px 0;
-    padding-left: 0;
-    list-style: none;
-    
-    li {
-      margin-bottom: 8px;
-      font-size: 14px;
-      line-height: 1.4;
-      
-      strong {
-        color: var(--ion-color-primary);
-      }
     }
   }
 }
@@ -184,8 +193,8 @@ ion-header {
   .allocation-input-wrapper {
     display: flex;
     align-items: center;
-    background: #f2f2f7;
-    border-radius: 8px;
+    background: white;
+    border-radius: 4px;
     padding: 4px 8px;
     width: 80px;
     
@@ -210,26 +219,31 @@ ion-header {
   }
 }
 
-.total-chip {
-  font-weight: 600;
-  height: 24px;
-}
-
-.action-buttons {
-  padding: 16px;
-  
-  ion-button {
-    margin-bottom: 12px;
-    --border-radius: 12px;
-    font-weight: 600;
-  }
-}
-
 .search-results-container {
-  background: var(--app-background-alt, #f2f2f7);
-  max-height: 300px;
+  background: white;
+  max-height: 250px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  border-radius: 10px;
+  margin-top: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.stock-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  background: var(--app-gray-100);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  
+  .stock-initials {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--app-gray-900);
+  }
 }
 
 .no-results {
@@ -248,5 +262,15 @@ ion-header {
   p {
     margin-top: 10px;
     color: var(--app-gray-400);
+  }
+}
+
+.portfolio-actions {
+  margin-top: 16px;
+  text-align: center;
+  
+  .reset-portfolio-btn {
+    --color: var(--ion-color-medium);
+    font-size: 14px;
   }
 }
