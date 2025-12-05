@@ -276,10 +276,9 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
         
         // Fallback to default portfolio
         this.userPortfolio = [
-          { symbol: 'VTI', name: 'Vanguard Total Stock Market ETF', allocation: 40, description: 'U.S. Stock Market' },
-          { symbol: 'VXUS', name: 'Vanguard Total International Stock ETF', allocation: 30, description: 'International Stocks' },
-          { symbol: 'BND', name: 'Vanguard Total Bond Market ETF', allocation: 20, description: 'U.S. Bonds' },
-          { symbol: 'VNQ', name: 'Vanguard Real Estate ETF', allocation: 10, description: 'Real Estate' }
+          { symbol: 'VTI', name: 'Vanguard Total Stock Market ETF', allocation: 75, description: 'U.S. Stock Market' },
+          { symbol: 'VXUS', name: 'Vanguard Total International Stock ETF', allocation: 20, description: 'International Stocks' },
+          { symbol: 'VBR', name: 'Vanguard Small-Cap Value ETF', allocation: 5, description: 'Small-Cap Value' }
         ];
       }
     });

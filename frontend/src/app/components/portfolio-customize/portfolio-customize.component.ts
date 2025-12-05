@@ -182,7 +182,7 @@ export class PortfolioCustomizeComponent implements OnInit {
       {
         symbol: 'VTI',
         name: 'Vanguard Total Stock Market ETF',
-        percentage: 70,
+        percentage: 75,
         assetType: 'ETF',
         description: 'Tracks the entire U.S. stock market',
         isDefault: true
@@ -196,11 +196,11 @@ export class PortfolioCustomizeComponent implements OnInit {
         isDefault: true
       },
       {
-        symbol: 'BND',
-        name: 'Vanguard Total Bond Market ETF',
-        percentage: 10,
+        symbol: 'VBR',
+        name: 'Vanguard Small-Cap Value ETF',
+        percentage: 5,
         assetType: 'ETF',
-        description: 'Broad exposure to U.S. investment grade bonds',
+        description: 'Exposure to small-cap value stocks',
         isDefault: true
       }
     ];
@@ -397,7 +397,7 @@ export class PortfolioCustomizeComponent implements OnInit {
       {
         symbol: 'VTI',
         name: 'Vanguard Total Stock Market ETF',
-        percentage: 70,
+        percentage: 75,
         assetType: 'ETF',
         description: 'Tracks the entire U.S. stock market',
         isDefault: true
@@ -411,11 +411,11 @@ export class PortfolioCustomizeComponent implements OnInit {
         isDefault: true
       },
       {
-        symbol: 'BND',
-        name: 'Vanguard Total Bond Market ETF',
-        percentage: 10,
+        symbol: 'VBR',
+        name: 'Vanguard Small-Cap Value ETF',
+        percentage: 5,
         assetType: 'ETF',
-        description: 'Broad exposure to U.S. investment grade bonds',
+        description: 'Exposure to small-cap value stocks',
         isDefault: true
       }
     ];

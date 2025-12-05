@@ -286,9 +286,9 @@ export class Tab3Page implements OnInit, OnDestroy {
         nextDate: this.settingsService.getNextInvestmentDate('monthly'),
         isActive: true,
         portfolioAllocation: {
-          'VTI': 60,   // Total Stock Market
-          'VXUS': 30,  // International
-          'BND': 10    // Bonds
+          'VTI': 75,   // Total Stock Market
+          'VXUS': 20,  // International
+          'VBR': 5     // Small-Cap Value
         }
       };
       this.settingsService.updateRecurringInvestment(demoInvestment);
