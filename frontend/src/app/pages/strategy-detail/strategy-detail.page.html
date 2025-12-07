@@ -1,13 +1,217 @@
-<ion-header [translucent]="true">
+<ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-title>strategy-detail</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tab2" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title *ngIf="strategy">{{ strategy.title }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">strategy-detail</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content *ngIf="strategy" class="strategy-detail-content" [scrollY]="false">
+  <!-- Progress Indicator -->
+  <div class="progress-container">
+    <ion-progress-bar [value]="(currentSlide + 1) / 6"></ion-progress-bar>
+    <p class="progress-text">{{ currentSlide + 1 }} of 6</p>
+  </div>
+
+  <!-- Swiper Container (pagination disabled in favor of external pagination) -->
+  <swiper-container (swiperslidechange)="onSlideChange($event)" [pagination]="false" [speed]="400">
+    <!-- Slide 1: Hero + Overview -->
+    <swiper-slide>
+      <div class="slide-content">
+        <div class="strategy-hero-slide" [attr.data-color]="strategy.color">
+          <ion-icon [name]="strategy.icon" class="hero-icon"></ion-icon>
+          <h1>{{ strategy.title }}</h1>
+          <p class="subtitle">{{ strategy.subtitle }}</p>
+        </div>
+
+        <ion-card class="overview-card-slide">
+          <ion-card-header>
+            <ion-card-title>
+              <ion-icon name="information-circle-outline"></ion-icon>
+              What Is This?
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p>{{ strategy.overview }}</p>
+          </ion-card-content>
+        </ion-card>
+
+        <p class="swipe-hint">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+          Swipe to learn more
+        </p>
+      </div>
+    </swiper-slide>
+
+    <!-- Slide 2: How It Works -->
+    <swiper-slide>
+      <div class="slide-content">
+        <h2 class="slide-title">
+          <ion-icon name="construct-outline"></ion-icon>
+          {{ strategy.howItWorks.title }}
+        </h2>
+
+        <ion-card>
+          <ion-card-content>
+            <ol class="strategy-steps">
+              <li *ngFor="let step of strategy.howItWorks.steps">{{ step }}</li>
+            </ol>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </swiper-slide>
+
+    <!-- Slide 3: SBLOC vs Traditional -->
+    <swiper-slide *ngIf="strategy.vsTraditional">
+      <div class="slide-content">
+        <h2 class="slide-title">
+          <ion-icon name="git-compare-outline"></ion-icon>
+          {{ strategy.vsTraditional.title }}
+        </h2>
+
+        <ion-card class="comparison-card sbloc-card">
+          <ion-card-header>
+            <ion-card-title>
+              <ion-icon name="trending-up" class="success"></ion-icon>
+              SBLOC Strategy
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ul>
+              <li *ngFor="let item of strategy.vsTraditional.sbloc">
+                <ion-icon name="checkmark-circle" class="success"></ion-icon>
+                {{ item }}
+              </li>
+            </ul>
+          </ion-card-content>
+        </ion-card>
+
+        <ion-card class="comparison-card traditional-card">
+          <ion-card-header>
+            <ion-card-title>
+              <ion-icon name="trending-down" class="danger"></ion-icon>
+              Traditional Approach
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ul>
+              <li *ngFor="let item of strategy.vsTraditional.traditional">
+                <ion-icon name="close-circle" class="danger"></ion-icon>
+                {{ item }}
+              </li>
+            </ul>
+          </ion-card-content>
+        </ion-card>
+
+        <div class="conclusion-box">
+          <p>
+            <ion-icon name="bulb-outline" class="primary"></ion-icon>
+            <strong>Bottom Line:</strong> {{ strategy.vsTraditional.conclusion }}
+          </p>
+        </div>
+      </div>
+    </swiper-slide>
+
+    <!-- Slide 4: Benefits & Considerations -->
+    <swiper-slide>
+      <div class="slide-content">
+        <h2 class="slide-title">
+          <ion-icon name="analytics-outline"></ion-icon>
+          Pros & Cons
+        </h2>
+
+        <ion-card class="benefits-card">
+          <ion-card-header>
+            <ion-card-title>
+              <ion-icon name="checkmark-circle-outline" class="success"></ion-icon>
+              Key Benefits
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ul>
+              <li *ngFor="let benefit of strategy.benefits">{{ benefit }}</li>
+            </ul>
+          </ion-card-content>
+        </ion-card>
+
+        <ion-card class="considerations-card">
+          <ion-card-header>
+            <ion-card-title>
+              <ion-icon name="alert-circle-outline" class="warning"></ion-icon>
+              Important Considerations
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ul>
+              <li *ngFor="let consideration of strategy.considerations">{{ consideration }}</li>
+            </ul>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </swiper-slide>
+
+    <!-- Slide 5: Example Scenario -->
+    <swiper-slide>
+      <div class="slide-content">
+        <h2 class="slide-title">
+          <ion-icon name="calculator-outline"></ion-icon>
+          {{ strategy.exampleScenario.title }}
+        </h2>
+
+        <ion-card class="example-card">
+          <ion-card-header>
+            <ion-card-title>{{ strategy.exampleScenario.description }}</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ul class="example-details">
+              <li *ngFor="let detail of strategy.exampleScenario.details" [innerHTML]="detail"></li>
+            </ul>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </swiper-slide>
+
+    <!-- Slide 6: Who It's For + Getting Started -->
+    <swiper-slide>
+      <div class="slide-content">
+        <h2 class="slide-title">
+          <ion-icon name="people-outline"></ion-icon>
+          Is This Right for You?
+        </h2>
+
+        <ion-card class="best-for-card">
+          <ion-card-content>
+            <p>{{ strategy.bestFor }}</p>
+          </ion-card-content>
+        </ion-card>
+
+        <h3 class="subsection-title">
+          <ion-icon name="rocket-outline"></ion-icon>
+          Getting Started
+        </h3>
+
+        <ion-card class="getting-started-card">
+          <ion-card-content>
+            <ol class="getting-started-steps">
+              <li *ngFor="let step of strategy.gettingStarted">{{ step }}</li>
+            </ol>
+          </ion-card-content>
+        </ion-card>
+
+        <ion-button expand="block" size="large" class="back-button" (click)="goBack()">
+          <ion-icon name="arrow-back" slot="start"></ion-icon>
+          Back to Strategies
+        </ion-button>
+      </div>
+    </swiper-slide>
+  </swiper-container>
 </ion-content>
+
+<!-- Fixed Pagination Container (always visible above tab bar) -->
+<div class="pagination-container" *ngIf="strategy">
+  <div class="pagination-bullets">
+    <span *ngFor="let slide of [0,1,2,3,4,5]; let i = index" class="pagination-bullet"
+      [class.active]="i === currentSlide"></span>
+  </div>
+</div>
