@@ -124,6 +124,7 @@ export class PortfolioCustomizeComponent implements OnInit {
 
   ngOnInit() {
     console.log('[PortfolioCustomizeComponent] Initializing portfolio customization');
+    // Force recompile
     
     // Check if this is the initial setup flow
     this.route.queryParamMap.subscribe(params => {

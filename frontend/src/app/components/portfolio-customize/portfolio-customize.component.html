@@ -8,18 +8,21 @@
 </ion-header>
 
 <ion-content class="gray-background">
-  <div class="container">
+  <div class="mobile-container">
     
     <!-- Main Portfolio List -->
-    <div class="section-group portfolio-section">
-      <div class="section-header">YOUR ALLOCATION ({{ getTotalAllocation() }}%)</div>
+    <div class="section-card mobile-card">
+      <div class="section-header" style="margin-bottom: 0px;">
+        <h3 class="section-title">Your Allocation</h3>
+        <p class="section-subtitle">{{ getTotalAllocation() }}% Allocated</p>
+      </div>
       
       <div *ngIf="isLoading" class="loading-container">
         <ion-spinner name="crescent"></ion-spinner>
         <p>Loading portfolio...</p>
       </div>
       
-      <ion-list inset="true" class="ios-list portfolio-list" *ngIf="!isLoading">
+      <ion-list class="ios-list portfolio-list" *ngIf="!isLoading">
         <ion-reorder-group [disabled]="false" (ionItemReorder)="reorderStocks($event)">
           <ion-item-sliding *ngFor="let stock of portfolio" class="ios-item-sliding" @deleteAnimation>
             <ion-item lines="full" class="portfolio-item">
@@ -55,13 +58,18 @@
     </div>
 
     <!-- Search Section -->
-    <div class="section-group search-group">
-      <ion-list inset="true" class="ios-list search-list">
+    <div class="section-card mobile-card">
+      <div class="section-header">
+        <h3 class="section-title">Add Assets</h3>
+        <p class="section-subtitle">Search for stocks & ETFs</p>
+      </div>
+
+      <ion-list class="ios-list search-list">
         <ion-item lines="none">
           <ion-searchbar
             [(ngModel)]="searchTerm"
             (ionInput)="searchStocks()"
-            placeholder="Add stocks & ETFs"
+            placeholder="Symbol or Name"
             show-cancel-button="focus"
             animated="true"
             debounce="300"
@@ -71,7 +79,7 @@
       </ion-list>
 
       <!-- Search Results (Virtual Scroll Area) -->
-      <div class="search-results-container" *ngIf="searchTerm.length > 0 || isSearching">
+      <div class="search-results-container scrollable-results" *ngIf="searchTerm.length > 0 || isSearching">
         <div *ngIf="isSearching" class="loading-container">
           <ion-spinner name="crescent"></ion-spinner>
         </div>
@@ -106,9 +114,13 @@
     </div>
 
     <!-- Use Case 1: Explanation (Moved to bottom) -->
-    <div class="section-group">
-      <div class="section-header">OUR PHILOSOPHY</div>
-      <ion-list inset="true" class="ios-list info-list">
+    <div class="section-card mobile-card">
+      <div class="section-header" style="margin-bottom: 0px;">
+        <h3 class="section-title">Our Philosophy</h3>
+        <p class="section-subtitle">Why we recommend this</p>
+      </div>
+
+      <ion-list class="ios-list info-list">
         <ion-item lines="none">
           <ion-label class="ion-text-wrap">
             <h2 class="info-title">
@@ -156,7 +168,7 @@
     </div>
 
     <!-- Save Portfolio Button -->
-    <div class="ion-padding-vertical ion-margin-horizontal">
+    <div class="ion-padding-vertical">
       <ion-button 
         expand="block" 
         shape="round"
