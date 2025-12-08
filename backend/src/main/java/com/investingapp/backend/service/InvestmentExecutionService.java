@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -26,6 +27,7 @@ import java.util.*;
 public class InvestmentExecutionService {
     
     private static final Logger logger = LoggerFactory.getLogger(InvestmentExecutionService.class);
+    private static final ZoneId MARKET_TIMEZONE = ZoneId.of("America/New_York");
     
     // Configuration for lump sum batching behavior
     // Set to true to batch multiple lump sum investments within the window (cost optimization)
@@ -65,7 +67,7 @@ public class InvestmentExecutionService {
      * Market hours: Monday-Friday 9:30 AM - 4:00 PM ET
      */
     private boolean isMarketOpen() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(MARKET_TIMEZONE);
         DayOfWeek dayOfWeek = now.getDayOfWeek();
         
         // Weekend check
@@ -267,7 +269,7 @@ public class InvestmentExecutionService {
      * Process all scheduled investments for today
      */
     public void processScheduledInvestments() {
-        logger.info("Starting scheduled investment processing for {}", LocalDate.now());
+        logger.info("Starting scheduled investment processing for {}", LocalDate.now(MARKET_TIMEZONE));
         
         // Get all investment schedules that are ready for execution
         // This includes schedules where either:
@@ -277,7 +279,7 @@ public class InvestmentExecutionService {
         
         logger.info("Found {} investment schedules ready for execution", readySchedules.size());
         
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(MARKET_TIMEZONE);
         
         for (InvestmentSchedule schedule : readySchedules) {
             try {
@@ -332,7 +334,7 @@ public class InvestmentExecutionService {
         InvestmentExecution execution = new InvestmentExecution();
         execution.setUser(schedule.getUser());
         execution.setAmount(schedule.getInvestmentAmount());
-        execution.setScheduledDate(LocalDateTime.now()); // Use LocalDateTime
+        execution.setScheduledDate(LocalDateTime.now(MARKET_TIMEZONE)); // Use LocalDateTime
         execution.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
         // Note: InvestmentExecution doesn't have a direct link back to schedule
         
@@ -344,7 +346,7 @@ public class InvestmentExecutionService {
      */
     private void updateScheduleAfterExecution(InvestmentSchedule schedule) {
         LocalDate currentNextDate = schedule.getNextInvestmentDate();
-        LocalDate newNextDate = schedule.calculateNextInvestmentDate(LocalDate.now());
+        LocalDate newNextDate = schedule.calculateNextInvestmentDate(LocalDate.now(MARKET_TIMEZONE));
         
         schedule.setNextInvestmentDate(newNextDate);
         // Note: We don't update startDate - it remains as the original start date

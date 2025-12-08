@@ -77,17 +77,18 @@ public class InvestmentScheduleService {
                 }
 
                 if (intendedDate != null) {
+                    schedule.setChosenDate(intendedDate);
                     schedule.setDayOfWeek(intendedDate.getDayOfWeek().name());
                     schedule.setDayOfMonth(intendedDate.getDayOfMonth());
                 }
 
                 // If nextInvestmentDate is explicitly provided, use it but adjust for holidays
                 if (nextInvestmentDate != null) {
-                    // Only update if the date has actually changed to avoid overwriting chosenDate
-                    // with an adjusted date
-                    // when the user is just updating the amount
+                    // Only update if the date has actually changed OR if chosenDate is missing
+                    // to avoid overwriting chosenDate with an adjusted date when the user is just updating the amount
                     boolean dateChanged = schedule.getNextInvestmentDate() == null
-                            || !nextInvestmentDate.equals(schedule.getNextInvestmentDate());
+                            || !nextInvestmentDate.equals(schedule.getNextInvestmentDate())
+                            || schedule.getChosenDate() == null;
 
                     if (dateChanged) {
                         // Update chosenDate to the user's selected date
