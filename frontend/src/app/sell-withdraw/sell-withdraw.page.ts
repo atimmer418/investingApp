@@ -302,6 +302,55 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     return pendingPercent === 100;
   }
 
+  getWithdrawableCash(): number {
+    if (this.balance?.withdrawableCash !== undefined) {
+      return this.balance.withdrawableCash;
+    }
+    return this.balance?.cash || 0;
+  }
+
+  getSettledCash(): number {
+    return this.balance?.cash || 0;
+  }
+
+  getEstimatedHoldReleaseDate(): string | null {
+    if (!this.dashboardData?.recentTransactions) return null;
+    
+    // Find recent deposits (positive amount and type is CSD/ACH)
+    // We look for transactions with positive amount and type 'CSD' (Cash Settlement) or 'ACH'
+    // which indicate deposits. 'FILL' are trades.
+    const deposits = this.dashboardData.recentTransactions.filter(t => 
+      t.amount > 0 && (t.type === 'CSD' || t.type === 'ACH' || t.type === 'JNLS')
+    );
+    
+    if (deposits.length > 0) {
+      // Sort by date descending to get the latest
+      deposits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const lastDeposit = deposits[0];
+      
+      const depositDate = new Date(lastDeposit.date);
+      // Add 6 business days to be safe (Alpaca states 4-6 business days)
+      const releaseDate = this.addBusinessDays(depositDate, 6);
+      
+      return releaseDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }
+    return null;
+  }
+
+  private addBusinessDays(date: Date, days: number): Date {
+    const result = new Date(date);
+    let addedDays = 0;
+    while (addedDays < days) {
+      result.setDate(result.getDate() + 1);
+      const dayOfWeek = result.getDay();
+      // 0 is Sunday, 6 is Saturday
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        addedDays++;
+      }
+    }
+    return result;
+  }
+
   private showToast(message: string, color: string = 'primary') {
     this.toastService.showToast(message, color);
   }

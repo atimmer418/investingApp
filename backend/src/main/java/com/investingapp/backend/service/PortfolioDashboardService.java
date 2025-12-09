@@ -703,8 +703,9 @@ public class PortfolioDashboardService {
     private List<Transaction> getRecentTransactions(String accountId) {
         try {
             // Use the activities endpoint with account_id query parameter
+            // Include CSD (Cash Settlement/Deposits) to track funding activities
             String url = alpacaBrokerBaseUrl + "/accounts/activities?account_id=" + accountId
-                    + "&activity_types=FILL&limit=50";
+                    + "&activity_types=FILL,CSD&limit=50";
             HttpHeaders headers = createAuthHeaders();
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
@@ -718,14 +719,19 @@ public class PortfolioDashboardService {
                 if (transactionsArray.isArray()) {
                     for (JsonNode transactionNode : transactionsArray) {
                         // Parse according to the structure you provided
-                        String id = transactionNode.has("order_id") ? transactionNode.get("order_id").asText() : "";
-                        String type = transactionNode.has("type") ? transactionNode.get("type").asText() : "fill";
+                        String id = transactionNode.has("id") ? transactionNode.get("id").asText() : 
+                                   (transactionNode.has("order_id") ? transactionNode.get("order_id").asText() : "");
+                        String type = transactionNode.has("activity_type") ? transactionNode.get("activity_type").asText() : 
+                                     (transactionNode.has("type") ? transactionNode.get("type").asText() : "fill");
                         String symbol = transactionNode.has("symbol") ? transactionNode.get("symbol").asText() : "";
                         BigDecimal quantity = parseDecimalSafely(transactionNode, "qty", BigDecimal.ZERO);
                         BigDecimal price = parseDecimalSafely(transactionNode, "price", BigDecimal.ZERO);
 
-                        // Calculate amount (price * quantity)
-                        BigDecimal amount = price.multiply(quantity);
+                        // Calculate amount: prefer net_amount (handles deposits), fallback to price * qty
+                        BigDecimal amount = parseDecimalSafely(transactionNode, "net_amount", BigDecimal.ZERO);
+                        if (amount.compareTo(BigDecimal.ZERO) == 0 && price.compareTo(BigDecimal.ZERO) != 0) {
+                            amount = price.multiply(quantity);
+                        }
 
                         String date = transactionNode.has("transaction_time")
                                 ? transactionNode.get("transaction_time").asText()

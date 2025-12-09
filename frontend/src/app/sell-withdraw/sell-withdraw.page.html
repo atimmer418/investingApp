@@ -161,7 +161,7 @@
           <div class="display-flex justify-between align-center m-b-xs">
             <label class="amount-label font-medium text-dark">Amount</label>
             <span class="available-text text-xs text-gray">
-              Available: {{formatCurrency(balance?.cash || 0)}}
+              Available: {{formatCurrency(getWithdrawableCash())}}
             </span>
           </div>
           <div class="amount-input-wrapper display-flex align-center border rounded p-xs">
@@ -200,9 +200,19 @@
         <div class="info-box bg-gray-50 p-sm rounded m-t-md">
           <div class="display-flex align-start">
             <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
-            <p class="text-xs text-gray m-0">
-              <strong>Note:</strong> You can only withdraw "Settled Cash". If you just sold stock, it may take 1 business day for funds to settle and become available for withdrawal.
-            </p>
+            <div class="text-xs text-gray m-0">
+              <ng-container *ngIf="getSettledCash() > getWithdrawableCash() && getEstimatedHoldReleaseDate(); else defaultMsg">
+                <p class="m-0">
+                  New deposits take 4-6 days to clear before you can withdraw that amount.
+                  Your recently deposited amount should be available for withdrawal by <strong>{{getEstimatedHoldReleaseDate()}}</strong>.
+                </p>
+              </ng-container>
+              <ng-template #defaultMsg>
+                <p class="m-0">
+                  Funds from selling stock take 1 business day to settle before being available for withdrawal.
+                </p>
+              </ng-template>
+            </div>
           </div>
         </div>
       </div>
