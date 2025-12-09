@@ -45,9 +45,6 @@ ion-header {
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .section-title {
@@ -57,40 +54,31 @@ ion-header {
   margin: 0;
 }
 
-/* Info Card */
-.info-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+.section-subtitle {
+  color: #8e8e93;
+  font-size: 14px;
+  margin: 4px 0 0 0;
+}
+
+/* Page Introduction */
+.page-intro {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
   
-  .info-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #007aff;
-    color: white !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 1.2rem;
-    text-align: center;
-    line-height: 1;
-    padding: 0;
-    margin: 0;
-    position: relative;
-    
-    /* Adjust the icon position by shifting the container's content */
-    padding-top: 1px;
-    padding-left: 1px;
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1c1c1e;
+    margin: 0 0 1rem 0;
+    line-height: 1.3;
   }
   
-  h3 {
+  .helper-text {
+    font-size: 1rem;
+    color: #8e8e93;
+    line-height: 1.5;
     margin: 0;
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #1c1c1e;
   }
 }
 
@@ -160,32 +148,61 @@ p {
   }
 }
 
-/* Investment Type Segment */
-.investment-type-segment {
-  --background: #f9f9f9;
-  --color-checked: white;
-  --background-checked: #007aff;
-  --border-radius: 12px;
+/* iOS Tab Switcher */
+.ios-tab-switcher {
+  display: flex;
+  background: #e3e3e8;
+  border-radius: 12px;
+  padding: 2px;
+  width: 100%;
   margin-bottom: 0.5rem;
-  
-  ion-segment-button {
-    --color: #8e8e93;
-    font-weight: 500;
+  position: relative;
+}
+
+.ios-tab-button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  cursor: pointer;
+  color: #8e8e93;
+  font-weight: 500;
+  font-size: 14px;
+  position: relative;
+  z-index: 1;
+
+  &:hover {
+    color: #1c1c1e;
+  }
+
+  &.active {
+    background: white;
+    color: var(--ion-color-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+    font-weight: 600;
   }
 }
 
-/* Stock Search Components */
-.stock-searchbar {
-  --background: #f9f9f9;
-  --color: #1c1c1e;
-  --border-radius: 12px;
+/* iOS Search Bar */
+.ios-searchbar {
+  --background: #e3e3e8;
+  --placeholder-color: #8e8e93;
+  --icon-color: #8e8e93;
+  --border-radius: 10px;
   --box-shadow: none;
-  border: 1px solid #e0e0e0;
-  transition: border-color 0.2s;
+  height: auto;
+  padding-left: 0;
+  padding-right: 0;
   margin-bottom: 1rem;
   
   &.searchbar-has-focus {
-    border-color: #007aff;
+    --cancel-button-color: var(--ion-color-primary);
   }
 }
 
@@ -207,51 +224,56 @@ p {
   }
 }
 
-.search-results {
-  margin: 1rem 0;
+/* Search Results */
+.search-results-container {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
   
-  .search-results-list {
-    background: #f9f9f9;
-    border-radius: 12px;
-    overflow: hidden;
+  .ios-list {
+    background: transparent;
+    padding: 0;
+    margin: 0;
     
-    .search-result-item {
-      --background: transparent;
-      --border-color: #e0e0e0;
-      --color: #1c1c1e;
-      cursor: pointer;
-      transition: background-color 0.2s;
+    ion-item {
+      --background: white;
+      --border-color: #e5e5ea;
+      --padding-start: 0;
+      --inner-padding-end: 0;
+      margin-bottom: 0;
       
-      &:hover {
-        --background: #f0f0f0;
+      &::part(native) {
+        padding-left: 0;
       }
       
-      &:last-child {
-        --border-style: none;
-      }
-      
-      ion-label {
-        h3 {
+      .stock-icon-wrapper {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #f2f2f7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        
+        .stock-initials {
+          font-size: 14px;
           font-weight: 600;
           color: #1c1c1e;
-          margin: 0 0 0.25rem 0;
-          font-size: 1rem;
         }
-        
-        p {
-          color: #8e8e93;
-          margin: 0 0 0.25rem 0;
-          font-size: 0.85rem;
-          line-height: 1.2;
-        }
-        
-        ion-note {
-          color: #007aff;
-          font-size: 0.75rem;
-          font-weight: 500;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
+      }
+      
+      h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1c1c1e;
+        margin-bottom: 2px;
+      }
+      
+      p {
+        font-size: 13px;
+        color: #8e8e93;
       }
     }
   }
@@ -405,16 +427,6 @@ p {
 @media (max-width: 768px) {
   .projection-section {
     margin: 1rem 0;
-  }
-  
-  .info-header {
-    flex-direction: column;
-    text-align: center;
-    gap: 1rem;
-    
-    ion-icon {
-      font-size: 2.5rem;
-    }
   }
 }
 

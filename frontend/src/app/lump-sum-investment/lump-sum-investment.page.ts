@@ -335,7 +335,7 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
 
   getInvestmentTarget(): string {
     if (this.investmentType === 'portfolio') {
-      return 'your diversified portfolio';
+      return 'your portfolio';
     } else if (this.selectedStockInfo) {
       return `${this.selectedStockInfo.name} (${this.selectedStockInfo.symbol})`;
     }

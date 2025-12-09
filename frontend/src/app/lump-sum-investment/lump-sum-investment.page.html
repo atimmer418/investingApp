@@ -12,37 +12,30 @@
   
   <div class="mobile-container">
     
-    <!-- Investment Information Card -->
-    <div class="section-card mobile-card">
-      <div class="info-header">
-        <div class="info-icon">
-          <ion-icon name="information-circle-outline"></ion-icon>
-        </div>
-        <h3>One-Time Investment</h3>
-      </div>
-      <p>Make a one-time lump sum investment from your linked bank account into your current portfolio or a stock of your choosing.</p>
-    </div>
-    
     <!-- Investment Form Card -->
     <div class="section-card mobile-card">
       <div class="section-header">
-        <h3 class="section-title">Investment Details</h3>
+        <div>
+          <h3 class="section-title">One-Time Investment</h3>
+          <p class="section-subtitle">Make a one-time lump sum investment from your linked bank account into your current portfolio or a stock of your choosing.</p>
+        </div>
       </div>
         
       <!-- Investment Type Selection -->
       <div class="input-wrapper">
         <label class="input-label">Investment Type</label>
-        <ion-segment 
-          [(ngModel)]="investmentType" 
-          (ionChange)="onInvestmentTypeChange()"
-          class="investment-type-segment">
-          <ion-segment-button value="portfolio">
-            <ion-label>Portfolio</ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="stock">
-            <ion-label>Individual Stock</ion-label>
-          </ion-segment-button>
-        </ion-segment>
+        
+        <div class="ios-tab-switcher">
+          <button class="ios-tab-button" [class.active]="investmentType === 'portfolio'"
+            (click)="investmentType = 'portfolio'; onInvestmentTypeChange()">
+            Portfolio
+          </button>
+          <button class="ios-tab-button" [class.active]="investmentType === 'stock'"
+            (click)="investmentType = 'stock'; onInvestmentTypeChange()">
+            Individual Stock
+          </button>
+        </div>
+
         <p class="input-helper">
           {{ investmentType === 'portfolio' ? 'Invest according to your current portfolio allocation' : 'Choose a specific stock to invest in' }}
         </p>
@@ -56,31 +49,36 @@
         <ion-searchbar
           [(ngModel)]="searchTerm"
           (ionInput)="searchStocks()"
-          placeholder="Search stocks by symbol or name"
-          show-clear-button="focus"
+          placeholder="Symbol or Name"
+          show-cancel-button="focus"
+          animated="true"
           debounce="300"
-          class="stock-searchbar">
+          class="ios-searchbar">
         </ion-searchbar>
 
         <!-- Loading indicator -->
         <div *ngIf="isSearching" class="loading-container">
-          <ion-spinner name="dots"></ion-spinner>
-          <p>Searching investments...</p>
+          <ion-spinner name="crescent"></ion-spinner>
         </div>
 
         <!-- Search Results -->
-        <div class="search-results" *ngIf="searchResults.length > 0 && !isSearching">
-          <ion-list class="search-results-list">
+        <div class="search-results-container scrollable-results" *ngIf="searchResults.length > 0 && !isSearching">
+          <ion-list class="ios-list search-results-list" lines="full">
             <ion-item 
               *ngFor="let asset of searchResults"
-              button
               (click)="selectStock(asset)"
-              class="search-result-item">
+              [button]="true"
+              detail="false">
+              <div class="stock-icon-wrapper" slot="start">
+                <div class="stock-initials">{{ asset.symbol.substring(0, 2) }}</div>
+              </div>
               <ion-label>
-                <h3>{{ asset.symbol }}</h3>
-                <p>{{ asset.name }}</p>
-                <ion-note>{{ asset.class === 'us_equity' ? 'Stock' : 'ETF' }}</ion-note>
+                <h3 class="font-bold">{{ asset.symbol }}</h3>
+                <p class="text-gray">{{ asset.name }}</p>
               </ion-label>
+              <ion-note slot="end" color="primary" class="text-xs font-medium">
+                {{ asset.class === 'us_equity' ? 'Stock' : 'ETF' }}
+              </ion-note>
             </ion-item>
           </ion-list>
         </div>

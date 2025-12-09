@@ -28,11 +28,11 @@
         <div class="display-flex justify-between align-center">
           <h3 class="section-title font-semibold text-dark text-lg" style="margin-top: 0px;">Sell Holdings</h3>
           <div class="text-right" *ngIf="balance">
-            <p class="text-xs text-gray m-0">Buying Power</p>
-            <p class="font-medium text-dark m-0">{{formatCurrency(balance.buyingPower)}}</p>
+            <p class="text-xs text-gray m-0">Settled Cash</p>
+            <p class="font-medium text-dark m-0">{{formatCurrency(getSettledCash())}}</p>
           </div>
         </div>
-        <p class="section-subtitle text-gray text-sm">Select a stock to sell. Proceeds will be added to your Buying Power.</p>
+        <p class="section-subtitle text-gray text-sm">Select a stock to sell. Proceeds will be added to your Settled Cash.</p>
       </div>
 
       <!-- No positions message -->
