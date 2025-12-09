@@ -138,6 +138,7 @@ public class PortfolioDashboardService {
                     todayChangePercent,
                     initialSummary.buyingPower,
                     initialSummary.cash,
+                    initialSummary.withdrawableCash,
                     realTimeEquity);
 
             // Calculate total gain/loss based on positions' unrealized P&L
@@ -254,15 +255,16 @@ public class PortfolioDashboardService {
                 TradingAccountData tradingData = getTradingAccountData(accountId);
                 BigDecimal buyingPower = tradingData.buyingPower;
                 BigDecimal cash = tradingData.cash;
+                BigDecimal withdrawableCash = tradingData.withdrawableCash;
 
                 String accountStatus = accountData.has("status") ? accountData.get("status").asText() : "UNKNOWN";
                 String currency = accountData.has("currency") ? accountData.get("currency").asText() : "USD";
 
-                logger.info("Account summary retrieved - Status: {}, Currency: {}, Last Equity: {}, Cash: {}",
-                        accountStatus, currency, portfolioValue, cash);
+                logger.info("Account summary retrieved - Status: {}, Currency: {}, Last Equity: {}, Cash: {}, Withdrawable: {}",
+                        accountStatus, currency, portfolioValue, cash, withdrawableCash);
 
                 return new AccountSummary(portfolioValue, todayChange, todayChangePercent, buyingPower, cash,
-                        portfolioValue);
+                        withdrawableCash, portfolioValue);
             } else {
                 logger.error("Failed to fetch account summary. Status: {}, Response: {}",
                         response.getStatusCode(), response.getBody());
@@ -297,8 +299,11 @@ public class PortfolioDashboardService {
                 // settled/available cash
                 BigDecimal cash = parseDecimalSafely(accountData, "cash", BigDecimal.ZERO);
 
-                logger.info("Retrieved trading data - Buying Power: ${}, Cash: ${}", buyingPower, cash);
-                return new TradingAccountData(buyingPower, cash);
+                // Parse withdrawable cash - this is what can actually be transferred out
+                BigDecimal withdrawableCash = parseDecimalSafely(accountData, "cash_withdrawable", BigDecimal.ZERO);
+
+                logger.info("Retrieved trading data - Buying Power: ${}, Cash: ${}, Withdrawable: ${}", buyingPower, cash, withdrawableCash);
+                return new TradingAccountData(buyingPower, cash, withdrawableCash);
 
             } else {
                 logger.warn("Failed to fetch trading account data. Status: {}, Response: {}",
@@ -309,17 +314,19 @@ public class PortfolioDashboardService {
             logger.error("Error fetching trading account data for {}: {}", accountId, e.getMessage());
         }
 
-        return new TradingAccountData(BigDecimal.ZERO, BigDecimal.ZERO);
+        return new TradingAccountData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
     }
 
     // Helper class for trading account data
     private static class TradingAccountData {
         public final BigDecimal buyingPower;
         public final BigDecimal cash;
+        public final BigDecimal withdrawableCash;
 
-        public TradingAccountData(BigDecimal buyingPower, BigDecimal cash) {
+        public TradingAccountData(BigDecimal buyingPower, BigDecimal cash, BigDecimal withdrawableCash) {
             this.buyingPower = buyingPower;
             this.cash = cash;
+            this.withdrawableCash = withdrawableCash;
         }
     }
 
@@ -800,15 +807,18 @@ public class PortfolioDashboardService {
         public final BigDecimal todayChangePercent;
         public final BigDecimal buyingPower;
         public final BigDecimal cash;
+        public final BigDecimal withdrawableCash;
         public final BigDecimal equity;
 
         public AccountSummary(BigDecimal portfolioValue, BigDecimal todayChange,
-                BigDecimal todayChangePercent, BigDecimal buyingPower, BigDecimal cash, BigDecimal equity) {
+                BigDecimal todayChangePercent, BigDecimal buyingPower, BigDecimal cash, 
+                BigDecimal withdrawableCash, BigDecimal equity) {
             this.portfolioValue = portfolioValue;
             this.todayChange = todayChange;
             this.todayChangePercent = todayChangePercent;
             this.buyingPower = buyingPower;
             this.cash = cash;
+            this.withdrawableCash = withdrawableCash;
             this.equity = equity;
         }
     }

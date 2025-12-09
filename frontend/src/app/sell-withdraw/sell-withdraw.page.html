@@ -208,107 +208,12 @@
       </div>
     </div>
 
-    <!-- Retirement Planning Section -->
-    <div class="section-card mobile-card">
-      <div class="section-header p-b-sm border-bottom">
-        <h3 class="section-title font-semibold text-dark text-lg">Retirement Planning</h3>
-        <p class="section-subtitle text-gray text-sm">Plan systematic withdrawals using the 4% rule.</p>
-      </div>
 
-      <div class="retirement-planning p-t-md">
-        <div class="retirement-info m-b-md">
-          <div class="retirement-stat text-center p-md bg-gray-50 rounded">
-            <span class="stat-label text-gray text-sm display-block m-b-xs">Safe Monthly Withdrawal (4%)</span>
-            <span class="stat-value font-bold text-dark text-2xl">
-              {{formatCurrency(calculateRetirementWithdrawal())}}
-            </span>
-          </div>
-        </div>
 
-        <ion-button 
-          expand="block" 
-          fill="outline"
-          class="retirement-btn"
-          (click)="showRetirementModal = true">
-          <ion-icon name="calculator-outline" slot="start"></ion-icon>
-          Retirement Calculator
-        </ion-button>
-      </div>
-    </div>
 
-    <!-- Danger Zone: Liquidate Portfolio -->
-    <div class="section-card mobile-card danger-zone m-t-xl m-b-xl">
-      <div class="section-header p-b-sm border-bottom">
-        <h3 class="section-title font-semibold text-danger text-lg">Danger Zone</h3>
-      </div>
-
-      <div class="portfolio-actions p-t-md">
-        <div class="action-item">
-          <div class="action-info m-b-md">
-            <h4 class="action-title font-medium text-dark">Liquidate Entire Portfolio</h4>
-            <p class="action-description text-gray text-sm">This will sell ALL your positions immediately. This action is irreversible.</p>
-          </div>
-          <ion-button 
-            expand="block"
-            color="danger"
-            [disabled]="isLiquidating || positions.length === 0"
-            (click)="liquidatePortfolio()">
-            <ion-spinner *ngIf="isLiquidating" name="crescent" slot="start"></ion-spinner>
-            {{isLiquidating ? 'Processing...' : 'Liquidate All Assets'}}
-          </ion-button>
-        </div>
-      </div>
-    </div>
 
   </div>
 
-  <!-- Retirement Planning Modal -->
-  <ion-modal [isOpen]="showRetirementModal" (didDismiss)="showRetirementModal = false">
-    <ng-template>
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>Retirement Planning</ion-title>
-          <ion-buttons slot="end">
-            <ion-button (click)="showRetirementModal = false">Close</ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-      
-      <ion-content class="modal-content ion-padding">
-        <div class="retirement-modal">
-          <div class="modal-section m-b-lg">
-            <h3 class="text-lg font-semibold m-b-sm">The 4% Rule Explained</h3>
-            <p class="text-gray text-sm">The 4% rule suggests withdrawing 4% of your portfolio value annually during retirement. This approach aims to make your savings last 30+ years.</p>
-          </div>
-          
-          <div class="modal-section m-b-lg">
-            <h4 class="text-md font-semibold m-b-sm">Your Retirement Calculations</h4>
-            <div class="calculation-grid bg-gray-50 p-md rounded">
-              <div class="calc-item display-flex justify-between m-b-xs">
-                <span class="calc-label text-gray">Portfolio Value</span>
-                <span class="calc-value font-medium">{{formatCurrency(balance?.portfolioValue || '0')}}</span>
-              </div>
-              <div class="calc-item display-flex justify-between m-b-xs">
-                <span class="calc-label text-gray">4% Annual</span>
-                <span class="calc-value font-medium">{{formatCurrency(getPortfolioValue() * 0.04)}}</span>
-              </div>
-              <div class="calc-item display-flex justify-between border-top p-t-xs m-t-xs">
-                <span class="calc-label font-semibold text-primary">Monthly Income</span>
-                <span class="calc-value font-bold text-primary">{{formatCurrency(calculateRetirementWithdrawal())}}</span>
-              </div>
-            </div>
-          </div>
 
-          <div class="modal-section">
-            <h4 class="text-md font-semibold m-b-sm">Setup Systematic Withdrawals</h4>
-            <p class="coming-soon text-gray text-sm bg-gray-100 p-sm rounded text-center">
-              <ion-icon name="time-outline" class="m-r-xs"></ion-icon>
-              Coming Soon
-            </p>
-          </div>
-        </div>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
 
 </ion-content>

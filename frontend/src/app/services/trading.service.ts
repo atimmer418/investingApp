@@ -46,6 +46,7 @@ export interface WithdrawResponse {
 
 export interface AccountBalance {
   cash: string;
+  withdrawable_cash: string;
   buying_power: string;
   portfolio_value: string;
   equity: string;
@@ -121,16 +122,7 @@ export class TradingService {
     );
   }
 
-  /**
-   * Liquidate entire portfolio (sell all positions)
-   */
-  liquidatePortfolio(): Observable<LiquidateResponse> {
-    return this.http.post<LiquidateResponse>(
-      `${this.baseUrl}/trading/liquidate`,
-      {},
-      { headers: this.getAuthHeaders() }
-    );
-  }
+
 
   /**
    * Withdraw cash to bank account

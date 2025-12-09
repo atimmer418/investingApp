@@ -11,6 +11,7 @@ export interface AccountSummary {
   todayChangePercent: number;
   buyingPower: number;
   cash: number;
+  withdrawableCash?: number;
   equity: number;
 }
 

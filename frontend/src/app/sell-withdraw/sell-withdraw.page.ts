@@ -15,7 +15,6 @@ import {
   IonSpinner,
   IonInput,
   IonRange,
-  IonModal,
   AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -53,8 +52,7 @@ import { ToastService } from '../services/toast.service';
     IonIcon,
     IonSpinner,
     IonInput,
-    IonRange,
-    IonModal
+    IonRange
   ]
 })
 export class SellWithdrawPage implements OnInit, OnDestroy {
@@ -68,13 +66,10 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
   public selectedPosition: Position | null = null;
   public sellPercentage = 25;
   public withdrawAmount: number | null = null;
-  public retirementRate = 4.0;
 
   // UI state
   public isSelling = false;
-  public isLiquidating = false;
   public isWithdrawing = false;
-  public showRetirementModal = false;
 
   // Quick select options
   public quickPercentages = [25, 50, 75, 100];
@@ -187,29 +182,21 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     return (marketValue * this.sellPercentage) / 100;
   }
 
-  calculateRetirementWithdrawal(): number {
-    if (!this.balance?.portfolioValue) return 0;
-    const portfolioValue = this.balance.portfolioValue;
-    return this.tradingService.calculateRetirementWithdrawal(portfolioValue);
-  }
 
-  calculateCustomRetirementWithdrawal(): number {
-    if (!this.balance?.portfolioValue) return 0;
-    const portfolioValue = this.balance.portfolioValue;
-    return this.tradingService.calculateSystematicWithdrawal(portfolioValue, this.retirementRate, 'monthly');
-  }
-
-  getPortfolioValue(): number {
-    if (!this.balance?.portfolioValue) return 0;
-    return this.balance.portfolioValue;
-  }
 
   get maxWithdrawAmount(): number {
-    if (this.balance && typeof this.balance.cash !== 'undefined') {
-      return this.balance.cash;
+    if (this.balance) {
+      // Use withdrawableCash if available (it's the most accurate for withdrawals)
+      if (typeof this.balance.withdrawableCash !== 'undefined') {
+        return this.balance.withdrawableCash;
+      }
+      // Fallback to cash if withdrawableCash is not available
+      if (typeof this.balance.cash !== 'undefined') {
+        return this.balance.cash;
+      }
+      // Fallback to buyingPower if cash is not available
+      if (this.balance.buyingPower) return this.balance.buyingPower;
     }
-    // Fallback to buyingPower if cash is not available (though it should be)
-    if (this.balance?.buyingPower) return this.balance.buyingPower;
     return 0;
   }
 
@@ -262,53 +249,7 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     }
   }
 
-  async liquidatePortfolio() {
-    if (this.isLiquidating || this.positions.length === 0) return;
 
-    const alert = await this.alertController.create({
-      header: 'Liquidate Portfolio',
-      subHeader: 'Are you sure?',
-      message: 'This will sell ALL your current holdings and convert them to cash. This action cannot be undone.',
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-          cssClass: 'secondary'
-        },
-        {
-          text: 'Liquidate All',
-          role: 'destructive',
-          cssClass: 'alert-button-danger',
-          handler: () => {
-            this.processLiquidation();
-          }
-        }
-      ]
-    });
-
-    await alert.present();
-  }
-
-  private async processLiquidation() {
-    try {
-      this.isLiquidating = true;
-
-      const response = await this.tradingService.liquidatePortfolio().toPromise();
-
-      if (response?.success) {
-        this.showToast('Portfolio liquidation initiated successfully', 'success');
-        await this.loadData(); // Refresh data
-      } else {
-        this.showToast(response?.error || 'Failed to liquidate portfolio', 'danger');
-      }
-
-    } catch (error) {
-      console.error('Error liquidating portfolio:', error);
-      this.showToast('Failed to liquidate portfolio', 'danger');
-    } finally {
-      this.isLiquidating = false;
-    }
-  }
 
   async withdrawCash() {
     if (!this.withdrawAmount || this.isWithdrawing || this.withdrawAmount > this.maxWithdrawAmount) return;

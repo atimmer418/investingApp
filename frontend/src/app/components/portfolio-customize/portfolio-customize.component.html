@@ -10,6 +10,60 @@
 <ion-content class="gray-background">
   <div class="mobile-container">
     
+    <!-- Use Case 1: Explanation (Moved to top) -->
+    <div class="section-card mobile-card">
+      <div class="section-header" style="margin-bottom: 0px;">
+        <h3 class="section-title">Our Philosophy</h3>
+        <p class="section-subtitle">Why we recommend this</p>
+      </div>
+
+      <ion-list class="ios-list info-list">
+        <ion-item lines="none">
+          <ion-label class="ion-text-wrap">
+            <h2 class="info-title">
+              <ion-icon name="star" color="warning" class="info-icon"></ion-icon>
+              The "10/10" Growth Strategy
+            </h2>
+            
+            <p class="info-text">
+              We provide this default portfolio because guessing the next "big boom" stock is a headache that fights for marginal gains. 
+              This strategy is designed for <strong>maximum long-term growth probability</strong> without the complexity.
+            </p>
+
+            <div class="portfolio-breakdown">
+              <div class="breakdown-item"><strong>75% VTI</strong> &ndash; U.S. Total Stock Market</div>
+              <div class="breakdown-item"><strong>20% VXUS</strong> &ndash; International Stocks</div>
+              <div class="breakdown-item"><strong>5% VBR</strong> &ndash; Small-Cap Value Tilt</div>
+            </div>
+
+            <h3 class="sub-title">Why This Works</h3>
+            <ul class="benefit-list">
+              <li><strong>Max Growth:</strong> ~95% stocks with a history of outperforming over decades.</li>
+              <li><strong>Global Sweet Spot:</strong> 20% international avoids US-only risk without dragging returns.</li>
+              <li><strong>Factor Tilt:</strong> 5% VBR captures the academically recognized "small-cap value" premium.</li>
+              <li><strong>Simplicity:</strong> Reduces behavioral errors (no tinkering or timing).</li>
+            </ul>
+
+            <p class="info-note">
+              <em>*While no growth is truly guaranteed, this mix has historically never lost value over a 20-30 year period.</em>
+            </p>
+
+            <div class="ion-margin-top" *ngIf="isPortfolioDifferentFromDefault()">
+              <ion-button 
+                fill="clear" 
+                size="small" 
+                color="warning"
+                (click)="resetToDefault()"
+                [disabled]="isLoading || isSaving">
+                <ion-icon name="refresh-outline" slot="start"></ion-icon>
+                Reset to Default
+              </ion-button>
+            </div>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
+
     <!-- Main Portfolio List -->
     <div class="section-card mobile-card">
       <div class="section-header" style="margin-bottom: 0px;">
@@ -111,60 +165,6 @@
           <p>No results found for "{{ searchTerm }}"</p>
         </div>
       </div>
-    </div>
-
-    <!-- Use Case 1: Explanation (Moved to bottom) -->
-    <div class="section-card mobile-card">
-      <div class="section-header" style="margin-bottom: 0px;">
-        <h3 class="section-title">Our Philosophy</h3>
-        <p class="section-subtitle">Why we recommend this</p>
-      </div>
-
-      <ion-list class="ios-list info-list">
-        <ion-item lines="none">
-          <ion-label class="ion-text-wrap">
-            <h2 class="info-title">
-              <ion-icon name="star" color="warning" class="info-icon"></ion-icon>
-              The "10/10" Growth Strategy
-            </h2>
-            
-            <p class="info-text">
-              We provide this default portfolio because guessing the next "big boom" stock is a headache that fights for marginal gains. 
-              This strategy is designed for <strong>maximum long-term growth probability</strong> without the complexity.
-            </p>
-
-            <div class="portfolio-breakdown">
-              <div class="breakdown-item"><strong>75% VTI</strong> &ndash; U.S. Total Stock Market</div>
-              <div class="breakdown-item"><strong>20% VXUS</strong> &ndash; International Stocks</div>
-              <div class="breakdown-item"><strong>5% VBR</strong> &ndash; Small-Cap Value Tilt</div>
-            </div>
-
-            <h3 class="sub-title">Why This Works</h3>
-            <ul class="benefit-list">
-              <li><strong>Max Growth:</strong> ~95% stocks with a history of outperforming over decades.</li>
-              <li><strong>Global Sweet Spot:</strong> 20% international avoids US-only risk without dragging returns.</li>
-              <li><strong>Factor Tilt:</strong> 5% VBR captures the academically recognized "small-cap value" premium.</li>
-              <li><strong>Simplicity:</strong> Reduces behavioral errors (no tinkering or timing).</li>
-            </ul>
-
-            <p class="info-note">
-              <em>*While no growth is truly guaranteed, this mix has historically never lost value over a 20-30 year period.</em>
-            </p>
-
-            <div class="ion-margin-top" *ngIf="isPortfolioDifferentFromDefault()">
-              <ion-button 
-                fill="clear" 
-                size="small" 
-                color="warning"
-                (click)="resetToDefault()"
-                [disabled]="isLoading || isSaving">
-                <ion-icon name="refresh-outline" slot="start"></ion-icon>
-                Reset to Default
-              </ion-button>
-            </div>
-          </ion-label>
-        </ion-item>
-      </ion-list>
     </div>
 
     <!-- Save Portfolio Button -->
