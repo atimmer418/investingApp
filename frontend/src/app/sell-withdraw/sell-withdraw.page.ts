@@ -320,7 +320,9 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     // We look for transactions with positive amount and type 'CSD' (Cash Settlement) or 'ACH'
     // which indicate deposits. 'FILL' are trades.
     const deposits = this.dashboardData.recentTransactions.filter(t => 
-      t.amount > 0 && (t.type === 'CSD' || t.type === 'ACH' || t.type === 'JNLS')
+      t.amount > 0 && 
+      (t.type === 'CSD' || t.type === 'ACH' || t.type === 'JNLS') &&
+      t.date && !isNaN(new Date(t.date).getTime()) // Ensure date is valid
     );
     
     if (deposits.length > 0) {
@@ -329,6 +331,10 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
       const lastDeposit = deposits[0];
       
       const depositDate = new Date(lastDeposit.date);
+      
+      // Double check validity
+      if (isNaN(depositDate.getTime())) return null;
+
       // Add 6 business days to be safe (Alpaca states 4-6 business days)
       const releaseDate = this.addBusinessDays(depositDate, 6);
       

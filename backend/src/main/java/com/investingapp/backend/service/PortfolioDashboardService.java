@@ -733,9 +733,14 @@ public class PortfolioDashboardService {
                             amount = price.multiply(quantity);
                         }
 
-                        String date = transactionNode.has("transaction_time")
-                                ? transactionNode.get("transaction_time").asText()
-                                : "";
+                        // Parse date: prefer transaction_time (ISO), fallback to date (YYYY-MM-DD) for CSD/ACH
+                        String date = "";
+                        if (transactionNode.has("transaction_time") && !transactionNode.get("transaction_time").isNull()) {
+                            date = transactionNode.get("transaction_time").asText();
+                        } else if (transactionNode.has("date") && !transactionNode.get("date").isNull()) {
+                            date = transactionNode.get("date").asText();
+                        }
+
                         String status = transactionNode.has("order_status")
                                 ? transactionNode.get("order_status").asText()
                                 : "filled";
