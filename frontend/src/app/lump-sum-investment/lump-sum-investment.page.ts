@@ -38,6 +38,7 @@ import {
   informationCircleOutline
 } from 'ionicons/icons';
 import { InvestmentService } from '../services/investment.service';
+import { PortfolioService, AccountSummary } from '../services/portfolio.service';
 
 interface AlpacaAsset {
   id: string;
@@ -85,6 +86,8 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
   // Investment data
   investmentAmount: number = 0;
   investmentType: 'portfolio' | 'stock' = 'portfolio';
+  fundingSource: 'bank' | 'buying_power' = 'bank';
+  buyingPower: number = 0;
   selectedStock: string = '';
   selectedStockInfo: AlpacaAsset | null = null;
   isLoading: boolean = false;
@@ -103,6 +106,7 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private investmentService: InvestmentService,
+    private portfolioService: PortfolioService,
     private http: HttpClient
   ) {
     addIcons({
@@ -114,7 +118,22 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // Initialize any needed data
+    this.loadPortfolioData();
+  }
+
+  loadPortfolioData() {
+    this.portfolioService.getPortfolioDashboard()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          if (data && data.summary) {
+            this.buyingPower = data.summary.buyingPower;
+          }
+        },
+        error: (err) => {
+          console.error('Failed to load portfolio data', err);
+        }
+      });
   }
 
   ngOnDestroy() {
@@ -251,7 +270,8 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
     // Prepare request payload
     const requestData: any = {
       amount: this.investmentAmount,
-      type: this.investmentType
+      type: this.investmentType,
+      fundingSource: this.fundingSource
     };
 
     // Add specific stock symbol if investing in individual stock
@@ -318,6 +338,11 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
 
     if (this.investmentAmount > 1000000) {
       this.showToast('Maximum investment amount is $1,000,000', 'error');
+      return false;
+    }
+
+    if (this.fundingSource === 'buying_power' && this.investmentAmount > this.buyingPower) {
+      this.showToast(`Insufficient buying power. You only have ${this.formatCurrency(this.buyingPower)} available.`, 'error');
       return false;
     }
 
