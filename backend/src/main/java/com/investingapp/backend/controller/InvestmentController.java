@@ -256,13 +256,20 @@ public class InvestmentController {
                 }
             }
             
+            // Parse funding source
+            String fundingSource = "bank"; // default
+            if (request.containsKey("fundingSource")) {
+                fundingSource = (String) request.get("fundingSource");
+            }
+
             // Create investment execution with type and symbol information
             InvestmentExecution execution = new InvestmentExecution(
                 user, 
                 LocalDateTime.now(), 
                 amount,
                 investmentType,
-                selectedSymbol
+                selectedSymbol,
+                fundingSource
             );
             
             execution = executionRepository.save(execution);

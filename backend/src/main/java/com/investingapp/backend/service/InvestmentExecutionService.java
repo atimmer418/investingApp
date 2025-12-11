@@ -92,6 +92,12 @@ public class InvestmentExecutionService {
             execution.getId(), execution.getUser().getEmail());
         
         try {
+            // Check if this is a buying power execution
+            if ("buying_power".equals(execution.getFundingSource())) {
+                processBuyingPowerExecution(execution);
+                return;
+            }
+
             // Check if user has any pending funding executions today
             List<InvestmentExecution> pendingFundingToday = executionRepository
                 .findPendingFundingExecutionsForUserToday(
@@ -358,6 +364,48 @@ public class InvestmentExecutionService {
                    schedule.getId(), currentNextDate, newNextDate);
     }
     
+    /**
+     * Process an investment execution using existing buying power
+     */
+    private void processBuyingPowerExecution(InvestmentExecution execution) {
+        logger.info("Processing buying power investment execution {} for user {}", 
+            execution.getId(), execution.getUser().getEmail());
+            
+        User user = execution.getUser();
+        
+        // Validate user has required Alpaca information
+        if (user.getAlpacaAccountId() == null) {
+            throw new RuntimeException("User missing required Alpaca account ID");
+        }
+        
+        // Check buying power
+        BigDecimal buyingPower = alpacaService.getBuyingPower(user.getAlpacaAccountId());
+        
+        if (buyingPower.compareTo(execution.getAmount()) >= 0) {
+            // Sufficient funds
+            logger.info("User has sufficient buying power (${}) for execution {} (${})", 
+                buyingPower, execution.getId(), execution.getAmount());
+                
+            execution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_COMPLETED);
+            execution.setFundingCompletedAt(LocalDateTime.now());
+            execution.setAlpacaAccountId(user.getAlpacaAccountId());
+            executionRepository.save(execution);
+            
+            // Initiate trading immediately
+            initiateTradingForExecution(execution);
+        } else {
+            // Insufficient funds
+            logger.warn("User has insufficient buying power (${}) for execution {} (${})", 
+                buyingPower, execution.getId(), execution.getAmount());
+                
+            execution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_FAILED);
+            execution.setErrorMessage("Insufficient buying power. Available: $" + buyingPower + ", Required: $" + execution.getAmount());
+            executionRepository.save(execution);
+            
+            throw new RuntimeException("Insufficient buying power. Available: $" + buyingPower);
+        }
+    }
+
     /**
      * Process a single investment execution
      */

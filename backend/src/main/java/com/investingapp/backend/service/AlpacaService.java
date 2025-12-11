@@ -73,6 +73,33 @@ public class AlpacaService {
     }
 
     /**
+     * Get buying power for an account
+     */
+    public BigDecimal getBuyingPower(String accountId) {
+        try {
+            String url = alpacaBrokerBaseUrl + "/trading/accounts/" + accountId + "/account";
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            logger.info("Fetching buying power for account: {}", accountId);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonNode accountData = objectMapper.readTree(response.getBody());
+                
+                if (accountData.has("effective_buying_power")) {
+                    return new BigDecimal(accountData.get("effective_buying_power").asText());
+                } else if (accountData.has("buying_power")) {
+                    return new BigDecimal(accountData.get("buying_power").asText());
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error fetching buying power for account {}: {}", accountId, e.getMessage());
+        }
+        return BigDecimal.ZERO;
+    }
+
+    /**
      * Initiate ACH transfer to fund account
      */
     public AlpacaTransferResponse initiateAchTransfer(String accountId, String relationshipId, BigDecimal amount) {

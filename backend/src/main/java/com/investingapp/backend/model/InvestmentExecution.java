@@ -44,6 +44,9 @@ public class InvestmentExecution {
     @Column(name = "target_symbol")
     private String targetSymbol; // Stock symbol for individual stock investments
     
+    @Column(name = "funding_source")
+    private String fundingSource; // "bank" or "buying_power"
+    
     @Column(name = "funding_completed_at")
     private LocalDateTime fundingCompletedAt;
     
@@ -100,6 +103,17 @@ public class InvestmentExecution {
         this.status = ExecutionStatus.SCHEDULED;
         this.investmentType = investmentType;
         this.targetSymbol = targetSymbol;
+        this.fundingSource = "bank"; // default
+    }
+
+    public InvestmentExecution(User user, LocalDateTime scheduledDate, BigDecimal amount, String investmentType, String targetSymbol, String fundingSource) {
+        this.user = user;
+        this.scheduledDate = scheduledDate;
+        this.amount = amount;
+        this.status = ExecutionStatus.SCHEDULED;
+        this.investmentType = investmentType;
+        this.targetSymbol = targetSymbol;
+        this.fundingSource = fundingSource;
     }
     
     // Getters and Setters
@@ -136,6 +150,9 @@ public class InvestmentExecution {
     public String getTargetSymbol() { return targetSymbol; }
     public void setTargetSymbol(String targetSymbol) { this.targetSymbol = targetSymbol; }
     
+    public String getFundingSource() { return fundingSource; }
+    public void setFundingSource(String fundingSource) { this.fundingSource = fundingSource; }
+
     public LocalDateTime getFundingCompletedAt() { return fundingCompletedAt; }
     public void setFundingCompletedAt(LocalDateTime fundingCompletedAt) { this.fundingCompletedAt = fundingCompletedAt; }
     
