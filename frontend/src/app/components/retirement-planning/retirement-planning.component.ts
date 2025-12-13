@@ -23,7 +23,10 @@ import {
   IonSpinner,
   IonList,
   IonSegment,
-  IonSegmentButton
+  IonSegmentButton,
+  IonSelect,
+  IonSelectOption,
+  IonToggle
 } from '@ionic/angular/standalone';
 
 interface SimulationResult {
@@ -74,7 +77,10 @@ interface StrategyCard {
     IonSpinner,
     IonList,
     IonSegment,
-    IonSegmentButton
+    IonSegmentButton,
+    IonSelect,
+    IonSelectOption,
+    IonToggle
   ]
 })
 export class RetirementPlanningComponent {
@@ -98,9 +104,22 @@ export class RetirementPlanningComponent {
   annualWithdrawal: number = 40000;
   yearsToLast: number = 30;
 
+  // Strategy-specific properties
+  selectedStrategy: string = 'traditional';
+  useNTSX: boolean = false;
+  essentialExpenses: number = 40000;
+  sblocInterestRate: number = 0.055; // 5.5% SBLOC interest
+  sblocLtvLimit: number = 0.70; // 70% LTV limit
+  guardrailLower: number = 0.04; // 4% lower guardrail
+  guardrailUpper: number = 0.06; // 6% upper guardrail
+
   // Simulation state
   isSimulating: boolean = false;
   simulationResult: SimulationResult | null = null;
+
+  // UI state for collapsible sections
+  guideExpanded: boolean = false;
+  showAdvancedOptions: boolean = false;
 
   // Strategy education
   selectedCard: StrategyCard | null = null;
@@ -365,13 +384,27 @@ export class RetirementPlanningComponent {
   }
 
   private runMonteCarloSimulation(): SimulationResult {
+    // Route to strategy-specific simulation method
+    switch (this.selectedStrategy) {
+      case 'sbloc':
+        return this.simulateSBLOC();
+      case 'annuity-growth':
+        return this.simulateAnnuityGrowth();
+      case 'dynamic-guardrails':
+        return this.simulateDynamicGuardrails();
+      case 'full-annuity':
+        return this.simulateFullAnnuity();
+      case 'traditional':
+      default:
+        return this.simulateTraditional();
+    }
+  }
+
+  // ========== STRATEGY 1: TRADITIONAL 4% RULE ==========
+  private simulateTraditional(): SimulationResult {
     const simulations = 1000;
     const years = this.yearsToLast;
     const inflationRate = 0.025;
-    const stockReturn = 0.10;
-    const stockVolatility = 0.18;
-    const bondReturn = 0.04;
-    const bondVolatility = 0.05;
 
     let successCount = 0;
     const endValues: number[] = [];
@@ -382,12 +415,8 @@ export class RetirementPlanningComponent {
       let success = true;
 
       for (let year = 0; year < years; year++) {
-        // Generate random returns using Monte Carlo
-        const stockRandomReturn = this.generateRandomReturn(stockReturn, stockVolatility);
-        const bondRandomReturn = this.generateRandomReturn(bondReturn, bondVolatility);
-
-        // Assume 70% stocks, 30% bonds balanced portfolio
-        const portfolioReturn = 0.7 * stockRandomReturn + 0.3 * bondRandomReturn;
+        // Get portfolio return (NTSX or traditional)
+        const portfolioReturn = this.getPortfolioReturn();
 
         // Apply market performance to portfolio
         portfolioVal *= (1 + portfolioReturn);
@@ -420,6 +449,243 @@ export class RetirementPlanningComponent {
       minimumEndValue: endValues[0],
       failureRate: ((simulations - successCount) / simulations) * 100
     };
+  }
+
+  // ========== STRATEGY 2: SBLOC (Borrow during downturns) ==========
+  private simulateSBLOC(): SimulationResult {
+    const simulations = 1000;
+    const years = this.yearsToLast;
+    const inflationRate = 0.025;
+
+    let successCount = 0;
+    const endValues: number[] = [];
+
+    for (let sim = 0; sim < simulations; sim++) {
+      let portfolioVal = this.portfolioValue;
+      let annualWithdrawal = this.annualWithdrawal;
+      let sblocDebt = 0;
+      let success = true;
+
+      for (let year = 0; year < years; year++) {
+        const portfolioReturn = this.getPortfolioReturn();
+
+        // Apply market performance to portfolio
+        portfolioVal *= (1 + portfolioReturn);
+
+        // Adjust withdrawal for inflation
+        annualWithdrawal *= (1 + inflationRate);
+
+        // SBLOC Logic: Borrow in down years, sell in up years
+        if (portfolioReturn < 0) {
+          // Down year: Borrow from SBLOC instead of selling
+          sblocDebt += annualWithdrawal;
+          // Accrrue interest on existing debt
+          sblocDebt *= (1 + this.sblocInterestRate);
+        } else {
+          // Up year: Sell from portfolio
+          portfolioVal -= annualWithdrawal;
+
+          // True-Up: If return > 12%, pay off SBLOC interest
+          if (portfolioReturn > 0.12 && sblocDebt > 0) {
+            const payoff = Math.min(sblocDebt, portfolioVal * 0.1); // Pay up to 10% of portfolio
+            sblocDebt -= payoff;
+            portfolioVal -= payoff;
+          }
+        }
+
+        // Check LTV ratio to avoid margin call
+        const ltv = sblocDebt / portfolioVal;
+        if (ltv > this.sblocLtvLimit) {
+          success = false; // Margin call = failure
+          break;
+        }
+
+        // Check if portfolio is depleted
+        if (portfolioVal <= 0) {
+          success = false;
+          break;
+        }
+      }
+
+      if (success && portfolioVal > 0) {
+        successCount++;
+      }
+
+      endValues.push(Math.max(0, portfolioVal));
+    }
+
+    endValues.sort((a, b) => a - b);
+
+    return {
+      successProbability: (successCount / simulations) * 100,
+      medianEndValue: endValues[Math.floor(endValues.length / 2)],
+      minimumEndValue: endValues[0],
+      failureRate: ((simulations - successCount) / simulations) * 100
+    };
+  }
+
+  // ========== STRATEGY 3: ANNUITY + GROWTH ==========
+  private simulateAnnuityGrowth(): SimulationResult {
+    const simulations = 1000;
+    const years = this.yearsToLast;
+    const inflationRate = 0.025;
+
+    // Calculate annuity portion based on essential expenses
+    const annuityAmount = this.getRecommendedAnnuityAmount();
+    const annuityIncome = annuityAmount * 0.06; // 6% payout
+    const growthPortfolio = this.portfolioValue - annuityAmount;
+
+    let successCount = 0;
+    const endValues: number[] = [];
+
+    for (let sim = 0; sim < simulations; sim++) {
+      let growthVal = growthPortfolio;
+      let annualWithdrawal = this.annualWithdrawal;
+      let success = true;
+
+      for (let year = 0; year < years; year++) {
+        const portfolioReturn = this.getPortfolioReturn();
+
+        // Apply market performance to GROWTH portfolio only
+        growthVal *= (1 + portfolioReturn);
+
+        // Adjust withdrawal for inflation
+        annualWithdrawal *= (1 + inflationRate);
+
+        // Annuity covers essential expenses automatically
+        const remainingNeed = Math.max(0, annualWithdrawal - annuityIncome);
+
+        // Withdraw remaining need from growth portfolio
+        growthVal -= remainingNeed;
+
+        // Only fail if GROWTH portfolio is depleted (annuity continues forever)
+        if (growthVal <= 0) {
+          success = false;
+          break;
+        }
+      }
+
+      if (success && growthVal > 0) {
+        successCount++;
+      }
+
+      endValues.push(Math.max(0, growthVal));
+    }
+
+    endValues.sort((a, b) => a - b);
+
+    return {
+      successProbability: (successCount / simulations) * 100,
+      medianEndValue: endValues[Math.floor(endValues.length / 2)],
+      minimumEndValue: endValues[0],
+      failureRate: ((simulations - successCount) / simulations) * 100
+    };
+  }
+
+  // ========== STRATEGY 4: DYNAMIC GUARDRAILS ==========
+  private simulateDynamicGuardrails(): SimulationResult {
+    const simulations = 1000;
+    const years = this.yearsToLast;
+    const inflationRate = 0.025;
+
+    let successCount = 0;
+    const endValues: number[] = [];
+
+    for (let sim = 0; sim < simulations; sim++) {
+      let portfolioVal = this.portfolioValue;
+      let annualWithdrawal = this.portfolioValue * 0.05; // Start with 5% initial withdrawal
+      let success = true;
+
+      for (let year = 0; year < years; year++) {
+        const portfolioReturn = this.getPortfolioReturn();
+
+        // Apply market performance to portfolio
+        portfolioVal *= (1 + portfolioReturn);
+
+        // Calculate current withdrawal rate
+        const currentRate = annualWithdrawal / portfolioVal;
+
+        // Dynamic Guardrail Logic
+        if (currentRate > this.guardrailUpper) {
+          // Above upper guardrail (6%): CUT spending by 10%
+          annualWithdrawal *= 0.90;
+        } else if (currentRate < this.guardrailLower) {
+          // Below lower guardrail (4%): INCREASE spending by 10%
+          annualWithdrawal *= 1.10;
+        } else {
+          // Within guardrails: Just adjust for inflation
+          annualWithdrawal *= (1 + inflationRate);
+        }
+
+        // Withdraw from portfolio
+        portfolioVal -= annualWithdrawal;
+
+        // Check if portfolio is depleted
+        if (portfolioVal <= 0) {
+          success = false;
+          break;
+        }
+      }
+
+      if (success && portfolioVal > 0) {
+        successCount++;
+      }
+
+      endValues.push(Math.max(0, portfolioVal));
+    }
+
+    endValues.sort((a, b) => a - b);
+
+    return {
+      successProbability: (successCount / simulations) * 100,
+      medianEndValue: endValues[Math.floor(endValues.length / 2)],
+      minimumEndValue: endValues[0],
+      failureRate: ((simulations - successCount) / simulations) * 100
+    };
+  }
+
+  // ========== STRATEGY 5: FULL ANNUITY (Deterministic, no Monte Carlo) ==========
+  private simulateFullAnnuity(): SimulationResult {
+    // Full annuity is deterministic - either it works or it doesn't
+    const annuityIncome = this.portfolioValue * 0.06; // 6% payout rate
+
+    if (annuityIncome >= this.annualWithdrawal) {
+      // Success: Annuity covers expenses, guaranteed for life
+      return {
+        successProbability: 100.0,
+        medianEndValue: 0, // No portfolio left (all annuitized)
+        minimumEndValue: 0,
+        failureRate: 0.0
+      };
+    } else {
+      // Failure: Annuity doesn't cover expenses
+      return {
+        successProbability: 0.0,
+        medianEndValue: 0,
+        minimumEndValue: 0,
+        failureRate: 100.0
+      };
+    }
+  }
+
+  // ========== HELPER: Get Portfolio Return (NTSX or Traditional) ==========
+  private getPortfolioReturn(): number {
+    if (this.useNTSX) {
+      // NTSX: 90/60 leveraged portfolio
+      // 10% mean return, 15% volatility
+      return this.generateRandomReturn(0.10, 0.15);
+    } else {
+      // Traditional 70/30 portfolio
+      const stockReturn = 0.10;
+      const stockVolatility = 0.18;
+      const bondReturn = 0.04;
+      const bondVolatility = 0.05;
+
+      const stockRandomReturn = this.generateRandomReturn(stockReturn, stockVolatility);
+      const bondRandomReturn = this.generateRandomReturn(bondReturn, bondVolatility);
+
+      return 0.7 * stockRandomReturn + 0.3 * bondRandomReturn;
+    }
   }
 
   private generateRandomReturn(meanReturn: number, volatility: number): number {
@@ -503,5 +769,64 @@ export class RetirementPlanningComponent {
   // Expose Math for template use
   get mathPow() {
     return Math.pow;
+  }
+
+  // Strategy selector helper methods
+  getStrategyHint(): string {
+    const hints: { [key: string]: string } = {
+      'traditional': 'Withdraw a fixed 4% of your initial portfolio annually, adjusted for inflation. Simple and historically safe.',
+      'sbloc': 'Borrow during market downturns instead of selling. Maintains full portfolio exposure, mathematically optimal.',
+      'annuity-growth': 'Guarantee essential expenses with an annuity, invest the rest for growth. Best of both worlds.',
+      'dynamic-guardrails': 'Adjust spending based on portfolio performance. Spend more in good years, less in bad years.',
+      'full-annuity': 'Convert entire portfolio to guaranteed lifetime income. Maximum security, zero market risk.'
+    };
+    return hints[this.selectedStrategy] || '';
+  }
+
+  getStrategyHintCompact(): string {
+    const hints: { [key: string]: string } = {
+      'traditional': 'Withdraw 4% annually, adjusted for inflation',
+      'sbloc': 'Borrow in bad years, sell in good years',
+      'annuity-growth': 'Guarantee essentials, grow the rest',
+      'dynamic-guardrails': 'Spend more/less based on performance',
+      'full-annuity': 'Guaranteed income for life'
+    };
+    return hints[this.selectedStrategy] || '';
+  }
+
+  toggleGuideExpanded(): void {
+    this.guideExpanded = !this.guideExpanded;
+  }
+
+  toggleAdvancedOptions(): void {
+    this.showAdvancedOptions = !this.showAdvancedOptions;
+  }
+
+  onStrategyChange(): void {
+    // Reset simulation results when strategy changes
+    this.simulationResult = null;
+  }
+
+  onNTSXChange(): void {
+    // Reset simulation results when NTSX toggle changes
+    this.simulationResult = null;
+  }
+
+  // Annuity calculation helpers
+  getRecommendedAnnuityAmount(): number {
+    if (!this.essentialExpenses || !this.portfolioValue) return 0;
+    // Annuity pays ~6% annually, so divide essential expenses by 0.06
+    const annuityNeeded = this.essentialExpenses / 0.06;
+    // Cap at portfolio value
+    return Math.min(annuityNeeded, this.portfolioValue);
+  }
+
+  getRecommendedAnnuityPercentage(): number {
+    if (!this.portfolioValue) return 0;
+    return (this.getRecommendedAnnuityAmount() / this.portfolioValue) * 100;
+  }
+
+  getAnnuityIncome(): number {
+    return this.getRecommendedAnnuityAmount() * 0.06; // 6% payout rate
   }
 }

@@ -77,7 +77,7 @@ public class AlpacaService {
      */
     public BigDecimal getBuyingPower(String accountId) {
         try {
-            String url = alpacaBrokerBaseUrl + "/trading/accounts/" + accountId + "/account";
+            String url = alpacaBaseUrl + "/trading/accounts/" + accountId + "/account";
             HttpHeaders headers = createAuthHeaders();
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 

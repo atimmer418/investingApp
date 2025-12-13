@@ -13,7 +13,8 @@
   --padding-end: 0;
   --padding-top: 8px !important;
   --offset-top: 0px !important;
-  --padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--app-spacing-xl));
+  --padding-bottom: 0;
+
 
   &::part(scroll) {
     padding-top: 8px !important;
@@ -263,6 +264,288 @@ ion-item {
   }
 }
 
+// Quick Start Guide (Collapsible)
+.quick-guide-card {
+  margin: var(--app-spacing-md) 0;
+  border-left: 4px solid var(--app-primary);
+  overflow: hidden;
+
+  .card-header-clickable {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--app-spacing-md);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: var(--app-gray-100);
+    }
+
+    &:active {
+      background: var(--app-gray-200);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: var(--app-spacing-sm);
+      font-weight: 600;
+      color: var(--app-gray-900);
+      font-size: var(--app-font-size-base);
+
+      ion-icon {
+        font-size: var(--app-font-size-lg);
+      }
+    }
+
+    >ion-icon {
+      color: var(--app-gray-400);
+      font-size: var(--app-font-size-lg);
+      transition: transform 0.3s ease;
+    }
+  }
+
+  .expandable-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding: 0 var(--app-spacing-md);
+
+    &.expanded {
+      max-height: 500px;
+      padding: 0 var(--app-spacing-md) var(--app-spacing-md);
+    }
+
+    p {
+      margin: 0 0 var(--app-spacing-sm) 0;
+      line-height: 1.6;
+      color: var(--app-gray-700);
+    }
+
+    .compact-list {
+      margin: var(--app-spacing-sm) 0;
+      padding-left: var(--app-spacing-lg);
+
+      li {
+        margin: 4px 0;
+        line-height: 1.5;
+        color: var(--app-gray-600);
+        font-size: var(--app-font-size-sm);
+      }
+    }
+  }
+}
+
+// Strategy Selector Card (Compact)
+.strategy-selector-card.compact {
+  margin: var(--app-spacing-md) 0;
+  border-left: 4px solid var(--app-success);
+
+  ion-card-content {
+    padding: var(--app-spacing-md);
+
+    ion-item {
+      --padding-start: 0;
+      --inner-padding-end: 0;
+      --background: transparent;
+      margin-bottom: var(--app-spacing-sm);
+
+      ion-select {
+        font-weight: 600;
+        color: var(--app-primary);
+        width: 100%;
+      }
+    }
+
+    .strategy-hint-compact {
+      margin: 0 0 var(--app-spacing-md) 0;
+      padding: var(--app-spacing-sm);
+      background: var(--app-gray-100);
+      border-radius: var(--app-radius-sm);
+      font-size: var(--app-font-size-sm);
+      color: var(--app-gray-600);
+      line-height: 1.5;
+    }
+
+    .conditional-input-compact {
+      margin-top: var(--app-spacing-md);
+      padding-top: var(--app-spacing-md);
+      border-top: 1px solid var(--app-card-border);
+
+      ion-item {
+        margin-bottom: var(--app-spacing-xs);
+      }
+
+      .helper-text {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: var(--app-spacing-xs);
+        font-size: var(--app-font-size-xs);
+        color: var(--app-gray-600);
+        line-height: 1.4;
+
+        ion-icon {
+          font-size: var(--app-font-size-sm);
+          flex-shrink: 0;
+        }
+
+        &.success {
+          color: var(--app-success);
+
+          ion-icon {
+            color: var(--app-success);
+          }
+        }
+      }
+    }
+
+    .advanced-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--app-spacing-sm) 0;
+      margin-top: var(--app-spacing-md);
+      border-top: 1px solid var(--app-card-border);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+
+      &:hover {
+        color: var(--app-primary);
+      }
+
+      span {
+        font-size: var(--app-font-size-sm);
+        font-weight: 600;
+        color: var(--app-gray-700);
+      }
+
+      ion-icon {
+        color: var(--app-gray-400);
+        font-size: var(--app-font-size-base);
+      }
+    }
+
+    .expandable-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+
+      &.expanded {
+        max-height: 1000px;
+        margin-top: var(--app-spacing-sm);
+      }
+
+      ion-item {
+        margin-top: var(--app-spacing-sm);
+
+        ion-label {
+          h4 {
+            margin: 0;
+            font-size: var(--app-font-size-sm);
+            font-weight: 600;
+            color: var(--app-gray-900);
+          }
+
+          p {
+            margin: var(--app-spacing-xs) 0 0 0;
+            font-size: var(--app-font-size-xs);
+            color: var(--app-gray-400);
+          }
+        }
+      }
+
+      .helper-text {
+        display: flex;
+        align-items: flex-start;
+        gap: 4px;
+        margin-top: var(--app-spacing-xs);
+        font-size: var(--app-font-size-xs);
+        color: var(--app-gray-600);
+        line-height: 1.4;
+
+        ion-icon {
+          font-size: var(--app-font-size-sm);
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+      }
+
+      .assumptions-compact {
+        margin-top: var(--app-spacing-md);
+        padding-top: var(--app-spacing-md);
+        border-top: 1px solid var(--app-card-border);
+
+        h4 {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin: 0 0 var(--app-spacing-sm) 0;
+          font-size: var(--app-font-size-sm);
+          font-weight: 600;
+          color: var(--app-gray-900);
+
+          ion-icon {
+            color: var(--app-primary);
+            font-size: var(--app-font-size-base);
+          }
+        }
+
+        .assumption-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: var(--app-spacing-xs);
+          margin-bottom: var(--app-spacing-sm);
+
+          .assumption-item {
+            padding: var(--app-spacing-xs);
+            background: var(--app-gray-100);
+            border-radius: var(--app-radius-sm);
+            display: flex;
+            flex-direction: column;
+
+            strong {
+              font-size: var(--app-font-size-xs);
+              color: var(--app-primary);
+              margin-bottom: 2px;
+            }
+
+            span {
+              font-size: var(--app-font-size-xs);
+              color: var(--app-gray-600);
+            }
+          }
+        }
+
+        .data-source {
+          display: flex;
+          align-items: flex-start;
+          gap: 4px;
+          font-size: var(--app-font-size-xs);
+          color: var(--app-gray-500);
+          line-height: 1.3;
+
+          ion-icon {
+            color: var(--app-success);
+            font-size: var(--app-font-size-sm);
+            flex-shrink: 0;
+            margin-top: 1px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Remove old styles that are no longer needed
+.strategy-selector-card:not(.compact),
+.assumptions-card {
+  display: none;
+}
+
 .section-tabs {
   display: flex;
   justify-content: center;
@@ -296,7 +579,7 @@ ion-item {
 
 .simulator-section {
   padding: 0 16px 20px 16px;
-  padding-bottom: calc(var(--app-spacing-xl) * 4); // Extra padding to clear bottom tab bar
+  padding-bottom: var(--app-spacing-lg);
   background: var(--app-background); // Gray background to match education section
 }
 
@@ -342,7 +625,7 @@ ion-item {
     --border-color: var(--app-card-border);
     --border-width: 1px;
     --border-radius: var(--app-radius-sm);
-    --background: var(--app-gray-100);
+    --background: var(--app-card-background); // White background
     margin-bottom: var(--app-spacing-md);
 
     ion-label {
@@ -444,7 +727,7 @@ ion-item {
 
 .strategy-section {
   padding: 20px 16px;
-  padding-bottom: calc(var(--app-spacing-xl) * 4); // Extra padding to clear bottom tab bar
+  padding-bottom: var(--app-spacing-lg);
 }
 
 .strategy-header {
@@ -516,6 +799,7 @@ ion-item {
 
   h4 {
     color: var(--app-primary);
+
     margin: var(--app-spacing-md) 0 var(--app-spacing-sm) 0;
     font-size: var(--app-font-size-base);
     font-weight: 600;
@@ -1087,4 +1371,10 @@ ion-item {
   .strategy-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.bottom-spacer {
+  width: 100%;
+  height: calc(var(--ion-tab-bar-height, 56px) + env(safe-area-inset-bottom) + var(--app-spacing-lg));
+  flex-shrink: 0;
 }

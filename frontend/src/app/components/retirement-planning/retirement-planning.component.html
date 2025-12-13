@@ -30,42 +30,120 @@
       <p>Test if your money will last through retirement using real market scenarios</p>
     </div>
 
-    <!-- How It Works Explanation -->
-    <ion-card class="explanation-card">
+
+    <!-- Monte Carlo Explanation (Collapsible) -->
+    <ion-card class="quick-guide-card">
+      <div class="card-header-clickable" (click)="toggleGuideExpanded()">
+        <div class="header-left">
+          <ion-icon name="help-circle-outline" class="icon-enhanced primary"></ion-icon>
+          <span>What is Monte Carlo?</span>
+        </div>
+        <ion-icon [name]="guideExpanded ? 'chevron-up' : 'chevron-down'"></ion-icon>
+      </div>
+      <div class="expandable-content" [class.expanded]="guideExpanded">
+
+        <p><strong>Monte Carlo simulation</strong> tests your retirement plan by running 1,000 different market
+          scenarios to
+          see if your money lasts.</p>
+        <ul class="compact-list">
+          <li>Each test uses different returns based on historical data</li>
+          <li>Your withdrawal increases 2.5% annually for inflation</li>
+          <li>Success rate = % of scenarios where money lasts full retirement</li>
+        </ul>
+      </div>
+    </ion-card>
+
+    <!-- Strategy Selector Card (Compact) -->
+    <ion-card class="strategy-selector-card compact">
       <ion-card-header>
         <ion-card-title>
-          <ion-icon name="help-circle-outline" class="icon-enhanced primary"></ion-icon>
-          How This Simulator Works
+          <ion-icon name="options-outline" class="icon-enhanced primary"></ion-icon>
+          Withdrawal Strategy
         </ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <p><strong>Monte Carlo simulation</strong> tests your retirement plan by running 1,000 different market
-          scenarios. Here's what happens:</p>
+        <ion-item lines="none">
+          <ion-select [(ngModel)]="selectedStrategy" interface="action-sheet" (ionChange)="onStrategyChange()">
+            <ion-select-option value="traditional">Traditional 4% Rule</ion-select-option>
+            <ion-select-option value="sbloc">SBLOC (Borrow in Downturns)</ion-select-option>
+            <ion-select-option value="annuity-growth">Annuity + Growth</ion-select-option>
+            <ion-select-option value="dynamic-guardrails">Dynamic Guardrails</ion-select-option>
+            <ion-select-option value="full-annuity">Full Annuity</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <p class="strategy-hint-compact">{{ getStrategyHintCompact() }}</p>
 
-        <ul>
-          <li><strong>Random Market Conditions:</strong> Each scenario uses different stock/bond returns based on
-            historical market volatility</li>
-          <li><strong>Inflation Protection:</strong> Your withdrawal amount increases by 2.5% annually to maintain
-            purchasing power</li>
-          <li><strong>Balanced Portfolio:</strong> Assumes 70% stocks (10% average return) and 30% bonds (4% average
-            return)</li>
-          <li><strong>Success Rate:</strong> Shows the percentage of scenarios where your money lasts the full
-            retirement period</li>
-        </ul>
+        <!-- Essential Expenses Input (Annuity + Growth only) -->
+        <div *ngIf="selectedStrategy === 'annuity-growth'" class="conditional-input-compact">
+          <ion-item lines="none">
+            <ion-label position="stacked">Essential Annual Expenses</ion-label>
+            <ion-input type="number" [(ngModel)]="essentialExpenses" placeholder="40,000"></ion-input>
+          </ion-item>
+          <small class="helper-text success" *ngIf="essentialExpenses && portfolioValue">
+            <ion-icon name="calculator-outline"></ion-icon>
+            Annuitize {{ formatPercent(getRecommendedAnnuityPercentage()) }} → {{ formatCurrency(getAnnuityIncome())
+            }}/yr
+            guaranteed
+          </small>
+        </div>
 
-        <div class="confidence-guide">
-          <h4>
-            <ion-icon name="shield-checkmark-outline" class="icon-enhanced success"></ion-icon>
-            Confidence Guide
-          </h4>
-          <p><strong>90%+ Success Rate:</strong> Very confident - your plan should work in most market conditions</p>
-          <p><strong>75-89% Success Rate:</strong> Moderately confident - consider small adjustments</p>
-          <p><strong>Below 75%:</strong> High risk - significant plan changes recommended</p>
+        <!-- Advanced Options Toggle -->
+        <div class="advanced-toggle" (click)="toggleAdvancedOptions()">
+          <span>Advanced Options</span>
+          <ion-icon [name]="showAdvancedOptions ? 'chevron-up' : 'chevron-down'"></ion-icon>
+        </div>
+
+        <!-- Advanced: NTSX Toggle -->
+        <div class="expandable-content" [class.expanded]="showAdvancedOptions">
+          <ion-item lines="none">
+            <ion-label>
+              <h4>NTSX (90/60 Leveraged)</h4>
+              <p>Better risk-adjusted returns</p>
+            </ion-label>
+            <ion-toggle [(ngModel)]="useNTSX" (ionChange)="onNTSXChange()"></ion-toggle>
+          </ion-item>
+          <small class="helper-text" *ngIf="useNTSX">
+            <ion-icon name="information-circle"></ion-icon>
+            WisdomTree NTSX uses 1.5x leverage for 90% stocks + 60% bonds. More efficient than traditional portfolios,
+            but
+            carries leverage risk.
+          </small>
+
+          <!-- Return Assumptions (in Advanced) -->
+          <div class="assumptions-compact">
+            <h4>
+              <ion-icon name="trending-up-outline"></ion-icon>
+              Market Assumptions
+            </h4>
+            <div class="assumption-grid">
+              <div class="assumption-item">
+                <strong>Stocks</strong>
+                <span>10% avg, 18% vol</span>
+              </div>
+              <div class="assumption-item">
+                <strong>Bonds</strong>
+                <span>4% avg, 5% vol</span>
+              </div>
+              <div class="assumption-item" *ngIf="useNTSX">
+                <strong>NTSX</strong>
+                <span>10% avg, 15% vol</span>
+              </div>
+              <div class="assumption-item" *ngIf="!useNTSX">
+                <strong>70/30</strong>
+                <span>8.8% blended</span>
+              </div>
+            </div>
+            <small class="data-source">
+              <ion-icon name="shield-checkmark-outline"></ion-icon>
+              Based on S&P 500 & Bloomberg Bond data (1926-2024)
+            </small>
+          </div>
         </div>
       </ion-card-content>
     </ion-card>
 
     <div class="input-section">
+
       <h3>
         <ion-icon name="wallet-outline" class="icon-enhanced primary"></ion-icon>
         Financial Inputs
@@ -294,13 +372,6 @@
         </div>
       </ion-card-content>
     </ion-card>
-
-    <div class="simulation-note">
-      <ion-icon name="information-circle-outline" class="icon-enhanced primary"></ion-icon>
-      <strong>Simulation Details:</strong> This analysis used 1,000 random market scenarios with a balanced portfolio
-      (70% stocks, 30% bonds)
-      and included sequence of returns risk - the challenge of poor market performance early in retirement.
-    </div>
   </div>
 
   <!-- Strategy Education Section -->
@@ -416,3 +487,6 @@
       </ion-card>
     </div>
   </div>
+
+  <!-- Spacer to ensure content clears the bottom tabs/safe area -->
+  <div class="bottom-spacer"></div>
