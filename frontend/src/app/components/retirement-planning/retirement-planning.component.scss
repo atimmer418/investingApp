@@ -11,9 +11,9 @@
   --background: var(--portfolio-background);
   --padding-start: 0;
   --padding-end: 0;
-  --padding-top: 8px !important;
-  --offset-top: 0px !important;
-  --padding-bottom: 0;
+  /* Force explicit height with extra 10px buffer to ensure no overlap */
+  height: calc(100% - (var(--ion-tab-bar-height, 56px) + env(safe-area-inset-bottom) + 36px));
+  --padding-bottom: var(--app-spacing-xl);
 
 
   &::part(scroll) {
@@ -1371,10 +1371,4 @@ ion-item {
   .strategy-grid {
     grid-template-columns: 1fr;
   }
-}
-
-.bottom-spacer {
-  width: 100%;
-  height: calc(var(--ion-tab-bar-height, 56px) + env(safe-area-inset-bottom) + var(--app-spacing-lg));
-  flex-shrink: 0;
 }

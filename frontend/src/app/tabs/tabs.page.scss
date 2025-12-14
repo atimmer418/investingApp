@@ -19,7 +19,7 @@
   background: rgba(255, 255, 255, 0.95);
   min-height: calc(56px + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  
+
   @media (prefers-color-scheme: dark) {
     background: rgba(28, 28, 30, 0.95);
   }
@@ -35,25 +35,26 @@
   min-height: 56px;
   padding: var(--app-spacing-sm);
   transition: all 0.2s ease;
-  
+
   .tab-icon {
     font-size: 30px;
     transition: all 0.2s ease;
   }
-  
+
   &.tab-selected {
     .tab-icon {
       transform: scale(1.1);
     }
   }
-  
+
   &:active {
     transform: scale(0.95);
   }
 }
 
 ion-router-outlet {
-  padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  /* Use 'bottom' to physically constrain the absolute container height */
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
 @media (prefers-color-scheme: dark) {
