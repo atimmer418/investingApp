@@ -144,12 +144,22 @@
     </ion-card>
 
     <div class="action-buttons">
+      <!-- Terms Agreement -->
+      <div class="terms-agreement">
+        <ion-item lines="none" class="terms-item">
+          <ion-checkbox slot="start" [(ngModel)]="agreedToTerms" mode="md"></ion-checkbox>
+          <ion-label class="ion-text-wrap terms-label">
+            I agree to the <a href="#" (click)="$event.preventDefault()">Terms of Service</a> and <a href="#" (click)="$event.preventDefault()">Privacy Policy</a>.
+          </ion-label>
+        </ion-item>
+      </div>
+
       <ion-button 
         expand="block" 
         size="large" 
         color="primary"
         (click)="authorizeRecurringInvestment()"
-        [disabled]="isAuthorizing || isCreatingAccount"
+        [disabled]="isAuthorizing || isCreatingAccount || !agreedToTerms"
         class="start-investing-btn">
         <ion-icon name="rocket-outline" slot="start"></ion-icon>
         <span *ngIf="!isAuthorizing && !isCreatingAccount">Start Investing & Create Account</span>

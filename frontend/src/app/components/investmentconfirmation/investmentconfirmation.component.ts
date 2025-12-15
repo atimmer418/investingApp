@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ViewWillEnter } from '@ionic/angular';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  IonButtons, IonBackButton, IonNote, IonSpinner
+  IonButtons, IonBackButton, IonNote, IonSpinner, IonCheckbox
 } from '@ionic/angular/standalone';
 import { ToastService } from '../../services/toast.service';
 import { AlpacaService, CreateAccountRequest } from '../../services/alpaca.service';
@@ -43,13 +44,15 @@ interface DefaultStock {
   styleUrls: ['./investmentconfirmation.component.scss'],
   standalone: true,
   imports: [
-    CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
+    CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
     IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    IonButtons, IonBackButton, IonNote, IonSpinner
+    IonButtons, IonBackButton, IonNote, IonSpinner, IonCheckbox
   ]
 })
 
 export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
+  agreedToTerms: boolean = false;
+
   // Investment schedule data
   investmentSchedule: InvestmentSchedule = {
     payFrequency: 'BIWEEKLY',
@@ -364,6 +367,11 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
   }
 
   async authorizeRecurringInvestment() {
+    if (!this.agreedToTerms) {
+      this.toastService.showToast('Please agree to the Terms of Service and Privacy Policy to continue.', 'warning');
+      return;
+    }
+
     this.isAuthorizing = true;
     this.authorizationStatus = 'Attempting authorization...';
     console.log('Authorizing recurring investment of', this.investmentPercentage);

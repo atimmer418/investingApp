@@ -95,6 +95,7 @@ export class Tab3Page implements OnInit, OnDestroy {
   public userPreferences: UserPreferences | null = null;
   public recurringInvestment: RecurringInvestment | null = null;
   public currentBankAccount: BankAccount | null = null;
+  public userEmail: string = 'alex.doe@example.com';
   public isToastOpen = false;
   public toastMessage = '';
   public toastColor = 'primary';
@@ -137,8 +138,8 @@ export class Tab3Page implements OnInit, OnDestroy {
       title: 'Account & Security',
       items: [
         {
-          title: 'Security Settings',
-          subtitle: 'Password, biometrics, and 2FA',
+          title: 'Account Security',
+          subtitle: 'App locking, identity and email',
           icon: 'shield-checkmark-outline',
           action: 'security',
           type: 'navigation'
@@ -184,17 +185,10 @@ export class Tab3Page implements OnInit, OnDestroy {
           type: 'navigation'
         },
         {
-          title: 'Privacy Policy',
-          subtitle: 'Review our privacy practices',
-          icon: 'lock-closed-outline',
-          action: 'privacyPolicy',
-          type: 'navigation'
-        },
-        {
-          title: 'Terms of Service',
-          subtitle: 'Read our terms and conditions',
+          title: 'Legal Information',
+          subtitle: 'Terms of Service & Privacy Policy',
           icon: 'document-text-outline',
-          action: 'termsOfService',
+          action: 'legalInformation',
           type: 'navigation'
         }
       ]
@@ -235,6 +229,11 @@ export class Tab3Page implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    const storedEmail = localStorage.getItem('userEmail');
+    if (storedEmail) {
+      this.userEmail = storedEmail;
+    }
+
     this.initializeSettingSections();
     this.setupDemoData();
 
@@ -315,10 +314,12 @@ export class Tab3Page implements OnInit, OnDestroy {
         this.showComingSoon('Investment Goals');
         break;
       case 'personalInfo':
-        this.showComingSoon('Personal Information');
+      case 'changeEmail':
+        // These are now handled in security settings
+        this.router.navigate(['/security-settings']);
         break;
       case 'security':
-        this.showComingSoon('Security Settings');
+        this.router.navigate(['/security-settings']);
         break;
       case 'bankAccounts':
         this.handleBankAccountsView();
@@ -347,11 +348,8 @@ export class Tab3Page implements OnInit, OnDestroy {
       case 'contactSupport':
         this.handleContactSupport();
         break;
-      case 'privacyPolicy':
-        this.showComingSoon('Privacy Policy');
-        break;
-      case 'termsOfService':
-        this.showComingSoon('Terms of Service');
+      case 'legalInformation':
+        this.showComingSoon('Legal Information');
         break;
       default:
         console.log('Unknown action:', action);

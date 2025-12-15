@@ -6,9 +6,11 @@ import com.investingapp.backend.dto.RegistrationFinishResponse;
 import com.investingapp.backend.model.PasskeyCredential;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.model.UserProgress;
+import com.investingapp.backend.model.UserSession;
 import com.investingapp.backend.repository.PasskeyCredentialRepository;
 import com.investingapp.backend.repository.UserRepository;
 import com.investingapp.backend.repository.UserProgressRepository;
+import com.investingapp.backend.repository.UserSessionRepository;
 import com.investingapp.backend.security.jwt.JwtUtils;
 import com.investingapp.backend.security.services.UserDetailsServiceImpl;
 import com.yubico.webauthn.*;
@@ -198,6 +200,9 @@ public class WebAuthnService {
         return requestOptions;
     }
 
+    @Autowired
+    private UserSessionRepository userSessionRepository;
+
     /**
      * Finish authentication flow - discovers user from passkey response
      */
@@ -238,10 +243,6 @@ public class WebAuthnService {
                     userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 
-                // Generate JWT token
-                String jwt = jwtUtils.generateJwtToken(authentication);
-                logger.info("JWT generated for authenticated user: {}", user.getEmail());
-                
                 // Update device ID if provided (for manual re-auth scenarios)
                 String deviceId = httpRequest.getHeader("X-Device-ID");
                 if (deviceId != null && !deviceId.isEmpty()) {
@@ -259,6 +260,30 @@ public class WebAuthnService {
                 } else {
                     logger.debug("No device ID header provided during authentication for user {}", user.getEmail());
                 }
+
+                // Create User Session
+                UserSession session = new UserSession();
+                try {
+                    session.setUser(user);
+                    session.setDeviceInfo(deviceId != null ? deviceId : httpRequest.getHeader("User-Agent"));
+                    session.setIpAddress(httpRequest.getRemoteAddr());
+                    session.setActive(true);
+                    session.setLastActive(java.time.LocalDateTime.now());
+                    session = userSessionRepository.save(session);
+                    logger.info("Created new active session for user {}", user.getEmail());
+                } catch (Exception e) {
+                    logger.error("Failed to create user session: {}", e.getMessage());
+                    // Don't fail auth if session creation fails
+                }
+                
+                // Generate JWT token
+                String jwt;
+                if (session.getId() != null) {
+                    jwt = jwtUtils.generateJwtToken(authentication, session.getId());
+                } else {
+                    jwt = jwtUtils.generateJwtToken(authentication);
+                }
+                logger.info("JWT generated for authenticated user: {}", user.getEmail());
                 
                 return new AuthenticationFinishResponse(
                     true,

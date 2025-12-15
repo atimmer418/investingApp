@@ -80,6 +80,34 @@ public class JwtUtils {
                 .compact();
     }
 
+    public String generateJwtToken(Authentication authentication, Long sessionId) {
+        UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
+
+        String jwtId = UUID.randomUUID().toString();
+        Date issuedAt = new Date();
+        Date expiration = new Date(issuedAt.getTime() + jwtExpirationMs);
+        
+        return Jwts.builder()
+                .setSubject(userPrincipal.getUsername())
+                .claim("sessionId", sessionId)
+                .setId(jwtId)
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiration)
+                .setIssuer("investingapp")
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public Long getSessionIdFromJwtToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+            return claims.get("sessionId", Long.class);
+        } catch (Exception e) {
+            logger.error("Could not extract sessionId from token: {}", e.getMessage());
+            return null;
+        }
+    }
+
     public String generateTokenFromUsername(String username) {
         // Generate unique JWT ID for each token
         String jwtId = UUID.randomUUID().toString();

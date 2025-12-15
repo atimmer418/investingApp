@@ -69,6 +69,47 @@
   }
 }
 
+/* Terms Agreement */
+.terms-agreement {
+  margin-bottom: 1.5rem;
+  
+  .terms-item {
+    --background: transparent;
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    font-size: 0.9rem;
+    
+    ion-checkbox {
+      --size: 20px;
+      margin-right: 12px;
+      --checkbox-background: white;
+      --border-color: #c7c7cc;
+      --border-radius: 4px;
+      
+      &::part(container) {
+        border-width: 2px;
+      }
+    }
+    
+    .terms-label {
+      color: #3a3a3c;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      white-space: normal;
+      
+      a {
+        color: var(--ion-color-primary);
+        text-decoration: none;
+        font-weight: 500;
+        
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+}
+
 .action-buttons {
   margin-top: 32px;
   

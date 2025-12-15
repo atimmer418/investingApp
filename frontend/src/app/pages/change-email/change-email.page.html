@@ -1,0 +1,58 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="security-header">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/security-settings" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title color="dark">Change Email</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="security-content">
+  <div class="mobile-container">
+    
+    <div class="section-card mobile-card">
+      <div class="section-header">
+        <div>
+          <h3 class="section-title">Update Email Address</h3>
+          <p class="section-subtitle">Enter your new email address below</p>
+        </div>
+      </div>
+      
+      <div class="form-padding">
+        <div class="input-group">
+          <ion-label position="stacked">Current Email</ion-label>
+          <ion-input [value]="currentEmail" readonly class="readonly-input"></ion-input>
+        </div>
+
+        <div class="input-group">
+          <ion-label position="stacked">New Email</ion-label>
+          <ion-input [(ngModel)]="newEmail" type="email" placeholder="Enter new email"></ion-input>
+        </div>
+
+        <div class="input-group">
+          <ion-label position="stacked">Confirm New Email</ion-label>
+          <ion-input [(ngModel)]="confirmEmail" type="email" placeholder="Confirm new email"></ion-input>
+        </div>
+
+        <div *ngIf="errorMessage" class="error-message">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <ion-button expand="block" (click)="saveEmail()" [disabled]="!canSave() || isLoading" class="save-btn">
+          <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+          <span *ngIf="!isLoading">Update Email</span>
+        </ion-button>
+      </div>
+    </div>
+  </div>
+
+  <ion-toast
+    [isOpen]="isToastOpen"
+    [message]="toastMessage"
+    [duration]="2000"
+    [color]="toastColor"
+    (didDismiss)="isToastOpen = false"
+    position="top"
+  ></ion-toast>
+</ion-content>

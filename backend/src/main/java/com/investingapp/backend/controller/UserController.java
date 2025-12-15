@@ -33,6 +33,12 @@ public class UserController {
     @Autowired
     private jakarta.persistence.EntityManager entityManager;
 
+    @Autowired
+    private com.investingapp.backend.security.jwt.JwtUtils jwtUtils;
+
+    @Autowired
+    private com.investingapp.backend.repository.UserSessionRepository userSessionRepository;
+
     public static class UserProgressResponse {
         private boolean getStartedCompleted;
         private boolean surveyInitialCompleted;
@@ -472,5 +478,96 @@ public class UserController {
         if (wasFixed) {
             logger.info("[UserController] Fixed step dependencies for user {}", userEmail);
         }
+    }
+
+    @PostMapping("/update-email")
+    @Transactional
+    public ResponseEntity<?> updateEmail(@RequestBody Map<String, String> request, Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String currentEmail = userDetails.getUsername();
+        String newEmail = request.get("newEmail");
+        
+        if (newEmail == null || newEmail.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "New email is required"));
+        }
+
+        String providedCurrentEmail = request.get("currentEmail");
+        if (providedCurrentEmail != null && !providedCurrentEmail.equals(currentEmail)) {
+             return ResponseEntity.badRequest().body(Map.of("message", "Current email does not match authenticated user"));
+        }
+
+        User user = userRepository.findByEmail(currentEmail).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "User not found"));
+        }
+        
+        if (userRepository.existsByEmail(newEmail)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email is already in use"));
+        }
+
+        user.setEmail(newEmail);
+        userRepository.save(user);
+        
+        // Generate new JWT
+        String newJwt = jwtUtils.generateTokenFromUsername(newEmail);
+        
+        logger.info("Updated email for user ID {} from {} to {}", user.getId(), currentEmail, newEmail);
+
+        return ResponseEntity.ok(Map.of(
+            "message", "Email updated successfully", 
+            "newEmail", newEmail,
+            "jwtToken", newJwt
+        ));
+    }
+
+    @GetMapping("/sessions")
+    public ResponseEntity<?> getUserSessions(Authentication authentication, HttpServletRequest request) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String email = userDetails.getUsername();
+        User user = userRepository.findByEmail(email).orElse(null);
+        
+        if (user == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "User not found"));
+        }
+
+        List<com.investingapp.backend.model.UserSession> sessions = userSessionRepository.findByUserIdAndActiveTrue(user.getId());
+        
+        String authHeader = request.getHeader("Authorization");
+        Long currentSessionId = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            currentSessionId = jwtUtils.getSessionIdFromJwtToken(token);
+        }
+
+        return ResponseEntity.ok(Map.of(
+            "currentSessionId", currentSessionId != null ? currentSessionId : -1L,
+            "sessions", sessions
+        ));
+    }
+
+    @PostMapping("/sessions/{id}/revoke")
+    @Transactional
+    public ResponseEntity<?> revokeSession(@PathVariable Long id, Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String email = userDetails.getUsername();
+        User user = userRepository.findByEmail(email).orElse(null);
+        
+        if (user == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "User not found"));
+        }
+
+        com.investingapp.backend.model.UserSession session = userSessionRepository.findById(id).orElse(null);
+        if (session == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "Session not found"));
+        }
+
+        if (!session.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).body(Map.of("message", "Unauthorized"));
+        }
+
+        session.setActive(false);
+        userSessionRepository.save(session);
+        
+        return ResponseEntity.ok(Map.of("message", "Session revoked successfully"));
     }
 }
