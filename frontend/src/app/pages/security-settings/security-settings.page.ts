@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
+import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import { 
   IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
   IonCard, IonCardContent, IonList, IonItem, IonLabel, IonToggle, IonButton,
@@ -82,14 +84,14 @@ export class SecuritySettingsPage implements OnInit {
   }
 
   loadSessions() {
-    const token = localStorage.getItem('jwt_token');
+    const token = JwtTokenUtils.getValidJwtToken();
     if (!token) return;
 
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
 
-    this.http.get<SessionsResponse>('/api/user/sessions', { headers }).subscribe({
+    this.http.get<SessionsResponse>(`${environment.backendApiUrl}/user/sessions`, { headers }).subscribe({
       next: (data) => {
         this.sessions = data.sessions;
         this.currentSessionId = data.currentSessionId;
@@ -115,14 +117,14 @@ export class SecuritySettingsPage implements OnInit {
   }
 
   revokeSession(id: number) {
-    const token = localStorage.getItem('jwt_token');
+    const token = JwtTokenUtils.getValidJwtToken();
     if (!token) return;
 
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
 
-    this.http.post(`/api/user/sessions/${id}/revoke`, {}, { headers }).subscribe({
+    this.http.post(`${environment.backendApiUrl}/user/sessions/${id}/revoke`, {}, { headers }).subscribe({
       next: () => {
         this.sessions = this.sessions.filter(s => s.id !== id);
       },
