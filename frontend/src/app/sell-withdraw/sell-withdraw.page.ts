@@ -34,6 +34,7 @@ import {
 import { TradingService, SellRequest, WithdrawRequest } from '../services/trading.service';
 import { PortfolioService, PortfolioDashboardData, Position, AccountSummary } from '../services/portfolio.service';
 import { ToastService } from '../services/toast.service';
+import { PasskeyService } from '../services/passkey.service';
 
 @Component({
   selector: 'app-sell-withdraw',
@@ -82,7 +83,8 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     private tradingService: TradingService,
     private portfolioService: PortfolioService,
     private alertController: AlertController,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private passkeyService: PasskeyService
   ) {
     addIcons({
       pieChartOutline,
@@ -204,6 +206,28 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     if (!this.selectedPosition || this.isSelling) return;
 
     try {
+      // Step-up authentication
+      try {
+        const startResponse = await this.passkeyService.startAuthentication().toPromise();
+        if (!startResponse || !startResponse.requestOptions) {
+          throw new Error('Failed to start authentication');
+        }
+
+        const credential = await navigator.credentials.get({
+          publicKey: JSON.parse(startResponse.requestOptions)
+        });
+
+        const authResult = await this.passkeyService.finishAuthentication(credential, startResponse.sessionId).toPromise();
+        
+        if (!authResult || !authResult.success) {
+          throw new Error('Authentication failed');
+        }
+      } catch (authError) {
+        console.error('Authentication error:', authError);
+        this.showToast('Authentication required to sell positions.', 'warning');
+        return;
+      }
+
       this.isSelling = true;
       const symbolToSell = this.selectedPosition.symbol;
       const isFullSell = this.sellPercentage === 100;
@@ -255,6 +279,28 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     if (!this.withdrawAmount || this.isWithdrawing || this.withdrawAmount > this.maxWithdrawAmount) return;
 
     try {
+      // Step-up authentication
+      try {
+        const startResponse = await this.passkeyService.startAuthentication().toPromise();
+        if (!startResponse || !startResponse.requestOptions) {
+          throw new Error('Failed to start authentication');
+        }
+
+        const credential = await navigator.credentials.get({
+          publicKey: JSON.parse(startResponse.requestOptions)
+        });
+
+        const authResult = await this.passkeyService.finishAuthentication(credential, startResponse.sessionId).toPromise();
+        
+        if (!authResult || !authResult.success) {
+          throw new Error('Authentication failed');
+        }
+      } catch (authError) {
+        console.error('Authentication error:', authError);
+        this.showToast('Authentication required to withdraw funds.', 'warning');
+        return;
+      }
+
       this.isWithdrawing = true;
 
       const withdrawRequest = {

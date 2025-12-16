@@ -85,32 +85,6 @@ export class DeviceIdService {
   }
 
   private generateRandomId(): string {
-    const nav = navigator as any;
-    
-    // Collect device-specific characteristics
-    const fingerprint = [
-      nav.userAgent || '',
-      nav.language || '',
-      nav.languages?.join(',') || '',
-      screen.width + 'x' + screen.height,
-      screen.colorDepth,
-      screen.pixelDepth,
-      new Date().getTimezoneOffset(),
-      nav.platform || '',
-      nav.cookieEnabled,
-      nav.doNotTrack || '',
-      nav.hardwareConcurrency || '', // CPU cores
-      nav.deviceMemory || '',         // RAM (if available)
-      // Add more device-specific characteristics
-      screen.availWidth + 'x' + screen.availHeight,
-      window.devicePixelRatio || '',
-      nav.maxTouchPoints || '',       // Touch capabilities
-    ].join('|');
-    
-    return fingerprint;
-  }
-
-  private generateRandomId(): string {
     // Generate a cryptographically strong random component
     const array = new Uint8Array(32); // 256 bits of randomness
     crypto.getRandomValues(array);

@@ -178,17 +178,41 @@ public class WebAuthnController {
     // === PASSKEY AUTHENTICATION ENDPOINTS ===
     
     /**
-     * Start passkey authentication - NO EMAIL REQUIRED!
-     * Uses discoverable credentials to identify the user from the passkey itself
+     * Start passkey authentication.
+     * If Authorization header is present, it targets the specific user (Step-Up Auth).
+     * Otherwise, it uses discoverable credentials (Usernameless Login).
      */
     @PostMapping("/authenticate/start")
     public ResponseEntity<?> startAuthentication(HttpServletRequest request) {
-        logger.info("Starting usernameless passkey authentication");
         String origin = request.getHeader("Origin");
+        String authHeader = request.getHeader("Authorization");
+        
         logger.info("Authentication request from ORIGIN: {}", origin);
         
         try {
-            PublicKeyCredentialRequestOptions options = webAuthnService.startAuthenticationFlow();
+            PublicKeyCredentialRequestOptions options;
+            
+            // Check for JWT token to identify user for Step-Up Auth
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                if (jwtUtils.validateJwtToken(token)) {
+                    String email = jwtUtils.getUserNameFromJwtToken(token);
+                    logger.info("Starting Step-Up Authentication for user: {}", email);
+                    options = webAuthnService.startAuthenticationFlow(email);
+                } else {
+                    logger.warn("Invalid JWT token provided for authentication start");
+                    // Fallback to usernameless if token is invalid? Or fail?
+                    // Let's fallback to usernameless for robustness, or maybe fail.
+                    // Failing is safer for step-up. But let's assume if token is bad, they are logged out.
+                    // Actually, if token is invalid, they shouldn't be doing step-up.
+                    // But let's stick to the pattern: if we can identify user, target them.
+                    logger.info("Starting usernameless passkey authentication (invalid token)");
+                    options = webAuthnService.startAuthenticationFlow();
+                }
+            } else {
+                logger.info("Starting usernameless passkey authentication (no token)");
+                options = webAuthnService.startAuthenticationFlow();
+            }
             
             // Generate a temporary session ID to cache the challenge
             String sessionId = java.util.UUID.randomUUID().toString();

@@ -9,6 +9,7 @@ import {
 } from '@ionic/angular/standalone';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
+import { PasskeyService } from '../../services/passkey.service';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import { addIcons } from 'ionicons';
 import { mailOutline, alertCircleOutline } from 'ionicons/icons';
@@ -39,7 +40,8 @@ export class ChangeEmailPage implements OnInit {
   constructor(
     private router: Router,
     private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
+    private passkeyService: PasskeyService
   ) {
     addIcons({ mailOutline, alertCircleOutline });
   }
@@ -70,37 +72,65 @@ export class ChangeEmailPage implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    const payload = {
-      currentEmail: this.currentEmail,
-      newEmail: this.newEmail
-    };
+    // Step 1: Re-authenticate with Passkey
+    try {
+      const { requestOptions, sessionId } = await this.passkeyService.startAuthentication().toPromise() || {};
+      
+      if (!requestOptions || !sessionId) {
+        throw new Error('Failed to start authentication');
+      }
 
-    this.http.post<any>(`${environment.backendApiUrl}/api/user/update-email`, payload)
-      .subscribe({
-        next: (response) => {
-          this.isLoading = false;
-          
-          // Update localStorage
-          localStorage.setItem('userEmail', response.newEmail);
-          if (response.jwtToken) {
-            // Update JWT token as well since it contains the email
-            JwtTokenUtils.storeJwtToken(response.jwtToken, undefined, response.newEmail);
-          }
-
-          this.showToast('Email updated successfully', 'success');
-          
-          // Navigate back after a short delay
-          setTimeout(() => {
-            this.router.navigate(['/security-settings']);
-          }, 1500);
-        },
-        error: (error) => {
-          this.isLoading = false;
-          console.error('Error updating email:', error);
-          this.errorMessage = error.error?.message || 'Failed to update email. Please try again.';
-          this.showToast(this.errorMessage, 'danger');
-        }
+      // This will trigger the FaceID/TouchID prompt
+      const credential = await navigator.credentials.get({
+        publicKey: JSON.parse(requestOptions)
       });
+
+      // Verify the credential
+      const authResult = await this.passkeyService.finishAuthentication(credential, sessionId).toPromise();
+      
+      if (!authResult || !authResult.success) {
+        throw new Error('Authentication failed');
+      }
+
+      // Step 2: Proceed with Email Update
+      const payload = {
+        currentEmail: this.currentEmail,
+        newEmail: this.newEmail
+      };
+
+      this.http.post<any>(`${environment.backendApiUrl}/api/user/update-email`, payload)
+        .subscribe({
+          next: (response) => {
+            this.isLoading = false;
+            
+            // Update localStorage
+            localStorage.setItem('userEmail', response.newEmail);
+            if (response.jwtToken) {
+              // Update JWT token as well since it contains the email
+              JwtTokenUtils.storeJwtToken(response.jwtToken, undefined, response.newEmail);
+            }
+
+            this.showToast('Email updated successfully', 'success');
+            
+            // Navigate back after a short delay
+            setTimeout(() => {
+              this.router.navigate(['/security-settings']);
+            }, 1500);
+          },
+          error: (error) => {
+            this.isLoading = false;
+            console.error('Error updating email:', error);
+            this.errorMessage = error.error?.message || 'Failed to update email. Please try again.';
+            this.showToast(this.errorMessage, 'danger');
+          }
+        });
+
+    } catch (error) {
+      this.isLoading = false;
+      console.error('Re-authentication failed:', error);
+      this.errorMessage = 'Security verification failed. Please try again.';
+      this.showToast(this.errorMessage, 'danger');
+    }
   }
 
   showToast(message: string, color: string) {

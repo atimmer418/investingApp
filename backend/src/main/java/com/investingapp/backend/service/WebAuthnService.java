@@ -200,6 +200,30 @@ public class WebAuthnService {
         return requestOptions;
     }
 
+    /**
+     * Start authentication flow for a specific user (Step-Up Authentication)
+     * This populates allowCredentials to ensure we authenticate the correct user
+     * and supports non-discoverable credentials.
+     */
+    public PublicKeyCredentialRequestOptions startAuthenticationFlow(String email) {
+        logger.info("Starting passkey authentication flow for user: {}", email);
+        
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            
+        // Start assertion with username to populate allowCredentials
+        StartAssertionOptions options = StartAssertionOptions.builder()
+            .username(email)
+            .userVerification(UserVerificationRequirement.PREFERRED)
+            .build();
+            
+        AssertionRequest assertionRequest = relyingParty.startAssertion(options);
+        PublicKeyCredentialRequestOptions requestOptions = assertionRequest.getPublicKeyCredentialRequestOptions();
+        logger.info("Authentication challenge generated for user: {}", email);
+        
+        return requestOptions;
+    }
+
     @Autowired
     private UserSessionRepository userSessionRepository;
 
