@@ -14,6 +14,8 @@ import com.investingapp.backend.model.UserSession;
 import com.investingapp.backend.repository.UserSessionRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * 🧪 DEVELOPMENT ONLY: Controller for simulating login as existing users
@@ -34,6 +36,9 @@ public class DevAuthController {
 
     @Autowired
     private UserSessionRepository userSessionRepository;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
 
     public static class AuthAsUserRequest {
         private String email;
@@ -126,9 +131,12 @@ public class DevAuthController {
             session = userSessionRepository.save(session);
             logger.info("[DevAuthController] Created/Updated session for user {} on device {}", user.getEmail(), deviceId);
             
+            // Load UserDetails to ensure we have the correct principal object for JwtUtils
+            UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+
             // Generate JWT for this user (with session ID)
             String jwt = jwtUtils.generateJwtToken(
-                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(user.getEmail(), null), 
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()), 
                 session.getId()
             );
             logger.info("[DevAuthController] ✅ Successfully generated JWT for user: {} (ID: {})", user.getEmail(), user.getId());

@@ -286,11 +286,22 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
           throw new Error('Failed to start authentication');
         }
 
-        const options = JSON.parse(startResponse.requestOptions);
+        let options = JSON.parse(startResponse.requestOptions);
+        console.log('🔍 [SellWithdraw] Parsed WebAuthn options:', options);
+
+        // Handle potential nesting (some libraries wrap it in publicKey)
+        if (options.publicKey) {
+          console.log('🔍 [SellWithdraw] Found nested publicKey, unwrapping...');
+          options = options.publicKey;
+        }
         
         // Convert challenge from base64url to ArrayBuffer
         if (options.challenge) {
+          console.log('🔍 [SellWithdraw] Converting challenge:', options.challenge);
           options.challenge = this.base64urlToArrayBuffer(options.challenge);
+        } else {
+          console.error('❌ [SellWithdraw] Missing challenge in options!');
+          throw new Error('Missing challenge in WebAuthn options');
         }
         
         // Convert allowCredentials ids if present
