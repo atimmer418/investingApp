@@ -10,6 +10,10 @@ import com.investingapp.backend.model.UserProgress;
 import com.investingapp.backend.repository.UserRepository;
 import com.investingapp.backend.security.jwt.JwtUtils;
 import com.investingapp.backend.dto.JwtResponse;
+import com.investingapp.backend.model.UserSession;
+import com.investingapp.backend.repository.UserSessionRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 
 /**
  * 🧪 DEVELOPMENT ONLY: Controller for simulating login as existing users
@@ -27,6 +31,9 @@ public class DevAuthController {
     
     @Autowired
     private JwtUtils jwtUtils;
+
+    @Autowired
+    private UserSessionRepository userSessionRepository;
 
     public static class AuthAsUserRequest {
         private String email;
@@ -67,7 +74,7 @@ public class DevAuthController {
      * Body: { "email": "user@example.com" } OR { "userHandle": "handle123" }
      */
     @PostMapping("/authenticate-as-user")
-    public ResponseEntity<DevAuthResponse> authenticateAsUser(@RequestBody AuthAsUserRequest request) {
+    public ResponseEntity<DevAuthResponse> authenticateAsUser(@RequestBody AuthAsUserRequest request, HttpServletRequest httpRequest) {
         try {
             logger.info("[DevAuthController] 🧪 Attempting to authenticate as user: email={}, userHandle={}", 
                        request.getEmail(), request.getUserHandle());
@@ -90,8 +97,40 @@ public class DevAuthController {
                 return ResponseEntity.ok(new DevAuthResponse(false, message, null, null, null));
             }
             
-            // Generate JWT for this user
-            String jwt = jwtUtils.generateTokenFromUsername(user.getEmail());
+            // --- CREATE SESSION FOR DEV AUTH ---
+            String deviceId = httpRequest.getHeader("X-Device-ID");
+            String deviceName = httpRequest.getHeader("X-Device-Name");
+            String userAgent = httpRequest.getHeader("User-Agent");
+
+            UserSession session = null;
+            if (deviceId != null) {
+                session = userSessionRepository.findByUserIdAndDeviceId(user.getId(), deviceId).orElse(null);
+            }
+
+            if (session == null) {
+                session = new UserSession();
+                session.setUser(user);
+                session.setDeviceId(deviceId);
+            }
+
+            if (deviceName != null && !deviceName.isEmpty()) {
+                session.setDeviceInfo(deviceName);
+            } else {
+                session.setDeviceInfo(userAgent != null ? userAgent : "Unknown Device (Dev Auth)");
+            }
+
+            session.setIpAddress(httpRequest.getRemoteAddr());
+            session.setActive(true);
+            session.setLastActive(LocalDateTime.now());
+            
+            session = userSessionRepository.save(session);
+            logger.info("[DevAuthController] Created/Updated session for user {} on device {}", user.getEmail(), deviceId);
+            
+            // Generate JWT for this user (with session ID)
+            String jwt = jwtUtils.generateJwtToken(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(user.getEmail(), null), 
+                session.getId()
+            );
             logger.info("[DevAuthController] ✅ Successfully generated JWT for user: {} (ID: {})", user.getEmail(), user.getId());
             
             return ResponseEntity.ok(new DevAuthResponse(
