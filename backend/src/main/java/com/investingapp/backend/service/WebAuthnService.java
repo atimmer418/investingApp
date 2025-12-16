@@ -261,24 +261,47 @@ public class WebAuthnService {
                     logger.debug("No device ID header provided during authentication for user {}", user.getEmail());
                 }
 
-                // Create User Session
-                UserSession session = new UserSession();
+                // Create or Update User Session
+                UserSession session = null;
                 try {
-                    session.setUser(user);
-                    session.setDeviceInfo(deviceId != null ? deviceId : httpRequest.getHeader("User-Agent"));
+                    // Try to find existing session for this device
+                    if (deviceId != null) {
+                        session = userSessionRepository.findByUserIdAndDeviceId(user.getId(), deviceId).orElse(null);
+                    }
+                    
+                    if (session == null) {
+                        session = new UserSession();
+                        session.setUser(user);
+                        session.setDeviceId(deviceId);
+                    }
+                    
+                    // Update fields
+                    // Use X-Device-Name header if available (from Capacitor), otherwise fallback to User-Agent
+                    String deviceName = httpRequest.getHeader("X-Device-Name");
+                    String userAgent = httpRequest.getHeader("User-Agent");
+                    
+                    if (deviceName != null && !deviceName.isEmpty()) {
+                        session.setDeviceInfo(deviceName);
+                    } else {
+                        session.setDeviceInfo(userAgent != null ? userAgent : "Unknown Device");
+                    }
+                    
                     session.setIpAddress(httpRequest.getRemoteAddr());
                     session.setActive(true);
                     session.setLastActive(java.time.LocalDateTime.now());
+                    
                     session = userSessionRepository.save(session);
-                    logger.info("Created new active session for user {}", user.getEmail());
+                    logger.info("Updated/Created active session for user {} on device {}", user.getEmail(), deviceId);
                 } catch (Exception e) {
-                    logger.error("Failed to create user session: {}", e.getMessage());
+                    logger.error("Failed to manage user session: {}", e.getMessage());
                     // Don't fail auth if session creation fails
+                    session = new UserSession(); // Fallback
+                    session.setId(-1L);
                 }
                 
                 // Generate JWT token
                 String jwt;
-                if (session.getId() != null) {
+                if (session.getId() != null && session.getId() != -1L) {
                     jwt = jwtUtils.generateJwtToken(authentication, session.getId());
                 } else {
                     jwt = jwtUtils.generateJwtToken(authentication);

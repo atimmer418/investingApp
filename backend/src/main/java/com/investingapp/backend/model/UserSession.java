@@ -22,8 +22,11 @@ public class UserSession {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 512)
     private String deviceInfo; // e.g., "iPhone 15 Pro", "Chrome on macOS"
+
+    @Column(length = 64)
+    private String deviceId; // Unique ID from frontend (localStorage)
 
     @Column(length = 45)
     private String ipAddress;

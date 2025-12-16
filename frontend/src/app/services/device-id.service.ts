@@ -1,14 +1,17 @@
 import { Injectable } from '@angular/core';
+import { Device } from '@capacitor/device';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DeviceIdService {
   private deviceId: string | null = null;
+  private deviceName: string | null = null;
   private readonly DEVICE_ID_KEY = 'fred_device_id';
 
   constructor() {
     this.initializeDeviceId();
+    this.initializeDeviceName();
   }
 
   /**
@@ -20,6 +23,35 @@ export class DeviceIdService {
       this.initializeDeviceId();
     }
     return this.deviceId!;
+  }
+
+  /**
+   * Get the friendly name of the device (e.g. "iPhone 15 Pro")
+   */
+  async getDeviceName(): Promise<string> {
+    if (this.deviceName) return this.deviceName;
+    
+    try {
+      const info = await Device.getInfo();
+      // Combine model and platform for clarity, e.g. "iPhone 15 Pro (iOS)" or "Chrome (Web)"
+      if (info.platform === 'web') {
+        this.deviceName = `${this.getBrowserName()} (Web)`;
+      } else {
+        this.deviceName = `${info.model} (${info.platform})`;
+      }
+    } catch (e) {
+      console.warn('Failed to get device info', e);
+      this.deviceName = 'Unknown Device';
+    }
+    return this.deviceName!;
+  }
+
+  private getBrowserName(): string {
+    const agent = window.navigator.userAgent.toLowerCase();
+    if (agent.indexOf('chrome') > -1 && !!(<any>window).chrome) return 'Chrome';
+    if (agent.indexOf('safari') > -1) return 'Safari';
+    if (agent.indexOf('firefox') > -1) return 'Firefox';
+    return 'Browser';
   }
 
   private initializeDeviceId(): void {
@@ -47,7 +79,12 @@ export class DeviceIdService {
     console.log('[DeviceIdService] Generated new device ID:', this.deviceId.substring(0, 8) + '...');
   }
 
-  private generateBrowserFingerprint(): string {
+  private async initializeDeviceName() {
+    // Pre-fetch device name
+    await this.getDeviceName();
+  }
+
+  private generateRandomId(): string {
     const nav = navigator as any;
     
     // Collect device-specific characteristics

@@ -1,13 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
+import { IonApp, IonRouterOutlet, IonContent, IonButton, IonIcon, IonSpinner } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { Platform } from '@ionic/angular/standalone'; 
 import { SplashScreen } from '@capacitor/splash-screen';
 import { register } from 'swiper/element/bundle';
 import { AuthService, UserProgress } from './services/auth.service';
+import { AppLockService } from './services/app-lock.service';
+import { PasskeyService } from './services/passkey.service';
 import { JwtTokenUtils } from './utils/jwt-token.utils';
 import { combineLatest, debounceTime, distinctUntilChanged, filter } from 'rxjs';
+import { addIcons } from 'ionicons';
+import { lockClosedOutline, fingerPrintOutline } from 'ionicons/icons';
 
 register();
 
@@ -16,14 +20,20 @@ register();
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
   standalone: true,
-  imports: [IonApp, IonRouterOutlet, CommonModule],
+  imports: [IonApp, IonRouterOutlet, CommonModule, IonContent, IonButton, IonIcon, IonSpinner],
 })
 export class AppComponent implements OnInit {
+  isLocked = false;
+  isUnlocking = false;
+
   constructor(
     private router: Router,
     private platform: Platform,
-    private authService: AuthService
+    private authService: AuthService,
+    private appLockService: AppLockService,
+    private passkeyService: PasskeyService
   ) {
+    addIcons({ lockClosedOutline, fingerPrintOutline });
     this.initializeApp();
   }
 
@@ -43,6 +53,15 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Subscribe to App Lock state
+    this.appLockService.isLocked$.subscribe(locked => {
+      this.isLocked = locked;
+      if (locked) {
+        // Auto-trigger unlock if desired, or wait for user to tap button
+        // this.unlockApp(); 
+      }
+    });
+
     // localStorage.clear();
     console.log('[AppComponent] ngOnInit - Setting up authentication and progress tracking.');
     
@@ -271,5 +290,14 @@ export class AppComponent implements OnInit {
 
     // Use the same navigation logic as navigateBasedOnProgress
     this.navigateBasedOnProgress(progress);
+  }
+
+  async unlockApp() {
+    this.isUnlocking = true;
+    // Simulate Biometric/Passkey Prompt
+    setTimeout(() => {
+      this.appLockService.unlock();
+      this.isUnlocking = false;
+    }, 800);
   }
 }

@@ -29,6 +29,9 @@ public class AuthTokenFilter extends OncePerRequestFilter { // Extend OncePerReq
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
+    @Autowired
+    private com.investingapp.backend.repository.UserSessionRepository userSessionRepository;
+
     private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
 
     @Override
@@ -55,6 +58,20 @@ public class AuthTokenFilter extends OncePerRequestFilter { // Extend OncePerReq
             if (jwt != null) {
                 boolean isValid = jwtUtils.validateJwtToken(jwt); // Explicitly store result
                 if (isValid) {
+                    // Check for Session Revocation
+                    Long sessionId = jwtUtils.getSessionIdFromJwtToken(jwt);
+                    if (sessionId != null) {
+                        boolean isSessionActive = userSessionRepository.findById(sessionId)
+                                .map(com.investingapp.backend.model.UserSession::isActive)
+                                .orElse(false);
+                        
+                        if (!isSessionActive) {
+                            logger.warn("AuthTokenFilter: Session {} is revoked or invalid. Blocking request.", sessionId);
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Session has been revoked");
+                            return;
+                        }
+                    }
+
                     String email = jwtUtils.getUserNameFromJwtToken(jwt);
 
                     UserDetails userDetails = userDetailsService.loadUserByUsername(email);

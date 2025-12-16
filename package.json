@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@capacitor/device": "^8.0.0",
     "ionicons": "^8.0.9",
     "serve": "^14.2.4"
   }

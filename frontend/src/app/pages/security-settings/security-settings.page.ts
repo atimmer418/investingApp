@@ -29,6 +29,8 @@ interface SessionsResponse {
   sessions: UserSession[];
 }
 
+import { AppLockService } from '../../services/app-lock.service';
+
 @Component({
   selector: 'app-security-settings',
   templateUrl: './security-settings.page.html',
@@ -53,7 +55,11 @@ export class SecuritySettingsPage implements OnInit {
   sessions: UserSession[] = [];
   currentSessionId: number = -1;
 
-  constructor(private router: Router, private http: HttpClient) {
+  constructor(
+    private router: Router, 
+    private http: HttpClient,
+    private appLockService: AppLockService
+  ) {
     addIcons({
       shieldCheckmarkOutline, phonePortraitOutline,
       lockClosedOutline, mailOutline, personOutline, trashOutline,
@@ -66,6 +72,10 @@ export class SecuritySettingsPage implements OnInit {
     if (storedEmail) {
       this.userEmail = storedEmail;
     }
+    
+    // Sync App Lock state
+    this.appLockEnabled = this.appLockService.isEnabled();
+
     // Simulate Passkey Authentication on load
     await this.authenticateUser();
     this.loadSessions();
@@ -100,7 +110,7 @@ export class SecuritySettingsPage implements OnInit {
   }
 
   toggleAppLock() {
-    // Logic to toggle app lock preference
+    this.appLockService.setEnabled(this.appLockEnabled);
     console.log('App lock toggled:', this.appLockEnabled);
   }
 

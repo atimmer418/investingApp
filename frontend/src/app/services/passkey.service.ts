@@ -18,12 +18,16 @@ export class PasskeyService {
 
   constructor(private http: HttpClient, private deviceIdService: DeviceIdService) { }
 
-  private getHeaders(): HttpHeaders {
+  private async getHeadersAsync(): Promise<HttpHeaders> {
     let headers = new HttpHeaders();
     
-    // Add device ID to all passkey requests for proper device tracking
+    // Add device ID
     const deviceId = this.deviceIdService.getDeviceId();
     headers = headers.set('X-Device-ID', deviceId);
+
+    // Add friendly device name
+    const deviceName = await this.deviceIdService.getDeviceName();
+    headers = headers.set('X-Device-Name', deviceName);
     
     // Add JWT token if available
     const token = JwtTokenUtils.getValidJwtToken();
@@ -34,23 +38,41 @@ export class PasskeyService {
     return headers;
   }
 
+  // Helper to wrap async headers in Observable flow if needed, 
+  // but for now we'll just use from() in the methods
+  
   startRegistration(data: RegistrationStartRequest): Observable<RegistrationStartResponse> {
-    return this.http.post<RegistrationStartResponse>(`${BACKEND_API_URL}/passkey/register/start`, data, 
-      { headers: this.getHeaders() });
+    // We need to convert the async header retrieval to an Observable
+    return new Observable(observer => {
+      this.getHeadersAsync().then(headers => {
+        this.http.post<RegistrationStartResponse>(`${BACKEND_API_URL}/passkey/register/start`, data, { headers })
+          .subscribe({
+            next: res => { observer.next(res); observer.complete(); },
+            error: err => observer.error(err)
+          });
+      });
+    });
   }
 
   finishRegistration(data: RegistrationFinishRequest): Observable<RegistrationFinishResponse> {
     const finishUrl = `${BACKEND_API_URL}/passkey/register/finish`;
-    return this.http.post<RegistrationFinishResponse>(finishUrl, data, { headers: this.getHeaders() })
-      .pipe(
-        tap(response => {
-          if (response.success && response.jwtToken) {
-            // Store JWT with expiration info and user details
-            JwtTokenUtils.storeJwtToken(response.jwtToken, response.userId, response.email);
-            console.log('User registered and logged in. JWT stored with expiration info.');
-          }
-        })
-      );
+    return new Observable(observer => {
+      this.getHeadersAsync().then(headers => {
+        this.http.post<RegistrationFinishResponse>(finishUrl, data, { headers })
+          .pipe(
+            tap(response => {
+              if (response.success && response.jwtToken) {
+                JwtTokenUtils.storeJwtToken(response.jwtToken, response.userId, response.email);
+                console.log('User registered and logged in. JWT stored with expiration info.');
+              }
+            })
+          )
+          .subscribe({
+            next: res => { observer.next(res); observer.complete(); },
+            error: err => observer.error(err)
+          });
+      });
+    });
   }
 
   /**
@@ -58,8 +80,15 @@ export class PasskeyService {
    * Uses discoverable credentials to identify user from their passkey
    */
   startAuthentication(): Observable<{requestOptions: string, sessionId: string}> {
-    return this.http.post<{requestOptions: string, sessionId: string}>(`${BACKEND_API_URL}/passkey/authenticate/start`, {}, 
-      { headers: this.getHeaders() });
+    return new Observable(observer => {
+      this.getHeadersAsync().then(headers => {
+        this.http.post<{requestOptions: string, sessionId: string}>(`${BACKEND_API_URL}/passkey/authenticate/start`, {}, { headers })
+          .subscribe({
+            next: res => { observer.next(res); observer.complete(); },
+            error: err => observer.error(err)
+          });
+      });
+    });
   }
 
   /**
@@ -67,17 +96,25 @@ export class PasskeyService {
    */
   finishAuthentication(credentialResponse: any, sessionId: string): Observable<any> {
     const finishUrl = `${BACKEND_API_URL}/passkey/authenticate/finish`;
-    return this.http.post<any>(finishUrl, {
-      credential: credentialResponse,
-      sessionId: sessionId
-    }, { headers: this.getHeaders() }).pipe(
-      tap(response => {
-        if (response.success && response.jwtToken) {
-          // Store JWT with expiration info and user details
-          JwtTokenUtils.storeJwtToken(response.jwtToken, response.userId, response.email);
-          console.log('User authenticated with passkey. JWT stored with expiration info.');
-        }
-      })
-    );
+    return new Observable(observer => {
+      this.getHeadersAsync().then(headers => {
+        this.http.post<any>(finishUrl, {
+          credential: credentialResponse,
+          sessionId: sessionId
+        }, { headers })
+        .pipe(
+          tap(response => {
+            if (response.success && response.jwtToken) {
+              JwtTokenUtils.storeJwtToken(response.jwtToken, response.userId, response.email);
+              console.log('User authenticated with passkey. JWT stored with expiration info.');
+            }
+          })
+        )
+        .subscribe({
+          next: res => { observer.next(res); observer.complete(); },
+          error: err => observer.error(err)
+        });
+      });
+    });
   }
 }
