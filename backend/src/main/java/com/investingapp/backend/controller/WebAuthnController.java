@@ -179,40 +179,32 @@ public class WebAuthnController {
     
     /**
      * Start passkey authentication.
-     * If Authorization header is present, it targets the specific user (Step-Up Auth).
-     * Otherwise, it uses discoverable credentials (Usernameless Login).
+     * We ALWAYS use Usernameless (Discoverable) flow here to ensure robustness.
+     * 
+     * Why?
+     * If we use Step-Up (Targeted) auth by providing the username, the backend populates 'allowCredentials'
+     * with the specific key IDs registered in the DB.
+     * If the user's current device doesn't have those specific keys (e.g. different device, cleared storage, 
+     * or dev/prod DB mismatch), the browser's navigator.credentials.get() will fail immediately 
+     * with NotAllowedError, often without even showing a UI.
+     * 
+     * By using Usernameless flow (empty allowCredentials), the browser will:
+     * 1. Look for any keys for this RP ID.
+     * 2. If found, let the user select one.
+     * 3. If not found, ask the user to insert/touch a security key.
+     * 
+     * We then enforce the identity check in the /finish endpoint to ensure the user 
+     * re-authenticating matches the currently logged-in user.
      */
     @PostMapping("/authenticate/start")
     public ResponseEntity<?> startAuthentication(HttpServletRequest request) {
         String origin = request.getHeader("Origin");
-        String authHeader = request.getHeader("Authorization");
-        
         logger.info("Authentication request from ORIGIN: {}", origin);
         
         try {
-            PublicKeyCredentialRequestOptions options;
-            
-            // Check for JWT token to identify user for Step-Up Auth
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                if (jwtUtils.validateJwtToken(token)) {
-                    String email = jwtUtils.getUserNameFromJwtToken(token);
-                    logger.info("Starting Step-Up Authentication for user: {}", email);
-                    options = webAuthnService.startAuthenticationFlow(email);
-                } else {
-                    logger.warn("Invalid JWT token provided for authentication start");
-                    // Fallback to usernameless if token is invalid? Or fail?
-                    // Let's fallback to usernameless for robustness, or maybe fail.
-                    // Failing is safer for step-up. But let's assume if token is bad, they are logged out.
-                    // Actually, if token is invalid, they shouldn't be doing step-up.
-                    // But let's stick to the pattern: if we can identify user, target them.
-                    logger.info("Starting usernameless passkey authentication (invalid token)");
-                    options = webAuthnService.startAuthenticationFlow();
-                }
-            } else {
-                logger.info("Starting usernameless passkey authentication (no token)");
-                options = webAuthnService.startAuthenticationFlow();
-            }
+            // Always use Usernameless flow for maximum compatibility
+            logger.info("Starting robust passkey authentication (Usernameless flow)");
+            PublicKeyCredentialRequestOptions options = webAuthnService.startAuthenticationFlow();
             
             // Generate a temporary session ID to cache the challenge
             String sessionId = java.util.UUID.randomUUID().toString();
@@ -276,6 +268,23 @@ public class WebAuthnController {
                 webAuthnService.finishAuthenticationFlow(credentialResponse, assertionRequest, httpRequest);
             
             if (serviceResponse.isSuccess()) {
+                // Enforce Step-Up Authentication Identity Check
+                String authHeader = httpRequest.getHeader("Authorization");
+                if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                    String token = authHeader.substring(7);
+                    if (jwtUtils.validateJwtToken(token)) {
+                        String loggedInEmail = jwtUtils.getUserNameFromJwtToken(token);
+                        String authenticatedEmail = serviceResponse.getEmail();
+                        
+                        if (!loggedInEmail.equalsIgnoreCase(authenticatedEmail)) {
+                            logger.warn("Step-Up Auth Mismatch! Logged in: {}, Authenticated: {}", loggedInEmail, authenticatedEmail);
+                            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body("Authentication failed: You must authenticate with the currently logged-in account.");
+                        }
+                        logger.info("Step-Up Auth Verified: {} matches logged-in user.", authenticatedEmail);
+                    }
+                }
+
                 logger.info("Passkey authentication successful for user: {}", serviceResponse.getEmail());
                 return ResponseEntity.ok(serviceResponse);
             } else {
