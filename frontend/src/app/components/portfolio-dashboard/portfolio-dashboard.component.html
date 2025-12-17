@@ -91,7 +91,7 @@
             <!-- Bottom Right: Settled Cash -->
             <div class="hero-grid-item bottom-right">
               <span class="hero-label">Settled Cash</span>
-              <span class="hero-value">{{ formatCurrency(dashboard.summary.cash) }}</span>
+              <span class="hero-value">{{ formatCurrency(dashboard.summary.withdrawableCash ?? dashboard.summary.cash) }}</span>
             </div>
           </div>
         </div>

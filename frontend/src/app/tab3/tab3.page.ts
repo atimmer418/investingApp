@@ -187,7 +187,7 @@ export class Tab3Page implements OnInit, OnDestroy {
         {
           title: 'Legal Information',
           subtitle: 'Terms of Service & Privacy Policy',
-          icon: 'document-text-outline',
+          icon: 'book-outline',
           action: 'legalInformation',
           type: 'navigation'
         }

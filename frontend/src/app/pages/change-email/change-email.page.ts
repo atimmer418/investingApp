@@ -74,19 +74,43 @@ export class ChangeEmailPage implements OnInit {
 
     // Step 1: Re-authenticate with Passkey
     try {
-      const { requestOptions, sessionId } = await this.passkeyService.startAuthentication().toPromise() || {};
+      const startResponse = await this.passkeyService.startAuthentication().toPromise();
       
-      if (!requestOptions || !sessionId) {
+      if (!startResponse || !startResponse.requestOptions || !startResponse.sessionId) {
         throw new Error('Failed to start authentication');
+      }
+
+      let options = JSON.parse(startResponse.requestOptions);
+      
+      // Handle potential nesting (some libraries wrap it in publicKey)
+      if (options.publicKey) {
+        options = options.publicKey;
+      }
+
+      // Convert challenge from base64url to ArrayBuffer
+      if (options.challenge) {
+        options.challenge = this.base64urlToArrayBuffer(options.challenge);
+      } else {
+        throw new Error('Missing challenge in WebAuthn options');
+      }
+
+      // Convert allowCredentials ids if present
+      if (options.allowCredentials) {
+        options.allowCredentials = options.allowCredentials.map((c: any) => {
+          c.id = this.base64urlToArrayBuffer(c.id);
+          return c;
+        });
       }
 
       // This will trigger the FaceID/TouchID prompt
       const credential = await navigator.credentials.get({
-        publicKey: JSON.parse(requestOptions)
+        publicKey: options
       });
 
+      const credentialJson = this.credentialToJson(credential);
+
       // Verify the credential
-      const authResult = await this.passkeyService.finishAuthentication(credential, sessionId).toPromise();
+      const authResult = await this.passkeyService.finishAuthentication(credentialJson, startResponse.sessionId).toPromise();
       
       if (!authResult || !authResult.success) {
         throw new Error('Authentication failed');
@@ -98,7 +122,7 @@ export class ChangeEmailPage implements OnInit {
         newEmail: this.newEmail
       };
 
-      this.http.post<any>(`${environment.backendApiUrl}/api/user/update-email`, payload)
+      this.http.post<any>(`${environment.backendApiUrl}/user/update-email`, payload)
         .subscribe({
           next: (response) => {
             this.isLoading = false;
@@ -131,6 +155,38 @@ export class ChangeEmailPage implements OnInit {
       this.errorMessage = 'Security verification failed. Please try again.';
       this.showToast(this.errorMessage, 'danger');
     }
+  }
+
+  // Helper methods for WebAuthn
+  private base64urlToArrayBuffer(base64url: string): ArrayBuffer {
+    let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) { base64 += '='; }
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); }
+    return bytes.buffer;
+  }
+
+  private arrayBufferToBase64url(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  }
+
+  private credentialToJson(credential: any): any {
+    return {
+      id: credential.id,
+      rawId: this.arrayBufferToBase64url(credential.rawId),
+      response: {
+        authenticatorData: this.arrayBufferToBase64url(credential.response.authenticatorData),
+        clientDataJSON: this.arrayBufferToBase64url(credential.response.clientDataJSON),
+        signature: this.arrayBufferToBase64url(credential.response.signature),
+        userHandle: credential.response.userHandle ? this.arrayBufferToBase64url(credential.response.userHandle) : null
+      },
+      type: credential.type,
+      clientExtensionResults: credential.getClientExtensionResults()
+    };
   }
 
   showToast(message: string, color: string) {
