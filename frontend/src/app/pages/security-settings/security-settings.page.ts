@@ -51,6 +51,7 @@ export class SecuritySettingsPage implements OnInit {
   
   // Settings State
   appLockEnabled = true;
+  sensitiveAuthEnabled = true;
   userEmail: string = 'alex.doe@example.com';
   
   // Real Data
@@ -77,6 +78,7 @@ export class SecuritySettingsPage implements OnInit {
     
     // Sync App Lock state
     this.appLockEnabled = this.appLockService.isEnabled();
+    this.sensitiveAuthEnabled = localStorage.getItem('sensitive_auth_enabled') !== 'false';
 
     // Simulate Passkey Authentication on load
     await this.authenticateUser();
@@ -114,6 +116,11 @@ export class SecuritySettingsPage implements OnInit {
   toggleAppLock() {
     this.appLockService.setEnabled(this.appLockEnabled);
     console.log('App lock toggled:', this.appLockEnabled);
+  }
+
+  toggleSensitiveAuth() {
+    localStorage.setItem('sensitive_auth_enabled', String(this.sensitiveAuthEnabled));
+    console.log('Sensitive auth toggled:', this.sensitiveAuthEnabled);
   }
 
   revokeSession(id: number) {

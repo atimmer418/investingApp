@@ -178,8 +178,8 @@ ion-item {
   }
 }
 
-.app-lock-item {
-  --inner-padding-bottom: 8px;
+.sensitive-auth-item {
+  --inner-padding-bottom: 4px;
 }
 
 // Identity Section Specifics
@@ -247,4 +247,9 @@ ion-item {
     margin: 0;
     line-height: 1.4;
   }
+}
+
+// Applied to all main icons in the settings list
+.setting-icon {
+  color: #007aff !important;
 }

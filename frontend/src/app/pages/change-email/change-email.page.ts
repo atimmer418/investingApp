@@ -73,50 +73,61 @@ export class ChangeEmailPage implements OnInit {
     this.errorMessage = '';
 
     // Step 1: Re-authenticate with Passkey
-    try {
-      const startResponse = await this.passkeyService.startAuthentication().toPromise();
-      
-      if (!startResponse || !startResponse.requestOptions || !startResponse.sessionId) {
-        throw new Error('Failed to start authentication');
-      }
+    const sensitiveAuthEnabled = localStorage.getItem('sensitive_auth_enabled') !== 'false';
 
-      let options = JSON.parse(startResponse.requestOptions);
-      
-      // Handle potential nesting (some libraries wrap it in publicKey)
-      if (options.publicKey) {
-        options = options.publicKey;
-      }
+    if (sensitiveAuthEnabled) {
+      try {
+        const startResponse = await this.passkeyService.startAuthentication().toPromise();
+        
+        if (!startResponse || !startResponse.requestOptions || !startResponse.sessionId) {
+          throw new Error('Failed to start authentication');
+        }
 
-      // Convert challenge from base64url to ArrayBuffer
-      if (options.challenge) {
-        options.challenge = this.base64urlToArrayBuffer(options.challenge);
-      } else {
-        throw new Error('Missing challenge in WebAuthn options');
-      }
+        let options = JSON.parse(startResponse.requestOptions);
+        
+        // Handle potential nesting (some libraries wrap it in publicKey)
+        if (options.publicKey) {
+          options = options.publicKey;
+        }
 
-      // Convert allowCredentials ids if present
-      if (options.allowCredentials) {
-        options.allowCredentials = options.allowCredentials.map((c: any) => {
-          c.id = this.base64urlToArrayBuffer(c.id);
-          return c;
+        // Convert challenge from base64url to ArrayBuffer
+        if (options.challenge) {
+          options.challenge = this.base64urlToArrayBuffer(options.challenge);
+        } else {
+          throw new Error('Missing challenge in WebAuthn options');
+        }
+
+        // Convert allowCredentials ids if present
+        if (options.allowCredentials) {
+          options.allowCredentials = options.allowCredentials.map((c: any) => {
+            c.id = this.base64urlToArrayBuffer(c.id);
+            return c;
+          });
+        }
+
+        // This will trigger the FaceID/TouchID prompt
+        const credential = await navigator.credentials.get({
+          publicKey: options
         });
+
+        const credentialJson = this.credentialToJson(credential);
+
+        // Verify the credential
+        const authResult = await this.passkeyService.finishAuthentication(credentialJson, startResponse.sessionId).toPromise();
+        
+        if (!authResult || !authResult.success) {
+          throw new Error('Authentication failed');
+        }
+      } catch (error) {
+        this.isLoading = false;
+        console.error('Authentication error:', error);
+        this.errorMessage = 'Authentication required to change email.';
+        this.showToast(this.errorMessage, 'warning');
+        return;
       }
+    }
 
-      // This will trigger the FaceID/TouchID prompt
-      const credential = await navigator.credentials.get({
-        publicKey: options
-      });
-
-      const credentialJson = this.credentialToJson(credential);
-
-      // Verify the credential
-      const authResult = await this.passkeyService.finishAuthentication(credentialJson, startResponse.sessionId).toPromise();
-      
-      if (!authResult || !authResult.success) {
-        throw new Error('Authentication failed');
-      }
-
-      // Step 2: Proceed with Email Update
+    // Step 2: Proceed with Email Update
       const payload = {
         currentEmail: this.currentEmail,
         newEmail: this.newEmail
@@ -148,13 +159,6 @@ export class ChangeEmailPage implements OnInit {
             this.showToast(this.errorMessage, 'danger');
           }
         });
-
-    } catch (error) {
-      this.isLoading = false;
-      console.error('Re-authentication failed:', error);
-      this.errorMessage = 'Security verification failed. Please try again.';
-      this.showToast(this.errorMessage, 'danger');
-    }
   }
 
   // Helper methods for WebAuthn

@@ -206,53 +206,57 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     if (!this.selectedPosition || this.isSelling) return;
 
     try {
-      // Step-up authentication
-      try {
-        const startResponse = await this.passkeyService.startAuthentication().toPromise();
-        if (!startResponse || !startResponse.requestOptions) {
-          throw new Error('Failed to start authentication');
-        }
+      // Step-up authentication check
+      const sensitiveAuthEnabled = localStorage.getItem('sensitive_auth_enabled') !== 'false';
+      
+      if (sensitiveAuthEnabled) {
+        try {
+          const startResponse = await this.passkeyService.startAuthentication().toPromise();
+          if (!startResponse || !startResponse.requestOptions) {
+            throw new Error('Failed to start authentication');
+          }
 
-        let options = JSON.parse(startResponse.requestOptions);
-        console.log('🔍 [SellWithdraw] Parsed WebAuthn options:', options);
+          let options = JSON.parse(startResponse.requestOptions);
+          console.log('🔍 [SellWithdraw] Parsed WebAuthn options:', options);
 
-        // Handle potential nesting (some libraries wrap it in publicKey)
-        if (options.publicKey) {
-          console.log('🔍 [SellWithdraw] Found nested publicKey, unwrapping...');
-          options = options.publicKey;
-        }
-        
-        // Convert challenge from base64url to ArrayBuffer
-        if (options.challenge) {
-          console.log('🔍 [SellWithdraw] Converting challenge:', options.challenge);
-          options.challenge = this.base64urlToArrayBuffer(options.challenge);
-        } else {
-          console.error('❌ [SellWithdraw] Missing challenge in options!');
-          throw new Error('Missing challenge in WebAuthn options');
-        }
-        
-        // Convert allowCredentials ids if present
-        if (options.allowCredentials) {
-          options.allowCredentials = options.allowCredentials.map((c: any) => {
-            c.id = this.base64urlToArrayBuffer(c.id);
-            return c;
+          // Handle potential nesting (some libraries wrap it in publicKey)
+          if (options.publicKey) {
+            console.log('🔍 [SellWithdraw] Found nested publicKey, unwrapping...');
+            options = options.publicKey;
+          }
+          
+          // Convert challenge from base64url to ArrayBuffer
+          if (options.challenge) {
+            console.log('🔍 [SellWithdraw] Converting challenge:', options.challenge);
+            options.challenge = this.base64urlToArrayBuffer(options.challenge);
+          } else {
+            console.error('❌ [SellWithdraw] Missing challenge in options!');
+            throw new Error('Missing challenge in WebAuthn options');
+          }
+          
+          // Convert allowCredentials ids if present
+          if (options.allowCredentials) {
+            options.allowCredentials = options.allowCredentials.map((c: any) => {
+              c.id = this.base64urlToArrayBuffer(c.id);
+              return c;
+            });
+          }
+
+          const credential = await navigator.credentials.get({
+            publicKey: options
           });
-        }
 
-        const credential = await navigator.credentials.get({
-          publicKey: options
-        });
-
-        const credentialJson = this.credentialToJson(credential);
-        const authResult = await this.passkeyService.finishAuthentication(credentialJson, startResponse.sessionId).toPromise();
-        
-        if (!authResult || !authResult.success) {
-          throw new Error('Authentication failed');
+          const credentialJson = this.credentialToJson(credential);
+          const authResult = await this.passkeyService.finishAuthentication(credentialJson, startResponse.sessionId).toPromise();
+          
+          if (!authResult || !authResult.success) {
+            throw new Error('Authentication failed');
+          }
+        } catch (authError) {
+          console.error('Authentication error:', authError);
+          this.showToast('Authentication required to sell positions.', 'warning');
+          return;
         }
-      } catch (authError) {
-        console.error('Authentication error:', authError);
-        this.showToast('Authentication required to sell positions.', 'warning');
-        return;
       }
 
       this.isSelling = true;
@@ -306,53 +310,57 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     if (!this.withdrawAmount || this.isWithdrawing || this.withdrawAmount > this.maxWithdrawAmount) return;
 
     try {
-      // Step-up authentication
-      try {
-        const startResponse = await this.passkeyService.startAuthentication().toPromise();
-        if (!startResponse || !startResponse.requestOptions) {
-          throw new Error('Failed to start authentication');
-        }
+      // Step-up authentication check
+      const sensitiveAuthEnabled = localStorage.getItem('sensitive_auth_enabled') !== 'false';
 
-        let options = JSON.parse(startResponse.requestOptions);
-        console.log('🔍 [SellWithdraw] Parsed WebAuthn options:', options);
+      if (sensitiveAuthEnabled) {
+        try {
+          const startResponse = await this.passkeyService.startAuthentication().toPromise();
+          if (!startResponse || !startResponse.requestOptions) {
+            throw new Error('Failed to start authentication');
+          }
 
-        // Handle potential nesting (some libraries wrap it in publicKey)
-        if (options.publicKey) {
-          console.log('🔍 [SellWithdraw] Found nested publicKey, unwrapping...');
-          options = options.publicKey;
-        }
-        
-        // Convert challenge from base64url to ArrayBuffer
-        if (options.challenge) {
-          console.log('🔍 [SellWithdraw] Converting challenge:', options.challenge);
-          options.challenge = this.base64urlToArrayBuffer(options.challenge);
-        } else {
-          console.error('❌ [SellWithdraw] Missing challenge in options!');
-          throw new Error('Missing challenge in WebAuthn options');
-        }
-        
-        // Convert allowCredentials ids if present
-        if (options.allowCredentials) {
-          options.allowCredentials = options.allowCredentials.map((c: any) => {
-            c.id = this.base64urlToArrayBuffer(c.id);
-            return c;
+          let options = JSON.parse(startResponse.requestOptions);
+          console.log('🔍 [SellWithdraw] Parsed WebAuthn options:', options);
+
+          // Handle potential nesting (some libraries wrap it in publicKey)
+          if (options.publicKey) {
+            console.log('🔍 [SellWithdraw] Found nested publicKey, unwrapping...');
+            options = options.publicKey;
+          }
+          
+          // Convert challenge from base64url to ArrayBuffer
+          if (options.challenge) {
+            console.log('🔍 [SellWithdraw] Converting challenge:', options.challenge);
+            options.challenge = this.base64urlToArrayBuffer(options.challenge);
+          } else {
+            console.error('❌ [SellWithdraw] Missing challenge in options!');
+            throw new Error('Missing challenge in WebAuthn options');
+          }
+          
+          // Convert allowCredentials ids if present
+          if (options.allowCredentials) {
+            options.allowCredentials = options.allowCredentials.map((c: any) => {
+              c.id = this.base64urlToArrayBuffer(c.id);
+              return c;
+            });
+          }
+
+          const credential = await navigator.credentials.get({
+            publicKey: options
           });
-        }
 
-        const credential = await navigator.credentials.get({
-          publicKey: options
-        });
-
-        const credentialJson = this.credentialToJson(credential);
-        const authResult = await this.passkeyService.finishAuthentication(credentialJson, startResponse.sessionId).toPromise();
-        
-        if (!authResult || !authResult.success) {
-          throw new Error('Authentication failed');
+          const credentialJson = this.credentialToJson(credential);
+          const authResult = await this.passkeyService.finishAuthentication(credentialJson, startResponse.sessionId).toPromise();
+          
+          if (!authResult || !authResult.success) {
+            throw new Error('Authentication failed');
+          }
+        } catch (authError) {
+          console.error('Authentication error:', authError);
+          this.showToast('Authentication required to withdraw funds.', 'warning');
+          return;
         }
-      } catch (authError) {
-        console.error('Authentication error:', authError);
-        this.showToast('Authentication required to withdraw funds.', 'warning');
-        return;
       }
 
       this.isWithdrawing = true;

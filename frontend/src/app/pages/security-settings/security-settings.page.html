@@ -32,23 +32,32 @@
   <!-- Main Content (Hidden until authenticated) -->
   <div class="mobile-container" *ngIf="isAuthenticated">
     
-    <!-- App Lock Section -->
+    <!-- Security Preferences Section -->
     <div class="section-card mobile-card">
       <div class="section-header">
         <div>
-          <h3 class="section-title">App Lock</h3>
-          <p class="section-subtitle">Manage how you access the app</p>
+          <h3 class="section-title">Security Preferences</h3>
+          <p class="section-subtitle">Manage how you access and secure the app</p>
         </div>
       </div>
       
       <ion-list lines="none">
         <ion-item class="app-lock-item">
-          <ion-icon name="lock-closed-outline" slot="start" color="primary"></ion-icon>
+          <ion-icon name="lock-closed-outline" slot="start" class="setting-icon"></ion-icon>
           <ion-label>
-            <h3>Face ID</h3>
+            <h3>App Lock</h3>
             <p>Require passkey sign-in to unlock the app every time you open it</p>
           </ion-label>
           <ion-toggle slot="end" [(ngModel)]="appLockEnabled" (ionChange)="toggleAppLock()"></ion-toggle>
+        </ion-item>
+
+        <ion-item class="sensitive-auth-item">
+          <ion-icon name="shield-checkmark-outline" slot="start" class="setting-icon"></ion-icon>
+          <ion-label>
+            <h3>Transaction Security</h3>
+            <p>Require authentication for all sensitive actions</p>
+          </ion-label>
+          <ion-toggle slot="end" [(ngModel)]="sensitiveAuthEnabled" (ionChange)="toggleSensitiveAuth()"></ion-toggle>
         </ion-item>
       </ion-list>
     </div>
@@ -64,7 +73,7 @@
       
       <div class="info-block">
         <div class="info-row">
-          <ion-icon name="person-outline"></ion-icon>
+          <ion-icon name="person-outline" class="setting-icon"></ion-icon>
           <div class="info-text">
             <h4>Identity Verification</h4>
             <p>Verified via Persona (SSN ending in ••••)</p>
@@ -73,7 +82,7 @@
         </div>
         
         <div class="info-row">
-          <ion-icon name="mail-outline"></ion-icon>
+          <ion-icon name="mail-outline" class="setting-icon"></ion-icon>
           <div class="info-text">
             <h4>Email Address</h4>
             <p>{{ userEmail }}</p>
@@ -94,7 +103,7 @@
       
       <ion-list lines="full">
         <ion-item *ngFor="let session of sessions">
-          <ion-icon name="phone-portrait-outline" slot="start" color="medium"></ion-icon>
+          <ion-icon name="phone-portrait-outline" slot="start" class="setting-icon"></ion-icon>
           <ion-label>
             <h3>{{ session.deviceInfo }}</h3>
             <p>{{ session.location || 'Unknown Location' }} • {{ session.id === currentSessionId ? 'Active Now' : (session.lastActive | date:'medium') }}</p>

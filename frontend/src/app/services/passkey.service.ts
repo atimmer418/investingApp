@@ -117,4 +117,36 @@ export class PasskeyService {
       });
     });
   }
+
+  // Helper methods for WebAuthn
+  public base64urlToArrayBuffer(base64url: string): ArrayBuffer {
+    let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) { base64 += '='; }
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); }
+    return bytes.buffer;
+  }
+
+  public arrayBufferToBase64url(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  }
+
+  public credentialToJson(credential: any): any {
+    return {
+      id: credential.id,
+      rawId: this.arrayBufferToBase64url(credential.rawId),
+      response: {
+        authenticatorData: this.arrayBufferToBase64url(credential.response.authenticatorData),
+        clientDataJSON: this.arrayBufferToBase64url(credential.response.clientDataJSON),
+        signature: this.arrayBufferToBase64url(credential.response.signature),
+        userHandle: credential.response.userHandle ? this.arrayBufferToBase64url(credential.response.userHandle) : null
+      },
+      type: credential.type,
+      clientExtensionResults: credential.getClientExtensionResults()
+    };
+  }
 }

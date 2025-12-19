@@ -39,6 +39,7 @@ import {
 } from 'ionicons/icons';
 import { InvestmentService } from '../services/investment.service';
 import { PortfolioService, AccountSummary } from '../services/portfolio.service';
+import { PasskeyService } from '../services/passkey.service';
 
 interface AlpacaAsset {
   id: string;
@@ -107,7 +108,8 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
     private router: Router,
     private investmentService: InvestmentService,
     private portfolioService: PortfolioService,
-    private http: HttpClient
+    private http: HttpClient,
+    private passkeyService: PasskeyService
   ) {
     addIcons({
       cashOutline,
@@ -260,69 +262,125 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
     });
   }
 
-  makeInvestment() {
+  async makeInvestment() {
     if (!this.validateInvestment()) {
       return;
     }
 
     this.isLoading = true;
 
-    // Prepare request payload
-    const requestData: any = {
-      amount: this.investmentAmount,
-      type: this.investmentType,
-      fundingSource: this.fundingSource
-    };
+    try {
+      // Step-up authentication check
+      const sensitiveAuthEnabled = localStorage.getItem('sensitive_auth_enabled') !== 'false';
 
-    // Add specific stock symbol if investing in individual stock
-    if (this.investmentType === 'stock' && this.selectedStock) {
-      requestData.symbol = this.selectedStock;
-    }
+      if (sensitiveAuthEnabled) {
+        try {
+          const startResponse = await this.passkeyService.startAuthentication().toPromise();
+          if (!startResponse || !startResponse.requestOptions) {
+            throw new Error('Failed to start authentication');
+          }
 
-    // Make actual API call to backend
-    this.http.post(`${environment.backendApiUrl}/investments/execute`, requestData, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (response: any) => {
-        this.isLoading = false;
-        
-        if (response.success) {
-          const investmentTarget = this.investmentType === 'portfolio' 
-            ? 'your portfolio' 
-            : `${this.getSelectedStockInfo()?.name} (${this.selectedStock})`;
+          let options = JSON.parse(startResponse.requestOptions);
           
-          this.showToast(
-            `Lump sum investment of ${this.formatCurrency(this.investmentAmount)} into ${investmentTarget} has been initiated successfully! You will receive updates as it processes.`, 
-            'success'
-          );
+          // Handle potential nesting (some libraries wrap it in publicKey)
+          if (options.publicKey) {
+            options = options.publicKey;
+          }
           
-          // Reset form after successful investment
-          setTimeout(() => {
-            this.investmentAmount = 0;
-            this.selectedStock = '';
-            this.selectedStockInfo = null;
-            this.investmentType = 'portfolio';
-          }, 2000);
-        } else {
-          this.showToast(response.message || 'Failed to process investment', 'error');
+          // Convert challenge from base64url to ArrayBuffer
+          if (options.challenge) {
+            options.challenge = this.passkeyService.base64urlToArrayBuffer(options.challenge);
+          } else {
+            throw new Error('Missing challenge in WebAuthn options');
+          }
+          
+          // Convert allowCredentials ids if present
+          if (options.allowCredentials) {
+            options.allowCredentials = options.allowCredentials.map((c: any) => {
+              c.id = this.passkeyService.base64urlToArrayBuffer(c.id);
+              return c;
+            });
+          }
+
+          const credential = await navigator.credentials.get({
+            publicKey: options
+          });
+
+          const credentialJson = this.passkeyService.credentialToJson(credential);
+          const authResult = await this.passkeyService.finishAuthentication(credentialJson, startResponse.sessionId).toPromise();
+          
+          if (!authResult || !authResult.success) {
+            throw new Error('Authentication failed');
+          }
+        } catch (authError) {
+          console.error('Authentication error:', authError);
+          this.showToast('Authentication required to make investment.', 'error');
+          this.isLoading = false;
+          return;
         }
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('Investment error:', error);
-        
-        let errorMessage = 'Failed to process investment. Please try again.';
-        if (error.error?.message) {
-          errorMessage = error.error.message;
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        
-        this.showToast(errorMessage, 'error');
       }
-    });
+
+      // Prepare request payload
+      const requestData: any = {
+        amount: this.investmentAmount,
+        type: this.investmentType,
+        fundingSource: this.fundingSource
+      };
+
+      // Add specific stock symbol if investing in individual stock
+      if (this.investmentType === 'stock' && this.selectedStock) {
+        requestData.symbol = this.selectedStock;
+      }
+
+      // Make actual API call to backend
+      this.http.post(`${environment.backendApiUrl}/investments/execute`, requestData, {
+        headers: this.getAuthHeaders()
+      }).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (response: any) => {
+          this.isLoading = false;
+          
+          if (response.success) {
+            const investmentTarget = this.investmentType === 'portfolio' 
+              ? 'your portfolio' 
+              : `${this.getSelectedStockInfo()?.name} (${this.selectedStock})`;
+            
+            this.showToast(
+              `Lump sum investment of ${this.formatCurrency(this.investmentAmount)} into ${investmentTarget} has been initiated successfully! You will receive updates as it processes.`, 
+              'success'
+            );
+            
+            // Reset form after successful investment
+            setTimeout(() => {
+              this.investmentAmount = 0;
+              this.selectedStock = '';
+              this.selectedStockInfo = null;
+              this.investmentType = 'portfolio';
+            }, 2000);
+          } else {
+            this.showToast(response.message || 'Failed to process investment', 'error');
+          }
+        },
+        error: (error) => {
+          this.isLoading = false;
+          console.error('Investment error:', error);
+          
+          let errorMessage = 'Failed to process investment. Please try again.';
+          if (error.error?.message) {
+            errorMessage = error.error.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          this.showToast(errorMessage, 'error');
+        }
+      });
+    } catch (error) {
+      console.error('Error making investment:', error);
+      this.showToast('An unexpected error occurred.', 'error');
+      this.isLoading = false;
+    }
   }
 
   private validateInvestment(): boolean {
