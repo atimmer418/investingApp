@@ -1372,3 +1372,59 @@ ion-item {
     grid-template-columns: 1fr;
   }
 }
+// Comparison Table Styles
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th {
+    text-align: left;
+    padding: var(--app-spacing-sm);
+    font-size: var(--app-font-size-xs);
+    text-transform: uppercase;
+    color: var(--app-gray-500);
+    border-bottom: 2px solid var(--app-card-border);
+  }
+
+  td {
+    padding: var(--app-spacing-sm);
+    border-bottom: 1px solid var(--app-card-border);
+    font-size: var(--app-font-size-sm);
+    color: var(--app-gray-700);
+    
+    &:first-child {
+      font-weight: 500;
+      color: var(--app-gray-900);
+    }
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+// Media print for PDF export
+@media print {
+  // Hide everything by default
+  body * {
+    visibility: hidden;
+  }
+  
+  // Show only the comparison card
+  .results-section, 
+  .results-section * {
+    visibility: visible;
+  }
+  
+  .results-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  // Hide buttons inside the card
+  ion-button {
+    display: none !important;
+  }
+}

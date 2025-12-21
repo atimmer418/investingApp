@@ -109,6 +109,41 @@
             carries leverage risk.
           </small>
 
+
+          <!-- Strategy Configuration -->
+          <div class="strategy-config-compact"
+            style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--app-card-border);">
+            <h4>Configuration</h4>
+
+            <!-- SBLOC Config -->
+            <div *ngIf="selectedStrategy === 'sbloc'">
+              <ion-item>
+                <ion-label position="stacked">Borrowing Rate</ion-label>
+                <ion-input type="number" [(ngModel)]="sblocInterestRate" placeholder="0.055"></ion-input>
+              </ion-item>
+              <small class="helper-text">Interest rate charged on SBLOC margin loan (e.g. 0.055 for 5.5%)</small>
+            </div>
+
+            <!-- Guardrails Config -->
+            <div *ngIf="selectedStrategy === 'dynamic-guardrails'">
+              <ion-row>
+                <ion-col size="6">
+                  <ion-item>
+                    <ion-label position="stacked">Lower Guardrail</ion-label>
+                    <ion-input type="number" [(ngModel)]="guardrailLower" placeholder="0.04"></ion-input>
+                  </ion-item>
+                </ion-col>
+                <ion-col size="6">
+                  <ion-item>
+                    <ion-label position="stacked">Upper Guardrail</ion-label>
+                    <ion-input type="number" [(ngModel)]="guardrailUpper" placeholder="0.06"></ion-input>
+                  </ion-item>
+                </ion-col>
+              </ion-row>
+              <small class="helper-text">Adjust spending when withdrawal rate hits these limits.</small>
+            </div>
+          </div>
+
           <!-- Return Assumptions (in Advanced) -->
           <div class="assumptions-compact">
             <h4>
@@ -158,7 +193,12 @@
                   <ion-icon name="pie-chart-outline" class="icon-enhanced primary"></ion-icon>
                   Portfolio Value
                 </ion-label>
-                <ion-input type="number" [(ngModel)]="portfolioValue" placeholder="1,000,000"></ion-input>
+                <div class="input-wrapper" style="display:flex; align-items:center;">
+                  <ion-input type="number" [(ngModel)]="portfolioValue" placeholder="1,000,000"></ion-input>
+                  <ion-button fill="clear" size="small" (click)="fetchPortfolioValue()">
+                    Use My Portfolio
+                  </ion-button>
+                </div>
               </ion-item>
               <div class="input-help">Your total investment portfolio value</div>
             </ion-col>
@@ -189,15 +229,68 @@
       </div>
     </div>
 
-    <ion-button expand="block" size="large" class="simulate-button" (click)="runSimulation()"
-      [disabled]="isSimulating || portfolioValue <= 0 || annualWithdrawal <= 0 || yearsToLast <= 0">
-      <ion-icon name="play-circle-outline" slot="start"></ion-icon>
-      <span *ngIf="!isSimulating">Run Retirement Simulation</span>
-      <span *ngIf="isSimulating">
-        <ion-spinner name="crescent"></ion-spinner>
-        Testing {{ yearsToLast }} years across 1,000 scenarios...
-      </span>
-    </ion-button>
+    <div class="action-buttons" style="display:flex; gap:16px;">
+      <ion-button expand="block" size="large" class="simulate-button" style="flex:1"
+        (click)="isComparisonMode = false; runSimulation()" [disabled]="isSimulating || portfolioValue <= 0">
+        <ion-icon name="play-circle-outline" slot="start"></ion-icon>
+        <span *ngIf="!isSimulating">Simulate</span>
+        <span *ngIf="isSimulating">Running...</span>
+      </ion-button>
+
+      <ion-button expand="block" size="large" fill="outline" style="flex:1" (click)="runComparison()"
+        [disabled]="isSimulating || portfolioValue <= 0">
+        <ion-icon name="stats-chart-outline" slot="start"></ion-icon>
+        Compare All
+      </ion-button>
+    </div>
+
+    <!-- Comparison Results -->
+    <div *ngIf="isComparisonMode && comparisonResults" class="results-section slide-up">
+      <ion-card class="comparison-card">
+        <ion-card-header>
+          <ion-card-title>Strategy Comparison</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <canvas id="comparisonChart" style="margin-bottom: 24px;"></canvas>
+
+          <div class="table-responsive">
+            <table class="comparison-table" style="width:100%; border-collapse: collapse;">
+              <thead>
+                <tr style="border-bottom: 2px solid var(--app-card-border);">
+                  <th style="text-align:left; padding:8px;">Strategy</th>
+                  <th style="text-align:center; padding:8px;">Success</th>
+                  <th style="text-align:right; padding:8px;">Median End Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of comparisonResults | keyvalue"
+                  style="border-bottom: 1px solid var(--app-card-border);">
+                  <td style="padding:12px 8px; font-weight:500;">{{ formatStrategyName(item.key) }}</td>
+                  <td style="text-align:center;">
+                    <ion-badge
+                      [color]="item.value.successProbability >= 90 ? 'success' : item.value.successProbability >= 75 ? 'warning' : 'danger'">
+                      {{ item.value.successProbability | number:'1.0-1' }}%
+                    </ion-badge>
+                  </td>
+                  <td style="text-align:right;">{{ item.value.medianEndValue | currency:'USD':'symbol':'1.0-0' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="margin-top:24px; display:flex; gap:16px;">
+            <ion-button fill="outline" size="small" (click)="exportToCSV()">
+              <ion-icon name="download-outline" slot="start"></ion-icon>
+              Export CSV
+            </ion-button>
+            <ion-button fill="outline" size="small" (click)="printReport()">
+              <ion-icon name="print-outline" slot="start"></ion-icon>
+              Print PDF
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
 
     <!-- Enhanced Simulation Results -->
     <div *ngIf="simulationResult" class="results-section slide-up">

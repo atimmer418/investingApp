@@ -26,15 +26,14 @@ import {
   IonSegmentButton,
   IonSelect,
   IonSelectOption,
-  IonToggle
+  IonToggle,
+  IonBadge
 } from '@ionic/angular/standalone';
+import { MonteCarloService, SimulationParams, SimulationResult, StrategyType } from '../../services/monte-carlo.service';
+import { PortfolioService } from '../../services/portfolio.service';
+import Chart from 'chart.js/auto';
 
-interface SimulationResult {
-  successProbability: number;
-  medianEndValue: number;
-  minimumEndValue: number;
-  failureRate: number;
-}
+
 
 interface StrategyCard {
   id: string;
@@ -80,7 +79,10 @@ interface StrategyCard {
     IonSegmentButton,
     IonSelect,
     IonSelectOption,
-    IonToggle
+    IonSelect,
+    IonSelectOption,
+    IonToggle,
+    IonBadge
   ]
 })
 export class RetirementPlanningComponent {
@@ -116,6 +118,11 @@ export class RetirementPlanningComponent {
   // Simulation state
   isSimulating: boolean = false;
   simulationResult: SimulationResult | null = null;
+
+  // Comparison state
+  isComparisonMode: boolean = false;
+  comparisonResults: Record<string, SimulationResult> | null = null;
+  chart: Chart | null = null;
 
   // UI state for collapsible sections
   guideExpanded: boolean = false;
@@ -365,7 +372,25 @@ export class RetirementPlanningComponent {
     }
   ];
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private monteCarloService: MonteCarloService,
+    private portfolioService: PortfolioService
+  ) { }
+
+  // Fetch real portfolio value from Tab 1
+  fetchPortfolioValue(): void {
+    this.portfolioService.getPortfolioDashboard().subscribe({
+      next: (data) => {
+        if (data && data.summary) {
+          this.portfolioValue = Math.round(data.summary.portfolioValue);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to fetch portfolio', err);
+      }
+    });
+  }
 
   // Navigate to strategy detail pages
   navigateToStrategy(strategyId: string): void {
@@ -384,317 +409,168 @@ export class RetirementPlanningComponent {
   }
 
   private runMonteCarloSimulation(): SimulationResult {
-    // Route to strategy-specific simulation method
-    switch (this.selectedStrategy) {
-      case 'sbloc':
-        return this.simulateSBLOC();
-      case 'annuity-growth':
-        return this.simulateAnnuityGrowth();
-      case 'dynamic-guardrails':
-        return this.simulateDynamicGuardrails();
-      case 'full-annuity':
-        return this.simulateFullAnnuity();
-      case 'traditional':
-      default:
-        return this.simulateTraditional();
-    }
-  }
-
-  // ========== STRATEGY 1: TRADITIONAL 4% RULE ==========
-  private simulateTraditional(): SimulationResult {
-    const simulations = 1000;
-    const years = this.yearsToLast;
-    const inflationRate = 0.025;
-
-    let successCount = 0;
-    const endValues: number[] = [];
-
-    for (let sim = 0; sim < simulations; sim++) {
-      let portfolioVal = this.portfolioValue;
-      let annualWithdrawal = this.annualWithdrawal;
-      let success = true;
-
-      for (let year = 0; year < years; year++) {
-        // Get portfolio return (NTSX or traditional)
-        const portfolioReturn = this.getPortfolioReturn();
-
-        // Apply market performance to portfolio
-        portfolioVal *= (1 + portfolioReturn);
-
-        // Adjust withdrawal for inflation
-        annualWithdrawal *= (1 + inflationRate);
-
-        // Withdraw from portfolio
-        portfolioVal -= annualWithdrawal;
-
-        // Check if portfolio is depleted
-        if (portfolioVal <= 0) {
-          success = false;
-          break;
-        }
-      }
-
-      if (success && portfolioVal > 0) {
-        successCount++;
-      }
-
-      endValues.push(Math.max(0, portfolioVal));
-    }
-
-    endValues.sort((a, b) => a - b);
-
-    return {
-      successProbability: (successCount / simulations) * 100,
-      medianEndValue: endValues[Math.floor(endValues.length / 2)],
-      minimumEndValue: endValues[0],
-      failureRate: ((simulations - successCount) / simulations) * 100
+    const params: SimulationParams = {
+      strategy: this.selectedStrategy as StrategyType,
+      portfolioValue: this.portfolioValue,
+      annualWithdrawal: this.annualWithdrawal,
+      yearsToLast: this.yearsToLast,
+      useNTSX: this.useNTSX,
+      sblocInterestRate: this.sblocInterestRate,
+      sblocLtvLimit: this.sblocLtvLimit,
+      annuityPercentage: this.getRecommendedAnnuityPercentage(), // Use dynamic calculation
+      guardrailLower: this.guardrailLower,
+      guardrailUpper: this.guardrailUpper
     };
+
+    return this.monteCarloService.runSimulation(params);
   }
 
-  // ========== STRATEGY 2: SBLOC (Borrow during downturns) ==========
-  private simulateSBLOC(): SimulationResult {
-    const simulations = 1000;
-    const years = this.yearsToLast;
-    const inflationRate = 0.025;
+  runComparison() {
+    this.isSimulating = true;
+    this.isComparisonMode = true;
+    this.simulationResult = null; // Clear single result
 
-    let successCount = 0;
-    const endValues: number[] = [];
+    setTimeout(() => {
+      const params: Omit<SimulationParams, 'strategy'> = {
+        portfolioValue: this.portfolioValue,
+        annualWithdrawal: this.annualWithdrawal,
+        yearsToLast: this.yearsToLast,
+        useNTSX: this.useNTSX,
+        sblocInterestRate: this.sblocInterestRate,
+        sblocLtvLimit: this.sblocLtvLimit,
+        annuityPercentage: this.getRecommendedAnnuityPercentage(),
+        guardrailLower: this.guardrailLower,
+        guardrailUpper: this.guardrailUpper
+      };
 
-    for (let sim = 0; sim < simulations; sim++) {
-      let portfolioVal = this.portfolioValue;
-      let annualWithdrawal = this.annualWithdrawal;
-      let sblocDebt = 0;
-      let success = true;
+      this.comparisonResults = this.monteCarloService.runComparison(params);
+      this.isSimulating = false;
 
-      for (let year = 0; year < years; year++) {
-        const portfolioReturn = this.getPortfolioReturn();
+      // Give DOM time to update then create chart
+      setTimeout(() => this.createComparisonChart(), 100);
+    }, 1000);
+  }
 
-        // Apply market performance to portfolio
-        portfolioVal *= (1 + portfolioReturn);
+  createComparisonChart() {
+    if (this.chart) {
+      this.chart.destroy();
+    }
 
-        // Adjust withdrawal for inflation
-        annualWithdrawal *= (1 + inflationRate);
+    const ctx = document.getElementById('comparisonChart') as HTMLCanvasElement;
+    if (!ctx || !this.comparisonResults) return;
 
-        // SBLOC Logic: Borrow in down years, sell in up years
-        if (portfolioReturn < 0) {
-          // Down year: Borrow from SBLOC instead of selling
-          sblocDebt += annualWithdrawal;
-          // Accrrue interest on existing debt
-          sblocDebt *= (1 + this.sblocInterestRate);
-        } else {
-          // Up year: Sell from portfolio
-          portfolioVal -= annualWithdrawal;
+    const labels = Array.from({ length: this.yearsToLast + 1 }, (_, i) => `Year ${i}`);
 
-          // True-Up: If return > 12%, pay off SBLOC interest
-          if (portfolioReturn > 0.12 && sblocDebt > 0) {
-            const payoff = Math.min(sblocDebt, portfolioVal * 0.1); // Pay up to 10% of portfolio
-            sblocDebt -= payoff;
-            portfolioVal -= payoff;
+    // Define colors for strategies
+    const colors: Record<string, string> = {
+      'traditional': '#3880ff', // Primary Blue
+      'sbloc': '#2dd36f',      // Success Green
+      'annuity-growth': '#ffc409', // Warning Yellow
+      'dynamic-guardrails': '#eb445a', // Danger Red
+      'full-annuity': '#92949c' // Medium Gray
+    };
+
+    const datasets = Object.entries(this.comparisonResults).map(([strategy, result]) => {
+      return {
+        label: this.formatStrategyName(strategy),
+        data: result.medianTrajectory,
+        borderColor: colors[strategy] || '#000000',
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 0
+      };
+    });
+
+    this.chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+          },
+          title: {
+            display: true,
+            text: 'Median Portfolio Value Over Time'
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            callbacks: {
+              label: (context) => {
+                let label = context.dataset.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                if (context.parsed.y !== null) {
+                  label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(context.parsed.y);
+                }
+                return label;
+              }
+            }
+          }
+        },
+        interaction: {
+          mode: 'nearest',
+          axis: 'x',
+          intersect: false
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function (value) {
+                return '$' + (value as number / 1000) + 'k';
+              }
+            }
           }
         }
-
-        // Check LTV ratio to avoid margin call
-        const ltv = sblocDebt / portfolioVal;
-        if (ltv > this.sblocLtvLimit) {
-          success = false; // Margin call = failure
-          break;
-        }
-
-        // Check if portfolio is depleted
-        if (portfolioVal <= 0) {
-          success = false;
-          break;
-        }
       }
+    });
+  }
 
-      if (success && portfolioVal > 0) {
-        successCount++;
-      }
-
-      endValues.push(Math.max(0, portfolioVal));
-    }
-
-    endValues.sort((a, b) => a - b);
-
-    return {
-      successProbability: (successCount / simulations) * 100,
-      medianEndValue: endValues[Math.floor(endValues.length / 2)],
-      minimumEndValue: endValues[0],
-      failureRate: ((simulations - successCount) / simulations) * 100
+  formatStrategyName(key: string): string {
+    const names: Record<string, string> = {
+      'traditional': 'Traditional 4%',
+      'sbloc': 'SBLOC Growth',
+      'annuity-growth': 'Annuity + Growth',
+      'dynamic-guardrails': 'Dynamic Guardrails',
+      'full-annuity': 'Full Annuity'
     };
+    return names[key] || key;
   }
 
-  // ========== STRATEGY 3: ANNUITY + GROWTH ==========
-  private simulateAnnuityGrowth(): SimulationResult {
-    const simulations = 1000;
-    const years = this.yearsToLast;
-    const inflationRate = 0.025;
+  exportToCSV() {
+    if (!this.comparisonResults) return;
 
-    // Calculate annuity portion based on essential expenses
-    const annuityAmount = this.getRecommendedAnnuityAmount();
-    const annuityIncome = annuityAmount * 0.06; // 6% payout
-    const growthPortfolio = this.portfolioValue - annuityAmount;
+    // Header
+    let csv = 'Strategy,Success Rate,Median End Value,Worst Case Value\n';
 
-    let successCount = 0;
-    const endValues: number[] = [];
+    // Rows
+    Object.entries(this.comparisonResults).forEach(([strategy, result]) => {
+      csv += `${this.formatStrategyName(strategy)},${result.successProbability.toFixed(1)}%,${result.medianEndValue},${result.minimumEndValue}\n`;
+    });
 
-    for (let sim = 0; sim < simulations; sim++) {
-      let growthVal = growthPortfolio;
-      let annualWithdrawal = this.annualWithdrawal;
-      let success = true;
-
-      for (let year = 0; year < years; year++) {
-        const portfolioReturn = this.getPortfolioReturn();
-
-        // Apply market performance to GROWTH portfolio only
-        growthVal *= (1 + portfolioReturn);
-
-        // Adjust withdrawal for inflation
-        annualWithdrawal *= (1 + inflationRate);
-
-        // Annuity covers essential expenses automatically
-        const remainingNeed = Math.max(0, annualWithdrawal - annuityIncome);
-
-        // Withdraw remaining need from growth portfolio
-        growthVal -= remainingNeed;
-
-        // Only fail if GROWTH portfolio is depleted (annuity continues forever)
-        if (growthVal <= 0) {
-          success = false;
-          break;
-        }
-      }
-
-      if (success && growthVal > 0) {
-        successCount++;
-      }
-
-      endValues.push(Math.max(0, growthVal));
-    }
-
-    endValues.sort((a, b) => a - b);
-
-    return {
-      successProbability: (successCount / simulations) * 100,
-      medianEndValue: endValues[Math.floor(endValues.length / 2)],
-      minimumEndValue: endValues[0],
-      failureRate: ((simulations - successCount) / simulations) * 100
-    };
+    // Create download link
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'monte-carlo-comparison.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 
-  // ========== STRATEGY 4: DYNAMIC GUARDRAILS ==========
-  private simulateDynamicGuardrails(): SimulationResult {
-    const simulations = 1000;
-    const years = this.yearsToLast;
-    const inflationRate = 0.025;
-
-    let successCount = 0;
-    const endValues: number[] = [];
-
-    for (let sim = 0; sim < simulations; sim++) {
-      let portfolioVal = this.portfolioValue;
-      let annualWithdrawal = this.portfolioValue * 0.05; // Start with 5% initial withdrawal
-      let success = true;
-
-      for (let year = 0; year < years; year++) {
-        const portfolioReturn = this.getPortfolioReturn();
-
-        // Apply market performance to portfolio
-        portfolioVal *= (1 + portfolioReturn);
-
-        // Calculate current withdrawal rate
-        const currentRate = annualWithdrawal / portfolioVal;
-
-        // Dynamic Guardrail Logic
-        if (currentRate > this.guardrailUpper) {
-          // Above upper guardrail (6%): CUT spending by 10%
-          annualWithdrawal *= 0.90;
-        } else if (currentRate < this.guardrailLower) {
-          // Below lower guardrail (4%): INCREASE spending by 10%
-          annualWithdrawal *= 1.10;
-        } else {
-          // Within guardrails: Just adjust for inflation
-          annualWithdrawal *= (1 + inflationRate);
-        }
-
-        // Withdraw from portfolio
-        portfolioVal -= annualWithdrawal;
-
-        // Check if portfolio is depleted
-        if (portfolioVal <= 0) {
-          success = false;
-          break;
-        }
-      }
-
-      if (success && portfolioVal > 0) {
-        successCount++;
-      }
-
-      endValues.push(Math.max(0, portfolioVal));
-    }
-
-    endValues.sort((a, b) => a - b);
-
-    return {
-      successProbability: (successCount / simulations) * 100,
-      medianEndValue: endValues[Math.floor(endValues.length / 2)],
-      minimumEndValue: endValues[0],
-      failureRate: ((simulations - successCount) / simulations) * 100
-    };
+  printReport() {
+    window.print();
   }
 
-  // ========== STRATEGY 5: FULL ANNUITY (Deterministic, no Monte Carlo) ==========
-  private simulateFullAnnuity(): SimulationResult {
-    // Full annuity is deterministic - either it works or it doesn't
-    const annuityIncome = this.portfolioValue * 0.06; // 6% payout rate
 
-    if (annuityIncome >= this.annualWithdrawal) {
-      // Success: Annuity covers expenses, guaranteed for life
-      return {
-        successProbability: 100.0,
-        medianEndValue: 0, // No portfolio left (all annuitized)
-        minimumEndValue: 0,
-        failureRate: 0.0
-      };
-    } else {
-      // Failure: Annuity doesn't cover expenses
-      return {
-        successProbability: 0.0,
-        medianEndValue: 0,
-        minimumEndValue: 0,
-        failureRate: 100.0
-      };
-    }
-  }
-
-  // ========== HELPER: Get Portfolio Return (NTSX or Traditional) ==========
-  private getPortfolioReturn(): number {
-    if (this.useNTSX) {
-      // NTSX: 90/60 leveraged portfolio
-      // 10% mean return, 15% volatility
-      return this.generateRandomReturn(0.10, 0.15);
-    } else {
-      // Traditional 70/30 portfolio
-      const stockReturn = 0.10;
-      const stockVolatility = 0.18;
-      const bondReturn = 0.04;
-      const bondVolatility = 0.05;
-
-      const stockRandomReturn = this.generateRandomReturn(stockReturn, stockVolatility);
-      const bondRandomReturn = this.generateRandomReturn(bondReturn, bondVolatility);
-
-      return 0.7 * stockRandomReturn + 0.3 * bondRandomReturn;
-    }
-  }
-
-  private generateRandomReturn(meanReturn: number, volatility: number): number {
-    // Box-Muller transformation for normal distribution
-    const u1 = Math.random();
-    const u2 = Math.random();
-    const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-    return meanReturn + volatility * z0;
-  }
 
   getSuccessIcon(): string {
     if (!this.simulationResult) return 'help-outline';

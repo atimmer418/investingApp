@@ -1,152 +1,354 @@
 import { Injectable } from '@angular/core';
 
+export type StrategyType = 'traditional' | 'sbloc' | 'annuity-growth' | 'dynamic-guardrails' | 'full-annuity';
+
+export interface SimulationParams {
+  strategy: StrategyType;
+  portfolioValue: number;
+  annualWithdrawal: number;
+  yearsToLast: number;
+  useNTSX: boolean;
+  // Advanced parameters
+  sblocInterestRate?: number;
+  sblocLtvLimit?: number;
+  annuityPercentage?: number; // 0 to 1
+  guardrailLower?: number;
+  guardrailUpper?: number;
+}
+
+export interface SimulationResult {
+  successProbability: number;
+  medianEndValue: number;
+  minimumEndValue: number;
+  failureRate: number;
+  medianTrajectory: number[]; // Array of median portfolio values per year [year0, year1, ...]
+  worstCaseTrajectory: number[]; // Array of worst-case values
+  bestCaseTrajectory: number[]; // Array of best-case values
+}
+
 @Injectable({
   providedIn: 'root'
 })
-export class MonteCarloSBLOCSimulator {
+export class MonteCarloService {
 
-  // --- Core Economic & Model Assumptions ---
-  // These parameters define the "physics" of our simulated world.
-  private readonly MEAN_ANNUAL_RETURN = 0.082;   // 8.2% average return for a 80% NSTX and 20% NTI portfolio
-  private readonly STD_DEV_ANNUAL_RETURN = 0.11; // 11% standard deviation (historical volatility for bond based stock portfolio)
-  private readonly SBLOC_INTEREST_RATE = 0.06;   // 6% interest on the SBLOC loan
-  private readonly INFLATION_RATE = 0.025;       // 2.5% assumed inflation
-  private readonly MAX_LTV = 0.70;               // 70% LTV failure threshold
-  private readonly TRUE_UP_THRESHOLD = 0.12;     // Pay down interest if market return > 12%
-  private readonly SIMULATION_YEARS = 50;        // Test each plan for 50 years
-  private readonly NUM_SIMULATIONS = 1000;       // Number of "futures" to test
-  private readonly LTV_RECOVERY_TARGET = 0.68; // Target LTV after a margin call paydown
+  private readonly SIMULATIONS = 1000;
+  private readonly INFLATION_RATE = 0.025;
 
-  constructor() {}
+  // Market Assumptions
+  private readonly STOCK_RETURN = 0.10;
+  private readonly STOCK_VOL = 0.18;
+  private readonly BOND_RETURN = 0.04;
+  private readonly BOND_VOL = 0.05;
+
+  // NTSX Assumptions (90/60)
+  private readonly NTSX_RETURN = 0.10;
+  private readonly NTSX_VOL = 0.15;
+
+  constructor() { }
 
   /**
-   * UPDATED: Runs the full Monte Carlo simulation, now including a cash savings buffer.
-   *
-   * @param startingPortfolioValue The user's portfolio value.
-   * @param initialAnnualWithdrawal The desired first-year income.
-   * @param startingCashSavings The amount in their "Sleep Well At Night" fund.
-   * @returns An object with the success probability and any failed run data.
+   * Run a simulation for a specific strategy configuration
    */
-  public runSimulation(
-    startingPortfolioValue: number, 
-    initialAnnualWithdrawal: number,
-    startingCashSavings: number // <-- NEW PARAMETER
-  ): { successProbability: number, failedMarketReturns: number[][] } {
+  public runSimulation(params: SimulationParams): SimulationResult {
+    switch (params.strategy) {
+      case 'sbloc':
+        return this.simulateSBLOC(params);
+      case 'annuity-growth':
+        return this.simulateAnnuityGrowth(params);
+      case 'dynamic-guardrails':
+        return this.simulateDynamicGuardrails(params);
+      case 'full-annuity':
+        return this.simulateFullAnnuity(params);
+      case 'traditional':
+      default:
+        return this.simulateTraditional(params);
+    }
+  }
+
+  /**
+   * Run all strategies in parallel for comparison
+   */
+  public runComparison(baseParams: Omit<SimulationParams, 'strategy'>): Record<StrategyType, SimulationResult> {
+    const strategies: StrategyType[] = ['traditional', 'sbloc', 'annuity-growth', 'dynamic-guardrails', 'full-annuity'];
+    const results: any = {};
+
+    strategies.forEach(strategy => {
+      results[strategy] = this.runSimulation({ ...baseParams, strategy });
+    });
+
+    return results;
+  }
+
+  // =========================================================================
+  // STRATEGY IMPLEMENTATIONS
+  // =========================================================================
+
+  private simulateTraditional(params: SimulationParams): SimulationResult {
     let successCount = 0;
-    const failedMarketReturns: number[][] = [];
+    const endValues: number[] = [];
+    const yearlyValues: number[][] = [];
 
-    for (let i = 0; i < this.NUM_SIMULATIONS; i++) {
-      // Pass the new savings parameter to the simulation
-      const { success, marketReturns } = this.runSingleLifePath(
-        startingPortfolioValue, 
-        initialAnnualWithdrawal,
-        startingCashSavings // <-- PASSING IT HERE
-      );
-      if (success) {
-        successCount++;
-      } else {
-        failedMarketReturns.push(marketReturns);
+    for (let sim = 0; sim < this.SIMULATIONS; sim++) {
+      let portfolioVal = params.portfolioValue;
+      let withdrawal = params.annualWithdrawal;
+      let success = true;
+      const trajectory: number[] = [portfolioVal];
+
+      for (let year = 0; year < params.yearsToLast; year++) {
+        const ret = this.getPortfolioReturn(params.useNTSX);
+        portfolioVal *= (1 + ret);
+        withdrawal *= (1 + this.INFLATION_RATE);
+        portfolioVal -= withdrawal;
+
+        if (portfolioVal <= 0) {
+          success = false;
+          portfolioVal = 0; // Floor at 0
+        }
+        trajectory.push(portfolioVal);
+        if (!success) break; // Optimization: stop calculating if failed
       }
+
+      // If failed early, we need to fill the rest of the trajectory with 0s for charting
+      while (trajectory.length <= params.yearsToLast) {
+        trajectory.push(0);
+      }
+
+      endValues.push(portfolioVal);
+      yearlyValues.push(trajectory);
+      if (success && portfolioVal > 0) successCount++;
     }
 
-    return { successProbability: (successCount / this.NUM_SIMULATIONS) * 100, failedMarketReturns };
+    return this.processResults(successCount, endValues, yearlyValues, params.yearsToLast);
   }
 
-  /**
-   * REWRITTEN: Simulates a single 50-year financial life path, now with a cash buffer and crisis management logic.
-   */
-  private runSingleLifePath(
-    startPortfolio: number, 
-    startWithdrawal: number,
-    startCash: number // <-- NEW PARAMETER
-  ): { success: boolean, marketReturns: number[] } {
-    
-    // --- Initialize the simulation state ---
-    let portfolio = startPortfolio;
-    let debt = 0;
-    let cashSavings = startCash; // Initialize the cash buffer
-    let withdrawal = startWithdrawal;
-    let accumulatedInterest = 0;
-    const marketReturns: number[] = [];
+  private simulateSBLOC(params: SimulationParams): SimulationResult {
+    let successCount = 0;
+    const endValues: number[] = [];
+    const yearlyValues: number[][] = [];
 
-    for (let year = 1; year <= this.SIMULATION_YEARS; year++) {
-      // 1. Get market return and grow the portfolio
-      const marketReturn = this.generateNormalRandom(this.MEAN_ANNUAL_RETURN, this.STD_DEV_ANNUAL_RETURN);
-      marketReturns.push(parseFloat((100 * marketReturn).toFixed(2)));
-      portfolio *= (1 + marketReturn);
+    const interestRate = params.sblocInterestRate ?? 0.055;
+    const ltvLimit = params.sblocLtvLimit ?? 0.70;
 
-      // 2. Handle "True-Up" in good years
-      if (marketReturn > this.TRUE_UP_THRESHOLD) {
-        if (portfolio > accumulatedInterest) { // Safety check
-            portfolio -= accumulatedInterest;
-            debt -= accumulatedInterest;
-            accumulatedInterest = 0;
-        }
-      }
+    for (let sim = 0; sim < this.SIMULATIONS; sim++) {
+      let portfolioVal = params.portfolioValue;
+      let withdrawal = params.annualWithdrawal;
+      let sblocDebt = 0;
+      let success = true;
+      const trajectory: number[] = [portfolioVal];
 
-      // 3. Accrue interest on the loan
-      const interestForThisYear = debt * this.SBLOC_INTEREST_RATE;
-      debt += interestForThisYear;
-      accumulatedInterest += interestForThisYear;
+      for (let year = 0; year < params.yearsToLast; year++) {
+        const ret = this.getPortfolioReturn(params.useNTSX);
+        portfolioVal *= (1 + ret);
+        withdrawal *= (1 + this.INFLATION_RATE);
 
-      // 4. --- NEW: Crisis Management Logic ---
-      // We check LTV *before* taking this year's withdrawal to see if we're in trouble.
-      let withdrawalFromSBLOC = withdrawal;
-      const potentialNextLTV = (debt + withdrawalFromSBLOC) / portfolio;
-
-      if (potentialNextLTV >= this.MAX_LTV) {
-        // "Red Alert": A margin call is imminent. Trigger the Recovery Playbook.
-        
-        // Calculate how much cash we need to pay down the debt to get to a safe LTV
-        const amountToPaydown = (debt + withdrawalFromSBLOC) - (portfolio * this.LTV_RECOVERY_TARGET);
-
-        if (cashSavings >= amountToPaydown) {
-          // Playbook Step 1: We have enough cash to solve the problem.
-          cashSavings -= amountToPaydown;
-          debt -= amountToPaydown;
-          
-          // Playbook Step 2: Live off cash this year, so no SBLOC withdrawal.
-          // We still need to account for this spending by reducing our cash buffer.
-          if (cashSavings >= withdrawal) {
-            cashSavings -= withdrawal;
-            withdrawalFromSBLOC = 0;
-          } else {
-            // Not enough cash to live on for the whole year. This is a failure.
-            return { success: false, marketReturns };
-          }
-
+        if (ret < 0) {
+          // Borrow
+          sblocDebt += withdrawal;
+          sblocDebt *= (1 + interestRate);
         } else {
-          // We don't have enough cash to cover the margin call. The plan has failed.
-          return { success: false, marketReturns };
+          // Sell
+          portfolioVal -= withdrawal;
+          // True-up
+          if (ret > 0.12 && sblocDebt > 0) {
+            const payoff = Math.min(sblocDebt, portfolioVal * 0.1);
+            sblocDebt -= payoff;
+            portfolioVal -= payoff;
+          }
         }
+
+        const ltv = sblocDebt / portfolioVal;
+        if (ltv > ltvLimit || portfolioVal <= 0) {
+          success = false;
+          portfolioVal = 0; // Treat as ruin
+        }
+
+        let netValue = Math.max(0, portfolioVal - sblocDebt);
+        trajectory.push(netValue);
+
+        if (!success) break;
       }
 
-      // 5. Add the (potentially modified) withdrawal to the debt
-      debt += withdrawalFromSBLOC;
-
-      // 6. Final safety check on the cash buffer
-      if (cashSavings < 0) {
-        return { success: false, marketReturns };
+      while (trajectory.length <= params.yearsToLast) {
+        trajectory.push(0);
       }
 
-      // 7. Prepare for next year by inflating the withdrawal amount
-      withdrawal *= (1 + this.INFLATION_RATE);
+      endValues.push(trajectory[trajectory.length - 1]);
+      yearlyValues.push(trajectory);
+      if (success) successCount++;
     }
 
-    // If we survived all 50 years without failing...
-    return { success: true, marketReturns };
+    return this.processResults(successCount, endValues, yearlyValues, params.yearsToLast);
   }
 
-  /**
-   * Generates a random number from a normal distribution using the Box-Muller transform.
-   * This is what creates our realistic, weighted market returns.
-   */
+  private simulateAnnuityGrowth(params: SimulationParams): SimulationResult {
+    let successCount = 0;
+    const endValues: number[] = [];
+    const yearlyValues: number[][] = [];
+
+    const annuityPct = params.annuityPercentage ?? 0.50; // Default if not provided
+    const annuityAmount = params.portfolioValue * annuityPct;
+    const growthStart = params.portfolioValue - annuityAmount;
+    const annuityIncome = annuityAmount * 0.06;
+
+    for (let sim = 0; sim < this.SIMULATIONS; sim++) {
+      let growthVal = growthStart;
+      let withdrawal = params.annualWithdrawal;
+      let success = true;
+      // Start value is growth portion + annuity value (theoretical principal remain)
+      // But simpler is to track "Net Worth" = Growth + Annuity Principal (proxy)
+      // For charting, let's track Total Net Worth (Growth + implied Annuity Value)
+      // Or just Liquid Net Worth? Let's track Liquid Net Worth (Growth Portfolio)
+      const trajectory: number[] = [growthVal];
+
+      for (let year = 0; year < params.yearsToLast; year++) {
+        const ret = this.getPortfolioReturn(params.useNTSX);
+        growthVal *= (1 + ret);
+        withdrawal *= (1 + this.INFLATION_RATE);
+
+        const need = Math.max(0, withdrawal - annuityIncome);
+        growthVal -= need;
+
+        // Failure only if growth depletes AND annuity isn't enough (it never is enough for full withdrawal if need > 0)
+        // Actually, logic says: success = expenses covered. 
+        // If growthVal <= 0, we can only pay annuityIncome. If withdrawal > annuityIncome, we fail.
+        if (growthVal <= 0) {
+          growthVal = 0;
+          if (withdrawal > annuityIncome) success = false;
+        }
+
+        trajectory.push(growthVal);
+        if (!success && growthVal <= 0) break;
+      }
+
+      while (trajectory.length <= params.yearsToLast) {
+        // If failed, it stays 0. If success (expenses covered by annuity), technically 0 liquid but fine.
+        // Let's keep it 0 for liquid trajectory.
+        trajectory.push(0);
+      }
+
+      endValues.push(growthVal);
+      yearlyValues.push(trajectory);
+      if (success) successCount++;
+    }
+
+    return this.processResults(successCount, endValues, yearlyValues, params.yearsToLast);
+  }
+
+  private simulateDynamicGuardrails(params: SimulationParams): SimulationResult {
+    let successCount = 0;
+    const endValues: number[] = [];
+    const yearlyValues: number[][] = [];
+
+    const lower = params.guardrailLower ?? 0.04;
+    const upper = params.guardrailUpper ?? 0.06;
+
+    for (let sim = 0; sim < this.SIMULATIONS; sim++) {
+      let portfolioVal = params.portfolioValue;
+      let withdrawal = params.portfolioValue * 0.05; // Initial 5%
+      let success = true;
+      const trajectory: number[] = [portfolioVal];
+
+      for (let year = 0; year < params.yearsToLast; year++) {
+        const ret = this.getPortfolioReturn(params.useNTSX);
+        portfolioVal *= (1 + ret);
+
+        const rate = withdrawal / portfolioVal;
+
+        if (rate > upper) withdrawal *= 0.90;
+        else if (rate < lower) withdrawal *= 1.10;
+        else withdrawal *= (1 + this.INFLATION_RATE);
+
+        portfolioVal -= withdrawal;
+
+        if (portfolioVal <= 0) {
+          success = false;
+          portfolioVal = 0;
+        }
+
+        trajectory.push(portfolioVal);
+        if (!success) break;
+      }
+
+      while (trajectory.length <= params.yearsToLast) {
+        trajectory.push(0);
+      }
+
+      endValues.push(portfolioVal);
+      yearlyValues.push(trajectory);
+      if (success) successCount++;
+    }
+
+    return this.processResults(successCount, endValues, yearlyValues, params.yearsToLast);
+  }
+
+  private simulateFullAnnuity(params: SimulationParams): SimulationResult {
+    // Deterministic. 6% payout.
+    const income = params.portfolioValue * 0.06;
+    const success = income >= params.annualWithdrawal;
+    const trajectory = Array(params.yearsToLast + 1).fill(0); // No liquid value
+
+    return {
+      successProbability: success ? 100 : 0,
+      medianEndValue: 0,
+      minimumEndValue: 0,
+      failureRate: success ? 0 : 100,
+      medianTrajectory: trajectory,
+      worstCaseTrajectory: trajectory,
+      bestCaseTrajectory: trajectory
+    };
+  }
+
+  // =========================================================================
+  // HELPERS
+  // =========================================================================
+
+  private getPortfolioReturn(useNTSX: boolean): number {
+    if (useNTSX) {
+      return this.generateNormalRandom(this.NTSX_RETURN, this.NTSX_VOL);
+    } else {
+      const stock = this.generateNormalRandom(this.STOCK_RETURN, this.STOCK_VOL);
+      const bond = this.generateNormalRandom(this.BOND_RETURN, this.BOND_VOL);
+      return 0.7 * stock + 0.3 * bond;
+    }
+  }
+
   private generateNormalRandom(mean: number, stdDev: number): number {
-    let u1 = Math.random();
-    let u2 = Math.random();
-    // This formula converts two uniform random numbers into a normal distribution
-    let z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-    // Scale it to our desired mean and standard deviation
+    const u1 = Math.random();
+    const u2 = Math.random();
+    const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
     return z0 * stdDev + mean;
   }
+
+  private processResults(
+    successCount: number,
+    endValues: number[],
+    yearlyValues: number[][],
+    years: number
+  ): SimulationResult {
+    endValues.sort((a, b) => a - b);
+
+    // Calculate trajectories (Median, Best, Worst)
+    const medianTrajectory: number[] = [];
+    const worstCaseTrajectory: number[] = [];
+    const bestCaseTrajectory: number[] = [];
+
+    // For each year, get sorted values across all simulations to find percentiles
+    for (let t = 0; t <= years; t++) {
+      const valuesAtT = yearlyValues.map(sim => sim[t]).sort((a, b) => a - b);
+      medianTrajectory.push(valuesAtT[Math.floor(valuesAtT.length * 0.5)]);
+      worstCaseTrajectory.push(valuesAtT[Math.floor(valuesAtT.length * 0.05)]); // 5th percentile
+      bestCaseTrajectory.push(valuesAtT[Math.floor(valuesAtT.length * 0.95)]); // 95th percentile
+    }
+
+    return {
+      successProbability: (successCount / this.SIMULATIONS) * 100,
+      medianEndValue: endValues[Math.floor(endValues.length / 2)],
+      minimumEndValue: endValues[0],
+      failureRate: ((this.SIMULATIONS - successCount) / this.SIMULATIONS) * 100,
+      medianTrajectory,
+      worstCaseTrajectory,
+      bestCaseTrajectory
+    };
+  }
+
 }
