@@ -14,6 +14,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     // derived queries
     List<ChatMessage> findTop10ByUserIdOrderByCreatedAtDesc(Long userId);
 
+    List<ChatMessage> findByUserIdOrderByCreatedAtDesc(Long userId);
+
     // If query method name is too long or unsupported without explicit limit in
     // some versions:
     // @Query(...) or use Pageable

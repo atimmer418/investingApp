@@ -121,6 +121,12 @@ public class ChatService {
         return new ChatResponse(response);
     }
 
+    public List<ChatMessage> getChatHistory(Long userId) {
+        List<ChatMessage> history = chatMessageRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        Collections.reverse(history); // Return in chronological order
+        return history;
+    }
+
     private String buildUserContext(User user) {
         if (user == null) {
             return "User context: Anonymous/Guest (No personalization)";

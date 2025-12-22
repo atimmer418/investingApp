@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import {
   IonHeader,
   IonToolbar,
+  IonButtons,
   IonTitle,
   IonContent,
   IonCard,
@@ -32,6 +33,8 @@ import {
 import { MonteCarloService, SimulationParams, SimulationResult, StrategyType } from '../../services/monte-carlo.service';
 import { PortfolioService } from '../../services/portfolio.service';
 import Chart from 'chart.js/auto';
+import { addIcons } from 'ionicons';
+import { chatbubbleEllipsesOutline, diceOutline, schoolOutline, calculatorOutline } from 'ionicons/icons';
 
 
 
@@ -58,6 +61,7 @@ interface StrategyCard {
     FormsModule,
     IonHeader,
     IonToolbar,
+    IonButtons,
     IonTitle,
     IonContent,
     IonCard,
@@ -376,7 +380,13 @@ export class RetirementPlanningComponent {
     private router: Router,
     private monteCarloService: MonteCarloService,
     private portfolioService: PortfolioService
-  ) { }
+  ) { 
+    addIcons({ chatbubbleEllipsesOutline, diceOutline, schoolOutline, calculatorOutline });
+  }
+
+  navigateToChat() {
+    this.router.navigate(['/ai-chat']);
+  }
 
   // Fetch real portfolio value from Tab 1
   fetchPortfolioValue(): void {
