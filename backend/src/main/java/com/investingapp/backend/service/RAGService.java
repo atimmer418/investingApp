@@ -132,7 +132,7 @@ public class RAGService {
             }
 
             if (!vectors.isEmpty()) {
-                indexConnection.upsert(vectors, null);
+                indexConnection.upsert(vectors, "");
                 logger.info("Successfully upserted {} canonical chunks.", vectors.size());
             }
 
