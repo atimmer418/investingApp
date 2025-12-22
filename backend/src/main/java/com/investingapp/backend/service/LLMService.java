@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
 import java.util.Map;
@@ -84,18 +85,23 @@ public class LLMService {
     public record ChatMessage(String role, String content) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     record EmbeddingResponse(List<EmbeddingData> data) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     record EmbeddingData(List<Float> embedding) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     record ChatCompletionResponse(List<Choice> choices) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     record Choice(Message message) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     record Message(String content) {
     }
 }
