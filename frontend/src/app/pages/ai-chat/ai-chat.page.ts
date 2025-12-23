@@ -6,7 +6,6 @@ import {
   IonHeader, 
   IonToolbar, 
   IonButtons, 
-  IonBackButton, 
   IonTitle, 
   IonFooter, 
   IonTextarea, 
@@ -36,7 +35,6 @@ import { arrowUpCircle, menuOutline, addOutline } from 'ionicons/icons';
     IonHeader, 
     IonToolbar, 
     IonButtons, 
-    IonBackButton, 
     IonTitle, 
     IonFooter, 
     IonTextarea, 
@@ -176,9 +174,9 @@ export class AiChatPage implements OnInit {
       this.currentSession.lastModified = Date.now();
       
       // Update title if it's the first user message
-      if (msg.role === 'user' && this.messages.filter(m => m.role === 'user').length === 1) {
-        this.currentSession.title = msg.content.substring(0, 30) + (msg.content.length > 30 ? '...' : '');
-      }
+      // if (msg.role === 'user' && this.messages.filter(m => m.role === 'user').length === 1) {
+      //   this.currentSession.title = msg.content.substring(0, 30) + (msg.content.length > 30 ? '...' : '');
+      // }
       
       if (save) {
         this.chatService.saveSession(this.currentSession);
@@ -202,7 +200,10 @@ export class AiChatPage implements OnInit {
     this.isLoading = true;
     this.scrollToBottom();
 
-    this.chatService.sendMessage(userMsg)
+    // Check if we need to generate a title (first user message in session)
+    const isFirstUserMessage = this.messages.filter(m => m.role === 'user').length === 1;
+
+    this.chatService.sendMessage(userMsg, isFirstUserMessage)
       .pipe(finalize(() => {
         this.isLoading = false;
         this.scrollToBottom();
@@ -215,6 +216,13 @@ export class AiChatPage implements OnInit {
               content: response.reply,
               timestamp: new Date()
             });
+
+            // Update title if provided by LLM
+            if (response.title && this.currentSession) {
+               this.currentSession.title = response.title;
+               this.chatService.saveSession(this.currentSession);
+               this.loadSessions();
+            }
           }
         },
         error: (error) => {

@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { IonTabs, IonTabBar, IonTabButton, IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { triangle, ellipse, square, pieChart, trendingUp, settings } from 'ionicons/icons';
+import { triangle, ellipse, square, pieChartOutline, trendingUpOutline, personOutline, chatbubblesOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-tabs',
@@ -13,6 +13,6 @@ import { triangle, ellipse, square, pieChart, trendingUp, settings } from 'ionic
 export class TabsPage {
 
   constructor() {
-    addIcons({pieChart,trendingUp,settings,triangle,ellipse,square});
+    addIcons({ pieChartOutline, trendingUpOutline, personOutline, chatbubblesOutline, triangle, ellipse, square });
   }
 }

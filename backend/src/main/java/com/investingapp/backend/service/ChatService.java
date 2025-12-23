@@ -52,7 +52,7 @@ public class ChatService {
         // Handle Blocks & Redirects (Skip LLM)
         if (safety.verdict() != SafetyVerdict.SAFE) {
             String cannedResponse = FredRedirections.get(safety.reason());
-            return new ChatResponse(cannedResponse);
+            return new ChatResponse(cannedResponse, "FRED Redirected Response");
         }
 
         // 1. Persistence (User Message) - SAVE FIRST
@@ -118,7 +118,20 @@ public class ChatService {
         logger.info("Chat interaction - User: {}, Query: {}, RAG Chunks Used: {}",
                 request.userId(), request.message(), ragChunks.size());
 
-        return new ChatResponse(response);
+        // 11. Generate Title if requested
+        String title = null;
+        if (request.generateTitle()) {
+            title = generateTitle(request.message());
+        }
+
+        return new ChatResponse(response, title);
+    }
+
+    private String generateTitle(String userMessage) {
+        List<LLMService.ChatMessage> messages = new ArrayList<>();
+        messages.add(new LLMService.ChatMessage("system", "You are a helpful assistant. Generate a concise 3-5 word title for the following user question. Do not use quotes."));
+        messages.add(new LLMService.ChatMessage("user", userMessage));
+        return llmService.generateChatResponse(messages);
     }
 
     public List<ChatMessage> getChatHistory(Long userId) {

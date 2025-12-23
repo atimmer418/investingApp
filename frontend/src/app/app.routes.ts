@@ -2,10 +2,6 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   {
-    path: 'ai-chat',
-    loadComponent: () => import('./pages/ai-chat/ai-chat.page').then( m => m.AiChatPage)
-  },
-  {
     path: 'survey-initial',
     loadComponent: () => import('./components/surveyinitial/surveyinitial.component').then(m => m.SurveyInitialComponent)
   },

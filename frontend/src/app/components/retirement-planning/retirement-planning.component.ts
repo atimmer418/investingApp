@@ -34,7 +34,7 @@ import { MonteCarloService, SimulationParams, SimulationResult, StrategyType } f
 import { PortfolioService } from '../../services/portfolio.service';
 import Chart from 'chart.js/auto';
 import { addIcons } from 'ionicons';
-import { chatbubbleEllipsesOutline, diceOutline, schoolOutline, calculatorOutline } from 'ionicons/icons';
+import { diceOutline, schoolOutline, calculatorOutline } from 'ionicons/icons';
 
 
 
@@ -381,11 +381,7 @@ export class RetirementPlanningComponent {
     private monteCarloService: MonteCarloService,
     private portfolioService: PortfolioService
   ) { 
-    addIcons({ chatbubbleEllipsesOutline, diceOutline, schoolOutline, calculatorOutline });
-  }
-
-  navigateToChat() {
-    this.router.navigate(['/ai-chat']);
+    addIcons({ diceOutline, schoolOutline, calculatorOutline });
   }
 
   // Fetch real portfolio value from Tab 1

@@ -27,7 +27,7 @@ export class ChatService {
 
   constructor(private http: HttpClient) {}
 
-  sendMessage(message: string): Observable<any> {
+  sendMessage(message: string, generateTitle: boolean = false): Observable<{reply: string, title?: string}> {
     const token = JwtTokenUtils.getValidJwtToken();
     const userId = localStorage.getItem('userId');
 
@@ -41,10 +41,11 @@ export class ChatService {
 
     const body = {
       message: message,
-      userId: userId ? parseInt(userId, 10) : null
+      userId: userId ? parseInt(userId, 10) : null,
+      generateTitle: generateTitle
     };
 
-    return this.http.post<any>(this.apiUrl, body, { headers });
+    return this.http.post<{reply: string, title?: string}>(this.apiUrl, body, { headers });
   }
 
   getHistory(): Observable<any[]> {
