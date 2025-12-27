@@ -3,20 +3,25 @@
     <ion-toolbar>
       <ion-title>History</ion-title>
       <ion-buttons slot="end">
-        <ion-button (click)="startNewChat()" menuToggle>
-          <ion-icon slot="icon-only" name="add-outline"></ion-icon>
-        </ion-button>
+        <ion-menu-toggle menu="chat-menu" auto-hide="false">
+          <ion-button (click)="startNewChat()">
+            <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+          </ion-button>
+        </ion-menu-toggle>
       </ion-buttons>
     </ion-toolbar>
   </ion-header>
   <ion-content>
     <ion-list>
-      <ion-item *ngFor="let session of sessions" (click)="loadSession(session)" [color]="session.id === currentSession?.id ? 'light' : ''" button detail="false" menuToggle>
-        <ion-label>
-          <h2>{{ session.title }}</h2>
-          <p>{{ session.lastModified | date:'short' }}</p>
-        </ion-label>
-      </ion-item>
+      <ion-menu-toggle menu="chat-menu" auto-hide="false">
+        <ion-item *ngFor="let session of sessions" (click)="loadSession(session)"
+          [color]="session.id === currentSession?.id ? 'light' : ''" button detail="false">
+          <ion-label>
+            <h2>{{ session.title }}</h2>
+            <p>{{ session.lastModified | date:'short' }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-menu-toggle>
     </ion-list>
   </ion-content>
 </ion-menu>
@@ -35,8 +40,9 @@
 
   <ion-content [fullscreen]="true" class="chat-content">
     <div class="messages-container">
-      <div *ngFor="let msg of messages" class="message-wrapper" [class.user-message]="msg.role === 'user'" [class.assistant-message]="msg.role === 'assistant'">
-        
+      <div *ngFor="let msg of messages" class="message-wrapper" [class.user-message]="msg.role === 'user'"
+        [class.assistant-message]="msg.role === 'assistant'">
+
         <div class="avatar" *ngIf="msg.role === 'assistant'">
           <div class="fred-avatar">F</div>
         </div>
@@ -46,6 +52,16 @@
           <!-- <div class="message-time">{{ msg.timestamp | date:'shortTime' }}</div> -->
         </div>
 
+      </div>
+
+      <div *ngIf="messages.length <= 1 && dailySuggestions.length > 0" class="suggestions-container">
+        <p class="suggestion-header">Try asking about...</p>
+        <div class="suggestion-chips">
+          <ion-chip *ngFor="let question of dailySuggestions" (click)="selectSuggestion(question)" outline
+            color="primary">
+            <ion-label>{{ question }}</ion-label>
+          </ion-chip>
+        </div>
       </div>
 
       <div *ngIf="isLoading" class="message-wrapper assistant-message">
@@ -64,19 +80,16 @@
   </ion-content>
 
   <ion-footer class="ion-no-border">
-    <ion-toolbar class="input-toolbar">
+    <div class="input-bar">
       <div class="input-container">
-        <ion-textarea 
-          [(ngModel)]="newMessage" 
-          placeholder="Message FRED..." 
-          autoGrow="true" 
-          rows="1"
+        <ion-textarea [(ngModel)]="newMessage" placeholder="Message FRED..." autoGrow="true" rows="1"
           (keydown.enter)="$event.preventDefault(); sendMessage()">
         </ion-textarea>
-        <ion-button fill="clear" (click)="sendMessage()" [disabled]="!newMessage.trim() || isLoading" class="send-button">
+        <ion-button fill="clear" (click)="sendMessage()" [disabled]="!newMessage.trim() || isLoading"
+          class="send-button">
           <ion-icon name="arrow-up-circle" slot="icon-only"></ion-icon>
         </ion-button>
       </div>
-    </ion-toolbar>
+    </div>>
   </ion-footer>
 </div>

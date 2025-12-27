@@ -25,9 +25,9 @@ export class ChatService {
   private readonly STORAGE_KEY = 'fred_chat_history';
   private readonly SESSION_TIMEOUT_HOURS = 2;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-  sendMessage(message: string, generateTitle: boolean = false): Observable<{reply: string, title?: string}> {
+  sendMessage(message: string, generateTitle: boolean = false): Observable<{ reply: string, title?: string }> {
     const token = JwtTokenUtils.getValidJwtToken();
     const userId = localStorage.getItem('userId');
 
@@ -45,7 +45,7 @@ export class ChatService {
       generateTitle: generateTitle
     };
 
-    return this.http.post<{reply: string, title?: string}>(this.apiUrl, body, { headers });
+    return this.http.post<{ reply: string, title?: string }>(this.apiUrl, body, { headers });
   }
 
   getHistory(): Observable<any[]> {
@@ -58,6 +58,15 @@ export class ChatService {
     }
 
     return this.http.get<any[]>(`${this.apiUrl}/history?userId=${userId}`, { headers });
+  }
+
+  getDailySuggestions(): Observable<string[]> {
+    const token = JwtTokenUtils.getValidJwtToken();
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return this.http.get<string[]>(`${this.apiUrl}/suggestions`, { headers });
   }
 
   // History Management
@@ -118,6 +127,25 @@ export class ChatService {
       return lastSession;
     }
     return null;
+  }
+
+  // Daily Suggestions Persistence
+  markSuggestionAsUsed(question: string): void {
+    const today = new Date().toISOString().split('T')[0];
+    const key = `fred_used_suggestions_${today}`;
+    const used = this.getUsedSuggestions();
+
+    if (!used.includes(question)) {
+      used.push(question);
+      localStorage.setItem(key, JSON.stringify(used));
+    }
+  }
+
+  getUsedSuggestions(): string[] {
+    const today = new Date().toISOString().split('T')[0];
+    const key = `fred_used_suggestions_${today}`;
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : [];
   }
 
   private generateId(): string {

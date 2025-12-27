@@ -19,9 +19,12 @@ import java.util.List;
 public class ChatController {
 
     private final ChatService chatService;
+    private final com.investingapp.backend.service.DailyQuestionService dailyQuestionService;
 
-    public ChatController(ChatService chatService) {
+    public ChatController(ChatService chatService,
+            com.investingapp.backend.service.DailyQuestionService dailyQuestionService) {
         this.chatService = chatService;
+        this.dailyQuestionService = dailyQuestionService;
     }
 
     @PostMapping
@@ -34,5 +37,10 @@ public class ChatController {
     public ResponseEntity<List<ChatMessage>> getHistory(@RequestParam Long userId) {
         List<ChatMessage> history = chatService.getChatHistory(userId);
         return ResponseEntity.ok(history);
+    }
+
+    @GetMapping("/suggestions")
+    public ResponseEntity<List<String>> getSuggestions() {
+        return ResponseEntity.ok(dailyQuestionService.getTodayQuestions());
     }
 }

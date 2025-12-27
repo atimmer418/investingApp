@@ -1,22 +1,24 @@
 import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { 
-  IonContent, 
-  IonHeader, 
-  IonToolbar, 
-  IonButtons, 
-  IonTitle, 
-  IonFooter, 
-  IonTextarea, 
-  IonButton, 
+import { MenuController } from '@ionic/angular';
+import {
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonButtons,
+  IonTitle,
+  IonFooter,
+  IonTextarea,
+  IonButton,
   IonIcon,
   IonMenu,
   IonList,
   IonItem,
   IonLabel,
   IonMenuToggle,
-  IonMenuButton
+  IonMenuButton,
+  IonChip
 } from '@ionic/angular/standalone';
 import { ChatService, ChatMessage, ChatSession } from '../../services/chat.service';
 import { finalize } from 'rxjs/operators';
@@ -29,44 +31,65 @@ import { arrowUpCircle, menuOutline, addOutline } from 'ionicons/icons';
   styleUrls: ['./ai-chat.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     FormsModule,
-    IonContent, 
-    IonHeader, 
-    IonToolbar, 
-    IonButtons, 
-    IonTitle, 
-    IonFooter, 
-    IonTextarea, 
-    IonButton, 
+    IonContent,
+    IonHeader,
+    IonToolbar,
+    IonButtons,
+    IonTitle,
+    IonFooter,
+    IonTextarea,
+    IonButton,
     IonIcon,
     IonMenu,
     IonList,
     IonItem,
     IonLabel,
     IonMenuToggle,
-    IonMenuButton
+    IonMenuButton,
+    IonChip
   ]
 })
 export class AiChatPage implements OnInit {
   @ViewChild(IonContent) content!: IonContent;
-  
+
   messages: ChatMessage[] = [];
   sessions: ChatSession[] = [];
   currentSession: ChatSession | null = null;
   newMessage: string = '';
   isLoading: boolean = false;
+  dailySuggestions: string[] = [];
 
   constructor(
     private chatService: ChatService,
-    private cdr: ChangeDetectorRef
-  ) { 
+    private cdr: ChangeDetectorRef,
+    private menuCtrl: MenuController
+  ) {
     addIcons({ arrowUpCircle, menuOutline, addOutline });
   }
 
   ngOnInit() {
     this.loadSessions();
     this.syncBackendHistory();
+    this.loadDailySuggestions();
+  }
+
+  loadDailySuggestions() {
+    this.chatService.getDailySuggestions().subscribe({
+      next: (questions) => {
+        const used = this.chatService.getUsedSuggestions();
+        this.dailySuggestions = questions.filter(q => !used.includes(q));
+      },
+      error: (err) => console.error('Failed to load daily questions', err)
+    });
+  }
+
+  selectSuggestion(question: string) {
+    this.newMessage = question;
+    this.chatService.markSuggestionAsUsed(question);
+    this.dailySuggestions = this.dailySuggestions.filter(q => q !== question);
+    this.sendMessage();
   }
 
   syncBackendHistory() {
@@ -92,32 +115,32 @@ export class AiChatPage implements OnInit {
             // Create a session for this history or update current
             // For simplicity, let's overwrite the current "new" session with this history
             this.messages = backendMessages;
-            
+
             // If we have a current session (which might be empty/new), update it
             if (this.currentSession) {
               this.currentSession.messages = this.messages;
               this.currentSession.lastModified = lastMsg.timestamp.getTime();
               // Try to set a title if not set
               if (this.currentSession.title === 'New Chat') {
-                 const firstUserMsg = this.messages.find(m => m.role === 'user');
-                 if (firstUserMsg) {
-                   this.currentSession.title = firstUserMsg.content.substring(0, 30) + (firstUserMsg.content.length > 30 ? '...' : '');
-                 }
+                const firstUserMsg = this.messages.find(m => m.role === 'user');
+                if (firstUserMsg) {
+                  this.currentSession.title = firstUserMsg.content.substring(0, 30) + (firstUserMsg.content.length > 30 ? '...' : '');
+                }
               }
               this.chatService.saveSession(this.currentSession);
             } else {
-               // Should have been created by checkRecentSession -> startNewChat, but just in case
-               this.startNewChat();
-               this.currentSession!.messages = this.messages;
-               this.chatService.saveSession(this.currentSession!);
+              // Should have been created by checkRecentSession -> startNewChat, but just in case
+              this.startNewChat();
+              this.currentSession!.messages = this.messages;
+              this.chatService.saveSession(this.currentSession!);
             }
             this.cdr.detectChanges();
             setTimeout(() => this.scrollToBottom(), 100);
           } else {
-             // If not recent, we still might want to ensure it's saved in history?
-             // For now, let's respect the "recent session" logic of the UI.
-             // If local storage didn't have it, we could add it, but user asked specifically about "loading into current chat window"
-             this.checkRecentSession();
+            // If not recent, we still might want to ensure it's saved in history?
+            // For now, let's respect the "recent session" logic of the UI.
+            // If local storage didn't have it, we could add it, but user asked specifically about "loading into current chat window"
+            this.checkRecentSession();
           }
         } else {
           this.checkRecentSession();
@@ -148,8 +171,12 @@ export class AiChatPage implements OnInit {
   }
 
   startNewChat() {
+    this.menuCtrl.close('chat-menu');
     this.currentSession = this.chatService.createSession();
     this.messages = [];
+    // Reload suggestions to ensure used ones are filtered out
+    this.loadDailySuggestions();
+
     // Add an initial greeting from FRED
     this.addMessage({
       role: 'assistant',
@@ -160,6 +187,7 @@ export class AiChatPage implements OnInit {
 
   loadSession(session: ChatSession) {
     console.log('Loading session:', session.id);
+    this.menuCtrl.close('chat-menu');
     this.currentSession = session;
     // Create a copy of messages to ensure change detection runs
     this.messages = [...session.messages];
@@ -172,12 +200,12 @@ export class AiChatPage implements OnInit {
     if (this.currentSession) {
       this.currentSession.messages = this.messages;
       this.currentSession.lastModified = Date.now();
-      
+
       // Update title if it's the first user message
       // if (msg.role === 'user' && this.messages.filter(m => m.role === 'user').length === 1) {
       //   this.currentSession.title = msg.content.substring(0, 30) + (msg.content.length > 30 ? '...' : '');
       // }
-      
+
       if (save) {
         this.chatService.saveSession(this.currentSession);
         this.loadSessions(); // Refresh list
@@ -219,9 +247,9 @@ export class AiChatPage implements OnInit {
 
             // Update title if provided by LLM
             if (response.title && this.currentSession) {
-               this.currentSession.title = response.title;
-               this.chatService.saveSession(this.currentSession);
-               this.loadSessions();
+              this.currentSession.title = response.title;
+              this.chatService.saveSession(this.currentSession);
+              this.loadSessions();
             }
           }
         },
@@ -241,17 +269,17 @@ export class AiChatPage implements OnInit {
       this.content.scrollToBottom(300);
     }, 100);
   }
-  
+
   // Helper to format markdown-like text (basic implementation)
   // In a real app, you might use a library like marked or ngx-markdown
   formatMessage(content: string): string {
     // Basic bold formatting
     let formatted = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
+
     // Basic list formatting
     formatted = formatted.replace(/\n\n/g, '<br><br>');
     formatted = formatted.replace(/\n/g, '<br>');
-    
+
     return formatted;
   }
 }
