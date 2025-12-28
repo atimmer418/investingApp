@@ -65,19 +65,27 @@ public class DailyQuestionService {
     private List<String> generateAndSaveQuestions(LocalDate date) {
         try {
             List<ChatMessage> messages = new ArrayList<>();
+            List<String> allConcepts = Arrays.asList(
+                    "Compound Interest", "Risk Tolerance", "ETF vs Mutual Fund",
+                    "Inflation", "Market Cycles", "Dividends",
+                    "Retirement Planning", "Tech Stocks", "Dollar Cost Averaging", "Emergency Funds");
+
+            // Randomly select 3 concepts
+            List<String> selectedConcepts = new ArrayList<>(allConcepts);
+            java.util.Collections.shuffle(selectedConcepts);
+            String concepts = String.join(", ", selectedConcepts.subList(0, 3));
+
             messages.add(new ChatMessage("system",
                     "You are an engaging financial educator for novices. " +
                             "Generate exactly 3 short, intriguing questions that a beginner investor might ask to learn about financial concepts. "
                             +
-                            "Concepts can include: Compound Interest, Risk vs Reward, Low Fees, Inflation, Diversification, Market Behavior. "
+                            "Focus specifically on these concepts today: " + concepts + ". " // Force variety
                             +
                             "The questions should be written from the user's perspective (e.g., 'Why does inflation matter?'). "
                             +
                             "Output ONLY the 3 questions, separated by pipes (|). No numbering, no Intro."));
 
-            // We can rotate concepts or add randomness in the future. For now, the system
-            // prompt allows variety.
-            messages.add(new ChatMessage("user", "Generate 3 questions for today."));
+            messages.add(new ChatMessage("user", "Generate 3 unique questions for " + date));
 
             String response = llmService.generateChatResponse(messages);
 

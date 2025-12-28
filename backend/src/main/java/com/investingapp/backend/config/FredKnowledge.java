@@ -18,130 +18,209 @@ public class FredKnowledge {
         public static final List<CanonicalChunk> CANONICAL_CHUNKS = new ArrayList<>();
 
         static {
-                // 1. Automation
+                // Chunk 1 — FRED Mission & Philosophy
                 CANONICAL_CHUNKS.add(new CanonicalChunk(
-                                "automation_vs_willpower_v1",
-                                "Why Automation Works Better Than Willpower",
-                                "Human willpower is a depletable resource. Relying on it to make savvy financial decisions every month is a strategy destined for failure. "
+                                "fred_mission_v2",
+                                "FRED Mission & Philosophy",
+                                "FRED exists to make long-term investing simple, disciplined, and automated. " +
+                                                "Most people don’t fail because the math is hard — they fail because behavior is hard. "
                                                 +
-                                                "By automating your investments—treating them like a bill that must be paid—you remove the emotional friction of manual transfers. "
+                                                "FRED removes decision-fatigue, avoids speculation, and focuses on boring, consistent compounding over decades. "
                                                 +
-                                                "In volatile markets, manual investors often hesitate, trying to 'time' their entry, whereas automated investors buy consistently, lowering their average cost basis over time (dollar-cost averaging). "
+                                                "Core principles FRED teaches: " +
+                                                "• Long-term > short-term noise " +
+                                                "• Diversification reduces risk of being wrong " +
+                                                "• Automation prevents emotional mistakes " +
+                                                "• Staying invested usually beats timing the market " +
+                                                "FRED is here to educate and empower — not to speculate or predict the future. "
                                                 +
-                                                "Automation enforces discipline without requiring constant mental effort.",
-                                "v1",
-                                "automation",
-                                "low",
-                                true));
-
-                // 2. Fees
-                CANONICAL_CHUNKS.add(new CanonicalChunk(
-                                "flat_fee_vs_percentage_v1",
-                                "Why a Flat Fee Beats a Percentage Fee Over Time",
-                                "The financial industry standard is to charge a percentage of assets under management (AUM), typically 1%. "
-                                                +
-                                                "While 1% sounds small, it compounds aggressively against you. On a $1M portfolio, a 1% fee is $10,000 per year—every year. "
-                                                +
-                                                "Over 30 years, a 1% fee can erode up to 25-30% of your total potential wealth due to lost compound growth. "
-                                                +
-                                                "A flat fee (like a gym membership) ensures that as your wealth grows, your costs remain fixed, allowing you to keep the vast majority of your compounding returns.",
-                                "v1",
-                                "fees",
-                                "low",
-                                true));
-
-                // 3. Liquidity
-                CANONICAL_CHUNKS.add(new CanonicalChunk(
-                                "liquidity_matters_v1",
-                                "Why Liquidity Matters More Than Maximum Returns",
-                                "Many investors chase maximum theoretical returns by locking money into illiquid assets like real estate syndications or retirement accounts with early-withdrawal penalties. "
-                                                +
-                                                "However, life is unpredictable. True financial independence requires having access to capital when opportunities (or emergencies) arise. "
-                                                +
-                                                "A slightly lower return on a liquid asset is often superior to a higher return on an asset you cannot sell. "
-                                                +
-                                                "Liquidity is the ultimate form of optionality, giving you the power to act when others are forced to wait.",
-                                "v1",
-                                "liquidity",
-                                "low",
-                                true));
-
-                // 4. No Trading
-                CANONICAL_CHUNKS.add(new CanonicalChunk(
-                                "no_trading_v1",
-                                "Why FRED Doesn’t Offer Trading",
-                                "Trading—buying and selling individual stocks in the short term—is statistically a losing game for retail investors. "
-                                                +
-                                                "Platform incentives are often misaligned; they want you to trade because they profit from volume or payment for order flow. "
-                                                +
-                                                "FRED is built for 'investing,' not 'trading.' We curate diversified portfolios designed for decades of growth, not minutes of excitement. "
-                                                +
-                                                "Removing the button to trade individual stocks prevents panic selling during downturns and FOMO buying during peaks.",
-                                "v1",
-                                "behavior",
-                                "low",
-                                true));
-
-                // 5. SBLOCs
-                CANONICAL_CHUNKS.add(new CanonicalChunk(
-                                "sbloc_danger_v1",
-                                "What SBLOCs Are — and When They’re Dangerous",
-                                "A Securities-Backed Line of Credit (SBLOC) allows you to borrow against your portfolio without selling assets, avoiding taxable events. "
-                                                +
-                                                "While powerful, it introduces leverage risk. If the market value of your assets drops significantly, the lender can issue a 'margin call,' forcing you to sell assets at the bottom to cover the loan. "
-                                                +
-                                                "This can destroy decades of compounding in days. FRED advises extreme caution: SBLOCs should only be used by experienced investors with low loan-to-value (LTV) ratios and stable cash flows to service the debt.",
-                                "v1",
-                                "leverage",
-                                "caution",
-                                true));
-
-                // 6. Starting Small
-                CANONICAL_CHUNKS.add(new CanonicalChunk(
-                                "starting_small_v1",
-                                "Why Starting Small Still Works",
-                                "The most important factor in compounding is time, not the starting amount. " +
-                                                "Waiting until you have 'enough' money to invest is a mistake. Investing $50 a month for 40 years can outperform investing $500 a month for the last 10 years. "
-                                                +
-                                                "Starting small builds the habit (automation) and allows you to make mistakes when the stakes are low. "
-                                                +
-                                                "Momentum is psychological; seeing a small balance grow motivates you to increase contributions later.",
-                                "v1",
-                                "getting_started",
-                                "low",
-                                true));
-
-                // Phase 2 Additions
-
-                // 7. Market Crash
-                CANONICAL_CHUNKS.add(new CanonicalChunk(
-                                "market_crash_behavior_v1",
-                                "What to do during a market crash",
-                                "Market crashes are a normal, expected part of the economic cycle, occurring roughly every 7-10 years. "
-                                                +
-                                                "The natural instinct is to sell to 'stop the bleeding,' but this crystallizes temporary paper losses into permanent actual losses. "
-                                                +
-                                                "History shows that the best days often follow the worst days. Missing just the 10 best trading days over 20 years can cut your returns in half. "
-                                                +
-                                                "During a crash, the best action is usually inaction—or, if possible, increasing your automated contributions to buy more shares at discount prices.",
-                                "v1",
-                                "behavior",
-                                "caution",
-                                true));
-
-                // 8. Predictions
-                CANONICAL_CHUNKS.add(new CanonicalChunk(
-                                "fred_no_predictions_v1",
-                                "Why FRED avoids predictions",
-                                "Financial media is built on predictions because they sell ads, not because they are accurate. "
-                                                +
-                                                "No one consistently predicts macro events, interest rates, or stock movements. "
-                                                +
-                                                "FRED treats the future as unknowable. Instead of predicting, we prepare. We build robust, diversified portfolios that can survive multiple economic futures. "
-                                                +
-                                                "Focusing on what you can control (savings rate, fees, behavior) is far more profitable than guessing what you cannot control (the market).",
-                                "v1",
+                                                "Tone: calm, steady, data-driven, long-term focused.",
+                                "v2",
                                 "philosophy",
+                                "low",
+                                true));
+
+                // Chunk 2 — What FRED Is & Is Not
+                CANONICAL_CHUNKS.add(new CanonicalChunk(
+                                "what_fred_is_v2",
+                                "What FRED Is & Is Not",
+                                "What FRED is: " +
+                                                "• A financial education tool " +
+                                                "• A banking + automation app " +
+                                                "• A guide that explains long-term investing concepts in plain language "
+                                                +
+                                                "• A tool that helps you stick with a plan " +
+                                                "What FRED is NOT: " +
+                                                "• ❌ Not a financial advisor " +
+                                                "• ❌ Not giving personalized investment advice " +
+                                                "• ❌ Not predicting markets " +
+                                                "• ❌ Not recommending individual securities to you personally " +
+                                                "FRED explains general investing education, not tailored recommendations.",
+                                "v2",
+                                "compliance",
+                                "high",
+                                true));
+
+                // Chunk 3 — The Default FRED Portfolio & Why It Exists
+                CANONICAL_CHUNKS.add(new CanonicalChunk(
+                                "default_portfolio_v2",
+                                "The Default FRED Portfolio",
+                                "FRED uses a single default globally diversified portfolio designed for long-term growth and simplicity. "
+                                                +
+                                                "This avoids decision-fatigue and helps users get invested early instead of staying stuck. "
+                                                +
+                                                "Default Mix: " +
+                                                "• 75% VTI — U.S. Total Stock Market " +
+                                                "• 20% VXUS — International Stocks " +
+                                                "• 5% VBR — U.S. Small-Cap Value Tilt " +
+                                                "Why this approach is taught: " +
+                                                "• High expected long-term growth (heavy equity allocation) " +
+                                                "• Global diversification reduces “home country” risk " +
+                                                "• Small-cap value tilt reflects well-studied return factors " +
+                                                "• Extremely simple — easy to understand + stay consistent " +
+                                                "Note: While stocks have historically grown over long periods, returns are never guaranteed and markets can be volatile — sometimes for years at a time.",
+                                "v2",
+                                "portfolio",
+                                "medium",
+                                true));
+
+                // Chunk 4 — Partner Roles
+                CANONICAL_CHUNKS.add(new CanonicalChunk(
+                                "partner_roles_v2",
+                                "Partner Roles: Plaid, Persona, Alpaca",
+                                "Plaid — Bank Connectivity: Used to securely link your bank, detect paycheck deposits, and trigger automated investing workflows. FRED never sees your bank password — Plaid handles secure connection. "
+                                                +
+                                                "Persona — Identity Verification (KYC): Used to verify identity for regulatory + security purposes. This protects users from fraud and account misuse. "
+                                                +
+                                                "Alpaca — Brokerage & Custodian: Alpaca is the brokerage infrastructure provider. They handle trade execution, clearing, and asset custody. "
+                                                +
+                                                "Alpaca is not the investment advisor for users. They provide the execution “rails.” FRED provides education only.",
+                                "v2",
+                                "platform",
+                                "low",
+                                true));
+
+                // Chunk 5 — Deposits, Automation & Fees
+                CANONICAL_CHUNKS.add(new CanonicalChunk(
+                                "deposits_fees_v2",
+                                "Deposits, Automation & Fees",
+                                "• Investments are automated based on paycheck activity " +
+                                                "• A flat $8/month subscription funds the platform " +
+                                                "• First 2 months are free so users can try the service " +
+                                                "There are no trading commissions inside Alpaca for standard ETF trades, though regulatory fees may still apply. "
+                                                +
+                                                "Automation exists to reduce temptation to time the market.",
+                                "v2",
+                                "platform",
+                                "low",
+                                true));
+
+                // Chunk 6 — Risk & Volatility Education
+                CANONICAL_CHUNKS.add(new CanonicalChunk(
+                                "risk_education_v2",
+                                "Risk & Volatility Education",
+                                "Important truths FRED teaches: " +
+                                                "• Stock markets do fall — sometimes sharply " +
+                                                "• Diversification reduces risk but doesn’t remove it " +
+                                                "• Long-term investing means staying invested through downturns " +
+                                                "• Cash needs for the short-term should not be invested in stocks " +
+                                                "FRED encourages: " +
+                                                "• Long-term mindset " +
+                                                "• Emergency savings before investing " +
+                                                "• Avoiding emotional decisions " +
+                                                "But again — this is education, not advice.",
+                                "v2",
+                                "education",
+                                "medium",
+                                true));
+
+                // Chunk 7 — Liquidity & Access to Funds
+                CANONICAL_CHUNKS.add(new CanonicalChunk(
+                                "liquidity_access_v2",
+                                "Liquidity & Access to Funds",
+                                "Even when invested, your money is still yours — but selling investments: " +
+                                                "• May trigger taxes " +
+                                                "• Takes settlement time " +
+                                                "• Is not guaranteed to be at a profit " +
+                                                "So users should avoid investing money they’ll need soon.",
+                                "v2",
+                                "education",
+                                "low",
+                                true));
+
+                // Chunk 8 — SBLOC Education
+                CANONICAL_CHUNKS.add(new CanonicalChunk(
+                                "sbloc_education_v2",
+                                "SBLOC Education (Concept Only)",
+                                "FRED explains SBLOC as a borrowing strategy where securities are used as collateral for a credit line. "
+                                                +
+                                                "Key educational points: " +
+                                                "• SBLOC can provide liquidity without selling investments " +
+                                                "• Interest costs apply " +
+                                                "• Borrowing adds risk " +
+                                                "• If markets fall, collateral calls can happen " +
+                                                "FRED does not provide SBLOC access — only education. " +
+                                                "Users are encouraged to consult a licensed advisor before borrowing against investments.",
+                                "v2",
+                                "leverage",
+                                "high",
+                                true));
+
+                // Chunk 9 — Safety Guardrails
+                CANONICAL_CHUNKS.add(new CanonicalChunk(
+                                "safety_guardrails_v2",
+                                "Safety Guardrails",
+                                "To stay compliant and user-safe, FRED will NOT: " +
+                                                "• Recommend specific securities “for you” " +
+                                                "• Tell you how to allocate your personal money " +
+                                                "• Predict future returns " +
+                                                "• Give tax, legal, or personalized advice " +
+                                                "• Encourage speculation or day-trading " +
+                                                "• Provide encouragement toward risky borrowing behavior " +
+                                                "If a user asks for specific advice, FRED explains concepts without directing actions.",
+                                "v2",
+                                "compliance",
+                                "high",
+                                true));
+
+                // Chunk 10 — Privacy & Security
+                CANONICAL_CHUNKS.add(new CanonicalChunk(
+                                "privacy_security_v2",
+                                "Privacy & Security",
+                                "FRED is built with security as a first-class priority. " +
+                                                "• Bank connections handled through Plaid " +
+                                                "• Identity verification via Persona " +
+                                                "• Trades + assets handled by Alpaca " +
+                                                "• Data stored securely with industry-standard encryption " +
+                                                "FRED never sells user data.",
+                                "v2",
+                                "platform",
+                                "low",
+                                true));
+
+                // Chunk 11 — Support & Human Escalation
+                CANONICAL_CHUNKS.add(new CanonicalChunk(
+                                "support_escalation_v2",
+                                "Support & Human Escalation",
+                                "When questions fall outside education or safety rules, FRED directs users to: " +
+                                                "• Contact us " +
+                                                "• A licensed financial professional (when appropriate)",
+                                "v2",
+                                "platform",
+                                "low",
+                                true));
+
+                // Chunk 12 — Core Definitions
+                CANONICAL_CHUNKS.add(new CanonicalChunk(
+                                "core_definitions_v2",
+                                "Core Definitions",
+                                "• ETF — A basket of securities traded like a stock " +
+                                                "• Diversification — Spreading risk across many securities " +
+                                                "• Volatility — Short-term ups and downs " +
+                                                "• Custodian — Company that holds your assets " +
+                                                "• KYC — Identity verification for fraud + compliance",
+                                "v2",
+                                "education",
                                 "low",
                                 true));
         }
