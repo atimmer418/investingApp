@@ -5,12 +5,13 @@ import { Router } from '@angular/router';
 import { 
   IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
   IonCard, IonCardContent, IonList, IonItem, IonLabel, IonInput, IonButton,
-  IonIcon, IonNote, IonSpinner, IonToast, ToastController
+  IonIcon, IonNote, IonSpinner
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { shieldCheckmarkOutline, keyOutline, mailOutline } from 'ionicons/icons';
 import { RecoveryService } from '../../services/recovery.service';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-recovery',
@@ -21,7 +22,7 @@ import { JwtTokenUtils } from '../../utils/jwt-token.utils';
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
     IonCard, IonCardContent, IonList, IonItem, IonLabel, IonInput, IonButton,
-    IonIcon, IonNote, IonSpinner, IonToast
+    IonIcon, IonNote, IonSpinner
   ]
 })
 export class RecoveryPage implements OnInit {
@@ -33,7 +34,7 @@ export class RecoveryPage implements OnInit {
   constructor(
     private recoveryService: RecoveryService,
     private router: Router,
-    private toastController: ToastController
+    private toastService: ToastService
   ) {
     addIcons({ shieldCheckmarkOutline, keyOutline, mailOutline });
   }
@@ -84,11 +85,6 @@ export class RecoveryPage implements OnInit {
   }
 
   async presentToast(message: string) {
-    const toast = await this.toastController.create({
-      message: message,
-      duration: 3000,
-      position: 'bottom'
-    });
-    await toast.present();
+    this.toastService.showToast(message);
   }
 }

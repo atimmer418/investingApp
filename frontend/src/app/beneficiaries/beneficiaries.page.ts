@@ -16,7 +16,6 @@ import {
   IonProgressBar,
   IonButtons,
   IonBackButton,
-  IonToast,
   IonNote,
   IonSpinner,
   ViewWillEnter
@@ -41,6 +40,7 @@ import {
   alertCircleOutline,
   peopleCircleOutline, checkmarkOutline } from 'ionicons/icons';
 import { BeneficiaryService, Beneficiary, BeneficiaryAllocationSummary } from '../services/beneficiary.service';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-beneficiaries',
@@ -51,7 +51,7 @@ import { BeneficiaryService, Beneficiary, BeneficiaryAllocationSummary } from '.
     CommonModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton,
     IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIcon, 
-    IonBadge, IonProgressBar, IonButtons, IonBackButton, IonToast, IonNote, IonSpinner
+    IonBadge, IonProgressBar, IonButtons, IonBackButton, IonNote, IonSpinner
   ]
 })
 export class BeneficiariesPage implements OnInit, ViewWillEnter {
@@ -60,13 +60,11 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
   public allocationSummary: BeneficiaryAllocationSummary | null = null;
   public isLoading = true;
   public isSubmitting = false;
-  public isToastOpen = false;
-  public toastMessage = '';
-  public toastColor = 'primary';
   
   constructor(
     private router: Router,
-    private beneficiaryService: BeneficiaryService
+    private beneficiaryService: BeneficiaryService,
+    private toastService: ToastService
   ) {
     addIcons({peopleOutline,informationCircleOutline,shieldCheckmarkOutline,pieChartOutline,alertCircleOutline,checkmarkOutline,personAddOutline,checkmarkCircleOutline,addOutline,calendarOutline,mailOutline,shieldOutline,personOutline,pricetagOutline,timeOutline,closeCircleOutline,arrowBackOutline,peopleCircleOutline});
   }
@@ -96,7 +94,7 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
       
     } catch (error) {
       console.error('Error loading beneficiaries:', error);
-      this.displayToast('Failed to load beneficiaries. Please check your connection.', 'danger');
+      this.toastService.showToast('Failed to load beneficiaries. Please check your connection.', 'danger');
       
       // Initialize empty data on error
       this.beneficiaries = [];
@@ -193,7 +191,7 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
    */
   async onSubmitBeneficiary(beneficiary: Beneficiary) {
     if (!beneficiary.id) {
-      this.displayToast('Cannot submit beneficiary: Invalid ID', 'danger');
+      this.toastService.showToast('Cannot submit beneficiary: Invalid ID', 'danger');
       return;
     }
     
@@ -202,7 +200,7 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
       this.isSubmitting = true;
       
       await this.beneficiaryService.submitBeneficiary(beneficiary.id).toPromise();
-      this.displayToast(`Successfully submitted ${beneficiary.firstName} ${beneficiary.lastName} to Alpaca`, 'success');
+      this.toastService.showToast(`Successfully submitted ${beneficiary.firstName} ${beneficiary.lastName} to Alpaca`, 'success');
       
       // Refresh the data to show updated status
       await this.loadBeneficiaries();
@@ -218,7 +216,7 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
         errorMessage = `Submission failed: ${error.message}`;
       }
       
-      this.displayToast(errorMessage, 'danger');
+      this.toastService.showToast(errorMessage, 'danger');
     } finally {
       // Clear submission loading state
       this.isSubmitting = false;
@@ -232,7 +230,7 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
     const pendingCount = this.getPendingBeneficiaries().length;
     
     if (pendingCount === 0) {
-      this.displayToast('No pending beneficiaries to submit', 'warning');
+      this.toastService.showToast('No pending beneficiaries to submit', 'warning');
       return;
     }
     
@@ -241,7 +239,7 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
       this.isSubmitting = true;
       
       await this.beneficiaryService.submitAllBeneficiaries().toPromise();
-      this.displayToast(`Successfully submitted ${pendingCount} beneficiar${pendingCount === 1 ? 'y' : 'ies'} to Alpaca`, 'success');
+      this.toastService.showToast(`Successfully submitted ${pendingCount} beneficiar${pendingCount === 1 ? 'y' : 'ies'} to Alpaca`, 'success');
       
       // Refresh the data to show updated status
       await this.loadBeneficiaries();
@@ -257,7 +255,7 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
         errorMessage = `Submission failed: ${error.message}`;
       }
       
-      this.displayToast(errorMessage, 'danger');
+      this.toastService.showToast(errorMessage, 'danger');
     } finally {
       // Clear submission loading state
       this.isSubmitting = false;
@@ -269,7 +267,7 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
    */
   async onDeleteBeneficiary(beneficiary: Beneficiary) {
     if (!beneficiary.id) {
-      this.displayToast('Cannot delete beneficiary: Invalid ID', 'danger');
+      this.toastService.showToast('Cannot delete beneficiary: Invalid ID', 'danger');
       return;
     }
     
@@ -279,14 +277,14 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
     
     try {
       await this.beneficiaryService.deleteBeneficiary(beneficiary.id).toPromise();
-      this.displayToast(`Successfully deleted ${beneficiary.firstName} ${beneficiary.lastName}`, 'success');
+      this.toastService.showToast(`Successfully deleted ${beneficiary.firstName} ${beneficiary.lastName}`, 'success');
       
       // Refresh the data to show updated list
       await this.loadBeneficiaries();
       
     } catch (error) {
       console.error('Error deleting beneficiary:', error);
-      this.displayToast('Failed to delete beneficiary. Please try again.', 'danger');
+      this.toastService.showToast('Failed to delete beneficiary. Please try again.', 'danger');
     }
   }
   
@@ -364,11 +362,5 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
     
     // Fallback
     return dateValue.toString();
-  }
-  
-  private displayToast(message: string, color: string = 'primary') {
-    this.toastMessage = message;
-    this.toastColor = color;
-    this.isToastOpen = true;
   }
 }

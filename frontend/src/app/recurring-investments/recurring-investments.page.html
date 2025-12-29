@@ -174,26 +174,6 @@
   </div>
 </ion-content>
 
-<!-- Success Toast -->
-<ion-toast
-  [isOpen]="showSuccessToast"
-  [message]="toastMessage"
-  duration="3000"
-  color="success"
-  position="top"
-  (didDismiss)="showSuccessToast = false">
-</ion-toast>
-
-<!-- Error Toast -->
-<ion-toast
-  [isOpen]="showErrorToast"
-  [message]="toastMessage"
-  duration="5000"
-  color="danger"
-  position="top"
-  (didDismiss)="showErrorToast = false">
-</ion-toast>
-
 <!-- Date Picker Modal -->
 <ion-modal [isOpen]="isDatePickerOpen" (didDismiss)="closeDatePicker()">
   <ng-template>

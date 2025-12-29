@@ -15,7 +15,32 @@ This application uses a **Passkey-First** authentication model.
 - The backend challenges the device, and the device signs the challenge.
 - **Security Benefit:** Phishing resistant, no passwords to leak.
 
-## 2. Session Management & App Lock
+## 2. Step-up authentication (extra verification)
+
+### What it is
+An additional authentication step that can be enabled after you’re already signed in.
+
+### Triggered when an action is considered higher risk
+*   Withdrawing funds.
+*   Placing lump-sum trades.
+*   Changing account settings (Email, Address).
+*   Viewing full tax documents.
+
+### iOS Behavior
+On iOS, both can look identical (Face ID prompt), but the intent is different:
+*   **Passkey auth** = “Who are you?”
+*   **Step-up auth** = “Are you really you, right now, and do you mean to do this?”
+
+That’s why you’ll sometimes see Face ID and then pin verification soon after.
+### Lockout Policy
+To prevent brute-force attacks, the system enforces a strict lockout mechanism:
+*   **Attempt Limit:** 5 failed attempts allowed.
+*   **Initial Lockout:** 30 minutes.
+*   **Escalation:** Each subsequent lockout doubles in duration (30m → 1h → 2h → 4h...).
+*   **Reset:** Successfully entering the correct PIN immediately resets the lockout level back to the initial 30 minutes and clears all failed attempts.
+---
+
+## 3. Session Management & App Lock
 We balance security with user convenience using two distinct modes controlled by the **App Lock** setting.
 
 ### Core Concepts
@@ -37,21 +62,6 @@ We balance security with user convenience using two distinct modes controlled by
     *   If the user returns after < 1 hour: No prompt. Session continues.
     *   If the user returns after > 1 hour: App is locked. User must authenticate with Passkey.
 *   **Result:** A new JWT is issued upon unlock.
-
----
-
-## 3. Sensitive Action Security (The "Trading PIN")
-To mitigate the risk of a stolen device where the thief knows the device passcode (Passkey bypass), we implement an application-layer secret.
-
-### The 4-Digit App PIN
-*   **Requirement:** During onboarding, the user creates a specific **4-digit numeric PIN**.
-*   **Storage:** This PIN is hashed (bcrypt/Argon2) and stored in the backend database. It is **NOT** stored in the device keychain.
-*   **Enforcement:** This PIN is required for all "High Risk" actions:
-    *   Withdrawing funds.
-    *   Placing large trades.
-    *   Changing account settings (Email, Address).
-    *   Viewing full tax documents.
-*   **Security Benefit:** Even if a thief bypasses FaceID using the iPhone passcode, they cannot move money without this separate PIN.
 
 ---
 

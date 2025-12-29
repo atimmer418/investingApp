@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { ModalController, ToastController } from '@ionic/angular/standalone';
+import { ModalController } from '@ionic/angular/standalone';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonButton, IonSpinner } from '@ionic/angular/standalone';
 import { PasskeyService } from '../../services/passkey.service';
 import { get } from '@github/webauthn-json';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 import { CommonModule } from '@angular/common';
 import { addIcons } from 'ionicons';
 import { lockClosedOutline, fingerPrintOutline } from 'ionicons/icons';
@@ -23,7 +24,7 @@ export class PasskeyPromptComponent implements OnInit {
     private modalController: ModalController,
     private passkeyService: PasskeyService,
     private authService: AuthService,
-    private toastController: ToastController
+    private toastService: ToastService
   ) { 
     addIcons({ lockClosedOutline, fingerPrintOutline });
   }
@@ -100,12 +101,6 @@ export class PasskeyPromptComponent implements OnInit {
   }
 
   async showToast(message: string, color: string) {
-    const toast = await this.toastController.create({
-      message,
-      duration: 2000,
-      color,
-      position: 'bottom'
-    });
-    toast.present();
+    this.toastService.showToast(message, color);
   }
 }

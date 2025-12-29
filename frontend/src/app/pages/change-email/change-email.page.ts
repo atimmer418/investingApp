@@ -5,12 +5,13 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { 
   IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-  IonItem, IonLabel, IonInput, IonButton, IonNote, IonSpinner, IonToast, IonIcon
+  IonItem, IonLabel, IonInput, IonButton, IonNote, IonSpinner, IonIcon
 } from '@ionic/angular/standalone';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 import { PasskeyService } from '../../services/passkey.service';
 import { PinService } from '../../services/pin.service';
+import { ToastService } from '../../services/toast.service';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import { addIcons } from 'ionicons';
 import { mailOutline, alertCircleOutline } from 'ionicons/icons';
@@ -23,7 +24,7 @@ import { mailOutline, alertCircleOutline } from 'ionicons/icons';
   imports: [
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-    IonItem, IonLabel, IonInput, IonButton, IonNote, IonSpinner, IonToast, IonIcon
+    IonItem, IonLabel, IonInput, IonButton, IonNote, IonSpinner, IonIcon
   ]
 })
 export class ChangeEmailPage implements OnInit {
@@ -33,17 +34,14 @@ export class ChangeEmailPage implements OnInit {
   
   isLoading = false;
   errorMessage: string = '';
-  
-  isToastOpen = false;
-  toastMessage = '';
-  toastColor = 'success';
 
   constructor(
     private router: Router,
     private http: HttpClient,
     private authService: AuthService,
     private passkeyService: PasskeyService,
-    private pinService: PinService
+    private pinService: PinService,
+    private toastService: ToastService
   ) {
     addIcons({ mailOutline, alertCircleOutline });
   }
@@ -82,13 +80,13 @@ export class ChangeEmailPage implements OnInit {
       if (!verified) {
         this.isLoading = false;
         this.errorMessage = 'Authentication required to change email.';
-        this.showToast(this.errorMessage, 'warning');
+        this.toastService.showToast(this.errorMessage, 'warning');
         return;
       }
     }
 
     // Step 2: Proceed with Email Update
-      const payload = {
+    const payload = {
         currentEmail: this.currentEmail,
         newEmail: this.newEmail
       };
@@ -105,7 +103,7 @@ export class ChangeEmailPage implements OnInit {
               JwtTokenUtils.storeJwtToken(response.jwtToken, undefined, response.newEmail);
             }
 
-            this.showToast('Email updated successfully', 'success');
+            this.toastService.showToast('Email updated successfully', 'success');
             
             // Navigate back after a short delay
             setTimeout(() => {
@@ -116,7 +114,7 @@ export class ChangeEmailPage implements OnInit {
             this.isLoading = false;
             console.error('Error updating email:', error);
             this.errorMessage = error.error?.message || 'Failed to update email. Please try again.';
-            this.showToast(this.errorMessage, 'danger');
+            this.toastService.showToast(this.errorMessage, 'danger');
           }
         });
   }
@@ -151,11 +149,5 @@ export class ChangeEmailPage implements OnInit {
       type: credential.type,
       clientExtensionResults: credential.getClientExtensionResults()
     };
-  }
-
-  showToast(message: string, color: string) {
-    this.toastMessage = message;
-    this.toastColor = color;
-    this.isToastOpen = true;
   }
 }

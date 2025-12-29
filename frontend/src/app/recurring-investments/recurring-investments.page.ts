@@ -15,7 +15,6 @@ import {
   IonInput,
   IonSelect,
   IonSelectOption,
-  IonToast,
   IonButtons,
   IonBackButton,
   IonDatetime,
@@ -36,6 +35,7 @@ import {
 import { InvestmentService, InvestmentSchedule, CreateInvestmentScheduleRequest } from '../services/investment.service';
 import { PasskeyService } from '../services/passkey.service';
 import { PinService } from '../services/pin.service';
+import { ToastService } from '../services/toast.service';
 
 interface InvestmentFrequencyOption {
   value: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'SEMI_MONTHLY';
@@ -61,7 +61,6 @@ interface InvestmentFrequencyOption {
     IonInput,
     IonSelect,
     IonSelectOption,
-    IonToast,
     IonButtons,
     IonBackButton,
     IonDatetime,
@@ -81,9 +80,6 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     nextInvestmentDate: undefined
   };
 
-  showSuccessToast = false;
-  showErrorToast = false;
-  toastMessage = '';
   isLoading = false;
   isDatePickerOpen = false;
 
@@ -121,7 +117,8 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     private router: Router,
     private investmentService: InvestmentService,
     private passkeyService: PasskeyService,
-    private pinService: PinService
+    private pinService: PinService,
+    private toastService: ToastService
   ) {
     addIcons({ cashOutline, timeOutline, calendarOutline, addOutline, checkmarkCircleOutline, pauseOutline, playOutline, alertCircleOutline, settingsOutline, informationCircleOutline });
   }
@@ -158,8 +155,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
             console.log('No investment schedule found - user probably hasn\'t set one up yet');
             this.currentInvestment = null;
           } else {
-            this.toastMessage = 'Failed to load investment schedule';
-            this.showErrorToast = true;
+            this.toastService.showToast('Failed to load investment schedule', 'danger');
           }
           this.isLoading = false;
         }
@@ -459,8 +455,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       if (hasPin) {
         const verified = await this.pinService.promptPin('verify');
         if (!verified) {
-          this.toastMessage = 'Authentication required to change investment status.';
-          this.showErrorToast = true;
+          this.toastService.showToast('Authentication required to change investment status.', 'danger');
           this.isLoading = false;
           return;
         }
@@ -474,16 +469,14 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
         .subscribe({
           next: (updatedSchedule: InvestmentSchedule) => {
             this.currentInvestment = updatedSchedule;
-            this.toastMessage = newStatus ?
+            this.toastService.showToast(newStatus ?
               'Investment schedule paused successfully!' :
-              'Investment schedule resumed successfully!';
-            this.showSuccessToast = true;
+              'Investment schedule resumed successfully!', 'success');
             this.isLoading = false;
           },
           error: (error) => {
             console.error('Error updating investment status:', error);
-            this.toastMessage = 'Failed to update investment schedule. Please try again.';
-            this.showErrorToast = true;
+            this.toastService.showToast('Failed to update investment schedule. Please try again.', 'danger');
             this.isLoading = false;
           }
         });
@@ -495,8 +488,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
 
   async saveChanges() {
     if (!this.editedInvestment.investmentAmount || this.editedInvestment.investmentAmount < 1) {
-      this.toastMessage = 'Investment amount must be at least $1';
-      this.showErrorToast = true;
+      this.toastService.showToast('Investment amount must be at least $1', 'danger');
       return;
     }
 
@@ -511,8 +503,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       if (hasPin) {
         const verified = await this.pinService.promptPin('verify');
         if (!verified) {
-          this.toastMessage = 'Authentication required to save changes.';
-          this.showErrorToast = true;
+          this.toastService.showToast('Authentication required to save changes.', 'danger');
           this.isLoading = false;
           return;
         }
@@ -571,14 +562,12 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (updatedSchedule: InvestmentSchedule) => {
-          this.toastMessage = 'Investment schedule updated successfully!';
-          this.showSuccessToast = true;
+          this.toastService.showToast('Investment schedule updated successfully!', 'success');
           this.loadCurrentInvestment();
         },
         error: (error) => {
           console.error('Error updating investment:', error);
-          this.toastMessage = 'Failed to update investment schedule. Please try again.';
-          this.showErrorToast = true;
+          this.toastService.showToast('Failed to update investment schedule. Please try again.', 'danger');
           this.isLoading = false;
         }
       });

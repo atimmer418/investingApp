@@ -17,7 +17,6 @@ import {
   IonAvatar,
   IonText,
   IonBadge,
-  IonToast,
   IonRippleEffect
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -49,6 +48,7 @@ import {
 import { SettingsService, UserPreferences, RecurringInvestment } from '../services/settings.service';
 import { PlaidService, BankAccount } from '../services/plaid.service';
 import { AuthService } from '../services/auth.service';
+import { ToastService } from '../services/toast.service';
 
 interface SettingSection {
   title: string;
@@ -85,7 +85,6 @@ interface SettingItem {
     IonAvatar,
     IonText,
     IonBadge,
-    IonToast,
     IonRippleEffect
   ],
 })
@@ -96,9 +95,6 @@ export class Tab3Page implements OnInit, OnDestroy {
   public recurringInvestment: RecurringInvestment | null = null;
   public currentBankAccount: BankAccount | null = null;
   public userEmail: string = 'alex.doe@example.com';
-  public isToastOpen = false;
-  public toastMessage = '';
-  public toastColor = 'primary';
 
   public settingSections: SettingSection[] = [
     {
@@ -199,7 +195,8 @@ export class Tab3Page implements OnInit, OnDestroy {
     private router: Router,
     private settingsService: SettingsService,
     private plaidService: PlaidService,
-    private authService: AuthService
+    private authService: AuthService,
+    private toastService: ToastService
   ) {
     addIcons({
       settingsOutline,
@@ -368,12 +365,12 @@ export class Tab3Page implements OnInit, OnDestroy {
   private handleNotifications() {
     if (this.userPreferences) {
       const notifCount = Object.values(this.userPreferences.notifications).filter(Boolean).length;
-      this.displayToast(`You have ${notifCount} notification types enabled`, 'primary');
+      this.toastService.showToast(`You have ${notifCount} notification types enabled`, 'primary');
     }
   }
 
   private handleContactSupport() {
-    this.displayToast('Opening support chat...', 'success');
+    this.toastService.showToast('Opening support chat...', 'success');
     // In a real app, open support interface
   }
 
@@ -381,9 +378,9 @@ export class Tab3Page implements OnInit, OnDestroy {
     if (this.currentBankAccount) {
       const linkDate = this.plaidService.formatLinkDate(this.currentBankAccount.linkDate);
       const status = this.plaidService.getStatusText(this.currentBankAccount.status);
-      this.displayToast(`${this.currentBankAccount.institutionName} (${status}) - Linked: ${linkDate}`, 'primary');
+      this.toastService.showToast(`${this.currentBankAccount.institutionName} (${status}) - Linked: ${linkDate}`, 'primary');
     } else {
-      this.displayToast('No bank accounts linked. Use "Change Bank Account" to link one.', 'warning');
+      this.toastService.showToast('No bank accounts linked. Use "Change Bank Account" to link one.', 'warning');
     }
   }
 
@@ -393,7 +390,7 @@ export class Tab3Page implements OnInit, OnDestroy {
   }
 
   private showComingSoon(feature: string) {
-    this.displayToast(`${feature} feature coming soon!`, 'warning');
+    this.toastService.showToast(`${feature} feature coming soon!`, 'warning');
   }
 
   private handleBeneficiaries() {
@@ -405,14 +402,8 @@ export class Tab3Page implements OnInit, OnDestroy {
     if (this.userPreferences) {
       const newTheme = this.userPreferences.theme === 'dark' ? 'light' : 'dark';
       this.settingsService.applyTheme(newTheme);
-      this.displayToast(`Switched to ${newTheme} theme`, 'success');
+      this.toastService.showToast(`Switched to ${newTheme} theme`, 'success');
     }
-  }
-
-  private displayToast(message: string, color: string = 'primary') {
-    this.toastMessage = message;
-    this.toastColor = color;
-    this.isToastOpen = true;
   }
 
   onLogout() {

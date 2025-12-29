@@ -8,7 +8,7 @@ import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import { 
   IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
   IonCard, IonCardContent, IonList, IonItem, IonLabel, IonToggle, IonButton,
-  IonIcon, IonNote, IonSpinner, IonToast, ToastController
+  IonIcon, IonNote, IonSpinner
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
@@ -33,6 +33,7 @@ interface SessionsResponse {
 
 import { AppLockService } from '../../services/app-lock.service';
 import { PinService } from '../../services/pin.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-security-settings',
@@ -43,7 +44,7 @@ import { PinService } from '../../services/pin.service';
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
     IonCard, IonCardContent, IonList, IonItem, IonLabel, IonToggle, IonButton,
-    IonIcon, IonNote, IonSpinner, IonToast
+    IonIcon, IonNote, IonSpinner
   ]
 })
 export class SecuritySettingsPage implements OnInit {
@@ -64,7 +65,7 @@ export class SecuritySettingsPage implements OnInit {
     private http: HttpClient,
     private appLockService: AppLockService,
     private pinService: PinService,
-    private toastController: ToastController
+    private toastService: ToastService
   ) {
     addIcons({
       shieldCheckmarkOutline, phonePortraitOutline,
@@ -153,12 +154,7 @@ export class SecuritySettingsPage implements OnInit {
   }
 
   async presentToast(message: string) {
-    const toast = await this.toastController.create({
-      message: message,
-      duration: 2000,
-      position: 'bottom'
-    });
-    await toast.present();
+    this.toastService.showToast(message);
   }
 
   revokeSession(id: number) {

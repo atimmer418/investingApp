@@ -16,7 +16,6 @@ import {
   IonCardContent,
   IonIcon,
   IonInput,
-  IonToast,
   IonButtons,
   IonBackButton,
   IonSelect,
@@ -41,6 +40,7 @@ import { InvestmentService } from '../services/investment.service';
 import { PortfolioService, AccountSummary } from '../services/portfolio.service';
 import { PasskeyService } from '../services/passkey.service';
 import { PinService } from '../services/pin.service';
+import { ToastService } from '../services/toast.service';
 
 interface AlpacaAsset {
   id: string;
@@ -67,7 +67,6 @@ interface AlpacaAsset {
     IonCardContent,
     IonIcon,
     IonInput,
-    IonToast,
     IonButtons,
     IonBackButton,
     IonSegment,
@@ -99,11 +98,6 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
   searchResults: AlpacaAsset[] = [];
   isSearching: boolean = false;
   showSearch: boolean = false;
-  
-  // Toast messages
-  showSuccessToast: boolean = false;
-  showErrorToast: boolean = false;
-  toastMessage: string = '';
 
   constructor(
     private router: Router,
@@ -111,7 +105,8 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
     private portfolioService: PortfolioService,
     private http: HttpClient,
     private passkeyService: PasskeyService,
-    private pinService: PinService
+    private pinService: PinService,
+    private toastService: ToastService
   ) {
     addIcons({
       cashOutline,
@@ -278,7 +273,7 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
       if (hasPin) {
         const pinVerified = await this.pinService.promptPin('verify');
         if (!pinVerified) {
-          this.showToast('Authentication required to make investment.', 'error');
+          this.toastService.showToast('Authentication required to make investment.', 'danger');
           this.isLoading = false;
           return;
         }
@@ -310,7 +305,7 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
               ? 'your portfolio' 
               : `${this.getSelectedStockInfo()?.name} (${this.selectedStock})`;
             
-            this.showToast(
+            this.toastService.showToast(
               `Lump sum investment of ${this.formatCurrency(this.investmentAmount)} into ${investmentTarget} has been initiated successfully! You will receive updates as it processes.`, 
               'success'
             );
@@ -323,7 +318,7 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
               this.investmentType = 'portfolio';
             }, 2000);
           } else {
-            this.showToast(response.message || 'Failed to process investment', 'error');
+            this.toastService.showToast(response.message || 'Failed to process investment', 'danger');
           }
         },
         error: (error) => {
@@ -337,39 +332,39 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
             errorMessage = error.message;
           }
           
-          this.showToast(errorMessage, 'error');
+          this.toastService.showToast(errorMessage, 'danger');
         }
       });
     } catch (error) {
       console.error('Error making investment:', error);
-      this.showToast('An unexpected error occurred.', 'error');
+      this.toastService.showToast('An unexpected error occurred.', 'danger');
       this.isLoading = false;
     }
   }
 
   private validateInvestment(): boolean {
     if (!this.investmentAmount || this.investmentAmount <= 0) {
-      this.showToast('Please enter a valid investment amount', 'error');
+      this.toastService.showToast('Please enter a valid investment amount', 'danger');
       return false;
     }
 
     if (this.investmentAmount < 1) {
-      this.showToast('Minimum investment amount is $1', 'error');
+      this.toastService.showToast('Minimum investment amount is $1', 'danger');
       return false;
     }
 
     if (this.investmentAmount > 1000000) {
-      this.showToast('Maximum investment amount is $1,000,000', 'error');
+      this.toastService.showToast('Maximum investment amount is $1,000,000', 'danger');
       return false;
     }
 
     if (this.fundingSource === 'buying_power' && this.investmentAmount > this.buyingPower) {
-      this.showToast(`Insufficient buying power. You only have ${this.formatCurrency(this.buyingPower)} available.`, 'error');
+      this.toastService.showToast(`Insufficient buying power. You only have ${this.formatCurrency(this.buyingPower)} available.`, 'danger');
       return false;
     }
 
     if (this.investmentType === 'stock' && !this.selectedStock) {
-      this.showToast('Please select a stock to invest in', 'error');
+      this.toastService.showToast('Please select a stock to invest in', 'danger');
       return false;
     }
 
@@ -393,15 +388,6 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
     // For real stock pricing, you'd need to make another API call to get current price
     // For now, we'll show that it would be calculated
     return 0; // This would be calculated with real-time price data
-  }
-
-  private showToast(message: string, type: 'success' | 'error') {
-    this.toastMessage = message;
-    if (type === 'success') {
-      this.showSuccessToast = true;
-    } else {
-      this.showErrorToast = true;
-    }
   }
 
   formatCurrency(amount: number): string {

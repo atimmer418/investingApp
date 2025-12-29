@@ -15,7 +15,6 @@ import {
   IonIcon,
   IonButtons,
   IonBackButton,
-  IonToast,
   IonItem,
   IonLabel,
   IonInput,
@@ -35,6 +34,7 @@ import {
 import { BeneficiaryService, Beneficiary } from '../services/beneficiary.service';
 import { PasskeyService } from '../services/passkey.service';
 import { PinService } from '../services/pin.service';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-add-beneficiary',
@@ -46,7 +46,7 @@ import { PinService } from '../services/pin.service';
     FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton,
     IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIcon,
-    IonButtons, IonBackButton, IonToast, IonItem, IonLabel,
+    IonButtons, IonBackButton, IonItem, IonLabel,
     IonInput, IonSelect, IonSelectOption
   ]
 })
@@ -59,9 +59,6 @@ export class AddBeneficiaryPage implements OnInit {
   };
   
   public isLoading = false;
-  public isToastOpen = false;
-  public toastMessage = '';
-  public toastColor = 'primary';
   public editMode = false;
   public beneficiaryId?: number;
 
@@ -88,7 +85,8 @@ export class AddBeneficiaryPage implements OnInit {
     private route: ActivatedRoute,
     private beneficiaryService: BeneficiaryService,
     private passkeyService: PasskeyService,
-    private pinService: PinService
+    private pinService: PinService,
+    private toastService: ToastService
   ) {
     addIcons({
       arrowBackOutline,
@@ -135,12 +133,12 @@ export class AddBeneficiaryPage implements OnInit {
           this.beneficiary.dateOfBirth = this.parseBackendDate(this.beneficiary.dateOfBirth);
         }
       } else {
-        this.displayToast('Beneficiary not found', 'danger');
+        this.toastService.showToast('Beneficiary not found', 'danger');
         this.router.navigate(['/beneficiaries']);
       }
     } catch (error) {
       console.error('Error loading beneficiary for edit:', error);
-      this.displayToast('Failed to load beneficiary data', 'danger');
+      this.toastService.showToast('Failed to load beneficiary data', 'danger');
     } finally {
       this.isLoading = false;
     }
@@ -158,7 +156,7 @@ export class AddBeneficiaryPage implements OnInit {
       if (hasPin) {
         const pinVerified = await this.pinService.promptPin('verify');
         if (!pinVerified) {
-          this.displayToast('Authentication required to save beneficiary.', 'warning');
+          this.toastService.showToast('Authentication required to save beneficiary.', 'warning');
           this.isLoading = false;
           return;
         }
@@ -195,11 +193,11 @@ export class AddBeneficiaryPage implements OnInit {
       if (this.editMode && this.beneficiaryId) {
         // Update existing beneficiary
         await this.beneficiaryService.updateBeneficiary(this.beneficiaryId, cleanBeneficiary).toPromise();
-        this.displayToast('Beneficiary updated successfully', 'success');
+        this.toastService.showToast('Beneficiary updated successfully', 'success');
       } else {
         // Create new beneficiary
         await this.beneficiaryService.createBeneficiary(cleanBeneficiary).toPromise();
-        this.displayToast('Beneficiary added successfully', 'success');
+        this.toastService.showToast('Beneficiary added successfully', 'success');
       }
 
       // Navigate back to beneficiaries page immediately
@@ -208,7 +206,7 @@ export class AddBeneficiaryPage implements OnInit {
 
     } catch (error) {
       console.error('Error saving beneficiary:', error);
-      this.displayToast('Failed to save beneficiary. Please try again.', 'danger');
+      this.toastService.showToast('Failed to save beneficiary. Please try again.', 'danger');
     } finally {
       this.isLoading = false;
     }
@@ -217,44 +215,44 @@ export class AddBeneficiaryPage implements OnInit {
   private validateForm(): boolean {
     // Check required fields
     if (!this.beneficiary.firstName?.trim()) {
-      this.displayToast('First name is required', 'danger');
+      this.toastService.showToast('First name is required', 'danger');
       return false;
     }
 
     if (!this.beneficiary.lastName?.trim()) {
-      this.displayToast('Last name is required', 'danger');
+      this.toastService.showToast('Last name is required', 'danger');
       return false;
     }
 
     if (!this.beneficiary.dateOfBirth) {
-      this.displayToast('Date of birth is required', 'danger');
+      this.toastService.showToast('Date of birth is required', 'danger');
       return false;
     }
 
     if (!this.beneficiary.socialSecurityNumber?.trim()) {
-      this.displayToast('Social Security Number is required', 'danger');
+      this.toastService.showToast('Social Security Number is required', 'danger');
       return false;
     }
 
     if (!this.beneficiary.relationship) {
-      this.displayToast('Relationship is required', 'danger');
+      this.toastService.showToast('Relationship is required', 'danger');
       return false;
     }
 
     if (!this.beneficiary.percentageAllocation || this.beneficiary.percentageAllocation <= 0) {
-      this.displayToast('Allocation percentage must be greater than 0', 'danger');
+      this.toastService.showToast('Allocation percentage must be greater than 0', 'danger');
       return false;
     }
 
     if (this.beneficiary.percentageAllocation > 100) {
-      this.displayToast('Allocation percentage cannot exceed 100%', 'danger');
+      this.toastService.showToast('Allocation percentage cannot exceed 100%', 'danger');
       return false;
     }
 
     // Validate SSN format
     const ssnRegex = /^\d{3}-\d{2}-\d{4}$/;
     if (this.beneficiary.socialSecurityNumber && !ssnRegex.test(this.beneficiary.socialSecurityNumber)) {
-      this.displayToast('Social Security Number must be in format XXX-XX-XXXX', 'danger');
+      this.toastService.showToast('Social Security Number must be in format XXX-XX-XXXX', 'danger');
       return false;
     }
 
@@ -262,7 +260,7 @@ export class AddBeneficiaryPage implements OnInit {
     if (this.beneficiary.email && this.beneficiary.email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(this.beneficiary.email)) {
-        this.displayToast('Please enter a valid email address', 'danger');
+        this.toastService.showToast('Please enter a valid email address', 'danger');
         return false;
       }
     }
@@ -364,11 +362,5 @@ export class AddBeneficiaryPage implements OnInit {
       value = value.replace(/(\d{3})(\d{0,3})/, '($1) $2');
     }
     this.beneficiary.phone = value;
-  }
-
-  private displayToast(message: string, color: string = 'primary') {
-    this.toastMessage = message;
-    this.toastColor = color;
-    this.isToastOpen = true;
   }
 }
