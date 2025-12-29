@@ -200,4 +200,19 @@ public class JwtUtils {
         }
         return null;
     }
+
+    public String generateJwtTokenFromUsername(String username) {
+        String jwtId = UUID.randomUUID().toString();
+        Date issuedAt = new Date();
+        Date expiration = new Date(issuedAt.getTime() + jwtExpirationMs);
+        
+        return Jwts.builder()
+                .setSubject(username)
+                .setId(jwtId)
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiration)
+                .setIssuer("investingapp")
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
 }

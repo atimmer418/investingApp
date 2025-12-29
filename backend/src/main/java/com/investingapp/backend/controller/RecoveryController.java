@@ -77,7 +77,7 @@ public class RecoveryController {
         userRepository.save(user);
 
         // 3. Issue Token
-        String token = jwtUtils.generateJwtToken(user.getEmail());
+        String token = jwtUtils.generateJwtTokenFromUsername(user.getEmail());
 
         return ResponseEntity.ok(new RecoveryResponse(true, "Recovery successful. Please register a new passkey.", token));
     }
