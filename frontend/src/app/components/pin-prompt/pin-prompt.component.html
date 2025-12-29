@@ -1,0 +1,54 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="cancel()" color="medium">Cancel</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="pin-content">
+  <div class="pin-container">
+    <div class="icon-area">
+      <ion-icon name="lock-closed-outline"></ion-icon>
+    </div>
+    
+    <h2>{{ getTitle() }}</h2>
+    <p>{{ getSubtitle() }}</p>
+
+    <!-- PIN Dots -->
+    <div class="pin-dots" [class.error]="isError">
+      <div class="dot" [class.filled]="pin.length > 0"></div>
+      <div class="dot" [class.filled]="pin.length > 1"></div>
+      <div class="dot" [class.filled]="pin.length > 2"></div>
+      <div class="dot" [class.filled]="pin.length > 3"></div>
+    </div>
+
+    <p class="error-msg" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <!-- Keypad -->
+    <div class="keypad">
+      <div class="key-row">
+        <button class="key" (click)="addDigit('1')">1</button>
+        <button class="key" (click)="addDigit('2')">2</button>
+        <button class="key" (click)="addDigit('3')">3</button>
+      </div>
+      <div class="key-row">
+        <button class="key" (click)="addDigit('4')">4</button>
+        <button class="key" (click)="addDigit('5')">5</button>
+        <button class="key" (click)="addDigit('6')">6</button>
+      </div>
+      <div class="key-row">
+        <button class="key" (click)="addDigit('7')">7</button>
+        <button class="key" (click)="addDigit('8')">8</button>
+        <button class="key" (click)="addDigit('9')">9</button>
+      </div>
+      <div class="key-row">
+        <button class="key empty"></button>
+        <button class="key" (click)="addDigit('0')">0</button>
+        <button class="key backspace" (click)="removeDigit()">
+          <ion-icon name="backspace-outline"></ion-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</ion-content>

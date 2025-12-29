@@ -1,0 +1,118 @@
+.pin-content {
+  --background: var(--ion-background-color);
+}
+
+.pin-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding-bottom: 40px;
+
+  .icon-area {
+    margin-bottom: 20px;
+    ion-icon {
+      font-size: 48px;
+      color: var(--ion-color-primary);
+      padding: 20px;
+      background: rgba(var(--ion-color-primary-rgb), 0.1);
+      border-radius: 50%;
+    }
+  }
+
+  h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+
+  p {
+    color: var(--ion-color-medium);
+    margin: 0 0 30px;
+    font-size: 14px;
+  }
+
+  .error-msg {
+    color: var(--ion-color-danger);
+    margin-top: 10px;
+    margin-bottom: 0;
+    height: 20px;
+  }
+}
+
+.pin-dots {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 40px;
+
+  .dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--ion-color-light-shade);
+    transition: all 0.2s ease;
+
+    &.filled {
+      background: var(--ion-color-primary);
+      transform: scale(1.1);
+    }
+  }
+
+  &.error {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    .dot {
+      background: var(--ion-color-danger);
+    }
+  }
+}
+
+.keypad {
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .key-row {
+    display: flex;
+    justify-content: space-between;
+    
+    .key {
+      width: 70px;
+      height: 70px;
+      border-radius: 35px;
+      background: transparent; // var(--ion-color-light);
+      border: 1px solid var(--ion-color-light-shade);
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--ion-text-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+
+      &:active {
+        background: var(--ion-color-light-shade);
+      }
+
+      &.empty {
+        border: none;
+        background: transparent;
+        pointer-events: none;
+      }
+
+      &.backspace {
+        border: none;
+        font-size: 24px;
+      }
+    }
+  }
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}

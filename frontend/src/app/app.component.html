@@ -1,20 +1,3 @@
 <ion-app>
   <ion-router-outlet></ion-router-outlet>
-
-  <!-- App Lock Overlay -->
-  <div class="app-lock-overlay" *ngIf="isLocked">
-    <div class="lock-content">
-      <div class="lock-icon">
-        <ion-icon name="lock-closed-outline"></ion-icon>
-      </div>
-      <h2>FRED is Locked</h2>
-      <p>Unlock with Face ID to continue</p>
-      
-      <ion-button expand="block" class="unlock-btn" (click)="unlockApp()" [disabled]="isUnlocking">
-        <ion-spinner name="crescent" *ngIf="isUnlocking"></ion-spinner>
-        <span *ngIf="!isUnlocking">Unlock</span>
-        <ion-icon name="finger-print-outline" slot="end" *ngIf="!isUnlocking"></ion-icon>
-      </ion-button>
-    </div>
-  </div>
 </ion-app>

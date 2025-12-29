@@ -23,8 +23,6 @@ register();
   imports: [IonApp, IonRouterOutlet, CommonModule, IonContent, IonButton, IonIcon, IonSpinner],
 })
 export class AppComponent implements OnInit {
-  isLocked = false;
-  isUnlocking = false;
 
   constructor(
     private router: Router,
@@ -53,15 +51,6 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Subscribe to App Lock state
-    this.appLockService.isLocked$.subscribe(locked => {
-      this.isLocked = locked;
-      if (locked) {
-        // Auto-trigger unlock if desired, or wait for user to tap button
-        // this.unlockApp(); 
-      }
-    });
-
     // localStorage.clear();
     console.log('[AppComponent] ngOnInit - Setting up authentication and progress tracking.');
     
@@ -290,14 +279,5 @@ export class AppComponent implements OnInit {
 
     // Use the same navigation logic as navigateBasedOnProgress
     this.navigateBasedOnProgress(progress);
-  }
-
-  async unlockApp() {
-    this.isUnlocking = true;
-    // Simulate Biometric/Passkey Prompt
-    setTimeout(() => {
-      this.appLockService.unlock();
-      this.isUnlocking = false;
-    }, 800);
   }
 }

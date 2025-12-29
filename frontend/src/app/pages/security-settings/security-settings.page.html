@@ -54,8 +54,8 @@
         <ion-item class="sensitive-auth-item">
           <ion-icon name="shield-checkmark-outline" slot="start" class="setting-icon"></ion-icon>
           <ion-label>
-            <h3>Transaction Security</h3>
-            <p>Require authentication for all sensitive actions</p>
+            <h3>Sensitive Action Security</h3>
+            <p>Require 4-digit PIN for high-risk actions</p>
           </ion-label>
           <ion-toggle slot="end" [(ngModel)]="sensitiveAuthEnabled" (ionChange)="toggleSensitiveAuth()"></ion-toggle>
         </ion-item>

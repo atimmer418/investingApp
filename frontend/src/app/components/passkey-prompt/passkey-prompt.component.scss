@@ -1,0 +1,50 @@
+.app-lock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--ion-background-color);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lock-content {
+  text-align: center;
+  padding: 2rem;
+  width: 100%;
+  max-width: 320px;
+
+  .lock-icon {
+    margin-bottom: 2rem;
+    
+    ion-icon {
+      font-size: 4rem;
+      color: var(--ion-color-primary);
+      padding: 2rem;
+      background: rgba(var(--ion-color-primary-rgb), 0.1);
+      border-radius: 50%;
+    }
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--ion-text-color);
+  }
+
+  p {
+    color: var(--ion-color-medium);
+    margin-bottom: 3rem;
+  }
+
+  .unlock-btn {
+    --border-radius: 12px;
+    height: 50px;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+}

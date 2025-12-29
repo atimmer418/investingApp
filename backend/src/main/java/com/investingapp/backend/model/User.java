@@ -61,6 +61,16 @@ public class User {
     @Column(unique = true, length = 255) // Must be unique if used as user handle for WebAuthn
     private String userHandle; // Store as Base64URL encoded string
 
+    // Sensitive Action PIN
+    @Column(name = "pin_hash")
+    private String pinHash;
+
+    @Column(name = "failed_pin_attempts")
+    private Integer failedPinAttempts = 0;
+
+    @Column(name = "pin_lockout_until")
+    private LocalDateTime pinLockoutUntil;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<PasskeyCredential> passkeyCredentials = new HashSet<>();
 

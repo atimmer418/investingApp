@@ -8,7 +8,7 @@ import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import { 
   IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
   IonCard, IonCardContent, IonList, IonItem, IonLabel, IonToggle, IonButton,
-  IonIcon, IonNote, IonSpinner, IonToast
+  IonIcon, IonNote, IonSpinner, IonToast, ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
@@ -32,6 +32,7 @@ interface SessionsResponse {
 }
 
 import { AppLockService } from '../../services/app-lock.service';
+import { PinService } from '../../services/pin.service';
 
 @Component({
   selector: 'app-security-settings',
@@ -51,7 +52,7 @@ export class SecuritySettingsPage implements OnInit {
   
   // Settings State
   appLockEnabled = true;
-  sensitiveAuthEnabled = true;
+  sensitiveAuthEnabled = false; // Default to false until loaded
   userEmail: string = 'alex.doe@example.com';
   
   // Real Data
@@ -61,7 +62,9 @@ export class SecuritySettingsPage implements OnInit {
   constructor(
     private router: Router, 
     private http: HttpClient,
-    private appLockService: AppLockService
+    private appLockService: AppLockService,
+    private pinService: PinService,
+    private toastController: ToastController
   ) {
     addIcons({
       shieldCheckmarkOutline, phonePortraitOutline,
@@ -78,10 +81,24 @@ export class SecuritySettingsPage implements OnInit {
     
     // Sync App Lock state
     this.appLockEnabled = this.appLockService.isEnabled();
-    this.sensitiveAuthEnabled = localStorage.getItem('sensitive_auth_enabled') !== 'false';
+    
+    // Check if PIN is set (Sensitive Auth Enabled)
+    this.sensitiveAuthEnabled = await this.pinService.hasPin();
 
-    // Simulate Passkey Authentication on load
-    await this.authenticateUser();
+    // If Sensitive Auth is enabled, require PIN to enter this page
+    if (this.sensitiveAuthEnabled) {
+      const verified = await this.pinService.promptPin('verify');
+      if (!verified) {
+        // User cancelled or failed PIN -> Go back
+        this.router.navigate(['/tabs/tab3']); // Or wherever back is
+        return;
+      }
+    }
+
+    // No pre-authentication required to view settings (or already passed PIN)
+    this.isAuthenticated = true;
+    this.isAuthenticating = false;
+    
     this.loadSessions();
   }
 
@@ -118,9 +135,39 @@ export class SecuritySettingsPage implements OnInit {
     console.log('App lock toggled:', this.appLockEnabled);
   }
 
-  toggleSensitiveAuth() {
-    localStorage.setItem('sensitive_auth_enabled', String(this.sensitiveAuthEnabled));
-    console.log('Sensitive auth toggled:', this.sensitiveAuthEnabled);
+  async toggleSensitiveAuth() {
+    if (this.sensitiveAuthEnabled) {
+      // User turned it ON
+      const success = await this.pinService.promptPin('create');
+      if (success) {
+        // Launch verify mode right after as requested
+        const verified = await this.pinService.promptPin('verify');
+        if (verified) {
+          this.presentToast('Sensitive Action PIN enabled.');
+        } else {
+          // Verification failed, revert
+          this.sensitiveAuthEnabled = false;
+          await this.pinService.deletePin();
+          this.presentToast('Verification failed. PIN not set.');
+        }
+      } else {
+        // Creation cancelled
+        this.sensitiveAuthEnabled = false;
+      }
+    } else {
+      // User turned it OFF
+      await this.pinService.deletePin();
+      this.presentToast('Sensitive Action PIN disabled.');
+    }
+  }
+
+  async presentToast(message: string) {
+    const toast = await this.toastController.create({
+      message: message,
+      duration: 2000,
+      position: 'bottom'
+    });
+    await toast.present();
   }
 
   revokeSession(id: number) {
