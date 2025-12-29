@@ -4,7 +4,7 @@ import com.investingapp.backend.dto.PinRequest;
 import com.investingapp.backend.dto.PinResponse;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.UserRepository;
-import com.investingapp.backend.security.JwtUtils;
+import com.investingapp.backend.security.jwt.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -60,9 +60,10 @@ public class PinController {
         // Verify PIN
         if (passwordEncoder.matches(request.getPin(), user.getPinHash())) {
             // Success: Reset counters
-            if (user.getFailedPinAttempts() > 0 || user.getPinLockoutUntil() != null) {
+            if (user.getFailedPinAttempts() > 0 || user.getPinLockoutUntil() != null || (user.getPinLockoutLevel() != null && user.getPinLockoutLevel() > 0)) {
                 user.setFailedPinAttempts(0);
                 user.setPinLockoutUntil(null);
+                user.setPinLockoutLevel(0);
                 userRepository.save(user);
             }
             return ResponseEntity.ok(new PinResponse(true, "PIN verified", false, 0L));
@@ -73,9 +74,16 @@ public class PinController {
             user.setFailedPinAttempts(attempts);
 
             if (attempts >= MAX_ATTEMPTS) {
-                user.setPinLockoutUntil(LocalDateTime.now().plusMinutes(LOCKOUT_MINUTES));
+                // Calculate lockout duration based on level
+                int level = user.getPinLockoutLevel() == null ? 0 : user.getPinLockoutLevel();
+                long lockoutMinutes = LOCKOUT_MINUTES * (long) Math.pow(2, level);
+                
+                user.setPinLockoutUntil(LocalDateTime.now().plusMinutes(lockoutMinutes));
+                user.setPinLockoutLevel(level + 1);
+                user.setFailedPinAttempts(0); // Reset attempts so they get 5 more tries AFTER lockout expires
+                
                 userRepository.save(user);
-                return ResponseEntity.status(429).body(new PinResponse(false, "Too many failed attempts. Locked for 30 minutes.", true, (long) (LOCKOUT_MINUTES * 60)));
+                return ResponseEntity.status(429).body(new PinResponse(false, "Too many failed attempts. Locked for " + lockoutMinutes + " minutes.", true, lockoutMinutes * 60));
             } else {
                 userRepository.save(user);
                 return ResponseEntity.status(401).body(new PinResponse(false, "Incorrect PIN. " + (MAX_ATTEMPTS - attempts) + " attempts remaining.", false, 0L));
@@ -98,6 +106,7 @@ public class PinController {
         user.setPinHash(null);
         user.setFailedPinAttempts(0);
         user.setPinLockoutUntil(null);
+        user.setPinLockoutLevel(0);
         userRepository.save(user);
 
         return ResponseEntity.ok(new PinResponse(true, "PIN removed successfully", false, 0L));

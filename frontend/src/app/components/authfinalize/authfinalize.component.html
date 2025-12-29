@@ -112,6 +112,18 @@
         <ion-icon name="person-circle-outline" slot="start"></ion-icon>
         <span>Already have an account? Sign in with passkey</span>
       </ion-button>
+
+      <ion-button 
+        expand="block" 
+        fill="clear"
+        color="medium"
+        class="recovery-button" 
+        type="button"  
+        (click)="recoverAccount()"
+        style="margin-top: 12px; font-size: 0.9em;">
+        <ion-icon name="help-circle-outline" slot="start"></ion-icon>
+        <span>Lost Device / Recover Account</span>
+      </ion-button>
     </div>
 
     <!-- Feedback Messages -->

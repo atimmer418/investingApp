@@ -89,11 +89,37 @@ export class PinPromptComponent implements OnInit {
       }
     } catch (error: any) {
       // Handle 401/429 errors from backend
-      const msg = error.error?.message || 'Verification failed';
-      this.handleError(msg);
+      const errorBody = error.error;
+      if (errorBody && errorBody.lockedOut) {
+        this.handleLockout(errorBody.message, errorBody.lockoutDurationSeconds);
+      } else {
+        const msg = errorBody?.message || 'Verification failed';
+        this.handleError(msg);
+      }
     } finally {
       this.isLoading = false;
     }
+  }
+
+  handleLockout(msg: string, seconds: number) {
+    this.isError = true;
+    this.errorMessage = msg;
+    this.pin = '';
+    
+    // Start countdown
+    let remaining = seconds;
+    const interval = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        this.errorMessage = 'Lockout expired. You may try again.';
+        this.isError = false;
+      } else {
+        const minutes = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        this.errorMessage = `Locked out. Try again in ${minutes}m ${secs}s`;
+      }
+    }, 1000);
   }
 
   handleCreateStep() {

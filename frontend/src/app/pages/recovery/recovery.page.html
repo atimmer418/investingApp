@@ -1,0 +1,59 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/login" color="dark"></ion-back-button>
+    </ion-buttons>
+    <ion-title color="dark">Account Recovery</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="recovery-container">
+    <div class="icon-area">
+      <ion-icon name="shield-checkmark-outline" color="primary"></ion-icon>
+    </div>
+
+    <div *ngIf="step === 'ssn'">
+      <h2>Identity Verification</h2>
+      <p>Please enter your Social Security Number (SSN) to verify your identity.</p>
+
+      <ion-item class="input-item" lines="none">
+        <ion-icon name="key-outline" slot="start" color="medium"></ion-icon>
+        <ion-input 
+          [(ngModel)]="ssn" 
+          placeholder="Enter SSN" 
+          type="password"
+        ></ion-input>
+      </ion-item>
+
+      <ion-button expand="block" (click)="sendCode()" [disabled]="!ssn || isLoading" class="action-btn">
+        <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+        <span *ngIf="!isLoading">Send Recovery Code</span>
+      </ion-button>
+    </div>
+
+    <div *ngIf="step === 'otp'">
+      <h2>Enter Recovery Code</h2>
+      <p>We sent a code to the email associated with this SSN.</p>
+
+      <ion-item class="input-item" lines="none">
+        <ion-icon name="mail-outline" slot="start" color="medium"></ion-icon>
+        <ion-input 
+          [(ngModel)]="otp" 
+          placeholder="Enter 6-digit Code" 
+          type="number"
+        ></ion-input>
+      </ion-item>
+
+      <ion-button expand="block" (click)="verifyCode()" [disabled]="!otp || isLoading" class="action-btn">
+        <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+        <span *ngIf="!isLoading">Verify & Recover</span>
+      </ion-button>
+      
+      <ion-button fill="clear" expand="block" (click)="step = 'ssn'" [disabled]="isLoading">
+        Back
+      </ion-button>
+    </div>
+
+  </div>
+</ion-content>

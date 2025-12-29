@@ -18,6 +18,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Returns an Optional, which can be empty if no user is found
     Optional<User> findByEmail(String email);
 
+    Optional<User> findBySsn(String ssn);
+
     // Find a user by email with UserProgress eagerly fetched (avoids lazy loading
     // cache issues)
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.userProgress WHERE u.email = :email")

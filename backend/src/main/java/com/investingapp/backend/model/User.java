@@ -71,6 +71,19 @@ public class User {
     @Column(name = "pin_lockout_until")
     private LocalDateTime pinLockoutUntil;
 
+    @Column(name = "pin_lockout_level")
+    private Integer pinLockoutLevel = 0;
+
+    // Account Recovery
+    @Column(name = "ssn")
+    private String ssn; // In production, this MUST be encrypted!
+
+    @Column(name = "recovery_otp")
+    private String recoveryOtp;
+
+    @Column(name = "recovery_otp_expiry")
+    private LocalDateTime recoveryOtpExpiry;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<PasskeyCredential> passkeyCredentials = new HashSet<>();
 

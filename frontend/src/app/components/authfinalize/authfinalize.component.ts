@@ -10,6 +10,8 @@ import {
   IonInput, IonButton, IonSpinner, IonText, IonNote, IonProgressBar, 
   IonBackButton, IonButtons, IonIcon, NavController
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { personCircleOutline, helpCircleOutline } from 'ionicons/icons';
 
 // --- NEW IMPORTS ---
 import { PasskeyService } from '../../services/passkey.service';
@@ -54,6 +56,7 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
     private passkeyService: PasskeyService, // Inject the new service
     private authService: AuthService
   ) {
+    addIcons({ personCircleOutline, helpCircleOutline });
     this.registerForm = new FormGroup({
       email: new FormControl('', [Validators.required, Validators.email, Validators.maxLength(100)]),
     });
@@ -382,6 +385,10 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
     }
     
     this.isLoading = false;
+  }
+
+  recoverAccount() {
+    this.router.navigate(['/recovery']);
   }
 
   ngOnDestroy() {
