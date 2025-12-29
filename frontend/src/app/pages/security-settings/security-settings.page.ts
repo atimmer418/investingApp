@@ -140,16 +140,7 @@ export class SecuritySettingsPage implements OnInit {
       // User turned it ON
       const success = await this.pinService.promptPin('create');
       if (success) {
-        // Launch verify mode right after as requested
-        const verified = await this.pinService.promptPin('verify');
-        if (verified) {
-          this.presentToast('Sensitive Action PIN enabled.');
-        } else {
-          // Verification failed, revert
-          this.sensitiveAuthEnabled = false;
-          await this.pinService.deletePin();
-          this.presentToast('Verification failed. PIN not set.');
-        }
+        this.presentToast('Sensitive Action PIN enabled.');
       } else {
         // Creation cancelled
         this.sensitiveAuthEnabled = false;

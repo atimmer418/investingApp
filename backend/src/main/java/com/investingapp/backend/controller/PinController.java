@@ -98,6 +98,19 @@ public class PinController {
         return ResponseEntity.ok(user.getPinHash() != null && !user.getPinHash().isEmpty());
     }
 
+    @GetMapping("/lockout-status")
+    public ResponseEntity<PinResponse> checkLockout(@RequestHeader("Authorization") String token) {
+        User user = getUserFromToken(token);
+        if (user == null) return ResponseEntity.status(401).build();
+
+        if (user.getPinLockoutUntil() != null && user.getPinLockoutUntil().isAfter(LocalDateTime.now())) {
+            long secondsLeft = ChronoUnit.SECONDS.between(LocalDateTime.now(), user.getPinLockoutUntil());
+            return ResponseEntity.ok(new PinResponse(false, "Account is locked", true, secondsLeft));
+        }
+
+        return ResponseEntity.ok(new PinResponse(true, "Account is active", false, 0L));
+    }
+
     @DeleteMapping("/delete")
     public ResponseEntity<PinResponse> deletePin(@RequestHeader("Authorization") String token) {
         User user = getUserFromToken(token);

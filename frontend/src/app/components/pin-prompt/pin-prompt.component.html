@@ -6,7 +6,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="pin-content">
+<ion-content class="pin-content" [scrollY]="false">
   <div class="pin-container">
     <div class="icon-area">
       <ion-icon name="lock-closed-outline"></ion-icon>
@@ -28,24 +28,24 @@
     <!-- Keypad -->
     <div class="keypad">
       <div class="key-row">
-        <button class="key" (click)="addDigit('1')">1</button>
-        <button class="key" (click)="addDigit('2')">2</button>
-        <button class="key" (click)="addDigit('3')">3</button>
+        <button class="key" (click)="addDigit('1')" [disabled]="isLockedOut || isLoading">1</button>
+        <button class="key" (click)="addDigit('2')" [disabled]="isLockedOut || isLoading">2</button>
+        <button class="key" (click)="addDigit('3')" [disabled]="isLockedOut || isLoading">3</button>
       </div>
       <div class="key-row">
-        <button class="key" (click)="addDigit('4')">4</button>
-        <button class="key" (click)="addDigit('5')">5</button>
-        <button class="key" (click)="addDigit('6')">6</button>
+        <button class="key" (click)="addDigit('4')" [disabled]="isLockedOut || isLoading">4</button>
+        <button class="key" (click)="addDigit('5')" [disabled]="isLockedOut || isLoading">5</button>
+        <button class="key" (click)="addDigit('6')" [disabled]="isLockedOut || isLoading">6</button>
       </div>
       <div class="key-row">
-        <button class="key" (click)="addDigit('7')">7</button>
-        <button class="key" (click)="addDigit('8')">8</button>
-        <button class="key" (click)="addDigit('9')">9</button>
+        <button class="key" (click)="addDigit('7')" [disabled]="isLockedOut || isLoading">7</button>
+        <button class="key" (click)="addDigit('8')" [disabled]="isLockedOut || isLoading">8</button>
+        <button class="key" (click)="addDigit('9')" [disabled]="isLockedOut || isLoading">9</button>
       </div>
       <div class="key-row">
         <button class="key empty"></button>
-        <button class="key" (click)="addDigit('0')">0</button>
-        <button class="key backspace" (click)="removeDigit()">
+        <button class="key" (click)="addDigit('0')" [disabled]="isLockedOut || isLoading">0</button>
+        <button class="key backspace" (click)="removeDigit()" [disabled]="isLockedOut || isLoading">
           <ion-icon name="backspace-outline"></ion-icon>
         </button>
       </div>

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { ModalController } from '@ionic/angular/standalone';
 import { IonHeader, IonToolbar, IonButtons, IonButton, IonContent, IonIcon } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
@@ -13,7 +13,7 @@ import { PinService } from '../../services/pin.service';
   standalone: true,
   imports: [CommonModule, IonHeader, IonToolbar, IonButtons, IonButton, IonContent, IonIcon]
 })
-export class PinPromptComponent implements OnInit {
+export class PinPromptComponent implements OnInit, OnDestroy {
   @Input() mode: 'create' | 'verify' = 'verify';
   
   pin = '';
@@ -21,8 +21,10 @@ export class PinPromptComponent implements OnInit {
   step: 'enter' | 'confirm' = 'enter'; // For create mode
   
   isError = false;
+  isLockedOut = false;
   errorMessage = '';
   isLoading = false;
+  private lockoutInterval: any;
 
   constructor(
     private modalController: ModalController,
@@ -31,9 +33,26 @@ export class PinPromptComponent implements OnInit {
     addIcons({ lockClosedOutline, backspaceOutline });
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     // If verifying, step is always 'enter'
     // If creating, step starts at 'enter' (Create PIN) then goes to 'confirm' (Confirm PIN)
+    
+    if (this.mode === 'verify') {
+      try {
+        const status = await this.pinService.checkLockout();
+        if (status.lockedOut) {
+          this.handleLockout(status.message, status.lockoutDurationSeconds);
+        }
+      } catch (e) {
+        console.error('Failed to check lockout status', e);
+      }
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.lockoutInterval) {
+      clearInterval(this.lockoutInterval);
+    }
   }
 
   getTitle(): string {
@@ -47,7 +66,7 @@ export class PinPromptComponent implements OnInit {
   }
 
   addDigit(digit: string) {
-    if (this.pin.length < 4 && !this.isLoading) {
+    if (this.pin.length < 4 && !this.isLoading && !this.isLockedOut) {
       this.pin += digit;
       this.isError = false;
       this.errorMessage = '';
@@ -59,7 +78,7 @@ export class PinPromptComponent implements OnInit {
   }
 
   removeDigit() {
-    if (this.pin.length > 0 && !this.isLoading) {
+    if (this.pin.length > 0 && !this.isLoading && !this.isLockedOut) {
       this.pin = this.pin.slice(0, -1);
       this.isError = false;
       this.errorMessage = '';
@@ -103,17 +122,24 @@ export class PinPromptComponent implements OnInit {
 
   handleLockout(msg: string, seconds: number) {
     this.isError = true;
+    this.isLockedOut = true;
     this.errorMessage = msg;
     this.pin = '';
     
+    // Clear any existing interval
+    if (this.lockoutInterval) {
+      clearInterval(this.lockoutInterval);
+    }
+
     // Start countdown
     let remaining = seconds;
-    const interval = setInterval(() => {
+    this.lockoutInterval = setInterval(() => {
       remaining--;
       if (remaining <= 0) {
-        clearInterval(interval);
+        clearInterval(this.lockoutInterval);
         this.errorMessage = 'Lockout expired. You may try again.';
         this.isError = false;
+        this.isLockedOut = false;
       } else {
         const minutes = Math.floor(remaining / 60);
         const secs = remaining % 60;

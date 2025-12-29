@@ -7,6 +7,7 @@ import { trigger, style, animate, transition } from '@angular/animations';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../services/toast.service';
 import { PasskeyService } from '../../services/passkey.service';
+import { PinService } from '../../services/pin.service';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
@@ -121,7 +122,8 @@ export class PortfolioCustomizeComponent implements OnInit {
     private route: ActivatedRoute,
     private http: HttpClient,
     private toastService: ToastService,
-    private passkeyService: PasskeyService
+    private passkeyService: PasskeyService,
+    private pinService: PinService
   ) {}
 
   ngOnInit() {
@@ -543,49 +545,11 @@ export class PortfolioCustomizeComponent implements OnInit {
     
     try {
       // Step-up authentication check
-      const sensitiveAuthEnabled = localStorage.getItem('sensitive_auth_enabled') !== 'false';
+      const hasPin = await this.pinService.hasPin();
 
-      if (sensitiveAuthEnabled) {
-        try {
-          const startResponse = await this.passkeyService.startAuthentication().toPromise();
-          if (!startResponse || !startResponse.requestOptions) {
-            throw new Error('Failed to start authentication');
-          }
-
-          let options = JSON.parse(startResponse.requestOptions);
-          
-          // Handle potential nesting (some libraries wrap it in publicKey)
-          if (options.publicKey) {
-            options = options.publicKey;
-          }
-          
-          // Convert challenge from base64url to ArrayBuffer
-          if (options.challenge) {
-            options.challenge = this.passkeyService.base64urlToArrayBuffer(options.challenge);
-          } else {
-            throw new Error('Missing challenge in WebAuthn options');
-          }
-          
-          // Convert allowCredentials ids if present
-          if (options.allowCredentials) {
-            options.allowCredentials = options.allowCredentials.map((c: any) => {
-              c.id = this.passkeyService.base64urlToArrayBuffer(c.id);
-              return c;
-            });
-          }
-
-          const credential = await navigator.credentials.get({
-            publicKey: options
-          });
-
-          const credentialJson = this.passkeyService.credentialToJson(credential);
-          const authResult = await this.passkeyService.finishAuthentication(credentialJson, startResponse.sessionId).toPromise();
-          
-          if (!authResult || !authResult.success) {
-            throw new Error('Authentication failed');
-          }
-        } catch (authError) {
-          console.error('Authentication error:', authError);
+      if (hasPin) {
+        const pinVerified = await this.pinService.promptPin('verify');
+        if (!pinVerified) {
           this.toastService.showToast('Authentication required to save portfolio.', 'warning');
           this.isSaving = false;
           return;

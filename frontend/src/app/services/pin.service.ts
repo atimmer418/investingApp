@@ -39,6 +39,12 @@ export class PinService {
     }
   }
 
+  async checkLockout(): Promise<PinResponse> {
+    return await firstValueFrom(
+      this.http.get<PinResponse>(`${this.apiUrl}/lockout-status`, { headers: this.getHeaders() })
+    );
+  }
+
   async setPin(pin: string): Promise<PinResponse> {
     return await firstValueFrom(
       this.http.post<PinResponse>(`${this.apiUrl}/set`, { pin }, { headers: this.getHeaders() })

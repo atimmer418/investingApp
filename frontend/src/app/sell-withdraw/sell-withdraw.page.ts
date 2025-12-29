@@ -35,6 +35,7 @@ import { TradingService, SellRequest, WithdrawRequest } from '../services/tradin
 import { PortfolioService, PortfolioDashboardData, Position, AccountSummary } from '../services/portfolio.service';
 import { ToastService } from '../services/toast.service';
 import { PasskeyService } from '../services/passkey.service';
+import { PinService } from '../services/pin.service';
 
 @Component({
   selector: 'app-sell-withdraw',
@@ -84,7 +85,8 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     private portfolioService: PortfolioService,
     private alertController: AlertController,
     private toastService: ToastService,
-    private passkeyService: PasskeyService
+    private passkeyService: PasskeyService,
+    private pinService: PinService
   ) {
     addIcons({
       pieChartOutline,
@@ -207,53 +209,11 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
 
     try {
       // Step-up authentication check
-      const sensitiveAuthEnabled = localStorage.getItem('sensitive_auth_enabled') !== 'false';
+      const hasPin = await this.pinService.hasPin();
       
-      if (sensitiveAuthEnabled) {
-        try {
-          const startResponse = await this.passkeyService.startAuthentication().toPromise();
-          if (!startResponse || !startResponse.requestOptions) {
-            throw new Error('Failed to start authentication');
-          }
-
-          let options = JSON.parse(startResponse.requestOptions);
-          console.log('🔍 [SellWithdraw] Parsed WebAuthn options:', options);
-
-          // Handle potential nesting (some libraries wrap it in publicKey)
-          if (options.publicKey) {
-            console.log('🔍 [SellWithdraw] Found nested publicKey, unwrapping...');
-            options = options.publicKey;
-          }
-          
-          // Convert challenge from base64url to ArrayBuffer
-          if (options.challenge) {
-            console.log('🔍 [SellWithdraw] Converting challenge:', options.challenge);
-            options.challenge = this.base64urlToArrayBuffer(options.challenge);
-          } else {
-            console.error('❌ [SellWithdraw] Missing challenge in options!');
-            throw new Error('Missing challenge in WebAuthn options');
-          }
-          
-          // Convert allowCredentials ids if present
-          if (options.allowCredentials) {
-            options.allowCredentials = options.allowCredentials.map((c: any) => {
-              c.id = this.base64urlToArrayBuffer(c.id);
-              return c;
-            });
-          }
-
-          const credential = await navigator.credentials.get({
-            publicKey: options
-          });
-
-          const credentialJson = this.credentialToJson(credential);
-          const authResult = await this.passkeyService.finishAuthentication(credentialJson, startResponse.sessionId).toPromise();
-          
-          if (!authResult || !authResult.success) {
-            throw new Error('Authentication failed');
-          }
-        } catch (authError) {
-          console.error('Authentication error:', authError);
+      if (hasPin) {
+        const pinVerified = await this.pinService.promptPin('verify');
+        if (!pinVerified) {
           this.showToast('Authentication required to sell positions.', 'warning');
           return;
         }
@@ -311,53 +271,11 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
 
     try {
       // Step-up authentication check
-      const sensitiveAuthEnabled = localStorage.getItem('sensitive_auth_enabled') !== 'false';
+      const hasPin = await this.pinService.hasPin();
 
-      if (sensitiveAuthEnabled) {
-        try {
-          const startResponse = await this.passkeyService.startAuthentication().toPromise();
-          if (!startResponse || !startResponse.requestOptions) {
-            throw new Error('Failed to start authentication');
-          }
-
-          let options = JSON.parse(startResponse.requestOptions);
-          console.log('🔍 [SellWithdraw] Parsed WebAuthn options:', options);
-
-          // Handle potential nesting (some libraries wrap it in publicKey)
-          if (options.publicKey) {
-            console.log('🔍 [SellWithdraw] Found nested publicKey, unwrapping...');
-            options = options.publicKey;
-          }
-          
-          // Convert challenge from base64url to ArrayBuffer
-          if (options.challenge) {
-            console.log('🔍 [SellWithdraw] Converting challenge:', options.challenge);
-            options.challenge = this.base64urlToArrayBuffer(options.challenge);
-          } else {
-            console.error('❌ [SellWithdraw] Missing challenge in options!');
-            throw new Error('Missing challenge in WebAuthn options');
-          }
-          
-          // Convert allowCredentials ids if present
-          if (options.allowCredentials) {
-            options.allowCredentials = options.allowCredentials.map((c: any) => {
-              c.id = this.base64urlToArrayBuffer(c.id);
-              return c;
-            });
-          }
-
-          const credential = await navigator.credentials.get({
-            publicKey: options
-          });
-
-          const credentialJson = this.credentialToJson(credential);
-          const authResult = await this.passkeyService.finishAuthentication(credentialJson, startResponse.sessionId).toPromise();
-          
-          if (!authResult || !authResult.success) {
-            throw new Error('Authentication failed');
-          }
-        } catch (authError) {
-          console.error('Authentication error:', authError);
+      if (hasPin) {
+        const pinVerified = await this.pinService.promptPin('verify');
+        if (!pinVerified) {
           this.showToast('Authentication required to withdraw funds.', 'warning');
           return;
         }
@@ -479,34 +397,4 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
   }
 
   // Helper methods for WebAuthn
-  private base64urlToArrayBuffer(base64url: string): ArrayBuffer {
-    let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
-    while (base64.length % 4) { base64 += '='; }
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); }
-    return bytes.buffer;
-  }
-
-  private arrayBufferToBase64url(buffer: ArrayBuffer): string {
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); }
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  }
-
-  private credentialToJson(credential: any): any {
-    return {
-      id: credential.id,
-      rawId: this.arrayBufferToBase64url(credential.rawId),
-      response: {
-        authenticatorData: this.arrayBufferToBase64url(credential.response.authenticatorData),
-        clientDataJSON: this.arrayBufferToBase64url(credential.response.clientDataJSON),
-        signature: this.arrayBufferToBase64url(credential.response.signature),
-        userHandle: credential.response.userHandle ? this.arrayBufferToBase64url(credential.response.userHandle) : null
-      },
-      type: credential.type,
-      clientExtensionResults: credential.getClientExtensionResults()
-    };
-  }
 }

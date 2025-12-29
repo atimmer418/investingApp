@@ -67,7 +67,7 @@ export class RecoveryPage implements OnInit {
       const response = await this.recoveryService.verifyRecovery(this.ssn, this.otp);
       if (response.success && response.token) {
         // Save token
-        JwtTokenUtils.setJwtToken(response.token);
+        JwtTokenUtils.storeJwtToken(response.token);
         
         this.presentToast('Recovery successful! Please register a new passkey immediately.');
         
