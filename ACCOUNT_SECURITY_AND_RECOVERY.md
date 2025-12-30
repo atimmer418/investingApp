@@ -18,7 +18,7 @@ This application uses a **Passkey-First** authentication model.
 ## 2. Step-up authentication (extra verification)
 
 ### What it is
-An additional authentication step that can be enabled after you’re already signed in.
+An additional authentication step that can be enabled after you’re signed in.
 
 ### Triggered when an action is considered higher risk
 *   Withdrawing funds.
@@ -71,21 +71,22 @@ Since there are no passwords, "Forgot Password" does not exist. Instead, we use 
 ### The Problem
 If a user loses their device, they lose their private key (Passkey). They cannot log in.
 
-### The Solution: Multi-Factor Identity Verification (SSN + Email)
-We use a "Defense in Depth" strategy. Access to the email inbox alone is **not sufficient** to recover the account. The user must prove their identity using PII (Personally Identifiable Information) verified during the KYC (Persona) process.
+### The Solution: Biometric Identity Verification (Persona + Email)
+We use a "Defense in Depth" strategy. Access to the email inbox alone is **not sufficient** to recover the account. The user must prove their identity using **Biometric Verification** via our identity partner, **Persona**.
 
 #### Recovery Workflow:
 1.  **Initiation:**
     - User clicks **"Lost Device"** or **"Reset Passkey Access"** on the login screen.
-    - **Security Challenge:** The user is prompted to enter their **Social Security Number (SSN)** (or the last 4 digits, depending on security configuration).
+    - **Identity Challenge:** The app launches a **Persona Inquiry** flow.
     
-2.  **Lookup & Verification:**
-    - Backend searches the encrypted FRED database for the user associated with this SSN.
-    - **Security Check:** If found, the system initiates the recovery protocol. If not found, a generic error is shown to prevent data mining.
+2.  **Biometric Scan (Face Match):**
+    - **Liveness Detection:** The user is prompted to take a live selfie. Persona analyzes the video feed to ensure the user is a real person present at that moment (preventing spoofing with photos or screens).
+    - **1:1 Match:** Persona compares the new biometric data against the original KYC identity profile established during sign-up to confirm it is the same person.
+    - **Result:** Persona sends a secure webhook to our backend confirming the identity match.
 
-3.  **Email Dispatch (Mocked for Dev):**
-    - The system sends a **One-Time Password (OTP)** or **Magic Link** to the *email address on file* for that SSN.
-    - *Note:* This prevents an attacker who has breached the email account from taking over, unless they ALSO know the victim's SSN.
+3.  **Email Dispatch:**
+    - Once identity is biometrically verified, the system sends a **One-Time Password (OTP)** or **Magic Link** to the *email address on file*.
+    - *Note:* This ensures the user controls both the biological identity AND the communication channel.
 
 4.  **Access Restoration & Security Reset:**
     - User clicks the link or enters the OTP.
@@ -100,7 +101,7 @@ We use a "Defense in Depth" strategy. Access to the email inbox alone is **not s
 ---
 
 ## 5. Security Considerations
-- **SSN Storage:** SSNs are stored using strong encryption (e.g., AES-256) in the database. They are never logged or exposed in plain text.
-- **Rate Limiting:** The recovery endpoint is strictly rate-limited to prevent brute-force guessing of SSNs.
+- **Biometric Privacy:** We do not store raw biometric data. All matching is handled securely by Persona.
+- **Rate Limiting:** The recovery endpoint is strictly rate-limited.
 - **Notification:** A security alert is sent to the email address notifying them that a recovery was initiated.
 - **Mocking:** For development, the email sending service is mocked (logs the OTP to the console).

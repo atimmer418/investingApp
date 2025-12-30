@@ -75,7 +75,7 @@ public class JwtUtils {
                 .setId(jwtId) // Unique JWT ID - makes each token unique
                 .setIssuedAt(issuedAt) // When token was created
                 .setExpiration(expiration) // When token expires
-                .setIssuer("investingapp") // Optional: identify the issuer
+                .setIssuer("FRED") // Optional: identify the issuer
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -93,7 +93,7 @@ public class JwtUtils {
                 .setId(jwtId)
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
-                .setIssuer("investingapp")
+                .setIssuer("FRED")
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -121,7 +121,7 @@ public class JwtUtils {
                 .setId(jwtId) // Unique JWT ID - makes each token unique
                 .setIssuedAt(issuedAt) // When token was created
                 .setExpiration(expiration) // When token expires
-                .setIssuer("investingapp") // Optional: identify the issuer
+                .setIssuer("FRED") // Optional: identify the issuer
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -211,7 +211,7 @@ public class JwtUtils {
                 .setId(jwtId)
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
-                .setIssuer("investingapp")
+                .setIssuer("FRED")
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }

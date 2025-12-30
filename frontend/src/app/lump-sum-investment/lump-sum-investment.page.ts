@@ -273,7 +273,7 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
       if (hasPin) {
         const pinVerified = await this.pinService.promptPin('verify');
         if (!pinVerified) {
-          this.toastService.showToast('Authentication required to make investment.', 'danger');
+          this.toastService.showToast('Authentication required to make investment.', 'warning');
           this.isLoading = false;
           return;
         }

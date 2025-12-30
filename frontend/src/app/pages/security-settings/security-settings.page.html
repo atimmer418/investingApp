@@ -20,7 +20,7 @@
       
       <div class="spinner-container" *ngIf="isAuthenticating">
         <ion-spinner name="crescent"></ion-spinner>
-        <span>Verifying Passkey...</span>
+        <span>Verifying...</span>
       </div>
       
       <ion-button *ngIf="!isAuthenticating" (click)="authenticateUser()" expand="block" class="verify-btn">

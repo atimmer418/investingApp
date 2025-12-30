@@ -54,7 +54,7 @@ export class SecuritySettingsPage implements OnInit {
   // Settings State
   appLockEnabled = true;
   sensitiveAuthEnabled = false; // Default to false until loaded
-  userEmail: string = 'alex.doe@example.com';
+  userEmail: string = '';
   
   // Real Data
   sessions: UserSession[] = [];

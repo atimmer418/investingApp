@@ -455,7 +455,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       if (hasPin) {
         const verified = await this.pinService.promptPin('verify');
         if (!verified) {
-          this.toastService.showToast('Authentication required to change investment status.', 'danger');
+          this.toastService.showToast('Authentication required to change investment status.', 'warning');
           this.isLoading = false;
           return;
         }
@@ -503,7 +503,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       if (hasPin) {
         const verified = await this.pinService.promptPin('verify');
         if (!verified) {
-          this.toastService.showToast('Authentication required to save changes.', 'danger');
+          this.toastService.showToast('Authentication required to save changes.', 'warning');
           this.isLoading = false;
           return;
         }
