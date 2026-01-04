@@ -5,16 +5,17 @@ import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
-import { 
+import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
   IonCard, IonCardContent, IonList, IonItem, IonLabel, IonToggle, IonButton,
   IonIcon, IonNote, IonSpinner
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { 
-  shieldCheckmarkOutline, phonePortraitOutline, 
+import {
+  shieldCheckmarkOutline, phonePortraitOutline,
   lockClosedOutline, mailOutline, personOutline, trashOutline,
-  addCircleOutline, logOutOutline, alertCircleOutline, checkmarkCircle
+  addCircleOutline, logOutOutline, alertCircleOutline, checkmarkCircle,
+  cardOutline, copyOutline
 } from 'ionicons/icons';
 
 interface UserSession {
@@ -50,18 +51,19 @@ import { ToastService } from '../../services/toast.service';
 export class SecuritySettingsPage implements OnInit {
   isAuthenticated = false;
   isAuthenticating = true;
-  
+
   // Settings State
   appLockEnabled = true;
   sensitiveAuthEnabled = false; // Default to false until loaded
   userEmail: string = '';
-  
+
   // Real Data
   sessions: UserSession[] = [];
   currentSessionId: number = -1;
+  alpacaAccountNumber: string | null = null;
 
   constructor(
-    private router: Router, 
+    private router: Router,
     private http: HttpClient,
     private appLockService: AppLockService,
     private pinService: PinService,
@@ -70,7 +72,8 @@ export class SecuritySettingsPage implements OnInit {
     addIcons({
       shieldCheckmarkOutline, phonePortraitOutline,
       lockClosedOutline, mailOutline, personOutline, trashOutline,
-      addCircleOutline, logOutOutline, alertCircleOutline, checkmarkCircle
+      addCircleOutline, logOutOutline, alertCircleOutline, checkmarkCircle,
+      cardOutline, copyOutline
     });
   }
 
@@ -79,10 +82,10 @@ export class SecuritySettingsPage implements OnInit {
     if (storedEmail) {
       this.userEmail = storedEmail;
     }
-    
+
     // Sync App Lock state
     this.appLockEnabled = this.appLockService.isEnabled();
-    
+
     // Check if PIN is set (Sensitive Auth Enabled)
     this.sensitiveAuthEnabled = await this.pinService.hasPin();
 
@@ -99,8 +102,9 @@ export class SecuritySettingsPage implements OnInit {
     // No pre-authentication required to view settings (or already passed PIN)
     this.isAuthenticated = true;
     this.isAuthenticating = false;
-    
+
     this.loadSessions();
+    this.syncAlpacaAccountNumber();
   }
 
   loadSessions() {
@@ -120,6 +124,35 @@ export class SecuritySettingsPage implements OnInit {
         console.error('Failed to load sessions', err);
       }
     });
+  }
+
+  syncAlpacaAccountNumber() {
+    const token = JwtTokenUtils.getValidJwtToken();
+    if (!token) return;
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    this.http.post<any>(`${environment.backendApiUrl}/alpaca/sync-account-number`, {}, { headers }).subscribe({
+      next: (response) => {
+        if (response && response.account_number) {
+          this.alpacaAccountNumber = response.account_number;
+          console.log('Synced Alpaca Account Number:', this.alpacaAccountNumber);
+        }
+      },
+      error: (err) => {
+        console.warn('Failed to sync Alpaca account number', err);
+        // Silent fail - user might not have an account yet
+      }
+    });
+  }
+
+  async copyAccountNumber() {
+    if (this.alpacaAccountNumber) {
+      await navigator.clipboard.writeText(this.alpacaAccountNumber);
+      this.toastService.showToast('Account number copied to clipboard', 'success');
+    }
   }
 
   async authenticateUser() {

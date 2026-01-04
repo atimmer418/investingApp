@@ -28,19 +28,19 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/investments")
 @CrossOrigin(origins = "*")
 public class InvestmentController {
-    
+
     @Autowired
     private InvestmentExecutionRepository executionRepository;
-    
+
     @Autowired
     private InvestmentTradeRepository tradeRepository;
-    
+
     @Autowired
     private UserRepository userRepository;
-    
+
     @Autowired
     private InvestmentExecutionService investmentExecutionService;
-    
+
     /**
      * Get investment history for the authenticated user
      */
@@ -49,81 +49,82 @@ public class InvestmentController {
         try {
             String email = authentication.getName();
             Optional<User> userOpt = userRepository.findByEmail(email);
-            
+
             if (userOpt.isEmpty()) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "User not found"));
+                        .body(Map.of("success", false, "message", "User not found"));
             }
-            
+
             User user = userOpt.get();
-            
+
             // Get recent executions (last 6 months)
             LocalDateTime since = LocalDateTime.now().minusMonths(6);
             List<InvestmentExecution> executions = executionRepository
-                .findRecentExecutionsForUser(user.getId(), since);
-            
+                    .findRecentExecutionsForUser(user.getId(), since);
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("executions", executions);
             response.put("nextInvestmentDate", user.getNextInvestmentDate());
             response.put("monthlyInvestment", user.getMonthlyInvestment());
             response.put("payFrequency", user.getPayFrequency());
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "Error retrieving investment history: " + e.getMessage()));
+                    .body(Map.of("success", false, "message",
+                            "Error retrieving investment history: " + e.getMessage()));
         }
     }
-    
+
     /**
      * Get details for a specific investment execution
      */
     @GetMapping("/execution/{executionId}")
     public ResponseEntity<Map<String, Object>> getExecutionDetails(
-            @PathVariable Long executionId, 
+            @PathVariable Long executionId,
             Authentication authentication) {
         try {
             String email = authentication.getName();
             Optional<User> userOpt = userRepository.findByEmail(email);
-            
+
             if (userOpt.isEmpty()) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "User not found"));
+                        .body(Map.of("success", false, "message", "User not found"));
             }
-            
+
             Optional<InvestmentExecution> executionOpt = executionRepository.findById(executionId);
-            
+
             if (executionOpt.isEmpty()) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Investment execution not found"));
+                        .body(Map.of("success", false, "message", "Investment execution not found"));
             }
-            
+
             InvestmentExecution execution = executionOpt.get();
-            
+
             // Verify the execution belongs to the authenticated user
             if (!execution.getUser().getId().equals(userOpt.get().getId())) {
                 return ResponseEntity.status(403)
-                    .body(Map.of("success", false, "message", "Access denied"));
+                        .body(Map.of("success", false, "message", "Access denied"));
             }
-            
+
             // Get associated trades
             List<InvestmentTrade> trades = tradeRepository.findByInvestmentExecutionId(executionId);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("execution", execution);
             response.put("trades", trades);
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "Error retrieving execution details: " + e.getMessage()));
+                    .body(Map.of("success", false, "message", "Error retrieving execution details: " + e.getMessage()));
         }
     }
-    
+
     /**
      * Update investment schedule settings
      */
@@ -134,14 +135,14 @@ public class InvestmentController {
         try {
             String email = authentication.getName();
             Optional<User> userOpt = userRepository.findByEmail(email);
-            
+
             if (userOpt.isEmpty()) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "User not found"));
+                        .body(Map.of("success", false, "message", "User not found"));
             }
-            
+
             User user = userOpt.get();
-            
+
             // Update investment schedule fields
             if (request.containsKey("monthlyInvestment")) {
                 Object amount = request.get("monthlyInvestment");
@@ -149,14 +150,14 @@ public class InvestmentController {
                     user.setMonthlyInvestment(((Number) amount).doubleValue());
                 }
             }
-            
+
             if (request.containsKey("payFrequency")) {
                 String frequency = (String) request.get("payFrequency");
                 if (isValidPayFrequency(frequency)) {
                     user.setPayFrequency(frequency);
                 }
             }
-            
+
             if (request.containsKey("nextInvestmentDate")) {
                 String dateStr = (String) request.get("nextInvestmentDate");
                 try {
@@ -164,26 +165,25 @@ public class InvestmentController {
                     user.setNextInvestmentDate(nextDate);
                 } catch (Exception e) {
                     return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "message", "Invalid date format"));
+                            .body(Map.of("success", false, "message", "Invalid date format"));
                 }
             }
-            
+
             userRepository.save(user);
-            
+
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Investment schedule updated successfully",
-                "nextInvestmentDate", user.getNextInvestmentDate(),
-                "monthlyInvestment", user.getMonthlyInvestment(),
-                "payFrequency", user.getPayFrequency()
-            ));
-            
+                    "success", true,
+                    "message", "Investment schedule updated successfully",
+                    "nextInvestmentDate", user.getNextInvestmentDate(),
+                    "monthlyInvestment", user.getMonthlyInvestment(),
+                    "payFrequency", user.getPayFrequency()));
+
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "Error updating investment schedule: " + e.getMessage()));
+                    .body(Map.of("success", false, "message", "Error updating investment schedule: " + e.getMessage()));
         }
     }
-    
+
     /**
      * Create a one-time investment execution (lump sum investment)
      * This immediately initiates ACH transfer and begins the investment process
@@ -195,67 +195,69 @@ public class InvestmentController {
         try {
             String email = authentication.getName();
             Optional<User> userOpt = userRepository.findByEmail(email);
-            
+
             if (userOpt.isEmpty()) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "User not found"));
+                        .body(Map.of("success", false, "message", "User not found"));
             }
-            
+
             User user = userOpt.get();
-            
+
             // Validate user has required setup for investments
             if (user.getAlpacaAccountId() == null || user.getPlaidRelationshipId() == null) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Account setup incomplete. Please complete your bank account and investment account setup first."));
+                        .body(Map.of("success", false, "message",
+                                "Account setup incomplete. Please complete your bank account and investment account setup first."));
             }
-            
+
             // Validate required fields
             if (!request.containsKey("amount")) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Amount is required"));
+                        .body(Map.of("success", false, "message", "Amount is required"));
             }
-            
+
             Object amountObj = request.get("amount");
             BigDecimal amount;
             if (amountObj instanceof Number) {
                 amount = new BigDecimal(amountObj.toString());
             } else {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Invalid amount format"));
+                        .body(Map.of("success", false, "message", "Invalid amount format"));
             }
-            
+
             // Validate minimum amount
             if (amount.compareTo(BigDecimal.ONE) < 0) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Minimum investment amount is $1"));
+                        .body(Map.of("success", false, "message", "Minimum investment amount is $1"));
             }
-            
+
             // Validate maximum amount (reasonable limit)
             if (amount.compareTo(new BigDecimal("1000000")) > 0) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "message", "Maximum investment amount is $1,000,000"));
+                        .body(Map.of("success", false, "message", "Maximum investment amount is $1,000,000"));
             }
-            
+
             // Parse investment type (portfolio vs individual stock)
             String investmentType = "portfolio"; // default
             if (request.containsKey("type")) {
                 investmentType = (String) request.get("type");
             }
-            
+
             String selectedSymbol = null;
             if ("stock".equals(investmentType)) {
                 if (!request.containsKey("symbol") || request.get("symbol") == null) {
                     return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "message", "Symbol is required for individual stock investments"));
+                            .body(Map.of("success", false, "message",
+                                    "Symbol is required for individual stock investments"));
                 }
                 selectedSymbol = (String) request.get("symbol");
-                
+
                 if (selectedSymbol.trim().isEmpty()) {
                     return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "message", "Invalid stock symbol"));
+                            .body(Map.of("success", false, "message", "Invalid stock symbol"));
                 }
             }
-            
+
             // Parse funding source
             String fundingSource = "bank"; // default
             if (request.containsKey("fundingSource")) {
@@ -264,67 +266,66 @@ public class InvestmentController {
 
             // Create investment execution with type and symbol information
             InvestmentExecution execution = new InvestmentExecution(
-                user, 
-                LocalDateTime.now(), 
-                amount,
-                investmentType,
-                selectedSymbol,
-                fundingSource
-            );
-            
+                    user,
+                    LocalDateTime.now(),
+                    amount,
+                    investmentType,
+                    selectedSymbol,
+                    fundingSource);
+
             execution = executionRepository.save(execution);
-            
+
             // Immediately process the investment execution
             // This will initiate ACH transfer right away instead of waiting for cron job
             try {
                 investmentExecutionService.processInvestmentExecutionImmediately(execution);
-                
+
                 // Check if execution was queued due to daily ACH limits
                 execution = executionRepository.findById(execution.getId()).orElse(execution);
-                
-                if (InvestmentExecution.ExecutionStatus.SCHEDULED.equals(execution.getStatus()) && 
-                    execution.getErrorMessage() != null && 
-                    execution.getErrorMessage().contains("Queued for batch processing")) {
-                    
+
+                if (InvestmentExecution.ExecutionStatus.SCHEDULED.equals(execution.getStatus()) &&
+                        execution.getErrorMessage() != null &&
+                        (execution.getErrorMessage().contains("Queued for batch processing") ||
+                                execution.getErrorMessage().contains("Queued for end-of-day"))) {
+
                     return ResponseEntity.ok(Map.of(
-                        "success", true,
-                        "message", "Investment queued successfully. You already have an ACH transfer in progress today, so this investment will be processed when that transfer completes.",
-                        "executionId", execution.getId(),
-                        "amount", execution.getAmount(),
-                        "status", execution.getStatus(),
-                        "queued", true
-                    ));
+                            "success", true,
+                            "message",
+                            "Investment queued successfully. All investments will be processed at end of day.",
+                            "executionId", execution.getId(),
+                            "amount", execution.getAmount(),
+                            "status", execution.getStatus(),
+                            "queued", true));
                 } else {
                     return ResponseEntity.ok(Map.of(
-                        "success", true,
-                        "message", "Lump sum investment initiated successfully. ACH transfer has been started and you will receive updates as it processes.",
-                        "executionId", execution.getId(),
-                        "amount", execution.getAmount(),
-                        "status", execution.getStatus(),
-                        "queued", false
-                    ));
+                            "success", true,
+                            "message",
+                            "Investment queued successfully. All investments will be processed at end of day.",
+                            "executionId", execution.getId(),
+                            "amount", execution.getAmount(),
+                            "status", execution.getStatus(),
+                            "queued", true));
                 }
-                
+
             } catch (Exception processingException) {
                 // If processing fails, update execution status and inform user
                 execution.setStatus(InvestmentExecution.ExecutionStatus.FAILED);
                 execution.setErrorMessage("Failed to initiate investment: " + processingException.getMessage());
                 executionRepository.save(execution);
-                
+
                 return ResponseEntity.internalServerError()
-                    .body(Map.of(
-                        "success", false, 
-                        "message", "Failed to initiate investment: " + processingException.getMessage(),
-                        "executionId", execution.getId()
-                    ));
+                        .body(Map.of(
+                                "success", false,
+                                "message", "Failed to initiate investment: " + processingException.getMessage(),
+                                "executionId", execution.getId()));
             }
-            
+
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "Error creating lump sum investment: " + e.getMessage()));
+                    .body(Map.of("success", false, "message", "Error creating lump sum investment: " + e.getMessage()));
         }
     }
-    
+
     /**
      * Get investment dashboard summary
      */
@@ -332,32 +333,32 @@ public class InvestmentController {
     public ResponseEntity<Map<String, Object>> getDashboard(@AuthenticationPrincipal UserDetails userDetails) {
         try {
             User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
             // Get investment statistics
             List<InvestmentExecution> executions = executionRepository.findByUserOrderByCreatedAtDesc(user);
-            
+
             double totalInvested = executions.stream()
-                .filter(e -> e.getStatus() == ExecutionStatus.COMPLETED)
-                .mapToDouble(e -> e.getAmount().doubleValue())
-                .sum();
-            
+                    .filter(e -> e.getStatus() == ExecutionStatus.COMPLETED)
+                    .mapToDouble(e -> e.getAmount().doubleValue())
+                    .sum();
+
             long pendingCount = executions.stream()
-                .filter(e -> e.getStatus() == ExecutionStatus.SCHEDULED || 
+                    .filter(e -> e.getStatus() == ExecutionStatus.SCHEDULED ||
                             e.getStatus() == ExecutionStatus.FUNDING_INITIATED ||
                             e.getStatus() == ExecutionStatus.TRADING_INITIATED)
-                .count();
-            
+                    .count();
+
             long failedCount = executions.stream()
-                .filter(e -> e.getStatus() == ExecutionStatus.FAILED ||
+                    .filter(e -> e.getStatus() == ExecutionStatus.FAILED ||
                             e.getStatus() == ExecutionStatus.FUNDING_FAILED ||
                             e.getStatus() == ExecutionStatus.TRADING_FAILED)
-                .count();
+                    .count();
 
             // Get recent executions (last 10)
             List<InvestmentExecution> recentExecutions = executions.stream()
-                .limit(10)
-                .collect(Collectors.toList());
+                    .limit(10)
+                    .collect(Collectors.toList());
 
             Map<String, Object> dashboard = new HashMap<>();
             dashboard.put("success", true);
@@ -376,9 +377,11 @@ public class InvestmentController {
             errorResponse.put("message", "Failed to load dashboard: " + e.getMessage());
             return ResponseEntity.status(500).body(errorResponse);
         }
-    }    private boolean isValidPayFrequency(String frequency) {
-        return frequency != null && 
-               (frequency.equals("weekly") || frequency.equals("biweekly") || 
-                frequency.equals("monthly") || frequency.equals("semimonthly"));
+    }
+
+    private boolean isValidPayFrequency(String frequency) {
+        return frequency != null &&
+                (frequency.equals("weekly") || frequency.equals("biweekly") ||
+                        frequency.equals("monthly") || frequency.equals("semimonthly"));
     }
 }

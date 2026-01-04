@@ -116,7 +116,10 @@ public class User {
 
     // Alpaca ACH relationship fields
     @Column(length = 255)
-    private String alpacaAccountId; // Alpaca brokerage account ID
+    private String alpacaAccountId; // Alpaca brokerage account ID (UUID)
+
+    @Column(length = 255)
+    private String alpacaAccountNumber; // Alpaca brokerage account number (e.g. PA... or AC...)
 
     @Column(length = 255)
     private String alpacaAchRelationshipId; // ACH relationship ID for funding

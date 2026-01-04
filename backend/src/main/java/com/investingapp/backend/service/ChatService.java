@@ -4,7 +4,7 @@ import com.investingapp.backend.dto.ChatRequest;
 import com.investingapp.backend.dto.ChatResponse;
 import com.investingapp.backend.config.FredConstitution; // Restore Import
 import com.investingapp.backend.dto.SafetyResult; // Import
-import com.investingapp.backend.dto.SafetyResult; // Import
+// Import
 import com.investingapp.backend.dto.SafetyVerdict; // Import
 import com.investingapp.backend.config.FredRedirections; // Import
 import com.investingapp.backend.model.ChatMessage; // Import
@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections; // Import
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors; // Import
+// Import
 
 @Service
 public class ChatService {
@@ -129,7 +129,8 @@ public class ChatService {
 
     private String generateTitle(String userMessage) {
         List<LLMService.ChatMessage> messages = new ArrayList<>();
-        messages.add(new LLMService.ChatMessage("system", "You are a helpful assistant. Generate a concise 3-5 word title for the following user question. Do not use quotes."));
+        messages.add(new LLMService.ChatMessage("system",
+                "You are a helpful assistant. Generate a concise 3-5 word title for the following user question. Do not use quotes."));
         messages.add(new LLMService.ChatMessage("user", userMessage));
         return llmService.generateChatResponse(messages);
     }

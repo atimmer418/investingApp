@@ -30,7 +30,7 @@
               <p>{{ getInvestmentScheduleDescription() }}</p>
             </ion-label>
           </ion-item>
-          
+
           <ion-item>
             <ion-icon name="cash-outline" slot="start" color="success"></ion-icon>
             <ion-label>
@@ -54,19 +54,19 @@
           <div class="portfolio-type">
             <h4>{{ portfolioType === 'auto' ? 'Diversified Portfolio' : 'Custom Portfolio' }}</h4>
           </div>
-          
+
           <!-- Loading state -->
           <div *ngIf="isLoadingPortfolio" class="loading-portfolio">
             <ion-spinner name="dots"></ion-spinner>
             <p>Loading your portfolio...</p>
           </div>
-          
+
           <!-- Error state -->
           <div *ngIf="portfolioError" class="portfolio-error">
             <ion-icon name="warning-outline" color="warning"></ion-icon>
             <p>{{ portfolioError }}</p>
           </div>
-          
+
           <!-- Compact portfolio display -->
           <div *ngIf="!isLoadingPortfolio && !portfolioError" class="compact-portfolio">
             <div *ngFor="let stock of userPortfolio" class="portfolio-item-compact">
@@ -82,14 +82,9 @@
               </div>
             </div>
           </div>
-          
+
           <div class="portfolio-actions">
-            <ion-button 
-              fill="clear" 
-              size="small" 
-              color="medium"
-              (click)="editPortfolio()"
-              class="edit-portfolio-btn">
+            <ion-button fill="clear" size="small" color="medium" (click)="editPortfolio()" class="edit-portfolio-btn">
               <ion-icon name="create-outline" slot="start"></ion-icon>
               Edit Portfolio
             </ion-button>
@@ -108,36 +103,42 @@
       <ion-card-content>
         <div class="info-content">
           <p class="info-intro">When you click "Start Investing", here's what will happen:</p>
-          
+
           <div class="info-steps">
             <div class="info-step">
               <div class="step-number">1</div>
               <div class="step-content">
                 <h4>Account Creation</h4>
-                <p>We'll create a personal brokerage account for you through Alpaca Securities using your verified information.</p>
+                <p>We'll create a personal brokerage account for you through Alpaca Securities using your verified
+                  information.</p>
               </div>
             </div>
-            
+
             <div class="info-step">
               <div class="step-number">2</div>
               <div class="step-content">
                 <h4>Automated Funding</h4>
-                <p>Your account will be automatically funded following your pay schedule - {{ formatCurrency(investmentSchedule.investmentAmount) }} every {{ getSelectedFrequencyDetails()?.label?.toLowerCase() || 'period' }}.</p>
+                <p>ACH transfers will initiate on your selected dates ({{
+                  formatCurrency(investmentSchedule.investmentAmount) }} every {{
+                  getSelectedFrequencyDetails()?.label?.toLowerCase() || 'period' }}). Trades execute 1-3 business days
+                  after each transfer initiation.</p>
               </div>
             </div>
-            
+
             <div class="info-step">
               <div class="step-number">3</div>
               <div class="step-content">
                 <h4>Smart Investing</h4>
-                <p>Each time funds are added, they'll be automatically invested into your selected portfolio based on the allocations you've chosen.</p>
+                <p>Each time funds are added, they'll be automatically invested into your selected portfolio based on
+                  the allocations you've chosen.</p>
               </div>
             </div>
           </div>
-          
+
           <div class="flexibility-note">
             <ion-icon name="pause-circle-outline" color="medium"></ion-icon>
-            <p><strong>Full Control:</strong> You can pause, modify, or stop your investment schedule at any time through your dashboard.</p>
+            <p><strong>Full Control:</strong> You can pause, modify, or stop your investment schedule at any time
+              through your dashboard.</p>
           </div>
         </div>
       </ion-card-content>
@@ -149,26 +150,23 @@
         <ion-item lines="none" class="terms-item">
           <ion-checkbox slot="start" [(ngModel)]="agreedToTerms" mode="md"></ion-checkbox>
           <ion-label class="ion-text-wrap terms-label">
-            I agree to the <a href="#" (click)="$event.preventDefault()">Terms of Service</a> and <a href="#" (click)="$event.preventDefault()">Privacy Policy</a>.
+            I agree to the <a href="#" (click)="$event.preventDefault()">Terms of Service</a> and <a href="#"
+              (click)="$event.preventDefault()">Privacy Policy</a>.
           </ion-label>
         </ion-item>
       </div>
 
-      <ion-button 
-        expand="block" 
-        size="large" 
-        color="primary"
-        (click)="authorizeRecurringInvestment()"
-        [disabled]="isAuthorizing || isCreatingAccount || !agreedToTerms"
-        class="start-investing-btn">
+      <ion-button expand="block" size="large" color="primary" (click)="authorizeRecurringInvestment()"
+        [disabled]="isAuthorizing || isCreatingAccount || !agreedToTerms" class="start-investing-btn">
         <ion-icon name="rocket-outline" slot="start"></ion-icon>
         <span *ngIf="!isAuthorizing && !isCreatingAccount">Start Investing & Create Account</span>
         <span *ngIf="isAuthorizing">Verifying Identity...</span>
         <span *ngIf="isCreatingAccount">Creating Your Brokerage Account...</span>
       </ion-button>
-      
+
       <p class="legal-disclaimer">
-        By clicking "Start Investing", you agree to create a brokerage account with Alpaca Securities LLC and authorize automatic investments according to your schedule.
+        By clicking "Start Investing", you agree to create a brokerage account with Alpaca Securities LLC and authorize
+        automatic investments according to your schedule.
       </p>
     </div>
   </div>

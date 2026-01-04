@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 
 @Service
 public class AlpacaApiService {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(AlpacaApiService.class);
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -32,12 +32,11 @@ public class AlpacaApiService {
     private final String tradingBaseUrl;
 
     public AlpacaApiService(
-        @Value("${alpaca.api.key}") String apiKey,
-        @Value("${alpaca.api.secret}") String apiSecret,
-        @Value("${alpaca.broker.base-url:https://broker-api.sandbox.alpaca.markets/v1}") String brokerBaseUrl,
-        @Value("${alpaca.trading.base-url:https://paper-api.alpaca.markets/v2}") String tradingBaseUrl,
-        AlpacaService alpacaService
-    ) {
+            @Value("${alpaca.api.key}") String apiKey,
+            @Value("${alpaca.api.secret}") String apiSecret,
+            @Value("${alpaca.broker.base-url:https://broker-api.sandbox.alpaca.markets/v1}") String brokerBaseUrl,
+            @Value("${alpaca.trading.base-url:https://paper-api.alpaca.markets/v2}") String tradingBaseUrl,
+            AlpacaService alpacaService) {
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
         this.apiKey = apiKey;
@@ -45,72 +44,75 @@ public class AlpacaApiService {
         this.brokerBaseUrl = brokerBaseUrl;
         this.tradingBaseUrl = tradingBaseUrl;
         this.alpacaService = alpacaService;
-        
+
         // Log configuration (without exposing secrets)
         logger.info("AlpacaApiService initialized:");
         logger.info("  Broker Base URL: {}", brokerBaseUrl);
         logger.info("  Trading Base URL: {}", tradingBaseUrl);
-        logger.info("  API Key: {}", apiKey != null ? apiKey.substring(0, Math.min(8, apiKey.length())) + "..." : "null");
+        logger.info("  API Key: {}",
+                apiKey != null ? apiKey.substring(0, Math.min(8, apiKey.length())) + "..." : "null");
         logger.info("  API Secret: {}", apiSecret != null ? "***set***" : "null");
     }
 
     private HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        
+
         // Use HTTP Basic authentication for Broker API
         String credentials = apiKey + ":" + apiSecret;
         String base64Credentials = Base64.getEncoder().encodeToString(
-            credentials.getBytes(StandardCharsets.UTF_8)
-        );
+                credentials.getBytes(StandardCharsets.UTF_8));
         headers.set("Authorization", "Basic " + base64Credentials);
-        
+
         return headers;
     }
 
     public String getAccountInfo() {
         HttpEntity<String> entity = new HttpEntity<>(createHeaders());
         ResponseEntity<String> response = restTemplate.exchange(
-            brokerBaseUrl + "/accounts", 
-            HttpMethod.GET, 
-            entity, 
-            String.class
-        );
+                brokerBaseUrl + "/accounts",
+                HttpMethod.GET,
+                entity,
+                String.class);
         return response.getBody();
     }
 
     /**
      * Create an Alpaca account for a user
-     * This is a simplified version - in reality, Alpaca requires extensive KYC information
+     * This is a simplified version - in reality, Alpaca requires extensive KYC
+     * information
      */
-    public Map<String, Object> createAccount(String email, String firstName, String lastName, 
-                                           String dateOfBirth, String ssn, String phone,
-                                           Map<String, String> address) {
+    public Map<String, Object> createAccount(String email, String firstName, String lastName,
+            String dateOfBirth, String ssn, String phone,
+            Map<String, String> address) {
         logger.info("Creating Alpaca account for user: {}", email);
-        
+
         // Add parameter validation and logging
-        logger.debug("Parameters received - email: {}, firstName: {}, lastName: {}, dateOfBirth: {}, ssn: {}, phone: {}, address: {}", 
-            email, firstName, lastName, dateOfBirth, ssn, phone, address);
-        
+        logger.debug(
+                "Parameters received - email: {}, firstName: {}, lastName: {}, dateOfBirth: {}, ssn: {}, phone: {}, address: {}",
+                email, firstName, lastName, dateOfBirth, ssn, phone, address);
+
         if (address != null) {
-            logger.debug("Address details - street_address: {}, city: {}, state: {}, postal_code: {}", 
-                address.get("street_address"), address.get("city"), address.get("state"), address.get("postal_code"));
+            logger.debug("Address details - street_address: {}, city: {}, state: {}, postal_code: {}",
+                    address.get("street_address"), address.get("city"), address.get("state"),
+                    address.get("postal_code"));
         }
-        
+
         if (email == null || firstName == null || lastName == null) {
-            logger.error("Required parameters are null - email: {}, firstName: {}, lastName: {}", email, firstName, lastName);
+            logger.error("Required parameters are null - email: {}, firstName: {}, lastName: {}", email, firstName,
+                    lastName);
             Map<String, Object> errorResult = new HashMap<>();
             errorResult.put("error", "Required parameters cannot be null: email, firstName, lastName");
             return errorResult;
         }
-        
+
         Map<String, Object> accountData = new HashMap<>();
-        
+
         // Contact information
         Map<String, Object> contactInfo = new HashMap<>();
         contactInfo.put("email_address", email);
         contactInfo.put("phone_number", phone);
-        
+
         // Add address to contact if provided
         if (address != null) {
             String streetAddress = address.get("street_address"); // Fixed: use correct key
@@ -121,7 +123,7 @@ public class AlpacaApiService {
             contactInfo.put("state", address.get("state"));
             contactInfo.put("postal_code", address.get("postal_code"));
         }
-        
+
         // Identity information
         Map<String, Object> identity = new HashMap<>();
         identity.put("given_name", firstName);
@@ -133,63 +135,62 @@ public class AlpacaApiService {
         identity.put("country_of_birth", "USA");
         identity.put("country_of_tax_residence", "USA");
         identity.put("funding_source", List.of("employment_income"));
-        
+
         // Trusted contact (required)
         Map<String, String> trustedContact = new HashMap<>();
         trustedContact.put("given_name", firstName); // Use same person for simplicity
         trustedContact.put("family_name", lastName);
         trustedContact.put("email_address", email);
-        
+
         // Build account data
         accountData.put("contact", contactInfo);
         accountData.put("identity", identity);
         accountData.put("trusted_contact", trustedContact);
         accountData.put("disclosures", Map.of(
-            "is_control_person", false,
-            "is_affiliated_exchange_or_finra", false,
-            "is_affiliated_exchange_or_iiroc", false,
-            "is_politically_exposed", false,
-            "immediate_family_exposed", false
-        ));
+                "is_control_person", false,
+                "is_affiliated_exchange_or_finra", false,
+                "is_affiliated_exchange_or_iiroc", false,
+                "is_politically_exposed", false,
+                "immediate_family_exposed", false));
         accountData.put("agreements", List.of(
-            Map.of(
-                "agreement", "customer_agreement",
-                "signed_at", java.time.Instant.now().toString(),
-                "ip_address", "127.0.0.1"
-            )
-        ));
-        
+                Map.of(
+                        "agreement", "customer_agreement",
+                        "signed_at", java.time.Instant.now().toString(),
+                        "ip_address", "127.0.0.1")));
+
         // Remove the separate address handling since it's now in contact
-        
+
         try {
             String jsonBody = objectMapper.writeValueAsString(accountData);
             logger.debug("Alpaca account creation request: {}", jsonBody);
-            
+
             HttpEntity<String> entity = new HttpEntity<>(jsonBody, createHeaders());
             ResponseEntity<String> response = restTemplate.exchange(
-                brokerBaseUrl + "/accounts",
-                HttpMethod.POST,
-                entity,
-                String.class
-            );
-            
+                    brokerBaseUrl + "/accounts",
+                    HttpMethod.POST,
+                    entity,
+                    String.class);
+
             String responseBody = response.getBody();
             JsonNode responseNode = objectMapper.readTree(responseBody);
             Map<String, Object> result = new HashMap<>();
             String accountId = responseNode.get("id").asText();
             result.put("account_id", accountId);
+            if (responseNode.has("account_number")) {
+                result.put("account_number", responseNode.get("account_number").asText());
+            }
             result.put("status", responseNode.get("status").asText());
             result.put("created_at", responseNode.get("created_at").asText());
             result.put("raw_response", responseBody);
-            
+
             logger.info("Successfully created Alpaca account: {}", accountId);
-            
+
             // IMPORTANT: Configure account for cash-only trading (no margin)
             logger.info("Configuring account {} for cash-only trading...", accountId);
             alpacaService.setupCashOnlyAccount(accountId);
-            
+
             return result;
-            
+
         } catch (JsonProcessingException e) {
             logger.error("Error processing JSON", e);
             Map<String, Object> errorResult = new HashMap<>();
@@ -208,7 +209,7 @@ public class AlpacaApiService {
      * Note: Assets endpoint is typically public and doesn't require authentication
      */
     public String getAssets(String status, String assetClass, String search) {
-        
+
         // Add query parameters
         StringBuilder queryParams = new StringBuilder("?");
         if (status != null && !status.isEmpty()) {
@@ -223,26 +224,26 @@ public class AlpacaApiService {
 
         String fullUrl = brokerBaseUrl + "/assets" + queryParams.toString().replaceAll("&$", "");
         logger.info("Fetching assets from: {}", fullUrl);
-        logger.info("Using API Key: {}***", apiKey != null ? apiKey.substring(0, Math.min(4, apiKey.length())) : "null");
-        
+        logger.info("Using API Key: {}***",
+                apiKey != null ? apiKey.substring(0, Math.min(4, apiKey.length())) : "null");
+
         try {
             HttpEntity<String> entity = new HttpEntity<>(createHeaders());
             ResponseEntity<String> response = restTemplate.exchange(
-                fullUrl,
-                HttpMethod.GET,
-                entity,
-                String.class
-            );
-            
+                    fullUrl,
+                    HttpMethod.GET,
+                    entity,
+                    String.class);
+
             String responseBody = response.getBody();
-            logger.info("Assets API response status: {}, body length: {}", 
-                response.getStatusCode(), 
-                responseBody != null ? responseBody.length() : 0);
-            
+            logger.info("Assets API response status: {}, body length: {}",
+                    response.getStatusCode(),
+                    responseBody != null ? responseBody.length() : 0);
+
             if (responseBody != null && responseBody.length() > 100) {
                 logger.debug("Assets API response preview: {}", responseBody.substring(0, 100) + "...");
             }
-            
+
             return responseBody;
         } catch (Exception e) {
             logger.error("Error calling Alpaca assets API: {}", e.getMessage(), e);
@@ -253,11 +254,11 @@ public class AlpacaApiService {
     /**
      * Create ACH relationship for an Alpaca account using bank details
      */
-    public Map<String, Object> createAchRelationship(String accountId, String accountOwnerName, 
-                                                   String bankAccountType, String bankAccountNumber, 
-                                                   String bankRoutingNumber, String nickname) {
+    public Map<String, Object> createAchRelationship(String accountId, String accountOwnerName,
+            String bankAccountType, String bankAccountNumber,
+            String bankRoutingNumber, String nickname) {
         logger.info("Creating ACH relationship for account: {}", accountId);
-        
+
         try {
             Map<String, Object> achData = new HashMap<>();
             achData.put("account_owner_name", accountOwnerName);
@@ -265,18 +266,17 @@ public class AlpacaApiService {
             achData.put("bank_account_number", bankAccountNumber);
             achData.put("bank_routing_number", bankRoutingNumber);
             achData.put("nickname", nickname);
-            
+
             String jsonBody = objectMapper.writeValueAsString(achData);
             logger.debug("ACH relationship creation request: {}", jsonBody);
-            
+
             HttpEntity<String> entity = new HttpEntity<>(jsonBody, createHeaders());
             ResponseEntity<String> response = restTemplate.exchange(
-                brokerBaseUrl + "/accounts/" + accountId + "/ach_relationships",
-                HttpMethod.POST,
-                entity,
-                String.class
-            );
-            
+                    brokerBaseUrl + "/accounts/" + accountId + "/ach_relationships",
+                    HttpMethod.POST,
+                    entity,
+                    String.class);
+
             String responseBody = response.getBody();
             JsonNode responseNode = objectMapper.readTree(responseBody);
             Map<String, Object> result = new HashMap<>();
@@ -286,7 +286,7 @@ public class AlpacaApiService {
             result.put("raw_response", responseBody);
             logger.info("Successfully created ACH relationship: {}", result.get("id"));
             return result;
-            
+
         } catch (Exception e) {
             logger.error("Error creating ACH relationship for account {}: {}", accountId, e.getMessage(), e);
             Map<String, Object> errorResult = new HashMap<>();
@@ -304,7 +304,7 @@ public class AlpacaApiService {
 
     public String getAccountDocuments(String accountId, String start, String end) {
         StringBuilder urlBuilder = new StringBuilder(brokerBaseUrl + "/accounts/" + accountId + "/documents");
-        
+
         if (start != null || end != null) {
             urlBuilder.append("?");
             if (start != null) {
@@ -314,7 +314,7 @@ public class AlpacaApiService {
                 urlBuilder.append("end=").append(end).append("&");
             }
         }
-        
+
         String url = urlBuilder.toString();
         if (url.endsWith("&")) {
             url = url.substring(0, url.length() - 1);
@@ -350,14 +350,13 @@ public class AlpacaApiService {
      */
     public String getAchRelationships(String accountId) {
         logger.debug("Getting ACH relationships for account: {}", accountId);
-        
+
         HttpEntity<String> entity = new HttpEntity<>(createHeaders());
         ResponseEntity<String> response = restTemplate.exchange(
-            brokerBaseUrl + "/accounts/" + accountId + "/ach_relationships",
-            HttpMethod.GET,
-            entity,
-            String.class
-        );
+                brokerBaseUrl + "/accounts/" + accountId + "/ach_relationships",
+                HttpMethod.GET,
+                entity,
+                String.class);
         return response.getBody();
     }
 
@@ -367,11 +366,23 @@ public class AlpacaApiService {
     public String getAccountStatus(String accountId) {
         HttpEntity<String> entity = new HttpEntity<>(createHeaders());
         ResponseEntity<String> response = restTemplate.exchange(
-            brokerBaseUrl + "/accounts/" + accountId,
-            HttpMethod.GET,
-            entity,
-            String.class
-        );
+                brokerBaseUrl + "/accounts/" + accountId,
+                HttpMethod.GET,
+                entity,
+                String.class);
         return response.getBody();
+    }
+
+    public String getAccountNumber(String accountId) {
+        try {
+            String response = getAccountStatus(accountId);
+            JsonNode root = objectMapper.readTree(response);
+            if (root.has("account_number")) {
+                return root.get("account_number").asText();
+            }
+        } catch (Exception e) {
+            logger.error("Error fetching account number for id: {}", accountId, e);
+        }
+        return null;
     }
 }

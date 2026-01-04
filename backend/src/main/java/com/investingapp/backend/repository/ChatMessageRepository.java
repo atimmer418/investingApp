@@ -1,7 +1,7 @@
 package com.investingapp.backend.repository;
 
 import com.investingapp.backend.model.ChatMessage;
-import org.springframework.data.domain.Pageable; // Correct
+// Correct
 import org.springframework.data.jpa.repository.JpaRepository; // Correct
 import org.springframework.stereotype.Repository;
 

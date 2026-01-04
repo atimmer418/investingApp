@@ -9,22 +9,23 @@
 </ion-header>
 
 <ion-content class="recurring-investments-content">
-  
+
   <div class="mobile-container">
-    
+
     <!-- Current Investment Schedule Overview -->
     <div class="current-schedule-section" *ngIf="currentInvestment">
-      
+
       <!-- Status Banner -->
-      <ion-card class="status-banner" [class.active]="!currentInvestment.isPaused" [class.paused]="currentInvestment.isPaused">
+      <ion-card class="status-banner" [class.active]="!currentInvestment.isPaused"
+        [class.paused]="currentInvestment.isPaused">
         <ion-card-content>
           <div class="status-content">
             <div class="status-info">
               <h2>{{ !currentInvestment.isPaused ? 'Active' : 'Paused' }}</h2>
-              <p>{{ !currentInvestment.isPaused ? 'Your investments are running' : 'Your investments are currently paused' }}</p>
+              <p>{{ !currentInvestment.isPaused ? 'Your investments are running' : 'Your investments are currently
+                paused' }}</p>
             </div>
-            <ion-icon 
-              [name]="!currentInvestment.isPaused ? 'checkmark-circle-outline' : 'pause-circle-outline'">
+            <ion-icon [name]="!currentInvestment.isPaused ? 'checkmark-circle-outline' : 'pause-circle-outline'">
             </ion-icon>
           </div>
         </ion-card-content>
@@ -35,37 +36,32 @@
         <div class="section-header">
           <h3 class="section-title">Investment Details</h3>
         </div>
-          
+
         <div class="detail-row">
           <div class="detail-col">
             <h4>Amount</h4>
             <p>{{ formatCurrency(currentInvestment.investmentAmount) }}</p>
           </div>
-          
+
           <div class="detail-col center">
             <h4>Frequency</h4>
             <p>{{ getFrequencyDescription() }}</p>
           </div>
-          
+
           <div class="detail-col end">
             <h4>Next Date</h4>
             <p>{{ formatDate(currentInvestment.nextInvestmentDate, false) }}</p>
           </div>
         </div>
-        
+
         <!-- Pause/Resume Button -->
         <div class="card-actions">
-          <ion-button 
-            expand="block" 
-            fill="solid"
-            [color]="!currentInvestment.isPaused ? 'warning' : 'success'"
-            class="pause-button"
-            (click)="toggleInvestmentStatus()"
-            [disabled]="isLoading">
+          <ion-button expand="block" fill="solid" [color]="!currentInvestment.isPaused ? 'warning' : 'success'"
+            class="pause-button" (click)="toggleInvestmentStatus()" [disabled]="isLoading">
             <ion-icon [name]="!currentInvestment.isPaused ? 'pause-outline' : 'play-outline'" slot="start"></ion-icon>
             {{ !currentInvestment.isPaused ? 'Pause Investments' : 'Resume Investments' }}
           </ion-button>
-        </div>        <!-- Pause/Resume Button -->
+        </div> <!-- Pause/Resume Button -->
         <div class="card-actions">
         </div>
 
@@ -85,14 +81,15 @@
         </div>
       </div>
     </div>
-    
+
     <!-- No Investment Schedule Message -->
     <div class="no-schedule-section" *ngIf="!currentInvestment">
       <div class="section-card mobile-card">
         <div class="empty-state">
           <ion-icon name="calendar-outline"></ion-icon>
           <h3>No Investment Schedule Set</h3>
-          <p>You haven't set up a recurring investment schedule yet. Set one up to start building wealth automatically.</p>
+          <p>You haven't set up a recurring investment schedule yet. Set one up to start building wealth automatically.
+          </p>
           <ion-button expand="block" color="primary" size="large" (click)="goBack()">
             <ion-icon name="add-outline" slot="start"></ion-icon>
             Set Up Investment Schedule
@@ -100,77 +97,64 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Edit Investment Schedule -->
     <div class="edit-section" *ngIf="currentInvestment">
       <div class="section-card mobile-card">
         <div class="section-header">
           <h3 class="section-title">Modify Investment Schedule</h3>
         </div>
-          
+
         <!-- Amount Input -->
         <div class="input-wrapper">
           <label class="input-label">Investment Amount</label>
           <div class="currency-input">
             <span class="currency-symbol">$</span>
-            <ion-input
-              type="number"
-              [(ngModel)]="editedInvestment.investmentAmount"
-              (ionBlur)="onAmountChange()"
-              placeholder="0"
-              class="amount-input"
-              min="1">
+            <ion-input type="number" [(ngModel)]="editedInvestment.investmentAmount" (ionBlur)="onAmountChange()"
+              placeholder="0" class="amount-input" min="1">
             </ion-input>
           </div>
           <p class="input-helper">Amount to invest every {{ getEditedFrequencyText() }}</p>
         </div>
-        
+
         <!-- Frequency Selection -->
         <div class="input-wrapper">
           <label class="input-label">Investment Frequency</label>
-          <ion-select
-            [(ngModel)]="editedInvestment.frequency"
-            placeholder="Select frequency"
-            interface="popover"
+          <ion-select [(ngModel)]="editedInvestment.frequency" placeholder="Select frequency" interface="popover"
             class="frequency-select">
-            <ion-select-option 
-              *ngFor="let option of frequencyOptions" 
-              [value]="option.value">
+            <ion-select-option *ngFor="let option of frequencyOptions" [value]="option.value">
               {{ option.label }}
             </ion-select-option>
           </ion-select>
           <p class="input-helper">How often you want to invest</p>
         </div>
 
-        <!-- Next Investment Date -->
+        <!-- Next Transfer Date -->
         <div class="input-wrapper">
-          <label class="input-label">Next Investment Date</label>
-          <ion-button 
-            fill="outline" 
-            color="primary"
-            expand="block"
-            (click)="openDatePicker()">
+          <label class="input-label">Transfer Date</label>
+          <ion-button fill="outline" color="primary" expand="block" (click)="openDatePicker()">
             <ion-icon name="calendar-outline" slot="start"></ion-icon>
-            {{ formatDate((editedInvestment.nextInvestmentDate || (currentInvestment && currentInvestment.nextInvestmentDate)) || '') }}
+            {{ formatDate((editedInvestment.nextInvestmentDate || (currentInvestment &&
+            currentInvestment.nextInvestmentDate)) || '') }}
           </ion-button>
-          <p class="input-helper">When your next investment will occur</p>
+          <p class="input-helper">When your next ACH transfer will initiate to fund your investment</p>
+          <p class="input-helper trade-window"
+            *ngIf="editedInvestment.nextInvestmentDate || currentInvestment?.nextInvestmentDate">
+            <ion-icon name="time-outline"></ion-icon>
+            Estimated trade execution: {{ getEstimatedTradeWindow() }}
+          </p>
         </div>
-        
+
         <!-- Save Changes Button -->
         <div class="save-actions">
-          <ion-button 
-            expand="block" 
-            color="primary"
-            size="large"
-            (click)="saveChanges()"
-            [disabled]="isLoading">
+          <ion-button expand="block" color="primary" size="large" (click)="saveChanges()" [disabled]="isLoading">
             <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
             Save Changes
           </ion-button>
         </div>
       </div>
     </div>
-    
+
   </div>
 </ion-content>
 
@@ -179,7 +163,7 @@
   <ng-template>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Select Next Investment Date</ion-title>
+        <ion-title>Select Transfer Date</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="closeDatePicker()">Done</ion-button>
         </ion-buttons>
@@ -188,10 +172,7 @@
     <ion-content>
       <ion-datetime
         [value]="getDateForPicker(editedInvestment.nextInvestmentDate || (currentInvestment && currentInvestment.nextInvestmentDate) || undefined)"
-        (ionChange)="onNextInvestmentDateChange($event)"
-        [min]="todayISO"
-        presentation="date"
-        color="primary">
+        (ionChange)="onNextInvestmentDateChange($event)" [min]="todayISO" presentation="date" color="primary">
       </ion-datetime>
     </ion-content>
   </ng-template>

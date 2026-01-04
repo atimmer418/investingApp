@@ -511,66 +511,66 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
 
       // Determine what start date to use - ALWAYS use existing start date to preserve history
       let startDateString: string;
-    if (Array.isArray(this.currentInvestment.startDate)) {
-      const [year, month, day] = this.currentInvestment.startDate;
-      startDateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-    } else {
-      startDateString = this.currentInvestment.startDate;
-    }
-
-    // Determine next investment date
-    let nextInvestmentDateString: string | undefined;
-
-    // Use the edited next investment date (which defaults to current if not changed)
-    if (this.editedInvestment.nextInvestmentDate) {
-      let dateToAdjust: Date;
-
-      if (typeof this.editedInvestment.nextInvestmentDate === 'string') {
-        // Handle ISO string or YYYY-MM-DD
-        const datePart = this.editedInvestment.nextInvestmentDate.includes('T') ?
-          this.editedInvestment.nextInvestmentDate.split('T')[0] :
-          this.editedInvestment.nextInvestmentDate;
-
-        const parts = datePart.split('-');
-        const year = parseInt(parts[0]);
-        const month = parseInt(parts[1]);
-        const day = parseInt(parts[2]);
-        dateToAdjust = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
-      } else if (Array.isArray(this.editedInvestment.nextInvestmentDate)) {
-        const [year, month, day] = this.editedInvestment.nextInvestmentDate;
-        dateToAdjust = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+      if (Array.isArray(this.currentInvestment.startDate)) {
+        const [year, month, day] = this.currentInvestment.startDate;
+        startDateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
       } else {
-        // Fallback if type is unknown, though it should be string or array
-        dateToAdjust = new Date();
+        startDateString = this.currentInvestment.startDate;
       }
 
-      const year = dateToAdjust.getUTCFullYear();
-      const month = (dateToAdjust.getUTCMonth() + 1).toString().padStart(2, '0');
-      const day = dateToAdjust.getUTCDate().toString().padStart(2, '0');
-      nextInvestmentDateString = `${year}-${month}-${day}`;
-    }
+      // Determine next investment date
+      let nextInvestmentDateString: string | undefined;
 
-    // Create update request
-    const updateRequest: CreateInvestmentScheduleRequest = {
-      investmentAmount: this.editedInvestment.investmentAmount!,
-      frequency: this.editedInvestment.frequency || this.currentInvestment.frequency,
-      startDate: startDateString,
-      nextInvestmentDate: nextInvestmentDateString
-    };
+      // Use the edited next investment date (which defaults to current if not changed)
+      if (this.editedInvestment.nextInvestmentDate) {
+        let dateToAdjust: Date;
 
-    this.investmentService.createSchedule(updateRequest)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (updatedSchedule: InvestmentSchedule) => {
-          this.toastService.showToast('Investment schedule updated successfully!', 'success');
-          this.loadCurrentInvestment();
-        },
-        error: (error) => {
-          console.error('Error updating investment:', error);
-          this.toastService.showToast('Failed to update investment schedule. Please try again.', 'danger');
-          this.isLoading = false;
+        if (typeof this.editedInvestment.nextInvestmentDate === 'string') {
+          // Handle ISO string or YYYY-MM-DD
+          const datePart = this.editedInvestment.nextInvestmentDate.includes('T') ?
+            this.editedInvestment.nextInvestmentDate.split('T')[0] :
+            this.editedInvestment.nextInvestmentDate;
+
+          const parts = datePart.split('-');
+          const year = parseInt(parts[0]);
+          const month = parseInt(parts[1]);
+          const day = parseInt(parts[2]);
+          dateToAdjust = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+        } else if (Array.isArray(this.editedInvestment.nextInvestmentDate)) {
+          const [year, month, day] = this.editedInvestment.nextInvestmentDate;
+          dateToAdjust = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+        } else {
+          // Fallback if type is unknown, though it should be string or array
+          dateToAdjust = new Date();
         }
-      });
+
+        const year = dateToAdjust.getUTCFullYear();
+        const month = (dateToAdjust.getUTCMonth() + 1).toString().padStart(2, '0');
+        const day = dateToAdjust.getUTCDate().toString().padStart(2, '0');
+        nextInvestmentDateString = `${year}-${month}-${day}`;
+      }
+
+      // Create update request
+      const updateRequest: CreateInvestmentScheduleRequest = {
+        investmentAmount: this.editedInvestment.investmentAmount!,
+        frequency: this.editedInvestment.frequency || this.currentInvestment.frequency,
+        startDate: startDateString,
+        nextInvestmentDate: nextInvestmentDateString
+      };
+
+      this.investmentService.createSchedule(updateRequest)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (updatedSchedule: InvestmentSchedule) => {
+            this.toastService.showToast('Investment schedule updated successfully!', 'success');
+            this.loadCurrentInvestment();
+          },
+          error: (error) => {
+            console.error('Error updating investment:', error);
+            this.toastService.showToast('Failed to update investment schedule. Please try again.', 'danger');
+            this.isLoading = false;
+          }
+        });
     } catch (e) {
       console.error('Unexpected error:', e);
       this.isLoading = false;
@@ -584,5 +584,72 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
   deleteInvestmentSchedule() {
     // TODO: Implement delete functionality with confirmation dialog
     console.log('Delete investment schedule');
+  }
+
+  /**
+   * Calculate estimated trade execution window (1-3 business days after transfer date)
+   */
+  getEstimatedTradeWindow(): string {
+    const transferDate = this.editedInvestment.nextInvestmentDate || this.currentInvestment?.nextInvestmentDate;
+    if (!transferDate) return '';
+
+    try {
+      let date: Date;
+
+      // Handle array format
+      if (Array.isArray(transferDate) && transferDate.length === 3) {
+        const [year, month, day] = transferDate;
+        date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+      } else if (typeof transferDate === 'string') {
+        const datePart = transferDate.includes('T') ? transferDate.split('T')[0] : transferDate;
+        const parts = datePart.split('-');
+        const year = parseInt(parts[0]);
+        const month = parseInt(parts[1]);
+        const day = parseInt(parts[2]);
+        date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+      } else {
+        return '';
+      }
+
+      if (isNaN(date.getTime())) return '';
+
+      // Calculate trade window: 1-3 business days after transfer
+      const minDate = this.addBusinessDays(date, 1);
+      const maxDate = this.addBusinessDays(date, 3);
+
+      return `${this.formatDate(this.dateToArray(minDate), false)} - ${this.formatDate(this.dateToArray(maxDate), false)}`;
+    } catch (error) {
+      console.error('Error calculating trade window:', error);
+      return '';
+    }
+  }
+
+  /**
+   * Add business days to a date (skipping weekends)
+   */
+  private addBusinessDays(date: Date, days: number): Date {
+    const result = new Date(date);
+    let added = 0;
+
+    while (added < days) {
+      result.setUTCDate(result.getUTCDate() + 1);
+      // Skip weekends (0 = Sunday, 6 = Saturday)
+      if (result.getUTCDay() !== 0 && result.getUTCDay() !== 6) {
+        added++;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Convert Date to array format for formatDate method
+   */
+  private dateToArray(date: Date): number[] {
+    return [
+      date.getUTCFullYear(),
+      date.getUTCMonth() + 1,
+      date.getUTCDate()
+    ];
   }
 }

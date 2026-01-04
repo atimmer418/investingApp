@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+
 import java.util.stream.Collectors;
 
 @Service
@@ -106,6 +106,7 @@ public class RAGService {
                 String id = chunk.id();
 
                 List<Float> embedding = llmService.getEmbedding(content);
+                logger.info("Generated embedding for chunk: {}", id);
 
                 Struct metadata = Struct.newBuilder()
                         .putFields("text", com.google.protobuf.Value.newBuilder().setStringValue(content).build())

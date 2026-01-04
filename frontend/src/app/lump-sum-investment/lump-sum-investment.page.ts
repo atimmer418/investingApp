@@ -83,7 +83,7 @@ interface AlpacaAsset {
 })
 export class LumpSumInvestmentPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   // Investment data
   investmentAmount: number = 0;
   investmentType: 'portfolio' | 'stock' = 'portfolio';
@@ -92,7 +92,7 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
   selectedStock: string = '';
   selectedStockInfo: AlpacaAsset | null = null;
   isLoading: boolean = false;
-  
+
   // Stock search
   searchTerm: string = '';
   searchResults: AlpacaAsset[] = [];
@@ -175,9 +175,9 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
       // Search for US equity stocks
       const stocksResponse = await this.http.get<AlpacaAsset[]>(
         `${environment.backendApiUrl}/alpaca/assets`,
-        { 
+        {
           headers: this.getAuthHeaders(),
-          params: { 
+          params: {
             search: term,
             asset_class: 'us_equity',
             status: 'active'
@@ -188,16 +188,16 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
       // Search for ETFs
       const etfsResponse = await this.http.get<AlpacaAsset[]>(
         `${environment.backendApiUrl}/alpaca/assets`,
-        { 
+        {
           headers: this.getAuthHeaders(),
-          params: { 
+          params: {
             search: term,
             asset_class: 'etf',
             status: 'active'
           }
         }
       ).toPromise();
-      
+
       // Combine results
       let allResults: AlpacaAsset[] = [];
       if (stocksResponse) {
@@ -206,29 +206,29 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
       if (etfsResponse) {
         allResults = allResults.concat(etfsResponse);
       }
-      
+
       if (allResults.length > 0) {
         // Filter for tradable assets only and strict string matching
         const termUpper = term.toUpperCase();
-        let filteredResults = allResults.filter(asset => 
-          asset.tradable && 
+        let filteredResults = allResults.filter(asset =>
+          asset.tradable &&
           asset.status === 'active' &&
-          (asset.symbol.toUpperCase().includes(termUpper) || 
-           asset.name.toUpperCase().includes(termUpper))
+          (asset.symbol.toUpperCase().includes(termUpper) ||
+            asset.name.toUpperCase().includes(termUpper))
         );
 
         // Sort results: exact symbol matches first, then partial matches, then name matches
         filteredResults.sort((a, b) => {
           const aSymbolExact = a.symbol.toUpperCase() === termUpper ? 1 : 0;
           const bSymbolExact = b.symbol.toUpperCase() === termUpper ? 1 : 0;
-          
+
           if (aSymbolExact !== bSymbolExact) return bSymbolExact - aSymbolExact;
-          
+
           const aSymbolPartial = a.symbol.toUpperCase().includes(termUpper) ? 1 : 0;
           const bSymbolPartial = b.symbol.toUpperCase().includes(termUpper) ? 1 : 0;
-          
+
           if (aSymbolPartial !== bSymbolPartial) return bSymbolPartial - aSymbolPartial;
-          
+
           return a.symbol.localeCompare(b.symbol);
         });
 
@@ -299,17 +299,14 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
       ).subscribe({
         next: (response: any) => {
           this.isLoading = false;
-          
+
           if (response.success) {
-            const investmentTarget = this.investmentType === 'portfolio' 
-              ? 'your portfolio' 
-              : `${this.getSelectedStockInfo()?.name} (${this.selectedStock})`;
-            
+            // Use the message from backend response
             this.toastService.showToast(
-              `Lump sum investment of ${this.formatCurrency(this.investmentAmount)} into ${investmentTarget} has been initiated successfully! You will receive updates as it processes.`, 
+              response.message || 'Investment initiated successfully!',
               'success'
             );
-            
+
             // Reset form after successful investment
             setTimeout(() => {
               this.investmentAmount = 0;
@@ -324,14 +321,14 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
         error: (error) => {
           this.isLoading = false;
           console.error('Investment error:', error);
-          
+
           let errorMessage = 'Failed to process investment. Please try again.';
           if (error.error?.message) {
             errorMessage = error.error.message;
           } else if (error.message) {
             errorMessage = error.message;
           }
-          
+
           this.toastService.showToast(errorMessage, 'danger');
         }
       });

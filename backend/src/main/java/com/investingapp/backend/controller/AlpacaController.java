@@ -20,10 +20,13 @@ public class AlpacaController {
     private static final Logger logger = LoggerFactory.getLogger(AlpacaController.class);
     private final AlpacaApiService alpacaApiService;
     private final PlaidToAlpacaService plaidToAlpacaService;
+    private final com.investingapp.backend.repository.UserRepository userRepository;
 
-    public AlpacaController(AlpacaApiService alpacaApiService, PlaidToAlpacaService plaidToAlpacaService) {
+    public AlpacaController(AlpacaApiService alpacaApiService, PlaidToAlpacaService plaidToAlpacaService,
+            com.investingapp.backend.repository.UserRepository userRepository) {
         this.alpacaApiService = alpacaApiService;
         this.plaidToAlpacaService = plaidToAlpacaService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/account")
@@ -34,7 +37,7 @@ public class AlpacaController {
         } catch (Exception e) {
             logger.error("Error getting account info: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("{\"error\":\"Failed to get account info\"}");
+                    .body("{\"error\":\"Failed to get account info\"}");
         }
     }
 
@@ -42,28 +45,70 @@ public class AlpacaController {
     public ResponseEntity<Map<String, Object>> createAccount(@RequestBody CreateAccountRequest request) {
         try {
             logger.info("Creating Alpaca account for email: {}", request.getEmail());
-            
+
             Map<String, Object> result = alpacaApiService.createAccount(
-                request.getEmail(),
-                request.getFirstName(),
-                request.getLastName(),
-                request.getDateOfBirth(),
-                request.getSsn(),
-                request.getPhone(),
-                request.getAddress()
-            );
-            
+                    request.getEmail(),
+                    request.getFirstName(),
+                    request.getLastName(),
+                    request.getDateOfBirth(),
+                    request.getSsn(),
+                    request.getPhone(),
+                    request.getAddress());
+
             if (result.containsKey("error")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
             }
-            
+
+            // Save Alpaca Account ID and Number to User entity
+            String email = request.getEmail();
+            if (email != null && !email.isEmpty()) {
+                com.investingapp.backend.model.User user = userRepository.findByEmail(email).orElse(null);
+                if (user != null) {
+                    if (result.containsKey("account_id")) {
+                        user.setAlpacaAccountId((String) result.get("account_id"));
+                    }
+                    if (result.containsKey("account_number")) {
+                        user.setAlpacaAccountNumber((String) result.get("account_number"));
+                    }
+                    userRepository.save(user);
+                    logger.info("Saved Alpaca Account ID and Number for user: {}", email);
+                } else {
+                    logger.warn("User not found for email: {}, could not save Alpaca details locally", email);
+                }
+            }
+
             return ResponseEntity.ok(result);
-            
+
         } catch (Exception e) {
-            logger.error("Error creating account: {}", e.getMessage());
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Failed to create account: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            logger.error("Error creating Alpaca account", e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @PostMapping("/sync-account-number")
+    public ResponseEntity<?> syncAccountNumber(org.springframework.security.core.Authentication authentication) {
+        String email = authentication.getName();
+        com.investingapp.backend.model.User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
+        }
+
+        String accountId = user.getAlpacaAccountId();
+        if (accountId == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "No Alpaca account ID found for user"));
+        }
+
+        String accountNumber = alpacaApiService.getAccountNumber(accountId);
+        if (accountNumber != null) {
+            user.setAlpacaAccountNumber(accountNumber);
+            userRepository.save(user);
+            logger.info("Synced Alpaca Account Number for user: {}", email);
+            return ResponseEntity.ok(Map.of("account_number", accountNumber));
+        } else {
+            return ResponseEntity.badRequest().body(Map.of("error", "Could not fetch account number from Alpaca"));
         }
     }
 
@@ -79,7 +124,7 @@ public class AlpacaController {
         } catch (Exception e) {
             logger.error("Error getting assets: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("{\"error\":\"Failed to get assets\"}");
+                    .body("{\"error\":\"Failed to get assets\"}");
         }
     }
 
@@ -89,22 +134,21 @@ public class AlpacaController {
             @RequestBody CreateAchRelationshipRequest request) {
         try {
             logger.info("Creating ACH relationship for account: {}", accountId);
-            
+
             Map<String, Object> result = alpacaApiService.createAchRelationship(
-                accountId,
-                request.getAccountOwnerName(),
-                request.getBankAccountType(),
-                request.getBankAccountNumber(),
-                request.getBankRoutingNumber(),
-                request.getNickname()
-            );
-            
+                    accountId,
+                    request.getAccountOwnerName(),
+                    request.getBankAccountType(),
+                    request.getBankAccountNumber(),
+                    request.getBankRoutingNumber(),
+                    request.getNickname());
+
             if (result.containsKey("error")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
             }
-            
+
             return ResponseEntity.ok(result);
-            
+
         } catch (Exception e) {
             logger.error("Error creating ACH relationship: {}", e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
@@ -120,25 +164,24 @@ public class AlpacaController {
             Authentication authentication) {
         try {
             logger.info("Creating ACH relationship for account {} using Plaid", accountId);
-            
+
             // Get user email from authentication
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             String userEmail = userDetails.getUsername();
-            
+
             Map<String, Object> result = plaidToAlpacaService.createAchRelationshipFromPlaid(
-                accountId,
-                request.getPlaidAccessToken(),
-                request.getPlaidAccountId(),
-                request.getAccountOwnerName(),
-                userEmail
-            );
-            
+                    accountId,
+                    request.getPlaidAccessToken(),
+                    request.getPlaidAccountId(),
+                    request.getAccountOwnerName(),
+                    userEmail);
+
             if (result.containsKey("error")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
             }
-            
+
             return ResponseEntity.ok(result);
-            
+
         } catch (Exception e) {
             logger.error("Error creating ACH relationship from Plaid: {}", e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
@@ -155,7 +198,7 @@ public class AlpacaController {
         } catch (Exception e) {
             logger.error("Error getting ACH relationships: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("{\"error\":\"Failed to get ACH relationships\"}");
+                    .body("{\"error\":\"Failed to get ACH relationships\"}");
         }
     }
 
@@ -167,7 +210,7 @@ public class AlpacaController {
         } catch (Exception e) {
             logger.error("Error getting account status: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("{\"error\":\"Failed to get account status\"}");
+                    .body("{\"error\":\"Failed to get account status\"}");
         }
     }
 
@@ -182,26 +225,61 @@ public class AlpacaController {
         private Map<String, String> address;
 
         // Getters and setters
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
+        public String getEmail() {
+            return email;
+        }
 
-        public String getFirstName() { return firstName; }
-        public void setFirstName(String firstName) { this.firstName = firstName; }
+        public void setEmail(String email) {
+            this.email = email;
+        }
 
-        public String getLastName() { return lastName; }
-        public void setLastName(String lastName) { this.lastName = lastName; }
+        public String getFirstName() {
+            return firstName;
+        }
 
-        public String getDateOfBirth() { return dateOfBirth; }
-        public void setDateOfBirth(String dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+        public void setFirstName(String firstName) {
+            this.firstName = firstName;
+        }
 
-        public String getSsn() { return ssn; }
-        public void setSsn(String ssn) { this.ssn = ssn; }
+        public String getLastName() {
+            return lastName;
+        }
 
-        public String getPhone() { return phone; }
-        public void setPhone(String phone) { this.phone = phone; }
+        public void setLastName(String lastName) {
+            this.lastName = lastName;
+        }
 
-        public Map<String, String> getAddress() { return address; }
-        public void setAddress(Map<String, String> address) { this.address = address; }
+        public String getDateOfBirth() {
+            return dateOfBirth;
+        }
+
+        public void setDateOfBirth(String dateOfBirth) {
+            this.dateOfBirth = dateOfBirth;
+        }
+
+        public String getSsn() {
+            return ssn;
+        }
+
+        public void setSsn(String ssn) {
+            this.ssn = ssn;
+        }
+
+        public String getPhone() {
+            return phone;
+        }
+
+        public void setPhone(String phone) {
+            this.phone = phone;
+        }
+
+        public Map<String, String> getAddress() {
+            return address;
+        }
+
+        public void setAddress(Map<String, String> address) {
+            this.address = address;
+        }
     }
 
     // DTO for ACH relationship creation request
@@ -213,20 +291,45 @@ public class AlpacaController {
         private String nickname;
 
         // Getters and setters
-        public String getAccountOwnerName() { return accountOwnerName; }
-        public void setAccountOwnerName(String accountOwnerName) { this.accountOwnerName = accountOwnerName; }
+        public String getAccountOwnerName() {
+            return accountOwnerName;
+        }
 
-        public String getBankAccountType() { return bankAccountType; }
-        public void setBankAccountType(String bankAccountType) { this.bankAccountType = bankAccountType; }
+        public void setAccountOwnerName(String accountOwnerName) {
+            this.accountOwnerName = accountOwnerName;
+        }
 
-        public String getBankAccountNumber() { return bankAccountNumber; }
-        public void setBankAccountNumber(String bankAccountNumber) { this.bankAccountNumber = bankAccountNumber; }
+        public String getBankAccountType() {
+            return bankAccountType;
+        }
 
-        public String getBankRoutingNumber() { return bankRoutingNumber; }
-        public void setBankRoutingNumber(String bankRoutingNumber) { this.bankRoutingNumber = bankRoutingNumber; }
+        public void setBankAccountType(String bankAccountType) {
+            this.bankAccountType = bankAccountType;
+        }
 
-        public String getNickname() { return nickname; }
-        public void setNickname(String nickname) { this.nickname = nickname; }
+        public String getBankAccountNumber() {
+            return bankAccountNumber;
+        }
+
+        public void setBankAccountNumber(String bankAccountNumber) {
+            this.bankAccountNumber = bankAccountNumber;
+        }
+
+        public String getBankRoutingNumber() {
+            return bankRoutingNumber;
+        }
+
+        public void setBankRoutingNumber(String bankRoutingNumber) {
+            this.bankRoutingNumber = bankRoutingNumber;
+        }
+
+        public String getNickname() {
+            return nickname;
+        }
+
+        public void setNickname(String nickname) {
+            this.nickname = nickname;
+        }
     }
 
     // DTO for ACH relationship creation using Plaid
@@ -236,13 +339,28 @@ public class AlpacaController {
         private String accountOwnerName;
 
         // Getters and setters
-        public String getPlaidAccessToken() { return plaidAccessToken; }
-        public void setPlaidAccessToken(String plaidAccessToken) { this.plaidAccessToken = plaidAccessToken; }
+        public String getPlaidAccessToken() {
+            return plaidAccessToken;
+        }
 
-        public String getPlaidAccountId() { return plaidAccountId; }
-        public void setPlaidAccountId(String plaidAccountId) { this.plaidAccountId = plaidAccountId; }
+        public void setPlaidAccessToken(String plaidAccessToken) {
+            this.plaidAccessToken = plaidAccessToken;
+        }
 
-        public String getAccountOwnerName() { return accountOwnerName; }
-        public void setAccountOwnerName(String accountOwnerName) { this.accountOwnerName = accountOwnerName; }
+        public String getPlaidAccountId() {
+            return plaidAccountId;
+        }
+
+        public void setPlaidAccountId(String plaidAccountId) {
+            this.plaidAccountId = plaidAccountId;
+        }
+
+        public String getAccountOwnerName() {
+            return accountOwnerName;
+        }
+
+        public void setAccountOwnerName(String accountOwnerName) {
+            this.accountOwnerName = accountOwnerName;
+        }
     }
 }
