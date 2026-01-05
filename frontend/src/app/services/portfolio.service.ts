@@ -32,6 +32,8 @@ export interface Position {
 export interface PortfolioHistory {
   timestamps: string[];
   values: number[];
+  profitLoss?: number[];
+  profitLossPercent?: number[];
 }
 
 export interface Transaction {

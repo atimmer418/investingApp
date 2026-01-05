@@ -41,8 +41,6 @@ export class PortfolioDashboardComponent implements OnInit {
 
   // Time period options for chart
   periodOptions = [
-    { value: '1D', label: '1D' },
-    { value: '1W', label: '1W' },
     { value: '1M', label: '1M' },
     { value: '3M', label: '3M' },
     { value: '6M', label: '6M' },
@@ -168,7 +166,59 @@ export class PortfolioDashboardComponent implements OnInit {
     return chartData;
   }
 
+  getReturnForCurrentPeriod(): { value: number, percent: number } | null {
+    let targetPeriod = this.selectedPeriod;
+    if (this.selectedPeriod === 'ALL') targetPeriod = 'Total';
 
+    const perf = this.performanceData.find(p => p.period === targetPeriod);
+    if (perf) {
+      return {
+        value: perf.totalReturn,
+        percent: perf.totalReturnPercent
+      };
+    }
+
+    // Use history data (Alpaca provided P/L) if available
+    if (this.dashboard?.history?.profitLossPercent && this.dashboard.history.profitLossPercent.length > 0) {
+      const history = this.dashboard.history;
+      const lastIndex = history.values.length - 1;
+      
+      if (lastIndex >= 0) {
+        // Alpaca returns cumulative P/L for the period in the last element
+        const percent = history.profitLossPercent[lastIndex];
+        const value = history.profitLoss && history.profitLoss.length > lastIndex ? history.profitLoss[lastIndex] : 0;
+        return { value, percent };
+      }
+    }
+
+    // Fallback: Calculate from chartData
+    if (this.chartData && this.chartData.length > 0) {
+      const startValue = this.chartData[0].value;
+      const endValue = this.chartData[this.chartData.length - 1].value;
+      
+      if (startValue === 0) {
+         return { value: endValue, percent: 0 };
+      }
+      
+      const value = endValue - startValue;
+      const percent = (value / startValue) * 100;
+      
+      return { value, percent };
+    }
+
+    return null;
+  }
+
+  getPeriodLabel(): string {
+    const map: {[key: string]: string} = {
+      '1M': '1-month',
+      '3M': '3-month',
+      '6M': '6-month',
+      '1Y': '1-year',
+      'ALL': 'total'
+    };
+    return map[this.selectedPeriod] || this.selectedPeriod;
+  }
 
   formatCurrency(amount: number): string {
     // Handle edge case where value is very small negative (rounds to 0) 

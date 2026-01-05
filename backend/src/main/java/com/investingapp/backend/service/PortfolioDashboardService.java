@@ -646,11 +646,13 @@ public class PortfolioDashboardService {
                 List<String> dates = new ArrayList<>();
                 List<BigDecimal> values = new ArrayList<>();
                 List<BigDecimal> profitLoss = new ArrayList<>();
+                List<BigDecimal> profitLossPercent = new ArrayList<>();
 
                 // Parse timestamps, equity arrays, and profit_loss
                 JsonNode timestamps = historyData.get("timestamp");
                 JsonNode equityValues = historyData.get("equity");
                 JsonNode profitLossValues = historyData.get("profit_loss");
+                JsonNode profitLossPercentValues = historyData.get("profit_loss_pct");
 
                 if (timestamps != null && timestamps.isArray() &&
                         equityValues != null && equityValues.isArray() &&
@@ -678,12 +680,25 @@ public class PortfolioDashboardService {
                             BigDecimal pl = new BigDecimal(profitLossValues.get(i).asText());
                             profitLoss.add(pl);
                         }
+
+                        // Parse profit/loss percent data if available
+                        if (profitLossPercentValues != null && profitLossPercentValues.isArray() && i < profitLossPercentValues.size()) {
+                            // Alpaca returns decimal (e.g. 0.05 for 5%), we might want to keep it as is or convert to percent
+                            // Frontend expects percent (e.g. 5.0), but let's check what Alpaca returns.
+                            // Usually Alpaca returns 0.015 for 1.5%.
+                            // Let's store it as is, and frontend can multiply by 100 if needed, OR multiply here.
+                            // Existing code for totalGainLossPercent multiplies by 100.
+                            // Let's multiply by 100 here to be consistent with "Percent" naming in other places if they are 0-100.
+                            // Wait, totalGainLossPercent in DashboardData is 0-100 based.
+                            // Let's multiply by 100.
+                            BigDecimal plPct = new BigDecimal(profitLossPercentValues.get(i).asText()).multiply(new BigDecimal("100"));
+                            profitLossPercent.add(plPct);
+                        }
                     }
                 }
 
                 logger.info("Retrieved {} portfolio history data points", dates.size());
-                logger.info("Profit/Loss data points: {}", profitLoss);
-                return new PortfolioHistory(dates, values, profitLoss);
+                return new PortfolioHistory(dates, values, profitLoss, profitLossPercent);
 
             } else {
                 logger.warn("Failed to fetch portfolio history: {}", response.getStatusCode());
@@ -914,17 +929,20 @@ public class PortfolioDashboardService {
         public final List<String> timestamps;
         public final List<BigDecimal> values;
         public final List<BigDecimal> profitLoss;
+        public final List<BigDecimal> profitLossPercent;
 
         public PortfolioHistory(List<String> timestamps, List<BigDecimal> values) {
             this.timestamps = timestamps;
             this.values = values;
             this.profitLoss = new ArrayList<>();
+            this.profitLossPercent = new ArrayList<>();
         }
 
-        public PortfolioHistory(List<String> timestamps, List<BigDecimal> values, List<BigDecimal> profitLoss) {
+        public PortfolioHistory(List<String> timestamps, List<BigDecimal> values, List<BigDecimal> profitLoss, List<BigDecimal> profitLossPercent) {
             this.timestamps = timestamps;
             this.values = values;
             this.profitLoss = profitLoss;
+            this.profitLossPercent = profitLossPercent;
         }
     }
 

@@ -122,6 +122,16 @@
           <app-portfolio-chart [data]="chartData" [selectedPeriod]="selectedPeriod">
           </app-portfolio-chart>
         </div>
+
+        <!-- Return Yield Section -->
+        <div class="return-yield-section" *ngIf="getReturnForCurrentPeriod() as returnData">
+          <div class="yield-row">
+            <span class="yield-label">Your {{ getPeriodLabel() }} cumulative pre-tax return</span>
+            <span class="yield-value" [class]="'change-' + getGainLossColor(returnData.value)">
+              {{ formatPercent(returnData.percent) }}
+            </span>
+          </div>
+        </div>
       </div>
 
     </div>

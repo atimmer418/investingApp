@@ -723,3 +723,37 @@ ion-header {
     --portfolio-text-secondary: var(--app-gray-400);
   }
 }
+/* =============================================================================
+   RETURN YIELD SECTION
+   ============================================================================= */
+
+.return-yield-section {
+  margin-top: var(--app-spacing-md);
+  padding-top: var(--app-spacing-sm);
+  border-top: 1px solid var(--app-border-color, #e0e0e0);
+  
+  .yield-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+  }
+
+  .yield-label {
+    font-size: 14px;
+    color: var(--portfolio-text-secondary);
+  }
+
+  .yield-value {
+    font-size: 16px;
+    font-weight: 600;
+    
+    &.change-success {
+      color: var(--portfolio-success);
+    }
+    
+    &.change-danger {
+      color: var(--portfolio-danger);
+    }
+  }
+}
