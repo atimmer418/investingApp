@@ -625,13 +625,12 @@ public class PortfolioDashboardService {
     private PortfolioHistory getPortfolioHistory(String accountId, String period) {
         try {
             // Build URL with account ID for Broker API
-            // Use timeframe=1D to get daily data points, not intraday minutes
-            // Add cashflow_types=NONE to exclude cash flows from P&L calculation
+            // Use timeframe=1D to get daily data points
+            // Removed cashflow_types=NONE to ensure we get proper P/L calculations accounting for deposits
             String url = alpacaBrokerBaseUrl + "/trading/accounts/" + accountId + "/account/portfolio/history" +
                     "?period=" + period +
                     "&timeframe=1D" +
-                    "&intraday_reporting=market_hours" +
-                    "&cashflow_types=NONE";
+                    "&intraday_reporting=market_hours";
 
             HttpHeaders headers = createAuthHeaders(); // Use broker API headers
             HttpEntity<Void> entity = new HttpEntity<>(headers);

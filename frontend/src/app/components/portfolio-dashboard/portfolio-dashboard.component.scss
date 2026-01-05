@@ -757,3 +757,29 @@ ion-header {
     }
   }
 }
+
+/* =============================================================================
+   POSITIONS TABLE - TOTAL ROW
+   ============================================================================= */
+
+.positions-table {
+  tfoot {
+    border-top: 2px solid var(--app-border-color, #e0e0e0);
+    background-color: var(--app-background-alt, #f9f9f9);
+    
+    td {
+      padding: 12px 8px;
+      font-weight: 600;
+      color: var(--portfolio-text-primary);
+    }
+
+    .yield-percent-text {
+      font-size: 0.85em;
+      display: block;
+    }
+  }
+}
+
+.text-middle {
+  text-align: center;
+}

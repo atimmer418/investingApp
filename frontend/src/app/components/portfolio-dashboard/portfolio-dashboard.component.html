@@ -220,6 +220,26 @@
                 </td>
               </tr>
             </tbody>
+            <tfoot>
+              <tr>
+                <td class="text-left">Total</td>
+                <td class="text-middle">-</td>
+                <td class="text-middle"> -</td>
+                <td class="text-middle"> -</td>
+                <td class="text-right">{{ formatCurrency(getPositionsTotalValue()) }}</td>
+                <td class="text-right">
+                  <div class="gain-loss-cell">
+                    <span class="text-base font-semibold" [class]="'change-' + getGainLossColor(getPositionsTotalGainLoss())">
+                      {{ formatCurrency(getPositionsTotalGainLoss()) }}
+                    </span>
+                    <span class="text-sm yield-percent-text" [class]="'change-' + getGainLossColor(getPositionsTotalGainLoss())">
+                      {{ formatPercent(getPositionsTotalWeightedReturn()) }}
+                    </span>
+                  </div>
+                </td>
+                <td class="text-center">100%</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 

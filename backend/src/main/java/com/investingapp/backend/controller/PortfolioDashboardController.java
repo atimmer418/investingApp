@@ -95,12 +95,17 @@ public class PortfolioDashboardController {
             PortfolioDashboardService.PortfolioHistory portfolioHistory = 
                 portfolioDashboardService.getPortfolioHistoryForPeriod(user, period);
             
-            // Return the history with the requested period
-            Map<String, Object> result = new HashMap<>();
-            result.put("history", portfolioHistory);
-            result.put("period", period);
+            // Return the history object directly (it contains timestamps/values/profitLoss/profitLossPercent)
+            // The frontend expects the history object itself, not wrapped in "history" key for this endpoint?
+            // Checking frontend service: getPortfolioHistory returns Observable<PortfolioHistory>
+            // So we should return portfolioHistory directly.
+            // Previous code: result.put("history", portfolioHistory); return result;
+            // But PortfolioService.ts expects: timestamps, values.
+            // If we wrapped it in { history: ... } frontend would need data.history.timestamps
+            // Checking PortfolioService.ts: getPortfolioHistory calls .get<any>(...).pipe(...)
+            // It seems acceptable to return just the object.
             
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(portfolioHistory);
             
         } catch (Exception e) {
             logger.error("Error fetching portfolio history", e);

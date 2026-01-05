@@ -169,8 +169,9 @@ export class PortfolioDashboardComponent implements OnInit {
   getReturnForCurrentPeriod(): { value: number, percent: number } | null {
     let targetPeriod = this.selectedPeriod;
     if (this.selectedPeriod === 'ALL') targetPeriod = 'Total';
-
+    console.log('Performance data:', this.performanceData);
     const perf = this.performanceData.find(p => p.period === targetPeriod);
+    console.log('perf:', perf);
     if (perf) {
       return {
         value: perf.totalReturn,
@@ -179,19 +180,46 @@ export class PortfolioDashboardComponent implements OnInit {
     }
 
     // Use history data (Alpaca provided P/L) if available
+    // Priority 1: Direct Percentage from Alpaca
     if (this.dashboard?.history?.profitLossPercent && this.dashboard.history.profitLossPercent.length > 0) {
       const history = this.dashboard.history;
       const lastIndex = history.values.length - 1;
       
-      if (lastIndex >= 0) {
-        // Alpaca returns cumulative P/L for the period in the last element
-        const percent = history.profitLossPercent[lastIndex];
+      if (lastIndex >= 0 && history.profitLossPercent) {
+        const percent = history.profitLossPercent[lastIndex]; // Already in % or decimal? Alpaca usually returns decimal, but we fetch as is.
+        // Assuming backend handles scaling or frontend formats it.
+        // Note: Earlier backend edit multiplies by 100 for profit_loss_pct array.
+        
         const value = history.profitLoss && history.profitLoss.length > lastIndex ? history.profitLoss[lastIndex] : 0;
         return { value, percent };
       }
     }
 
-    // Fallback: Calculate from chartData
+    // Priority 3: Derived "Money-Weighted" Return approximation
+    // If we have P/L dollar amount but no percentage, and we see an equity jump inconsistent with P/L
+    if (this.dashboard?.history?.profitLoss && this.dashboard.history.profitLoss.length > 0) {
+      const history = this.dashboard.history;
+      const lastIndex = history.values.length - 1;
+
+      if (lastIndex >= 0) {
+        const profitLoss = history.profitLoss[lastIndex];
+        const currentEquity = history.values[lastIndex];
+        
+        // Invested Capital is (Equity - Total Profit). 
+        // This effectively treats the "Principal" as the denominator.
+        const investedCapital = currentEquity - profitLoss;
+        
+        if (investedCapital !== 0) {
+            // Check for valid profitLoss data
+            console.log(`Period ${targetPeriod} P/L: ${profitLoss}, Equity: ${currentEquity}, Invested: ${investedCapital}`);
+            const percent = (profitLoss / investedCapital) * 100;
+            return { value: profitLoss, percent };
+        }
+      }
+    }
+
+    // Fallback: Calculate from chartData (Only if absolutely no P/L data exists)
+    // Warning: This includes deposits/withdrawals as "Performance"
     if (this.chartData && this.chartData.length > 0) {
       const startValue = this.chartData[0].value;
       const endValue = this.chartData[this.chartData.length - 1].value;
@@ -257,5 +285,29 @@ export class PortfolioDashboardComponent implements OnInit {
     // Overview (default) -> Front side (isFlipped = false)
     // Analytics -> Back side (isFlipped = true)
     this.isFlipped = this.selectedTab === 'analytics';
+  }
+
+  getPositionsTotalValue(): number {
+    if (!this.dashboard?.positions) return 0;
+    return this.dashboard.positions.reduce((sum, p) => sum + p.marketValue, 0);
+  }
+
+  getPositionsTotalCostBasis(): number {
+    if (!this.dashboard?.positions) return 0;
+    return this.dashboard.positions.reduce((sum, p) => sum + p.costBasis, 0);
+  }
+
+  getPositionsTotalGainLoss(): number {
+    if (!this.dashboard?.positions) return 0;
+    return this.dashboard.positions.reduce((sum, p) => sum + p.unrealizedPL, 0);
+  }
+
+  getPositionsTotalWeightedReturn(): number {
+    const totalCost = this.getPositionsTotalCostBasis();
+    if (totalCost === 0) return 0;
+    
+    // Weighted Return = (Total Gain / Total Cost) * 100
+    // This is mathematically equivalent to the sum of weighted returns if weights are based on cost basis
+    return (this.getPositionsTotalGainLoss() / totalCost) * 100;
   }
 }
