@@ -12,6 +12,7 @@ import {
 import { ToastService } from '../../services/toast.service';
 import { AlpacaService, CreateAccountRequest } from '../../services/alpaca.service';
 import { AuthService } from '../../services/auth.service';
+import { InvestmentService } from '../../services/investment.service';
 import { PlaidDataService } from '../../services/plaid-data.service';
 import { environment } from '../../../environments/environment';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
@@ -94,6 +95,7 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
     private router: Router,
     private alpacaService: AlpacaService,
     private authService: AuthService,
+    private investmentService: InvestmentService,
     private plaidDataService: PlaidDataService,
     private http: HttpClient,
     private toastService: ToastService
@@ -408,6 +410,22 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
       
       // If account creation successful, proceed with investment setup
       if (this.alpacaAccountId) {
+        
+        // Handle pending ACATS transfer if exists
+        if (this.investmentService.pendingAcatsRequest) {
+            console.log('Found pending ACATS request, initiating transfer...');
+            this.authorizationStatus = 'Initiating asset transfer...';
+            try {
+                // Pass the pending request data (DTC #, Account #) - the User ID is inferred from the token
+                await this.investmentService.initiateAcatsTransfer(this.investmentService.pendingAcatsRequest!).toPromise();
+                console.log('✅ ACATS transfer request submitted successfully');
+                await this.toastService.showToast('Asset transfer request submitted successfully', 'success', 3000);
+            } catch (acatsError) {
+                console.error('❌ Failed to initiate ACATS transfer:', acatsError);
+                await this.toastService.showToast('Failed to initiate asset transfer. Please try again from settings.', 'warning', 5000);
+            }
+        }
+
         this.authorizationStatus = 'Alpaca account created! Setting up recurring investment...';
         
         // TODO: Set up recurring investment logic

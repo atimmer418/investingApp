@@ -37,6 +37,31 @@
 @import '@ionic/angular/css/palettes/dark.system.css';
 
 /* =============================================================================
+   CUSTOM FONTS
+   ============================================================================= */
+
+@font-face {
+  font-family: 'Nagoya Demo';
+  src: url('/assets/fonts/NagoyaDEMO-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'The Ink Prophecy';
+  src: url('/assets/fonts/The Ink Prophecy.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Astralight';
+  src: url('/assets/fonts/astralight.regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* =============================================================================
    MOBILE-FIRST GLOBAL STYLES FOR INVESTING APP
    ============================================================================= */
 

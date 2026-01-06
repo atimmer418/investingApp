@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
@@ -27,14 +27,19 @@ import {
   IonList,
   IonItem,
   IonSpinner,
-  IonNote
+  IonNote,
+  IonCheckbox,
+  IonPopover
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   cashOutline,
   checkmarkCircleOutline,
   alertCircleOutline,
-  informationCircleOutline
+  informationCircleOutline,
+  chevronDownOutline,
+  chevronUpOutline,
+  swapHorizontalOutline
 } from 'ionicons/icons';
 import { InvestmentService } from '../services/investment.service';
 import { PortfolioService, AccountSummary } from '../services/portfolio.service';
@@ -69,6 +74,8 @@ interface AlpacaAsset {
     IonInput,
     IonButtons,
     IonBackButton,
+    IonSelect,
+    IonSelectOption,
     IonSegment,
     IonSegmentButton,
     IonLabel,
@@ -76,7 +83,9 @@ interface AlpacaAsset {
     IonList,
     IonItem,
     IonSpinner,
-    IonNote
+    IonNote,
+    IonCheckbox,
+    IonPopover
   ],
   templateUrl: './lump-sum-investment.page.html',
   styleUrls: ['./lump-sum-investment.page.scss']
@@ -99,8 +108,26 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
   isSearching: boolean = false;
   showSearch: boolean = false;
 
+  // ACATS Transfer
+  showTransferOptions: boolean = false;
+  transferBrokerageDtc: string = '';
+  transferAccountNumber: string = '';
+  isProcessingTransfer: boolean = false;
+
+  brokerageOptions = [
+    { name: 'Robinhood', dtc: '6769' },
+    { name: 'Fidelity', dtc: '0226' },
+    { name: 'Charles Schwab', dtc: '0164' },
+    { name: 'E*TRADE', dtc: '0385' },
+    { name: 'TD Ameritrade', dtc: '0188' },
+    { name: 'Vanguard', dtc: '0062' },
+    { name: 'Webull', dtc: '0002' }, // Note check this DTC, standard clearing
+    { name: 'Public', dtc: '0443' }  // Apex Clearing
+  ];
+
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private investmentService: InvestmentService,
     private portfolioService: PortfolioService,
     private http: HttpClient,
@@ -112,11 +139,20 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
       cashOutline,
       checkmarkCircleOutline,
       alertCircleOutline,
-      informationCircleOutline
+      informationCircleOutline,
+      chevronDownOutline,
+      chevronUpOutline,
+      swapHorizontalOutline
     });
   }
 
   ngOnInit() {
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+        if (params['mode'] === 'transfer') {
+            this.showTransferOptions = true;
+        }
+    });
+
     this.loadPortfolioData();
   }
 
@@ -259,7 +295,36 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
     });
   }
 
+  async submitAcatsTransfer() {
+    if (!this.transferBrokerageDtc || !this.transferAccountNumber) {
+       this.toastService.showToast('Please select a brokerage and enter your account number.', 'warning');
+       return;
+    }
+
+    this.isLoading = true;
+
+    try {
+        const transferData = {
+            dtcNumber: this.transferBrokerageDtc,
+            accountNumber: this.transferAccountNumber
+        };
+        
+        console.log('Initiating ACATS transfer:', transferData);
+        await this.investmentService.initiateAcatsTransfer(transferData).toPromise();
+        
+        this.toastService.showToast('Asset transfer request submitted successfully!', 'success', 3000);
+        this.goBack();
+
+    } catch (error) {
+        console.error('Error submitting ACATS transfer:', error);
+        this.toastService.showToast('Failed to submit transfer request. Please try again.', 'danger');
+    } finally {
+        this.isLoading = false;
+    }
+  }
+
   async makeInvestment() {
+    // If we have separate buttons, this function should strictly handle investment logic
     if (!this.validateInvestment()) {
       return;
     }

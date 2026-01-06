@@ -102,6 +102,57 @@
       </div>
     </div>
 
+    <!-- ACATS Transfer Option -->
+    <div class="input-section transfer-section">
+      <div class="transfer-toggle-wrapper" style="display: flex; align-items: flex-start; gap: 16px; padding: 16px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+         <ion-checkbox slot="start" [(ngModel)]="showTransferOptions" mode="ios"></ion-checkbox>
+         <div class="transfer-label">
+            <h3 style="margin: 0 0 4px; font-size: 17px; font-weight: 600;">Transfer existing assets?</h3>
+            <p style="margin: 0; font-size: 14px; color: var(--ion-color-medium); line-height: 1.4;">
+               Move your portfolio from another brokerage like Robinhood or Fidelity directly into this account.
+            </p>
+         </div>
+      </div>
+
+      <div *ngIf="showTransferOptions" class="transfer-form" style="margin-top: 24px; padding-left: 8px; padding-right: 8px;">
+        
+        <!-- Brokerage Selection -->
+        <div class="sub-section" style="margin-bottom: 24px;">
+             <p style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 8px; color: var(--ion-color-medium);">Brokerage</p>
+             <div class="input-display-wrapper">
+                <ion-select [(ngModel)]="transferBrokerageDtc" placeholder="Select your current brokerage" interface="action-sheet" cancelText="Cancel">
+                  <ion-select-option *ngFor="let broker of brokerageOptions" [value]="broker.dtc">
+                    {{ broker.name }}
+                  </ion-select-option>
+                </ion-select>
+             </div>
+        </div>
+
+        <!-- Account Number -->
+        <div class="sub-section">
+             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <p style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin: 0; color: var(--ion-color-medium);">Account Number</p>
+                <ion-button fill="clear" size="small" id="acats-tooltip" style="--padding-start:0; --padding-end:0; height: 20px;">
+                    <ion-icon slot="icon-only" name="information-circle-outline" style="font-size: 18px;"></ion-icon>
+                </ion-button>
+             </div>
+             
+             <ion-popover trigger="acats-tooltip" triggerAction="click">
+                <ng-template>
+                  <ion-content class="ion-padding">
+                    <p style="font-size: 14px; line-height: 1.5; margin: 0;">Found in your monthly statements or account settings under "Account Number".</p>
+                  </ion-content>
+                </ng-template>
+             </ion-popover>
+             
+             <div class="input-display-wrapper">
+                <ion-input type="text" [(ngModel)]="transferAccountNumber" placeholder="Enter account number"></ion-input>
+             </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Navigation Controls -->
     <div class="navigation-controls">
       <ion-button expand="block" [disabled]="!canProceed() || isSubmitting" (click)="goToStockPreferences()">

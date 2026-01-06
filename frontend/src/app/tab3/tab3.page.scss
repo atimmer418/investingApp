@@ -22,112 +22,103 @@ ion-header {
 }
 
 /* =============================================================================
-   IOS-STYLE PROFILE HEADER (INTEGRATED)
+   NEW CUSTOM PROFILE HEADER
    ============================================================================= */
 
-.profile-header-container {
-  /* Light Bluish FRED Style - Professional Financial Blue */
-  background: linear-gradient(135deg, #c6e3ff 0%, #a8d5ff 100%);
-  border-bottom: 1px solid var(--app-card-border);
-  padding: 0;
-  width: 100%;
+.custom-profile-header {
+  background: var(--ion-color-primary);
+  /* Flipped Gradient: Bottom-Up (dark to light/tint) */
+  background: linear-gradient(0deg, var(--ion-color-primary) 0%, var(--ion-color-primary-tint) 100%);
+  
+  /* Flipped Shape: Concave Bottom 
+     (Achieved by removing the border-radius here and using a pseudo-element) */
+  box-shadow: none; /* Shadow handled by the content overlap or simplified */
+  
+  padding: 10px 24px 34px 24px; /* Extra bottom padding for the cutout */
   position: relative;
-  overflow: hidden;
+  z-index: 10;
   
-  /* Decorative Circles - Very subtle for light background */
-  &::before {
-    content: '';
-    position: absolute;
-    top: -60px;
-    right: -40px;
-    width: 240px;
-    height: 240px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-  }
-  
+  /* The "Concave" Curve - Gray page background curving UP into the header */
   &::after {
     content: '';
     position: absolute;
-    bottom: -40px;
-    left: -20px;
-    width: 180px;
-    height: 180px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
+    bottom: -1px; /* Overlap slightly to prevent sub-pixel gaps */
+    left: 0;
+    right: 0;
+    height: 24px;
+    background: #f2f2f7; /* Matches settings-content background */
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
   }
-}
-
-.profile-card {
-  display: flex;
-  align-items: center;
-  background: transparent;
-  padding: 0 20px;
-  border-radius: 0;
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  height: 111px;
   
-  .profile-avatar {
-    width: 56px;
-    height: 56px;
-    margin-right: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Softer shadow */
-  }
-
-  .profile-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    overflow: hidden;
-    z-index: 1;
-
-    .profile-name {
-      margin: 0 0 2px 0;
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: var(--app-gray-900); /* Dark text */
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-shadow: none; /* Removed shadow */
-      letter-spacing: -0.02em;
-    }
-
-    .profile-email {
-      margin: 0;
-      font-size: 0.9rem;
-      color: var(--app-gray-500); /* Gray text */
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-weight: 500;
-    }
-  }
-
-  .profile-actions {
+  .header-content {
     display: flex;
     align-items: center;
-    justify-content: center;
-    z-index: 2;
-    margin-left: 8px;
+    justify-content: space-between;
+    padding-top: 10px;
+  }
 
-    .settings-icon {
-      font-size: 24px;
-      color: var(--app-gray-400); /* Subtle gray icon */
+  .user-details {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Left align everything */
+    flex: 1; /* Allow space for branding */
+    
+    .user-avatar {
+      width: 52px;
+      height: 52px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      margin-right: 16px; /* Spacing on right */
+      margin-left: 0;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    
+    .user-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start; /* Left align text */
+      text-align: left;        /* Left align text */
+      
+      .name {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        color: white;
+        letter-spacing: -0.01em;
+      }
+      
+      .email {
+        margin: 2px 0 0 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.85);
+        font-weight: 500;
+      }
     }
   }
-}
 
+  .header-branding {
+    font-family: "astralight", sans-serif;
+    font-size: 46px; /* Rough height of name + email + gap */
+    font-weight: 900;
+    color: #f2f2f7; /* Matches settings background */
+    opacity: 0.3;     /* Subtle watermark effect */
+    letter-spacing: 0.05em;
+    line-height: 1;
+    pointer-events: none; /* purely decorative */
+    margin-left: 16px;
+  }
+}
 
 .settings-content {
   --background: #f2f2f7;
-  --padding-top: 8px; /* Match other tabs */
+  --padding-top: 0; /* Cutout handles the spacing */
+}
+
+// Remove old classes to avoid confusion
+.profile-header-container,
+.profile-card,
+.profile-gradient-separator {
+  display: none;
 }
 
 /* =============================================================================
@@ -203,7 +194,7 @@ ion-header {
 .settings-sections {
   display: flex;
   flex-direction: column;
-  gap: var(--app-spacing-lg);
+  gap: var(--app-spacing-md);
 }
 
 .settings-group {
@@ -367,8 +358,8 @@ ion-header {
    ============================================================================= */
 
 .app-version {
-  margin-top: var(--app-spacing-xl);
-  margin-bottom: var(--app-spacing-xl);
+  margin-top: 6px;
+  margin-bottom: 6px;
   
   .version-text {
     margin: 0;

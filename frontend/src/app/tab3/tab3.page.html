@@ -1,19 +1,16 @@
 <ion-header class="ion-no-border">
-  <!-- iOS-Style Profile Header (Replaces Toolbar) -->
-  <div class="profile-header-container safe-area-top">
-    <div class="profile-card">
-      <ion-avatar class="profile-avatar">
-        <img src="https://ionicframework.com/docs/img/demos/avatar.svg" alt="Profile" />
-      </ion-avatar>
-      <div class="profile-info">
-        <h2 class="profile-name">Alex Doe</h2>
-        <p class="profile-email">{{ userEmail }}</p>
+  <div class="custom-profile-header safe-area-top">
+    <div class="header-content">
+      <div class="user-details">
+        <ion-avatar class="user-avatar">
+          <img src="https://ionicframework.com/docs/img/demos/avatar.svg" />
+        </ion-avatar>
+        <div class="user-text">
+          <h1 class="name">Alex Doe</h1>
+          <p class="email">{{ userEmail }}</p>
+        </div>
       </div>
-      
-      <!-- Settings Gear Icon (Visual Only) -->
-      <div class="profile-actions">
-        <ion-icon name="settings-outline" class="settings-icon"></ion-icon>
-      </div>
+      <div class="header-branding">FRED</div>
     </div>
   </div>
 </ion-header>
@@ -70,6 +67,6 @@
 
   <!-- App Version -->
   <div class="app-version mobile-container">
-    <p class="version-text text-xs text-gray text-center">Version 1.0.0</p>
+    <p class="version-text text-xs text-gray text-center">FRED v1.0.0</p>
   </div>
 </ion-content>

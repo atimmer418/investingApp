@@ -6,10 +6,12 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel,
   IonSelect, IonSelectOption, IonInput, IonNote, IonIcon, IonCard, IonCardContent,
-  IonCardHeader, IonCardTitle, IonButtons, IonBackButton, IonProgressBar, IonSpinner
+  IonCardHeader, IonCardTitle, IonButtons, IonBackButton, IonProgressBar, IonSpinner,
+  IonCheckbox, IonPopover
 } from '@ionic/angular/standalone';
 
 import { AuthService } from '../../services/auth.service';
+import { InvestmentService } from '../../services/investment.service'; // Import this
 import { environment } from '../../../environments/environment';
 
 export interface InvestmentSchedule {
@@ -47,7 +49,8 @@ export interface InvestmentScheduleResponse {
     CommonModule, FormsModule,
     IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel,
     IonSelect, IonSelectOption, IonInput, IonNote, IonIcon, IonCard, IonCardContent,
-    IonCardHeader, IonCardTitle, IonButtons, IonBackButton, IonProgressBar, IonSpinner
+    IonCardHeader, IonCardTitle, IonButtons, IonBackButton, IonProgressBar, IonSpinner,
+    IonCheckbox, IonPopover
   ]
 })
 export class InvestmentScheduleComponent implements OnInit {
@@ -57,10 +60,26 @@ export class InvestmentScheduleComponent implements OnInit {
   timeToFI: number = 0;
 
   isSubmitting: boolean = false;
+  
+  // ACATS Transfer
+  showTransferOptions: boolean = false;
+  transferBrokerageDtc: string = '';
+  transferAccountNumber: string = '';
+  
+  brokerageOptions = [
+    { name: 'Robinhood', dtc: '6769' },
+    { name: 'Fidelity', dtc: '0226' },
+    { name: 'Charles Schwab', dtc: '0164' },
+    { name: 'Vanguard', dtc: '0062' },
+    { name: 'E*Trade', dtc: '0385' },
+    { name: 'TD Ameritrade', dtc: '0188' },
+    { name: 'Webull', dtc: '0158' }
+  ];
 
   constructor(
     private router: Router,
     private authService: AuthService,
+    private investmentService: InvestmentService,
     private http: HttpClient
   ) {}
 
@@ -535,6 +554,17 @@ export class InvestmentScheduleComponent implements OnInit {
 
     console.log('[InvestmentScheduleComponent] Saving investment schedule:', investmentScheduleData);
     console.log('[InvestmentScheduleComponent] Start date being sent:', this.schedule.startDate);
+
+    // Save ACATS transfer data if selected
+    if (this.showTransferOptions && this.transferBrokerageDtc && this.transferAccountNumber) {
+        this.investmentService.pendingAcatsRequest = {
+            dtcNumber: this.transferBrokerageDtc,
+            accountNumber: this.transferAccountNumber
+        };
+        console.log('Saved pending ACATS request');
+    } else {
+        this.investmentService.pendingAcatsRequest = null;
+    }
 
     // Save investment schedule using AuthService
     this.authService.createOrUpdateInvestmentSchedule(investmentScheduleData)

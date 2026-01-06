@@ -85,14 +85,28 @@ export interface UpdateInvestmentScheduleRequest {
   nextInvestmentDate?: string;
 }
 
+export interface AcatsRequestData {
+  dtcNumber: string;
+  accountNumber: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class InvestmentService {
   private apiUrl = `${environment.backendApiUrl}/investments`;
   private scheduleApiUrl = `${environment.backendApiUrl}/investment-schedule`;
+  private alpacaApiUrl = `${environment.backendApiUrl}/alpaca`; // Add this
+  
+  // Temporary storage for onboarding flow
+  public pendingAcatsRequest: AcatsRequestData | null = null; 
 
   constructor(private http: HttpClient) { }
+
+  initiateAcatsTransfer(data: AcatsRequestData): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.post(`${this.alpacaApiUrl}/acats/transfer`, data, { headers });
+  }
 
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('jwtToken');

@@ -94,7 +94,7 @@ export class Tab3Page implements OnInit, OnDestroy {
   public userPreferences: UserPreferences | null = null;
   public recurringInvestment: RecurringInvestment | null = null;
   public currentBankAccount: BankAccount | null = null;
-  public userEmail: string = 'alex.doe@example.com';
+  public userEmail: string = '';
 
   public settingSections: SettingSection[] = [
     {
@@ -108,8 +108,8 @@ export class Tab3Page implements OnInit, OnDestroy {
           type: 'navigation'
         },
         {
-          title: 'One-Time Investment',
-          subtitle: 'Make a lump sum investment',
+          title: 'One-Time Transactions',
+          subtitle: 'Invest once or transfer assets into Alpaca',
           icon: 'cash-outline',
           action: 'lumpSumInvestment',
           type: 'navigation'
@@ -174,7 +174,7 @@ export class Tab3Page implements OnInit, OnDestroy {
           type: 'navigation'
         },
         {
-          title: 'Contact Support',
+          title: 'Contact Us',
           subtitle: 'Get help from our team',
           icon: 'mail-outline',
           action: 'contactSupport',
@@ -370,8 +370,7 @@ export class Tab3Page implements OnInit, OnDestroy {
   }
 
   private handleContactSupport() {
-    this.toastService.showToast('Opening support chat...', 'success');
-    // In a real app, open support interface
+    window.location.href = 'mailto:help@fredvested.com';
   }
 
   private handleBankAccountsView() {

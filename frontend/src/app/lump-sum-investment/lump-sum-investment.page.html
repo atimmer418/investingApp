@@ -177,16 +177,79 @@
       </div>
       
       <!-- Investment Button -->
-      <div class="investment-actions">
+      <div class="investment-actions" style="margin-top: 20px;">
         <ion-button 
-          expand="block" 
-          color="primary"
-          size="large"
-          (click)="makeInvestment()"
-          [disabled]="isLoading || !investmentAmount || investmentAmount <= 0 || (investmentType === 'stock' && !selectedStock)">
-          <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-          {{ isLoading ? 'Processing...' : 'Make Investment' }}
+            expand="block" 
+            color="primary"
+            size="large"
+            (click)="makeInvestment()"
+            [disabled]="isLoading || !investmentAmount || investmentAmount <= 0 || (investmentType === 'stock' && !selectedStock)">
+            <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+            {{ isLoading ? 'Processing...' : 'Make Investment' }}
         </ion-button>
+      </div>
+    
+    <!-- Close One-Time Investment Card -->
+    </div>
+
+    <!-- ACATS Transfer Card -->
+    <div class="section-card mobile-card" 
+         style="margin-top: 24px; overflow: hidden; transition: height 0.3s ease;"
+         [style.height]="showTransferOptions ? '414px' : '104px'">
+      <div class="input-wrapper">
+        <div class="transfer-header" 
+             (click)="showTransferOptions = !showTransferOptions" 
+             style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; cursor: pointer;">
+           <div style="padding-right: 16px;">
+              <label class="input-label" style="margin-bottom: 4px; display: block; font-size: 16px; font-weight: 600;">Transfer Existing Assets</label>
+              <p class="input-helper" style="margin-top: 0; font-size: 14px; line-height: 1.4;">Want to move your assets from another brokerage into FRED?</p>
+           </div>
+           <ion-icon [name]="showTransferOptions ? 'chevron-up-outline' : 'chevron-down-outline'" style="font-size: 20px; color: var(--ion-color-medium); min-width: 20px;"></ion-icon>
+        </div>
+
+        <div *ngIf="showTransferOptions" class="transfer-form-container" style="margin-top: 16px;">
+            <!-- Brokerage Selection -->
+            <div class="input-wrapper">
+                <label class="input-label">Current Brokerage</label>
+                <div class="ios-select-wrapper">
+                    <ion-select [(ngModel)]="transferBrokerageDtc" placeholder="Select Brokerage" interface="action-sheet" cancelText="Cancel" style="width: 100%;">
+                        <ion-select-option *ngFor="let broker of brokerageOptions" [value]="broker.dtc">
+                            {{ broker.name }}
+                        </ion-select-option>
+                    </ion-select>
+                </div>
+            </div>
+
+            <!-- Account Number -->
+            <div class="input-wrapper">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label class="input-label">Account Number</label>
+                    <ion-button fill="clear" size="small" id="acats-tooltip-lump" style="height: 24px; font-size: 12px;">
+                        <ion-icon name="information-circle-outline"></ion-icon>
+                    </ion-button>
+                    <ion-popover trigger="acats-tooltip-lump" triggerAction="click">
+                        <ng-template>
+                            <ion-content class="ion-padding">
+                                <p style="font-size: 13px;">Found in your monthly statements or account settings.</p>
+                            </ion-content>
+                        </ng-template>
+                    </ion-popover>
+                </div>
+                <ion-input type="text" [(ngModel)]="transferAccountNumber" placeholder="Enter account number" class="amount-input" style="font-size: 16px;"></ion-input>
+            </div>
+
+            <!-- Transfer Submit Button -->
+            <ion-button 
+                expand="block" 
+                color="primary"
+                size="large"
+                (click)="submitAcatsTransfer()"
+                [disabled]="isLoading || !transferBrokerageDtc || !transferAccountNumber"
+                style="margin-top: 24px;">
+                <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
+                {{ isLoading ? 'Processing...' : 'Submit Transfer Request' }}
+            </ion-button>
+        </div>
       </div>
     </div>
     

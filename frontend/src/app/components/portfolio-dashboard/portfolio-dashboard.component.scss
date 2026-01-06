@@ -356,11 +356,33 @@ ion-header {
 
     .period-selector {
       align-self: stretch;
+      box-sizing: border-box;
+
+      // Vertical: 2px (Reduced height "cut in half")
+      // Horizontal: 1px (Creates the gray frame effect at the ends)
+      padding: 2px 1px !important;
+      
+      border-radius: 4.5px;
+      
+      // Ensure the segment itself doesn't force a large height
+      height: auto;
+      min-height: 32px;
 
       ion-segment-button {
-        min-height: 32px;
+        // Remove margins to allow buttons to expand and fix "smushed" look
+        margin: 0;
+        
+        // Ensure buttons are compact
+        min-height: 28px;
         font-size: var(--app-font-size-xs);
         font-weight: 500;
+        
+        // Use minimal internal padding to maximize text space
+        --padding-start: 2px;
+        --padding-end: 2px;
+        
+        // Allow buttons to shrink if needed
+        min-width: 0;
       }
     }
   }
