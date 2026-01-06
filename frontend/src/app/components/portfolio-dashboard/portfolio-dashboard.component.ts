@@ -169,51 +169,113 @@ export class PortfolioDashboardComponent implements OnInit {
   getReturnForCurrentPeriod(): { value: number, percent: number } | null {
     let targetPeriod = this.selectedPeriod;
     if (this.selectedPeriod === 'ALL') targetPeriod = 'Total';
-    console.log('Performance data:', this.performanceData);
-    const perf = this.performanceData.find(p => p.period === targetPeriod);
-    console.log('perf:', perf);
-    if (perf) {
-      return {
-        value: perf.totalReturn,
-        percent: perf.totalReturnPercent
-      };
-    }
-
-    // Use history data (Alpaca provided P/L) if available
-    // Priority 1: Direct Percentage from Alpaca
-    if (this.dashboard?.history?.profitLossPercent && this.dashboard.history.profitLossPercent.length > 0) {
-      const history = this.dashboard.history;
-      const lastIndex = history.values.length - 1;
-      
-      if (lastIndex >= 0 && history.profitLossPercent) {
-        const percent = history.profitLossPercent[lastIndex]; // Already in % or decimal? Alpaca usually returns decimal, but we fetch as is.
-        // Assuming backend handles scaling or frontend formats it.
-        // Note: Earlier backend edit multiplies by 100 for profit_loss_pct array.
-        
-        const value = history.profitLoss && history.profitLoss.length > lastIndex ? history.profitLoss[lastIndex] : 0;
-        return { value, percent };
+    
+    
+    // We only use the pre-fetched performance data for "Today".
+    // For "Total"/"ALL", the pre-fetched data only includes Unrealized Gains (Open Positions).
+    // The user prefers the return to be consistent with other periods (Realized + Unrealized),
+    // so we force "Total" to fall through to the History-based calculation below.
+    if (targetPeriod === 'Today') {
+      const perf = this.performanceData.find(p => p.period === targetPeriod);
+      console.log('perf:', perf);
+      if (perf) {
+        return {
+          value: perf.totalReturn,
+          percent: perf.totalReturnPercent
+        };
       }
     }
 
-    // Priority 3: Derived "Money-Weighted" Return approximation
-    // If we have P/L dollar amount but no percentage, and we see an equity jump inconsistent with P/L
+    // Use history data (Alpaca provided P/L) if available
+    
+    // Priority 1: Manual Calculation using Modified Dietz / Cost Basis method
+    // We compute the return based on the Change in Profit/Loss ($) relative to the Invested Capital.
+    // This handles recurring deposits better than raw Equity changes, and avoids ambiguity 
+    // in Alpaca's pre-calculated percentage.
+    if (this.dashboard?.history?.profitLoss && this.dashboard.history.profitLoss.length > 0 && 
+        this.dashboard.history.values && this.dashboard.history.values.length > 0) {
+      
+      const history = this.dashboard.history;
+      const last = history.values.length - 1;
+      
+      // Note: We used to have special logic here for "Inception" checks to use Unrealized P/L,
+      // but now we treat all periods the same (Realized + Unrealized) for consistency.
+      if (last > 0 && history?.profitLoss && history.profitLoss.length > last) {
+        // Find the first index with non-zero equity to avoid "Start=0" skewing the Dietz calculation
+        // If we start at 0, the initial deposit is treated as a flow (weighted 0.5), which inflates return % artificially.
+        let firstIndex = 0;
+        while (firstIndex < last && history.values[firstIndex] === 0) {
+          firstIndex++;
+        }
+
+        const plStart = history.profitLoss[firstIndex] || 0;
+        const plEnd = history.profitLoss[last] || 0;
+        const eqStart = history.values[firstIndex] || 0;
+        const eqEnd = history.values[last] || 0;
+
+        const gainPeriod = plEnd - plStart;
+        const equityChange = eqEnd - eqStart;
+        const netDeposits = equityChange - gainPeriod;
+
+        // Formula: Return = (PL_End - PL_Start) / Current_Cost_Basis
+        // Current_Cost_Basis = Equity_End - PLC_End
+        // This calculates the contribution of this period's P/L to the Total Return on Investment.
+        // This ensures consistency: if Period covers the whole lifespan (like 3M for a 1M old account),
+        // it simplifies to Total_PL / Total_Basis, which matches the "All" view (1.8%).
+        const currentCostBasis = eqEnd - plEnd;
+
+        // Safety for zero basis
+        let basis = currentCostBasis;
+        if (basis <= 0) {
+           // Fallback to average invested capital during period (Modified Dietz denominator)
+           // Adjusted Capital = Start Capital + 0.5 * New Capital
+           basis = eqStart + (netDeposits * 0.5);
+           if (basis <= 0) basis = 1;
+        }
+
+        const percent = (gainPeriod / basis) * 100;
+
+        return { 
+          value: gainPeriod, 
+          percent: percent 
+        };
+      }
+    }
+
+    // Priority 2: Fallback (should be covered by Priority 1 usually)
     if (this.dashboard?.history?.profitLoss && this.dashboard.history.profitLoss.length > 0) {
       const history = this.dashboard.history;
+      const profitLossArray = history.profitLoss; // Copy to local const for type safety
+      const valuesArray = history.values;
       const lastIndex = history.values.length - 1;
 
-      if (lastIndex >= 0) {
-        const profitLoss = history.profitLoss[lastIndex];
-        const currentEquity = history.values[lastIndex];
+      if (lastIndex >= 0 && profitLossArray && profitLossArray.length > lastIndex) {
+        // Get P/L and Equity at start and end of the period
+        // Index 0 is the start of the requested period (e.g., 1M ago)
+        const plStart = profitLossArray[0] || 0;
+        const plEnd = profitLossArray[lastIndex] || 0;
         
-        // Invested Capital is (Equity - Total Profit). 
-        // This effectively treats the "Principal" as the denominator.
-        const investedCapital = currentEquity - profitLoss;
+        const valStart = valuesArray[0] || 0;
+        const valEnd = valuesArray[lastIndex] || 0;
+
+        // Calculate performance for THIS period
+        const plPeriod = plEnd - plStart;
         
-        if (investedCapital !== 0) {
-            // Check for valid profitLoss data
-            console.log(`Period ${targetPeriod} P/L: ${profitLoss}, Equity: ${currentEquity}, Invested: ${investedCapital}`);
-            const percent = (profitLoss / investedCapital) * 100;
-            return { value: profitLoss, percent };
+        // Calculate Invested Capital (Net of P/L)
+        // Invested = Equity - P/L
+        const investedStart = valStart - plStart;
+        const investedEnd = valEnd - plEnd;
+        
+        // Net New Cash introduced during the period
+        const netNewCash = investedEnd - investedStart;
+        
+        // Modified Dietz Denominator: Start Capital + (Net New Cash / 2)
+        // We assume cash flows happen roughly in the middle or evenly distributed
+        const uniqueInvestedCapital = investedStart + (netNewCash / 2);
+
+        if (uniqueInvestedCapital !== 0) {
+           const percent = (plPeriod / uniqueInvestedCapital) * 100;
+           return { value: plPeriod, percent };
         }
       }
     }

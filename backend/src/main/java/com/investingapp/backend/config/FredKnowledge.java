@@ -451,5 +451,33 @@ public class FredKnowledge {
                 "low",
                 true));
 
+        // Chunk 16 — Metrics Explanation: Unrealized vs Realized P/L
+        CANONICAL_CHUNKS.add(new CanonicalChunk(
+                "metrics_pl_explanation_v1",
+                "Unrealized P/L vs Total Cumulative Return",
+                """
+                        # Understanding Your Dashboard Metrics
+                        
+                        FRED displays two key performance numbers that measure different things:
+
+                        1. **Unrealized P/L (Top of Dashboard)**
+                           - This number represents the profit or loss ONLY for the investments you currently hold.
+                           - It is "Unrealized" because you haven't sold the assets yet—it's just "paper" gain or loss.
+                           - This number changes continuously with the market price of your current portfolio.
+
+                        2. **Total Cumulative Pre-tax Return (Bottom of Chart)**
+                           - This number represents your TOTAL historical performance: **Realized + Unrealized**.
+                           - It includes the "Unrealized" gains from your current holdings PLUS any "Realized" profits or losses from assets you have already sold.
+                           - This is the true measure of how much money your account has made since inception.
+
+                        ## Why are they different?
+                        - If you have **never sold** an investment, these two numbers will be identical.
+                        - If you **have sold** investments in the past, they will be different because the "Total Cumulative Return" remembers the profit/loss from those past sales, while "Unrealized P/L" only cares about what you own right now.
+                        """,
+                "v1",
+                "metrics",
+                "low",
+                true));
+
     }
 }

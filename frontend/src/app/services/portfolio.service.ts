@@ -114,7 +114,9 @@ export class PortfolioService {
 
         return {
           timestamps,
-          values: historyData.values || []
+          values: historyData.values || [],
+          profitLoss: historyData.profitLoss || [],
+          profitLossPercent: historyData.profitLossPercent || []
         } as PortfolioHistory;
       })
     );
