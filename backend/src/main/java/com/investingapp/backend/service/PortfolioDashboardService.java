@@ -624,11 +624,17 @@ public class PortfolioDashboardService {
      */
     private PortfolioHistory getPortfolioHistory(String accountId, String period) {
         try {
+            // Map 1Y to 1A as Alpaca uses 1A for "1 Annum/Year"
+            String alpacaPeriod = period;
+            if ("1Y".equals(period)) {
+                alpacaPeriod = "1A";
+            }
+
             // Build URL with account ID for Broker API
             // Use timeframe=1D to get daily data points
             // Removed cashflow_types=NONE to ensure we get proper P/L calculations accounting for deposits
             String url = alpacaBrokerBaseUrl + "/trading/accounts/" + accountId + "/account/portfolio/history" +
-                    "?period=" + period +
+                    "?period=" + alpacaPeriod +
                     "&timeframe=1D" +
                     "&intraday_reporting=market_hours";
 
