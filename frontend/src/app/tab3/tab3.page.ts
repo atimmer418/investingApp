@@ -17,7 +17,8 @@ import {
   IonAvatar,
   IonText,
   IonBadge,
-  IonRippleEffect
+  IonRippleEffect,
+  IonFooter
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -85,7 +86,8 @@ interface SettingItem {
     IonAvatar,
     IonText,
     IonBadge,
-    IonRippleEffect
+    IonRippleEffect,
+    IonFooter
   ],
 })
 export class Tab3Page implements OnInit, OnDestroy {

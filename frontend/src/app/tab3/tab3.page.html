@@ -6,67 +6,60 @@
           <img src="https://ionicframework.com/docs/img/demos/avatar.svg" />
         </ion-avatar>
         <div class="user-text">
-          <h1 class="name">Alex Doe</h1>
-          <p class="email">{{ userEmail }}</p>
+          <h1 class="name">My Profile</h1>
+          <p class="email">Firstname Lastname</p>
         </div>
       </div>
-      <div class="header-branding">FRED</div>
+      <div class="header-branding"> FRED</div>
     </div>
   </div>
 </ion-header>
 
-<ion-content class="settings-content">
-  <!-- Settings Sections -->
-  <div class="settings-sections mobile-container">
-    <div *ngFor="let section of settingSections" class="settings-group">
-      <h3 class="group-header text-gray text-xs font-semibold">{{ section.title }}</h3>
-      
-      <div class="settings-card mobile-card">
-        <div class="settings-list">
-          <button 
-            *ngFor="let item of section.items; let last = last" 
-            class="setting-item mobile-touch-target"
-            [class.last-item]="last"
-            (click)="onSettingClick(item.action)">
-            
-            <div class="setting-icon-container">
-              <ion-icon [name]="item.icon" class="setting-icon"></ion-icon>
-            </div>
-            
-            <div class="setting-content">
-              <div class="setting-main">
-                <h4 class="setting-title font-medium text-dark">{{ item.title }}</h4>
-                <p *ngIf="item.subtitle" class="setting-subtitle text-gray">{{ item.subtitle }}</p>
+<ion-content [scrollY]="false" class="settings-content">
+  <div class="content-wrapper">
+    <!-- Settings Sections -->
+    <div class="settings-sections mobile-container">
+      <div *ngFor="let section of settingSections" class="settings-group">
+        <h3 class="group-header text-gray text-xs font-semibold">{{ section.title }}</h3>
+        
+        <div class="settings-card mobile-card">
+          <div class="settings-list">
+            <button 
+              *ngFor="let item of section.items; let last = last" 
+              class="setting-item mobile-touch-target"
+              [class.last-item]="last"
+              (click)="onSettingClick(item.action)">
+              
+              <div class="setting-icon-container">
+                <ion-icon [name]="item.icon" class="setting-icon"></ion-icon>
               </div>
               
-              <div class="setting-trailing">
-                <ion-badge 
-                  *ngIf="item.badge" 
-                  [color]="item.badgeColor || 'primary'" 
-                  class="setting-badge">
-                  {{ item.badge }}
-                </ion-badge>
-                <ion-icon name="chevron-forward" class="chevron-icon text-gray"></ion-icon>
+              <div class="setting-content">
+                <div class="setting-main">
+                  <h4 class="setting-title font-medium text-dark">{{ item.title }}</h4>
+                  <p *ngIf="item.subtitle" class="setting-subtitle text-gray">{{ item.subtitle }}</p>
+                </div>
+                
+                <div class="setting-trailing">
+                  <ion-badge 
+                    *ngIf="item.badge" 
+                    [color]="item.badgeColor || 'primary'" 
+                    class="setting-badge">
+                    {{ item.badge }}
+                  </ion-badge>
+                  <ion-icon name="chevron-forward" class="chevron-icon text-gray"></ion-icon>
+                </div>
               </div>
-            </div>
-          </button>
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Logout Section -->
-  <!-- <div class="logout-section mobile-container">
-    <button class="logout-button mobile-card mobile-touch-target" (click)="onLogout()">
-      <div class="logout-content">
-        <ion-icon name="log-out-outline" class="logout-icon text-danger"></ion-icon>
-        <span class="logout-text text-base font-medium text-danger">Sign Out</span>
-      </div>
-    </button>
-  </div> -->
-
-  <!-- App Version -->
-  <div class="app-version mobile-container">
-    <p class="version-text text-xs text-gray text-center">FRED v1.0.0</p>
+    <!-- Centered Footer Info -->
+    <div class="footer-content">
+      <p class="legal-text">© 2026 FREDvested</p>
+      <p class="version-text">v1.0.0 (Beta)</p>
+    </div>
   </div>
 </ion-content>

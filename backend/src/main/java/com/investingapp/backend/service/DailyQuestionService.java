@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +36,7 @@ public class DailyQuestionService {
      * (lazy load fallback).
      */
     public List<String> getTodayQuestions() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneId.of("America/New_York"));
         Optional<DailyQuestion> existing = repository.findByDate(today);
 
         if (existing.isPresent()) {
@@ -55,7 +56,7 @@ public class DailyQuestionService {
      */
     @Scheduled(cron = "0 0 0 * * *", zone = "America/New_York")
     public void scheduleQuestionGeneration() {
-        LocalDate today = LocalDate.now(); // Cron runs at midnight, so 'today' is the new day
+        LocalDate today = LocalDate.now(ZoneId.of("America/New_York"));
         logger.info("Executing scheduled question generation for {}", today);
         if (repository.findByDate(today).isEmpty()) {
             generateAndSaveQuestions(today);
@@ -67,7 +68,7 @@ public class DailyQuestionService {
             List<ChatMessage> messages = new ArrayList<>();
             List<String> allConcepts = Arrays.asList(
                     "Compound Interest", "Risk Tolerance", "ETF vs Mutual Fund",
-                    "Inflation", "Market Cycles", "Dividends",
+                    "Inflation", "Market Cycles", "Dividends", "Compound Growth", "Asset Allocation",
                     "Retirement Planning", "Tech Stocks", "Dollar Cost Averaging", "Emergency Funds");
 
             // Randomly select 3 concepts

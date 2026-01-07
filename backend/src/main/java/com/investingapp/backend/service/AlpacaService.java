@@ -823,4 +823,25 @@ public class AlpacaService {
             return new AlpacaTransferResponse(null, "FAILED", amount, null, e.getMessage());
         }
     }
+
+    /**
+     * Initiate an ACATS transfer
+     */
+    public String initiateAcatsTransfer(String accountId, String transferAccountId, String transferAccountType, String dtcNumber) {
+        try {
+            logger.info("Initiating ACATS transfer for account {} from external account {} (Type: {}, DTC: {})", 
+                accountId, transferAccountId, transferAccountType, dtcNumber);
+            
+            // In a production environment, this would call:
+            // POST /v1/accounts/{account_id}/transfers
+            // { "transfer_type": "acats", "account_number": "...", "transfer_side": "incoming", "counterparty_id": "dtcNumber" ... }
+            
+            // For now, we simulate success for the demo.
+            return "acats_" + java.util.UUID.randomUUID().toString();
+
+        } catch (Exception e) {
+            logger.error("Error initiating ACATS transfer", e);
+            throw new RuntimeException("Failed to initiate ACATS transfer: " + e.getMessage());
+        }
+    }
 }

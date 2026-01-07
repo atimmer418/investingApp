@@ -282,6 +282,47 @@ public class AlpacaController {
         }
     }
 
+    @PostMapping("/acats/transfer")
+    public ResponseEntity<?> initiateAcatsTransfer(@RequestBody AcatsTransferRequest request) {
+        try {
+            User user = getCurrentUser();
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            }
+            if (user.getAlpacaAccountId() == null) {
+                return ResponseEntity.badRequest().body("User does not have an Alpaca account");
+            }
+
+            String transferId = alpacaService.initiateAcatsTransfer(
+                user.getAlpacaAccountId(), 
+                request.getAccountNumber(), 
+                "BROKERAGE", 
+                request.getDtcNumber()
+            );
+            
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("transferId", transferId);
+            response.put("message", "ACATS transfer initiated successfully");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error initiating ACATS transfer", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to initiate transfer: " + e.getMessage()));
+        }
+    }
+
+    public static class AcatsTransferRequest {
+        private String dtcNumber;
+        private String accountNumber;
+        
+        public String getDtcNumber() { return dtcNumber; }
+        public void setDtcNumber(String dtcNumber) { this.dtcNumber = dtcNumber; }
+        public String getAccountNumber() { return accountNumber; }
+        public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
+    }
+
     // DTO for ACH relationship creation request
     public static class CreateAchRelationshipRequest {
         private String accountOwnerName;

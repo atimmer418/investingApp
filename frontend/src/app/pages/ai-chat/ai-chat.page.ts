@@ -60,6 +60,7 @@ export class AiChatPage implements OnInit {
   newMessage: string = '';
   isLoading: boolean = false;
   dailySuggestions: string[] = [];
+  isActive: boolean = true; // Default to true to ensure it works on reload/entry
 
   constructor(
     private chatService: ChatService,
@@ -73,6 +74,14 @@ export class AiChatPage implements OnInit {
     this.loadSessions();
     this.syncBackendHistory();
     this.loadDailySuggestions();
+  }
+
+  ionViewDidEnter() {
+    this.isActive = true;
+  }
+
+  ionViewWillLeave() {
+    this.isActive = false;
   }
 
   loadDailySuggestions() {
@@ -234,7 +243,7 @@ export class AiChatPage implements OnInit {
     this.chatService.sendMessage(userMsg, isFirstUserMessage)
       .pipe(finalize(() => {
         this.isLoading = false;
-        this.scrollToBottom();
+        // Navigation handled in next/error callbacks
       }))
       .subscribe({
         next: (response) => {
@@ -244,6 +253,9 @@ export class AiChatPage implements OnInit {
               content: response.reply,
               timestamp: new Date()
             });
+
+            // Scroll to the top of the new assistant message
+            this.scrollToMessage(this.messages.length - 1);
 
             // Update title if provided by LLM
             if (response.title && this.currentSession) {
@@ -260,8 +272,24 @@ export class AiChatPage implements OnInit {
             content: "I'm sorry, I'm having trouble connecting right now. Please try again later.",
             timestamp: new Date()
           });
+          this.scrollToMessage(this.messages.length - 1);
         }
       });
+  }
+
+  scrollToMessage(index: number) {
+    if (!this.isActive) return;
+
+    // Use native scrollIntoView which is robust enough to find the scroll parent
+    setTimeout(() => {
+      const element = document.getElementById(`chat-message-${index}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        // Fallback if element not found in DOM yet
+        console.warn('Message element not found for index:', index);
+      }
+    }, 300); // Increased timeout to ensure rendering completion
   }
 
   scrollToBottom() {

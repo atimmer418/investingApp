@@ -40,8 +40,8 @@
 
   <ion-content [fullscreen]="true" class="chat-content">
     <div class="messages-container">
-      <div *ngFor="let msg of messages" class="message-wrapper" [class.user-message]="msg.role === 'user'"
-        [class.assistant-message]="msg.role === 'assistant'">
+      <div *ngFor="let msg of messages; let i = index" class="message-wrapper" [class.user-message]="msg.role === 'user'"
+        [class.assistant-message]="msg.role === 'assistant'" [id]="'chat-message-' + i">
 
         <div class="avatar" *ngIf="msg.role === 'assistant'">
           <div class="fred-avatar">F</div>

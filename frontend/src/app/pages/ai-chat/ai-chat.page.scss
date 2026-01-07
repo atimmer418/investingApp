@@ -30,6 +30,7 @@ ion-header {
   align-items: flex-end;
   gap: 8px;
   max-width: 100%;
+  scroll-margin-top: 80px; /* Ensures the message starts below the header (approx 56px + padding) */
 
   &.user-message {
     justify-content: flex-end;
