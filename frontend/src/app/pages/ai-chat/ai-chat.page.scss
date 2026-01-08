@@ -18,7 +18,7 @@ ion-header {
 }
 
 .messages-container {
-  padding: 16px;
+  padding: 0px; /* Removed horizontal padding */
   padding-bottom: 20px;
   display: flex;
   flex-direction: column;
@@ -28,12 +28,21 @@ ion-header {
 .message-wrapper {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
+  /* 
+    Updated Logic:
+    - Assistant messages: 0 padding on wrapper. 
+      Left Gutter = Avatar(50) + Gap(12) = 62px.
+      Right Gutter = Bubble Margin Right (62px).
+    - User messages: 12px padding on wrapper to maintain spacing.
+  */
+  gap: 8px; 
   max-width: 100%;
   scroll-margin-top: 80px; /* Ensures the message starts below the header (approx 56px + padding) */
 
   &.user-message {
     justify-content: flex-end;
+    padding-left: 12px;
+    padding-right: 12px;
 
     .message-bubble {
       background-color: var(--app-primary, #007aff);
@@ -44,31 +53,48 @@ ion-header {
 
   &.assistant-message {
     justify-content: flex-start;
+    padding-left: 0;
+    padding-right: 0;
 
     .message-bubble {
       background-color: var(--app-card-background, #ffffff);
       color: var(--app-gray-900, #000000);
       border-radius: 20px 20px 20px 4px;
+      /*
+        Right Space Calculation:
+        Wrapper Pad Right = 0.
+        Left Space = Avatar(50) + Gap(12) = 62px.
+        So we need 62px margin to balance.
+      */
+      margin-right: 62px;
+      max-width: none; 
     }
   }
 }
 
 .avatar {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  
+  /* Fix for Safari/iOS rounded corner blurring/bleeding */
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  mask-image: radial-gradient(white, black);
+  overflow: hidden;
 
-  .fred-avatar {
+  /* Hardware acceleration for containment */
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+
+  .fred-avatar-img {
     width: 100%;
     height: 100%;
-    background-color: var(--ion-color-secondary, #3dc2ff);
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 14px;
+    object-fit: cover;
+    
+    /* apply text-rendering optimization to image which can help detail */
+    image-rendering: -webkit-optimize-contrast;
   }
 }
 

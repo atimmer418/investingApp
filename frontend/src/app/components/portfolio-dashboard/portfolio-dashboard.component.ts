@@ -88,11 +88,44 @@ export class PortfolioDashboardComponent implements OnInit {
 
           // Sync 'Today' performance
           let todayPerf = this.performanceData.find(p => p.period === 'Today');
-          if (todayPerf) {
+          if (!todayPerf) {
+            todayPerf = { period: 'Today', startValue: 0, endValue: 0, totalReturn: 0, totalReturnPercent: 0 };
+            this.performanceData.push(todayPerf);
+          }
+          
+          if (this.dashboard) {
             todayPerf.endValue = this.dashboard.summary.portfolioValue;
-            todayPerf.totalReturn = this.dashboard.summary.todayChange;
-            todayPerf.totalReturnPercent = this.dashboard.summary.todayChangePercent;
-            todayPerf.startValue = this.dashboard.summary.portfolioValue - this.dashboard.summary.todayChange;
+            
+            // Try to use History for accurate P/L (Dollar Change)
+            // This pulls the actual Profit/Loss from Alpaca's history, which accounts for trades/transfers
+            // significantly better than the snapshot comparison.
+            let todayPL = null;
+            if (this.dashboard.history && this.dashboard.history.profitLoss && this.dashboard.history.profitLoss.length >= 2) {
+                const pl = this.dashboard.history.profitLoss;
+                const last = pl.length - 1;
+                // Today's P/L = Current Cumulative P/L - Yesterday's Cumulative P/L
+                const currentPL = pl[last] || 0;
+                const prevPL = pl[last - 1] || 0;
+                todayPL = currentPL - prevPL;
+            }
+            
+            if (todayPL !== null) {
+                todayPerf.totalReturn = todayPL;
+            } else {
+                // Fallback to backend summary if history unavailable
+                todayPerf.totalReturn = this.dashboard.summary.todayChange;
+            }
+
+            // Calculate Start Value derived from the Return
+            // This creates a consistent "Apple to Apples" view of Portfolio Value Growth
+            todayPerf.startValue = todayPerf.endValue - todayPerf.totalReturn;
+            
+            // Calculate Percent: Return / Start
+            if (todayPerf.startValue !== 0) {
+              todayPerf.totalReturnPercent = (todayPerf.totalReturn / todayPerf.startValue) * 100;
+            } else {
+              todayPerf.totalReturnPercent = 0;
+            }
           }
         }
       } catch (perfError) {
