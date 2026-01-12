@@ -615,8 +615,6 @@ public class PortfolioDashboardService {
                                     unrealizedPLPercent,
                                     currentPrice,
                                     averageCostBasis,
-                                    currentPrice,
-                                    averageCostBasis,
                                     BigDecimal.ZERO,
                                     BigDecimal.ZERO, // todayGainLoss unavailable in EOD
                                     BigDecimal.ZERO // todayGainLossPercent unavailable in EOD

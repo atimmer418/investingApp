@@ -11,6 +11,9 @@ import com.investingapp.backend.service.PlaidToAlpacaService;
 import com.investingapp.backend.security.services.UserDetailsImpl;
 import java.util.Map;
 import java.util.HashMap;
+import com.investingapp.backend.model.User;
+import com.investingapp.backend.service.AlpacaService;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/api/alpaca")
@@ -19,12 +22,14 @@ public class AlpacaController {
 
     private static final Logger logger = LoggerFactory.getLogger(AlpacaController.class);
     private final AlpacaApiService alpacaApiService;
+    private final AlpacaService alpacaService;
     private final PlaidToAlpacaService plaidToAlpacaService;
     private final com.investingapp.backend.repository.UserRepository userRepository;
 
-    public AlpacaController(AlpacaApiService alpacaApiService, PlaidToAlpacaService plaidToAlpacaService,
+    public AlpacaController(AlpacaApiService alpacaApiService, AlpacaService alpacaService, PlaidToAlpacaService plaidToAlpacaService,
             com.investingapp.backend.repository.UserRepository userRepository) {
         this.alpacaApiService = alpacaApiService;
+        this.alpacaService = alpacaService;
         this.plaidToAlpacaService = plaidToAlpacaService;
         this.userRepository = userRepository;
     }
@@ -39,6 +44,15 @@ public class AlpacaController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("{\"error\":\"Failed to get account info\"}");
         }
+    }
+
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            return userRepository.findById(userDetails.getId()).orElse(null);
+        }
+        return null;
     }
 
     @PostMapping("/create-account")
