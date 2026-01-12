@@ -86,4 +86,9 @@ public interface InvestmentExecutionRepository extends JpaRepository<InvestmentE
      * Find all executions with a specific status (for delayed trading initiation)
      */
     List<InvestmentExecution> findByStatus(ExecutionStatus status);
+
+    /**
+     * Find all executions associated with a specific Alpaca transfer ID
+     */
+    List<InvestmentExecution> findByAlpacaTransferId(String alpacaTransferId);
 }

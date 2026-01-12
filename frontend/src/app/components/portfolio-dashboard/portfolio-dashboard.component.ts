@@ -357,6 +357,14 @@ export class PortfolioDashboardComponent implements OnInit {
     }).format(displayAmount);
   }
 
+  formatQuantity(value: number): string {
+     if (value === undefined || value === null) return '0';
+     return new Intl.NumberFormat('en-US', {
+       minimumFractionDigits: 0,
+       maximumFractionDigits: 3
+     }).format(value);
+  }
+
   formatPercent(value: number): string {
     const sign = value >= 0 ? '+' : '';
     return `${sign}${value.toFixed(2)}%`;

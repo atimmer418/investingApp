@@ -275,28 +275,34 @@ public class InvestmentController {
 
             execution = executionRepository.save(execution);
 
-            // Immediately process the investment execution
-            // This will initiate ACH transfer right away instead of waiting for cron job
-            try {
+            // Process based on funding source
+            if ("buying_power".equals(fundingSource)) {
+                // Buying power executions are immediate
                 investmentExecutionService.processInvestmentExecutionImmediately(execution);
+            } else {
+                // Bank fundings are queued for daily batch to prevent multiple ACH transfers
+                // The QUEUE_LUMP_SUMS_UNTIL_EOD flag in service determines if it waits or runs immediately
+                // but processInvestmentExecutionImmediately handles that check internally now
+                investmentExecutionService.processInvestmentExecutionImmediately(execution);
+            }
 
-                // Check if execution was queued due to daily ACH limits
-                execution = executionRepository.findById(execution.getId()).orElse(execution);
+            // Return response based on execution status
+            execution = executionRepository.findById(execution.getId()).orElse(execution);
 
-                if (InvestmentExecution.ExecutionStatus.SCHEDULED.equals(execution.getStatus()) &&
-                        execution.getErrorMessage() != null &&
-                        (execution.getErrorMessage().contains("Queued for batch processing") ||
-                                execution.getErrorMessage().contains("Queued for end-of-day"))) {
+            if (InvestmentExecution.ExecutionStatus.SCHEDULED.equals(execution.getStatus()) &&
+                    execution.getErrorMessage() != null &&
+                    (execution.getErrorMessage().contains("Queued for batch processing") ||
+                            execution.getErrorMessage().contains("Queued for end-of-day"))) {
 
-                    return ResponseEntity.ok(Map.of(
-                            "success", true,
-                            "message",
-                            "Investment queued successfully. All investments will be processed at end of day.",
-                            "executionId", execution.getId(),
-                            "amount", execution.getAmount(),
-                            "status", execution.getStatus(),
-                            "queued", true));
-                } else {
+                return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "message",
+                        "Investment queued successfully. All investments will be processed at end of day.",
+                        "executionId", execution.getId(),
+                        "amount", execution.getAmount(),
+                        "status", execution.getStatus(),
+                        "queued", true));
+            } else {
                     return ResponseEntity.ok(Map.of(
                             "success", true,
                             "message",

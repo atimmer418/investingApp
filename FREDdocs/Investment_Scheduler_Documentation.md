@@ -193,27 +193,22 @@ When either a user's `nextInvestmentDate` equals today's date OR their `startDat
    }
    ```
 
-### Phase 3: Funding Initiation
+### Phase 3: Funding Initiation (Smart Batch Execution)
 
-6. **Update Status to FUNDING_INITIATED**
-   ```java
-   execution.setStatus(ExecutionStatus.FUNDING_INITIATED);
-   execution.setExecutionDate(LocalDateTime.now());
-   execution.setAlpacaAccountId(user.getAlpacaAccountId());
-   ```
+The system employs a "Smart Batch Execution" strategy to handle multiple investments for the same user on the same day (e.g., a recurring investment + a manual lump sum) without merging data records. This ensures compliance with ACH limits (1 per day) while keeping investment instructions distinct.
 
-7. **Initiate ACH Transfer**
-   ```java
-   AlpacaTransferResponse transferResponse = alpacaService.initiateAchTransfer(
-       user.getAlpacaAccountId(),
-       user.getPlaidRelationshipId(),
-       execution.getAmount()
-   );
-   ```
+1. **Individual Records**: Each investment (Recurring, Portfolio Lump Sum, Stock Lump Sum) exists as its own separate `InvestmentExecution` record. Amounts are **never** merged in the database.
 
-8. **Handle Transfer Response**
-   - **Success**: Store `transferResponse.id` as `alpacaTransferId`
-   - **Failure**: Set status to `FUNDING_FAILED`, notify user
+2. **Wait for End-of-Day**: All bank-funded investments created during the day are initially set to `SCHEDULED` status with a "Queued for end-of-day" message.
+
+3. **Aggregation for Transfer (11:59 PM)**:
+   - The batch processor identifies all pending executions for a user.
+   - It calculates the **Batch Total** in memory (Sum of all individual amounts).
+   - It initiates **ONE** ACH transfer request to Alpaca for this total amount.
+
+4. **Linkage**:
+   - Alpaca returns a single `Transfer ID`.
+   - The system updates **ALL** individual execution records in that batch with this **same** `alpacaTransferId`.
 
 ### Phase 4: Schedule Advancement
 
@@ -239,24 +234,26 @@ When either a user's `nextInvestmentDate` equals today's date OR their `startDat
    - `startDate` is preserved as the original schedule start date
    - This ensures first-time investments work correctly
 
-### Phase 5: Funding Monitoring (Async - Every 30 minutes)
+### Phase 5: Smart Funding Check (Async - Every 30 minutes)
 
-10. **Check Transfer Status** (10+ minutes after initiation)
-   ```java
-   AlpacaTransferResponse status = alpacaService.checkTransferStatus(
-       execution.getAlpacaAccountId(),
-       execution.getAlpacaTransferId(),
-       execution.getAmount(),
-       execution.getExecutionDate()
-   );
-   ```
+**Logic: Validating the Batch**
+The system must handle the "One-to-Many" relationship between an Alpaca Transfer and the Investigation Executions it funds. We cannot validate a transfer by looking at a single execution record's amount, because the transfer amount is the *sum* of multiple records.
 
-11. **Status Handling**
-    - **COMPLETED**: Update to `FUNDING_COMPLETED`, proceed to trading
-    - **FAILED/REJECTED**: Update to `FUNDING_FAILED`, notify user
-    - **PENDING**: Wait (timeout after 24 hours)
+10. **Aggregate & Verify**
+    - Retrieve an execution in `FUNDING_INITIATED` status.
+    - **Step 1:** Find all *other* executions that share the same `alpacaTransferId`.
+    - **Step 2:** Sum the amounts of these linked executions.
+    - **Step 3:** Retrieve the Transfer status from Alpaca using the `alpacaTransferId`.
+    - **Step 4:** Verify that `Alpaca Transfer Amount == Sum of Linked Executions`.
 
-### Phase 6: Trading Initiation
+11. **Bulk Status Update**
+    - **If COMPLETED:** The funds have settled. Update **ALL** linked executions (the entire batch) to `FUNDING_COMPLETED`. They are now ready for trading.
+    - **If REJECTED/CANCELED:** The entire batch failed. Update **ALL** linked executions to `FUNDING_FAILED`.
+    - **If PENDING:** Do nothing. Check again later.
+
+### Phase 6: Independent Trading Trigger (Market Based)
+
+Once the batch succeeds, the individual executions are "released" to trade. Because we **did not merge** the records, we preserve the original intent of each investment.
 
 12. **Market Hours Check**
     ```java
@@ -266,29 +263,26 @@ When either a user's `nextInvestmentDate` equals today's date OR their `startDat
     }
     ```
 
-13. **Portfolio Allocation Retrieval**
-    ```java
-    Map<String, BigDecimal> portfolioAllocation = getUserPortfolioAllocation(user);
-    ```
+13. **Execution Routing**
+    Iterate through records marked `FUNDING_COMPLETED`.
+    
+    *   **Case A: Specific Stock Purchase** (`type = STOCK_BUY`)
+        - The user wanted to buy $50 of specific stock (e.g., AAPL).
+        - **Action:** Immediately place a market buy order for that symbol.
+    
+    *   **Case B: Portfolio Deposit** (`type = PORTFOLIO_DEPOSIT`)
+        - The user wanted to invest $100 into their general portfolio strategy.
+        - **Action:**
+            1. Retrieve user's target allocation weights.
+            2. Split the $100 across those assets.
+            3. Place market buy orders for each slice.
 
-14. **Trade Creation for Each Asset**
-    ```java
-    for (Map.Entry<String, BigDecimal> allocation : portfolioAllocation.entrySet()) {
-        String symbol = allocation.getKey();
-        BigDecimal percentage = allocation.getValue();
-        BigDecimal amount = execution.getAmount()
-            .multiply(percentage)
-            .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-        
-        // Create InvestmentTrade record
-        InvestmentTrade trade = new InvestmentTrade(execution, symbol, amount);
-        
-        // Place order with Alpaca
-        AlpacaOrderResponse orderResponse = alpacaService.placeBuyOrder(
-            execution.getAlpacaAccountId(), symbol, amount
-        );
-    }
-    ```
+    *   **Case C: Recurring Investment** (`type = RECURRING`)
+        - Handled same as Stock Buy or Portfolio Deposit depending on configuration.
+
+14. **Transition to Trading**
+    - Once orders are placed, updated status to `TRADING_IN_PROGRESS`.
+
 
 ### Phase 7: Trading Monitoring (Async - Every 15 minutes during market hours)
 

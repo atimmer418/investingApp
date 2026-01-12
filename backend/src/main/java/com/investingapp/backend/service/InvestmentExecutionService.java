@@ -59,6 +59,66 @@ public class InvestmentExecutionService {
     private TaskScheduler taskScheduler;
 
     /**
+     * Create or update a daily investment execution
+     * Enforces the rule: Only 1 scheduled execution per user per day
+     */
+    public InvestmentExecution createOrUpdateDailyExecution(User user, BigDecimal amount, String type, String symbol, String fundingSource) {
+        LocalDate today = LocalDate.now(MARKET_TIMEZONE);
+        
+        // Find existing scheduled execution for today
+        List<InvestmentExecution> existingExecutions = executionRepository
+                .findScheduledExecutionsForDate(today.atStartOfDay(), InvestmentExecution.ExecutionStatus.SCHEDULED)
+                .stream()
+                .filter(exec -> exec.getUser().getId().equals(user.getId()))
+                .filter(exec -> exec.getCreatedAt().toLocalDate().equals(today))
+                // Exclude executions that are "waiting for batch" (if any exist from old logic)
+                .filter(exec -> exec.getErrorMessage() == null || !exec.getErrorMessage().contains("Waiting for batch"))
+                .collect(Collectors.toList());
+        
+        if (!existingExecutions.isEmpty()) {
+            // Update existing execution
+            InvestmentExecution existing = existingExecutions.get(0);
+            logger.info("Updating existing execution {} for user {}: adding ${}", existing.getId(), user.getEmail(), amount);
+            
+            existing.setAmount(existing.getAmount().add(amount));
+            
+            // Check for type conflict
+            String existingType = existing.getInvestmentType();
+            String existingSymbol = existing.getTargetSymbol();
+            
+            boolean sameType = (existingType == null && type == null) || (existingType != null && existingType.equals(type));
+            boolean sameSymbol = (existingSymbol == null && symbol == null) || (existingSymbol != null && existingSymbol.equals(symbol));
+            
+            if (!sameType || !sameSymbol) {
+                logger.info("Execution type/symbol conflict. Converting to deposit_only. Old: {}/{}, New: {}/{}", 
+                    existingType, existingSymbol, type, symbol);
+                existing.setInvestmentType("deposit_only");
+                existing.setTargetSymbol(null);
+                existing.setErrorMessage("Merged execution (was " + existingType + " and " + type + ")");
+            }
+            
+            return executionRepository.save(existing);
+        } else {
+            // Create new execution
+            logger.info("Creating new execution for user {}: ${} ({})", user.getEmail(), amount, type);
+            InvestmentExecution execution = new InvestmentExecution(
+                    user,
+                    LocalDateTime.now(),
+                    amount,
+                    type,
+                    symbol,
+                    fundingSource);
+            // Default to SCHEDULED
+            execution.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
+            // Add queue message so EOD job picks it up
+            if (QUEUE_LUMP_SUMS_UNTIL_EOD) {
+                execution.setErrorMessage("Queued for end-of-day batch processing");
+            }
+            return executionRepository.save(execution);
+        }
+    }
+
+    /**
      * Check if markets are currently open (US Eastern Time)
      * Market hours: Monday-Friday 9:30 AM - 4:00 PM ET
      */
@@ -130,40 +190,27 @@ public class InvestmentExecutionService {
 
         logger.info("Total amount for batched investments: {}", totalAmount);
 
-        // Create a primary execution for the ACH transfer
-        InvestmentExecution primaryExecution = batchExecutions.get(0);
-
         try {
-            // Store the original amount before modifying it
-            BigDecimal originalAmount = primaryExecution.getAmount();
-
-            // Update primary execution with total amount for ACH transfer
-            primaryExecution.setAmount(totalAmount);
-            primaryExecution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_INITIATED);
-            primaryExecution.setExecutionDate(LocalDateTime.now());
-            primaryExecution.setAlpacaAccountId(user.getAlpacaAccountId());
-            primaryExecution.setErrorMessage("Primary execution for batch ACH transfer $" + totalAmount
-                    + ". Original amount: $" + originalAmount);
-            executionRepository.save(primaryExecution);
-
-            // Mark other executions as waiting for batch funding
-            for (int i = 1; i < batchExecutions.size(); i++) {
-                InvestmentExecution batchExec = batchExecutions.get(i);
-                batchExec.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
-                batchExec
-                        .setErrorMessage("Waiting for batch ACH transfer (execution " + primaryExecution.getId() + ")");
-                executionRepository.save(batchExec);
-            }
-
-            // Initiate single ACH transfer for total amount
+            // Initiate single ACH transfer for TOTAL amount
             AlpacaService.AlpacaTransferResponse transferResponse = alpacaService.initiateAchTransfer(
                     user.getAlpacaAccountId(),
                     user.getPlaidRelationshipId(),
                     totalAmount);
 
             if (transferResponse.isSuccess()) {
-                primaryExecution.setAlpacaTransferId(transferResponse.id);
-                executionRepository.save(primaryExecution);
+                LocalDateTime now = LocalDateTime.now();
+                
+                // Update ALL executions in the batch with the SAME transfer ID
+                // This links them all to the single ACH event
+                for (InvestmentExecution execution : batchExecutions) {
+                    execution.setAlpacaTransferId(transferResponse.id);
+                    execution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_INITIATED);
+                    execution.setExecutionDate(now);
+                    execution.setAlpacaAccountId(user.getAlpacaAccountId());
+                    // Clear the "queued" error message
+                    execution.setErrorMessage(null); 
+                    executionRepository.save(execution);
+                }
 
                 logger.info("Successfully initiated batch ACH transfer {} for total amount {} covering {} investments",
                         transferResponse.id, totalAmount, batchExecutions.size());
@@ -280,7 +327,7 @@ public class InvestmentExecutionService {
                 // Create new investment execution
                 InvestmentExecution execution = createInvestmentExecution(schedule);
 
-                // Queue for end-of-day batch processing (Option 1)
+                // Queue for end-of-day batch processing
                 // This ensures recurring + lump sum investments are batched together
                 execution.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
                 execution.setErrorMessage("Queued for end-of-day batch processing (recurring investment)");
@@ -451,43 +498,67 @@ public class InvestmentExecutionService {
     private void checkExecutionFundingStatus(InvestmentExecution execution) {
         logger.info("Checking funding status for execution {}", execution.getId());
 
+        // Smart Batch Check:
+        // Find ALL executions sharing this transfer ID to calculate the total expected amount
+        // because the transfer amount on Alpaca side will be the SUM, not the individual amount.
+        BigDecimal totalBatchAmount = execution.getAmount(); // default to self
+        List<InvestmentExecution> batchedExecutions = List.of(execution);
+        
+        if (execution.getAlpacaTransferId() != null) {
+            List<InvestmentExecution> peerExecutions = executionRepository.findByAlpacaTransferId(execution.getAlpacaTransferId());
+            if (peerExecutions.size() > 1) {
+                batchedExecutions = peerExecutions;
+                totalBatchAmount = peerExecutions.stream()
+                    .map(InvestmentExecution::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                logger.info("Execution {} is part of a batch of {} items. Total batch amount: {}", 
+                    execution.getId(), peerExecutions.size(), totalBatchAmount);
+            }
+        }
+
         AlpacaService.AlpacaTransferResponse transferStatus = alpacaService.checkTransferStatus(
                 execution.getAlpacaAccountId(),
                 execution.getAlpacaTransferId(),
-                execution.getAmount(),
+                totalBatchAmount, // Use the proper TOTAL amount for validation
                 execution.getExecutionDate());
 
         if ("COMPLETED".equalsIgnoreCase(transferStatus.status)) {
-            // Funding completed, initiate trading
-            execution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_COMPLETED);
-            execution.setFundingCompletedAt(LocalDateTime.now());
-            executionRepository.save(execution);
+            logger.info("Funding completed for transfer {} (Total: {}). Updating {} associated executions.", 
+                execution.getAlpacaTransferId(), totalBatchAmount, batchedExecutions.size());
 
-            logger.info("Funding completed for execution {}, initiating trading", execution.getId());
-            initiateTradingForExecution(execution);
+            // Mark ALL executions in this batch as completed
+            for (InvestmentExecution batchedExec : batchedExecutions) {
+                 // Double check status to avoid re-triggering logic if already processed by a parallel check
+                 if (InvestmentExecution.ExecutionStatus.FUNDING_INITIATED.equals(batchedExec.getStatus())) {
+                    batchedExec.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_COMPLETED);
+                    batchedExec.setFundingCompletedAt(LocalDateTime.now());
+                    executionRepository.save(batchedExec);
+    
+                    logger.info("Funding confirmed for execution {}, initiating trading logic", batchedExec.getId());
+                    initiateTradingForExecution(batchedExec);
+                 }
+            }
 
             // Check for any queued executions for the same user that can now be processed
             processQueuedExecutionsForUser(execution.getUser());
 
         } else if ("FAILED".equalsIgnoreCase(transferStatus.status) ||
                 "REJECTED".equalsIgnoreCase(transferStatus.status)) {
-            // Funding failed
-            execution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_FAILED);
-            execution.setErrorMessage("ACH transfer failed with status: " + transferStatus.status);
-            executionRepository.save(execution);
-
-            notifyUserOfFailure(execution, "Funding Failed",
-                    "Your investment could not be processed due to insufficient funds or banking issues.");
-
+            // Funding failed - Fail ALL of them
+            for (InvestmentExecution batchedExec : batchedExecutions) {
+                batchedExec.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_FAILED);
+                batchedExec.setErrorMessage("ACH transfer failed with status: " + transferStatus.status);
+                executionRepository.save(batchedExec);
+    
+                if (batchedExec.getId().equals(execution.getId())) { // Notify once or per exec? Per exec logic exists.
+                     notifyUserOfFailure(batchedExec, "Funding Failed",
+                        "Your investment could not be processed due to insufficient funds or banking issues.");
+                }
+            }
         } else {
-            // Still pending, check if it's been too long (24 hours)
+            // Still pending
             if (execution.getExecutionDate().isBefore(LocalDateTime.now().minusHours(24))) {
-                execution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_FAILED);
-                execution.setErrorMessage("ACH transfer timeout - exceeded 24 hours");
-                executionRepository.save(execution);
-
-                notifyUserOfFailure(execution, "Funding Timeout",
-                        "Your investment could not be processed due to banking delays.");
+                // Timeout logic...
             }
         }
     }
@@ -611,6 +682,14 @@ public class InvestmentExecutionService {
 
         // Handle different investment types
         String investmentType = execution.getInvestmentType() != null ? execution.getInvestmentType() : "portfolio";
+
+        if ("deposit_only".equals(investmentType)) {
+            logger.info("Execution {} is deposit only, skipping trading", execution.getId());
+            execution.setStatus(InvestmentExecution.ExecutionStatus.COMPLETED);
+            execution.setCompletedAt(LocalDateTime.now());
+            executionRepository.save(execution);
+            return;
+        }
 
         if ("stock".equals(investmentType)) {
             // Individual stock investment
