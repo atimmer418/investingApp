@@ -62,10 +62,12 @@ public class InvestmentScheduler {
     }
     
     /**
-     * Process scheduled investments every day at 9:30 AM ET (market open)
-     * Cron: "0 30 9 * * MON-FRI" (Monday to Friday at 9:30 AM)
+     * Process scheduled investments every day at 11:00 PM ET
+     * This runs before the 11:59 PM batch process, allowing users to update their
+     * investment schedule to "today" at any point during the day and still have it picked up.
+     * Cron: "0 0 23 * * *" (Daily at 11:00 PM)
      */
-    @Scheduled(cron = "0 30 9 * * MON-FRI", zone = "America/New_York")
+    @Scheduled(cron = "0 0 23 * * *", zone = "America/New_York")
     public void processScheduledInvestments() {
         logger.info("Starting scheduled investment processing job");
         try {

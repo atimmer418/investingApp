@@ -96,25 +96,15 @@ export class PortfolioDashboardComponent implements OnInit {
           if (this.dashboard) {
             todayPerf.endValue = this.dashboard.summary.portfolioValue;
 
-            // Try to use History for accurate P/L (Dollar Change)
-            // This pulls the actual Profit/Loss from Alpaca's history, which accounts for trades/transfers
-            // significantly better than the snapshot comparison.
-            let todayPL = null;
-            if (this.dashboard.history && this.dashboard.history.profitLoss && this.dashboard.history.profitLoss.length >= 2) {
-              const pl = this.dashboard.history.profitLoss;
-              const last = pl.length - 1;
-              // Today's P/L = Current Cumulative P/L - Yesterday's Cumulative P/L
-              const currentPL = pl[last] || 0;
-              const prevPL = pl[last - 1] || 0;
-              todayPL = currentPL - prevPL;
+            // Use the sum of individual positions' Day G/L for Today's Performance
+            // This avoids issues where deposits/withdrawals are incorrectly counted as performance gains/losses
+            // in the overall account equity calculation.
+            let todayPL = 0;
+            if (this.dashboard.positions) {
+              todayPL = this.dashboard.positions.reduce((sum, pos) => sum + (pos.todayGainLoss || 0), 0);
             }
-
-            if (todayPL !== null) {
-              todayPerf.totalReturn = todayPL;
-            } else {
-              // Fallback to backend summary if history unavailable
-              todayPerf.totalReturn = this.dashboard.summary.todayChange;
-            }
+            
+            todayPerf.totalReturn = todayPL;
 
             // Calculate Start Value derived from the Return
             // This creates a consistent "Apple to Apples" view of Portfolio Value Growth
@@ -221,58 +211,70 @@ export class PortfolioDashboardComponent implements OnInit {
 
     // Use history data (Alpaca provided P/L) if available
 
-    // Priority 1: Manual Calculation using Modified Dietz / Cost Basis method
-    // We compute the return based on the Change in Profit/Loss ($) relative to the Invested Capital.
-    // This handles recurring deposits better than raw Equity changes, and avoids ambiguity 
-    // in Alpaca's pre-calculated percentage.
+    // Priority 1: Hybrid Calculation (History Start vs Real-Time End)
+    // We use the history to find the "Start" state, and the current dashboard summary for the "End" state.
+    // This ensures that "End" includes the very latest deposits, price changes, and P/L that might not be in the history API yet.
     if (this.dashboard?.history?.profitLoss && this.dashboard.history.profitLoss.length > 0 &&
       this.dashboard.history.values && this.dashboard.history.values.length > 0) {
 
       const history = this.dashboard.history;
+      
+      // FOR "ALL" OR "MAX": Just use the Dashboard Totals directly.
+      // The user expects these to match the "Total G/L" in the table.
+      if (this.selectedPeriod === 'ALL' || this.selectedPeriod === '1Y') { // 1Y is effectively ALL for new accounts
+         // If account is older than 1Y, this logic stands: Total G/L / Total Invested
+         if (this.dashboard.totalInvested > 0) {
+            return {
+                value: this.dashboard.totalGainLoss,
+                percent: (this.dashboard.totalGainLoss / this.dashboard.totalInvested) * 100
+            };
+         }
+      }
+
       const last = history.values.length - 1;
 
-      // Note: We used to have special logic here for "Inception" checks to use Unrealized P/L,
-      // but now we treat all periods the same (Realized + Unrealized) for consistency.
-      if (last > 0 && history?.profitLoss && history.profitLoss.length > last) {
-        // Find the first index with non-zero equity to avoid "Start=0" skewing the Dietz calculation
-        // If we start at 0, the initial deposit is treated as a flow (weighted 0.5), which inflates return % artificially.
-        let firstIndex = 0;
-        while (firstIndex < last && history.values[firstIndex] === 0) {
-          firstIndex++;
-        }
-
-        const plStart = history.profitLoss[firstIndex] || 0;
-        const plEnd = history.profitLoss[last] || 0;
-        const eqStart = history.values[firstIndex] || 0;
-        const eqEnd = history.values[last] || 0;
-
-        const gainPeriod = plEnd - plStart;
-        const equityChange = eqEnd - eqStart;
-        const netDeposits = equityChange - gainPeriod;
-
-        // Formula: Return = (PL_End - PL_Start) / Current_Cost_Basis
-        // Current_Cost_Basis = Equity_End - PLC_End
-        // This calculates the contribution of this period's P/L to the Total Return on Investment.
-        // This ensures consistency: if Period covers the whole lifespan (like 3M for a 1M old account),
-        // it simplifies to Total_PL / Total_Basis, which matches the "All" view (1.8%).
-        const currentCostBasis = eqEnd - plEnd;
-
-        // Safety for zero basis
-        let basis = currentCostBasis;
-        if (basis <= 0) {
-          // Fallback to average invested capital during period (Modified Dietz denominator)
-          // Adjusted Capital = Start Capital + 0.5 * New Capital
-          basis = eqStart + (netDeposits * 0.5);
-          if (basis <= 0) basis = 1;
-        }
-
-        const percent = (gainPeriod / basis) * 100;
-
-        return {
-          value: gainPeriod,
-          percent: percent
-        };
+      // Find the first index with non-zero equity to avoid "Start=0" skewing the Dietz calculation
+      let firstIndex = 0;
+      while (firstIndex < last && history.values[firstIndex] === 0) {
+        firstIndex++;
       }
+
+      const profitLoss = history.profitLoss || [];
+      const plStart = profitLoss[firstIndex] || 0;
+      const eqStart = history.values[firstIndex] || 0;
+
+      // Use REAL-TIME values for the "End" state
+      // This fixes the "History is stale" issue where a recent deposit isn't in history yet
+      
+      // Actually, better approach:
+      // Gain_Period = Total_PL_Now - Total_PL_At_Start
+      // Basis_Now = Total_Invested_Now
+      
+      // Let's rely on the variables we have:
+      // End State (Real Time):
+      const eqEnd = this.dashboard.summary.portfolioValue; // $635
+      const totalPLEnd = this.dashboard.totalGainLoss;     // $18 (from Positions/Summary)
+      
+      // Start State (History):
+      // plStart is "Cumulative P/L at Start of Period".
+      
+      const gainPeriod = totalPLEnd - plStart;
+      
+      // Current Invested Capital (Real Time)
+      const currentCostBasis = this.dashboard.totalInvested;
+
+      // Safety for zero basis
+      let basis = currentCostBasis;
+      if (basis <= 0) {
+        basis = 1;
+      }
+
+      const percent = (gainPeriod / basis) * 100;
+
+      return {
+        value: gainPeriod,
+        percent: percent
+      };
     }
 
     // Priority 2: Fallback (should be covered by Priority 1 usually)

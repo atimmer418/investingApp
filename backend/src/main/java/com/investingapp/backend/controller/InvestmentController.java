@@ -275,8 +275,9 @@ public class InvestmentController {
 
             execution = executionRepository.save(execution);
 
-            // Process based on funding source
-            if ("buying_power".equals(fundingSource)) {
+            try {
+                // Process based on funding source
+                if ("buying_power".equals(fundingSource)) {
                 // Buying power executions are immediate
                 investmentExecutionService.processInvestmentExecutionImmediately(execution);
             } else {

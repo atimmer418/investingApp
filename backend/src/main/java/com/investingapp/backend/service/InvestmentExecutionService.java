@@ -58,65 +58,7 @@ public class InvestmentExecutionService {
     @Autowired
     private TaskScheduler taskScheduler;
 
-    /**
-     * Create or update a daily investment execution
-     * Enforces the rule: Only 1 scheduled execution per user per day
-     */
-    public InvestmentExecution createOrUpdateDailyExecution(User user, BigDecimal amount, String type, String symbol, String fundingSource) {
-        LocalDate today = LocalDate.now(MARKET_TIMEZONE);
-        
-        // Find existing scheduled execution for today
-        List<InvestmentExecution> existingExecutions = executionRepository
-                .findScheduledExecutionsForDate(today.atStartOfDay(), InvestmentExecution.ExecutionStatus.SCHEDULED)
-                .stream()
-                .filter(exec -> exec.getUser().getId().equals(user.getId()))
-                .filter(exec -> exec.getCreatedAt().toLocalDate().equals(today))
-                // Exclude executions that are "waiting for batch" (if any exist from old logic)
-                .filter(exec -> exec.getErrorMessage() == null || !exec.getErrorMessage().contains("Waiting for batch"))
-                .collect(Collectors.toList());
-        
-        if (!existingExecutions.isEmpty()) {
-            // Update existing execution
-            InvestmentExecution existing = existingExecutions.get(0);
-            logger.info("Updating existing execution {} for user {}: adding ${}", existing.getId(), user.getEmail(), amount);
-            
-            existing.setAmount(existing.getAmount().add(amount));
-            
-            // Check for type conflict
-            String existingType = existing.getInvestmentType();
-            String existingSymbol = existing.getTargetSymbol();
-            
-            boolean sameType = (existingType == null && type == null) || (existingType != null && existingType.equals(type));
-            boolean sameSymbol = (existingSymbol == null && symbol == null) || (existingSymbol != null && existingSymbol.equals(symbol));
-            
-            if (!sameType || !sameSymbol) {
-                logger.info("Execution type/symbol conflict. Converting to deposit_only. Old: {}/{}, New: {}/{}", 
-                    existingType, existingSymbol, type, symbol);
-                existing.setInvestmentType("deposit_only");
-                existing.setTargetSymbol(null);
-                existing.setErrorMessage("Merged execution (was " + existingType + " and " + type + ")");
-            }
-            
-            return executionRepository.save(existing);
-        } else {
-            // Create new execution
-            logger.info("Creating new execution for user {}: ${} ({})", user.getEmail(), amount, type);
-            InvestmentExecution execution = new InvestmentExecution(
-                    user,
-                    LocalDateTime.now(),
-                    amount,
-                    type,
-                    symbol,
-                    fundingSource);
-            // Default to SCHEDULED
-            execution.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
-            // Add queue message so EOD job picks it up
-            if (QUEUE_LUMP_SUMS_UNTIL_EOD) {
-                execution.setErrorMessage("Queued for end-of-day batch processing");
-            }
-            return executionRepository.save(execution);
-        }
-    }
+
 
     /**
      * Check if markets are currently open (US Eastern Time)
@@ -683,13 +625,7 @@ public class InvestmentExecutionService {
         // Handle different investment types
         String investmentType = execution.getInvestmentType() != null ? execution.getInvestmentType() : "portfolio";
 
-        if ("deposit_only".equals(investmentType)) {
-            logger.info("Execution {} is deposit only, skipping trading", execution.getId());
-            execution.setStatus(InvestmentExecution.ExecutionStatus.COMPLETED);
-            execution.setCompletedAt(LocalDateTime.now());
-            executionRepository.save(execution);
-            return;
-        }
+
 
         if ("stock".equals(investmentType)) {
             // Individual stock investment
