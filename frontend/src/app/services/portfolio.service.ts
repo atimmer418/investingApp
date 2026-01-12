@@ -27,6 +27,8 @@ export interface Position {
   currentPrice: number;
   averageCostBasis: number;
   percentOfAccount: number;
+  todayGainLoss: number;
+  todayGainLossPercent: number;
 }
 
 export interface PortfolioHistory {

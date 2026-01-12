@@ -91,7 +91,8 @@
             <!-- Bottom Right: Settled Cash -->
             <div class="hero-grid-item bottom-right">
               <span class="hero-label">Settled Cash</span>
-              <span class="hero-value">{{ formatCurrency(dashboard.summary.withdrawableCash ?? dashboard.summary.cash) }}</span>
+              <span class="hero-value">{{ formatCurrency(dashboard.summary.withdrawableCash ?? dashboard.summary.cash)
+                }}</span>
             </div>
           </div>
         </div>
@@ -181,7 +182,8 @@
                 <th class="text-right">Avg Cost</th>
                 <th class="text-right">Current</th>
                 <th class="text-right">Value</th>
-                <th class="text-right">Gain/Loss</th>
+                <th class="text-right">Day G/L</th>
+                <th class="text-right">Total G/L</th>
                 <th class="text-right">% Account</th>
               </tr>
             </thead>
@@ -207,6 +209,17 @@
                 </td>
                 <td class="text-right">
                   <div class="gain-loss-cell">
+                    <span class="text-base font-semibold"
+                      [class]="'change-' + getGainLossColor(position.todayGainLoss)">
+                      {{ formatCurrency(position.todayGainLoss) }}
+                    </span>
+                    <span class="text-sm" [class]="'change-' + getGainLossColor(position.todayGainLoss)">
+                      {{ formatPercent(position.todayGainLossPercent) }}
+                    </span>
+                  </div>
+                </td>
+                <td class="text-right">
+                  <div class="gain-loss-cell">
                     <span class="text-base font-semibold" [class]="'change-' + getGainLossColor(position.unrealizedPL)">
                       {{ formatCurrency(position.unrealizedPL) }}
                     </span>
@@ -229,10 +242,24 @@
                 <td class="text-right">{{ formatCurrency(getPositionsTotalValue()) }}</td>
                 <td class="text-right">
                   <div class="gain-loss-cell">
-                    <span class="text-base font-semibold" [class]="'change-' + getGainLossColor(getPositionsTotalGainLoss())">
+                    <span class="text-base font-semibold"
+                      [class]="'change-' + getGainLossColor(getPositionsTotalTodayGainLoss())">
+                      {{ formatCurrency(getPositionsTotalTodayGainLoss()) }}
+                    </span>
+                    <span class="text-sm yield-percent-text"
+                      [class]="'change-' + getGainLossColor(getPositionsTotalTodayGainLoss())">
+                      {{ formatPercent(getPositionsTotalWeightedTodayReturn()) }}
+                    </span>
+                  </div>
+                </td>
+                <td class="text-right">
+                  <div class="gain-loss-cell">
+                    <span class="text-base font-semibold"
+                      [class]="'change-' + getGainLossColor(getPositionsTotalGainLoss())">
                       {{ formatCurrency(getPositionsTotalGainLoss()) }}
                     </span>
-                    <span class="text-sm yield-percent-text" [class]="'change-' + getGainLossColor(getPositionsTotalGainLoss())">
+                    <span class="text-sm yield-percent-text"
+                      [class]="'change-' + getGainLossColor(getPositionsTotalGainLoss())">
                       {{ formatPercent(getPositionsTotalWeightedReturn()) }}
                     </span>
                   </div>

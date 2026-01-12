@@ -92,34 +92,34 @@ export class PortfolioDashboardComponent implements OnInit {
             todayPerf = { period: 'Today', startValue: 0, endValue: 0, totalReturn: 0, totalReturnPercent: 0 };
             this.performanceData.push(todayPerf);
           }
-          
+
           if (this.dashboard) {
             todayPerf.endValue = this.dashboard.summary.portfolioValue;
-            
+
             // Try to use History for accurate P/L (Dollar Change)
             // This pulls the actual Profit/Loss from Alpaca's history, which accounts for trades/transfers
             // significantly better than the snapshot comparison.
             let todayPL = null;
             if (this.dashboard.history && this.dashboard.history.profitLoss && this.dashboard.history.profitLoss.length >= 2) {
-                const pl = this.dashboard.history.profitLoss;
-                const last = pl.length - 1;
-                // Today's P/L = Current Cumulative P/L - Yesterday's Cumulative P/L
-                const currentPL = pl[last] || 0;
-                const prevPL = pl[last - 1] || 0;
-                todayPL = currentPL - prevPL;
+              const pl = this.dashboard.history.profitLoss;
+              const last = pl.length - 1;
+              // Today's P/L = Current Cumulative P/L - Yesterday's Cumulative P/L
+              const currentPL = pl[last] || 0;
+              const prevPL = pl[last - 1] || 0;
+              todayPL = currentPL - prevPL;
             }
-            
+
             if (todayPL !== null) {
-                todayPerf.totalReturn = todayPL;
+              todayPerf.totalReturn = todayPL;
             } else {
-                // Fallback to backend summary if history unavailable
-                todayPerf.totalReturn = this.dashboard.summary.todayChange;
+              // Fallback to backend summary if history unavailable
+              todayPerf.totalReturn = this.dashboard.summary.todayChange;
             }
 
             // Calculate Start Value derived from the Return
             // This creates a consistent "Apple to Apples" view of Portfolio Value Growth
             todayPerf.startValue = todayPerf.endValue - todayPerf.totalReturn;
-            
+
             // Calculate Percent: Return / Start
             if (todayPerf.startValue !== 0) {
               todayPerf.totalReturnPercent = (todayPerf.totalReturn / todayPerf.startValue) * 100;
@@ -202,8 +202,8 @@ export class PortfolioDashboardComponent implements OnInit {
   getReturnForCurrentPeriod(): { value: number, percent: number } | null {
     let targetPeriod = this.selectedPeriod;
     if (this.selectedPeriod === 'ALL') targetPeriod = 'Total';
-    
-    
+
+
     // We only use the pre-fetched performance data for "Today".
     // For "Total"/"ALL", the pre-fetched data only includes Unrealized Gains (Open Positions).
     // The user prefers the return to be consistent with other periods (Realized + Unrealized),
@@ -220,17 +220,17 @@ export class PortfolioDashboardComponent implements OnInit {
     }
 
     // Use history data (Alpaca provided P/L) if available
-    
+
     // Priority 1: Manual Calculation using Modified Dietz / Cost Basis method
     // We compute the return based on the Change in Profit/Loss ($) relative to the Invested Capital.
     // This handles recurring deposits better than raw Equity changes, and avoids ambiguity 
     // in Alpaca's pre-calculated percentage.
-    if (this.dashboard?.history?.profitLoss && this.dashboard.history.profitLoss.length > 0 && 
-        this.dashboard.history.values && this.dashboard.history.values.length > 0) {
-      
+    if (this.dashboard?.history?.profitLoss && this.dashboard.history.profitLoss.length > 0 &&
+      this.dashboard.history.values && this.dashboard.history.values.length > 0) {
+
       const history = this.dashboard.history;
       const last = history.values.length - 1;
-      
+
       // Note: We used to have special logic here for "Inception" checks to use Unrealized P/L,
       // but now we treat all periods the same (Realized + Unrealized) for consistency.
       if (last > 0 && history?.profitLoss && history.profitLoss.length > last) {
@@ -260,17 +260,17 @@ export class PortfolioDashboardComponent implements OnInit {
         // Safety for zero basis
         let basis = currentCostBasis;
         if (basis <= 0) {
-           // Fallback to average invested capital during period (Modified Dietz denominator)
-           // Adjusted Capital = Start Capital + 0.5 * New Capital
-           basis = eqStart + (netDeposits * 0.5);
-           if (basis <= 0) basis = 1;
+          // Fallback to average invested capital during period (Modified Dietz denominator)
+          // Adjusted Capital = Start Capital + 0.5 * New Capital
+          basis = eqStart + (netDeposits * 0.5);
+          if (basis <= 0) basis = 1;
         }
 
         const percent = (gainPeriod / basis) * 100;
 
-        return { 
-          value: gainPeriod, 
-          percent: percent 
+        return {
+          value: gainPeriod,
+          percent: percent
         };
       }
     }
@@ -287,28 +287,28 @@ export class PortfolioDashboardComponent implements OnInit {
         // Index 0 is the start of the requested period (e.g., 1M ago)
         const plStart = profitLossArray[0] || 0;
         const plEnd = profitLossArray[lastIndex] || 0;
-        
+
         const valStart = valuesArray[0] || 0;
         const valEnd = valuesArray[lastIndex] || 0;
 
         // Calculate performance for THIS period
         const plPeriod = plEnd - plStart;
-        
+
         // Calculate Invested Capital (Net of P/L)
         // Invested = Equity - P/L
         const investedStart = valStart - plStart;
         const investedEnd = valEnd - plEnd;
-        
+
         // Net New Cash introduced during the period
         const netNewCash = investedEnd - investedStart;
-        
+
         // Modified Dietz Denominator: Start Capital + (Net New Cash / 2)
         // We assume cash flows happen roughly in the middle or evenly distributed
         const uniqueInvestedCapital = investedStart + (netNewCash / 2);
 
         if (uniqueInvestedCapital !== 0) {
-           const percent = (plPeriod / uniqueInvestedCapital) * 100;
-           return { value: plPeriod, percent };
+          const percent = (plPeriod / uniqueInvestedCapital) * 100;
+          return { value: plPeriod, percent };
         }
       }
     }
@@ -318,14 +318,14 @@ export class PortfolioDashboardComponent implements OnInit {
     if (this.chartData && this.chartData.length > 0) {
       const startValue = this.chartData[0].value;
       const endValue = this.chartData[this.chartData.length - 1].value;
-      
+
       if (startValue === 0) {
-         return { value: endValue, percent: 0 };
+        return { value: endValue, percent: 0 };
       }
-      
+
       const value = endValue - startValue;
       const percent = (value / startValue) * 100;
-      
+
       return { value, percent };
     }
 
@@ -333,7 +333,7 @@ export class PortfolioDashboardComponent implements OnInit {
   }
 
   getPeriodLabel(): string {
-    const map: {[key: string]: string} = {
+    const map: { [key: string]: string } = {
       '1M': '1-month',
       '3M': '3-month',
       '6M': '6-month',
@@ -397,12 +397,30 @@ export class PortfolioDashboardComponent implements OnInit {
     return this.dashboard.positions.reduce((sum, p) => sum + p.unrealizedPL, 0);
   }
 
+  getPositionsTotalTodayGainLoss(): number {
+    if (!this.dashboard?.positions) return 0;
+    return this.dashboard.positions.reduce((sum, p) => sum + (p.todayGainLoss || 0), 0);
+  }
+
   getPositionsTotalWeightedReturn(): number {
     const totalCost = this.getPositionsTotalCostBasis();
     if (totalCost === 0) return 0;
-    
+
     // Weighted Return = (Total Gain / Total Cost) * 100
     // This is mathematically equivalent to the sum of weighted returns if weights are based on cost basis
     return (this.getPositionsTotalGainLoss() / totalCost) * 100;
+  }
+
+  getPositionsTotalWeightedTodayReturn(): number {
+    // Current Market Value = Positions Total Value (Yesterday) + Total Today G/L
+    // Yesterday Value = Current Market Value - Total Today G/L
+    // Return % = (Total Today G/L / Yesterday Value) * 100
+    // This gives the accurate portfolio-wide day performance
+    const currentMarketValue = this.getPositionsTotalValue();
+    const todayGL = this.getPositionsTotalTodayGainLoss();
+    const yesterdayValue = currentMarketValue - todayGL;
+
+    if (yesterdayValue === 0) return 0;
+    return (todayGL / yesterdayValue) * 100;
   }
 }

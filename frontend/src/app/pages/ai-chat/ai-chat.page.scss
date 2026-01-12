@@ -18,8 +18,9 @@ ion-header {
 }
 
 .messages-container {
-  padding: 0px; /* Removed horizontal padding */
-  padding-bottom: 20px;
+  padding: 0px;
+  /* Removed horizontal padding */
+  padding-bottom: calc(32px + 48px); // 32px spacing + ~48px for input area (36px container + 12px padding)
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -35,9 +36,10 @@ ion-header {
       Right Gutter = Bubble Margin Right (62px).
     - User messages: 12px padding on wrapper to maintain spacing.
   */
-  gap: 8px; 
+  gap: 8px;
   max-width: 100%;
-  scroll-margin-top: 80px; /* Ensures the message starts below the header (approx 56px + padding) */
+  scroll-margin-top: 80px;
+  /* Ensures the message starts below the header (approx 56px + padding) */
 
   &.user-message {
     justify-content: flex-end;
@@ -67,7 +69,7 @@ ion-header {
         So we need 62px margin to balance.
       */
       margin-right: 62px;
-      max-width: none; 
+      max-width: none;
     }
   }
 }
@@ -77,7 +79,7 @@ ion-header {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  
+
   /* Fix for Safari/iOS rounded corner blurring/bleeding */
   -webkit-mask-image: -webkit-radial-gradient(white, black);
   mask-image: radial-gradient(white, black);
@@ -92,7 +94,7 @@ ion-header {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    
+
     /* apply text-rendering optimization to image which can help detail */
     image-rendering: -webkit-optimize-contrast;
   }
@@ -193,62 +195,109 @@ ion-header {
 }
 
 ion-footer {
-  background: var(--app-card-background, #ffffff);
-  border-top: 1px solid var(--app-card-border, #e5e5ea);
+  background: var(--app-background, #f2f2f7) !important;
+  --background: var(--app-background, #f2f2f7) !important;
+  border-top: none;
 }
 
 .input-bar {
-  background: var(--app-card-background, #ffffff);
-  padding: 0 8px;
+  background: var(--app-background, #f2f2f7);
+  padding: 6px 8px;
   width: 100%;
   box-sizing: border-box;
 }
 
 .input-container {
-  display: flex;
-  align-items: center;
+  min-height: 38px !important;
+  height: auto !important;
+  // Removed vertical padding from container to let textarea define the height
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: flex-end !important;
   background: var(--app-background, #f2f2f7);
   border-radius: 18px;
-  padding: 0px 2px 0px 12px;
   border: 1px solid var(--app-card-border, #e5e5ea);
-  min-height: 30px !important;
-  margin-top: 2px !important;
-  margin-bottom: 2px !important;
-  max-height: 150px;
+  max-height: 200px !important;
   flex-grow: 1;
+  padding-left: 12px;
+  padding-right: 2px;
 
   ion-textarea {
-    border: none;
-    margin: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    min-height: 28px;
-    max-height: 140px;
+    // 7px top + 7px bottom + 22px line-height = 36px content
+    // 36px content + 2px border = 38px total height
+    --padding-top: 7px !important;
+    --padding-bottom: 7px !important;
     --padding-start: 0;
     --padding-end: 0;
-    --padding-top: 4px;
-    --padding-bottom: 4px;
-    font-size: 16px;
-    line-height: 20px;
+    min-height: 36px !important;
+    margin: 0 !important;
+
+    border: none;
+    padding: 0 !important;
+    height: auto !important;
+    max-height: 200px; // Match container constraint
+
+    font-size: 16px !important;
+    line-height: 22px !important;
+
     --border-width: 0;
-    --highlight-color-focused: transparent;
+    --highlight-color-focused: none;
+    flex: 1;
+
+    &::part(native) {
+      padding-top: 7px !important;
+      padding-bottom: 7px !important;
+      margin-top: 0 !important;
+      min-height: 36px !important;
+      // CRITICAL FIX: overflow hidden prevents internal scroll/clipping
+      overflow: hidden !important;
+      height: auto !important;
+      line-height: inherit !important; // Inherit from host
+      margin: 0;
+      padding: 0;
+    }
+
+    // Fix for auto-grow creeping clipping:
+    // The "ghost" element used for height calculation defaults to normal line-height (19px)
+    // We must force it to match our 22px line-height so growth is 1:1 with content
+    // DOUBLED CLASS for higher specificity to override Ionic defaults
+    ::ng-deep .native-wrapper.native-wrapper::after {
+      line-height: 22px !important;
+      padding-top: 7px !important;
+      padding-bottom: 7px !important;
+    }
 
     ::ng-deep textarea {
       border: none !important;
       outline: none !important;
       box-shadow: none !important;
-      padding-top: 4px !important;
-      padding-bottom: 4px !important;
+      padding-top: 7px !important;
+      padding-bottom: 7px !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      margin: 0 !important;
+      resize: none !important;
+      min-height: 36px !important;
+      line-height: 22px !important;
+      overflow: hidden !important;
     }
   }
 
   .send-button {
-    margin: 0;
-    margin-right: -4px; // Pull closer to edge
-    height: 32px; // Slightly larger touch target
-    width: 32px;
+    height: 30px !important;
+    min-height: 30px !important;
+    margin: 0 !important;
+    margin-right: 4px !important;
+    // Align button with the visual center of 36px available height (36-30)/2 = 3px
+    margin-bottom: 3px !important;
+    --padding-top: 0 !important;
+    --padding-bottom: 0 !important;
     --padding-start: 0;
     --padding-end: 0;
+    width: 32px;
+    align-self: flex-end !important;
 
     ion-icon {
       font-size: 28px;

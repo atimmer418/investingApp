@@ -170,7 +170,9 @@ public class PortfolioDashboardService {
                                 position.unrealizedPLPercent,
                                 position.currentPrice,
                                 position.averageCostBasis,
-                                percentOfAccount);
+                                percentOfAccount,
+                                position.todayGainLoss,
+                                position.todayGainLossPercent);
                     })
                     .collect(java.util.stream.Collectors.toList());
 
@@ -260,7 +262,8 @@ public class PortfolioDashboardService {
                 String accountStatus = accountData.has("status") ? accountData.get("status").asText() : "UNKNOWN";
                 String currency = accountData.has("currency") ? accountData.get("currency").asText() : "USD";
 
-                logger.info("Account summary retrieved - Status: {}, Currency: {}, Last Equity: {}, Cash: {}, Withdrawable: {}",
+                logger.info(
+                        "Account summary retrieved - Status: {}, Currency: {}, Last Equity: {}, Cash: {}, Withdrawable: {}",
                         accountStatus, currency, portfolioValue, cash, withdrawableCash);
 
                 return new AccountSummary(portfolioValue, todayChange, todayChangePercent, buyingPower, cash,
@@ -302,7 +305,8 @@ public class PortfolioDashboardService {
                 // Parse withdrawable cash - this is what can actually be transferred out
                 BigDecimal withdrawableCash = parseDecimalSafely(accountData, "cash_withdrawable", BigDecimal.ZERO);
 
-                logger.info("Retrieved trading data - Buying Power: ${}, Cash: ${}, Withdrawable: ${}", buyingPower, cash, withdrawableCash);
+                logger.info("Retrieved trading data - Buying Power: ${}, Cash: ${}, Withdrawable: ${}", buyingPower,
+                        cash, withdrawableCash);
                 return new TradingAccountData(buyingPower, cash, withdrawableCash);
 
             } else {
@@ -514,10 +518,20 @@ public class PortfolioDashboardService {
 
                         // Get company name
                         String name = getCompanyName(symbol);
+                        // parse today's gain/loss
+                        BigDecimal todayGainLoss = parseDecimalSafely(positionNode, "unrealized_intraday_pl",
+                                BigDecimal.ZERO);
+                        // parse today's gain/loss percent (usually decimal like 0.015 for 1.5%)
+                        // We multiply by 100 to make it a percentage
+                        BigDecimal todayGainLossPercent = parseDecimalSafely(positionNode, "unrealized_intraday_plpc",
+                                BigDecimal.ZERO)
+                                .multiply(new BigDecimal("100"));
+
                         // percentOfAccount will be calculated later in getPortfolioDashboard
                         Position position = new Position(symbol, name, quantity, quantityAvailable, marketValue,
                                 costBasis,
-                                unrealizedPL, unrealizedPLPercent, currentPrice, averageCostBasis, BigDecimal.ZERO);
+                                unrealizedPL, unrealizedPLPercent, currentPrice, averageCostBasis, BigDecimal.ZERO,
+                                todayGainLoss, todayGainLossPercent);
                         positions.add(position);
 
                         logger.info(
@@ -601,7 +615,12 @@ public class PortfolioDashboardService {
                                     unrealizedPLPercent,
                                     currentPrice,
                                     averageCostBasis,
-                                    BigDecimal.ZERO);
+                                    currentPrice,
+                                    averageCostBasis,
+                                    BigDecimal.ZERO,
+                                    BigDecimal.ZERO, // todayGainLoss unavailable in EOD
+                                    BigDecimal.ZERO // todayGainLossPercent unavailable in EOD
+                            );
 
                             positions.add(position);
                         }
@@ -632,7 +651,8 @@ public class PortfolioDashboardService {
 
             // Build URL with account ID for Broker API
             // Use timeframe=1D to get daily data points
-            // Removed cashflow_types=NONE to ensure we get proper P/L calculations accounting for deposits
+            // Removed cashflow_types=NONE to ensure we get proper P/L calculations
+            // accounting for deposits
             String url = alpacaBrokerBaseUrl + "/trading/accounts/" + accountId + "/account/portfolio/history" +
                     "?period=" + alpacaPeriod +
                     "&timeframe=1D" +
@@ -666,8 +686,8 @@ public class PortfolioDashboardService {
                     for (int i = 0; i < timestamps.size(); i++) {
                         // Convert timestamp to date string (timestamps are in epoch seconds)
                         long epochSeconds = timestamps.get(i).asLong();
-                        
-                        // Use NY timezone to determine the date, as Alpaca returns UTC timestamps 
+
+                        // Use NY timezone to determine the date, as Alpaca returns UTC timestamps
                         // that might be 1am UTC of the next day for the previous trading day's close.
                         // e.g. 1764637200 is Dec 2 01:00 UTC, which is Dec 1 20:00 NY -> Dec 1
                         LocalDate date = Instant.ofEpochSecond(epochSeconds)
@@ -687,16 +707,21 @@ public class PortfolioDashboardService {
                         }
 
                         // Parse profit/loss percent data if available
-                        if (profitLossPercentValues != null && profitLossPercentValues.isArray() && i < profitLossPercentValues.size()) {
-                            // Alpaca returns decimal (e.g. 0.05 for 5%), we might want to keep it as is or convert to percent
+                        if (profitLossPercentValues != null && profitLossPercentValues.isArray()
+                                && i < profitLossPercentValues.size()) {
+                            // Alpaca returns decimal (e.g. 0.05 for 5%), we might want to keep it as is or
+                            // convert to percent
                             // Frontend expects percent (e.g. 5.0), but let's check what Alpaca returns.
                             // Usually Alpaca returns 0.015 for 1.5%.
-                            // Let's store it as is, and frontend can multiply by 100 if needed, OR multiply here.
+                            // Let's store it as is, and frontend can multiply by 100 if needed, OR multiply
+                            // here.
                             // Existing code for totalGainLossPercent multiplies by 100.
-                            // Let's multiply by 100 here to be consistent with "Percent" naming in other places if they are 0-100.
+                            // Let's multiply by 100 here to be consistent with "Percent" naming in other
+                            // places if they are 0-100.
                             // Wait, totalGainLossPercent in DashboardData is 0-100 based.
                             // Let's multiply by 100.
-                            BigDecimal plPct = new BigDecimal(profitLossPercentValues.get(i).asText()).multiply(new BigDecimal("100"));
+                            BigDecimal plPct = new BigDecimal(profitLossPercentValues.get(i).asText())
+                                    .multiply(new BigDecimal("100"));
                             profitLossPercent.add(plPct);
                         }
                     }
@@ -739,23 +764,27 @@ public class PortfolioDashboardService {
                 if (transactionsArray.isArray()) {
                     for (JsonNode transactionNode : transactionsArray) {
                         // Parse according to the structure you provided
-                        String id = transactionNode.has("id") ? transactionNode.get("id").asText() : 
-                                   (transactionNode.has("order_id") ? transactionNode.get("order_id").asText() : "");
-                        String type = transactionNode.has("activity_type") ? transactionNode.get("activity_type").asText() : 
-                                     (transactionNode.has("type") ? transactionNode.get("type").asText() : "fill");
+                        String id = transactionNode.has("id") ? transactionNode.get("id").asText()
+                                : (transactionNode.has("order_id") ? transactionNode.get("order_id").asText() : "");
+                        String type = transactionNode.has("activity_type")
+                                ? transactionNode.get("activity_type").asText()
+                                : (transactionNode.has("type") ? transactionNode.get("type").asText() : "fill");
                         String symbol = transactionNode.has("symbol") ? transactionNode.get("symbol").asText() : "";
                         BigDecimal quantity = parseDecimalSafely(transactionNode, "qty", BigDecimal.ZERO);
                         BigDecimal price = parseDecimalSafely(transactionNode, "price", BigDecimal.ZERO);
 
-                        // Calculate amount: prefer net_amount (handles deposits), fallback to price * qty
+                        // Calculate amount: prefer net_amount (handles deposits), fallback to price *
+                        // qty
                         BigDecimal amount = parseDecimalSafely(transactionNode, "net_amount", BigDecimal.ZERO);
                         if (amount.compareTo(BigDecimal.ZERO) == 0 && price.compareTo(BigDecimal.ZERO) != 0) {
                             amount = price.multiply(quantity);
                         }
 
-                        // Parse date: prefer transaction_time (ISO), fallback to date (YYYY-MM-DD) for CSD/ACH
+                        // Parse date: prefer transaction_time (ISO), fallback to date (YYYY-MM-DD) for
+                        // CSD/ACH
                         String date = "";
-                        if (transactionNode.has("transaction_time") && !transactionNode.get("transaction_time").isNull()) {
+                        if (transactionNode.has("transaction_time")
+                                && !transactionNode.get("transaction_time").isNull()) {
                             date = transactionNode.get("transaction_time").asText();
                         } else if (transactionNode.has("date") && !transactionNode.get("date").isNull()) {
                             date = transactionNode.get("date").asText();
@@ -842,7 +871,7 @@ public class PortfolioDashboardService {
         public final BigDecimal equity;
 
         public AccountSummary(BigDecimal portfolioValue, BigDecimal todayChange,
-                BigDecimal todayChangePercent, BigDecimal buyingPower, BigDecimal cash, 
+                BigDecimal todayChangePercent, BigDecimal buyingPower, BigDecimal cash,
                 BigDecimal withdrawableCash, BigDecimal equity) {
             this.portfolioValue = portfolioValue;
             this.todayChange = todayChange;
@@ -866,11 +895,14 @@ public class PortfolioDashboardService {
         public final BigDecimal currentPrice;
         public final BigDecimal averageCostBasis;
         public final BigDecimal percentOfAccount;
+        public final BigDecimal todayGainLoss;
+        public final BigDecimal todayGainLossPercent;
 
         public Position(String symbol, String name, BigDecimal quantity, BigDecimal quantityAvailable,
                 BigDecimal marketValue,
                 BigDecimal costBasis, BigDecimal unrealizedPL, BigDecimal unrealizedPLPercent,
-                BigDecimal currentPrice, BigDecimal averageCostBasis, BigDecimal percentOfAccount) {
+                BigDecimal currentPrice, BigDecimal averageCostBasis, BigDecimal percentOfAccount,
+                BigDecimal todayGainLoss, BigDecimal todayGainLossPercent) {
             this.symbol = symbol;
             this.name = name;
             this.quantity = quantity;
@@ -882,6 +914,8 @@ public class PortfolioDashboardService {
             this.currentPrice = currentPrice;
             this.averageCostBasis = averageCostBasis;
             this.percentOfAccount = percentOfAccount;
+            this.todayGainLoss = todayGainLoss;
+            this.todayGainLossPercent = todayGainLossPercent;
         }
 
         // Getters for JSON serialization
@@ -928,6 +962,14 @@ public class PortfolioDashboardService {
         public BigDecimal getPercentOfAccount() {
             return percentOfAccount;
         }
+
+        public BigDecimal getTodayGainLoss() {
+            return todayGainLoss;
+        }
+
+        public BigDecimal getTodayGainLossPercent() {
+            return todayGainLossPercent;
+        }
     }
 
     public static class PortfolioHistory {
@@ -943,7 +985,8 @@ public class PortfolioDashboardService {
             this.profitLossPercent = new ArrayList<>();
         }
 
-        public PortfolioHistory(List<String> timestamps, List<BigDecimal> values, List<BigDecimal> profitLoss, List<BigDecimal> profitLossPercent) {
+        public PortfolioHistory(List<String> timestamps, List<BigDecimal> values, List<BigDecimal> profitLoss,
+                List<BigDecimal> profitLossPercent) {
             this.timestamps = timestamps;
             this.values = values;
             this.profitLoss = profitLoss;
