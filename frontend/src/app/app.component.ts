@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonApp, IonRouterOutlet, IonContent, IonButton, IonIcon, IonSpinner } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
@@ -9,7 +9,7 @@ import { AuthService, UserProgress } from './services/auth.service';
 import { AppLockService } from './services/app-lock.service';
 import { PasskeyService } from './services/passkey.service';
 import { JwtTokenUtils } from './utils/jwt-token.utils';
-import { combineLatest, debounceTime, distinctUntilChanged, filter } from 'rxjs';
+import { combineLatest, debounceTime, distinctUntilChanged, filter, Subject, throttleTime } from 'rxjs';
 import { addIcons } from 'ionicons';
 import { lockClosedOutline, fingerPrintOutline } from 'ionicons/icons';
 
@@ -24,6 +24,8 @@ register();
 })
 export class AppComponent implements OnInit {
 
+  private userActivity$ = new Subject<void>();
+
   constructor(
     private router: Router,
     private platform: Platform,
@@ -32,7 +34,26 @@ export class AppComponent implements OnInit {
     private passkeyService: PasskeyService
   ) {
     addIcons({ lockClosedOutline, fingerPrintOutline });
+    
+    // Setup activity tracker with throtting to avoid performance issues
+    // This ensures we don't call updateLastActiveTime on every single touch event
+    this.userActivity$.pipe(
+      throttleTime(60000) // limit to once every 60 seconds
+    ).subscribe(() => {
+      this.appLockService.updateLastActiveTime();
+    });
+
     this.initializeApp();
+  }
+
+  // Listen for global user interactions to keep the session alive (optimized for mobile/iPhone)
+  @HostListener('window:touchstart')
+  @HostListener('window:touchmove') // Catches continuous interaction (dragging/swiping)
+  @HostListener('window:scroll', ['$event']) // Catches Voice Control or assistive scrolling
+  @HostListener('window:click')
+  @HostListener('window:keydown')
+  onUserActivity() {
+    this.userActivity$.next();
   }
 
   initializeApp() {

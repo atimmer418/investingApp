@@ -44,8 +44,8 @@ To prevent brute-force attacks, the system enforces a strict lockout mechanism:
 We balance security with user convenience using two distinct modes controlled by the **App Lock** setting.
 
 ### Core Concepts
-*   **Inactivity:** Defined as a period with **no backend API requests**.
-*   **Session Extension:** Every backend request resets the inactivity timer to 0.
+*   **Inactivity:** Defined as a period with **no frontend user interaction** (touches, scrolls, typing) or **backend API requests**.
+*   **Session Extension:** Any physical user interaction or backend request resets the inactivity timer to 0.
 *   **Token Refresh:** Every successful Passkey verification (unlock) generates a **fresh JWT Token**.
 
 ### A. App Lock: ON (High Security)
@@ -57,7 +57,7 @@ We balance security with user convenience using two distinct modes controlled by
 
 ### B. App Lock: OFF (Standard Mode)
 *   **Triggers:**
-    1.  **Inactivity ONLY:** App locks *only* after **1 Hour** of inactivity (no backend requests), regardless of whether the app was in the background or foreground.
+    1.  **Inactivity ONLY:** App locks *only* after **1 Hour** of inactivity, regardless of whether the app was in the background or foreground.
 *   **Behavior:**
     *   If the user returns after < 1 hour: No prompt. Session continues.
     *   If the user returns after > 1 hour: App is locked. User must authenticate with Passkey.
