@@ -3,6 +3,7 @@ package com.investingapp.backend.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "investment_executions")
@@ -73,8 +74,8 @@ public class InvestmentExecution {
     
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(ZoneId.of("America/New_York"));
+        this.updatedAt = LocalDateTime.now(ZoneId.of("America/New_York"));
         if (this.status == null) {
             this.status = ExecutionStatus.SCHEDULED;
         }
@@ -82,7 +83,7 @@ public class InvestmentExecution {
     
     @PreUpdate
     protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(ZoneId.of("America/New_York"));
     }
     
     // Constructors
