@@ -300,6 +300,8 @@ public class InvestmentExecutionService {
         execution.setAmount(schedule.getInvestmentAmount());
         execution.setScheduledDate(LocalDateTime.now(MARKET_TIMEZONE)); // Use LocalDateTime
         execution.setStatus(InvestmentExecution.ExecutionStatus.SCHEDULED);
+        execution.setInvestmentType("recurring");
+        execution.setFundingSource("bank");
         // Note: InvestmentExecution doesn't have a direct link back to schedule
 
         return executionRepository.save(execution);
