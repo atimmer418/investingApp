@@ -1,3 +1,17 @@
+.chat-content {
+  --background: var(--app-background);
+  /* Force explicit height to ensure scrollbar ends at top of input bar and tab switcher */
+  /* 56px tab bar + safe area + 36px buffer + 50px message bar */
+  height: calc(100% - (var(--ion-tab-bar-height, 56px) + env(safe-area-inset-bottom) + 36px + 50px));
+
+  &::part(scroll) {
+    margin-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 50px) !important;
+  }
+}
+
 ion-content {
   --background: var(--app-background);
 }
@@ -20,7 +34,7 @@ ion-header {
 .messages-container {
   padding: 0px;
   /* Removed horizontal padding */
-  padding-bottom: calc(32px + 48px); // 32px spacing + ~48px for input area (36px container + 12px padding)
+  padding-bottom: 0px; // 32px spacing + ~48px for input area (36px container + 12px padding)
   display: flex;
   flex-direction: column;
   gap: 16px;

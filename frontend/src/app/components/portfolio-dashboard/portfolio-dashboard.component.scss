@@ -12,9 +12,8 @@
   --background: var(--portfolio-background);
   --padding-start: 0;
   --padding-end: 0;
-  --padding-top: 8px !important;
-  --offset-top: 0px !important;
-  --padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+  /* Force explicit height to ensure scrollbar ends at top of tab switcher */
+  height: calc(100% - (var(--ion-tab-bar-height, 56px) + env(safe-area-inset-bottom) + 36px));
 
   &::part(scroll) {
     padding-top: 8px !important;
@@ -361,9 +360,9 @@ ion-header {
       // Vertical: 2px (Reduced height "cut in half")
       // Horizontal: 1px (Creates the gray frame effect at the ends)
       padding: 2px 1px !important;
-      
+
       border-radius: 4.5px;
-      
+
       // Ensure the segment itself doesn't force a large height
       height: auto;
       min-height: 32px;
@@ -371,16 +370,16 @@ ion-header {
       ion-segment-button {
         // Remove margins to allow buttons to expand and fix "smushed" look
         margin: 0;
-        
+
         // Ensure buttons are compact
         min-height: 28px;
         font-size: var(--app-font-size-xs);
         font-weight: 500;
-        
+
         // Use minimal internal padding to maximize text space
         --padding-start: 2px;
         --padding-end: 2px;
-        
+
         // Allow buttons to shrink if needed
         min-width: 0;
       }
@@ -745,6 +744,7 @@ ion-header {
     --portfolio-text-secondary: var(--app-gray-400);
   }
 }
+
 /* =============================================================================
    RETURN YIELD SECTION
    ============================================================================= */
@@ -753,7 +753,7 @@ ion-header {
   margin-top: var(--app-spacing-md);
   padding-top: var(--app-spacing-sm);
   border-top: 1px solid var(--app-border-color, #e0e0e0);
-  
+
   .yield-row {
     display: flex;
     justify-content: space-between;
@@ -769,11 +769,11 @@ ion-header {
   .yield-value {
     font-size: 16px;
     font-weight: 600;
-    
+
     &.change-success {
       color: var(--portfolio-success);
     }
-    
+
     &.change-danger {
       color: var(--portfolio-danger);
     }
@@ -788,7 +788,7 @@ ion-header {
   tfoot {
     border-top: 2px solid var(--app-border-color, #e0e0e0);
     background-color: var(--app-background-alt, #f9f9f9);
-    
+
     td {
       padding: 12px 8px;
       font-weight: 600;

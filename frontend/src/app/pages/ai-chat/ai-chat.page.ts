@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuController } from '@ionic/angular';
@@ -51,7 +51,7 @@ import { arrowUpCircle, menuOutline, addOutline } from 'ionicons/icons';
     IonChip
   ]
 })
-export class AiChatPage implements OnInit {
+export class AiChatPage implements OnInit, AfterViewInit {
   @ViewChild(IonContent) content!: IonContent;
 
   readonly FRED_STORY_TRIGGER = "What's your story FRED?";
@@ -73,13 +73,30 @@ export class AiChatPage implements OnInit {
   }
 
   ngOnInit() {
+    console.log('ngOnInit called');
     this.loadSessions();
     this.syncBackendHistory();
     this.loadDailySuggestions();
   }
 
+  ngAfterViewInit() {
+    console.log('ngAfterViewInit called');
+    // Give time for async operations to complete and populate messages
+    setTimeout(() => {
+      if (this.messages.length > 0) {
+        console.log('Scrolling to bottom from ngAfterViewInit, messages count:', this.messages.length);
+        this.scrollToBottom();
+      }
+    }, 300);
+  }
+
   ionViewDidEnter() {
     this.isActive = true;
+    // Scroll to bottom if there are existing messages
+    if (this.messages.length > 0) {
+      setTimeout(() => this.scrollToBottom(), 300);
+    }
+    console.log('ionViewDidEnter');
   }
 
   ionViewWillLeave() {
@@ -320,8 +337,15 @@ export class AiChatPage implements OnInit {
   }
 
   scrollToBottom() {
+    if (!this.content) return;
+
     setTimeout(() => {
-      this.content.scrollToBottom(300);
+      const anchor = document.getElementById('scroll-anchor');
+      if (anchor) {
+        anchor.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      } else {
+        this.content.scrollToBottom(300);
+      }
     }, 100);
   }
 
