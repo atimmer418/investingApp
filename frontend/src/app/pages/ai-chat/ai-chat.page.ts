@@ -54,6 +54,8 @@ import { arrowUpCircle, menuOutline, addOutline } from 'ionicons/icons';
 export class AiChatPage implements OnInit {
   @ViewChild(IonContent) content!: IonContent;
 
+  readonly FRED_STORY_TRIGGER = "What's your story FRED?";
+
   messages: ChatMessage[] = [];
   sessions: ChatSession[] = [];
   currentSession: ChatSession | null = null;
@@ -88,15 +90,40 @@ export class AiChatPage implements OnInit {
     this.chatService.getDailySuggestions().subscribe({
       next: (questions) => {
         const used = this.chatService.getUsedSuggestions();
-        this.dailySuggestions = questions.filter(q => !used.includes(q));
+        const available = questions.filter(q => !used.includes(q));
+        this.updateDailySuggestions(available);
       },
-      error: (err) => console.error('Failed to load daily questions', err)
+      error: (err) => {
+        console.error('Failed to load daily questions', err);
+        this.updateDailySuggestions([]);
+      }
     });
+  }
+
+  private updateDailySuggestions(baseSuggestions: string[]) {
+    // Check if user has read Fred's story
+    const hasReadStory = localStorage.getItem('has_read_fred_story');
+    if (!hasReadStory) {
+      // ensure we have space for it (max 3 usually)
+      if (baseSuggestions.length >= 3) {
+        baseSuggestions.pop(); // Remove the last random one to make space
+      }
+      // Add as the LAST item for visibility
+      baseSuggestions.push(this.FRED_STORY_TRIGGER);
+    }
+    this.dailySuggestions = baseSuggestions;
+    this.cdr.detectChanges();
   }
 
   selectSuggestion(question: string) {
     this.newMessage = question;
     this.chatService.markSuggestionAsUsed(question);
+
+    // If it's the Fred story trigger, mark as read
+    if (question === this.FRED_STORY_TRIGGER) {
+      localStorage.setItem('has_read_fred_story', 'true');
+    }
+
     this.dailySuggestions = this.dailySuggestions.filter(q => q !== question);
     this.sendMessage();
   }
@@ -303,6 +330,9 @@ export class AiChatPage implements OnInit {
   formatMessage(content: string): string {
     // Basic bold formatting
     let formatted = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // Basic italics formatting
+    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     // Basic list formatting
     formatted = formatted.replace(/\n\n/g, '<br><br>');

@@ -58,6 +58,11 @@ public class ChatService {
         // 1. Persistence (User Message) - SAVE FIRST
         chatMessageRepository.save(new ChatMessage(request.userId(), "user", request.message()));
 
+        // 1. Persistence (User Message) - SAVE FIRST
+        chatMessageRepository.save(new ChatMessage(request.userId(), "user", request.message()));
+
+        // 2. Load User
+
         // 2. Load User
         Optional<User> userOpt = userRepository.findById(request.userId());
         // Handle guest/anonymous or error if needed. For now, assume user exists or
@@ -110,6 +115,18 @@ public class ChatService {
 
         // 8. Call LLM
         String response = llmService.generateChatResponse(messages);
+
+        // 8.5 SMART INTERCEPT FOR FRED STORY
+        if (response != null && response.contains(FredConstitution.FRED_STORY_ORIGIN_TRIGGER)) {
+            logger.info("Smart Trigger: Detected FRED_STORY_ORIGIN_TRIGGER. Swapping with canonical text.");
+            response = FredConstitution.FRED_STORY_ORIGIN
+                    + "\n\nDo you want me to tell you about my master strategist retirement plan?";
+        }
+
+        if (response != null && response.contains(FredConstitution.FRED_STORY_STRATEGY_TRIGGER)) {
+            logger.info("Smart Trigger: Detected FRED_STORY_STRATEGY_TRIGGER. Swapping with canonical text.");
+            response = FredConstitution.FRED_STORY_STRATEGY;
+        }
 
         // 9. Persistence (Assistant Response)
         chatMessageRepository.save(new ChatMessage(request.userId(), "assistant", response));

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository; // Correct
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
@@ -15,6 +16,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     List<ChatMessage> findTop10ByUserIdOrderByCreatedAtDesc(Long userId);
 
     List<ChatMessage> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+    Optional<ChatMessage> findTopByUserIdOrderByCreatedAtDesc(Long userId);
 
     // If query method name is too long or unsupported without explicit limit in
     // some versions:
