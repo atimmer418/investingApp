@@ -1,11 +1,11 @@
 import { Component, Input, OnInit, OnDestroy, ViewChild, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { 
-  Chart, 
-  ChartConfiguration, 
-  ChartData, 
+import {
+  Chart,
+  ChartConfiguration,
+  ChartData,
   registerables,
-  TooltipItem 
+  TooltipItem
 } from 'chart.js';
 
 export interface PortfolioDataPoint {
@@ -24,7 +24,7 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
   @ViewChild('chartCanvas', { static: true }) chartCanvas!: ElementRef<HTMLCanvasElement>;
   @Input() data: PortfolioDataPoint[] = [];
   @Input() selectedPeriod: string = '1M';
-  
+
   private chart: Chart | null = null;
   public selectedDataPoint: { date: string; value: number; formattedDate: string } | null = null;
   public isTooltipVisible = false;
@@ -72,103 +72,122 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
 
     try {
       const chartData: ChartData<'line'> = {
-      labels: this.data.map(point => {
-        const date = new Date(point.date);
-        return date.toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric',
-          timeZone: 'UTC'
-        });
-      }),
-      datasets: [{
-        label: 'Portfolio Value',
-        data: this.data.map(point => point.value),
-        borderColor: '#3880ff',
-        backgroundColor: 'rgba(56, 128, 255, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.1,
-        pointRadius: 0,
-        pointHoverRadius: 8,
-        pointHoverBackgroundColor: '#3880ff',
-        pointHoverBorderColor: '#ffffff',
-        pointHoverBorderWidth: 2
-      }]
-    };
+        labels: this.data.map(point => {
+          const date = new Date(point.date);
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            timeZone: 'UTC'
+          });
+        }),
+        datasets: [{
+          label: 'Portfolio Value',
+          data: this.data.map(point => point.value),
+          borderColor: '#3880ff',
+          backgroundColor: 'rgba(56, 128, 255, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.1,
+          pointRadius: 0,
+          pointHoverRadius: 8,
+          pointHoverBackgroundColor: '#3880ff',
+          pointHoverBorderColor: '#ffffff',
+          pointHoverBorderWidth: 2
+        }]
+      };
 
-    // Store reference to component data for use in callbacks
-    const componentData = this.data;
+      // Store reference to component data for use in callbacks
+      const componentData = this.data;
 
-    const config: ChartConfiguration<'line'> = {
-      type: 'line',
-      data: chartData,
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-          intersect: false,
-          mode: 'index'
-        },
-        plugins: {
-          legend: {
-            display: false
+      const config: ChartConfiguration<'line'> = {
+        type: 'line',
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: 'index'
           },
-          tooltip: {
-            enabled: false, // We'll use custom tooltip
-            external: (context) => {
-              this.handleTooltip(context);
-            }
-          }
-        },
-        scales: {
-          x: {
-            grid: {
+          plugins: {
+            legend: {
               display: false
             },
-            ticks: {
-              color: '#666',
-              maxTicksLimit: 6
-            }
-          },
-          y: {
-            beginAtZero: false,
-            grid: {
-              color: 'rgba(200, 200, 200, 0.3)'
-            },
-            ticks: {
-              color: '#666',
-              callback: function(value) {
-                return '$' + Number(value).toLocaleString('en-US', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
-                });
+            tooltip: {
+              enabled: false, // We'll use custom tooltip
+              external: (context) => {
+                this.handleTooltip(context);
               }
             }
-          }
-        },
-        onHover: (event, elements) => {
-          const canvas = event.native?.target as HTMLCanvasElement;
-          if (canvas) {
-            canvas.style.cursor = elements.length > 0 ? 'pointer' : 'default';
-          }
-          
-          // Update tooltip on hover/drag ONLY if interacting
-          if (this.isInteracting && elements.length > 0) {
-             this.handleInteraction(elements);
-          } else if (!this.isInteracting && this.chart && this.chart.getActiveElements().length > 0) {
-             // If not interacting, ensure no points are selected/highlighted
-             this.chart.setActiveElements([]);
-             this.chart.update();
-          }
-        },
-        onClick: (event, elements) => {
-          // Click handling is now managed by mousedown/touchstart and mouseup/touchend
-          // to support "press to view, release to hide" behavior
-        }
-      }
-    };
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: '#666',
+                maxRotation: 0,
+                minRotation: 0,
+                autoSkip: false,
+                callback: function (value, index, ticks) {
+                  if (index === 0 || index === ticks.length - 1) {
+                    return this.getLabelForValue(value as number);
+                  }
+                  return '';
+                }
+              }
+            },
+            y: {
+              position: 'right',
+              beginAtZero: false,
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: '#666',
+                padding: 10,
+                callback: function (value, index, ticks) {
+                  // Only show the first, last, and middle ticks
+                  if (index === 0 || index === ticks.length - 1 || index === Math.floor(ticks.length / 2)) {
+                    const numValue = Number(value);
+                    if (numValue >= 1000) {
+                      return '$' + (numValue / 1000).toFixed(1) + 'K';
+                    }
+                    return '$' + numValue.toLocaleString('en-US', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0
+                    });
+                  }
+                  return '';
+                }
+              }
+            }
+          },
+          onHover: (event, elements) => {
+            const canvas = event.native?.target as HTMLCanvasElement;
+            if (canvas) {
+              canvas.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+            }
 
-    this.chart = new Chart(ctx, config);
+            // Update tooltip on hover/drag ONLY if interacting
+            if (this.isInteracting && elements.length > 0) {
+              this.handleInteraction(elements);
+            } else if (!this.isInteracting && this.chart && this.chart.getActiveElements().length > 0) {
+              // If not interacting, ensure no points are selected/highlighted
+              this.chart.setActiveElements([]);
+              this.chart.update();
+            }
+          },
+          onClick: (event, elements) => {
+            // Click handling is now managed by mousedown/touchstart and mouseup/touchend
+            // to support "press to view, release to hide" behavior
+          }
+        }
+      };
+
+      this.chart = new Chart(ctx, config);
     } catch (error) {
       console.error('Error initializing chart:', error);
     }
@@ -186,14 +205,14 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
   public handleStart(event: Event) {
     this.isInteracting = true;
     if (!this.chart) return;
-    
+
     const points = this.chart.getElementsAtEventForMode(
-      event as unknown as Event, 
-      'index', 
-      { intersect: false }, 
+      event as unknown as Event,
+      'index',
+      { intersect: false },
       false
     );
-    
+
     if (points.length > 0) {
       this.handleInteraction(points);
     }
@@ -204,14 +223,14 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
       const elementIndex = elements[0].index;
       const dataPoint = this.data[elementIndex];
       const element = elements[0];
-      
+
       if (dataPoint && this.chart) {
         this.selectedDataPoint = {
           date: dataPoint.date,
           value: dataPoint.value,
           formattedDate: this.formatDate(dataPoint.date)
         };
-        
+
         this.isTooltipVisible = true;
 
         // Explicitly highlight the point
@@ -221,7 +240,7 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
         // Get the x position from the chart element (this is already centered on the point)
         const pointX = element.element.x;
         const pointY = element.element.y;
-        
+
         // Position tooltip centered above the point
         this.tooltipPosition = {
           x: pointX - 50, // Center the tooltip (assuming ~100px width)
@@ -244,9 +263,10 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
     try {
       this.chart.data.labels = this.data.map(point => {
         const date = new Date(point.date);
-        return date.toLocaleDateString('en-US', { 
-          month: 'short', 
+        return date.toLocaleDateString('en-US', {
+          month: 'short',
           day: 'numeric',
+          year: 'numeric',
           timeZone: 'UTC'
         });
       });
@@ -266,8 +286,8 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
 
   private formatDate(dateString: string): string {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
       year: 'numeric',
       timeZone: 'UTC'

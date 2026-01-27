@@ -433,7 +433,7 @@ ion-header {
     height: auto;
     position: relative;
     margin: 0;
-    padding: var(--app-spacing-md); // More padding for better visual containment
+    padding: 16px 0px 16px 8px; // More padding for better visual containment
     overflow: visible; // Allow chart to display fully
 
     app-portfolio-chart {

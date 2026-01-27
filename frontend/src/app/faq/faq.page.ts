@@ -81,7 +81,7 @@ export class FaqPage implements OnInit {
         },
         {
             question: 'What do the different portfolio values mean?',
-            answer: 'Total Equity is your complete account value (investments + cash). Total Portfolio Value is just your stock holdings\' market value. Total Invested is how much cash you\'ve deposited. Buying Power is funds available for immediate trading. Settled Cash is withdrawn-ready funds (typically available 1 day after selling stocks).',
+            answer: 'Total Equity is your complete account value (investments + cash). Portfolio Value is just your stock holdings\' market value. Total Invested is how much cash you\'ve deposited. Buying Power is funds available for immediate trading. Settled Cash is withdrawn-ready funds (typically available 1 day after selling stocks).',
             isOpen: false,
             icon: 'cash-outline'
         },
