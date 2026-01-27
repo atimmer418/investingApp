@@ -106,37 +106,79 @@
 
 .portfolio-hero-front {
   transform: rotateY(0deg);
+  position: relative; // Ensure positioning context for absolute children
+
+  .portfolio-background-icons {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-content: space-between; // Distribute lines evenly
+    padding: var(--app-spacing-sm);
+    box-sizing: border-box;
+    z-index: 0;
+    overflow: hidden;
+    opacity: 0.15; // Very faint background
+
+    &.trend-success {
+      color: #28a745; // Explicit green
+    }
+
+    &.trend-danger {
+      color: #dc3545; // Explicit red
+    }
+
+    ion-icon {
+      font-size: 24px; // Adjust size as needed
+      margin: 4px; // Spacing between icons
+    }
+  }
 
   .portfolio-value {
+    position: relative;
+    z-index: 1; // Ensure text is above background
     padding: var(--app-spacing-lg) 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .portfolio-value-content {
+      position: relative; // Establish positioning context for pseudo-element
+      padding: 6px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      // Use pseudo-element for background to handle opacity without affecting text
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--portfolio-background);
+        opacity: 0.5;
+        border-radius: 20px;
+        z-index: -1; // Place behind the text content
+      }
+    }
 
     .value-amount {
       margin: 0 0 var(--app-spacing-xs) 0;
       letter-spacing: -1px;
     }
 
-    .portfolio-change {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--app-spacing-xs);
-      margin: var(--app-spacing-sm) 0;
-
-      ion-icon {
-        font-size: var(--app-font-size-lg);
-      }
-
-      &.change-success {
-        color: var(--portfolio-success);
-      }
-
-      &.change-danger {
-        color: var(--portfolio-danger);
-      }
-    }
+    // .portfolio-change removed
 
     .value-subtitle {
       opacity: 0.8;
+      font-weight: 500;
+      margin: 0; // Reset margin since padding handles spacing
     }
   }
 }

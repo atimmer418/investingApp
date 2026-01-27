@@ -25,7 +25,7 @@ import {
     IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent,
     IonRefresher, IonRefresherContent, IonCard, IonCardContent, IonCardHeader,
     IonCardTitle, IonSpinner, IonItem, IonLabel, IonBadge, IonSegment,
-    IonSegmentButton, IonGrid, IonRow, IonCol, IonList, IonChip, IonRippleEffect
+    IonSegmentButton, IonGrid, IonRow, IonCol, IonList, IonChip
   ]
 })
 export class PortfolioDashboardComponent implements OnInit {
@@ -38,6 +38,7 @@ export class PortfolioDashboardComponent implements OnInit {
   selectedPeriod = 'ALL';
   chartData: PortfolioDataPoint[] = [];
   isFlipped = false;
+  backgroundIcons: string[] = [];
 
   // Time period options for chart
   periodOptions = [
@@ -66,6 +67,9 @@ export class PortfolioDashboardComponent implements OnInit {
       // Load dashboard data
       const dashboardData = await this.portfolioService.getPortfolioDashboard().toPromise();
       this.dashboard = dashboardData || null;
+      if (this.dashboard) {
+        this.generateBackgroundIcons();
+      }
 
       // Load performance data - handle gracefully if endpoint doesn't exist
       try {
@@ -103,7 +107,7 @@ export class PortfolioDashboardComponent implements OnInit {
             if (this.dashboard.positions) {
               todayPL = this.dashboard.positions.reduce((sum, pos) => sum + (pos.todayGainLoss || 0), 0);
             }
-            
+
             todayPerf.totalReturn = todayPL;
 
             // Calculate Start Value derived from the Return
@@ -218,17 +222,17 @@ export class PortfolioDashboardComponent implements OnInit {
       this.dashboard.history.values && this.dashboard.history.values.length > 0) {
 
       const history = this.dashboard.history;
-      
+
       // FOR "ALL" OR "MAX": Just use the Dashboard Totals directly.
       // The user expects these to match the "Total G/L" in the table.
       if (this.selectedPeriod === 'ALL' || this.selectedPeriod === '1Y') { // 1Y is effectively ALL for new accounts
-         // If account is older than 1Y, this logic stands: Total G/L / Total Invested
-         if (this.dashboard.totalInvested > 0) {
-            return {
-                value: this.dashboard.totalGainLoss,
-                percent: (this.dashboard.totalGainLoss / this.dashboard.totalInvested) * 100
-            };
-         }
+        // If account is older than 1Y, this logic stands: Total G/L / Total Invested
+        if (this.dashboard.totalInvested > 0) {
+          return {
+            value: this.dashboard.totalGainLoss,
+            percent: (this.dashboard.totalGainLoss / this.dashboard.totalInvested) * 100
+          };
+        }
       }
 
       const last = history.values.length - 1;
@@ -245,21 +249,21 @@ export class PortfolioDashboardComponent implements OnInit {
 
       // Use REAL-TIME values for the "End" state
       // This fixes the "History is stale" issue where a recent deposit isn't in history yet
-      
+
       // Actually, better approach:
       // Gain_Period = Total_PL_Now - Total_PL_At_Start
       // Basis_Now = Total_Invested_Now
-      
+
       // Let's rely on the variables we have:
       // End State (Real Time):
       const eqEnd = this.dashboard.summary.portfolioValue; // $635
       const totalPLEnd = this.dashboard.totalGainLoss;     // $18 (from Positions/Summary)
-      
+
       // Start State (History):
       // plStart is "Cumulative P/L at Start of Period".
-      
+
       const gainPeriod = totalPLEnd - plStart;
-      
+
       // Current Invested Capital (Real Time)
       const currentCostBasis = this.dashboard.totalInvested;
 
@@ -360,11 +364,11 @@ export class PortfolioDashboardComponent implements OnInit {
   }
 
   formatQuantity(value: number): string {
-     if (value === undefined || value === null) return '0';
-     return new Intl.NumberFormat('en-US', {
-       minimumFractionDigits: 0,
-       maximumFractionDigits: 3
-     }).format(value);
+    if (value === undefined || value === null) return '0';
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 3
+    }).format(value);
   }
 
   formatPercent(value: number): string {
@@ -432,5 +436,16 @@ export class PortfolioDashboardComponent implements OnInit {
 
     if (yesterdayValue === 0) return 0;
     return (todayGL / yesterdayValue) * 100;
+  }
+
+  generateBackgroundIcons() {
+    if (!this.dashboard) return;
+
+    // Choose icon based on total gain/loss
+    const iconName = this.dashboard.totalGainLoss >= 0 ? 'trending-up' : 'trending-down';
+
+    // Create an array of icons directly. We'll use CSS Grid/Flex to arrange them "neatly".
+    // 80 icons should be plenty to fill the background without overdoing DOM elements.
+    this.backgroundIcons = Array(80).fill(iconName);
   }
 }

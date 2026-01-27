@@ -50,20 +50,21 @@
   <div *ngIf="dashboard && !loading" class="portfolio-dashboard mobile-container">
 
     <!-- Portfolio Value Hero Card (Flip) -->
-    <div class="portfolio-hero-container ion-activatable ripple-parent" (click)="toggleFlip()">
-      <ion-ripple-effect></ion-ripple-effect>
+    <div class="portfolio-hero-container" (click)="toggleFlip()">
       <div class="portfolio-hero-flipper" [class.flipped]="isFlipped">
 
         <!-- Front Side -->
         <div class="portfolio-hero-front">
+          <!-- Background Icons Pattern -->
+          <div class="portfolio-background-icons" [class]="'trend-' + getGainLossColor(dashboard.totalGainLoss)">
+            <ion-icon *ngFor="let icon of backgroundIcons" [name]="icon"></ion-icon>
+          </div>
+
           <div class="portfolio-value text-center">
-            <h1 class="value-amount text-4xl font-bold text-dark">{{ formatCurrency(dashboard.summary.equity) }}</h1>
-            <div class="portfolio-change" [class]="'change-' + getGainLossColor(dashboard.totalGainLoss)">
-              <ion-icon [name]="getGainLossIcon(dashboard.totalGainLoss)"></ion-icon>
-              <span class="text-lg font-medium">{{ formatCurrency(dashboard.totalGainLoss) }} ({{
-                formatPercent(dashboard.totalGainLossPercent) }})</span>
+            <div class="portfolio-value-content">
+              <h1 class="value-amount text-4xl font-bold text-dark">{{ formatCurrency(dashboard.summary.equity) }}</h1>
+              <p class="value-subtitle text-gray text-sm m-xs">Total Equity</p>
             </div>
-            <p class="value-subtitle text-gray text-sm m-xs">Total Equity</p>
           </div>
         </div>
 
