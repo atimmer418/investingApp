@@ -56,10 +56,7 @@ public class ChatService {
         }
 
         // 1. Persistence (User Message) - SAVE FIRST
-        chatMessageRepository.save(new ChatMessage(request.userId(), "user", request.message()));
-
-        // 1. Persistence (User Message) - SAVE FIRST
-        chatMessageRepository.save(new ChatMessage(request.userId(), "user", request.message()));
+        chatMessageRepository.save(new ChatMessage(request.userId(), request.sessionId(), "user", request.message()));
 
         // 2. Load User
 
@@ -81,7 +78,7 @@ public class ChatService {
 
         // 6. Load History (Top 10 most recent)
         List<ChatMessage> historyEntities = chatMessageRepository
-                .findTop10ByUserIdOrderByCreatedAtDesc(request.userId());
+                .findTop10BySessionIdOrderByCreatedAtDesc(request.sessionId());
         // Reverse to Chronological Order
         List<ChatMessage> chronologicalHistory = new ArrayList<>(historyEntities);
         Collections.reverse(chronologicalHistory);
@@ -129,7 +126,7 @@ public class ChatService {
         }
 
         // 9. Persistence (Assistant Response)
-        chatMessageRepository.save(new ChatMessage(request.userId(), "assistant", response));
+        chatMessageRepository.save(new ChatMessage(request.userId(), request.sessionId(), "assistant", response));
 
         // 10. Log interaction (Basic logging for now)
         logger.info("Chat interaction - User: {}, Query: {}, RAG Chunks Used: {}",
@@ -152,10 +149,28 @@ public class ChatService {
         return llmService.generateChatResponse(messages);
     }
 
-    public List<ChatMessage> getChatHistory(Long userId) {
-        List<ChatMessage> history = chatMessageRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public List<ChatMessage> getChatHistory(String sessionId) {
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<ChatMessage> history = chatMessageRepository.findBySessionIdOrderByCreatedAtDesc(sessionId);
         Collections.reverse(history); // Return in chronological order
         return history;
+    }
+
+    public List<ChatMessage> getRecentSessionHistory(Long userId) {
+        if (userId == null)
+            return Collections.emptyList();
+
+        // 1. Find the MOST RECENT message for this user to get the latest sessionId
+        Optional<ChatMessage> latestMsg = chatMessageRepository.findTopByUserIdOrderByCreatedAtDesc(userId);
+
+        if (latestMsg.isPresent()) {
+            String lastSessionId = latestMsg.get().getSessionId();
+            return getChatHistory(lastSessionId);
+        }
+
+        return Collections.emptyList();
     }
 
     private String buildUserContext(User user) {

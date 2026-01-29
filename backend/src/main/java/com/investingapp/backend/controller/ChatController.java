@@ -34,9 +34,15 @@ public class ChatController {
     }
 
     @GetMapping("/history")
-    public ResponseEntity<List<ChatMessage>> getHistory(@RequestParam Long userId) {
-        List<ChatMessage> history = chatService.getChatHistory(userId);
-        return ResponseEntity.ok(history);
+    public ResponseEntity<List<ChatMessage>> getHistory(
+            @RequestParam(required = false) String sessionId,
+            @RequestParam(required = false) Long userId) {
+        if (sessionId != null && !sessionId.trim().isEmpty()) {
+            return ResponseEntity.ok(chatService.getChatHistory(sessionId));
+        } else if (userId != null) {
+            return ResponseEntity.ok(chatService.getRecentSessionHistory(userId));
+        }
+        return ResponseEntity.badRequest().build();
     }
 
     @GetMapping("/suggestions")

@@ -20,6 +20,9 @@ public class ChatMessage {
     @Column(nullable = false)
     private Long userId;
 
+    @Column(nullable = false, length = 100)
+    private String sessionId;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
@@ -29,8 +32,9 @@ public class ChatMessage {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    public ChatMessage(Long userId, String role, String content) {
+    public ChatMessage(Long userId, String sessionId, String role, String content) {
         this.userId = userId;
+        this.sessionId = sessionId;
         this.role = role;
         this.content = content;
     }

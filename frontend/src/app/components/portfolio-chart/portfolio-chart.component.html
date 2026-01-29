@@ -1,19 +1,12 @@
-<div class="portfolio-chart-container">
+<div class="portfolio-chart-container" *ngIf="data.length > 0; else noData">
   <!-- Chart Canvas -->
   <div class="chart-wrapper">
-    <canvas #chartCanvas class="portfolio-chart"
-      (mousedown)="handleStart($event)"
-      (touchstart)="handleStart($event)"
-      (mouseleave)="clearSelection()"
-      (touchend)="clearSelection()"
-      (mouseup)="clearSelection()"
-    ></canvas>
-    
+    <canvas #chartCanvas class="portfolio-chart" (mousedown)="handleStart($event)" (touchstart)="handleStart($event)"
+      (mouseleave)="clearSelection()" (touchend)="clearSelection()" (mouseup)="clearSelection()"></canvas>
+
     <!-- Floating tooltip above clicked point -->
-    <div class="chart-tooltip" 
-         [class.visible]="isTooltipVisible"
-         [style.left.px]="tooltipPosition.x" 
-         [style.top.px]="tooltipPosition.y">
+    <div class="chart-tooltip" [class.visible]="isTooltipVisible" [style.left.px]="tooltipPosition.x"
+      [style.top.px]="tooltipPosition.y">
       <div class="tooltip-content" *ngIf="selectedDataPoint">
         <div class="tooltip-date">{{ selectedDataPoint.formattedDate }}</div>
         <div class="tooltip-value">{{ formatCurrency(selectedDataPoint.value) }}</div>
@@ -21,9 +14,11 @@
       <div class="tooltip-arrow"></div>
     </div>
   </div>
-  
-  <!-- Empty state -->
-  <div class="empty-state" *ngIf="data.length === 0">
-    <p>No portfolio data available</p>
-  </div>
 </div>
+
+<!-- Empty state -->
+<ng-template #noData>
+  <div class="empty-state">
+    <p>No portfolio data available yet</p>
+  </div>
+</ng-template>

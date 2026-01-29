@@ -8,6 +8,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  sessionId?: string;
 }
 
 export interface ChatSession {
@@ -27,7 +28,7 @@ export class ChatService {
 
   constructor(private http: HttpClient) { }
 
-  sendMessage(message: string, generateTitle: boolean = false): Observable<{ reply: string, title?: string }> {
+  sendMessage(message: string, sessionId: string, generateTitle: boolean = false): Observable<{ reply: string, title?: string }> {
     const token = JwtTokenUtils.getValidJwtToken();
     const userId = localStorage.getItem('userId');
 
@@ -42,22 +43,29 @@ export class ChatService {
     const body = {
       message: message,
       userId: userId ? parseInt(userId, 10) : null,
+      sessionId: sessionId,
       generateTitle: generateTitle
     };
 
     return this.http.post<{ reply: string, title?: string }>(this.apiUrl, body, { headers });
   }
 
-  getHistory(): Observable<any[]> {
+  getHistory(sessionId?: string, userId?: string | null): Observable<any[]> {
     const token = JwtTokenUtils.getValidJwtToken();
-    const userId = localStorage.getItem('userId');
+    let queryParams = '';
+
+    if (sessionId) {
+      queryParams = `?sessionId=${sessionId}`;
+    } else if (userId) {
+      queryParams = `?userId=${userId}`;
+    }
 
     let headers = new HttpHeaders();
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
 
-    return this.http.get<any[]>(`${this.apiUrl}/history?userId=${userId}`, { headers });
+    return this.http.get<any[]>(`${this.apiUrl}/history${queryParams}`, { headers });
   }
 
   getDailySuggestions(): Observable<string[]> {

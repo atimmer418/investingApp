@@ -146,8 +146,16 @@ export class AiChatPage implements OnInit, AfterViewInit {
   }
 
   syncBackendHistory() {
+    const userId = localStorage.getItem('userId');
+    const sessionId = this.currentSession?.id;
+
+    if (!sessionId && !userId) {
+      this.checkRecentSession();
+      return;
+    }
+
     this.isLoading = true;
-    this.chatService.getHistory().subscribe({
+    this.chatService.getHistory(sessionId, userId).subscribe({
       next: (history) => {
         this.isLoading = false;
         if (history && history.length > 0) {
@@ -155,47 +163,54 @@ export class AiChatPage implements OnInit, AfterViewInit {
           const backendMessages: ChatMessage[] = history.map(m => ({
             role: m.role,
             content: m.content,
-            timestamp: new Date(m.createdAt)
+            timestamp: new Date(m.createdAt),
+            sessionId: m.sessionId // Capture sessionId from messages
           }));
 
-          // Check if the last message is recent (within 2 hours)
           const lastMsg = backendMessages[backendMessages.length - 1];
           const now = new Date();
           const diffHours = (now.getTime() - lastMsg.timestamp.getTime()) / (1000 * 60 * 60);
 
+          // Use the sessionId from the backend history if we didn't have one
+          const activeSessionId = sessionId || lastMsg.sessionId;
+
           if (diffHours < 2) {
-            console.log('Found recent backend history, loading it.');
-            // Create a session for this history or update current
-            // For simplicity, let's overwrite the current "new" session with this history
+            console.log('Found recent session, loading it:', activeSessionId);
             this.messages = backendMessages;
 
-            // If we have a current session (which might be empty/new), update it
-            if (this.currentSession) {
-              this.currentSession.messages = this.messages;
-              this.currentSession.lastModified = lastMsg.timestamp.getTime();
-              // Try to set a title if not set
-              if (this.currentSession.title === 'New Chat') {
-                const firstUserMsg = this.messages.find(m => m.role === 'user');
-                if (firstUserMsg) {
-                  this.currentSession.title = firstUserMsg.content.substring(0, 30) + (firstUserMsg.content.length > 30 ? '...' : '');
-                }
-              }
-              this.chatService.saveSession(this.currentSession);
+            // Update or Create session locally
+            let session = this.sessions.find(s => s.id === activeSessionId);
+            if (!session) {
+              session = {
+                id: activeSessionId!,
+                title: 'Resumed Chat',
+                lastModified: lastMsg.timestamp.getTime(),
+                messages: this.messages
+              };
             } else {
-              // Should have been created by checkRecentSession -> startNewChat, but just in case
-              this.startNewChat();
-              this.currentSession!.messages = this.messages;
-              this.chatService.saveSession(this.currentSession!);
+              session.messages = this.messages;
+              session.lastModified = lastMsg.timestamp.getTime();
             }
+
+            // Generate title if default
+            if (activeSessionId && (session.title === 'Resumed Chat' || session.title === 'New Chat')) {
+              const firstUserMsg = this.messages.find(m => m.role === 'user');
+              if (firstUserMsg) {
+                session.title = firstUserMsg.content.substring(0, 30) + (firstUserMsg.content.length > 30 ? '...' : '');
+              }
+            }
+
+            this.currentSession = session;
+            this.chatService.saveSession(session);
+            this.loadSessions();
             this.cdr.detectChanges();
             setTimeout(() => this.scrollToBottom(), 100);
           } else {
-            // If not recent, we still might want to ensure it's saved in history?
-            // For now, let's respect the "recent session" logic of the UI.
-            // If local storage didn't have it, we could add it, but user asked specifically about "loading into current chat window"
+            // History found but too old
             this.checkRecentSession();
           }
         } else {
+          // No history found on backend
           this.checkRecentSession();
         }
       },
@@ -235,7 +250,7 @@ export class AiChatPage implements OnInit, AfterViewInit {
       role: 'assistant',
       content: "Hello! I'm FRED. How can I help you with your investing journey today?",
       timestamp: new Date()
-    }, false); // Don't save just yet
+    }, true); // Save the initial greeting
   }
 
   loadSession(session: ChatSession) {
@@ -284,7 +299,9 @@ export class AiChatPage implements OnInit, AfterViewInit {
     // Check if we need to generate a title (first user message in session)
     const isFirstUserMessage = this.messages.filter(m => m.role === 'user').length === 1;
 
-    this.chatService.sendMessage(userMsg, isFirstUserMessage)
+    const sessionId = this.currentSession?.id || 'default-session';
+
+    this.chatService.sendMessage(userMsg, sessionId, isFirstUserMessage)
       .pipe(finalize(() => {
         this.isLoading = false;
         // Navigation handled in next/error callbacks
@@ -299,6 +316,7 @@ export class AiChatPage implements OnInit, AfterViewInit {
             });
 
             // Scroll to the top of the new assistant message
+            this.cdr.detectChanges();
             this.scrollToMessage(this.messages.length - 1);
 
             // Update title if provided by LLM
@@ -324,16 +342,21 @@ export class AiChatPage implements OnInit, AfterViewInit {
   scrollToMessage(index: number) {
     if (!this.isActive) return;
 
-    // Use native scrollIntoView which is robust enough to find the scroll parent
     setTimeout(() => {
       const element = document.getElementById(`chat-message-${index}`);
-      if (element) {
+      if (!element) return;
+
+      const rect = element.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+
+      // If message is "big enough" (e.g. > 35% of viewport), scroll to top
+      // Otherwise scroll to bottom to see everything
+      if (rect.height > viewportHeight * 0.35) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else {
-        // Fallback if element not found in DOM yet
-        console.warn('Message element not found for index:', index);
+        this.scrollToBottom();
       }
-    }, 300); // Increased timeout to ensure rendering completion
+    }, 300);
   }
 
   scrollToBottom() {

@@ -6,8 +6,7 @@
 
   &::part(scroll) {
     margin-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+    padding: 0 8px 0 4px !important;
     margin-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 50px) !important;
   }
 }
@@ -34,7 +33,7 @@ ion-header {
 .messages-container {
   padding: 0px;
   /* Removed horizontal padding */
-  padding-bottom: 0px; // 32px spacing + ~48px for input area (36px container + 12px padding)
+  padding-bottom: 0px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -50,15 +49,16 @@ ion-header {
       Right Gutter = Bubble Margin Right (62px).
     - User messages: 12px padding on wrapper to maintain spacing.
   */
-  gap: 8px;
+  gap: 4px;
   max-width: 100%;
-  scroll-margin-top: 80px;
+  /* Match header height precisely for scrollIntoView: 56px toolbar + safe area + 8px buffer */
+  scroll-margin-top: calc(64px + env(safe-area-inset-top, 0px));
   /* Ensures the message starts below the header (approx 56px + padding) */
 
   &.user-message {
     justify-content: flex-end;
     padding-left: 12px;
-    padding-right: 12px;
+    padding-right: 6px;
 
     .message-bubble {
       background-color: var(--app-primary, #007aff);
@@ -76,14 +76,13 @@ ion-header {
       background-color: var(--app-card-background, #ffffff);
       color: var(--app-gray-900, #000000);
       border-radius: 20px 20px 20px 4px;
-      /*
-        Right Space Calculation:
-        Wrapper Pad Right = 0.
-        Left Space = Avatar(50) + Gap(12) = 62px.
-        So we need 62px margin to balance.
-      */
-      margin-right: 62px;
+      margin-right: 54px;
       max-width: none;
+    }
+
+    &.loading-bubble-wrapper {
+      align-items: center;
+      /* Specific centering for loading state */
     }
   }
 }
@@ -115,7 +114,8 @@ ion-header {
 }
 
 .message-bubble {
-  padding: 12px 16px;
+  padding: 10px 14px;
+  width: fit-content;
   max-width: 80%;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   position: relative;
@@ -139,8 +139,10 @@ ion-header {
 }
 
 .loading-bubble {
-  padding: 12px 16px;
-  min-width: 60px;
+  padding: 0px;
+  min-width: 80px;
+  height: 48px;
+  /* Slightly shorter than avatar for better proportions */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -151,8 +153,8 @@ ion-header {
   gap: 4px;
 
   span {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     background-color: #8e8e93;
     border-radius: 50%;
     animation: bounce 1.4s infinite ease-in-out both;
@@ -234,6 +236,8 @@ ion-footer {
   border-radius: 18px;
   border: 1px solid var(--app-card-border, #e5e5ea);
   max-height: 200px !important;
+  overflow: hidden;
+  /* Ensure content stays within rounded borders */
   flex-grow: 1;
   padding-left: 12px;
   padding-right: 2px;
@@ -265,8 +269,8 @@ ion-footer {
       padding-bottom: 7px !important;
       margin-top: 0 !important;
       min-height: 36px !important;
-      // CRITICAL FIX: overflow hidden prevents internal scroll/clipping
-      overflow: hidden !important;
+      // Allow scroll when max-height is reached
+      overflow: auto !important;
       height: auto !important;
       line-height: inherit !important; // Inherit from host
       margin: 0;
@@ -295,7 +299,7 @@ ion-footer {
       resize: none !important;
       min-height: 36px !important;
       line-height: 22px !important;
-      overflow: hidden !important;
+      overflow: auto !important;
     }
   }
 

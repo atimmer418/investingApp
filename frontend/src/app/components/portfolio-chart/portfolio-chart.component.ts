@@ -21,7 +21,18 @@ export interface PortfolioDataPoint {
   imports: [CommonModule]
 })
 export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
-  @ViewChild('chartCanvas', { static: true }) chartCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('chartCanvas') set chartCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
+    if (element) {
+      this._chartCanvas = element;
+      // Initialize only if we have data and no existing chart
+      if (this.data && this.data.length > 0 && !this.chart) {
+        // Small delay to ensure DOM dimensions are settled
+        setTimeout(() => this.initializeChart(), 0);
+      }
+    }
+  }
+  private _chartCanvas: ElementRef<HTMLCanvasElement> | undefined;
+
   @Input() data: PortfolioDataPoint[] = [];
   @Input() selectedPeriod: string = '1M';
 
@@ -61,14 +72,14 @@ export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
       this.chart = null;
     }
 
-    const ctx = this.chartCanvas?.nativeElement?.getContext('2d');
-    if (!ctx) {
+    const ctx = this._chartCanvas?.nativeElement?.getContext('2d');
+    if (!ctx || !this._chartCanvas) {
       console.warn('Chart canvas context not available');
       return;
     }
 
     // Clear any existing chart from the canvas
-    Chart.getChart(this.chartCanvas.nativeElement)?.destroy();
+    Chart.getChart(this._chartCanvas.nativeElement)?.destroy();
 
     try {
       const chartData: ChartData<'line'> = {

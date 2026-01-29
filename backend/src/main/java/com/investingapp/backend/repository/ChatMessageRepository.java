@@ -11,13 +11,15 @@ import java.util.Optional;
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
-    // findTop10ByUserIdOrderByCreatedAtDesc usually works with Spring Data JPA
+    // findTop10BySessionIdOrderByCreatedAtDesc usually works with Spring Data JPA
     // derived queries
-    List<ChatMessage> findTop10ByUserIdOrderByCreatedAtDesc(Long userId);
+    List<ChatMessage> findTop10BySessionIdOrderByCreatedAtDesc(String sessionId);
 
-    List<ChatMessage> findByUserIdOrderByCreatedAtDesc(Long userId);
+    List<ChatMessage> findBySessionIdOrderByCreatedAtDesc(String sessionId);
 
     Optional<ChatMessage> findTopByUserIdOrderByCreatedAtDesc(Long userId);
+
+    Optional<ChatMessage> findTopBySessionIdOrderByCreatedAtDesc(String sessionId);
 
     // If query method name is too long or unsupported without explicit limit in
     // some versions:
