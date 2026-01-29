@@ -226,36 +226,48 @@ ion-footer {
 .input-container {
   min-height: 38px !important;
   height: auto !important;
-  // Removed vertical padding from container to let textarea define the height
   padding-top: 0 !important;
   padding-bottom: 0 !important;
   box-sizing: border-box !important;
+
+  // RESTORE FLEX-END (Grows Upwards)
   display: flex !important;
   align-items: flex-end !important;
+  position: relative !important; // Anchor for absolute button
+
   background: var(--app-background, #f2f2f7);
   border-radius: 18px;
   border: 1px solid var(--app-card-border, #e5e5ea);
-  max-height: 200px !important;
-  overflow: hidden;
-  /* Ensure content stays within rounded borders */
+
+  // CONTAINER WRAPS CONTENT
+  max-height: none !important;
+  overflow: visible !important;
+
   flex-grow: 1;
   padding-left: 12px;
   padding-right: 2px;
 
   ion-textarea {
-    // 7px top + 7px bottom + 22px line-height = 36px content
-    // 36px content + 2px border = 38px total height
     --padding-top: 7px !important;
     --padding-bottom: 7px !important;
     --padding-start: 0;
-    --padding-end: 0;
+
+    // Gutter for absolute button
+    --padding-end: 45px !important;
+
     min-height: 36px !important;
     margin: 0 !important;
 
     border: none;
     padding: 0 !important;
+
+    // CRITICAL: Host must respect max-height and scroll
     height: auto !important;
-    max-height: 200px; // Match container constraint
+    max-height: 200px !important;
+
+    // HOST HANDLES SCROLL
+    overflow-y: auto !important;
+    display: block !important;
 
     font-size: 16px !important;
     line-height: 22px !important;
@@ -264,27 +276,47 @@ ion-footer {
     --highlight-color-focused: none;
     flex: 1;
 
+    // Scrollbar styling (Curve Fix)
+    &::-webkit-scrollbar {
+      width: 6px;
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+      margin-block: 10px; // Curve
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      border: 2px solid transparent;
+      background-clip: content-box;
+    }
+
     &::part(native) {
       padding-top: 7px !important;
       padding-bottom: 7px !important;
       margin-top: 0 !important;
       min-height: 36px !important;
-      // Allow scroll when max-height is reached
-      overflow: auto !important;
+
+      // NO INTERNAL SCROLL
+      overflow: visible !important;
+
       height: auto !important;
-      line-height: inherit !important; // Inherit from host
+      // Let it grow so host knows to scroll
+      max-height: none !important;
+
+      line-height: inherit !important;
       margin: 0;
       padding: 0;
     }
 
-    // Fix for auto-grow creeping clipping:
-    // The "ghost" element used for height calculation defaults to normal line-height (19px)
-    // We must force it to match our 22px line-height so growth is 1:1 with content
-    // DOUBLED CLASS for higher specificity to override Ionic defaults
     ::ng-deep .native-wrapper.native-wrapper::after {
       line-height: 22px !important;
       padding-top: 7px !important;
       padding-bottom: 7px !important;
+      max-height: none !important;
     }
 
     ::ng-deep textarea {
@@ -299,7 +331,10 @@ ion-footer {
       resize: none !important;
       min-height: 36px !important;
       line-height: 22px !important;
-      overflow: auto !important;
+
+      // NO NATIVE SCROLL
+      overflow: hidden !important;
+      max-height: none !important;
     }
   }
 
@@ -307,15 +342,19 @@ ion-footer {
     height: 30px !important;
     min-height: 30px !important;
     margin: 0 !important;
-    margin-right: 4px !important;
-    // Align button with the visual center of 36px available height (36-30)/2 = 3px
-    margin-bottom: 3px !important;
+
+    // ABSOLUTE POSITIONING
+    position: absolute !important;
+    bottom: 3px !important;
+    right: 5px !important;
+
+    width: 32px;
+    z-index: 20;
+
     --padding-top: 0 !important;
     --padding-bottom: 0 !important;
     --padding-start: 0;
     --padding-end: 0;
-    width: 32px;
-    align-self: flex-end !important;
 
     ion-icon {
       font-size: 28px;
