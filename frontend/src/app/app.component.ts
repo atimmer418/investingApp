@@ -2,7 +2,7 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonApp, IonRouterOutlet, IonContent, IonButton, IonIcon, IonSpinner } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
-import { Platform } from '@ionic/angular/standalone'; 
+import { Platform } from '@ionic/angular/standalone';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { register } from 'swiper/element/bundle';
 import { AuthService, UserProgress } from './services/auth.service';
@@ -34,7 +34,7 @@ export class AppComponent implements OnInit {
     private passkeyService: PasskeyService
   ) {
     addIcons({ lockClosedOutline, fingerPrintOutline });
-    
+
     // Setup activity tracker with throtting to avoid performance issues
     // This ensures we don't call updateLastActiveTime on every single touch event
     this.userActivity$.pipe(
@@ -74,20 +74,20 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     // localStorage.clear();
     console.log('[AppComponent] ngOnInit - Setting up authentication and progress tracking.');
-    
+
     // Check if this is a testing scenario (add ?testing=true to URL)
     const urlParams = new URLSearchParams(window.location.search);
     const isTesting = urlParams.get('testing') === 'true';
-    
+
     if (isTesting) {
       console.log('[AppComponent] Testing mode enabled - skipping navigation logic');
       return; // Skip all navigation logic for testing
     }
-    
+
     // 🧪 SIMULATE EXISTING USER - Login as any user from your database
     // First, check your database users by visiting: http://localhost:8080/api/dev/list-users
     // Then uncomment ONE of these to simulate logging in as that user:
-    
+
     this.simulateUserLogin('facebook@gmail.com');           // Login by email
     // this.simulateUserLogin('', 'user_handle_123');        // Login by user_handle  
     // this.simulateUserLogin('test@test.com');              // Login as different user
@@ -97,7 +97,7 @@ export class AppComponent implements OnInit {
     // this.router.navigate(['/investment-schedule'], { replaceUrl: true });
     // this.router.navigate(['/stock-selection'], { replaceUrl: true });
     // this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
-    
+
     // ✅ ENABLE AUTH LOGIC FOR PROPER NAVIGATION
     // Use a single combined subscription to avoid race conditions between auth state and progress
     this.setupUnifiedNavigationLogic();
@@ -109,19 +109,19 @@ export class AppComponent implements OnInit {
    */
   private simulateUserLogin(email?: string, userHandle?: string): void {
     console.log(`[AppComponent] 🧪 Simulating login for user:`, { email, userHandle });
-    
+
     // Call backend to authenticate as this user and get their JWT + progress
     this.authService.authenticateAsUser(email, userHandle).subscribe({
       next: (response) => {
         console.log('🔍 [AppComponent] Raw response from authenticateAsUser:', response);
-        
+
         if (response && response.success && response.jwtToken) {
           console.log('✅ [AppComponent] Successfully authenticated as user:', response);
-          
+
           // Store JWT and trigger auth state update
           JwtTokenUtils.storeJwtToken(response.jwtToken, response.id!, response.email!);
           this.authService.handleSuccessfulAuthentication(response.jwtToken, response.id!, response.email!);
-          
+
         } else {
           console.error('❌ [AppComponent] Failed to authenticate as user. Response:', response);
           console.error('❌ [AppComponent] Response details:', {
@@ -152,7 +152,7 @@ export class AppComponent implements OnInit {
    */
   private setupUnifiedNavigationLogic(): void {
     console.log('[AppComponent] Setting up unified navigation logic with RxJS combineLatest');
-    
+
     // Combine authentication state and user progress into a single stream
     // This ensures we only navigate when both pieces of data are consistent
     combineLatest([
@@ -163,8 +163,8 @@ export class AppComponent implements OnInit {
       debounceTime(300),
       // Only process when the combination actually changes
       distinctUntilChanged((prev, curr) => {
-        return prev[0] === curr[0] && 
-               JSON.stringify(prev[1]) === JSON.stringify(curr[1]);
+        return prev[0] === curr[0] &&
+          JSON.stringify(prev[1]) === JSON.stringify(curr[1]);
       }),
       // Filter out cases where we have partial data
       filter(([isLoggedIn, progress]) => {
@@ -175,20 +175,20 @@ export class AppComponent implements OnInit {
       })
     ).subscribe(([isLoggedIn, progress]) => {
       console.log(`[AppComponent] 🔄 Unified navigation trigger: isLoggedIn=${isLoggedIn}, hasProgress=${!!progress}`);
-      
+
       if (isLoggedIn && progress) {
         // User is authenticated and we have backend progress data
         console.log('[AppComponent] User authenticated with progress:', progress);
         this.navigateBasedOnProgress(progress);
-        
+
       } else if (!isLoggedIn) {
         // User is not logged in - use localStorage progress if available
         if (!this.authService.isReAuthInProgress()) {
           const unifiedProgress = this.authService.getUnifiedProgress();
-          const hasAnyProgress = unifiedProgress.getStartedCompleted || 
-                               unifiedProgress.surveyInitialCompleted || 
-                               unifiedProgress.fiPlanResultsCompleted;
-          
+          const hasAnyProgress = unifiedProgress.getStartedCompleted ||
+            unifiedProgress.surveyInitialCompleted ||
+            unifiedProgress.fiPlanResultsCompleted;
+
           if (hasAnyProgress) {
             console.log('[AppComponent] User not authenticated but has localStorage progress:', unifiedProgress);
             this.navigateBasedOnProgress(unifiedProgress);
@@ -218,7 +218,7 @@ export class AppComponent implements OnInit {
   navigateBasedOnProgress(progress: UserProgress): void {
     const currentTimeStamp = new Date().toISOString();
     console.log(`🚀 [AppComponent] navigateBasedOnProgress called at ${currentTimeStamp} with progress:`, progress);
-    
+
     // Use the ACTUAL progress data from the backend to determine the user's current step
     const getStartedCompleted = progress.getStartedCompleted;
     const surveyInitialCompleted = progress.surveyInitialCompleted;
@@ -263,7 +263,7 @@ export class AppComponent implements OnInit {
     }
 
     const currentBaseUrl = this.router.url.split('?')[0].split('#')[0];
-    
+
     // Navigate if we're not already on the target route
     if (targetRoute && currentBaseUrl !== targetRoute) {
       console.log(`[AppComponent] DECISION: ${decisionReason} Navigating to ${targetRoute}.`);
@@ -290,7 +290,7 @@ export class AppComponent implements OnInit {
   checkSurveyStatusAndNavigate(): void {
     // Use unified progress that works both pre-auth (localStorage) and post-auth (database)
     const progress = this.authService.getUnifiedProgress();
-    
+
     console.log("------------------------------------------");
     console.log("[AppComponent] checkSurveyStatusAndNavigate CALLED (UNIFIED)");
     console.log("  Current Router URL:", this.router.url);

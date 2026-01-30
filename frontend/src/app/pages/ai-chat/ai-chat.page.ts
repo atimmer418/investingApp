@@ -372,6 +372,21 @@ export class AiChatPage implements OnInit, AfterViewInit {
     }, 100);
   }
 
+  // Auto-scroll textarea to bottom when typing
+  onTextareaInput(event: any) {
+    // Use setTimeout to ensure the DOM has updated with the new content
+    setTimeout(() => {
+      const ionTextarea = event.target?.closest('ion-textarea');
+      if (ionTextarea) {
+        // Scroll the ion-textarea host element (which has overflow-y: auto)
+        // Not the native textarea inside (which has overflow: hidden)
+        if (ionTextarea.scrollHeight > ionTextarea.clientHeight) {
+          ionTextarea.scrollTop = ionTextarea.scrollHeight;
+        }
+      }
+    }, 0);
+  }
+
   // Helper to format markdown-like text (basic implementation)
   // In a real app, you might use a library like marked or ngx-markdown
   formatMessage(content: string): string {

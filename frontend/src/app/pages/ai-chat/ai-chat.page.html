@@ -85,7 +85,7 @@
     <div class="input-bar">
       <div class="input-container">
         <ion-textarea [(ngModel)]="newMessage" placeholder="Message FRED..." autoGrow="true" rows="1"
-          (keydown.enter)="$event.preventDefault(); sendMessage()">
+          (keydown.enter)="$event.preventDefault(); sendMessage()" (ionInput)="onTextareaInput($event)">
         </ion-textarea>
         <ion-button fill="clear" (click)="sendMessage()" [disabled]="!newMessage.trim() || isLoading"
           class="send-button">

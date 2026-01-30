@@ -78,7 +78,7 @@
   --app-primary: #007aff;
   --app-primary-shade: #0056b3;
   --app-primary-tint: #4d94ff;
-  
+
   /* iOS system grays */
   --app-gray-50: #f9f9f9;
   --app-gray-100: #f2f2f7;
@@ -90,17 +90,17 @@
   --app-gray-700: #3a3a3c;
   --app-gray-800: #2c2c2e;
   --app-gray-900: #1c1c1e;
-  
+
   /* Semantic colors */
   --app-success: #34c759;
   --app-warning: #ff9500;
   --app-danger: #ff3b30;
-  
+
   /* Card and surface colors */
   --app-background: #f2f2f7;
   --app-card-background: #ffffff;
   --app-card-border: #e5e5ea;
-  
+
   /* Typography */
   --app-font-size-xs: 12px;
   --app-font-size-sm: 14px;
@@ -110,7 +110,7 @@
   --app-font-size-2xl: 24px;
   --app-font-size-3xl: 28px;
   --app-font-size-4xl: 32px;
-  
+
   /* Spacing scale (iOS-inspired) */
   --app-spacing-xs: 4px;
   --app-spacing-sm: 8px;
@@ -118,13 +118,13 @@
   --app-spacing-lg: 24px;
   --app-spacing-xl: 32px;
   --app-spacing-2xl: 48px;
-  
+
   /* Border radius */
   --app-radius-sm: 8px;
   --app-radius-md: 12px;
   --app-radius-lg: 16px;
   --app-radius-xl: 20px;
-  
+
   /* Shadows (iOS-style) */
   --app-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --app-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -159,7 +159,7 @@ ion-toolbar {
   --color: var(--app-gray-900);
   --border-width: 0;
   --min-height: 56px;
-  
+
   ion-title {
     font-size: var(--app-font-size-lg);
     font-weight: 600;
@@ -180,24 +180,24 @@ ion-card {
   border-radius: var(--app-radius-md);
   box-shadow: var(--app-shadow-sm);
   margin: var(--app-spacing-sm) 0;
-  
+
   ion-card-header {
     padding: var(--app-spacing-md) var(--app-spacing-md) var(--app-spacing-sm);
-    
+
     ion-card-title {
       font-size: var(--app-font-size-lg);
       font-weight: 600;
       margin: 0;
       color: var(--app-gray-900);
     }
-    
+
     ion-card-subtitle {
       font-size: var(--app-font-size-sm);
       color: var(--app-gray-400);
       margin: var(--app-spacing-xs) 0 0 0;
     }
   }
-  
+
   ion-card-content {
     padding: var(--app-spacing-sm) var(--app-spacing-md) var(--app-spacing-md);
   }
@@ -212,19 +212,19 @@ ion-button {
   font-weight: 600;
   text-transform: none;
   font-size: var(--app-font-size-base);
-  
+
   &[fill="solid"] {
     --background: var(--app-primary);
     --background-hover: var(--app-primary-shade);
     --color: #ffffff;
   }
-  
+
   &[fill="outline"] {
     --border-color: var(--app-primary);
     --color: var(--app-primary);
     --background-hover: rgba(0, 122, 255, 0.1);
   }
-  
+
   &[fill="clear"] {
     --color: var(--app-primary);
     --background-hover: rgba(0, 122, 255, 0.1);
@@ -235,21 +235,26 @@ ion-button {
 ion-list {
   background: var(--app-card-background);
   border-radius: var(--app-radius-md);
-  
+
   ion-item {
     --background: transparent;
     --border-color: var(--app-card-border);
     --padding-start: var(--app-spacing-md);
     --padding-end: var(--app-spacing-md);
     --min-height: 56px;
-    
+
     ion-label {
-      h2, h3, h4, h5, h6 {
+
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
         font-weight: 600;
         margin: 0;
         color: var(--app-gray-900);
       }
-      
+
       p {
         color: var(--app-gray-400);
         font-size: var(--app-font-size-sm);
@@ -272,7 +277,7 @@ ion-segment {
   border-radius: var(--app-radius-sm);
   padding: var(--app-spacing-xs);
   margin: var(--app-spacing-md) 0;
-  
+
   ion-segment-button {
     --background: transparent;
     --background-checked: var(--app-card-background);
@@ -286,7 +291,8 @@ ion-segment {
 }
 
 /* Ion Input/Textarea - iOS-style */
-ion-input, ion-textarea {
+ion-input,
+ion-textarea {
   --background: var(--app-card-background);
   --color: var(--app-gray-900);
   --placeholder-color: var(--app-gray-400);
@@ -310,7 +316,8 @@ ion-select {
 }
 
 /* Ion Checkbox/Radio - iOS-style */
-ion-checkbox, ion-radio {
+ion-checkbox,
+ion-radio {
   --color: var(--app-primary);
   --color-checked: var(--app-primary);
   --border-radius: var(--app-spacing-xs);
@@ -328,43 +335,127 @@ ion-toggle {
    ============================================================================= */
 
 /* Spacing utilities */
-.p-xs { padding: var(--app-spacing-xs) !important; }
-.p-sm { padding: var(--app-spacing-sm) !important; }
-.p-md { padding: var(--app-spacing-md) !important; }
-.p-lg { padding: var(--app-spacing-lg) !important; }
-.p-xl { padding: var(--app-spacing-xl) !important; }
+.p-xs {
+  padding: var(--app-spacing-xs) !important;
+}
 
-.m-xs { margin: var(--app-spacing-xs) !important; }
-.m-sm { margin: var(--app-spacing-sm) !important; }
-.m-md { margin: var(--app-spacing-md) !important; }
-.m-lg { margin: var(--app-spacing-lg) !important; }
-.m-xl { margin: var(--app-spacing-xl) !important; }
+.p-sm {
+  padding: var(--app-spacing-sm) !important;
+}
+
+.p-md {
+  padding: var(--app-spacing-md) !important;
+}
+
+.p-lg {
+  padding: var(--app-spacing-lg) !important;
+}
+
+.p-xl {
+  padding: var(--app-spacing-xl) !important;
+}
+
+.m-xs {
+  margin: var(--app-spacing-xs) !important;
+}
+
+.m-sm {
+  margin: var(--app-spacing-sm) !important;
+}
+
+.m-md {
+  margin: var(--app-spacing-md) !important;
+}
+
+.m-lg {
+  margin: var(--app-spacing-lg) !important;
+}
+
+.m-xl {
+  margin: var(--app-spacing-xl) !important;
+}
 
 /* Typography utilities */
-.text-xs { font-size: var(--app-font-size-xs) !important; }
-.text-sm { font-size: var(--app-font-size-sm) !important; }
-.text-base { font-size: var(--app-font-size-base) !important; }
-.text-lg { font-size: var(--app-font-size-lg) !important; }
-.text-xl { font-size: var(--app-font-size-xl) !important; }
-.text-2xl { font-size: var(--app-font-size-2xl) !important; }
-.text-3xl { font-size: var(--app-font-size-3xl) !important; }
-.text-4xl { font-size: var(--app-font-size-4xl) !important; }
+.text-xs {
+  font-size: var(--app-font-size-xs) !important;
+}
 
-.font-medium { font-weight: 500 !important; }
-.font-semibold { font-weight: 600 !important; }
-.font-bold { font-weight: 700 !important; }
+.text-sm {
+  font-size: var(--app-font-size-sm) !important;
+}
 
-.text-center { text-align: center !important; }
-.text-left { text-align: left !important; }
-.text-right { text-align: right !important; }
+.text-base {
+  font-size: var(--app-font-size-base) !important;
+}
+
+.text-lg {
+  font-size: var(--app-font-size-lg) !important;
+}
+
+.text-xl {
+  font-size: var(--app-font-size-xl) !important;
+}
+
+.text-2xl {
+  font-size: var(--app-font-size-2xl) !important;
+}
+
+.text-3xl {
+  font-size: var(--app-font-size-3xl) !important;
+}
+
+.text-4xl {
+  font-size: var(--app-font-size-4xl) !important;
+}
+
+.font-medium {
+  font-weight: 500 !important;
+}
+
+.font-semibold {
+  font-weight: 600 !important;
+}
+
+.font-bold {
+  font-weight: 700 !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-left {
+  text-align: left !important;
+}
+
+.text-right {
+  text-align: right !important;
+}
 
 /* Color utilities */
-.text-primary { color: var(--app-primary) !important; }
-.text-success { color: var(--app-success) !important; }
-.text-warning { color: var(--app-warning) !important; }
-.text-danger { color: var(--app-danger) !important; }
-.text-gray { color: var(--app-gray-400) !important; }
-.text-dark { color: var(--app-gray-900) !important; }
+.text-primary {
+  color: var(--app-primary) !important;
+}
+
+.text-success {
+  color: var(--app-success) !important;
+}
+
+.text-warning {
+  color: var(--app-warning) !important;
+}
+
+.text-danger {
+  color: var(--app-danger) !important;
+}
+
+.text-gray {
+  color: var(--app-gray-400) !important;
+}
+
+.text-dark {
+  color: var(--app-gray-900) !important;
+}
 
 /* Mobile-specific utilities */
 .mobile-container {
@@ -417,22 +508,24 @@ ion-toggle {
 
 /* Mobile-first responsive breakpoints */
 @media (max-width: 767px) {
+
   /* Ensure touch targets are at least 44px (iOS guidelines) */
-  ion-button, .touch-target {
+  ion-button,
+  .touch-target {
     min-height: 44px;
   }
-  
+
   /* Reduce padding on very small screens */
   ion-content {
     --padding-start: var(--app-spacing-sm);
     --padding-end: var(--app-spacing-sm);
   }
-  
+
   /* Stack elements vertically on mobile */
   .mobile-stack {
     flex-direction: column !important;
   }
-  
+
   /* Full width on mobile */
   .mobile-full-width {
     width: 100% !important;
@@ -446,7 +539,7 @@ ion-toggle {
   .mobile-container {
     max-width: 600px;
   }
-  
+
   ion-content {
     --padding-start: var(--app-spacing-lg);
     --padding-end: var(--app-spacing-lg);
@@ -480,8 +573,13 @@ ion-toggle {
 }
 
 /* Opacity utilities */
-.opacity-50 { opacity: 0.5 !important; }
-.opacity-75 { opacity: 0.75 !important; }
+.opacity-50 {
+  opacity: 0.5 !important;
+}
+
+.opacity-75 {
+  opacity: 0.75 !important;
+}
 
 /* Stacked Toast Styles */
 ion-toast.stacked-toast {
@@ -501,4 +599,62 @@ ion-toast.stacked-toast {
 .portfolio-content,
 .retirement-content {
   --padding-top: 8px !important;
+}
+
+/* =============================================================================
+   GLOBAL SCROLLBAR STYLING (iOS-style with curved ends)
+   ============================================================================= */
+
+/* Apply smooth curved scrollbar to all scrollable elements */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 10px;
+  /* Creates the curved/smooth ends effect */
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  /* Always visible */
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* Dark mode scrollbar */
+@media (prefers-color-scheme: dark) {
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Apply scrollbar styling to Ionic's shadow DOM scroll containers */
+ion-content::part(scroll)::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+}
+
+ion-content::part(scroll)::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 10px;
+}
+
+ion-content::part(scroll)::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  /* Always visible */
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+@media (prefers-color-scheme: dark) {
+  ion-content::part(scroll)::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
 }

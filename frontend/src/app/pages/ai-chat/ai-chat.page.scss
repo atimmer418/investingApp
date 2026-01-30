@@ -262,8 +262,9 @@ ion-footer {
     padding: 0 !important;
 
     // CRITICAL: Host must respect max-height and scroll
+    // 9 lines * 22px line-height + 14px padding (7px top + 7px bottom) = 212px
     height: auto !important;
-    max-height: 200px !important;
+    max-height: 212px !important;
 
     // HOST HANDLES SCROLL
     overflow-y: auto !important;
@@ -288,10 +289,15 @@ ion-footer {
     }
 
     &::-webkit-scrollbar-thumb {
-      background-color: rgba(0, 0, 0, 0.2);
+      background-color: rgba(0, 0, 0, 0); // Transparent by default (hidden)
       border-radius: 10px;
       border: 2px solid transparent;
       background-clip: content-box;
+      transition: background-color 0.2s ease;
+    }
+
+    &.is-scrolling::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2); // Visible during scroll
     }
 
     &::part(native) {
