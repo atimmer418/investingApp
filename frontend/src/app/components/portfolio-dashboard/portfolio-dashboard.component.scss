@@ -15,6 +15,20 @@
   /* Force explicit height to ensure scrollbar ends at top of tab switcher */
   height: calc(100% - (var(--ion-tab-bar-height, 56px) + env(safe-area-inset-bottom) + 36px));
 
+  ion-refresher-content {
+    --spinner-color: var(--portfolio-primary);
+    color: var(--portfolio-primary);
+  }
+
+  // Penetrate shadow DOM to color the refresher text
+  ::ng-deep ion-refresher-content {
+    color: var(--portfolio-primary) !important;
+
+    * {
+      color: var(--portfolio-primary) !important;
+    }
+  }
+
   &::part(scroll) {
     padding-top: 8px !important;
   }
@@ -272,6 +286,9 @@
 ion-header {
   --background: var(--app-background);
   background: var(--app-background) !important;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 
   ion-toolbar {
     --background: var(--app-background);
@@ -386,7 +403,7 @@ ion-header {
   .chart-header {
     display: flex;
     flex-direction: column;
-    gap: var(--app-spacing-md);
+    gap: var(--app-spacing-sm);
     margin-bottom: var(--app-spacing-md);
     flex-shrink: 0; // Prevent header from shrinking
 
@@ -433,7 +450,7 @@ ion-header {
     height: auto;
     position: relative;
     margin: 0;
-    padding: 16px 0px 16px 8px; // More padding for better visual containment
+    padding: 0px 0px 0px 8px; // More padding for better visual containment
     overflow: visible; // Allow chart to display fully
 
     app-portfolio-chart {
@@ -846,4 +863,10 @@ ion-header {
 
 .text-middle {
   text-align: center;
+}
+
+// Style the refresher spinner - use CSS custom properties that penetrate shadow DOM
+ion-refresher-content {
+  --spinner-color: var(--portfolio-primary);
+  color: var(--portfolio-primary);
 }

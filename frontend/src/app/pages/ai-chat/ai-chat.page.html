@@ -42,11 +42,17 @@
     <div class="messages-container">
       <div *ngFor="let msg of messages; let i = index" class="message-wrapper"
         [class.user-message]="msg.role === 'user'" [class.assistant-message]="msg.role === 'assistant'"
-        [id]="'chat-message-' + i">
+        [class.failed-message]="msg.failed" [id]="'chat-message-' + i">
 
         <div class="avatar" *ngIf="msg.role === 'assistant'">
           <img src="assets/icon/pfp.png" class="fred-avatar-img" alt="FRED">
         </div>
+
+        <!-- Retry button for failed messages (before bubble) -->
+        <ion-button *ngIf="msg.failed && msg.role === 'user'" size="small" fill="outline" color="danger"
+          (click)="retryMessage(i)" class="retry-button-inline">
+          <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+        </ion-button>
 
         <div class="message-bubble">
           <div class="message-text" [innerHTML]="formatMessage(msg.content)"></div>

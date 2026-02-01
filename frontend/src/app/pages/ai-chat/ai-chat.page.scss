@@ -54,6 +54,7 @@ ion-header {
   /* Match header height precisely for scrollIntoView: 56px toolbar + safe area + 8px buffer */
   scroll-margin-top: calc(64px + env(safe-area-inset-top, 0px));
   /* Ensures the message starts below the header (approx 56px + padding) */
+  position: relative; // For retry button positioning
 
   &.user-message {
     justify-content: flex-end;
@@ -398,5 +399,32 @@ ion-footer {
     ion-textarea {
       color: white;
     }
+  }
+}
+
+/* Failed message styling */
+.message-wrapper.failed-message {
+  opacity: 0.6;
+
+  .message-bubble {
+    border: 1px solid var(--ion-color-danger, #eb445a);
+  }
+}
+
+/* Retry button inline with message */
+.retry-button-inline {
+  --border-radius: 50%;
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  margin-right: 8px;
+  flex-shrink: 0;
+  align-self: center; // Center vertically with message bubble
+  --padding-start: 0;
+  --padding-end: 0;
+
+  ion-icon {
+    font-size: 16px;
   }
 }

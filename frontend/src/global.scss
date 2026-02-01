@@ -658,3 +658,22 @@ ion-content::part(scroll)::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.3);
   }
 }
+
+/* =============================================================================
+   REFRESHER SPINNER COLOR
+   ============================================================================= */
+
+/* Style all ion-spinner components to use primary color */
+ion-spinner {
+  --color: var(--app-primary);
+}
+
+/* Style the refresher content's icon and text to match spinner color */
+ion-refresher-content {
+  color: var(--app-primary);
+
+  // Target the pulling icon directly
+  ion-icon {
+    color: var(--app-primary);
+  }
+}

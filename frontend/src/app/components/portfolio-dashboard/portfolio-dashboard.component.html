@@ -1,11 +1,6 @@
 <ion-header class="ion-no-border safe-area-top">
   <ion-toolbar>
     <ion-title>Portfolio</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="loadPortfolioData()" fill="clear" size="small">
-        <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
-      </ion-button>
-    </ion-buttons>
   </ion-toolbar>
 
   <!-- iOS-Style Tab Switcher -->
@@ -24,8 +19,8 @@
 </ion-header>
 
 <ion-content class="portfolio-content" [class.scroll-disabled]="selectedTab === 'overview'">
-  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
-    <ion-refresher-content></ion-refresher-content>
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" [disabled]="loading || isRefreshing">
+    <ion-refresher-content refreshingSpinner="crescent" pullingText="Pull to Refresh" pullingIcon="chevron-down-circle-outline"></ion-refresher-content>
   </ion-refresher>
 
   <!-- Loading State -->

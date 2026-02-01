@@ -33,6 +33,7 @@ export class PortfolioDashboardComponent implements OnInit {
   dashboard: PortfolioDashboardData | null = null;
   performanceData: PerformanceData[] = [];
   loading = true;
+  isRefreshing = false;
   error: string | null = null;
   selectedTab = 'overview';
   selectedPeriod = 'ALL';
@@ -59,8 +60,12 @@ export class PortfolioDashboardComponent implements OnInit {
     this.loadPortfolioData();
   }
 
-  async loadPortfolioData() {
-    this.loading = true;
+  async loadPortfolioData(isRefresh = false) {
+    if (isRefresh) {
+      this.isRefreshing = true;
+    } else {
+      this.loading = true;
+    }
     this.error = null;
 
     try {
@@ -137,12 +142,16 @@ export class PortfolioDashboardComponent implements OnInit {
       this.error = error.error?.message || 'Failed to load portfolio data';
       this.toastService.showToast('Failed to load portfolio data', 'danger');
     } finally {
-      this.loading = false;
+      if (isRefresh) {
+        this.isRefreshing = false;
+      } else {
+        this.loading = false;
+      }
     }
   }
 
   async onRefresh(event: any) {
-    await this.loadPortfolioData();
+    await this.loadPortfolioData(true);
     event.target.complete();
   }
 

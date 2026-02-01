@@ -9,6 +9,7 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
   sessionId?: string;
+  failed?: boolean;
 }
 
 export interface ChatSession {

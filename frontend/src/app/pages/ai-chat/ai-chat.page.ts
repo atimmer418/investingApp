@@ -23,7 +23,7 @@ import {
 import { ChatService, ChatMessage, ChatSession } from '../../services/chat.service';
 import { finalize } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
-import { arrowUpCircle, menuOutline, addOutline } from 'ionicons/icons';
+import { arrowUpCircle, menuOutline, addOutline, refreshOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-ai-chat',
@@ -69,7 +69,7 @@ export class AiChatPage implements OnInit, AfterViewInit {
     private cdr: ChangeDetectorRef,
     private menuCtrl: MenuController
   ) {
-    addIcons({ arrowUpCircle, menuOutline, addOutline });
+    addIcons({ arrowUpCircle, menuOutline, addOutline, refreshOutline });
   }
 
   ngOnInit() {
@@ -286,10 +286,13 @@ export class AiChatPage implements OnInit, AfterViewInit {
     if (!this.newMessage.trim()) return;
 
     const userMsg = this.newMessage.trim();
+    const userMsgIndex = this.messages.length;
+
     this.addMessage({
       role: 'user',
       content: userMsg,
-      timestamp: new Date()
+      timestamp: new Date(),
+      failed: false
     });
 
     this.newMessage = '';
@@ -304,7 +307,6 @@ export class AiChatPage implements OnInit, AfterViewInit {
     this.chatService.sendMessage(userMsg, sessionId, isFirstUserMessage)
       .pipe(finalize(() => {
         this.isLoading = false;
-        // Navigation handled in next/error callbacks
       }))
       .subscribe({
         next: (response) => {
@@ -329,9 +331,15 @@ export class AiChatPage implements OnInit, AfterViewInit {
         },
         error: (error) => {
           console.error('Error sending message:', error);
+          // Mark the user message as failed
+          if (this.messages[userMsgIndex]) {
+            this.messages[userMsgIndex].failed = true;
+            this.cdr.detectChanges();
+          }
+
           this.addMessage({
             role: 'assistant',
-            content: "I'm sorry, I'm having trouble connecting right now. Please try again later.",
+            content: "I'm sorry, I'm having trouble connecting right now. Please try again.",
             timestamp: new Date()
           });
           this.scrollToMessage(this.messages.length - 1);
@@ -339,22 +347,42 @@ export class AiChatPage implements OnInit, AfterViewInit {
       });
   }
 
+  retryMessage(index: number) {
+    const failedMsg = this.messages[index];
+    if (!failedMsg || failedMsg.role !== 'user' || !failedMsg.failed) return;
+
+    // Remove the failed message and the error response after it
+    this.messages.splice(index, 2); // Remove failed user message and error assistant message
+
+    // Update session
+    if (this.currentSession) {
+      this.currentSession.messages = this.messages;
+      this.chatService.saveSession(this.currentSession);
+    }
+
+    this.cdr.detectChanges();
+
+    // Resend the message
+    this.newMessage = failedMsg.content;
+    this.sendMessage();
+  }
+
   scrollToMessage(index: number) {
     if (!this.isActive) return;
 
     setTimeout(() => {
-      const element = document.getElementById(`chat-message-${index}`);
-      if (!element) return;
+      const messageWrapper = document.getElementById(`chat-message-${index}`);
+      if (!messageWrapper) return;
 
-      const rect = element.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
+      // Find the message-bubble div (the actual bubble with text)
+      const messageBubble = messageWrapper.querySelector('.message-bubble') as HTMLElement;
 
-      // If message is "big enough" (e.g. > 35% of viewport), scroll to top
-      // Otherwise scroll to bottom to see everything
-      if (rect.height > viewportHeight * 0.35) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (messageBubble) {
+        // Scroll to the message bubble (not the wrapper with avatar)
+        messageBubble.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else {
-        this.scrollToBottom();
+        // Fallback to wrapper
+        messageWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }, 300);
   }
