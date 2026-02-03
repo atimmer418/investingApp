@@ -6,8 +6,9 @@
 
   &::part(scroll) {
     margin-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
-    padding: 0 8px 0 4px !important;
+    padding: 0 4px !important; // Balanced 4px padding on both sides
     margin-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 50px) !important;
+    scrollbar-gutter: stable;
   }
 }
 
@@ -59,13 +60,13 @@ ion-header {
   &.user-message {
     justify-content: flex-end;
     padding-left: 12px;
-    padding-right: 6px;
+    padding-right: 2px; // Tightened from 6px
 
     .message-bubble {
       background-color: var(--app-primary, #007aff);
       color: white;
       border-radius: 20px 20px 4px 20px;
-      max-width: 70%; // Tighter fit for user messages
+      max-width: 80%; // Increased from 70% for better flow
     }
   }
 

@@ -211,7 +211,10 @@ export class AiChatPage implements OnInit, AfterViewInit {
   }
 
   loadSessions() {
-    this.sessions = this.chatService.getSessions();
+    // Only show sessions that have at least one user message
+    this.sessions = this.chatService.getSessions().filter(s =>
+      s.messages && s.messages.some(m => m.role === 'user')
+    );
     this.cdr.detectChanges();
   }
 
@@ -238,7 +241,7 @@ export class AiChatPage implements OnInit, AfterViewInit {
       role: 'assistant',
       content: "Hello! I'm FRED. How can I help you with your investing journey today?",
       timestamp: new Date()
-    }, true); // Save the initial greeting
+    }, false); // Don't save initial greeting to history yet
   }
 
   loadSession(session: ChatSession) {
@@ -257,12 +260,10 @@ export class AiChatPage implements OnInit, AfterViewInit {
       this.currentSession.messages = this.messages;
       this.currentSession.lastModified = Date.now();
 
-      // Update title if it's the first user message
-      // if (msg.role === 'user' && this.messages.filter(m => m.role === 'user').length === 1) {
-      //   this.currentSession.title = msg.content.substring(0, 30) + (msg.content.length > 30 ? '...' : '');
-      // }
+      // Only save to history if we have at least one user message
+      const hasUserMessage = this.messages.some(m => m.role === 'user');
 
-      if (save) {
+      if (save && hasUserMessage) {
         this.chatService.saveSession(this.currentSession);
         this.loadSessions(); // Refresh list
       }
