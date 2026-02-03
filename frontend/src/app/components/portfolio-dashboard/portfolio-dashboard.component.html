@@ -50,16 +50,13 @@
 
         <!-- Front Side -->
         <div class="portfolio-hero-front">
-          <!-- Background Icons Pattern -->
-          <div class="portfolio-background-icons" [class]="'trend-' + getGainLossColor(dashboard.totalGainLoss)">
-            <ion-icon *ngFor="let icon of backgroundIcons" [name]="icon"></ion-icon>
-          </div>
-
           <div class="portfolio-value text-center">
-            <div class="portfolio-value-content">
-              <h1 class="value-amount text-4xl font-bold text-dark">{{ formatCurrency(dashboard.summary.equity) }}</h1>
-              <p class="value-subtitle text-gray text-sm m-xs">Total Equity</p>
+            <h1 class="value-amount text-4xl font-bold text-dark">{{ formatCurrency(dashboard.summary.equity) }}</h1>
+            <div class="portfolio-change" [class]="'change-' + getGainLossColor(dashboard.totalGainLoss)">
+              <ion-icon [name]="getGainLossIcon(dashboard.totalGainLoss)"></ion-icon>
+              <span class="text-lg font-medium">{{ formatCurrency(dashboard.totalGainLoss) }}</span>
             </div>
+            <p class="value-subtitle text-gray text-sm m-xs">Total Equity</p>
           </div>
         </div>
 
