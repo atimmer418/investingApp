@@ -231,6 +231,12 @@ export class AiChatPage implements OnInit, AfterViewInit {
 
   startNewChat() {
     this.menuCtrl.close('chat-menu');
+
+    // If already in a new chat that hasn't been started, just return
+    if (this.currentSession?.title === 'New Chat') {
+      return;
+    }
+
     this.currentSession = this.chatService.createSession();
     this.messages = [];
     // Reload suggestions to ensure used ones are filtered out

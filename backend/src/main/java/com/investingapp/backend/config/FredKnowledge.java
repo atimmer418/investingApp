@@ -327,17 +327,19 @@ public class FredKnowledge {
                                                 ---
 
                                                 ## 4. Account Recovery Strategy
-                                                Since there are no passwords, "Forgot Password" does not exist. Instead, we use a **Device Loss Recovery Flow**.
+                                                Since there are no passwords, "Forgot Password" does not exist. Instead, we use an **Identity-Based Recovery Flow**.
 
                                                 ### The Problem
-                                                If a user loses their device, they lose their private key (Passkey). They cannot log in.
+                                                Passkeys are typically synced across your devices via your cloud account (e.g., Apple ID/iCloud Keychain or Google Password Manager). If a user loses their device but still has their Apple ID, they can simply sign in on a new device and their Passkey will be there.
+
+                                                However, if a user loses access to their **entire account ecosystem** (e.g., losing access to their Apple ID or Google Account) or switches to a new ecosystem entirely, they lose their private key (Passkey) and cannot log in.
 
                                                 ### The Solution: Biometric Identity Verification (Persona + Email)
                                                 We use a "Defense in Depth" strategy. Access to the email inbox alone is **not sufficient** to recover the account. The user must prove their identity using **Biometric Verification** via our identity partner, **Persona**.
 
                                                 #### Recovery Workflow:
                                                 1.  **Initiation:**
-                                                    - User clicks **"Lost Device"** or **"Reset Passkey Access"** on the login screen.
+                                                    - User clicks **"Lost Access to My Account"** or **"Reset Passkey Access"** on the login screen.
                                                     - **Identity Challenge:** The app launches a **Persona Inquiry** flow.
 
                                                 2.  **Biometric Scan (Face Match):**
@@ -372,11 +374,6 @@ public class FredKnowledge {
                 "low",
                 true));
 
-        // Disable Old Chunk 13
-        CANONICAL_CHUNKS.add(new CanonicalChunk(
-                "account_security_recovery_v1", "DEPRECATED", "DEPRECATED", "v1", "security", "low",
-                false));
-
         // Chunk 14 — ACATS Transfers (V2)
         CANONICAL_CHUNKS.add(new CanonicalChunk(
                 "acats_transfers_v2",
@@ -409,13 +406,9 @@ public class FredKnowledge {
                 "low",
                 true));
 
-        // Disable Old Chunk 14
+        // Chunk 15 — ACH Transfer Timing (V2)
         CANONICAL_CHUNKS.add(new CanonicalChunk(
-                "acats_transfers_v1", "DEPRECATED", "DEPRECATED", "v1", "liquidity", "low", false));
-
-        // Chunk 15 — ACH Transfer Timing
-        CANONICAL_CHUNKS.add(new CanonicalChunk(
-                "ach_transfer_timing_v1",
+                "ach_transfer_timing_v2",
                 "Investment Date vs. Trade Execution",
                 """
                         # Investment Date vs. Trade Execution
@@ -446,14 +439,14 @@ public class FredKnowledge {
 
                         This timing protects you from failed transfers and ensures your investments happen smoothly.
                         """,
-                "v1",
+                "v2",
                 "platform",
                 "low",
                 true));
 
-        // Chunk 16 — Metrics Explanation: Unrealized vs Realized P/L
+        // Chunk 16 — Metrics Explanation (V2)
         CANONICAL_CHUNKS.add(new CanonicalChunk(
-                "metrics_pl_explanation_v1",
+                "metrics_pl_explanation_v2",
                 "Unrealized P/L vs Total Cumulative Return",
                 """
                         # Understanding Your Dashboard Metrics
@@ -474,14 +467,14 @@ public class FredKnowledge {
                         - If you have **never sold** an investment, these two numbers will be identical.
                         - If you **have sold** investments in the past, they will be different because the "Total Cumulative Return" remembers the profit/loss from those past sales, while "Unrealized P/L" only cares about what you own right now.
                         """,
-                "v1",
+                "v2",
                 "metrics",
                 "low",
                 true));
 
-        // Chunk 17 — Why Fred Wears The Suit (The Uniform)
+        // Chunk 17 — Why Fred Wears The Suit (V2)
         CANONICAL_CHUNKS.add(new CanonicalChunk(
-                "fred_clothing_v1",
+                "fred_clothing_v2",
                 "Why Fred Wears The Suit (The Uniform)",
                 """
                         People ask me about the suit. They ask why I still wear the uniform of the world I left behind.
@@ -500,14 +493,14 @@ public class FredKnowledge {
 
                         You are free.
                         """,
-                "v1",
+                "v2",
                 "philosophy",
                 "low",
                 true));
 
-        // Chunk 18 — FRED Story Math Validation
+        // Chunk 18 — FRED Story Math Validation (V2)
         CANONICAL_CHUNKS.add(new CanonicalChunk(
-                "fred_story_math_validation_v1",
+                "fred_story_math_validation_v2",
                 "Is FRED's $2.37 Million Story Realistic?",
                 """
                         # Is FRED's $2.37 Million Story Realistic?
@@ -547,7 +540,7 @@ public class FredKnowledge {
 
                         *Disclaimer: This story is a hypothetical illustration based on historical market data. Past performance does not guarantee future results. Investing involves risk, including the loss of principal.*
                         """,
-                "v1",
+                "v2",
                 "philosophy",
                 "low",
                 true));

@@ -52,8 +52,17 @@ public class ChatService {
         logger.info("Safety Check - User: {}, Verdict: {}, Reason: {}, Query: \"{}\"",
                 request.userId(), safety.verdict(), safety.reason(), request.message());
 
-        if (safety.verdict() != SafetyVerdict.SAFE) {
-            throw new SecurityException("Content flagged: " + safety.reason());
+        if (safety.verdict() != com.investingapp.backend.dto.SafetyVerdict.SAFE) {
+            String redirectionContent = FredRedirections.get(safety.reason());
+
+            // Persist the user message and the redirection response so history stays in
+            // sync
+            chatMessageRepository
+                    .save(new ChatMessage(request.userId(), request.sessionId(), "user", request.message()));
+            chatMessageRepository
+                    .save(new ChatMessage(request.userId(), request.sessionId(), "assistant", redirectionContent));
+
+            return new ChatResponse(redirectionContent, null);
         }
 
         // 1. Persist user message
