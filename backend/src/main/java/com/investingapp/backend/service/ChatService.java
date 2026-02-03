@@ -31,14 +31,17 @@ public class ChatService {
     private final RAGService ragService;
     private final LLMService llmService;
     private final SafetyService safetyService; // Inject
+    private final ConversationAnalyticsService analyticsService; // NEW: Phase 2A
 
     public ChatService(UserRepository userRepository, ChatMessageRepository chatMessageRepository,
-            RAGService ragService, LLMService llmService, SafetyService safetyService) {
+            RAGService ragService, LLMService llmService, SafetyService safetyService,
+            ConversationAnalyticsService analyticsService) { // NEW: Phase 2A
         this.userRepository = userRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.ragService = ragService;
         this.llmService = llmService;
         this.safetyService = safetyService;
+        this.analyticsService = analyticsService; // NEW: Phase 2A
     }
 
     public ChatResponse processChat(ChatRequest request) {
@@ -49,16 +52,22 @@ public class ChatService {
         logger.info("Safety Check - User: {}, Verdict: {}, Reason: {}, Query: \"{}\"",
                 request.userId(), safety.verdict(), safety.reason(), request.message());
 
-        // Handle Blocks & Redirects (Skip LLM)
         if (safety.verdict() != SafetyVerdict.SAFE) {
-            String cannedResponse = FredRedirections.get(safety.reason());
-            return new ChatResponse(cannedResponse, "FRED Redirected Response");
+            throw new SecurityException("Content flagged: " + safety.reason());
         }
 
-        // 1. Persistence (User Message) - SAVE FIRST
+        // 1. Persist user message
         chatMessageRepository.save(new ChatMessage(request.userId(), request.sessionId(), "user", request.message()));
 
-        // 2. Load User
+        // 2. NEW Phase 2B: Track follow-up patterns (before logging question)
+        if (request.userId() != null && request.sessionId() != null) {
+            try {
+                analyticsService.trackFollowUpPattern(request.sessionId(), request.message());
+            } catch (Exception e) {
+                logger.error("Failed to track follow-up pattern", e);
+                // Continue even if follow-up tracking fails
+            }
+        }
 
         // 2. Load User
         Optional<User> userOpt = userRepository.findById(request.userId());
@@ -123,6 +132,20 @@ public class ChatService {
         if (response != null && response.contains(FredConstitution.FRED_STORY_STRATEGY_TRIGGER)) {
             logger.info("Smart Trigger: Detected FRED_STORY_STRATEGY_TRIGGER. Swapping with canonical text.");
             response = FredConstitution.FRED_STORY_STRATEGY;
+        }
+
+        // NEW: Phase 2A - Log conversation analytics
+        if (request.userId() != null && response != null) {
+            try {
+                analyticsService.logUserQuestion(
+                        request.userId(),
+                        request.sessionId(),
+                        request.message(),
+                        response.length());
+            } catch (Exception e) {
+                logger.error("Failed to log conversation analytics", e);
+                // Continue with chat response even if analytics fails
+            }
         }
 
         // 9. Persistence (Assistant Response)

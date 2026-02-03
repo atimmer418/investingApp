@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.investingapp.backend.model.ChatMessage;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import java.util.List;
 
 @RestController
@@ -45,8 +46,13 @@ public class ChatController {
         return ResponseEntity.badRequest().build();
     }
 
+    /**
+     * Phase 3: Get personalized daily suggestions for authenticated user.
+     * Blends: 1 LLM + 1 popular + 1 personalized (or "What's your story FRED?" for
+     * first-time users).
+     */
     @GetMapping("/suggestions")
-    public ResponseEntity<List<String>> getSuggestions() {
-        return ResponseEntity.ok(dailyQuestionService.getTodayQuestions());
+    public ResponseEntity<List<String>> getSuggestions(@RequestParam Long userId) {
+        return ResponseEntity.ok(dailyQuestionService.getTodayQuestionsForUser(userId));
     }
 }

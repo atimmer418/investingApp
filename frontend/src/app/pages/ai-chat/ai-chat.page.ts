@@ -106,42 +106,30 @@ export class AiChatPage implements OnInit, AfterViewInit {
   loadDailySuggestions() {
     this.chatService.getDailySuggestions().subscribe({
       next: (questions) => {
+        // Phase 3: Backend returns [LLM, Popular, Personalized/FRED]
+        // Filter out used questions from positions 1 & 2 (static until midnight)
+        // Keep position 3 (personalized) always visible - backend handles rotation
+
         const used = this.chatService.getUsedSuggestions();
-        const available = questions.filter(q => !used.includes(q));
-        this.updateDailySuggestions(available);
+        const filteredQuestions = questions.filter(q => !used.includes(q));
+
+        this.dailySuggestions = filteredQuestions;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Failed to load daily questions', err);
-        this.updateDailySuggestions([]);
+        this.dailySuggestions = [];
+        this.cdr.detectChanges();
       }
     });
   }
 
-  private updateDailySuggestions(baseSuggestions: string[]) {
-    // Check if user has read Fred's story
-    const hasReadStory = localStorage.getItem('has_read_fred_story');
-    if (!hasReadStory) {
-      // ensure we have space for it (max 3 usually)
-      if (baseSuggestions.length >= 3) {
-        baseSuggestions.pop(); // Remove the last random one to make space
-      }
-      // Add as the LAST item for visibility
-      baseSuggestions.push(this.FRED_STORY_TRIGGER);
-    }
-    this.dailySuggestions = baseSuggestions;
-    this.cdr.detectChanges();
-  }
-
   selectSuggestion(question: string) {
     this.newMessage = question;
+
+    // Mark as used to hide static questions on next load
     this.chatService.markSuggestionAsUsed(question);
 
-    // If it's the Fred story trigger, mark as read
-    if (question === this.FRED_STORY_TRIGGER) {
-      localStorage.setItem('has_read_fred_story', 'true');
-    }
-
-    this.dailySuggestions = this.dailySuggestions.filter(q => q !== question);
     this.sendMessage();
   }
 
