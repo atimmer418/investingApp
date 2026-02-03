@@ -77,6 +77,17 @@ public class ConversationAnalyticsService {
      * @return Topic tag (e.g., "compound_interest", "risk_tolerance", "etf_basics")
      */
     private String extractTopic(String question) {
+        if (question == null || question.trim().isEmpty()) {
+            return "other";
+        }
+
+        // Deterministic check for the suggestion bubble to ensure sticky logic works
+        String cleanQuestion = question.trim().toLowerCase();
+        if (cleanQuestion.equals("what's your story fred?") ||
+                cleanQuestion.equals("whats your story fred?")) {
+            return "fred_story";
+        }
+
         try {
             String prompt = """
                     You are a financial topic classifier. Categorize the following question into ONE specific topic tag.
