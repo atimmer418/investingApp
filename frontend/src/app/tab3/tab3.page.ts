@@ -364,6 +364,10 @@ export class Tab3Page implements OnInit, OnDestroy {
     this.router.navigate(['/lump-sum-investment']);
   }
 
+  goToMyProfile() {
+    this.router.navigate(['/my-profile']);
+  }
+
   private handleNotifications() {
     if (this.userPreferences) {
       const notifCount = Object.values(this.userPreferences.notifications).filter(Boolean).length;

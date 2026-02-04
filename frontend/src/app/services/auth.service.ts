@@ -18,6 +18,8 @@ export interface UserProgress {
   investmentConfirmationCompleted: boolean;
   monthlyInvestment?: number; // User's monthly investment capacity
   retirementIncome?: number; // User's desired retirement income
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface PasskeyAuthRequest {
@@ -39,7 +41,7 @@ export interface AuthResponse {
 export class AuthService {
   private isLoggedInSubject = new BehaviorSubject<boolean>(false);
   public isLoggedIn$ = this.isLoggedInSubject.asObservable();
-  
+
   private userProgressSubject = new BehaviorSubject<UserProgress | null>(null);
   public userProgress$ = this.userProgressSubject.asObservable();
 
@@ -56,11 +58,11 @@ export class AuthService {
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
-    
+
     // Add device ID to all requests for better device tracking
     const deviceId = this.deviceIdService.getDeviceId();
     headers = headers.set('X-Device-ID', deviceId);
-    
+
     return headers;
   }
 
@@ -69,7 +71,7 @@ export class AuthService {
     if (token && !JwtTokenUtils.isJwtExpired()) {
       // Check if this is a test user (mock JWT)
       const isTestUser = token.includes('mock_signature_for_testing');
-      
+
       if (isTestUser) {
         console.log('[AuthService] Test user detected, using simulated session');
         this.isLoggedInSubject.next(true);
@@ -87,7 +89,7 @@ export class AuthService {
         this.userProgressSubject.next(mockProgress);
         return;
       }
-      
+
       // Real user - validate with server and get user progress
       this.getUserProgress().subscribe({
         next: (progress) => {
@@ -102,13 +104,13 @@ export class AuthService {
       });
     } else {
       console.log('[AuthService] JWT token expired or missing, checking if should prompt for passkey re-auth');
-      
+
       // For non-authenticated users, load their localStorage progress into the subject
       // This ensures getUnifiedProgress() and components have consistent access to progress
       const localStorageProgress = this.buildProgressFromLocalStorage();
       this.userProgressSubject.next(localStorageProgress);
       console.log('[AuthService] Loaded localStorage progress for non-authenticated user:', localStorageProgress);
-      
+
       // Check if this device should be prompted for passkey re-authentication
       if (this.supportsPasskeys()) {
         this.shouldPromptForReauth().subscribe({
@@ -116,7 +118,7 @@ export class AuthService {
             if (response.shouldPromptReauth) {
               console.log('[AuthService] Device has previous users, prompting for passkey re-auth');
               const reauthSuccess = await this.promptForPasskeyReauth();
-              
+
               if (!reauthSuccess) {
                 console.log('[AuthService] Passkey re-auth failed or cancelled, user needs to authenticate normally');
                 // User will be directed by app.component.ts routing logic
@@ -143,12 +145,12 @@ export class AuthService {
   handleSuccessfulAuthentication(jwtToken: string, userId: number, email: string): void {
     JwtTokenUtils.storeJwtToken(jwtToken, userId, email);
     this.isLoggedInSubject.next(true);
-    
+
     // Check if this is a first-time authentication (user just completed authfinalize)
     // If so, sync their localStorage progress to the database
-    const hasLocalProgress = localStorage.getItem('getStartedCompleted') === 'true' || 
-                            localStorage.getItem('surveyInitialCompleted') === 'true' ||
-                            localStorage.getItem('fiPlanResultsCompleted') === 'true';
+    const hasLocalProgress = localStorage.getItem('getStartedCompleted') === 'true' ||
+      localStorage.getItem('surveyInitialCompleted') === 'true' ||
+      localStorage.getItem('fiPlanResultsCompleted') === 'true';
 
     console.log('[AuthService] Checking for localStorage progress to sync:', {
       getStartedCompleted: localStorage.getItem('getStartedCompleted'),
@@ -189,7 +191,7 @@ export class AuthService {
   }
 
   getUserProgress(): Observable<UserProgress> {
-    return this.http.get<UserProgress>(`${BACKEND_API_URL}/user/progress`, 
+    return this.http.get<UserProgress>(`${BACKEND_API_URL}/user/progress`,
       { headers: this.getAuthHeaders() });
   }
 
@@ -200,7 +202,7 @@ export class AuthService {
   syncLocalStorageProgressToDatabase(): Observable<any> {
     const monthlyInvestment = localStorage.getItem('surveyMonthlyInvestment');
     const retirementIncome = localStorage.getItem('surveyRetirementIncome');
-    
+
     // Debug: Log all relevant localStorage values
     console.log('[AuthService] Current localStorage values during sync:', {
       getStartedCompleted: localStorage.getItem('getStartedCompleted'),
@@ -209,7 +211,7 @@ export class AuthService {
       monthlyInvestment: monthlyInvestment,
       retirementIncome: retirementIncome
     });
-    
+
     const localProgress: Partial<UserProgress> = {
       getStartedCompleted: localStorage.getItem('getStartedCompleted') === 'true',
       surveyInitialCompleted: localStorage.getItem('surveyInitialCompleted') === 'true',
@@ -221,7 +223,7 @@ export class AuthService {
     };
 
     console.log('[AuthService] Syncing localStorage progress to database:', localProgress);
-    
+
     return this.updateProgress(localProgress).pipe(
       tap(() => {
         console.log('[AuthService] Successfully synced localStorage progress to database');
@@ -237,7 +239,7 @@ export class AuthService {
   private buildProgressFromLocalStorage(): UserProgress {
     const monthlyInvestment = localStorage.getItem('surveyMonthlyInvestment');
     const retirementIncome = localStorage.getItem('surveyRetirementIncome');
-    
+
     return {
       getStartedCompleted: localStorage.getItem('getStartedCompleted') === 'true',
       surveyInitialCompleted: localStorage.getItem('surveyInitialCompleted') === 'true',
@@ -271,7 +273,7 @@ export class AuthService {
   clearLocalStorageProgressFlags(): void {
     const flagsToRemove = [
       'getStartedCompleted',
-      'surveyInitialCompleted', 
+      'surveyInitialCompleted',
       'fiPlanResultsCompleted',
       'authFinalizeCompleted',
       'kycVerificationCompleted',
@@ -302,7 +304,16 @@ export class AuthService {
   }
 
   updateProgress(progressUpdate: Partial<UserProgress>): Observable<any> {
-    return this.http.put(`${BACKEND_API_URL}/user/progress`, progressUpdate, 
+    return this.http.put(`${BACKEND_API_URL}/user/progress`, progressUpdate,
+      { headers: this.getAuthHeaders() });
+  }
+
+  /**
+   * Update user profile data directly (User object), bypassing UserProgress logic.
+   * Use this for profile page updates like name, retirement income, etc.
+   */
+  updateUserProfile(profileUpdate: { monthlyInvestment?: number, retirementIncome?: number, firstName?: string, lastName?: string }): Observable<any> {
+    return this.http.put(`${BACKEND_API_URL}/user/profile`, profileUpdate,
       { headers: this.getAuthHeaders() });
   }
 
@@ -314,26 +325,26 @@ export class AuthService {
     // Always update localStorage first
     localStorage.setItem(`${step}Completed`, completed.toString());
     console.log(`[AuthService] Updated localStorage ${step} progress: ${completed}`);
-    
+
     // Check if user is authenticated before trying to update backend
     if (!this.isAuthenticated()) {
       console.log(`[AuthService] User not authenticated, skipping backend update for ${step}`);
-      
+
       // Update the userProgressSubject with the latest localStorage data
       const updatedProgress = this.buildProgressFromLocalStorage();
       this.userProgressSubject.next(updatedProgress);
       console.log(`[AuthService] Updated userProgressSubject with localStorage data:`, updatedProgress);
-      
+
       // Return a completed observable since localStorage update succeeded
       return of({ success: true, message: 'localStorage updated, user not authenticated for backend update' });
     }
-    
+
     // Create the progress update object using bracket notation
     const progressUpdate: any = {};
     progressUpdate[`${step}Completed`] = completed;
-    
+
     console.log(`[AuthService] Sending progress update to backend:`, progressUpdate);
-    
+
     // Update backend only if authenticated
     return this.updateProgress(progressUpdate).pipe(
       tap((response) => {
@@ -366,16 +377,16 @@ export class AuthService {
     // Check if this is likely a direct navigation (testing) vs backwards navigation
     const currentProgress = this.getUnifiedProgress();
     const isLikelyDirectNavigation = this.isDirectNavigation(step, currentProgress);
-    
+
     console.log(`[AuthService] markStepIncomplete('${step}') called`);
     console.log(`[AuthService] Current progress:`, currentProgress);
     console.log(`[AuthService] Is likely direct navigation:`, isLikelyDirectNavigation);
-    
+
     if (isLikelyDirectNavigation) {
       console.log(`[AuthService] Detected direct navigation to ${step}, skipping mark as incomplete`);
       return of({ success: true, message: 'Direct navigation detected, skipping mark as incomplete' });
     }
-    
+
     console.log(`[AuthService] Proceeding to mark ${step} as incomplete`);
     return this.updateStepProgress(step, false);
   }
@@ -386,7 +397,7 @@ export class AuthService {
   private isDirectNavigation(step: string, progress: UserProgress): boolean {
     const stepOrder = [
       'getStarted',
-      'surveyInitial', 
+      'surveyInitial',
       'fiPlanResults',
       'authFinalize',
       'kycVerification',
@@ -394,10 +405,10 @@ export class AuthService {
       'investmentSchedule',
       'investmentConfirmation'
     ];
-    
+
     const currentStepIndex = stepOrder.indexOf(step);
     if (currentStepIndex === -1) return false;
-    
+
     // Check if previous steps are completed
     for (let i = 0; i < currentStepIndex; i++) {
       const prevStep = stepOrder[i];
@@ -407,7 +418,7 @@ export class AuthService {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -438,8 +449,8 @@ export class AuthService {
    * Check with backend if current device/IP should be prompted for passkey re-authentication
    * Only devices that have previous users who completed auth-finalize will be prompted
    */
-  shouldPromptForReauth(): Observable<{shouldPromptReauth: boolean, message: string}> {
-    return this.http.get<{shouldPromptReauth: boolean, message: string}>(`${BACKEND_API_URL}/user/should-prompt-reauth`, 
+  shouldPromptForReauth(): Observable<{ shouldPromptReauth: boolean, message: string }> {
+    return this.http.get<{ shouldPromptReauth: boolean, message: string }>(`${BACKEND_API_URL}/user/should-prompt-reauth`,
       { headers: this.getAuthHeaders() });
   }
 
@@ -450,18 +461,18 @@ export class AuthService {
     try {
       this.reAuthInProgress = true;
       console.log('[AuthService] Starting passkey re-authentication');
-      
+
       // 1. Start authentication
-      const startResponse = await this.http.post<{requestOptions: string, sessionId: string}>(`${BACKEND_API_URL}/passkey/authenticate/start`, {}, 
+      const startResponse = await this.http.post<{ requestOptions: string, sessionId: string }>(`${BACKEND_API_URL}/passkey/authenticate/start`, {},
         { headers: this.getAuthHeaders() }).toPromise();
-      
+
       if (!startResponse) {
         throw new Error('Failed to start authentication');
       }
-      
+
       // 2. Show browser passkey prompt
       const credentialRequestOptions = JSON.parse(startResponse.requestOptions);
-      
+
       // Convert base64url strings to ArrayBuffers for WebAuthn API
       if (credentialRequestOptions.publicKey) {
         if (credentialRequestOptions.publicKey.challenge) {
@@ -475,27 +486,27 @@ export class AuthService {
           });
         }
       }
-      
+
       const credential = await navigator.credentials.get(credentialRequestOptions);
-      
+
       if (!credential) {
         throw new Error('User cancelled passkey authentication');
       }
-      
+
       // Convert credential to JSON-serializable format
       const credentialJson = this.credentialToJson(credential as PublicKeyCredential);
-      
+
       // 3. Finish authentication 
       const authResponse = await this.http.post<any>(`${BACKEND_API_URL}/passkey/authenticate/finish`, {
         credential: credentialJson,
         sessionId: startResponse.sessionId
       }, { headers: this.getAuthHeaders() }).toPromise();
-      
+
       if (authResponse?.success) {
         // User re-authenticated! Update auth state
         this.handleSuccessfulAuthentication(
-          authResponse.jwtToken, 
-          authResponse.userId, 
+          authResponse.jwtToken,
+          authResponse.userId,
           authResponse.email
         );
         console.log('[AuthService] Passkey re-authentication successful');
@@ -505,7 +516,7 @@ export class AuthService {
         this.reAuthInProgress = false;
         throw new Error(authResponse?.message || 'Authentication failed');
       }
-      
+
     } catch (error) {
       this.reAuthInProgress = false;
       console.error('[AuthService] Passkey re-authentication failed:', error);
@@ -517,7 +528,7 @@ export class AuthService {
   createOrUpdateInvestmentSchedule(schedule: any): Observable<any> {
     console.log('[AuthService] Creating/updating investment schedule (upsert):', schedule);
     // Use POST to create new or update existing investment schedule
-    return this.http.post(`${BACKEND_API_URL}/investment-schedule/create`, schedule, 
+    return this.http.post(`${BACKEND_API_URL}/investment-schedule/create`, schedule,
       { headers: this.getAuthHeaders() });
   }
 
@@ -530,14 +541,14 @@ export class AuthService {
   getCurrentInvestmentSchedule(): Observable<any> {
     console.log('[AuthService] Retrieving current user investment schedule...');
     // GET the user's current investment schedule
-    return this.http.get(`${BACKEND_API_URL}/investment-schedule/current`, 
+    return this.http.get(`${BACKEND_API_URL}/investment-schedule/current`,
       { headers: this.getAuthHeaders() });
   }
 
   getAllInvestmentSchedules(): Observable<any> {
     console.log('[AuthService] Retrieving all user investment schedules...');
     // GET all user's investment schedules
-    return this.http.get(`${BACKEND_API_URL}/investment-schedule/all`, 
+    return this.http.get(`${BACKEND_API_URL}/investment-schedule/all`,
       { headers: this.getAuthHeaders() });
   }
 
@@ -553,14 +564,14 @@ export class AuthService {
   pauseInvestmentSchedule(scheduleId: number): Observable<any> {
     console.log('[AuthService] Pausing investment schedule:', scheduleId);
     // Pause investment schedule
-    return this.http.post(`${BACKEND_API_URL}/investment-schedule/${scheduleId}/pause`, {}, 
+    return this.http.post(`${BACKEND_API_URL}/investment-schedule/${scheduleId}/pause`, {},
       { headers: this.getAuthHeaders() });
   }
 
   resumeInvestmentSchedule(scheduleId: number): Observable<any> {
     console.log('[AuthService] Resuming investment schedule:', scheduleId);
     // Resume investment schedule  
-    return this.http.post(`${BACKEND_API_URL}/investment-schedule/${scheduleId}/resume`, {}, 
+    return this.http.post(`${BACKEND_API_URL}/investment-schedule/${scheduleId}/resume`, {},
       { headers: this.getAuthHeaders() });
   }
 
@@ -575,7 +586,7 @@ export class AuthService {
    */
   getUnifiedProgress(): UserProgress {
     const databaseProgress = this.getCurrentProgress();
-    
+
     if (databaseProgress) {
       // User is authenticated - use database progress
       return databaseProgress;
@@ -623,11 +634,11 @@ export class AuthService {
   getCurrentUser(): { id: number | null; email: string | null } | null {
     const email = this.getCurrentUserEmail();
     const id = this.getCurrentUserId();
-    
+
     if (!email && !id) {
       return null;
     }
-    
+
     return { id, email };
   }
 
@@ -637,16 +648,16 @@ export class AuthService {
    */
   authenticateAsUser(email?: string, userHandle?: string): Observable<AuthResponse> {
     console.log('[AuthService] 🧪 Authenticating as existing user:', { email, userHandle });
-    
+
     const payload = {
       email: email || null,
       userHandle: userHandle || null
     };
-    
+
     const url = `${BACKEND_API_URL}/dev/authenticate-as-user`;
     console.log('[AuthService] Making HTTP POST to:', url);
     console.log('[AuthService] Payload:', payload);
-    
+
     return this.http.post<AuthResponse>(url, payload, {
       headers: this.getAuthHeaders()
     }).pipe(
@@ -674,30 +685,30 @@ export class AuthService {
   private base64urlToArrayBuffer(base64url: string): ArrayBuffer {
     // Add padding if needed
     let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
-    
+
     // Add padding
     while (base64.length % 4) {
       base64 += '=';
     }
-    
+
     const binaryString = atob(base64);
     const bytes = new Uint8Array(binaryString.length);
-    
+
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    
+
     return bytes.buffer;
   }
 
   private arrayBufferToBase64url(buffer: ArrayBuffer): string {
     const bytes = new Uint8Array(buffer);
     let binary = '';
-    
+
     for (let i = 0; i < bytes.byteLength; i++) {
       binary += String.fromCharCode(bytes[i]);
     }
-    
+
     return btoa(binary)
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
@@ -706,7 +717,7 @@ export class AuthService {
 
   private credentialToJson(credential: PublicKeyCredential): any {
     const response = credential.response as AuthenticatorAssertionResponse;
-    
+
     return {
       id: credential.id,
       rawId: this.arrayBufferToBase64url(credential.rawId),

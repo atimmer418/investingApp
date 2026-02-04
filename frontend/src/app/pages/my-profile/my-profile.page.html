@@ -1,0 +1,99 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tab3" text="" icon="chevron-back-outline"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Edit Profile</ion-title>
+    <ion-buttons slot="end">
+      <ion-button *ngIf="isDirty" (click)="saveChanges()" class="save-button">
+        Save
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [scrollY]="false" class="ion-padding profile-content">
+
+  <div class="profile-header">
+    <div class="avatar-container">
+      <ion-avatar>
+        <img src="https://ionicframework.com/docs/img/demos/avatar.svg" alt="User Avatar" />
+      </ion-avatar>
+      <div class="camera-icon">
+        <ion-icon name="camera"></ion-icon>
+      </div>
+    </div>
+    <h2 class="user-name">Firstname Lastname</h2>
+    <p class="user-handle">$portfolioVALUE</p>
+  </div>
+
+  <ion-card class="plan-card">
+    <ion-card-content>
+      <div class="card-header">
+        <span class="header-title">RETIREMENT PLAN</span>
+        <ion-icon name="wallet-outline" class="header-icon"></ion-icon>
+      </div>
+
+      <div class="plan-sentence">
+        To retire with
+        <div class="inline-input-wrapper">
+          <span class="prefix">$</span>
+          <input type="number" [(ngModel)]="retirementIncomeGoal" (ngModelChange)="onInputChange()"
+            class="inline-input" />
+          <span class="suffix">/mo</span>
+        </div>
+        by investing
+        <div class="inline-input-wrapper">
+          <span class="prefix">$</span>
+          <input type="number" [(ngModel)]="monthlyInvestGoal" (ngModelChange)="onInputChange()" class="inline-input" />
+          <span class="suffix">/mo</span>
+        </div>, you need a <strong>{{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</strong> portfolio.
+      </div>
+
+      <div class="insight-box">
+        <div class="insight-icon">
+          <ion-icon name="time-outline"></ion-icon>
+        </div>
+        <div class="insight-text">
+          At your current investment rate of <strong>{{ currentScheduledInvestment | currency }} {{
+            investmentFrequencyText }}</strong>, you'll reach
+          this goal in roughly <strong>{{ yearsToReach }} years</strong>.
+        </div>
+      </div>
+
+    </ion-card-content>
+  </ion-card>
+
+  <div class="section-title">Referrals</div>
+
+  <ion-card class="referral-card">
+    <ion-card-content>
+
+      <div class="referral-section">
+        <div class="sub-label">SHARE THE WEALTH</div>
+        <div class="code-box">
+          <div class="code-text">{{ referralCode }}</div>
+          <div class="share-btn" (click)="copyReferral()">
+            <ion-icon name="share-outline"></ion-icon>
+          </div>
+        </div>
+        <div class="helper-text">Get 1 month free for every friend who joins.</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="redeem-section">
+        <div class="sub-label">REDEEM CODE</div>
+        <div class="redeem-row">
+          <div class="input-container">
+            <ion-icon name="ticket-outline" class="input-icon"></ion-icon>
+            <input type="text" placeholder="Enter referral code" [(ngModel)]="redeemCodeInput" />
+          </div>
+          <button class="apply-btn" (click)="redeemCode()">Apply</button>
+        </div>
+      </div>
+
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>

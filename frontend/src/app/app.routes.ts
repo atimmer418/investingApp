@@ -110,4 +110,8 @@ export const routes: Routes = [
     path: 'strategy-detail',
     loadComponent: () => import('./pages/strategy-detail/strategy-detail.page').then( m => m.StrategyDetailPage)
   },
+  {
+    path: 'my-profile',
+    loadComponent: () => import('./pages/my-profile/my-profile.page').then( m => m.MyProfilePage)
+  },
 ];

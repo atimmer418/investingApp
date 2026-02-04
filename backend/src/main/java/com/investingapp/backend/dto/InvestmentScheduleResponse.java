@@ -24,6 +24,8 @@ public class InvestmentScheduleResponse {
     private String achRequestId;
     private Boolean isPaused;
     private LocalDate chosenDate; // The user's preferred anchor date
+    private String dayOfWeek;
+    private Integer dayOfMonth;
     private String scheduleDescription; // User-friendly schedule description
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -37,6 +39,8 @@ public class InvestmentScheduleResponse {
         this.startDate = schedule.getStartDate();
         this.nextInvestmentDate = schedule.getNextInvestmentDate();
         this.chosenDate = schedule.getChosenDate();
+        this.dayOfWeek = schedule.getDayOfWeek();
+        this.dayOfMonth = schedule.getDayOfMonth();
         this.achRequestId = schedule.getAchRequestId();
         this.isPaused = schedule.getIsPaused();
         this.scheduleDescription = schedule.getScheduleDescription(); // Add schedule description

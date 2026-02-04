@@ -1,0 +1,336 @@
+// Custom properties
+:host {
+    --page-background: #F2F2F7; // iOS gray background
+    --card-background: #FFFFFF;
+    --text-primary: #000000;
+    --text-secondary: #8E8E93;
+    --accent-color: var(--ion-color-primary, #3880ff);
+    --danger-color: #FF3B30;
+}
+
+ion-toolbar {
+    --background: var(--ion-color-primary);
+    --color: white;
+
+    ion-title {
+        font-weight: 600;
+    }
+
+    ion-back-button {
+        --color: white;
+    }
+
+    --border-width: 0;
+}
+
+.save-button {
+    font-weight: 600;
+    font-size: 16px;
+    --color: white;
+}
+
+ion-content {
+    --background: var(--page-background);
+}
+
+.profile-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 24px;
+
+    .avatar-container {
+        position: relative;
+        margin-bottom: 12px;
+
+        ion-avatar {
+            width: 100px;
+            height: 100px;
+            border: 3px solid var(--card-background);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .camera-icon {
+            // User requested NO photo edit, but the image has it. 
+            // User said: "except we dont want the option for users to add their own photo"
+            // So I will HIDE the camera icon I put in HTML or just make it purely decorative/removed.
+            // I'll hide it for now to comply with "dont want option".
+            display: none;
+        }
+    }
+
+    .user-name {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        color: var(--text-primary);
+    }
+
+    .user-handle {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin: 0;
+        font-family: monospace; // Or stylish
+        letter-spacing: 1px;
+        // The reference has a scratch-out effect, we'll just show the code or handle nicely
+    }
+}
+
+ion-card.plan-card,
+ion-card.referral-card {
+    margin: 0 0 20px 0;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background: var(--card-background);
+    overflow: visible; // Allow shadows
+
+    ion-card-content {
+        padding: 20px;
+    }
+}
+
+.plan-card {
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+
+        .header-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .header-icon {
+            color: var(--accent-color);
+            font-size: 18px;
+        }
+    }
+
+    .plan-sentence {
+        font-size: 18px;
+        line-height: 1.6;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+
+        strong {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .inline-input-wrapper {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(56, 128, 255, 0.1); // Light blue tint
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 0 8px;
+            margin: 0 4px;
+            height: 32px;
+            vertical-align: middle;
+
+            .prefix,
+            .suffix {
+                font-size: 16px;
+                color: var(--accent-color);
+                font-weight: 500;
+            }
+
+            .inline-input {
+                border: none;
+                background: transparent;
+                color: var(--accent-color);
+                font-weight: 700;
+                font-size: 16px;
+                width: 60px; // Adjust based on content?
+                text-align: center;
+                outline: none;
+                padding: 0;
+
+                &::-webkit-inner-spin-button,
+                &::-webkit-outer-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
+            }
+        }
+    }
+
+    .insight-box {
+        background: #F8F9FA;
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        flex-wrap: wrap; // Allow progress bar to wrap
+        align-items: flex-start;
+
+        .insight-icon {
+            background: var(--accent-color);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+
+            ion-icon {
+                font-size: 14px;
+            }
+        }
+
+        .insight-text {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.4;
+
+            strong {
+                color: var(--accent-color);
+            }
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #E5E5EA;
+            border-radius: 3px;
+            margin-top: 12px;
+            overflow: hidden;
+
+            .progress-bar {
+                width: 40%; // Static for now, or calculated
+                height: 100%;
+                background: var(--accent-color);
+                border-radius: 3px;
+            }
+        }
+    }
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 12px 4px;
+    color: var(--text-primary);
+}
+
+.referral-card {
+    .sub-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+    }
+
+    .code-box {
+        background: #FAFAFA; // Very light gray
+        border: 1px dashed #D1D1D6;
+        border-radius: 8px;
+        padding: 12px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+
+        .code-text {
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--text-primary);
+        }
+
+        .share-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(56, 128, 255, 0.3);
+
+            ion-icon {
+                font-size: 20px;
+            }
+
+            &:active {
+                transform: scale(0.95);
+            }
+        }
+    }
+
+    .helper-text {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 24px;
+    }
+
+    .divider {
+        height: 1px;
+        background: #E5E5EA;
+        margin-bottom: 24px;
+        width: 100%;
+    }
+
+    .redeem-row {
+        display: flex;
+        gap: 12px;
+
+        .input-container {
+            flex: 1;
+            background: #F2F2F7;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            height: 44px;
+
+            .input-icon {
+                color: var(--text-secondary);
+                font-size: 18px;
+                margin-right: 8px;
+            }
+
+            input {
+                border: none;
+                background: transparent;
+                flex: 1;
+                outline: none;
+                font-size: 15px;
+                color: var(--text-primary);
+
+                &::placeholder {
+                    color: #8E8E93;
+                }
+            }
+        }
+
+        .apply-btn {
+            background: #E5E5EA; // Inactive/Secondary looking
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 0 20px;
+            font-weight: 600;
+            font-size: 15px;
+            height: 44px;
+            cursor: pointer;
+
+            &:active {
+                background: #D1D1D6;
+            }
+        }
+    }
+}

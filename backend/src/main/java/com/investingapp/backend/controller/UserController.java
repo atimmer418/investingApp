@@ -49,6 +49,9 @@ public class UserController {
         private boolean investmentScheduleCompleted;
         private boolean investmentConfirmationCompleted;
         private Double monthlyInvestment;
+        private Double retirementIncome;
+        private String firstName;
+        private String lastName;
         private String nextStep;
         private double completionPercentage;
 
@@ -78,7 +81,11 @@ public class UserController {
                 this.nextStep = "get-started";
                 this.completionPercentage = 0.0;
             }
+            // Populate fields directly from the User object
             this.monthlyInvestment = user.getMonthlyInvestment();
+            this.retirementIncome = user.getRetirementIncome();
+            this.firstName = user.getFirstName();
+            this.lastName = user.getLastName();
         }
 
         // Getters
@@ -116,6 +123,18 @@ public class UserController {
 
         public Double getMonthlyInvestment() {
             return monthlyInvestment;
+        }
+
+        public Double getRetirementIncome() {
+            return retirementIncome;
+        }
+
+        public String getFirstName() {
+            return firstName;
+        }
+
+        public String getLastName() {
+            return lastName;
         }
 
         public String getNextStep() {
@@ -280,6 +299,57 @@ public class UserController {
 
         } catch (Exception e) {
             logger.error("[UserController] Error updating user progress: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Update the current user's profile data (User object direct update)
+     * PUT /user/profile
+     */
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateUserProfile(@RequestBody Map<String, Object> profileUpdate,
+            Authentication authentication) {
+        try {
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(401).build();
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String email = userDetails.getUsername();
+
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            boolean changed = false;
+
+            if (profileUpdate.containsKey("monthlyInvestment")) {
+                Object val = profileUpdate.get("monthlyInvestment");
+                if (val instanceof Number) {
+                    user.setMonthlyInvestment(((Number) val).doubleValue());
+                    changed = true;
+                }
+            }
+            if (profileUpdate.containsKey("retirementIncome")) {
+                Object val = profileUpdate.get("retirementIncome");
+                if (val instanceof Number) {
+                    user.setRetirementIncome(((Number) val).doubleValue());
+                    changed = true;
+                }
+            }
+
+            if (changed) {
+                userRepository.save(user);
+                logger.info("[UserController] Updated profile for user: {}", email);
+            }
+
+            // Return updated progress response (which includes User data) for convenience
+            return ResponseEntity.ok(new UserProgressResponse(user));
+
+        } catch (Exception e) {
+            logger.error("[UserController] Error updating user profile: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -486,38 +556,38 @@ public class UserController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String currentEmail = userDetails.getUsername();
         String newEmail = request.get("newEmail");
-        
+
         if (newEmail == null || newEmail.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "New email is required"));
         }
 
         String providedCurrentEmail = request.get("currentEmail");
         if (providedCurrentEmail != null && !providedCurrentEmail.equals(currentEmail)) {
-             return ResponseEntity.badRequest().body(Map.of("message", "Current email does not match authenticated user"));
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Current email does not match authenticated user"));
         }
 
         User user = userRepository.findByEmail(currentEmail).orElse(null);
         if (user == null) {
             return ResponseEntity.status(404).body(Map.of("message", "User not found"));
         }
-        
+
         if (userRepository.existsByEmail(newEmail)) {
             return ResponseEntity.badRequest().body(Map.of("message", "Email is already in use"));
         }
 
         user.setEmail(newEmail);
         userRepository.save(user);
-        
+
         // Generate new JWT
         String newJwt = jwtUtils.generateTokenFromUsername(newEmail);
-        
+
         logger.info("Updated email for user ID {} from {} to {}", user.getId(), currentEmail, newEmail);
 
         return ResponseEntity.ok(Map.of(
-            "message", "Email updated successfully", 
-            "newEmail", newEmail,
-            "jwtToken", newJwt
-        ));
+                "message", "Email updated successfully",
+                "newEmail", newEmail,
+                "jwtToken", newJwt));
     }
 
     @GetMapping("/sessions")
@@ -525,13 +595,14 @@ public class UserController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String email = userDetails.getUsername();
         User user = userRepository.findByEmail(email).orElse(null);
-        
+
         if (user == null) {
             return ResponseEntity.status(404).body(Map.of("message", "User not found"));
         }
 
-        List<com.investingapp.backend.model.UserSession> sessions = userSessionRepository.findByUserIdAndActiveTrue(user.getId());
-        
+        List<com.investingapp.backend.model.UserSession> sessions = userSessionRepository
+                .findByUserIdAndActiveTrue(user.getId());
+
         String authHeader = request.getHeader("Authorization");
         Long currentSessionId = null;
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -540,9 +611,8 @@ public class UserController {
         }
 
         return ResponseEntity.ok(Map.of(
-            "currentSessionId", currentSessionId != null ? currentSessionId : -1L,
-            "sessions", sessions
-        ));
+                "currentSessionId", currentSessionId != null ? currentSessionId : -1L,
+                "sessions", sessions));
     }
 
     @PostMapping("/sessions/{id}/revoke")
@@ -551,7 +621,7 @@ public class UserController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String email = userDetails.getUsername();
         User user = userRepository.findByEmail(email).orElse(null);
-        
+
         if (user == null) {
             return ResponseEntity.status(404).body(Map.of("message", "User not found"));
         }
@@ -567,7 +637,7 @@ public class UserController {
 
         session.setActive(false);
         userSessionRepository.save(session);
-        
+
         return ResponseEntity.ok(Map.of("message", "Session revoked successfully"));
     }
 }

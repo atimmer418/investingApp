@@ -2,7 +2,7 @@
   <div class="custom-profile-header safe-area-top">
     <div class="header-content">
       <div class="user-details">
-        <ion-avatar class="user-avatar">
+        <ion-avatar class="user-avatar" (click)="goToMyProfile()">
           <img src="https://ionicframework.com/docs/img/demos/avatar.svg" />
         </ion-avatar>
         <div class="user-text">
@@ -21,30 +21,24 @@
     <div class="settings-sections mobile-container">
       <div *ngFor="let section of settingSections" class="settings-group">
         <h3 class="group-header text-gray text-xs font-semibold">{{ section.title }}</h3>
-        
+
         <div class="settings-card mobile-card">
           <div class="settings-list">
-            <button 
-              *ngFor="let item of section.items; let last = last" 
-              class="setting-item mobile-touch-target"
-              [class.last-item]="last"
-              (click)="onSettingClick(item.action)">
-              
+            <button *ngFor="let item of section.items; let last = last" class="setting-item mobile-touch-target"
+              [class.last-item]="last" (click)="onSettingClick(item.action)">
+
               <div class="setting-icon-container">
                 <ion-icon [name]="item.icon" class="setting-icon"></ion-icon>
               </div>
-              
+
               <div class="setting-content">
                 <div class="setting-main">
                   <h4 class="setting-title font-medium text-dark">{{ item.title }}</h4>
                   <p *ngIf="item.subtitle" class="setting-subtitle text-gray">{{ item.subtitle }}</p>
                 </div>
-                
+
                 <div class="setting-trailing">
-                  <ion-badge 
-                    *ngIf="item.badge" 
-                    [color]="item.badgeColor || 'primary'" 
-                    class="setting-badge">
+                  <ion-badge *ngIf="item.badge" [color]="item.badgeColor || 'primary'" class="setting-badge">
                     {{ item.badge }}
                   </ion-badge>
                   <ion-icon name="chevron-forward" class="chevron-icon text-gray"></ion-icon>
