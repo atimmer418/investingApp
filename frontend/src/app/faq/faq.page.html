@@ -40,7 +40,7 @@
                 <!-- Answer Body (Expandable) -->
                 <div class="faq-body" [class.expanded]="faq.isOpen">
                     <div class="answer-content">
-                        <p>{{ faq.answer }}</p>
+                        <p [innerHTML]="faq.answer"></p>
                     </div>
                 </div>
 
@@ -50,9 +50,10 @@
         <!-- Contact Support Section -->
         <div class="support-section">
             <p>Still have questions?</p>
-            <ion-button expand="block" fill="outline" color="primary" class="contact-btn">
+            <p>FRED can answer questions about these FAQs!<br>If you still need help, feel free to contact us.</p>
+            <!-- <ion-button expand="block" fill="outline" color="primary" class="contact-btn">
                 Contact Support
-            </ion-button>
+            </ion-button> -->
         </div>
 
     </div>

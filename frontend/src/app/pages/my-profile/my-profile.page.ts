@@ -10,6 +10,7 @@ import { shareOutline, checkmarkCircleOutline, saveOutline } from 'ionicons/icon
 import { AuthService } from '../../services/auth.service';
 import { SettingsService } from '../../services/settings.service';
 import { ToastService } from '../../services/toast.service';
+import { PortfolioService } from '../../services/portfolio.service';
 
 @Component({
   selector: 'app-my-profile',
@@ -35,7 +36,12 @@ export class MyProfilePage implements OnInit {
   currentScheduledInvestment: number = 0;
   investmentFrequencyText: string = '';
   portfolioGoal: number = 0;
-  yearsToReach: number | string = 0;
+  yearsToReach: number | string = 0; // Based on input goal
+  yearsToReachCurrent: number | string = 0; // Based on actual schedule (From $0)
+  yearsToReachRemaining: number | string | null = null; // Based on actual schedule + current equity
+  currentMonthlyEquivalent: number = 0; // Derived effective monthly amount
+  currentPortfolioValue: number = 0; // From Portfolio Service
+  progressPercentage: number = 0; // currentPortfolioValue / portfolioGoal
 
   // Referral
   referralCode: string = 'FREDJOINS'; // Mocked default, could use user ID
@@ -49,20 +55,23 @@ export class MyProfilePage implements OnInit {
   private readonly SAFE_WITHDRAWAL_RATE = 0.04;
   private readonly AVG_MARKET_YIELD = 0.09;
 
+  // Internal state
+  private exactAnnualIncome: number | null = null;
+  private currentFrequency: string = '';
+
   constructor(
     private authService: AuthService,
     private settingsService: SettingsService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private portfolioService: PortfolioService
   ) {
     addIcons({ shareOutline, checkmarkCircleOutline, saveOutline });
   }
 
+
   ngOnInit() {
     this.loadUserData();
   }
-
-  // Internal state for precision
-  private exactAnnualIncome: number | null = null;
 
   loadUserData() {
     // Get Basic User Info & Progress Data
@@ -100,27 +109,40 @@ export class MyProfilePage implements OnInit {
     this.authService.getCurrentInvestmentSchedule().subscribe({
       next: (investment) => {
         if (investment) {
-          this.currentScheduledInvestment = investment.investmentAmount; // Note: DTO uses investmentAmount
-
-          // Format frequency text
+          this.currentScheduledInvestment = investment.investmentAmount;
+          this.currentFrequency = investment.frequency ? investment.frequency.toLowerCase() : '';
+          
           this.formatScheduleText(investment);
-
-          // Calculate monthly equivalent for "years to reach" prediction
-          let monthlyEquivalent = investment.investmentAmount;
-          const freq = investment.frequency ? investment.frequency.toLowerCase() : '';
-
-          if (freq === 'weekly') monthlyEquivalent *= 4.33;
-          if (freq === 'biweekly') monthlyEquivalent *= 2.16;
-          if (freq === 'semi_monthly') monthlyEquivalent *= 2;
-
-          this.calculateYearsToReach(monthlyEquivalent);
+          
+          // Trigger calculation using the centralized method
+          this.calculateCurrentScheduleYears();
         }
       },
       error: (err) => {
         console.log('No active investment schedule found or error fetching:', err);
         this.currentScheduledInvestment = 0;
         this.investmentFrequencyText = '';
-        this.yearsToReach = '∞';
+        this.currentFrequency = '';
+        this.currentMonthlyEquivalent = 0;
+        this.yearsToReachCurrent = '∞';
+      }
+    });
+
+    // Get Current Portfolio Value for Progress Bar
+    this.portfolioService.getPortfolioDashboard().subscribe({
+      next: (data) => {
+        if (data && data.summary) {
+          this.currentPortfolioValue = data.summary.equity || 0;
+          this.calculateProgress();
+          // Recalculate years now that we have portfolio value
+          this.calculateCurrentScheduleYears();
+        }
+      },
+      error: (err) => {
+        console.log('Error fetching portfolio summary:', err);
+        // Use 0 as default if fails
+        this.currentPortfolioValue = 0;
+        this.calculateProgress();
       }
     });
 
@@ -187,66 +209,138 @@ export class MyProfilePage implements OnInit {
   }
 
   calculatePlan() {
-    // 1. Calculate Portfolio Goal
-    // If the user hasn't touched the input (or it matches the rounded value of our exact source),
-    // use the exact source for calculation to avoid "5833 * 12 = 69996" rounding artifacts.
-    let annualIncome: number;
+    // Initial load full calculation
+    this.calculatePortfolioGoal();
+    this.calculateHypotheticalYears();
+    this.calculateCurrentScheduleYears();
+    this.checkDirty();
+  }
 
+  // Triggered by "To retire with $Y/mo" input
+  onIncomeChange() {
+    // 1. Validate Input
+    if (this.retirementIncomeGoal && this.retirementIncomeGoal.toString().length > 5) {
+      this.retirementIncomeGoal = Number(this.retirementIncomeGoal.toString().slice(0, 5));
+    }
+
+    // 2. Update Portfolio Goal (Source of Truth)
+    this.calculatePortfolioGoal();
+
+    // 3. Update BOTH time estimates because target changed
+    this.calculateHypotheticalYears();
+    this.calculateCurrentScheduleYears();
+
+    this.checkDirty();
+  }
+
+  // Triggered by "By investing $X/mo" input
+  onInvestChange() {
+    // 1. Validate Input
+    if (this.monthlyInvestGoal && this.monthlyInvestGoal.toString().length > 5) {
+      this.monthlyInvestGoal = Number(this.monthlyInvestGoal.toString().slice(0, 5));
+    }
+
+    // 2. Only update the hypothetical years locally
+    // Does NOT affect portfolio goal or current schedule outlook
+    this.calculateHypotheticalYears();
+
+    this.checkDirty();
+  }
+
+  private calculatePortfolioGoal() {
+    let annualIncome: number;
     if (this.exactAnnualIncome !== null &&
       Math.round(this.exactAnnualIncome / 12) === this.retirementIncomeGoal) {
       annualIncome = this.exactAnnualIncome;
     } else {
       annualIncome = this.retirementIncomeGoal * 12;
     }
-
     this.portfolioGoal = annualIncome / this.SAFE_WITHDRAWAL_RATE;
-
-    // 2. Re-calculate years with CURRENT investment (since target changed)
-    // We need the ACTUAL current investment amount for this.
-    // I'll grab it from the subscription if available, or just rely on the stored `currentScheduledInvestment` 
-    // *Wait*, I calculated years in the subscription based on `portfolioGoal`. 
-    // Since `portfolioGoal` depends on `retirementIncomeGoal`, I need to re-run `calculateYearsToReach` whenever `retirementIncomeGoal` changes.
-
-    // Check if we have a current investment to calc against
-    if (this.currentScheduledInvestment > 0) {
-      // Need to re-derive monthly equivalent for accuracy... 
-      // Accessing the raw observable value is tricky here without storing it. 
-      // I'll assume standard monthly for now or try to store the multiplier.
-      // Let's just use currentScheduledInvestment as a proxy for monthly for now to keep it simple unless I store frequency.
-      this.calculateYearsToReach(this.currentScheduledInvestment);
-    }
-
-    this.checkDirty();
+    this.calculateProgress(); // Update progress when goal changes
   }
 
-  calculateYearsToReach(monthlyAmount: number) {
-    if (monthlyAmount <= 0) {
+  private calculateProgress() {
+    if (this.portfolioGoal > 0) {
+      this.progressPercentage = Math.min((this.currentPortfolioValue / this.portfolioGoal), 1.0);
+    } else {
+      this.progressPercentage = 0;
+    }
+  }
+
+  private calculateHypotheticalYears() {
+    if (this.monthlyInvestGoal > 0) {
+      this.yearsToReach = this.calculateYears(this.monthlyInvestGoal);
+    } else {
       this.yearsToReach = '∞';
-      return;
+    }
+  }
+
+  private calculateCurrentScheduleYears() {
+    if (this.currentScheduledInvestment > 0) {
+      // Re-approximating for dynamic update. 
+      let monthly = this.currentScheduledInvestment;
+      
+      // Use stored frequency code instead of parsing UI text
+      if (this.currentFrequency === 'weekly') monthly *= 4.33;
+      else if (this.currentFrequency === 'biweekly') monthly *= 2.16;
+      else if (this.currentFrequency === 'semi_monthly' || this.currentFrequency === 'semimonthly') monthly *= 2;
+      
+      this.currentMonthlyEquivalent = monthly;
+      this.yearsToReachCurrent = this.calculateYears(monthly);
+
+      // Calculate remaining years considering current equity (PV)
+      if (this.currentPortfolioValue > 0) {
+        this.yearsToReachRemaining = this.calculateYearsWithPV(monthly, this.currentPortfolioValue);
+      } else {
+        this.yearsToReachRemaining = null;
+      }
+    }
+  }
+
+  calculateYearsWithPV(monthlyAmount: number, currentEquity: number): string | number {
+    if (monthlyAmount <= 0) return '∞';
+    if (currentEquity >= this.portfolioGoal) return 0;
+
+    const r = this.AVG_MARKET_YIELD / 12; // Monthly rate
+    const FV = this.portfolioGoal;
+    const PV = currentEquity;
+    const PMT = monthlyAmount;
+
+    // Formula: n = ln( (FV + PMT/r) / (PV + PMT/r) ) / ln(1 + r)
+    const numerator = Math.log((FV + PMT / r) / (PV + PMT / r));
+    const denominator = Math.log(1 + r);
+    const months = numerator / denominator;
+
+    if (isNaN(months) || !isFinite(months)) {
+      return '∞';
+    } else {
+      return (months / 12).toFixed(1);
+    }
+  }
+
+  calculateYears(monthlyAmount: number): string | number {
+    if (monthlyAmount <= 0) {
+      return '∞';
     }
 
     const monthlyRate = this.AVG_MARKET_YIELD / 12;
-    // Formula: N = ln(FV * r / P + 1) / ln(1 + r)
-    // FV = Target Portfolio
-    // P = Monthly Contribution
-
-    // Check if we can ever reach it
-    // if P < 0... handled.
-
     const numerator = Math.log((this.portfolioGoal * monthlyRate / monthlyAmount) + 1);
     const denominator = Math.log(1 + monthlyRate);
     const months = numerator / denominator;
 
     if (isNaN(months) || !isFinite(months)) {
-      this.yearsToReach = '∞';
+      return '∞';
     } else {
-      this.yearsToReach = (months / 12).toFixed(1);
+      return (months / 12).toFixed(1);
     }
   }
 
-  onInputChange() {
-    this.calculatePlan();
+  // Old method kept or removed? Removed to replace with calculateYears
+  calculateYearsToReach(monthlyAmount: number) {
+      this.yearsToReach = this.calculateYears(monthlyAmount);
   }
+
+
 
   checkDirty() {
     this.isDirty =
@@ -256,6 +350,11 @@ export class MyProfilePage implements OnInit {
 
   saveChanges() {
     if (!this.isDirty) return;
+
+    if (!this.monthlyInvestGoal || !this.retirementIncomeGoal) {
+        this.toastService.showToast('Please enter valid amounts for both goals.', 'warning');
+        return;
+    }
 
     this.authService.updateUserProfile({
       monthlyInvestment: this.monthlyInvestGoal,
@@ -268,6 +367,8 @@ export class MyProfilePage implements OnInit {
           monthly: this.monthlyInvestGoal,
           income: this.retirementIncomeGoal
         };
+        // Refresh local state from backend to ensure persistence
+        this.authService.loadUserProgress();
       },
       error: (err) => {
         console.error('Failed to save changes:', err);

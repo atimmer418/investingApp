@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/tab3" text="" icon="chevron-back-outline"></ion-back-button>
     </ion-buttons>
-    <ion-title>Edit Profile</ion-title>
+    <ion-title>My Profile</ion-title>
     <ion-buttons slot="end">
       <ion-button *ngIf="isDirty" (click)="saveChanges()" class="save-button">
         Save
@@ -24,7 +24,6 @@
       </div>
     </div>
     <h2 class="user-name">Firstname Lastname</h2>
-    <p class="user-handle">$portfolioVALUE</p>
   </div>
 
   <ion-card class="plan-card">
@@ -38,16 +37,20 @@
         To retire with
         <div class="inline-input-wrapper">
           <span class="prefix">$</span>
-          <input type="number" [(ngModel)]="retirementIncomeGoal" (ngModelChange)="onInputChange()"
-            class="inline-input" />
+          <input type="number" [(ngModel)]="retirementIncomeGoal" (ngModelChange)="onIncomeChange()"
+            class="inline-input" oninput="if(this.value.length > 5) this.value = this.value.slice(0, 5);" />
           <span class="suffix">/mo</span>
-        </div>
-        by investing
+        </div>, you need a portfolio worth <strong>{{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</strong>.
+      </div>
+      
+      <div class="plan-sentence">
+        By investing
         <div class="inline-input-wrapper">
           <span class="prefix">$</span>
-          <input type="number" [(ngModel)]="monthlyInvestGoal" (ngModelChange)="onInputChange()" class="inline-input" />
+          <input type="number" [(ngModel)]="monthlyInvestGoal" (ngModelChange)="onInvestChange()" class="inline-input"
+            oninput="if(this.value.length > 5) this.value = this.value.slice(0, 5);" />
           <span class="suffix">/mo</span>
-        </div>, you need a <strong>{{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</strong> portfolio.
+        </div>, you will reach that portfolio in <strong>{{ yearsToReach }} years</strong>.
       </div>
 
       <div class="insight-box">
@@ -56,9 +59,27 @@
         </div>
         <div class="insight-text">
           At your current investment rate of <strong>{{ currentScheduledInvestment | currency }} {{
-            investmentFrequencyText }}</strong>, you'll reach
-          this goal in roughly <strong>{{ yearsToReach }} years</strong>.
+            investmentFrequencyText }}</strong>
+          <span *ngIf="currentMonthlyEquivalent > 0" style="color: var(--text-secondary); font-weight: normal;">
+            ({{ currentMonthlyEquivalent | currency:'USD':'symbol':'1.0-0' }}/mo)
+          </span>,
+          you'll reach <strong>{{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</strong> in roughly <strong>{{
+            yearsToReachCurrent }} years</strong>
+          <span *ngIf="yearsToReachRemaining" style="color: var(--text-secondary); font-weight: normal;">
+            ({{ yearsToReachRemaining }} more years)</span>.
         </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar" [style.width.%]="progressPercentage * 100"></div>
+        </div>
+        <div class="progress-labels" style="display: flex; justify-content: space-between; width: 100%; font-size: 10px; color: #8E8E93; margin-top: 4px;">
+          <span>Current: {{ currentPortfolioValue | currency:'USD':'symbol':'1.0-0' }}</span>
+          <span>Goal: {{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</span>
+        </div>
+      </div>
+
+      <div class="disclaimer-text">
+        Our calculations assume a 9% average annual return.<br>Past performance is not indicative of future results.
       </div>
 
     </ion-card-content>
@@ -77,7 +98,7 @@
             <ion-icon name="share-outline"></ion-icon>
           </div>
         </div>
-        <div class="helper-text">Get 1 month free for every friend who joins.</div>
+        <div class="helper-text">Lock in a $5/month subscription for life when 3 friends redeem your code.</div>
       </div>
 
       <div class="divider"></div>

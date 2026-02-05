@@ -38,22 +38,34 @@ export class FaqPage implements OnInit {
 
     faqs: FaqItem[] = [
         {
-            question: 'When will my sales go through?',
-            answer: 'Sales are executed during standard market hours (9:30 AM - 4:00 PM ET on business days). If you place a sell order outside these hours, it will be queued and executed promptly at the next market open.',
+            question: 'What is FRED doing exactly?',
+            answer: 'FRED is your automated investment pilot designed to buy you time back in your life by helping you retire earlier than you would have otherwise. We handle the complex logic of recurring trades and navigating optimal retirement strategy planning. Additionally, FRED acts as a resource available to answer your questions about early retirement planning and its dependency on long term investing. We partner with Plaid and Alpaca Securities to securely hold your assets and execute the actual trades, ensuring your money is handled by a regulated custodian.',
+            isOpen: false,
+            icon: 'information-circle-outline'
+        },
+        {
+            question: 'Is my money safe?',
+            answer: 'Your brokerage account is held with Alpaca Securities LLC, a member of SIPC, which protects securities customers of its members up to $500,000 (including $250,000 for claims for cash). This is the same protection limit provided by other major brokerages like Fidelity and Schwab. FRED uses bank-level encryption to secure your data.\n\n<strong>Short answer: Yes, your money is safe.</strong>',
+            isOpen: false,
+            icon: 'shield-checkmark-outline'
+        },
+        {
+            question: 'When will my investments go through?',
+            answer: 'The ACH transfer is initiated on your Transfer Date. Once it completes (typically 1-3 business days later), the recurring purchase orders for your current portfolio are placed during market hours.',
             isOpen: false,
             icon: 'time-outline'
         },
         {
-            question: 'How long for buying power to become settled cash?',
-            answer: 'Typically, trade settlement takes 1 business day after the trade date (T+1). Once settled, the funds become "Available to Withdraw". You can see this status in your portfolio dashboard.',
-            isOpen: false,
-            icon: 'wallet-outline'
-        },
-        {
-            question: 'Does the schedule keep my selected day?',
+            question: 'Does the investment schedule keep my selected day?',
             answer: 'Yes! We always aim to execute on your exact preferred day. If that day falls on a weekend or market holiday, we simply shift that specific investment to the next available business day. Your future investments will stay on your original schedule.',
             isOpen: false,
             icon: 'calendar-outline'
+        },
+        {
+            question: 'What type of account do I get with Alpaca through FRED?',
+            answer: 'You have a personal brokerage account with Alpaca Securities, registered entirely in your name. This gives you full ownership and control over the account. At any point, you can liquidate your holdings or transfer your assets to another brokerage service.',
+            isOpen: false,
+            icon: 'business-outline'
         },
         {
             question: 'How do taxes work and how do I report them?',
@@ -62,34 +74,22 @@ export class FaqPage implements OnInit {
             icon: 'document-text-outline'
         },
         {
-            question: 'What is FRED doing exactly?',
-            answer: 'FRED is your automated investment pilot. We handle the complex logic of recurring trades, portfolio rebalancing, and strategy execution. We partner with Alpaca Securities to securely hold your assets and execute the actual trades, ensuring your money is handled by a regulated custodian.',
-            isOpen: false,
-            icon: 'information-circle-outline'
-        },
-        {
-            question: 'Is my money safe?',
-            answer: 'Your brokerage account is held with Alpaca Securities LLC, a member of SIPC, which protects securities customers of its members up to $500,000 (including $250,000 for claims for cash). FRED uses bank-level encryption to secure your data.',
-            isOpen: false,
-            icon: 'shield-checkmark-outline'
-        },
-        {
-            question: 'What type of account do I get with Alpaca through FRED?',
-            answer: 'Your Alpaca account through FRED is set up as a margin account, which legally gives you access to features like same-day settlement and extended trading hours. However, the margin borrowing feature is disabled by default since most FRED users don\'t need it. This setup provides you with the benefits of a margin account (faster settlement) without the risks of margin trading, keeping your investment strategy simple and safe.',
-            isOpen: false,
-            icon: 'business-outline'
-        },
-        {
             question: 'What do the different portfolio values mean?',
-            answer: 'Total Equity is your complete account value (investments + cash). Portfolio Value is just your stock holdings\' market value. Total Invested is how much cash you\'ve deposited. Buying Power is funds available for immediate trading. Settled Cash is withdrawn-ready funds (typically available 1 day after selling stocks).',
+            answer: '<strong>Total Equity</strong> is your complete account value (Portfolio Value + Buying Power).\n<strong>Portfolio Value</strong> is your stock holdings\' market value (Total Invested + Total G/L).\n<strong>Total Invested</strong> is the total amount of money you have contributed to your portfolio.\n<strong>Buying Power</strong> is funds available for immediate trading.\n<strong>Settled Cash</strong> is withdrawn-ready funds (typically available 1 day after selling stocks).',
             isOpen: false,
             icon: 'cash-outline'
         },
         {
             question: 'What do the Portfolio Insight table columns mean?',
-            answer: 'Symbol shows your stock ticker and company name. Quantity is how many shares you own. Avg Cost is the average price you paid per share. Current is today\'s market price per share. Value is your position\'s total market value (Quantity × Current). Gain/Loss shows your profit or loss in dollars and percentage. % Account shows what percentage of your total portfolio this position represents.',
+            answer: '<strong>Symbol</strong> shows a stock ticker and company name.\n<strong>Quantity</strong> is how many shares you own.\n<strong>Avg Cost</strong> is the average price you paid per share.\n<strong>Current</strong> is today\'s market price per share.\n<strong>Value</strong> is your position\'s total market value (Quantity × Current).\n<strong>Day G/L</strong> shows today\'s profit or loss.\n<strong>Total G/L</strong> shows your total profit or loss since buying.\n<strong>% Account</strong> shows what percentage of your total portfolio this position represents.',
             isOpen: false,
             icon: 'stats-chart-outline'
+        },
+        {
+            question: 'How long for buying power to become settled cash?',
+            answer: 'Typically, trade settlement takes 1 business day after the sell date (T+1). Once settled, the funds become "Available to Withdraw".',
+            isOpen: false,
+            icon: 'wallet-outline'
         }
     ];
 

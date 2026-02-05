@@ -447,25 +447,18 @@ public class FredKnowledge {
         // Chunk 16 — Metrics Explanation (V2)
         CANONICAL_CHUNKS.add(new CanonicalChunk(
                 "metrics_pl_explanation_v2",
-                "Unrealized P/L vs Total Cumulative Return",
+                "Total Cumulative Pre-tax Return",
                 """
                         # Understanding Your Dashboard Metrics
 
-                        FRED displays two key performance numbers that measure different things:
+                        FRED displays your **Total Cumulative Pre-tax Return** as a percentage at the bottom of your chart. here is what it means:
 
-                        1. **Unrealized P/L (Top of Dashboard)**
-                           - This number represents the profit or loss ONLY for the investments you currently hold.
-                           - It is "Unrealized" because you haven't sold the assets yet—it's just "paper" gain or loss.
-                           - This number changes continuously with the market price of your current portfolio.
+                        **Total Cumulative Pre-tax Return**
+                        - This percentage represents your **TOTAL** historical performance since you started with FRED.
+                        - It accounts for both **Unrealized** gains (from assets you currently hold) AND **Realized** profits/losses (from assets you have already sold).
+                        - This is the true measure of your account's efficiency and growth over time, capturing the complete picture of every dollar invested.
 
-                        2. **Total Cumulative Pre-tax Return (Bottom of Chart)**
-                           - This number represents your TOTAL historical performance: **Realized + Unrealized**.
-                           - It includes the "Unrealized" gains from your current holdings PLUS any "Realized" profits or losses from assets you have already sold.
-                           - This is the true measure of how much money your account has made since inception.
-
-                        ## Why are they different?
-                        - If you have **never sold** an investment, these two numbers will be identical.
-                        - If you **have sold** investments in the past, they will be different because the "Total Cumulative Return" remembers the profit/loss from those past sales, while "Unrealized P/L" only cares about what you own right now.
+                        unlike a simple daily change, this number tells you: "For every dollar I've put in since day one, how much has it grown?"
                         """,
                 "v2",
                 "metrics",
@@ -542,6 +535,112 @@ public class FredKnowledge {
                         """,
                 "v2",
                 "philosophy",
+                "low",
+                true));
+
+        // Chunk - FAQ: What is FRED doing exactly?
+        CANONICAL_CHUNKS.add(new CanonicalChunk(
+                "faq_fred_function_v1",
+                "FAQ: What is FRED doing exactly?",
+                "FRED is your automated investment pilot designed to buy you time back in your life by helping you retire earlier than you would have otherwise. " +
+                "We handle the complex logic of recurring trades and navigating optimal retirement strategy planning. " +
+                "Additionally, FRED acts as a resource available to answer your questions about early retirement planning and its dependency on long term investing. " +
+                "We partner with Plaid and Alpaca Securities to securely hold your assets and execute the actual trades, ensuring your money is handled by a regulated custodian.",
+                "v1",
+                "faq",
+                "low",
+                true));
+
+        // Chunk - FAQ: Is my money safe?
+        CANONICAL_CHUNKS.add(new CanonicalChunk(
+                "faq_money_safety_v1",
+                "FAQ: Is my money safe?",
+                "Your brokerage account is held with Alpaca Securities LLC, a member of SIPC, which protects securities customers of its members up to $500,000 (including $250,000 for claims for cash). " +
+                "This is the same protection limit provided by other major brokerages like Fidelity and Schwab. FRED uses bank-level encryption to secure your data. " +
+                "Short answer: Yes, your money is safe.",
+                "v1",
+                "faq",
+                "low",
+                true));
+
+        // Chunk - FAQ: When will my investments go through?
+        CANONICAL_CHUNKS.add(new CanonicalChunk(
+                "faq_investment_timing_v1",
+                "FAQ: When will my investments go through?",
+                "The ACH transfer is initiated on your Transfer Date. Once it completes (typically 2-3 business days later), the recurring purchase orders for your current portfolio are placed during market hours.",
+                "v1",
+                "faq",
+                "low",
+                true));
+
+        // Chunk - FAQ: Does the schedule keep my selected day?
+        CANONICAL_CHUNKS.add(new CanonicalChunk(
+                "faq_schedule_consistency_v1",
+                "FAQ: Does the schedule keep my selected day?",
+                "Yes! We always aim to execute on your exact preferred day. If that day falls on a weekend or market holiday, we simply shift that specific investment to the next available business day. Your future investments will stay on your original schedule.",
+                "v1",
+                "faq",
+                "low",
+                true));
+
+        // Chunk - FAQ: What type of account do I get with Alpaca through FRED?
+        CANONICAL_CHUNKS.add(new CanonicalChunk(
+                "faq_account_type_v1",
+                "FAQ: What type of account do I get with Alpaca through FRED?",
+                "You have a personal brokerage account with Alpaca Securities, registered entirely in your name. This gives you full ownership and control over the account. At any point, you can liquidate your holdings or transfer your assets to another brokerage service.",
+                "v1",
+                "faq",
+                "low",
+                true));
+
+        // Chunk - FAQ: How do taxes work and how do I report them?
+        CANONICAL_CHUNKS.add(new CanonicalChunk(
+                "faq_taxes_reporting_v1",
+                "FAQ: How do taxes work and how do I report them?",
+                "As with any brokerage account, you are responsible for reporting capital gains and dividends. We (via our partner Alpaca) will generate a consolidated Form 1099 by mid-February each year. You can download this document directly from the app to use for your tax filing.",
+                "v1",
+                "faq",
+                "low",
+                true));
+
+        // Chunk - FAQ: What do the different portfolio values mean?
+        CANONICAL_CHUNKS.add(new CanonicalChunk(
+                "faq_portfolio_values_v1",
+                "FAQ: What do the different portfolio values mean?",
+                "Total Equity is your complete account value (Portfolio Value + Buying Power). " +
+                "Portfolio Value is your stock holdings' market value (Total Invested + Total G/L). " +
+                "Total Invested is the total amount of money you have contributed to your portfolio. " +
+                "Buying Power is funds available for immediate trading. " +
+                "Settled Cash is withdrawn-ready funds (typically available 1 day after selling stocks).",
+                "v1",
+                "faq",
+                "low",
+                true));
+
+        // Chunk - FAQ: What do the Portfolio Insight table columns mean?
+        CANONICAL_CHUNKS.add(new CanonicalChunk(
+                "faq_portfolio_insights_v1",
+                "FAQ: What do the Portfolio Insight table columns mean?",
+                "Symbol shows a stock ticker and company name. " +
+                "Quantity is how many shares you own. " +
+                "Avg Cost is the average price you paid per share. " +
+                "Current is today's market price per share. " +
+                "Value is your position's total market value (Quantity × Current). " +
+                "Day G/L shows today's profit or loss. " +
+                "Total G/L shows your total profit or loss since buying. " +
+                "% Account shows what percentage of your total portfolio this position represents.",
+                "v1",
+                "faq",
+                "low",
+                true));
+
+        // Chunk - FAQ: How long for buying power to become settled cash?
+        CANONICAL_CHUNKS.add(new CanonicalChunk(
+                "faq_settled_cash_v1",
+                "FAQ: How long for buying power to become settled cash?",
+                "Typically, trade settlement takes 1 business day after the sell date (T+1). Once settled, the funds become \"Available to Withdraw\".",
+                "v1",
+                "faq",
                 "low",
                 true));
     }
