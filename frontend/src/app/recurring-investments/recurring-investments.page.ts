@@ -18,6 +18,7 @@ import {
   IonButtons,
   IonBackButton,
   IonDatetime,
+  IonDatetimeButton,
   IonModal
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -64,6 +65,7 @@ interface InvestmentFrequencyOption {
     IonButtons,
     IonBackButton,
     IonDatetime,
+    IonDatetimeButton,
     IonModal
   ],
   templateUrl: './recurring-investments.page.html',
@@ -281,6 +283,41 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
   }
 
   /**
+   * Handle frequency change
+   */
+  onFrequencyChange() {
+    if (this.editedInvestment.frequency === 'SEMI_MONTHLY') {
+      const now = new Date();
+      const currentDay = now.getDate();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      
+      let nextDate: Date;
+      
+      // If today is 2nd-15th -> Next date is 15th of current month
+      if (currentDay >= 2 && currentDay <= 15) {
+        nextDate = new Date(Date.UTC(currentYear, currentMonth, 15, 12, 0, 0));
+      } 
+      // If today is 16th-1st (16th-End or 1st) -> Next date is 1st (of next month if 16th+, or current month if 1st)
+      else if (currentDay >= 16) {
+        nextDate = new Date(Date.UTC(currentYear, currentMonth + 1, 1, 12, 0, 0));
+      }
+      else {
+         // Today is the 1st
+         // "if the date is the 16th-1st, the transfer date should show the 1st"
+         // If today is the 1st, we show the 1st (of current month).
+         nextDate = new Date(Date.UTC(currentYear, currentMonth, 1, 12, 0, 0));
+      }
+      
+      const nYear = nextDate.getUTCFullYear();
+      const nMonth = (nextDate.getUTCMonth() + 1).toString().padStart(2, '0');
+      const nDay = nextDate.getUTCDate().toString().padStart(2, '0');
+      
+      this.editedInvestment.nextInvestmentDate = `${nYear}-${nMonth}-${nDay}`;
+    }
+  }
+
+  /**
    * Convert date to ISO string for datetime picker
    */
   getDateForPicker(dateInput: string | number[] | undefined): string {
@@ -324,6 +361,17 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error converting date for picker:', error);
       return '';
+    }
+  }
+
+  /**
+   * Confirm date selection from picker
+   */
+  confirmDate(value: any) {
+    if (value) {
+      // Handle both string and array (though for date presentation usually string)
+      const selectedDate = Array.isArray(value) ? value[0] : value;
+      this.editedInvestment.nextInvestmentDate = selectedDate;
     }
   }
 
@@ -587,6 +635,34 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
   }
 
   /**
+   * Check if there are unsaved changes
+   */
+  hasChanges(): boolean {
+    if (!this.currentInvestment) return false;
+
+    // Check amount
+    if (this.currentInvestment.investmentAmount !== this.editedInvestment.investmentAmount) {
+      return true;
+    }
+
+    // Check frequency
+    if (this.currentInvestment.frequency !== this.editedInvestment.frequency) {
+      return true;
+    }
+
+    // Check next investment date
+    // Normalize both dates to YYYY-MM-DD string for comparison
+    const currentDate = this.getDateForPicker(this.currentInvestment.nextInvestmentDate);
+    const editedDate = this.getDateForPicker(this.editedInvestment.nextInvestmentDate);
+
+    if (currentDate !== editedDate) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Calculate estimated trade execution window (1-3 business days after transfer date)
    */
   getEstimatedTradeWindow(): string {
@@ -614,6 +690,9 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       if (isNaN(date.getTime())) return '';
 
       // Calculate trade window: 1-3 business days after transfer
+      // "so if someones weekly schedule is friday, they will see the dates for the next monday - wednesday"
+      // If today is Friday -> +1 business day is Monday (Day 1). +3 business days is Wednesday (Day 3).
+      // Logic: addBusinessDays(1) to addBusinessDays(3)
       const minDate = this.addBusinessDays(date, 1);
       const maxDate = this.addBusinessDays(date, 3);
 

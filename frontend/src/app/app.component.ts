@@ -264,8 +264,33 @@ export class AppComponent implements OnInit {
 
     const currentBaseUrl = this.router.url.split('?')[0].split('#')[0];
 
-    // Navigate if we're not already on the target route
+    // Define onboarding routes that should redirect to home once completed
+    const onboardingRoutes = [
+      '/get-started', '/survey-initial', '/fi-plan-results',
+      '/auth-finalize', '/kyc-verification', '/link-bank',
+      '/investment-schedule', '/investment-confirmation', '/'
+    ];
+
+    let shouldNavigate = false;
+
+    // Determine if we should navigate
     if (targetRoute && currentBaseUrl !== targetRoute) {
+      if (targetRoute === '/tabs/tab1') {
+        // If the user is fully onboarded (target is home), ONLY redirect if they are currently on an onboarding page
+        // This allows users to stay on internal pages like /my-profile or /tabs/tab2 without being forced to home
+        if (onboardingRoutes.includes(currentBaseUrl)) {
+          shouldNavigate = true;
+        } else {
+          console.log(`[AppComponent] DECISION: User fully onboarded and on valid internal page ${currentBaseUrl}. Staying put.`);
+        }
+      } else {
+        // For specific onboarding steps, always enforce the target route
+        shouldNavigate = true;
+      }
+    }
+
+    // Navigate if needed
+    if (shouldNavigate) {
       console.log(`[AppComponent] DECISION: ${decisionReason} Navigating to ${targetRoute}.`);
       this.router.navigateByUrl(targetRoute, { replaceUrl: true });
     } else if (targetRoute && currentBaseUrl === targetRoute) {

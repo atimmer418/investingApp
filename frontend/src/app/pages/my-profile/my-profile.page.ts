@@ -57,7 +57,7 @@ export class MyProfilePage implements OnInit {
 
   // Internal state
   private exactAnnualIncome: number | null = null;
-  private currentFrequency: string = '';
+  currentFrequency: string = '';
 
   constructor(
     private authService: AuthService,

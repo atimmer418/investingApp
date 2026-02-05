@@ -60,13 +60,11 @@
         <div class="insight-text">
           At your current investment rate of <strong>{{ currentScheduledInvestment | currency }} {{
             investmentFrequencyText }}</strong>
-          <span *ngIf="currentMonthlyEquivalent > 0" style="color: var(--text-secondary); font-weight: normal;">
+          <span *ngIf="currentMonthlyEquivalent > 0 && currentFrequency !== 'monthly'" style="color: var(--text-secondary); font-weight: normal;">
             ({{ currentMonthlyEquivalent | currency:'USD':'symbol':'1.0-0' }}/mo)
           </span>,
           you'll reach <strong>{{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</strong> in roughly <strong>{{
-            yearsToReachCurrent }} years</strong>
-          <span *ngIf="yearsToReachRemaining" style="color: var(--text-secondary); font-weight: normal;">
-            ({{ yearsToReachRemaining }} more years)</span>.
+            yearsToReachRemaining }} more years</strong>.
         </div>
 
         <div class="progress-bar-container">
@@ -98,7 +96,7 @@
             <ion-icon name="share-outline"></ion-icon>
           </div>
         </div>
-        <div class="helper-text">Lock in a $5/month subscription for life when 3 friends redeem your code.</div>
+        <div class="helper-text">Lock in a $5/mo subscription for life when 3 users redeem your code. Users can redeem only one code.</div>
       </div>
 
       <div class="divider"></div>
