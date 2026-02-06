@@ -39,6 +39,9 @@ public class UserController {
     @Autowired
     private com.investingapp.backend.repository.UserSessionRepository userSessionRepository;
 
+    @Autowired
+    private com.investingapp.backend.service.UserService userService;
+
     public static class UserProgressResponse {
         private boolean getStartedCompleted;
         private boolean surveyInitialCompleted;
@@ -54,6 +57,9 @@ public class UserController {
         private String lastName;
         private String nextStep;
         private double completionPercentage;
+        private String referralCode;
+        private int referralCount;
+        private boolean hasAppliedReferral;
 
         public UserProgressResponse(User user) {
             UserProgress progress = user.getUserProgress();
@@ -86,6 +92,9 @@ public class UserController {
             this.retirementIncome = user.getRetirementIncome();
             this.firstName = user.getFirstName();
             this.lastName = user.getLastName();
+            this.referralCode = user.getReferralCode();
+            this.referralCount = user.getReferralCount();
+            this.hasAppliedReferral = user.isHasAppliedReferral();
         }
 
         // Getters
@@ -137,12 +146,46 @@ public class UserController {
             return lastName;
         }
 
+        public String getReferralCode() {
+            return referralCode;
+        }
+
+        public int getReferralCount() {
+            return referralCount;
+        }
+
+        public boolean isHasAppliedReferral() {
+            return hasAppliedReferral;
+        }
+
         public String getNextStep() {
             return nextStep;
         }
 
         public double getCompletionPercentage() {
             return completionPercentage;
+        }
+    }
+
+    @Transactional
+    @PostMapping("/referral/apply")
+    public ResponseEntity<?> applyReferralCode(Authentication authentication, @RequestBody Map<String, String> payload) {
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "User not found"));
+        }
+
+        String code = payload.get("code");
+        if (code == null || code.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Referral code is required"));
+        }
+
+        try {
+            userService.applyReferralCode(user.getId(), code);
+            return ResponseEntity.ok(Map.of("message", "Referral code applied successfully."));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 

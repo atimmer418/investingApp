@@ -44,7 +44,8 @@ import {
   cashOutline,
   phonePortraitOutline,
   moonOutline,
-  checkmarkCircle
+  checkmarkCircle,
+  giftOutline
 } from 'ionicons/icons';
 import { SettingsService, UserPreferences, RecurringInvestment } from '../services/settings.service';
 import { PlaidService, BankAccount } from '../services/plaid.service';
@@ -223,7 +224,8 @@ export class Tab3Page implements OnInit, OnDestroy {
       cashOutline,
       phonePortraitOutline,
       moonOutline,
-      checkmarkCircle
+      checkmarkCircle,
+      giftOutline
     });
   }
 

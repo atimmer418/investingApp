@@ -44,8 +44,11 @@ export class MyProfilePage implements OnInit {
   progressPercentage: number = 0; // currentPortfolioValue / portfolioGoal
 
   // Referral
-  referralCode: string = 'FREDJOINS'; // Mocked default, could use user ID
+  referralCode: string = ''; 
   redeemCodeInput: string = '';
+  referralCount: number = 0;
+  hasAppliedReferral: boolean = false;
+  isLoadingReferral: boolean = false;
 
   // State
   isDirty: boolean = false;
@@ -93,6 +96,17 @@ export class MyProfilePage implements OnInit {
         if (progress.retirementIncome) {
           this.exactAnnualIncome = progress.retirementIncome; // Store exact value
           this.retirementIncomeGoal = Math.round(progress.retirementIncome / 12);
+        }
+        
+        // Referral Data
+        if (progress.referralCode) {
+           this.referralCode = progress.referralCode;
+        }
+        if (progress.referralCount !== undefined) {
+           this.referralCount = progress.referralCount;
+        }
+        if (progress.hasAppliedReferral !== undefined) {
+           this.hasAppliedReferral = progress.hasAppliedReferral;
         }
 
         // Store originals for dirty check
@@ -378,17 +392,40 @@ export class MyProfilePage implements OnInit {
   }
 
   async copyReferral() {
+    if (!this.referralCode) return;
     await navigator.clipboard.writeText(this.referralCode);
     this.toastService.showToast('Referral code copied!', 'success');
   }
 
   redeemCode() {
-    if (!this.redeemCodeInput.trim()) return;
+    if (!this.redeemCodeInput || this.redeemCodeInput.trim() === '') {
+      this.toastService.showToast('Please enter a referral code.', 'warning');
+      return;
+    }
 
-    // Mock redemption
-    setTimeout(() => {
-      this.toastService.showToast('Code redeemed successfully!', 'success');
-      this.redeemCodeInput = '';
-    }, 1000);
+    if (this.referralCode && this.redeemCodeInput.trim().toUpperCase() === this.referralCode.toUpperCase()) {
+        this.toastService.showToast('You cannot use your own referral code.', 'danger');
+        return;
+    }
+
+    if (this.hasAppliedReferral) {
+        this.toastService.showToast('You have already applied a referral code.', 'warning');
+        return;
+    }
+
+    this.isLoadingReferral = true;
+    this.authService.applyReferralCode(this.redeemCodeInput).subscribe({
+      next: () => {
+        this.isLoadingReferral = false;
+        this.toastService.showToast('Referral code applied successfully!', 'success');
+        this.redeemCodeInput = '';
+        this.authService.loadUserProgress(); // Refresh state
+      },
+      error: (error) => {
+        this.isLoadingReferral = false;
+        const msg = error.error?.message || 'Failed to apply referral code.';
+        this.toastService.showToast(msg, 'danger');
+      }
+    });
   }
 }

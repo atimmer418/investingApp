@@ -20,6 +20,9 @@ export interface UserProgress {
   retirementIncome?: number; // User's desired retirement income
   firstName?: string;
   lastName?: string;
+  referralCode?: string;
+  referralCount?: number;
+  hasAppliedReferral?: boolean;
 }
 
 export interface PasskeyAuthRequest {
@@ -734,4 +737,9 @@ export class AuthService {
 
   // You could add automatic token refresh logic here in the future
   // refreshTokenIfNeeded(): void { ... }
+  
+  applyReferralCode(code: string): Observable<any> {
+    const url = `${BACKEND_API_URL}/user/referral/apply`;
+    return this.http.post(url, { code }, { headers: this.getAuthHeaders() });
+  }
 }

@@ -89,7 +89,7 @@
     <ion-card-content>
 
       <div class="referral-section">
-        <div class="sub-label">SHARE THE WEALTH</div>
+        <div class="sub-label">SHARE THE WEALTH (<span style="color: var(--ion-color-primary); font-weight: bold;">{{ referralCount }} / 3 Redeemed</span>)</div>
         <div class="code-box">
           <div class="code-text">{{ referralCode }}</div>
           <div class="share-btn" (click)="copyReferral()">
@@ -103,12 +103,20 @@
 
       <div class="redeem-section">
         <div class="sub-label">REDEEM CODE</div>
+        
         <div class="redeem-row">
           <div class="input-container">
             <ion-icon name="ticket-outline" class="input-icon"></ion-icon>
-            <input type="text" placeholder="Enter referral code" [(ngModel)]="redeemCodeInput" />
+            <input type="text" [placeholder]="hasAppliedReferral ? 'Code applied' : 'Enter referral code'" [(ngModel)]="redeemCodeInput" [disabled]="isLoadingReferral || hasAppliedReferral" />
           </div>
-          <button class="apply-btn" (click)="redeemCode()">Apply</button>
+          <button class="apply-btn" (click)="redeemCode()" [disabled]="isLoadingReferral || hasAppliedReferral">
+            {{ isLoadingReferral ? '...' : (hasAppliedReferral ? 'Applied' : 'Apply') }}
+          </button>
+        </div>
+
+        <div class="redeem-success" *ngIf="hasAppliedReferral">
+             <ion-icon name="checkmark-circle-outline" style="font-size: 20px; color: var(--ion-color-success); margin-right: 8px;"></ion-icon>
+             <span>Referral code applied</span>
         </div>
       </div>
 

@@ -46,6 +46,7 @@ public class WebAuthnService {
     private final UserDetailsServiceImpl userDetailsService;
     private final PlaidService plaidService;
     private final EncryptionService encryptionService;
+    private final UserService userService;
 
     @Autowired
     public WebAuthnService(RelyingParty relyingParty,
@@ -55,7 +56,8 @@ public class WebAuthnService {
                            JwtUtils jwtUtils,
                            UserDetailsServiceImpl userDetailsService,
                            PlaidService plaidService,
-                           EncryptionService encryptionService) {
+                           EncryptionService encryptionService,
+                           UserService userService) {
         this.relyingParty = relyingParty;
         this.userRepository = userRepository;
         this.passkeyCredentialRepository = passkeyCredentialRepository;
@@ -64,6 +66,7 @@ public class WebAuthnService {
         this.userDetailsService = userDetailsService;
         this.plaidService = plaidService;
         this.encryptionService = encryptionService;
+        this.userService = userService;
     }
 
     @Transactional
@@ -85,6 +88,9 @@ public class WebAuthnService {
         random.nextBytes(handleBytes);
         user.setUserHandle(Base64.getUrlEncoder().withoutPadding().encodeToString(handleBytes));
         
+        // Generate and set unique referral code using email as base
+        user.setReferralCode(userService.generateUniqueReferralCode(email));
+
         // Store FI plan data (add these fields to your User model)
         user.setPlanId(planId);
         user.setTimeToFI(timeToFI);

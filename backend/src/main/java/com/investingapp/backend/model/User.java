@@ -74,6 +74,16 @@ public class User {
     @Column(name = "pin_lockout_level")
     private Integer pinLockoutLevel = 0;
 
+    // Referral System
+    @Column(unique = true, length = 20)
+    private String referralCode;
+
+    @Column(name = "has_applied_referral")
+    private boolean hasAppliedReferral = false;
+
+    @Column(name = "referral_count")
+    private int referralCount = 0;
+
     // Account Recovery
     @Column(name = "ssn")
     private String ssn; // In production, this MUST be encrypted!
