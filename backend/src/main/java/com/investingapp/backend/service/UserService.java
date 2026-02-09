@@ -121,7 +121,7 @@ public class UserService {
             throw new RuntimeException("User not found");
         }
         
-        if (user.isHasAppliedReferral()) {
+        if (Boolean.TRUE.equals(user.getHasAppliedReferral())) {
             throw new RuntimeException("User has already applied a referral code.");
         }
 
@@ -140,7 +140,8 @@ public class UserService {
         }
         
         user.setHasAppliedReferral(true);
-        referrer.setReferralCount(referrer.getReferralCount() + 1);
+        int currentCount = referrer.getReferralCount() != null ? referrer.getReferralCount() : 0;
+        referrer.setReferralCount(currentCount + 1);
         
         userRepository.save(user);
         userRepository.save(referrer);

@@ -93,8 +93,8 @@ public class UserController {
             this.firstName = user.getFirstName();
             this.lastName = user.getLastName();
             this.referralCode = user.getReferralCode();
-            this.referralCount = user.getReferralCount();
-            this.hasAppliedReferral = user.isHasAppliedReferral();
+            this.referralCount = user.getReferralCount() != null ? user.getReferralCount() : 0;
+            this.hasAppliedReferral = Boolean.TRUE.equals(user.getHasAppliedReferral());
         }
 
         // Getters

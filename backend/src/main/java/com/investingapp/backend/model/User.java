@@ -79,10 +79,10 @@ public class User {
     private String referralCode;
 
     @Column(name = "has_applied_referral")
-    private boolean hasAppliedReferral = false;
+    private Boolean hasAppliedReferral = false;
 
     @Column(name = "referral_count")
-    private int referralCount = 0;
+    private Integer referralCount = 0;
 
     // Account Recovery
     @Column(name = "ssn")
