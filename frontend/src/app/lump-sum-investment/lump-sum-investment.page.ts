@@ -94,7 +94,7 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   // Investment data
-  investmentAmount: number = 0;
+  investmentAmount: number | null = null;
   investmentType: 'portfolio' | 'stock' = 'portfolio';
   fundingSource: 'bank' | 'buying_power' = 'bank';
   buyingPower: number = 0;
@@ -182,7 +182,7 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
 
   onAmountChange() {
     // Validate amount
-    if (this.investmentAmount < 0) {
+    if (this.investmentAmount && this.investmentAmount < 0) {
       this.investmentAmount = 0;
     }
   }
@@ -374,7 +374,7 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
 
             // Reset form after successful investment
             setTimeout(() => {
-              this.investmentAmount = 0;
+              this.investmentAmount = null;
               this.selectedStock = '';
               this.selectedStockInfo = null;
               this.investmentType = 'portfolio';
@@ -441,7 +441,7 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
     if (this.investmentType === 'portfolio') {
       return 'your portfolio';
     } else if (this.selectedStockInfo) {
-      return `${this.selectedStockInfo.name} (${this.selectedStockInfo.symbol})`;
+      return this.selectedStockInfo.symbol;
     }
     return 'selected investment';
   }
@@ -462,8 +462,9 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
   }
 
   getProjectedGrowth(): number {
-    // Simple 7% annual growth calculation for display
-    const annualRate = 0.07;
-    return this.investmentAmount * (1 + annualRate);
+    // 9% annual growth compounded for 10 years, accounting for DRIP
+    const annualRate = 0.09;
+    const years = 10;
+    return (this.investmentAmount || 0) * Math.pow(1 + annualRate, years);
   }
 }

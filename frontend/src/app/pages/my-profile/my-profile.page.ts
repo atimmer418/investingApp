@@ -161,11 +161,11 @@ export class MyProfilePage implements OnInit {
     });
 
     // Mock Referral Code based on Email/ID if available
-    const user = this.authService.getCurrentUser();
-    if (user && user.email) {
-      const prefix = user.email.split('@')[0].toUpperCase().substring(0, 4);
-      this.referralCode = `${prefix}${user.id || '2025'}`;
-    }
+    // const user = this.authService.getCurrentUser();
+    // if (user && user.email) {
+    //   const prefix = user.email.split('@')[0].toUpperCase().substring(0, 4);
+    //   this.referralCode = `${prefix}${user.id || '2025'}`;
+    // }
   }
 
   formatScheduleText(investment: any) {

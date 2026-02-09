@@ -17,7 +17,7 @@
       <div class="section-header">
         <div>
           <h3 class="section-title">Lump Sum Investment</h3>
-          <p class="section-subtitle">Make a one-time lump sum investment from your linked bank account or buying power into your current portfolio or a stock of your choosing.</p>
+          <p class="section-subtitle">Make a one-time lump sum investment from your linked bank account or buying power into your current portfolio or an individual stock/ETF of your choosing.</p>
         </div>
       </div>
         
@@ -32,7 +32,7 @@
           </button>
           <button class="ios-tab-button" [class.active]="investmentType === 'stock'"
             (click)="investmentType = 'stock'; onInvestmentTypeChange()">
-            Individual Stock
+            Individual
           </button>
         </div>
 
@@ -118,7 +118,7 @@
             <p>{{ selectedStockInfo?.name }}</p>
           </div>
           <ion-button fill="clear" size="small" (click)="selectedStock = ''; selectedStockInfo = null; searchTerm = ''">
-            Change
+            Remove
           </ion-button>
         </div>
         
@@ -131,7 +131,7 @@
       </div>
       
       <!-- Amount Input -->
-      <div class="input-wrapper">
+      <div class="input-wrapper investment-amount-wrapper">
         <label class="input-label">Investment Amount</label>
         <div class="currency-input">
           <span class="currency-symbol">$</span>
@@ -148,31 +148,31 @@
       </div>
 
       <!-- Investment Projection -->
-      <div class="projection-section" *ngIf="investmentAmount > 0">
+      <div class="projection-section" *ngIf="(investmentAmount || 0) > 0">
         <h4>Investment Projection</h4>
         <div class="projection-card">
           <div class="projection-item">
             <span class="projection-label">Investment Amount</span>
-            <span class="projection-amount">{{ formatCurrency(investmentAmount) }}</span>
+            <span class="projection-amount">{{ formatCurrency(investmentAmount || 0) }}</span>
           </div>
           <div class="projection-item">
             <span class="projection-label">Investment Target</span>
             <span class="projection-amount target">{{ getInvestmentTarget() }}</span>
           </div>
-          <div class="projection-item" *ngIf="investmentType === 'portfolio'">
-            <span class="projection-label">Projected Value (1 Year)</span>
+          <div class="projection-item projected-value" *ngIf="investmentType === 'portfolio'">
+            <span class="projection-label">Projected Value (10 Yrs)</span>
             <span class="projection-amount projected">{{ formatCurrency(getProjectedGrowth()) }}</span>
           </div>
           <div class="projection-item gain" *ngIf="investmentType === 'portfolio'">
             <span class="projection-label">Potential Gain</span>
-            <span class="projection-amount gain-amount">+{{ formatCurrency(getProjectedGrowth() - investmentAmount) }}</span>
+            <span class="projection-amount gain-amount">+{{ formatCurrency(getProjectedGrowth() - (investmentAmount || 0)) }}</span>
           </div>
         </div>
         <p class="disclaimer" *ngIf="investmentType === 'portfolio'">
-          *Projections are estimates based on historical market performance. Actual returns may vary.
+          Our projections assume a 9% average annual return. Actual returns may vary based on market conditions and your portfolio allocation.
         </p>
         <p class="disclaimer" *ngIf="investmentType === 'stock'">
-          *Individual stock investments carry higher risk. Past performance does not guarantee future results.
+          Individual stock investments carry higher risk.<br>Past performance does not guarantee future results.
         </p>
       </div>
       
@@ -229,7 +229,7 @@
                     </ion-button>
                     <ion-popover trigger="acats-tooltip-lump" triggerAction="click">
                         <ng-template>
-                            <ion-content class="ion-padding">
+                            <ion-content [scrollY]="false" class="ion-padding">
                                 <p style="font-size: 13px;">Found in your monthly statements or account settings.</p>
                             </ion-content>
                         </ng-template>

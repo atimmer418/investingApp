@@ -92,6 +92,10 @@ p {
 /* Input Styling */
 .input-wrapper {
   margin-bottom: 2rem;
+
+ &.investment-amount-wrapper {
+    margin-bottom: 1rem;
+  }
   
   .input-label {
     display: block;
@@ -132,6 +136,7 @@ p {
       font-weight: 600;
       font-size: 1.1rem;
       flex: 1;
+      border: 0;
       
       &::part(native) {
         border: none !important;
@@ -340,7 +345,7 @@ p {
   .projection-card {
     background: #f9f9f9;
     border-radius: 12px;
-    padding: 1.2rem;
+    padding: 0.6rem 1.2rem;
     
     .projection-item {
       display: flex;
@@ -353,9 +358,13 @@ p {
         margin-bottom: 0.5rem;
         padding-bottom: 1rem;
       }
+
+      &.projected-value {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
       
       &.gain {
-        margin-top: 1rem;
         padding-top: 1rem;
         border-top: 2px solid var(--ion-color-success);
         border-bottom: none;
@@ -393,7 +402,7 @@ p {
   }
   
   .disclaimer {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: #8e8e93;
     margin: 1rem 0 0 0;
     line-height: 1.4;
