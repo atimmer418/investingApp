@@ -1,5 +1,9 @@
 // iOS-style Portfolio Customization
 
+ion-content {
+  --keyboard-offset: 0px !important;
+}
+
 ion-header {
   ion-toolbar {
     --background: var(--ion-color-primary);
@@ -17,6 +21,15 @@ ion-header {
   }
 }
 
+.ion-text-wrap {
+  margin-bottom: 0;
+}
+
+.ion-padding-vertical {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .gray-background {
   --background: var(--app-background-alt, #f2f2f7);
 }
@@ -30,6 +43,7 @@ ion-header {
   max-width: 600px;
   margin: 0 auto;
   padding: 16px;
+  padding-bottom: 8px;
 }
 
 .mobile-card {
@@ -86,6 +100,18 @@ ion-header {
       height: 100%;
     }
   }
+}
+
+.benefit-list {
+  padding-left: 20px;
+}
+
+.li-detail {
+  font-size: 12.5px;
+}
+
+.info-note {
+  font-size: 11.2px;
 }
 
 .ios-searchbar {
@@ -182,7 +208,7 @@ ion-header {
       --padding-bottom: 0;
       font-size: 16px;
       font-weight: 600;
-      text-align: right;
+      text-align: center;
       --color: #000;
     }
     

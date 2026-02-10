@@ -62,7 +62,7 @@ interface AlpacaAsset {
 interface Stock {
   symbol: string;
   name: string;
-  percentage: number;
+  percentage: number | null;
   description?: string;
   isDefault?: boolean;
   tradable?: boolean;
@@ -346,7 +346,9 @@ export class PortfolioCustomizeComponent implements OnInit {
 
   // Get total allocation percentage
   getTotalAllocation(): number {
-    return this.portfolio.reduce((total, stock) => total + stock.percentage, 0);
+    const total = this.portfolio.reduce((total, stock) => total + (stock.percentage ? stock.percentage : 0), 0);
+    // Round to 2 decimal places to handle floating point errors
+    return Math.round(total * 100) / 100;
   }
 
   // Check if allocations are valid
@@ -428,8 +430,34 @@ export class PortfolioCustomizeComponent implements OnInit {
 
   // Update stock allocation
   updateAllocation(stock: Stock, event: any) {
-    stock.percentage = parseInt(event.detail.value);
-    // Removed normalizeAllocations() to allow manual adjustment without side effects
+    const val = event.detail.value;
+    
+    // If cleared, set to null (so it shows as empty)
+    if (val === '' || val === null) {
+      stock.percentage = null;
+      return;
+    }
+    
+    // Use parseFloat to support decimals (up to 2 places desired by user)
+    let percentage = parseFloat(val);
+    
+    // Clamp between 0 and 100
+    if (percentage > 100) {
+      percentage = 100;
+      // Force update the input element if we clamped the value
+      if (event.target) {
+        event.target.value = 100;
+      }
+    } else if (percentage < 0) {
+      percentage = 0;
+      if (event.target) {
+        event.target.value = 0;
+      }
+    } else if (isNaN(percentage)) {
+      percentage = 0;
+    }
+    
+    stock.percentage = percentage;
   }
 
   // Normalize allocations to ensure they add up to 100%
@@ -438,14 +466,16 @@ export class PortfolioCustomizeComponent implements OnInit {
     if (total !== 100 && total > 0) {
       // Proportionally adjust allocations
       this.portfolio.forEach(stock => {
-        stock.percentage = Math.round((stock.percentage / total) * 100);
+        stock.percentage = Math.round(((stock.percentage || 0) / total) * 100);
       });
       
       // Handle rounding errors
       const newTotal = this.getTotalAllocation();
       if (newTotal !== 100) {
         const diff = 100 - newTotal;
-        this.portfolio[0].percentage += diff;
+        if (this.portfolio.length > 0) {
+          this.portfolio[0].percentage = (this.portfolio[0].percentage || 0) + diff;
+        }
       }
     }
   }
@@ -557,11 +587,13 @@ export class PortfolioCustomizeComponent implements OnInit {
       }
 
       const updateRequest: UpdatePortfolioRequest = {
-        portfolioItems: this.portfolio.map(stock => ({
-          symbol: stock.symbol,
-          name: stock.name,
-          percentage: stock.percentage,
-          assetType: stock.assetType || 'STOCK'
+        portfolioItems: this.portfolio
+          .filter(stock => (stock.percentage ?? 0) > 0) // Filter out 0% or null items
+          .map(stock => ({
+            symbol: stock.symbol,
+            name: stock.name,
+            percentage: stock.percentage || 0, // Ensure strictly number for API
+            assetType: stock.assetType || 'STOCK'
         }))
       };
 
@@ -573,6 +605,9 @@ export class PortfolioCustomizeComponent implements OnInit {
       
       if (response) {
         console.log('[PortfolioCustomizeComponent] Portfolio saved successfully');
+        
+        // Remove 0% items from local state to match backend
+        this.portfolio = this.portfolio.filter(stock => (stock.percentage || 0) > 0);
         
         // Update original portfolio to match current state
         this.originalPortfolio = JSON.parse(JSON.stringify(this.portfolio));

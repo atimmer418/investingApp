@@ -30,6 +30,7 @@ ion-header {
   max-width: 600px;
   margin: 0 auto;
   padding: 16px;
+  padding-bottom: 0;
 }
 
 .mobile-card {
@@ -196,6 +197,10 @@ ion-header {
   --padding-start: 8px;
   font-size: 18px;
   font-weight: 600;
+
+  &.no-border {
+    border: 0;
+  }
 }
 
 .quick-amounts {

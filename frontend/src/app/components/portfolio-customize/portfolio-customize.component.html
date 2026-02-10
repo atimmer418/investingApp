@@ -38,14 +38,15 @@
 
             <h3 class="sub-title">Why This Works</h3>
             <ul class="benefit-list">
-              <li><strong>Max Growth:</strong> ~95% stocks with a history of outperforming over decades.</li>
-              <li><strong>Global Sweet Spot:</strong> 20% international avoids US-only risk without dragging returns.</li>
-              <li><strong>Factor Tilt:</strong> 5% VBR captures the academically recognized "small-cap value" premium.</li>
-              <li><strong>Simplicity:</strong> Reduces behavioral errors (no tinkering or timing).</li>
+              <li><strong>Max Growth:</strong><span class="li-detail"> ~95% stocks with a history of outperforming over decades.</span></li>
+              <li><strong>Diversification:</strong><span class="li-detail"> Reduces risk by owning more of the market instead of individual stocks.</span></li>
+              <li><strong>Global Exposure:</strong><span class="li-detail"> 20% international avoids US-only risk without dragging returns.</span></li>
+              <li><strong>Factor Tilt:</strong><span class="li-detail"> 5% VBR captures the academically recognized "small-cap value" premium.</span></li>
+              <li><strong>Simplicity:</strong><span class="li-detail"> Reduces behavioral errors (no tinkering or timing).</span></li>
             </ul>
 
             <p class="info-note">
-              <em>*“Historically, diversified stock portfolios have compounded strongly over 20–30 year periods — but returns are never guaranteed.</em>
+              <em>Historically, diversified stock portfolios have compounded strongly over 20–30 year periods — but returns are never guaranteed.</em>
             </p>
 
             <div class="ion-margin-top" *ngIf="isPortfolioDifferentFromDefault()">
@@ -118,19 +119,17 @@
         <p class="section-subtitle">Search for stocks & ETFs</p>
       </div>
 
-      <ion-list class="ios-list search-list">
-        <ion-item lines="none">
-          <ion-searchbar
-            [(ngModel)]="searchTerm"
-            (ionInput)="searchStocks()"
-            placeholder="Symbol or Name"
-            show-cancel-button="focus"
-            animated="true"
-            debounce="300"
-            class="ios-searchbar">
-          </ion-searchbar>
-        </ion-item>
-      </ion-list>
+      <ion-searchbar
+        [(ngModel)]="searchTerm"
+        (ionInput)="searchStocks()"
+        placeholder="Symbol or Name"
+        show-cancel-button="focus"
+        animated="true"
+        debounce="300"
+        maxlength="80"
+        class="ios-searchbar"
+        style="padding-top: 0; padding-bottom: 0;">
+      </ion-searchbar>
 
       <!-- Search Results (Virtual Scroll Area) -->
       <div class="search-results-container scrollable-results" *ngIf="searchTerm.length > 0 || isSearching">
@@ -175,8 +174,8 @@
         color="primary"
         (click)="savePortfolio()"
         [disabled]="!isValidAllocation() || !hasPortfolioChanged() || isSaving">
-        <span *ngIf="!isSaving">Save Portfolio</span>
-        <ion-spinner name="crescent" *ngIf="isSaving"></ion-spinner>
+        <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+        <span>{{ isSaving ? 'Saving...' : 'Save Portfolio' }}</span>
       </ion-button>
     </div>
   </div>

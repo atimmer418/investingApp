@@ -832,12 +832,34 @@ public class AlpacaService {
             logger.info("Initiating ACATS transfer for account {} from external account {} (Type: {}, DTC: {})", 
                 accountId, transferAccountId, transferAccountType, dtcNumber);
             
-            // In a production environment, this would call:
-            // POST /v1/accounts/{account_id}/transfers
-            // { "transfer_type": "acats", "account_number": "...", "transfer_side": "incoming", "counterparty_id": "dtcNumber" ... }
+            // NOTE: Alpaca currently requires manual intervention for incoming ACATS transfers.
+            // There is no automated API for this yet, so we must email their operations team.
             
-            // For now, we simulate success for the demo.
-            return "acats_" + java.util.UUID.randomUUID().toString();
+            /* PSEUDOCODE FOR EMAIL NOTIFICATION (Pending EmailService implementation)
+            
+            // Construct the email details
+            String subject = "Incoming ACATS Request - Alpaca Account: " + accountId;
+            String body = String.format(
+                "Please initiate the following ACATS transfer:\n\n" +
+                "Target Alpaca Account ID: %s\n" +
+                "Source External Broker DTC: %s\n" +
+                "Source Account Number: %s\n" +
+                "Account Type: %s\n\n" +
+                "Please process this request manually.", 
+                accountId, dtcNumber, transferAccountId, transferAccountType
+            );
+
+            // 1. Send request to Alpaca Operations
+            emailService.sendEmail("support@alpaca.markets", subject, body);
+            
+            // 2. Send copy to Internal Support for tracking
+            emailService.sendEmail("help@fredvested.com", subject, body);
+            */
+            
+            logger.info("mocking email sent to support@alpaca.markets and help@fredvested.com for ACATS transfer");
+            
+            // Return a tracking ID to the frontend to confirm the process has been initiated
+            return "acats_initiated_" + java.util.UUID.randomUUID().toString();
 
         } catch (Exception e) {
             logger.error("Error initiating ACATS transfer", e);

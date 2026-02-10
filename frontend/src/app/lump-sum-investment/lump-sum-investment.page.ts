@@ -187,6 +187,51 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
     }
   }
 
+  validateInvestmentAmount(event: any) {
+    let value = event.target.value;
+    
+    if (!value) {
+      return;
+    }
+    
+    // Convert to string to handle validation
+    const strValue = value.toString();
+    
+    // Check if there's a decimal point
+    if (strValue.includes('.')) {
+      const parts = strValue.split('.');
+      const integerPart = parts[0];
+      const decimalPart = parts[1] || '';
+      
+      // Limit integer part to 5 digits
+      if (integerPart.length > 5) {
+        const limitedInteger = integerPart.substring(0, 5);
+        this.investmentAmount = parseFloat(`${limitedInteger}.${decimalPart}`);
+        event.target.value = `${limitedInteger}.${decimalPart}`;
+        return;
+      }
+      
+      // Limit decimal part to 2 digits
+      if (decimalPart.length > 2) {
+        const limitedDecimal = decimalPart.substring(0, 2);
+        this.investmentAmount = parseFloat(`${integerPart}.${limitedDecimal}`);
+        event.target.value = `${integerPart}.${limitedDecimal}`;
+        return;
+      }
+    } else {
+      // No decimal point - just limit to 5 digits
+      if (strValue.length > 5) {
+        const limited = strValue.substring(0, 5);
+        this.investmentAmount = parseFloat(limited);
+        event.target.value = limited;
+        return;
+      }
+    }
+    
+    // Update the model
+    this.investmentAmount = value ? parseFloat(value) : null;
+  }
+
   onInvestmentTypeChange() {
     // Reset stock selection when switching to portfolio
     if (this.investmentType === 'portfolio') {
@@ -313,7 +358,12 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
         await this.investmentService.initiateAcatsTransfer(transferData).toPromise();
         
         this.toastService.showToast('Asset transfer request submitted successfully!', 'success', 3000);
-        this.goBack();
+        
+        // Reset form after successful transfer initiation
+        setTimeout(() => {
+            this.transferBrokerageDtc = '';
+            this.transferAccountNumber = '';
+        }, 1000);
 
     } catch (error) {
         console.error('Error submitting ACATS transfer:', error);

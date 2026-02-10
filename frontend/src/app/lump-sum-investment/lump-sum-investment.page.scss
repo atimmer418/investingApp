@@ -103,6 +103,10 @@ p {
     color: #1c1c1e;
     margin-bottom: 0.75rem;
     font-size: 1rem;
+
+    &.acct-number {
+      margin-bottom: 0;
+    }
   }
   
   .currency-input {
@@ -137,6 +141,10 @@ p {
       font-size: 1.1rem;
       flex: 1;
       border: 0;
+
+      &.account-number-input {
+        padding-left: 14px;
+      }
       
       &::part(native) {
         border: none !important;
@@ -150,6 +158,47 @@ p {
     font-size: 0.85rem;
     color: #8e8e93;
     font-style: italic;
+  }
+}
+
+// Standalone account number input (outside currency-input wrapper)
+ion-input.account-number-input {
+  --padding-start: 14px;
+  --padding-end: 1rem;
+  --padding-top: 1rem;
+  --padding-bottom: 1rem;
+  --background: #f9f9f9;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  font-size: 16px;
+  
+  &::part(native) {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+
+// Tooltip icon button
+ion-button.tooltip-icon-button {
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  height: 20px;
+  width: 20px;
+  min-width: 20px;
+  margin: 0;
+  
+  &::part(native) {
+    padding: 0;
+    height: 20px;
+    width: 20px;
+  }
+  
+  ion-icon {
+    font-size: 20px;
+    margin: 0;
+    padding: 0;
   }
 }
 
@@ -371,7 +420,7 @@ p {
       }
       
       .projection-label {
-        font-size: 0.9rem;
+        font-size: 13.5px;
         color: #8e8e93;
         text-transform: uppercase;
         letter-spacing: 0.5px;

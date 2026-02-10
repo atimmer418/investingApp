@@ -76,6 +76,7 @@
           show-cancel-button="focus"
           animated="true"
           debounce="300"
+          maxlength="80"
           class="ios-searchbar">
         </ion-searchbar>
 
@@ -138,6 +139,7 @@
           <ion-input
             type="number"
             [(ngModel)]="investmentAmount"
+            (ionInput)="validateInvestmentAmount($event)"
             (ionBlur)="onAmountChange()"
             placeholder="0"
             class="amount-input"
@@ -222,9 +224,9 @@
 
             <!-- Account Number -->
             <div class="input-wrapper">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <label class="input-label">Account Number</label>
-                    <ion-button fill="clear" size="small" id="acats-tooltip-lump" style="height: 24px; font-size: 12px;">
+                <div style="display: flex; justify-content: flex-start; align-items: center; gap: 6px;">
+                    <label class="input-label acct-number">Account Number</label>
+                    <ion-button fill="clear" size="small" id="acats-tooltip-lump" class="tooltip-icon-button">
                         <ion-icon name="information-circle-outline"></ion-icon>
                     </ion-button>
                     <ion-popover trigger="acats-tooltip-lump" triggerAction="click">
@@ -235,7 +237,7 @@
                         </ng-template>
                     </ion-popover>
                 </div>
-                <ion-input type="text" [(ngModel)]="transferAccountNumber" placeholder="Enter account number" class="amount-input" style="font-size: 16px;"></ion-input>
+                <ion-input type="text" [(ngModel)]="transferAccountNumber" placeholder="Enter account number" class="account-number-input"></ion-input>
             </div>
 
             <!-- Transfer Submit Button -->
