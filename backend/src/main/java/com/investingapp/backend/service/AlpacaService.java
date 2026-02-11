@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -774,12 +775,26 @@ public class AlpacaService {
             JsonNode position = objectMapper.readTree(posResponse.getBody());
             BigDecimal currentQty = new BigDecimal(position.get("qty").asText());
 
+            // Check if fractionable
+            boolean isFractionable = isFractionable(symbol);
+
             // Calculate quantity to sell
             BigDecimal qtyToSell = currentQty.multiply(percentage).divide(new BigDecimal("100"));
 
             // If selling 100% or very close to it, just sell all
             if (percentage.compareTo(new BigDecimal("99.9")) >= 0) {
                 qtyToSell = currentQty;
+            } else if (!isFractionable) {
+                // If not fractionable, floor to nearest whole number
+                logger.info("Asset {} is not fractionable, flooring sell quantity", symbol);
+                qtyToSell = qtyToSell.setScale(0, RoundingMode.DOWN);
+                
+                // If attempting to sell < 1 share of non-fractionable asset, fail
+                if (qtyToSell.compareTo(BigDecimal.ZERO) == 0) {
+                    return new AlpacaOrderResponse(null, symbol, "FAILED", null, null,
+                        BigDecimal.ZERO, null, null, 
+                        "Cannot sell fractional amount (" + percentage + "%) of non-fractionable asset " + symbol);
+                }
             }
 
             // Place the sell order

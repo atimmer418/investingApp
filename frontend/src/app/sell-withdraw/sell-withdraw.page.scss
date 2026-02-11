@@ -19,6 +19,12 @@ ion-header {
   --padding-top: 0;
   --padding-bottom: 0;
   --background: #f2f2f7; /* iOS grouped background color */
+
+  &::part(scroll) {
+    scrollbar-gutter: stable;
+    // Force scrollbar to be visible or at least affect layout even if hidden by OS
+    overflow-y: scroll !important; 
+  }
 }
 
 .safe-area-top {

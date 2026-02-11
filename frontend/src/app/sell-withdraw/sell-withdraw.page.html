@@ -32,7 +32,7 @@
             <p class="font-medium text-dark m-0">{{formatCurrency(balance.buyingPower)}}</p>
           </div>
         </div>
-        <p class="section-subtitle text-gray text-sm">Select a stock to sell. Proceeds will be added to your Settled Cash.</p>
+        <p class="section-subtitle text-gray text-sm">Select a stock to sell. Proceeds will be added to your Buying Power immediately.</p>
       </div>
 
       <!-- No positions message -->
@@ -107,7 +107,6 @@
             [min]="1"
             [max]="maxSellPercentage"
             [step]="1"
-            [pin]="true"
             class="percentage-range">
           </ion-range>
           
@@ -134,6 +133,7 @@
           [disabled]="isSelling"
           (click)="sellPosition()">
           <ion-spinner *ngIf="isSelling" name="crescent" slot="start"></ion-spinner>
+          <ion-icon *ngIf="!isSelling" slot="start" name="pricetag-outline"></ion-icon>
           {{isSelling ? 'Processing...' : 'Sell ' + selectedPosition.symbol}}
         </ion-button>
 
@@ -194,6 +194,7 @@
           [disabled]="isWithdrawing || !withdrawAmount || withdrawAmount > maxWithdrawAmount"
           (click)="withdrawCash()">
           <ion-spinner *ngIf="isWithdrawing" name="crescent" slot="start"></ion-spinner>
+          <ion-icon *ngIf="!isWithdrawing" slot="start" name="arrow-forward-outline"></ion-icon>
           {{isWithdrawing ? 'Processing...' : 'Initiate Transfer'}}
         </ion-button>
 
@@ -209,7 +210,7 @@
               </ng-container>
               <ng-template #defaultMsg>
                 <p class="m-0">
-                  Funds from selling stock take 1 business day to settle before being available for withdrawal.
+                  Funds from sales take 1 business day to settle. New deposits take 4-6 days to clear. You cannot withdraw a value of funds that is less than the deposit amount.
                 </p>
               </ng-template>
             </div>

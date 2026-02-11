@@ -218,7 +218,7 @@ public class TradingController {
             result.put("amount", transferResponse.amount);
             result.put("initiated_at", transferResponse.createdAt);
             result.put("success", transferResponse.isSuccess());
-            result.put("message", "Withdrawal initiated - funds should arrive in 1-3 business days");
+            result.put("message", "Withdrawal initiated successfully. Funds typically arrive in your bank account within 1-3 business days.");
             
             if (transferResponse.errorMessage != null) {
                 result.put("error", transferResponse.errorMessage);

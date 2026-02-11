@@ -28,7 +28,9 @@ import {
   walletOutline,
   timeOutline,
   warningOutline,
-  informationCircleOutline
+  informationCircleOutline,
+  arrowForwardOutline,
+  pricetagOutline
 } from 'ionicons/icons';
 
 import { TradingService, SellRequest, WithdrawRequest } from '../services/trading.service';
@@ -98,7 +100,9 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
       walletOutline,
       timeOutline,
       warningOutline,
-      informationCircleOutline
+      informationCircleOutline,
+      arrowForwardOutline,
+      pricetagOutline
     });
   }
 
@@ -248,7 +252,7 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
         // Add a delay before reloading to allow order to fill
         setTimeout(async () => {
           await this.loadData();
-        }, 2000);
+        }, 1000);
 
       } else {
         // Gentle error message instead of raw backend error
