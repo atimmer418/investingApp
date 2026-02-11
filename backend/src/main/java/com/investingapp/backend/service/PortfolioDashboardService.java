@@ -1080,7 +1080,7 @@ public class PortfolioDashboardService {
     /**
      * Get current real-time price for a symbol using Alpaca market data API
      */
-    private BigDecimal getCurrentPrice(String symbol) {
+    public BigDecimal getCurrentPrice(String symbol) {
         try {
             // Use Alpaca's latest trade endpoint for real-time pricing
             String url = alpacaMarketDataBaseUrl + "/stocks/" + symbol + "/trades/latest";

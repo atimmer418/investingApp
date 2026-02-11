@@ -379,6 +379,83 @@ public class AlpacaService {
     }
 
     /**
+     * Check if an asset is fractionable
+     */
+    public boolean isFractionable(String symbol) {
+        try {
+            String url = alpacaBaseUrl + "/assets/" + symbol;
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonNode asset = objectMapper.readTree(response.getBody());
+                return asset.has("fractionable") && asset.get("fractionable").asBoolean();
+            }
+        } catch (Exception e) {
+            logger.error("Error checking fractionable status for {}", symbol, e);
+        }
+        return false; // Default to false if check fails
+    }
+
+    /**
+     * Place a market buy order with quantity (shares)
+     */
+    public AlpacaOrderResponse placeBuyOrderWithQuantity(String accountId, String symbol, BigDecimal quantity) {
+        try {
+            String url = alpacaBaseUrl + "/trading/accounts/" + accountId + "/orders";
+
+            Map<String, Object> request = new HashMap<>();
+            request.put("symbol", symbol);
+            request.put("qty", quantity.toString());
+            request.put("side", "buy");
+            request.put("type", "market");
+            request.put("time_in_force", "day");
+
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+
+            logger.info("Placing quantity buy order for account {} - Symbol: {}, Qty: {}",
+                    accountId, symbol, quantity);
+
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+
+            if (response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.CREATED) {
+                JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+                return new AlpacaOrderResponse(
+                        jsonResponse.get("id").asText(),
+                        symbol,
+                        jsonResponse.get("status").asText(),
+                        (jsonResponse.has("qty") && !jsonResponse.get("qty").isNull()
+                                && !"null".equals(jsonResponse.get("qty").asText()))
+                                        ? new BigDecimal(jsonResponse.get("qty").asText())
+                                        : quantity,
+                        null,
+                        (jsonResponse.has("filled_qty") && !jsonResponse.get("filled_qty").isNull()
+                                && !"null".equals(jsonResponse.get("filled_qty").asText()))
+                                        ? new BigDecimal(jsonResponse.get("filled_qty").asText())
+                                        : BigDecimal.ZERO,
+                        (jsonResponse.has("filled_avg_price") && !jsonResponse.get("filled_avg_price").isNull()
+                                && !"null".equals(jsonResponse.get("filled_avg_price").asText()))
+                                        ? new BigDecimal(jsonResponse.get("filled_avg_price").asText())
+                                        : null,
+                        jsonResponse.get("submitted_at").asText(),
+                        null);
+            } else {
+                logger.error("Failed to place buy order (qty). Status: {}, Response: {}",
+                        response.getStatusCode(), response.getBody());
+                return new AlpacaOrderResponse(null, symbol, "FAILED", quantity, null,
+                        BigDecimal.ZERO, null, null,
+                        "HTTP " + response.getStatusCode() + ": " + response.getBody());
+            }
+
+        } catch (Exception e) {
+            logger.error("Error placing buy order (qty) for account {} - Symbol: {}", accountId, symbol, e);
+            return new AlpacaOrderResponse(null, symbol, "FAILED", quantity, null,
+                    BigDecimal.ZERO, null, null, e.getMessage());
+        }
+    }
+
+    /**
      * Check order status
      */
     public AlpacaOrderResponse checkOrderStatus(String accountId, String orderId) {

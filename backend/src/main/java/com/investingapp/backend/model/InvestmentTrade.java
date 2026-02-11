@@ -12,6 +12,9 @@ public class InvestmentTrade {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "investment_execution_id", nullable = false)
     private InvestmentExecution investmentExecution;
@@ -91,6 +94,7 @@ public class InvestmentTrade {
     
     public InvestmentTrade(InvestmentExecution execution, String symbol, BigDecimal notionalAmount) {
         this.investmentExecution = execution;
+        this.userId = execution.getUser().getId();
         this.symbol = symbol;
         this.notionalAmount = notionalAmount;
         this.status = TradeStatus.PENDING;
@@ -100,6 +104,9 @@ public class InvestmentTrade {
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
     
     public InvestmentExecution getInvestmentExecution() { return investmentExecution; }
     public void setInvestmentExecution(InvestmentExecution investmentExecution) { this.investmentExecution = investmentExecution; }

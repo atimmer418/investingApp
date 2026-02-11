@@ -56,6 +56,9 @@ public class InvestmentExecutionService {
     private PortfolioRepository portfolioRepository;
 
     @Autowired
+    private PortfolioDashboardService portfolioDashboardService;
+
+    @Autowired
     private TaskScheduler taskScheduler;
 
 
@@ -140,9 +143,10 @@ public class InvestmentExecutionService {
                     totalAmount);
 
             if (transferResponse.isSuccess()) {
-                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime now = LocalDateTime.now(MARKET_TIMEZONE);
                 
                 // Update ALL executions in the batch with the SAME transfer ID
+
                 // This links them all to the single ACH event
                 for (InvestmentExecution execution : batchExecutions) {
                     execution.setAlpacaTransferId(transferResponse.id);
@@ -347,7 +351,7 @@ public class InvestmentExecutionService {
                     buyingPower, execution.getId(), execution.getAmount());
 
             execution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_COMPLETED);
-            execution.setFundingCompletedAt(LocalDateTime.now());
+            execution.setFundingCompletedAt(LocalDateTime.now(MARKET_TIMEZONE));
             execution.setAlpacaAccountId(user.getAlpacaAccountId());
             executionRepository.save(execution);
 
@@ -383,7 +387,7 @@ public class InvestmentExecutionService {
 
         // Update execution status and date
         execution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_INITIATED);
-        execution.setExecutionDate(LocalDateTime.now());
+        execution.setExecutionDate(LocalDateTime.now(MARKET_TIMEZONE));
         execution.setAlpacaAccountId(user.getAlpacaAccountId());
         executionRepository.save(execution);
 
@@ -419,7 +423,7 @@ public class InvestmentExecutionService {
         logger.info("Checking funding status for pending executions");
 
         // Check executions that have been waiting for funding for at least 10 minutes
-        LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(10);
+        LocalDateTime cutoffTime = LocalDateTime.now(MARKET_TIMEZONE).minusMinutes(10);
         List<InvestmentExecution> pendingExecutions = executionRepository
                 .findExecutionsAwaitingFundingCheck(
                         InvestmentExecution.ExecutionStatus.FUNDING_INITIATED,
@@ -475,7 +479,7 @@ public class InvestmentExecutionService {
                  // Double check status to avoid re-triggering logic if already processed by a parallel check
                  if (InvestmentExecution.ExecutionStatus.FUNDING_INITIATED.equals(batchedExec.getStatus())) {
                     batchedExec.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_COMPLETED);
-                    batchedExec.setFundingCompletedAt(LocalDateTime.now());
+                    batchedExec.setFundingCompletedAt(LocalDateTime.now(MARKET_TIMEZONE));
                     executionRepository.save(batchedExec);
     
                     logger.info("Funding confirmed for execution {}, initiating trading logic", batchedExec.getId());
@@ -501,7 +505,7 @@ public class InvestmentExecutionService {
             }
         } else {
             // Still pending
-            if (execution.getExecutionDate().isBefore(LocalDateTime.now().minusHours(24))) {
+            if (execution.getExecutionDate().isBefore(LocalDateTime.now(MARKET_TIMEZONE).minusHours(24))) {
                 // Timeout logic...
             }
         }
@@ -542,7 +546,7 @@ public class InvestmentExecutionService {
                 // Clear the queue message and process directly to trading
                 queuedExecution.setErrorMessage(null);
                 queuedExecution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_COMPLETED);
-                queuedExecution.setFundingCompletedAt(LocalDateTime.now());
+                queuedExecution.setFundingCompletedAt(LocalDateTime.now(MARKET_TIMEZONE));
                 executionRepository.save(queuedExecution);
 
                 logger.info("Processing queued execution {} for user {} with amount {}",
@@ -644,19 +648,28 @@ public class InvestmentExecutionService {
             logger.info("Creating individual stock trade for symbol {} with amount {}", targetSymbol,
                     execution.getAmount());
 
+            if (execution.getAmount().compareTo(BigDecimal.ONE) < 0) {
+                logger.error("Investment amount {} is less than minimum $1.00 for stock {}", execution.getAmount(), targetSymbol);
+                execution.setStatus(InvestmentExecution.ExecutionStatus.TRADING_FAILED);
+                execution.setErrorMessage("Investment amount must be at least $1.00");
+                executionRepository.save(execution);
+                notifyUserOfFailure(execution, "Amount Too Low", "The investment amount is below the minimum required $1.00.");
+                return;
+            }
+
             try {
                 // Create single trade for the target stock
                 InvestmentTrade trade = new InvestmentTrade(execution, targetSymbol, execution.getAmount());
                 trade = tradeRepository.save(trade);
 
-                // Place order with Alpaca
-                AlpacaService.AlpacaOrderResponse orderResponse = alpacaService.placeBuyOrder(
+                // Place order with Alpaca (handling fractional vs whole shares)
+                AlpacaService.AlpacaOrderResponse orderResponse = placeOrderWithFractionalCheck(
                         execution.getAlpacaAccountId(), targetSymbol, execution.getAmount());
 
                 if (orderResponse.isSuccess()) {
                     trade.setAlpacaOrderId(orderResponse.id);
                     trade.setStatus(InvestmentTrade.TradeStatus.SUBMITTED);
-                    trade.setSubmittedAt(LocalDateTime.now());
+                    trade.setSubmittedAt(LocalDateTime.now(MARKET_TIMEZONE));
                     tradeRepository.save(trade);
 
                     logger.info("Successfully placed order {} for stock {} with amount {}",
@@ -664,7 +677,7 @@ public class InvestmentExecutionService {
                 } else {
                     trade.setStatus(InvestmentTrade.TradeStatus.FAILED);
                     trade.setErrorMessage(orderResponse.errorMessage);
-                    trade.setFailedAt(LocalDateTime.now());
+                    trade.setFailedAt(LocalDateTime.now(MARKET_TIMEZONE));
                     tradeRepository.save(trade);
 
                     hasFailures = true;
@@ -689,19 +702,24 @@ public class InvestmentExecutionService {
                 BigDecimal amount = execution.getAmount().multiply(percentage).divide(BigDecimal.valueOf(100), 2,
                         RoundingMode.HALF_UP);
 
+                if (amount.compareTo(BigDecimal.ONE) < 0) {
+                    logger.warn("Calculated investment amount {} for symbol {} is below Alpaca minimum of $1.00. Skipping trade.", amount, symbol);
+                    continue;
+                }
+
                 try {
                     // Create trade record
                     InvestmentTrade trade = new InvestmentTrade(execution, symbol, amount);
                     trade = tradeRepository.save(trade);
 
-                    // Place order with Alpaca
-                    AlpacaService.AlpacaOrderResponse orderResponse = alpacaService.placeBuyOrder(
+                    // Place order with Alpaca (handling fractional vs whole shares)
+                    AlpacaService.AlpacaOrderResponse orderResponse = placeOrderWithFractionalCheck(
                             execution.getAlpacaAccountId(), symbol, amount);
 
                     if (orderResponse.isSuccess()) {
                         trade.setAlpacaOrderId(orderResponse.id);
                         trade.setStatus(InvestmentTrade.TradeStatus.SUBMITTED);
-                        trade.setSubmittedAt(LocalDateTime.now());
+                        trade.setSubmittedAt(LocalDateTime.now(MARKET_TIMEZONE));
                         tradeRepository.save(trade);
 
                         logger.info("Successfully placed order {} for symbol {} with amount {}",
@@ -709,7 +727,7 @@ public class InvestmentExecutionService {
                     } else {
                         trade.setStatus(InvestmentTrade.TradeStatus.FAILED);
                         trade.setErrorMessage(orderResponse.errorMessage);
-                        trade.setFailedAt(LocalDateTime.now());
+                        trade.setFailedAt(LocalDateTime.now(MARKET_TIMEZONE));
                         tradeRepository.save(trade);
 
                         hasFailures = true;
@@ -745,7 +763,7 @@ public class InvestmentExecutionService {
         }
 
         // Check executions that have been in trading state for at least 5 minutes
-        LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(5);
+        LocalDateTime cutoffTime = LocalDateTime.now(MARKET_TIMEZONE).minusMinutes(5);
         List<InvestmentExecution> tradingExecutions = executionRepository
                 .findExecutionsAwaitingTradingCheck(
                         InvestmentExecution.ExecutionStatus.TRADING_INITIATED,
@@ -804,14 +822,14 @@ public class InvestmentExecutionService {
                     trade.setStatus(InvestmentTrade.TradeStatus.FILLED);
                     trade.setFilledQuantity(orderStatus.filledQuantity);
                     trade.setFilledAvgPrice(orderStatus.filledAvgPrice);
-                    trade.setFilledAt(LocalDateTime.now());
+                    trade.setFilledAt(LocalDateTime.now(MARKET_TIMEZONE));
                     tradeRepository.save(trade);
 
                 } else if ("rejected".equalsIgnoreCase(orderStatus.status) ||
                         "canceled".equalsIgnoreCase(orderStatus.status)) {
                     trade.setStatus(InvestmentTrade.TradeStatus.FAILED);
                     trade.setErrorMessage("Order status: " + orderStatus.status);
-                    trade.setFailedAt(LocalDateTime.now());
+                    trade.setFailedAt(LocalDateTime.now(MARKET_TIMEZONE));
                     tradeRepository.save(trade);
                     hasFailures = true;
 
@@ -835,7 +853,7 @@ public class InvestmentExecutionService {
         // Update execution status
         if (allComplete && !hasFailures) {
             execution.setStatus(InvestmentExecution.ExecutionStatus.COMPLETED);
-            execution.setTradingCompletedAt(LocalDateTime.now());
+            execution.setTradingCompletedAt(LocalDateTime.now(MARKET_TIMEZONE));
             executionRepository.save(execution);
 
             notifyUserOfSuccess(execution);
@@ -884,9 +902,9 @@ public class InvestmentExecutionService {
         } else {
             // Fallback to default allocation if no portfolio found
             logger.warn("No portfolio found for user {}, using default balanced allocation", user.getId());
-            allocation.put("VTI", new BigDecimal("50"));
+            allocation.put("VTI", new BigDecimal("75"));
             allocation.put("VXUS", new BigDecimal("20"));
-            allocation.put("BND", new BigDecimal("30"));
+            allocation.put("VBR", new BigDecimal("5"));
         }
 
         logger.info("Final portfolio allocation for user {}: {}", user.getId(), allocation);
@@ -920,5 +938,41 @@ public class InvestmentExecutionService {
         } catch (Exception e) {
             logger.error("Failed to send failure notification for execution {}", execution.getId(), e);
         }
+    }
+
+    /**
+     * Helper to place a buy order, handling fractional share support
+     */
+    private AlpacaService.AlpacaOrderResponse placeOrderWithFractionalCheck(String accountId, String symbol, BigDecimal amount) {
+        // Check if asset allows fractional shares
+        boolean isFractionable = alpacaService.isFractionable(symbol);
+
+        if (isFractionable) {
+            return alpacaService.placeBuyOrder(accountId, symbol, amount);
+        }
+        
+        // If not fractionable, calculate whole shares
+        logger.info("Asset {} is not fractionable, calculating whole shares for amount {}", symbol, amount);
+        
+        BigDecimal currentPrice = portfolioDashboardService.getCurrentPrice(symbol);
+        
+        if (currentPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            return new AlpacaService.AlpacaOrderResponse(
+                    null, symbol, "FAILED", null, amount, 
+                    BigDecimal.ZERO, null, null, 
+                    "Could not fetch price for " + symbol + " to calculate quantity");
+        }
+        
+        // Calculate shares: floor(amount / price)
+        BigDecimal quantity = amount.divide(currentPrice, 0, RoundingMode.DOWN);
+        
+        if (quantity.compareTo(BigDecimal.ZERO) <= 0) {
+            return new AlpacaService.AlpacaOrderResponse(
+                    null, symbol, "FAILED", null, amount, 
+                    BigDecimal.ZERO, null, null, 
+                    "Amount $" + amount + " is too small to buy 1 share of " + symbol + " (Price: $" + currentPrice + ") which does not support fractional shares.");
+        }
+        
+        return alpacaService.placeBuyOrderWithQuantity(accountId, symbol, quantity);
     }
 }
