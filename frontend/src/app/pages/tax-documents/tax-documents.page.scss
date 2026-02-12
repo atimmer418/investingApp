@@ -3,11 +3,11 @@ ion-header {
   ion-toolbar {
     --background: var(--ion-color-primary);
     --color: white;
-    
+
     ion-title {
       font-weight: 600;
     }
-    
+
     ion-back-button {
       --color: white;
     }
@@ -16,10 +16,9 @@ ion-header {
 }
 
 .info-card {
-  background: var(--ion-color-light);
   padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  border-radius: 12px;
+  margin-bottom: 16px;
 
   h3 {
     margin-top: 0;
@@ -51,5 +50,143 @@ ion-header {
 
   p {
     margin: 0;
+  }
+}
+
+// ── Section containers ──────────────────────────
+
+.section {
+  margin-bottom: 28px;
+}
+
+// ── Tax form year buttons ───────────────────────
+
+.card-list {
+  background: var(--ion-item-background, #fff);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.tax-forms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.year-button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--ion-item-background, #fff);
+  border: none;
+  border-bottom: 1px solid var(--ion-color-light-shade, #e0e0e0);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+
+  &:active {
+    background: var(--ion-color-light);
+  }
+
+  .year-label {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .year-sublabel {
+    font-size: 13px;
+    color: var(--ion-color-medium);
+    margin-right: 8px;
+  }
+
+  .chevron {
+    font-size: 18px;
+    color: var(--ion-color-medium);
+  }
+}
+
+// ── Account statements accordion ────────────────
+
+.statements-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.statement-year-group {
+  border-bottom: 1px solid var(--ion-color-light-shade, #e0e0e0);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.year-accordion-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--ion-item-background, #fff);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+
+  &:active {
+    background: var(--ion-color-light);
+  }
+
+  .year-label {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .chevron {
+    font-size: 18px;
+    color: var(--ion-color-medium);
+    transition: transform 0.2s;
+  }
+}
+
+// Animated expand / collapse
+.months-container {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+
+  &.expanded {
+    max-height: 800px; // Large enough to show all months
+  }
+}
+
+.month-button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 13px 16px 13px 32px; // indented
+  background: var(--ion-item-background, #fff);
+  border: none;
+  border-top: 1px solid var(--ion-color-light-shade, #e0e0e0);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+
+  &:active {
+    background: var(--ion-color-light);
+  }
+
+  span {
+    flex: 1;
+    font-size: 15px;
+  }
+
+  .chevron {
+    font-size: 16px;
+    color: var(--ion-color-medium);
   }
 }

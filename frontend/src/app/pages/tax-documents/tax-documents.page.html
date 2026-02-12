@@ -9,10 +9,10 @@
 
 <ion-content class="ion-padding">
   <div class="info-card">
-    <h3>Important Tax Information</h3>
+    <h3>Tax Documents</h3>
     <p>
-      Tax documents for the previous year are typically available by mid-February.
-      These documents (Form 1099) report your capital gains, dividends, and other investment income.
+      Tax documents (Form 1099) for the previous year are typically available by mid-February.
+      These documents report your capital gains, dividends, and other investment income.
     </p>
   </div>
 
@@ -21,20 +21,63 @@
     <p>Loading documents...</p>
   </div>
 
-  <div *ngIf="!loading && documents.length === 0" class="empty-state">
+  <!-- Empty state -->
+  <div *ngIf="!loading && taxFormsByYear.length === 0 && statementYears.length === 0" class="empty-state">
     <ion-icon name="document-text-outline"></ion-icon>
     <h3>No Documents Yet</h3>
-    <p>Check back later!</p>
+    <p>Tax forms and account statements will appear here when available.</p>
   </div>
 
-  <ion-list *ngIf="!loading && documents.length > 0">
-    <ion-item *ngFor="let doc of documents" button (click)="download(doc)">
-      <ion-icon name="document-attach-outline" slot="start"></ion-icon>
-      <ion-label>
-        <h2>{{ doc.type || 'Tax Statement' }}</h2>
-        <p>{{ doc.date | date:'mediumDate' }}</p>
-      </ion-label>
-      <ion-icon name="download-outline" slot="end"></ion-icon>
-    </ion-item>
-  </ion-list>
+  <!-- ======== TAX DOCUMENTS SECTION ======== -->
+  <div *ngIf="!loading" class="section">
+    <div *ngIf="taxFormsByYear.length > 0" class="tax-forms-list card-list">
+      <button *ngFor="let tf of taxFormsByYear" class="year-button" (click)="openDocument(tf.doc)">
+        <span class="year-label">{{ tf.year }}</span>
+        <span class="year-sublabel">Form 1099</span>
+        <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
+      </button>
+    </div>
+
+    <div *ngIf="taxFormsByYear.length === 0" class="empty-state">
+      <ion-icon name="document-text-outline"></ion-icon>
+      <h3>No Tax Documents Yet</h3>
+      <p>Check back later!</p>
+    </div>
+  </div>
+
+  <!-- ======== ACCOUNT STATEMENTS SECTION ======== -->
+  <div *ngIf="!loading" class="section">
+    <div class="info-card">
+      <h3>Account Statements</h3>
+      <p>
+        Monthly account statements are available for each month after the month closes.
+        These statements provide a detailed record of your account activity, transactions, and holdings.
+      </p>
+    </div>
+
+    <div *ngIf="statementYears.length > 0" class="statements-list card-list">
+      <div *ngFor="let sy of statementYears" class="statement-year-group">
+        <!-- Year accordion header -->
+        <button class="year-accordion-header" (click)="toggleYear(sy)">
+          <span class="year-label">{{ sy.year }}</span>
+          <ion-icon [name]="sy.expanded ? 'chevron-down-outline' : 'chevron-forward-outline'" class="chevron"></ion-icon>
+        </button>
+
+        <!-- Expanded months list -->
+        <div class="months-container" [class.expanded]="sy.expanded">
+          <button *ngFor="let m of sy.months" class="month-button" (click)="openDocument(m.doc)">
+            <span>{{ m.label }}</span>
+            <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="statementYears.length === 0" class="empty-state">
+      <ion-icon name="document-text-outline"></ion-icon>
+      <h3>No Account Statements Yet</h3>
+      <p>Check back later!</p>
+    </div>
+  </div>
+
 </ion-content>

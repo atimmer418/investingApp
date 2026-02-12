@@ -78,9 +78,18 @@ public class DocumentsController {
 
             byte[] document = alpacaApiService.downloadDocument(user.getAlpacaAccountId(), documentId);
             
+            if (document == null || document.length == 0) {
+                logger.warn("Received empty document for documentId: {}", documentId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            
+            logger.info("Successfully retrieved document {} with size {} bytes", documentId, document.length);
+            
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment", "document_" + documentId + ".pdf");
+            headers.setContentLength(document.length);
+            // Use "inline" to open in browser instead of forcing download
+            headers.add("Content-Disposition", "inline; filename=document_" + documentId + ".pdf");
             
             return new ResponseEntity<>(document, headers, HttpStatus.OK);
 
