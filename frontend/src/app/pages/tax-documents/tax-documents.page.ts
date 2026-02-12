@@ -48,7 +48,7 @@ export class TaxDocumentsPage implements OnInit {
         // Filter out trade confirmations, keep only tax documents (account_statement, tax_form, etc.)
         this.documents = (docs || []).filter(doc => 
           !doc.type.includes('trade_confirmation')
-        );
+        ).reverse();
         this.loading = false;
       },
       error: (err) => {

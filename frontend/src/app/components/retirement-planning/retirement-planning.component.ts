@@ -28,7 +28,8 @@ import {
   IonSelect,
   IonSelectOption,
   IonToggle,
-  IonBadge
+  IonBadge,
+  IonRange
 } from '@ionic/angular/standalone';
 import { MonteCarloService, SimulationParams, SimulationResult, StrategyType } from '../../services/monte-carlo.service';
 import { PortfolioService } from '../../services/portfolio.service';
@@ -83,10 +84,9 @@ interface StrategyCard {
     IonSegmentButton,
     IonSelect,
     IonSelectOption,
-    IonSelect,
-    IonSelectOption,
     IonToggle,
-    IonBadge
+    IonBadge,
+    IonRange
   ]
 })
 export class RetirementPlanningComponent {

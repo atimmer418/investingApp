@@ -177,57 +177,44 @@
       </ion-card-content>
     </ion-card>
 
-    <div class="input-section">
-
-      <h3>
-        <ion-icon name="wallet-outline" class="icon-enhanced primary"></ion-icon>
-        Financial Inputs
-      </h3>
-
-      <div class="simulation-inputs">
-        <ion-grid>
-          <ion-row>
-            <ion-col size="12" size-md="4">
-              <ion-item>
-                <ion-label position="stacked">
-                  <ion-icon name="pie-chart-outline" class="icon-enhanced primary"></ion-icon>
-                  Portfolio Value
-                </ion-label>
-                <div class="input-wrapper" style="display:flex; align-items:center;">
-                  <ion-input type="number" [(ngModel)]="portfolioValue" placeholder="1,000,000"></ion-input>
-                  <ion-button fill="clear" size="small" (click)="fetchPortfolioValue()">
-                    Use My Portfolio
-                  </ion-button>
-                </div>
-              </ion-item>
-              <div class="input-help">Your total investment portfolio value</div>
-            </ion-col>
-
-            <ion-col size="12" size-md="4">
-              <ion-item>
-                <ion-label position="stacked">
-                  <ion-icon name="cash-outline" class="icon-enhanced primary"></ion-icon>
-                  Annual Withdrawal
-                </ion-label>
-                <ion-input type="number" [(ngModel)]="annualWithdrawal" placeholder="40,000"></ion-input>
-              </ion-item>
-              <div class="input-help">Amount you need per year (inflation-adjusted)</div>
-            </ion-col>
-
-            <ion-col size="12" size-md="4">
-              <ion-item>
-                <ion-label position="stacked">
-                  <ion-icon name="time-outline" class="icon-enhanced primary"></ion-icon>
-                  Retirement Duration
-                </ion-label>
-                <ion-input type="number" [(ngModel)]="yearsToLast" placeholder="30"></ion-input>
-              </ion-item>
-              <div class="input-help">How many years your money needs to last in retirement</div>
-            </ion-col>
-          </ion-row>
-        </ion-grid>
+    <ion-card class="financial-inputs-card">
+      <div class="card-title-row">
+        <ion-icon name="wallet-outline" class="header-icon"></ion-icon>
+        <h3>Financial Inputs</h3>
       </div>
-    </div>
+
+      <div class="inputs-row">
+        <!-- Portfolio Value -->
+        <div class="custom-input-container">
+          <div class="label-row">
+            <label>Portfolio Value</label>
+            <ion-icon name="sync-outline" class="fetch-icon" (click)="fetchPortfolioValue()" title="Use My Portfolio"></ion-icon>
+          </div>
+          <div class="input-box">
+            <span class="prefix">$</span>
+            <ion-input type="number" [(ngModel)]="portfolioValue" placeholder="1,200,000"></ion-input>
+          </div>
+        </div>
+
+        <!-- Annual Spend -->
+        <div class="custom-input-container">
+          <label class="label-row">Annual Spend</label>
+          <div class="input-box">
+            <span class="prefix">$</span>
+            <ion-input type="number" [(ngModel)]="annualWithdrawal" placeholder="48,000"></ion-input>
+          </div>
+        </div>
+      </div>
+
+      <!-- Duration Slider -->
+      <div class="slider-container">
+        <div class="slider-label-row">
+          <label>Duration</label>
+          <span class="highlight-value">{{ yearsToLast }} Years</span>
+        </div>
+        <ion-range min="10" max="60" step="1" [(ngModel)]="yearsToLast"></ion-range>
+      </div>
+    </ion-card>
 
     <div class="action-buttons" style="display:flex; gap:16px;">
       <ion-button expand="block" size="large" class="simulate-button" style="flex:1"
@@ -486,22 +473,13 @@
         </div>
         <ion-card-header>
           <ion-card-title>Optimal Growth</ion-card-title>
-          <p class="strategy-subtitle">SBLOC Strategy</p>
         </ion-card-header>
         <ion-card-content>
-          <p class="strategy-description">Use a line of credit during market downturns to avoid selling assets low,
-            maximizing long-term growth.</p>
           <div class="strategy-tags">
             <span class="tag tag-positive">Highest Growth</span>
             <span class="tag tag-positive">Volatility Protection</span>
           </div>
         </ion-card-content>
-        <div class="card-footer">
-          <ion-button fill="clear" color="primary" size="small">
-            Learn More
-            <ion-icon name="arrow-forward" slot="end"></ion-icon>
-          </ion-button>
-        </div>
       </ion-card>
 
       <!-- Annuity + Growth / Balanced Security -->
@@ -511,22 +489,13 @@
         </div>
         <ion-card-header>
           <ion-card-title>Balanced Security</ion-card-title>
-          <p class="strategy-subtitle">Annuity + Growth</p>
         </ion-card-header>
         <ion-card-content>
-          <p class="strategy-description">Guarantee essentials with an annuity, invest the rest for growth and lifestyle
-            spending.</p>
           <div class="strategy-tags">
             <span class="tag tag-positive">Essentials Guaranteed</span>
             <span class="tag tag-positive">Good Growth</span>
           </div>
         </ion-card-content>
-        <div class="card-footer">
-          <ion-button fill="clear" color="primary" size="small">
-            Learn More
-            <ion-icon name="arrow-forward" slot="end"></ion-icon>
-          </ion-button>
-        </div>
       </ion-card>
 
       <!-- Dynamic Guardrails / Adaptive Spending -->
@@ -536,22 +505,13 @@
         </div>
         <ion-card-header>
           <ion-card-title>Adaptive Spending</ion-card-title>
-          <p class="strategy-subtitle">Dynamic Guardrails</p>
         </ion-card-header>
         <ion-card-content>
-          <p class="strategy-description">Adjust spending based on market performance using smart guardrails for maximum
-            flexibility.</p>
           <div class="strategy-tags">
             <span class="tag tag-positive">High Growth</span>
             <span class="tag tag-positive">No Debt</span>
           </div>
         </ion-card-content>
-        <div class="card-footer">
-          <ion-button fill="clear" color="primary" size="small">
-            Learn More
-            <ion-icon name="arrow-forward" slot="end"></ion-icon>
-          </ion-button>
-        </div>
       </ion-card>
 
       <!-- Full Annuity / Safety First -->
@@ -561,22 +521,13 @@
         </div>
         <ion-card-header>
           <ion-card-title>Safety First</ion-card-title>
-          <p class="strategy-subtitle">Full Annuity</p>
         </ion-card-header>
         <ion-card-content>
-          <p class="strategy-description">Convert your portfolio into a guaranteed lifetime paycheck. No market risk,
-            complete security.</p>
           <div class="strategy-tags">
             <span class="tag tag-positive">Guaranteed Income</span>
             <span class="tag tag-caution">No Market Growth</span>
           </div>
         </ion-card-content>
-        <div class="card-footer">
-          <ion-button fill="clear" color="primary" size="small">
-            Learn More
-            <ion-icon name="arrow-forward" slot="end"></ion-icon>
-          </ion-button>
-        </div>
       </ion-card>
     </div>
   </div>

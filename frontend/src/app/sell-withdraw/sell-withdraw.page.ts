@@ -162,7 +162,8 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
 
     // Calculate max sell percentage based on available quantity
     if (position.quantityAvailable !== undefined && position.quantity > 0) {
-      this.maxSellPercentage = Math.floor((position.quantityAvailable / position.quantity) * 100);
+      // Use Math.round to handle floating point precision issues (e.g. 74.99999% should be 75%)
+      this.maxSellPercentage = Math.round((position.quantityAvailable / position.quantity) * 100);
     } else {
       this.maxSellPercentage = 100;
     }

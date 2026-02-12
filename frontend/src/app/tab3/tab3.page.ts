@@ -151,8 +151,8 @@ export class Tab3Page implements OnInit, OnDestroy {
           type: 'navigation'
         },
         {
-          title: 'Tax Documents',
-          subtitle: 'View and download tax forms',
+          title: 'Documents',
+          subtitle: 'Account statements & tax forms',
           icon: 'document-text-outline',
           action: 'taxDocuments',
           type: 'navigation'

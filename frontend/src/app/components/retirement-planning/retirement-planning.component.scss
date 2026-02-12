@@ -1238,88 +1238,89 @@ ion-item {
 
 .strategy-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--app-spacing-md);
-  margin-top: var(--app-spacing-lg);
+  grid-template-columns: 1fr 1fr;
+  gap: var(--app-spacing-sm);
+  margin-top: var(--app-spacing-md);
   padding-bottom: var(--app-spacing-xl);
+  padding-left: var(--app-spacing-sm);
+  padding-right: var(--app-spacing-sm);
 }
 
 .modern-strategy-card {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: var(--app-radius-lg);
+  border-radius: var(--app-radius-md);
   overflow: hidden;
   background: var(--app-card-background);
   border: 1px solid var(--app-card-border);
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  height: 100%;
 
   &:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
     border-color: var(--app-primary);
   }
 
   &:active {
-    transform: translateY(-6px) scale(1.01);
+    transform: translateY(-2px) scale(1.01);
   }
 
   .card-icon-header {
     background: linear-gradient(135deg, var(--app-primary), var(--app-primary-shade));
-    padding: var(--app-spacing-xl);
+    padding: var(--app-spacing-md);
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    margin: 0;
 
     .strategy-icon {
-      font-size: 48px;
+      font-size: 36px;
       color: white;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     }
   }
 
   ion-card-header {
-    padding: var(--app-spacing-md);
+    padding: var(--app-spacing-sm);
     background: transparent;
 
     ion-card-title {
-      font-size: var(--app-font-size-lg);
+      font-size: var(--app-font-size-base);
       font-weight: 700;
       color: var(--app-gray-900);
       margin: 0;
-    }
-
-    .strategy-subtitle {
-      font-size: var(--app-font-size-sm);
-      color: var(--app-primary);
-      font-weight: 600;
-      margin: var(--app-spacing-xs) 0 0 0;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      line-height: 1.2;
     }
   }
 
   ion-card-content {
-    padding: 0 var(--app-spacing-md) var(--app-spacing-md);
-
-    .strategy-description {
-      font-size: var(--app-font-size-sm);
-      line-height: 1.6;
-      color: var(--app-gray-600);
-      margin: 0 0 var(--app-spacing-md) 0;
-    }
+    padding: 0 var(--app-spacing-xs) var(--app-spacing-md);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
 
     .strategy-tags {
       display: flex;
-      flex-wrap: wrap;
-      gap: var(--app-spacing-xs);
+      flex-direction: column;
+      gap: 4px;
+      width: 100%;
+      align-items: center;
 
       .tag {
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: var(--app-font-size-xs);
-        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 8px;
+        font-size: 10px;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.3px;
+        white-space: nowrap;
 
         &.tag-positive {
           background: rgba(40, 167, 69, 0.1);
@@ -1341,33 +1342,9 @@ ion-item {
       }
     }
   }
-
-  .card-footer {
-    padding: 0 var(--app-spacing-md) var(--app-spacing-md);
-    overflow: visible; // Prevent icon clipping on hover
-
-    ion-button {
-      --padding-start: 0;
-      --padding-end: 0;
-      font-size: var(--app-font-size-sm);
-      font-weight: 600;
-      margin: 0;
-      overflow: visible; // Allow arrow to expand beyond button
-      min-width: 130px; // Accommodate arrow movement on hover
-
-      ion-icon {
-        margin-left: var(--app-spacing-xs);
-        transition: transform 0.3s ease;
-      }
-    }
-
-    &:hover ion-icon {
-      transform: translateX(4px);
-    }
-  }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 350px) {
   .strategy-grid {
     grid-template-columns: 1fr;
   }
@@ -1426,5 +1403,150 @@ ion-item {
   // Hide buttons inside the card
   ion-button {
     display: none !important;
+  }
+}
+
+/* =============================================================================
+   FINANCIAL INPUTS CARD
+   ============================================================================= */
+
+.financial-inputs-card {
+  margin: var(--app-spacing-md) 0 !important;
+  padding: var(--app-spacing-md) var(--app-spacing-md) var(--app-spacing-lg) !important;
+  background: white;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border: 1px solid var(--app-card-border);
+  border-left: 6px solid #10b981 !important; // Green accent
+  overflow: visible;
+
+  .card-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    
+    .header-icon {
+      color: #3b82f6; // Blue icon
+      font-size: 20px;
+    }
+    
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #111827;
+      letter-spacing: -0.01em;
+    }
+  }
+
+  .inputs-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    
+    @media (max-width: 480px) {
+      flex-direction: column; // Stack on mobile if needed, or keep row if narrow enough
+    }
+  }
+
+  .custom-input-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    .label-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        
+        label {
+          margin-bottom: 0;
+        }
+    }
+
+    .fetch-icon {
+        color: var(--app-primary);
+        cursor: pointer;
+        font-size: 16px;
+        opacity: 0.8;
+        &:hover { opacity: 1; }
+    }
+
+    label {
+      font-size: 14px;
+      color: #6b7280;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .input-box {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 4px 12px;
+      display: flex;
+      align-items: center;
+      background: #fff;
+      transition: all 0.2s ease;
+      height: 48px;
+
+      &:focus-within {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .prefix {
+        color: #6b7280;
+        font-weight: 500;
+        margin-right: 4px;
+        font-size: 16px;
+      }
+
+      ion-input {
+        --padding-start: 0;
+        --padding-end: 0;
+        --padding-top: 0;
+        --padding-bottom: 0;
+        --background: transparent;
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+        --placeholder-color: #9ca3af;
+        --placeholder-opacity: 1;
+      }
+    }
+  }
+
+  .slider-container {
+    padding-top: 8px;
+
+    .slider-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0px;
+
+      label {
+        font-size: 14px;
+        color: #6b7280;
+        font-weight: 600;
+      }
+
+      .highlight-value {
+        color: #3b82f6;
+        font-weight: 700;
+        font-size: 16px;
+      }
+    }
+
+    ion-range {
+      --bar-background: #e5e7eb;
+      --bar-background-active: #3b82f6;
+      --knob-background: #3b82f6;
+      --knob-size: 22px;
+      padding-inline-start: 0;
+      padding-inline-end: 0;
+    }
   }
 }
