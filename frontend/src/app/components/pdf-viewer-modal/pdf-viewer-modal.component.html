@@ -1,0 +1,48 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="close()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ documentTitle }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="sharePdf()">
+        <ion-icon name="share-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="downloadPdf()">
+        <ion-icon name="download"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner></ion-spinner>
+    <p>Loading document...</p>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="loadError" class="error-container">
+    <ion-icon name="alert-circle-outline"></ion-icon>
+    <h3>Failed to Load Document</h3>
+    <p>There was an error loading the PDF. Please try again.</p>
+    <ion-button (click)="close()">Close</ion-button>
+  </div>
+
+  <!-- PDF Viewer -->
+  <div *ngIf="!isLoading && !loadError" class="pdf-container">
+    <pdf-viewer
+      [src]="pdfSrc"
+      [render-text]="true"
+      [original-size]="false"
+      [fit-to-page]="true"
+      [show-all]="true"
+      [zoom-scale]="'page-width'"
+      (after-load-complete)="onPdfLoaded()"
+      (error)="onPdfError($event)"
+    ></pdf-viewer>
+  </div>
+</ion-content>

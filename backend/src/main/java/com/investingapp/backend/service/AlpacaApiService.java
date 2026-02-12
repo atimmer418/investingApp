@@ -335,10 +335,41 @@ public class AlpacaApiService {
      */
     public byte[] downloadDocument(String accountId, String documentId) {
         String url = brokerBaseUrl + "/accounts/" + accountId + "/documents/" + documentId + "/download";
-        HttpEntity<String> entity = new HttpEntity<>(createHeaders());
+        
+        // Create headers specifically for binary download
+        HttpHeaders headers = new HttpHeaders();
+        String credentials = apiKey + ":" + apiSecret;
+        String base64Credentials = Base64.getEncoder().encodeToString(
+                credentials.getBytes(StandardCharsets.UTF_8));
+        headers.set("Authorization", "Basic " + base64Credentials);
+        headers.setAccept(List.of(MediaType.APPLICATION_PDF, MediaType.APPLICATION_OCTET_STREAM));
+        
+        HttpEntity<String> entity = new HttpEntity<>(headers);
         try {
+            logger.info("Downloading document {} for account {} from URL: {}", documentId, accountId, url);
             ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, byte[].class);
-            return response.getBody();
+            
+            byte[] documentBytes = response.getBody();
+            if (documentBytes == null || documentBytes.length == 0) {
+                logger.error("Received empty document from Alpaca API");
+                throw new RuntimeException("Document is empty");
+            }
+            
+            // Check if it's actually a PDF by looking at the first few bytes
+            if (documentBytes.length > 5) {
+                String header = new String(documentBytes, 0, Math.min(5, documentBytes.length));
+                logger.info("Document header: {}, size: {} bytes", header, documentBytes.length);
+                
+                if (!header.startsWith("%PDF-")) {
+                    // Log first 200 chars to see what we actually got
+                    String preview = new String(documentBytes, 0, Math.min(200, documentBytes.length));
+                    logger.error("Downloaded content is not a PDF! Preview: {}", preview);
+                    throw new RuntimeException("Downloaded file is not a valid PDF");
+                }
+            }
+            
+            logger.info("Successfully downloaded PDF document, size: {} bytes", documentBytes.length);
+            return documentBytes;
         } catch (Exception e) {
             logger.error("Error downloading document {} for account {}: {}", documentId, accountId, e.getMessage());
             throw new RuntimeException("Failed to download document", e);

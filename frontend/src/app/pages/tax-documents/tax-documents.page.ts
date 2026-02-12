@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ModalController } from '@ionic/angular';
 import { PortfolioService } from '../../services/portfolio.service';
 import { LoadingController } from '@ionic/angular';
 import { ToastService } from '../../services/toast.service';
 import { addIcons } from 'ionicons';
 import { documentTextOutline, documentAttachOutline, downloadOutline, chevronDownOutline, chevronForwardOutline } from 'ionicons/icons';
+import { PdfViewerModalComponent } from '../../components/pdf-viewer-modal/pdf-viewer-modal.component';
 
 interface TaxDocument {
   id: string;
@@ -39,7 +40,8 @@ export class TaxDocumentsPage implements OnInit {
   constructor(
     private portfolioService: PortfolioService,
     private loadingController: LoadingController,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private modalController: ModalController
   ) {
     addIcons({ documentTextOutline, documentAttachOutline, downloadOutline, chevronDownOutline, chevronForwardOutline });
   }
@@ -119,42 +121,62 @@ export class TaxDocumentsPage implements OnInit {
     sy.expanded = !wasExpanded;
   }
 
-  /** Open a document in a new browser window with native print/save capabilities */
+  /** Open a document in the in-app PDF viewer with export capabilities */
   async openDocument(doc: TaxDocument) {
     const loading = await this.loadingController.create({ message: 'Loading document...' });
     await loading.present();
 
     this.portfolioService.downloadDocument(doc.id).subscribe({
-      next: (blob) => {
+      next: async (blob) => {
         loading.dismiss();
         
-        // Debug: Check if blob is valid
-        console.log('Received blob:', blob);
-        console.log('Blob size:', blob.size);
-        console.log('Blob type:', blob.type);
+        console.log('Received blob - size:', blob.size, 'type:', blob.type);
         
         if (blob.size === 0) {
           console.error('Received empty blob');
-          this.toastService.showToast('Document is empty', 'danger', 2000);
+          await this.toastService.showToast('Document is empty', 'danger', 2000);
           return;
         }
         
-        // Create blob with explicit PDF MIME type
-        const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(pdfBlob);
-        
-        // Open in new window
-        const newWindow = window.open(url, '_blank');
-        
-        // Clean up the URL after a delay to allow the window to load
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url);
-        }, 1000);
-        
-        if (!newWindow) {
-          console.error('Failed to open new window - popup might be blocked');
-          this.toastService.showToast('Please allow popups to view documents', 'warning', 3000);
-        }
+        // Read first few bytes to verify it's a PDF
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const arrayBuffer = e.target?.result as ArrayBuffer;
+          const uint8Array = new Uint8Array(arrayBuffer);
+          const header = String.fromCharCode(...uint8Array.slice(0, 5));
+          console.log('PDF header check:', header);
+          
+          if (!header.startsWith('%PDF-')) {
+            console.error('Not a valid PDF! First 100 bytes:', String.fromCharCode(...uint8Array.slice(0, Math.min(100, uint8Array.length))));
+            await this.toastService.showToast('Invalid document format', 'danger', 2000);
+            return;
+          }
+          
+          // Create blob with explicit PDF MIME type
+          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+          
+          // Determine document title based on type
+          let title = 'Document';
+          if (doc.type.includes('tax_form')) {
+            title = `${doc.year} Tax Form 1099`;
+          } else if (doc.type.includes('account_statement')) {
+            const date = new Date(doc.date + 'T00:00:00');
+            const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+            title = `${monthYear} Statement`;
+          }
+          
+          // Open PDF viewer modal
+          const modal = await this.modalController.create({
+            component: PdfViewerModalComponent,
+            componentProps: {
+              pdfBlob: pdfBlob,
+              documentTitle: title
+            }
+          });
+          
+          await modal.present();
+        };
+        reader.readAsArrayBuffer(blob);
       },
       error: async (err) => {
         loading.dismiss();
