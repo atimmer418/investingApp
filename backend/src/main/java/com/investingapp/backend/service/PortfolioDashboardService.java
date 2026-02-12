@@ -1119,6 +1119,46 @@ public class PortfolioDashboardService {
     }
 
     /**
+     * Get current ask price for a symbol using Alpaca market data API
+     * Useful for calculating buy quantities
+     */
+    public BigDecimal getAskPrice(String symbol) {
+        try {
+            // Use Alpaca's latest quote endpoint
+            String url = alpacaMarketDataBaseUrl + "/stocks/" + symbol + "/quotes/latest";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("APCA-API-KEY-ID", alpacaMarketDataKey);
+            headers.set("APCA-API-SECRET-KEY", alpacaMarketDataSecret);
+            headers.set("Accept", "application/json");
+
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonNode responseData = objectMapper.readTree(response.getBody());
+                JsonNode quote = responseData.get("quote");
+
+                if (quote != null && quote.has("ap")) {
+                    // Get the ask price (ap)
+                    BigDecimal askPrice = parseDecimalSafely(quote, "ap", BigDecimal.ZERO);
+
+                    if (askPrice.compareTo(BigDecimal.ZERO) > 0) {
+                        logger.debug("Current ask price for {}: ${}", symbol, askPrice);
+                        return askPrice;
+                    }
+                }
+            } else {
+                logger.warn("Failed to get ask price for {}: HTTP {}", symbol, response.getStatusCode());
+            }
+        } catch (Exception e) {
+            logger.error("Error getting ask price for {}: {}", symbol, e.getMessage());
+        }
+        
+        return BigDecimal.ZERO;
+    }
+
+    /**
      * Get company name for a symbol, using cache if available
      */
     private String getCompanyName(String symbol) {

@@ -954,9 +954,14 @@ public class InvestmentExecutionService {
         // If not fractionable, calculate whole shares
         logger.info("Asset {} is not fractionable, calculating whole shares for amount {}", symbol, amount);
         
-        BigDecimal currentPrice = portfolioDashboardService.getCurrentPrice(symbol);
+        // Try to get Ask Price first for better buy accuracy, fall back to Last Trade Price
+        BigDecimal calculationPrice = portfolioDashboardService.getAskPrice(symbol);
+        if (calculationPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            logger.debug("Ask price not available for {}, falling back to last trade price", symbol);
+            calculationPrice = portfolioDashboardService.getCurrentPrice(symbol);
+        }
         
-        if (currentPrice.compareTo(BigDecimal.ZERO) <= 0) {
+        if (calculationPrice.compareTo(BigDecimal.ZERO) <= 0) {
             return new AlpacaService.AlpacaOrderResponse(
                     null, symbol, "FAILED", null, amount, 
                     BigDecimal.ZERO, null, null, 
@@ -964,13 +969,13 @@ public class InvestmentExecutionService {
         }
         
         // Calculate shares: floor(amount / price)
-        BigDecimal quantity = amount.divide(currentPrice, 0, RoundingMode.DOWN);
+        BigDecimal quantity = amount.divide(calculationPrice, 0, RoundingMode.DOWN);
         
         if (quantity.compareTo(BigDecimal.ZERO) <= 0) {
             return new AlpacaService.AlpacaOrderResponse(
                     null, symbol, "FAILED", null, amount, 
                     BigDecimal.ZERO, null, null, 
-                    "Amount $" + amount + " is too small to buy 1 share of " + symbol + " (Price: $" + currentPrice + ") which does not support fractional shares.");
+                    "Amount $" + amount + " is too small to buy 1 share of " + symbol + " (Price: $" + calculationPrice + ") which does not support fractional shares.");
         }
         
         return alpacaService.placeBuyOrderWithQuantity(accountId, symbol, quantity);
