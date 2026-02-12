@@ -38,9 +38,11 @@
       [src]="pdfSrc"
       [render-text]="true"
       [original-size]="false"
-      [fit-to-page]="true"
+      [fit-to-page]="false"
       [show-all]="true"
-      [zoom-scale]="'page-width'"
+      [autoresize]="true"
+      [zoom]="1.0"
+      style="display: block; width: 100%; height: 100%;"
       (after-load-complete)="onPdfLoaded()"
       (error)="onPdfError($event)"
     ></pdf-viewer>

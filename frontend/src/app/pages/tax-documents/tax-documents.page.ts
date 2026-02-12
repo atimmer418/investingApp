@@ -158,11 +158,11 @@ export class TaxDocumentsPage implements OnInit {
           // Determine document title based on type
           let title = 'Document';
           if (doc.type.includes('tax_form')) {
-            title = `${doc.year} Tax Form 1099`;
+            title = `${doc.year} Alpaca Form 1099`;
           } else if (doc.type.includes('account_statement')) {
             const date = new Date(doc.date + 'T00:00:00');
-            const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
-            title = `${monthYear} Statement`;
+            const monthYear = date.toLocaleString('default', { month: 'short', year: 'numeric' });
+            title = `${monthYear} Alpaca Statement`;
           }
           
           // Open PDF viewer modal
