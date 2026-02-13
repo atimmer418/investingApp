@@ -5,7 +5,8 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { 
   IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-  IonItem, IonLabel, IonInput, IonButton, IonNote, IonSpinner, IonIcon
+  IonItem, IonLabel, IonInput, IonButton, IonNote, IonSpinner, IonIcon,
+  IonCard, IonCardHeader, IonCardTitle, IonCardContent
 } from '@ionic/angular/standalone';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
@@ -14,7 +15,9 @@ import { PinService } from '../../services/pin.service';
 import { ToastService } from '../../services/toast.service';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import { addIcons } from 'ionicons';
-import { mailOutline, alertCircleOutline } from 'ionicons/icons';
+import { mailOutline, alertCircleOutline, shieldCheckmarkOutline } from 'ionicons/icons';
+import { get } from '@github/webauthn-json';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-change-email',
@@ -24,13 +27,13 @@ import { mailOutline, alertCircleOutline } from 'ionicons/icons';
   imports: [
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-    IonItem, IonLabel, IonInput, IonButton, IonNote, IonSpinner, IonIcon
+    IonItem, IonLabel, IonInput, IonButton, IonNote, IonSpinner, IonIcon,
+    IonCard, IonCardHeader, IonCardTitle, IonCardContent
   ]
 })
 export class ChangeEmailPage implements OnInit {
   currentEmail: string = '';
   newEmail: string = '';
-  confirmEmail: string = '';
   
   isLoading = false;
   errorMessage: string = '';
@@ -43,7 +46,7 @@ export class ChangeEmailPage implements OnInit {
     private pinService: PinService,
     private toastService: ToastService
   ) {
-    addIcons({ mailOutline, alertCircleOutline });
+    addIcons({ mailOutline, alertCircleOutline, shieldCheckmarkOutline });
   }
 
   ngOnInit() {
@@ -60,94 +63,117 @@ export class ChangeEmailPage implements OnInit {
 
   canSave(): boolean {
     return this.newEmail.length > 0 && 
-           this.confirmEmail.length > 0 && 
-           this.newEmail === this.confirmEmail &&
            this.isValidEmail(this.newEmail) &&
            this.newEmail !== this.currentEmail;
   }
 
-  async saveEmail() {
+  async initiateEmailChange() {
     if (!this.canSave()) return;
 
     this.isLoading = true;
     this.errorMessage = '';
 
-    // Step 1: Re-authenticate with PIN if enabled
-    const hasPin = await this.pinService.hasPin();
+    try {
+      // 1. Try Biometric / Passkey Re-authentication first
+      await this.performBiometricVerification();
+      
+      // 2. If successful, proceed to update email
+      await this.performEmailUpdate();
 
-    if (hasPin) {
-      const verified = await this.pinService.promptPin('verify');
-      if (!verified) {
-        this.isLoading = false;
-        this.errorMessage = 'Authentication required to change email.';
-        this.toastService.showToast(this.errorMessage, 'warning');
-        return;
-      }
-    }
-
-    // Step 2: Proceed with Email Update
-    const payload = {
-        currentEmail: this.currentEmail,
-        newEmail: this.newEmail
-      };
-
-      this.http.post<any>(`${environment.backendApiUrl}/user/update-email`, payload)
-        .subscribe({
-          next: (response) => {
-            this.isLoading = false;
-            
-            // Update localStorage
-            localStorage.setItem('userEmail', response.newEmail);
-            if (response.jwtToken) {
-              // Update JWT token as well since it contains the email
-              JwtTokenUtils.storeJwtToken(response.jwtToken, undefined, response.newEmail);
+    } catch (error: any) {
+      console.error('Biometric Verification Failed:', error);
+      
+      // Fallback: If biometrics fail or not available, allow PIN as backup check
+      // This is a UX fallback.
+      if (await this.pinService.hasPin()) {
+         try {
+            const pinVerified = await this.pinService.promptPin('verify');
+            if (pinVerified) {
+                await this.performEmailUpdate();
+                return;
             }
+         } catch (pinError) {
+             console.error('PIN verification failed', pinError);
+         }
+      }
 
-            this.toastService.showToast('Email updated successfully', 'success');
-            
-            // Navigate back after a short delay
-            setTimeout(() => {
-              this.router.navigate(['/security-settings']);
-            }, 1500);
-          },
-          error: (error) => {
-            this.isLoading = false;
-            console.error('Error updating email:', error);
-            this.errorMessage = error.error?.message || 'Failed to update email. Please try again.';
-            this.toastService.showToast(this.errorMessage, 'danger');
-          }
-        });
+      this.isLoading = false;
+      this.errorMessage = 'Authentication required to update email.';
+      this.toastService.showToast(this.errorMessage, 'danger');
+    }
   }
 
-  // Helper methods for WebAuthn
-  private base64urlToArrayBuffer(base64url: string): ArrayBuffer {
-    let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
-    while (base64.length % 4) { base64 += '='; }
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); }
-    return bytes.buffer;
+  // Uses WebAuthn (Passkey) to re-verify user presence
+  private async performBiometricVerification(): Promise<void> {
+    try {
+      // Get challenge from backend
+      const startResponse = await firstValueFrom(this.passkeyService.startAuthentication());
+      
+      let requestOptions;
+      if (typeof startResponse.requestOptions === 'string') {
+        requestOptions = JSON.parse(startResponse.requestOptions);
+      } else {
+        requestOptions = startResponse.requestOptions;
+      }
+
+      // Handle structure where challenge is inside publicKey
+      // This logic is copied from PasskeyPromptComponent to ensure consistency
+      // The @github/webauthn-json library handles base64url decoding of challenge/id automatically
+      if (!requestOptions.publicKey && requestOptions.challenge) {
+          // If options are flat (legacy), wrap them
+          requestOptions = { publicKey: requestOptions };
+      }
+
+      // Trigger the browser/device WebAuthn prompt using the library
+      const credential = await get(requestOptions);
+
+      // Verify the assertion with backend
+      const finishResponse = await firstValueFrom(
+          this.passkeyService.finishAuthentication(credential, startResponse.sessionId)
+      );
+
+      if (!finishResponse.success) {
+         throw new Error('Backend verification failed: ' + (finishResponse.message || 'Unknown error'));
+      }
+      
+      return; // Success
+    } catch (e) {
+      console.error('Biometric verification error:', e);
+      throw e;
+    }
   }
 
-  private arrayBufferToBase64url(buffer: ArrayBuffer): string {
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); }
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  }
-
-  private credentialToJson(credential: any): any {
-    return {
-      id: credential.id,
-      rawId: this.arrayBufferToBase64url(credential.rawId),
-      response: {
-        authenticatorData: this.arrayBufferToBase64url(credential.response.authenticatorData),
-        clientDataJSON: this.arrayBufferToBase64url(credential.response.clientDataJSON),
-        signature: this.arrayBufferToBase64url(credential.response.signature),
-        userHandle: credential.response.userHandle ? this.arrayBufferToBase64url(credential.response.userHandle) : null
-      },
-      type: credential.type,
-      clientExtensionResults: credential.getClientExtensionResults()
+  private async performEmailUpdate() {
+    const payload = {
+      currentEmail: this.currentEmail,
+      newEmail: this.newEmail
     };
+
+    this.http.post<any>(`${environment.backendApiUrl}/user/update-email`, payload)
+      .subscribe({
+        next: (response) => {
+          this.isLoading = false;
+          
+          // Update localStorage
+          localStorage.setItem('userEmail', response.newEmail);
+          if (response.jwtToken) {
+            JwtTokenUtils.storeJwtToken(response.jwtToken, undefined, response.newEmail);
+          }
+
+          this.toastService.showToast('Email updated successfully', 'success');
+          
+          setTimeout(() => {
+            this.router.navigate(['/security-settings']);
+          }, 1500);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          console.error('Error updating email:', error);
+          this.errorMessage = error.error?.message || 'Failed to update email.';
+          this.toastService.showToast(this.errorMessage, 'danger');
+        }
+      });
   }
+
+  // --- WebAuthn Helpers (Removed manual implementation) ---
 }

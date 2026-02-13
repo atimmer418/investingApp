@@ -92,7 +92,7 @@ ion-content {
 
 // Main Content Styling
 .mobile-container {
-  padding: 20px 16px;
+  padding: 20px 16px 0px 16px;
   max-width: 600px;
   margin: 0 auto;
 }
@@ -104,6 +104,10 @@ ion-content {
   margin-bottom: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   overflow: hidden;
+
+  &:last-child {
+    margin-bottom: 12px;
+  }
 
   .section-header {
     padding: 16px 16px 8px 16px;

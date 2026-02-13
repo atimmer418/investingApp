@@ -16,6 +16,8 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Map;
 import java.util.List;
+import java.util.Random;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/user")
@@ -596,7 +598,7 @@ public class UserController {
     @PostMapping("/update-email")
     @Transactional
     public ResponseEntity<?> updateEmail(@RequestBody Map<String, String> request, Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal(); // Corrected casting
         String currentEmail = userDetails.getUsername();
         String newEmail = request.get("newEmail");
 

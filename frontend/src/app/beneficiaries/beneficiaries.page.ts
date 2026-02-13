@@ -173,10 +173,7 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
   }
   
   getPendingBeneficiaries(): Beneficiary[] {
-    return this.beneficiaries.filter(b => 
-      b.status === 'PENDING' || 
-      (b.status === 'INACTIVE' && !!b.submittedToAlpacaAt)
-    );
+    return this.beneficiaries.filter(b => b.status === 'PENDING');
   }
   
   getApprovedBeneficiaries(): Beneficiary[] {

@@ -4,6 +4,13 @@ ion-content {
   --keyboard-offset: 0px !important;
 }
 
+ion-content {
+  &::part(scroll) {
+    scrollbar-gutter: stable;
+    overflow-y: scroll !important;
+  }
+}
+
 ion-header {
   ion-toolbar {
     --background: var(--ion-color-primary);
