@@ -146,7 +146,9 @@
         </ion-button>
       </div>
 
-      <ion-card *ngFor="let beneficiary of getPrimaryBeneficiaries()" class="beneficiary-card" (click)="onEditBeneficiary(beneficiary)">
+      <ion-item-sliding *ngFor="let beneficiary of getPrimaryBeneficiaries()" class="beneficiary-sliding-item">
+        <ion-item lines="none" class="beneficiary-item-wrapper">
+          <ion-card class="beneficiary-card" (click)="onEditBeneficiary(beneficiary)">
         <ion-card-content>
           <div class="beneficiary-header">
             <div class="beneficiary-info">
@@ -202,7 +204,15 @@
             </div>
           </div>
         </ion-card-content>
-      </ion-card>
+          </ion-card>
+        </ion-item>
+
+        <ion-item-options side="end" (ionSwipe)="onDeleteBeneficiary(beneficiary)">
+          <ion-item-option color="danger" expandable="true" (click)="onDeleteBeneficiary(beneficiary)">
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
     </div>
 
     <!-- Contingent Beneficiaries Section -->
@@ -226,7 +236,9 @@
         </ion-button>
       </div>
 
-      <ion-card *ngFor="let beneficiary of getContingentBeneficiaries()" class="beneficiary-card contingent" (click)="onEditBeneficiary(beneficiary)">
+      <ion-item-sliding *ngFor="let beneficiary of getContingentBeneficiaries()" class="beneficiary-sliding-item">
+        <ion-item lines="none" class="beneficiary-item-wrapper">
+          <ion-card class="beneficiary-card contingent" (click)="onEditBeneficiary(beneficiary)">
         <ion-card-content>
           <div class="beneficiary-header">
             <div class="beneficiary-info">
@@ -282,7 +294,15 @@
             </div>
           </div>
         </ion-card-content>
-      </ion-card>
+          </ion-card>
+        </ion-item>
+
+        <ion-item-options side="end" (ionSwipe)="onDeleteBeneficiary(beneficiary)">
+          <ion-item-option color="danger" expandable="true" (click)="onDeleteBeneficiary(beneficiary)">
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
     </div>
 
   </div>

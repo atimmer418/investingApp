@@ -161,8 +161,34 @@ public class BeneficiaryService {
         beneficiary.setUpdatedAt(LocalDateTime.now());
         beneficiaryRepository.save(beneficiary);
         
-        // Optionally notify Alpaca of removal
-        // removeFromAlpaca(beneficiary);
+        // Notify Alpaca of removal by submitting the updated list (excluding the inactive one)
+        /*
+         * Note: Alpaca API requires replacing the entire list of beneficiaries.
+         * To "delete" one, we simply submit the list of remaining active beneficiaries.
+         * We do this automatically to ensure Alpaca stays in sync.
+         */
+        if (user.getAlpacaAccountId() != null && !user.getAlpacaAccountId().trim().isEmpty()) {
+            try {
+                // We don't use submitAllBeneficiariesToAlpaca here because we want to be more tolerant
+                // of partial allocations (e.g. if deleting one makes the total < 100%)
+                // and we don't want to fail the deletion if the Alpaca sync fails.
+                
+                logger.info("Auto-syncing beneficiaries to Alpaca after deletion for user: {}", user.getEmail());
+                
+                List<Beneficiary> allBeneficiaries = beneficiaryRepository.findByUserIdOrderByBeneficiaryTypeAscPercentageAllocationDesc(user.getId());
+                List<Beneficiary> activeBeneficiaries = allBeneficiaries.stream()
+                    .filter(b -> b.getStatus() == BeneficiaryStatus.APPROVED || b.getStatus() == BeneficiaryStatus.PENDING)
+                    .collect(Collectors.toList());
+
+                // Even if the list is empty (last beneficiary deleted), we should sync (send empty list)
+                alpacaService.updateAccountBeneficiaries(user.getAlpacaAccountId(), activeBeneficiaries);
+                
+                logger.info("Successfully synced beneficiaries to Alpaca after deletion");
+            } catch (Exception e) {
+                logger.warn("Failed to auto-sync beneficiaries to Alpaca after deletion: {}", e.getMessage());
+                // We do NOT throw exception here, as the local deletion was successful
+            }
+        }
         
         logger.info("Deleted (marked inactive) beneficiary {} for user: {}", beneficiaryId, user.getEmail());
     }

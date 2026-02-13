@@ -695,3 +695,33 @@ ion-badge {
     gap: 6px;
   }
 }
+
+
+/* Swipe to delete wrapper styles */
+ion-item-sliding.beneficiary-sliding-item {
+  margin-bottom: 16px;
+  background: var(--ion-color-danger);
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); // Apply shadow to the container
+  overflow: hidden;
+}
+
+.beneficiary-item-wrapper {
+  --background: var(--ion-card-background, #fff); // Ensure solid white background
+  --padding-start: 0;
+  --padding-end: 0;
+  --inner-padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --min-height: 0;
+  
+  // Ensure the card takes full width
+  ion-card {
+    width: 100%;
+    margin: 0; 
+    box-shadow: none; // Remove card shadow as container has it
+    border-radius: 0; // Let container handle corners
+    background: transparent; // Allow item background to show
+  }
+}

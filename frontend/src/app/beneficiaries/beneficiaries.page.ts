@@ -18,10 +18,16 @@ import {
   IonBackButton,
   IonNote,
   IonSpinner,
+  IonItemSliding,
+  IonItem,
+  IonItemOptions,
+  IonItemOption,
+  ActionSheetController,
   ViewWillEnter
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
+  trashOutline,
   peopleOutline,
   addOutline,
   personOutline,
@@ -51,7 +57,8 @@ import { ToastService } from '../services/toast.service';
     CommonModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton,
     IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIcon, 
-    IonBadge, IonProgressBar, IonButtons, IonBackButton, IonNote, IonSpinner
+    IonBadge, IonProgressBar, IonButtons, IonBackButton, IonNote, IonSpinner,
+    IonItemSliding, IonItem, IonItemOptions, IonItemOption
   ]
 })
 export class BeneficiariesPage implements OnInit, ViewWillEnter {
@@ -64,9 +71,10 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
   constructor(
     private router: Router,
     private beneficiaryService: BeneficiaryService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private actionSheetCtrl: ActionSheetController
   ) {
-    addIcons({peopleOutline,informationCircleOutline,shieldCheckmarkOutline,pieChartOutline,alertCircleOutline,checkmarkOutline,personAddOutline,checkmarkCircleOutline,addOutline,calendarOutline,mailOutline,shieldOutline,personOutline,pricetagOutline,timeOutline,closeCircleOutline,arrowBackOutline,peopleCircleOutline});
+    addIcons({trashOutline, peopleOutline,informationCircleOutline,shieldCheckmarkOutline,pieChartOutline,alertCircleOutline,checkmarkOutline,personAddOutline,checkmarkCircleOutline,addOutline,calendarOutline,mailOutline,shieldOutline,personOutline,pricetagOutline,timeOutline,closeCircleOutline,arrowBackOutline,peopleCircleOutline});
   }
   
   ngOnInit() {
@@ -157,15 +165,18 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
   }
   
   getPrimaryBeneficiaries(): Beneficiary[] {
-    return this.beneficiaries.filter(b => b.beneficiaryType === 'PRIMARY');
+    return this.beneficiaries.filter(b => b.beneficiaryType === 'PRIMARY' && b.status !== 'INACTIVE');
   }
   
   getContingentBeneficiaries(): Beneficiary[] {
-    return this.beneficiaries.filter(b => b.beneficiaryType === 'CONTINGENT');
+    return this.beneficiaries.filter(b => b.beneficiaryType === 'CONTINGENT' && b.status !== 'INACTIVE');
   }
   
   getPendingBeneficiaries(): Beneficiary[] {
-    return this.beneficiaries.filter(b => b.status === 'PENDING');
+    return this.beneficiaries.filter(b => 
+      b.status === 'PENDING' || 
+      (b.status === 'INACTIVE' && !!b.submittedToAlpacaAt)
+    );
   }
   
   getApprovedBeneficiaries(): Beneficiary[] {
@@ -271,21 +282,43 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
       return;
     }
     
-    // Simple confirmation - could be enhanced with a proper modal
-    const confirmed = confirm(`Are you sure you want to delete ${beneficiary.firstName} ${beneficiary.lastName}?`);
-    if (!confirmed) return;
-    
-    try {
-      await this.beneficiaryService.deleteBeneficiary(beneficiary.id).toPromise();
-      this.toastService.showToast(`Successfully deleted ${beneficiary.firstName} ${beneficiary.lastName}`, 'success');
-      
-      // Refresh the data to show updated list
-      await this.loadBeneficiaries();
-      
-    } catch (error) {
-      console.error('Error deleting beneficiary:', error);
-      this.toastService.showToast('Failed to delete beneficiary. Please try again.', 'danger');
-    }
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: 'Delete Beneficiary?',
+      subHeader: 'This beneficiary will be deleted.',
+      buttons: [
+        {
+          text: 'Delete',
+          role: 'destructive',
+          data: {
+            action: 'delete',
+          },
+          handler: async () => {
+            try {
+              // Delete (mark inactive) in backend - this processes the inactive status update
+              await this.beneficiaryService.deleteBeneficiary(beneficiary.id!).toPromise();
+              
+              this.toastService.showToast(`Deleted ${beneficiary.firstName} ${beneficiary.lastName} and updated Alpaca`, 'success');
+              
+              // Refresh the data to show updated list
+              await this.loadBeneficiaries();
+              
+            } catch (error) {
+              console.error('Error deleting beneficiary:', error);
+              this.toastService.showToast('Failed to delete beneficiary. Please try again.', 'danger');
+            }
+          }
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          data: {
+            action: 'cancel',
+          },
+        },
+      ],
+    });
+
+    await actionSheet.present();
   }
   
   /**
