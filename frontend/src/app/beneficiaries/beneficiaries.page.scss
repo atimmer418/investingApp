@@ -24,7 +24,7 @@ ion-header {
 
 // Info Card (matching portfolio customize page)
 .info-card {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
@@ -283,6 +283,10 @@ ion-header {
           font-weight: 600;
           color: var(--ion-color-primary);
           font-size: 1.1rem;
+
+          &.secondary {
+            color: var(--ion-color-secondary);
+          }
         }
       }
 
@@ -323,13 +327,12 @@ ion-header {
 
 // Beneficiary Sections
 .beneficiary-section {
-  margin-bottom: 32px;
+  margin-bottom: 8px;
 
   .section-header-with-button {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
 
     .section-header {
       display: flex;
@@ -390,6 +393,11 @@ ion-header {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   transition: all 0.2s ease;
+  border-left: 4px solid var(--ion-color-primary);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 
   &:hover {
     transform: translateY(-2px);
@@ -444,8 +452,43 @@ ion-header {
     }
   }
 
+  .beneficiary-action-middle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 4px 0 20px 0;
+    width: 100%;
+
+    ion-button {
+      min-width: 150px;
+      font-weight: 600;
+
+      // Force outline style persistence even when disabled
+      &[fill="outline"] {
+        --background: transparent;
+        --background-hover: rgba(var(--ion-color-primary-rgb), 0.1);
+        
+        &.button-disabled,
+        &[disabled] {
+          --background: transparent !important;
+          background: transparent !important;
+          --color: var(--ion-color-primary) !important;
+          --border-color: var(--ion-color-primary) !important;
+          --opacity: 0.5;
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  .beneficiary-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
   .beneficiary-details {
-    margin-bottom: 16px;
+    margin-bottom: 0;
 
     .detail-row {
       display: flex;
@@ -523,13 +566,15 @@ ion-header {
 .beneficiary-card .beneficiary-status {
   .status-section {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    width: auto;
+    justify-content: flex-end;
   }
   
   .submitted-info {
+    text-align: right;
     .submitted-text {
       font-size: 0.8rem;
       color: var(--ion-color-medium);

@@ -694,6 +694,33 @@ public class AlpacaService {
                                 : "contingent";
                 alpacaBeneficiary.put("type", type);
 
+                // Add optional contact info
+                if (beneficiary.getEmail() != null && !beneficiary.getEmail().trim().isEmpty()) {
+                    alpacaBeneficiary.put("email_address", beneficiary.getEmail());
+                }
+                if (beneficiary.getPhone() != null && !beneficiary.getPhone().trim().isEmpty()) {
+                    alpacaBeneficiary.put("phone_number", beneficiary.getPhone());
+                }
+
+                // Add optional address info
+                if (beneficiary.getAddressLine1() != null && !beneficiary.getAddressLine1().trim().isEmpty()) {
+                    Map<String, Object> address = new HashMap<>();
+                    java.util.List<String> streetAddress = new java.util.ArrayList<>();
+                    streetAddress.add(beneficiary.getAddressLine1());
+                    
+                    if (beneficiary.getAddressLine2() != null && !beneficiary.getAddressLine2().trim().isEmpty()) {
+                        streetAddress.add(beneficiary.getAddressLine2());
+                    }
+                    
+                    address.put("street_address", streetAddress);
+                    address.put("city", beneficiary.getCity());
+                    address.put("state", beneficiary.getState());
+                    address.put("postal_code", beneficiary.getPostalCode());
+                    address.put("country", beneficiary.getCountry() != null ? beneficiary.getCountry() : "US");
+                    
+                    alpacaBeneficiary.put("mailing_address", address);
+                }
+
                 alpacaBeneficiaries.add(alpacaBeneficiary);
 
                 logger.debug("Added beneficiary to submission: {} {} ({}), DOB: {}, Allocation: {}%",

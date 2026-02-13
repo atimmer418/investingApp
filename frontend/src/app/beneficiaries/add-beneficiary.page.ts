@@ -19,7 +19,9 @@ import {
   IonLabel,
   IonInput,
   IonSelect,
-  IonSelectOption
+  IonSelectOption,
+  IonModal,
+  IonDatetime
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
@@ -47,17 +49,19 @@ import { ToastService } from '../services/toast.service';
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton,
     IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIcon,
     IonButtons, IonBackButton, IonItem, IonLabel,
-    IonInput, IonSelect, IonSelectOption
+    IonInput, IonSelect, IonSelectOption,
+    IonModal, IonDatetime
   ]
 })
 export class AddBeneficiaryPage implements OnInit {
   
   public beneficiary: Partial<Beneficiary> = {
     beneficiaryType: 'PRIMARY',
-    percentageAllocation: 0,
     country: 'US'
   };
+  private originalBeneficiary: string = '';
   
+  public today = new Date().toISOString();
   public isLoading = false;
   public editMode = false;
   public beneficiaryId?: number;
@@ -132,6 +136,9 @@ export class AddBeneficiaryPage implements OnInit {
         if (this.beneficiary.dateOfBirth) {
           this.beneficiary.dateOfBirth = this.parseBackendDate(this.beneficiary.dateOfBirth);
         }
+        
+        // Store original state for change detection
+        this.originalBeneficiary = JSON.stringify(this.beneficiary);
       } else {
         this.toastService.showToast('Beneficiary not found', 'danger');
         this.router.navigate(['/beneficiaries']);
@@ -142,6 +149,25 @@ export class AddBeneficiaryPage implements OnInit {
     } finally {
       this.isLoading = false;
     }
+  }
+
+  get isFormComplete(): boolean {
+    const isComplete = !!(
+      this.beneficiary.firstName?.trim() &&
+      this.beneficiary.lastName?.trim() &&
+      this.beneficiary.dateOfBirth &&
+      this.beneficiary.socialSecurityNumber?.trim() &&
+      this.beneficiary.relationship &&
+      this.beneficiary.percentageAllocation && 
+      this.beneficiary.percentageAllocation > 0
+    );
+
+    if (this.editMode) {
+      const hasChanges = JSON.stringify(this.beneficiary) !== this.originalBeneficiary;
+      return isComplete && hasChanges;
+    }
+
+    return isComplete;
   }
 
   async onSave() {
@@ -204,9 +230,51 @@ export class AddBeneficiaryPage implements OnInit {
       // The beneficiaries page will auto-refresh when we navigate back
       this.router.navigate(['/beneficiaries']);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving beneficiary:', error);
-      this.toastService.showToast('Failed to save beneficiary. Please try again.', 'danger');
+      
+      let errorMessage = 'Failed to save beneficiary. Please try again.';
+      
+      // Extract backend error message
+      // Handle the case where error.error is the message string itself (e.g. from Java backend exception)
+      // or if it's a JSON object like { error: "...", timestamp: ... }
+      let backendMsg = '';
+      
+      if (typeof error?.error === 'string') {
+          // If the error body is just a string
+          backendMsg = error.error;
+      } else if (error?.error?.error && typeof error.error.error === 'string') {
+          // If the error body is an object like { error: "message", ... }
+          backendMsg = error.error.error;
+      } else if (error?.error?.message) {
+          // Standard Spring Boot error structure { message: "...", ... }
+          backendMsg = error.error.message;
+      } else if (error?.message) {
+          // Fallback to error.message
+          backendMsg = error.message;
+      }
+      
+      // Check for allocation error
+      if (typeof backendMsg === 'string' && backendMsg.includes('Total allocation cannot exceed 100%')) {
+        // Extract current total
+        // Regex to match "Current total: 100.00%" or similar
+        const match = backendMsg.match(/Current total: (\d+(\.\d+)?)%/);
+        if (match) {
+          const currentTotal = parseFloat(match[1]);
+          const remaining = 100 - currentTotal;
+          
+          if (currentTotal >= 100) {
+            errorMessage = 'Your allocation is already at 100%, decrease it first and then add another beneficiary.';
+          } else {
+            // Format remaining to remove trailing zeros if integer
+            const formattedRemaining = Number.isInteger(remaining) ? remaining.toString() : remaining.toFixed(2);
+             const formattedTotal = Number.isInteger(currentTotal) ? currentTotal.toString() : currentTotal.toFixed(2);
+            errorMessage = `You can only currently allocate ${formattedRemaining}% since you have your total beneficiary allocation already at ${formattedTotal}%.`;
+          }
+        }
+      }
+      
+      this.toastService.showToast(errorMessage, 'danger');
     } finally {
       this.isLoading = false;
     }

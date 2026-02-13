@@ -74,7 +74,7 @@
             </div>
             <ion-progress-bar 
               [value]="allocationSummary.primaryTotalAllocation / 100" 
-              [color]="allocationSummary.primaryAllocationComplete ? 'success' : 'warning'">
+              [color]="allocationSummary.primaryAllocationComplete ? 'primary' : 'warning'">
             </ion-progress-bar>
             <p class="allocation-status">{{ allocationSummary.primaryCount }} beneficiaries</p>
           </div>
@@ -82,7 +82,7 @@
           <div class="allocation-item">
             <div class="allocation-info">
               <span class="allocation-label">Contingent Beneficiaries</span>
-              <span class="allocation-percentage">{{ allocationSummary.contingentTotalAllocation }}%</span>
+              <span class="allocation-percentage secondary">{{ allocationSummary.contingentTotalAllocation }}%</span>
             </div>
             <ion-progress-bar 
               [value]="allocationSummary.contingentTotalAllocation / 100" 
@@ -116,7 +116,7 @@
         <ul class="info-list">
           <li><strong>Primary beneficiaries</strong> must total 100% allocation</li>
           <li><strong>Contingent beneficiaries</strong> only receive assets if no primary beneficiaries can claim them</li>
-          <li><strong>Processing time:</strong> Changes may take 1-2 business days to process with your broker</li>
+          <li><strong>Processing time:</strong> Changes may take 1-2 business days to process with Alpaca</li>
           <li><strong>Keep updated:</strong> Review beneficiary information after major life events</li>
         </ul>
         <ion-note>
@@ -159,41 +159,45 @@
               </span>
             </div>
           </div>
-          
-          <div class="beneficiary-details">
-            <div class="detail-row" *ngIf="beneficiary.dateOfBirth">
-              <ion-icon name="calendar-outline" color="medium"></ion-icon>
-              <span>Born {{ formatDateForDisplay(beneficiary.dateOfBirth) }}</span>
-            </div>
-            <div class="detail-row" *ngIf="beneficiary.email">
-              <ion-icon name="mail-outline" color="medium"></ion-icon>
-              <span>{{ beneficiary.email }}</span>
-            </div>
-          </div>
 
-          <div class="beneficiary-status">
-            <div class="status-section">
-              <ion-badge [color]="getStatusColor(beneficiary.status)">
-                <ion-icon [name]="getStatusIcon(beneficiary.status)"></ion-icon>
-                {{ beneficiary.status | titlecase }}
-              </ion-badge>
-              
-              <!-- Individual Submit Button for Pending -->
-              <ion-button 
-                *ngIf="beneficiary.status === 'PENDING'"
-                fill="outline" 
-                size="small" 
-                color="primary"
-                [disabled]="isSubmitting"
-                (click)="$event.stopPropagation(); onSubmitBeneficiary(beneficiary)">
-                <ion-icon *ngIf="!isSubmitting" name="checkmark-outline" slot="start"></ion-icon>
-                <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
-                {{ isSubmitting ? 'Submitting...' : 'Submit' }}
-              </ion-button>
-              
-              <!-- Last Submitted Info for Approved -->
-              <div *ngIf="beneficiary.status === 'APPROVED' && beneficiary.submittedToAlpacaAt" class="submitted-info">
-                <span class="submitted-text">Submitted</span>
+          <div class="beneficiary-action-middle" *ngIf="beneficiary.status === 'PENDING'">
+            <ion-button 
+              fill="outline" 
+              color="primary"
+              shape="round"
+              [disabled]="isSubmitting"
+              (click)="$event.stopPropagation(); onSubmitBeneficiary(beneficiary)">
+              <ion-icon *ngIf="!isSubmitting" name="checkmark-outline" slot="start"></ion-icon>
+              <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
+              {{ isSubmitting ? 'Submitting...' : 'Submit' }}
+            </ion-button>
+          </div>
+          
+          <div class="beneficiary-footer">
+            <div class="beneficiary-details">
+              <div class="detail-row" *ngIf="beneficiary.dateOfBirth">
+                <ion-icon name="calendar-outline" color="medium"></ion-icon>
+                <span>Born {{ formatDateForDisplay(beneficiary.dateOfBirth) }}</span>
+              </div>
+              <div class="detail-row" *ngIf="beneficiary.email">
+                <ion-icon name="mail-outline" color="medium"></ion-icon>
+                <span>{{ beneficiary.email }}</span>
+              </div>
+            </div>
+
+            <div class="beneficiary-status">
+              <div class="status-section">
+                <!-- Individual Submit Button for Pending -->
+                
+                <!-- Last Submitted Info for Approved -->
+                <div *ngIf="beneficiary.status === 'APPROVED' && beneficiary.submittedToAlpacaAt" class="submitted-info">
+                  <span class="submitted-text">Submitted</span>
+                </div>
+
+                <ion-badge [color]="getStatusColor(beneficiary.status)">
+                  <ion-icon [name]="getStatusIcon(beneficiary.status)"></ion-icon>
+                  {{ beneficiary.status | titlecase }}
+                </ion-badge>
               </div>
             </div>
           </div>
@@ -209,7 +213,7 @@
           Contingent Beneficiaries
         </h3>
         <ion-button fill="clear" size="small" (click)="onAddBeneficiary()">
-          <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+          <ion-icon name="add-outline" slot="icon-only" style="color: var(--ion-color-secondary);"></ion-icon>
         </ion-button>
       </div>
       
@@ -235,41 +239,45 @@
               </span>
             </div>
           </div>
-          
-          <div class="beneficiary-details">
-            <div class="detail-row" *ngIf="beneficiary.dateOfBirth">
-              <ion-icon name="calendar-outline" color="medium"></ion-icon>
-              <span>Born {{ formatDateForDisplay(beneficiary.dateOfBirth) }}</span>
-            </div>
-            <div class="detail-row" *ngIf="beneficiary.email">
-              <ion-icon name="mail-outline" color="medium"></ion-icon>
-              <span>{{ beneficiary.email }}</span>
-            </div>
-          </div>
 
-          <div class="beneficiary-status">
-            <div class="status-section">
-              <ion-badge [color]="getStatusColor(beneficiary.status)">
-                <ion-icon [name]="getStatusIcon(beneficiary.status)"></ion-icon>
-                {{ beneficiary.status | titlecase }}
-              </ion-badge>
-              
-              <!-- Individual Submit Button for Pending -->
-              <ion-button 
-                *ngIf="beneficiary.status === 'PENDING'"
-                fill="outline" 
-                size="small" 
-                color="primary"
-                [disabled]="isSubmitting"
-                (click)="$event.stopPropagation(); onSubmitBeneficiary(beneficiary)">
-                <ion-icon *ngIf="!isSubmitting" name="checkmark-outline" slot="start"></ion-icon>
-                <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
-                {{ isSubmitting ? 'Submitting...' : 'Submit' }}
-              </ion-button>
-              
-              <!-- Last Submitted Info for Approved -->
-              <div *ngIf="beneficiary.status === 'APPROVED' && beneficiary.submittedToAlpacaAt" class="submitted-info">
-                <span class="submitted-text">Submitted {{ beneficiary.submittedToAlpacaAt | date:'short' }}</span>
+          <div class="beneficiary-action-middle" *ngIf="beneficiary.status === 'PENDING'">
+            <ion-button 
+              fill="outline" 
+              color="primary"
+              shape="round"
+              [disabled]="isSubmitting"
+              (click)="$event.stopPropagation(); onSubmitBeneficiary(beneficiary)">
+              <ion-icon *ngIf="!isSubmitting" name="checkmark-outline" slot="start"></ion-icon>
+              <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
+              {{ isSubmitting ? 'Submitting...' : 'Submit' }}
+            </ion-button>
+          </div>
+          
+          <div class="beneficiary-footer">
+            <div class="beneficiary-details">
+              <div class="detail-row" *ngIf="beneficiary.dateOfBirth">
+                <ion-icon name="calendar-outline" color="medium"></ion-icon>
+                <span>Born {{ formatDateForDisplay(beneficiary.dateOfBirth) }}</span>
+              </div>
+              <div class="detail-row" *ngIf="beneficiary.email">
+                <ion-icon name="mail-outline" color="medium"></ion-icon>
+                <span>{{ beneficiary.email }}</span>
+              </div>
+            </div>
+
+            <div class="beneficiary-status">
+              <div class="status-section">
+                <!-- Individual Submit Button for Pending -->
+                
+                <!-- Last Submitted Info for Approved -->
+                <div *ngIf="beneficiary.status === 'APPROVED' && beneficiary.submittedToAlpacaAt" class="submitted-info">
+                  <span class="submitted-text">Submitted</span>
+                </div>
+
+                <ion-badge [color]="getStatusColor(beneficiary.status)">
+                  <ion-icon [name]="getStatusIcon(beneficiary.status)"></ion-icon>
+                  {{ beneficiary.status | titlecase }}
+                </ion-badge>
               </div>
             </div>
           </div>
