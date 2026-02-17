@@ -68,3 +68,5 @@ gradle-wrapper.jar # Some commit this, some don't. If you do, ensure it's the ve
 
 # Log files
 *.log
+
+.DS_Store
