@@ -91,4 +91,30 @@ public interface InvestmentExecutionRepository extends JpaRepository<InvestmentE
      * Find all executions associated with a specific Alpaca transfer ID
      */
     List<InvestmentExecution> findByAlpacaTransferId(String alpacaTransferId);
+
+    /**
+     * Count completed recurring investment executions for a user
+     */
+    @Query("SELECT COUNT(ie) FROM InvestmentExecution ie WHERE ie.user.id = :userId AND ie.status = 'COMPLETED'")
+    long countCompletedExecutionsByUser(@Param("userId") Long userId);
+
+    /**
+     * Sum of amounts for completed executions in a date range for a user
+     */
+    @Query("SELECT COALESCE(SUM(ie.amount), 0) FROM InvestmentExecution ie WHERE ie.user.id = :userId AND ie.status = 'COMPLETED' AND ie.executionDate >= :startDate AND ie.executionDate <= :endDate")
+    java.math.BigDecimal sumCompletedAmountsByUserAndDateRange(
+        @Param("userId") Long userId,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * Check if user has any completed executions in a given month
+     */
+    @Query("SELECT COUNT(ie) > 0 FROM InvestmentExecution ie WHERE ie.user.id = :userId AND ie.status = 'COMPLETED' AND YEAR(ie.executionDate) = :year AND MONTH(ie.executionDate) = :month")
+    boolean hasCompletedExecutionInMonth(
+        @Param("userId") Long userId,
+        @Param("year") int year,
+        @Param("month") int month
+    );
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import {
   IonHeader,
@@ -115,8 +115,11 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     }
   ];
 
+  suggestedAmount: number | null = null;
+
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private investmentService: InvestmentService,
     private passkeyService: PasskeyService,
     private pinService: PinService,
@@ -126,6 +129,11 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['suggestedAmount']) {
+        this.suggestedAmount = Number(params['suggestedAmount']);
+      }
+    });
     this.loadCurrentInvestment();
   }
 
@@ -143,7 +151,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
           this.currentInvestment = investment;
           if (investment) {
             this.editedInvestment = {
-              investmentAmount: investment.investmentAmount,
+              investmentAmount: this.suggestedAmount ?? investment.investmentAmount,
               frequency: investment.frequency,
               isPaused: investment.isPaused,
               nextInvestmentDate: investment.nextInvestmentDate

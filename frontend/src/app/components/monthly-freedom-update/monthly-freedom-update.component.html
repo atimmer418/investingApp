@@ -1,0 +1,160 @@
+<div class="mfu-overlay">
+  <!-- Decorative blurred background skeleton -->
+  <div class="mfu-background">
+    <div class="mfu-background__inner">
+      <div class="mfu-skeleton-header">
+        <div class="mfu-skeleton-header__left">
+          <div class="mfu-skeleton-circle mfu-skeleton-circle--sm"></div>
+          <div class="mfu-skeleton-bar mfu-skeleton-bar--md"></div>
+        </div>
+        <div class="mfu-skeleton-circle mfu-skeleton-circle--sm"></div>
+      </div>
+      <div class="mfu-skeleton-card mfu-skeleton-card--lg"></div>
+      <div class="mfu-skeleton-list">
+        <div class="mfu-skeleton-card mfu-skeleton-card--sm"></div>
+        <div class="mfu-skeleton-card mfu-skeleton-card--sm"></div>
+        <div class="mfu-skeleton-card mfu-skeleton-card--sm"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal container -->
+  <div class="mfu-modal-wrapper">
+    <div class="mfu-backdrop" (click)="dismiss()"></div>
+
+    <div class="mfu-modal">
+      <!-- Loading state -->
+      <div *ngIf="loading" class="mfu-loading">
+        <div class="mfu-loading__spinner"></div>
+        <p>Preparing your update...</p>
+      </div>
+
+      <!-- Error state -->
+      <div *ngIf="error && !loading" class="mfu-loading">
+        <p>{{ error }}</p>
+        <button class="mfu-cta__button" (click)="dismiss()">Close</button>
+      </div>
+
+      <!-- Content when loaded -->
+      <ng-container *ngIf="data && !loading && !error">
+        <!-- Header -->
+        <div class="mfu-header">
+          <div class="mfu-header__spacer"></div>
+          <h1 class="mfu-header__title">Your Monthly<br/>Freedom Update</h1>
+          <button class="mfu-header__close" *ngIf="canDismiss" (click)="dismiss()">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+          <div class="mfu-header__close mfu-header__close--locked" *ngIf="!canDismiss"></div>
+        </div>
+
+        <!-- Content -->
+        <div class="mfu-content">
+          <!-- Badges -->
+          <div class="mfu-badges">
+            <div class="mfu-badge mfu-badge--green">
+              <span class="material-symbols-outlined mfu-badge__icon">trending_up</span>
+              <span class="mfu-badge__label">Ahead of {{ data.statusPercentile }}%</span>
+            </div>
+            <div class="mfu-badge mfu-badge--orange" *ngIf="data.currentStreak > 0">
+              <span class="material-symbols-outlined mfu-badge__icon mfu-badge__icon--filled">local_fire_department</span>
+              <span class="mfu-badge__label">🔥 {{ data.currentStreak }}-month streak</span>
+            </div>
+          </div>
+
+          <!-- Milestone Card(s) -->
+          <div class="mfu-milestone" *ngFor="let milestone of data.milestones">
+            <div class="mfu-milestone__card">
+              <div class="mfu-milestone__icon-wrapper">
+                <span class="material-symbols-outlined">military_tech</span>
+              </div>
+              <div class="mfu-milestone__text">
+                <p class="mfu-milestone__title">{{ milestone.label }}</p>
+                <p class="mfu-milestone__subtitle">{{ milestone.subtitle }}</p>
+              </div>
+              <div class="mfu-milestone__chevron">
+                <span class="material-symbols-outlined">chevron_right</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bought Back Section -->
+          <div class="mfu-bought-back">
+            <div class="mfu-bought-back__header">
+              <span class="material-symbols-outlined mfu-bought-back__icon">hourglass_empty</span>
+              <h2 class="mfu-bought-back__title">{{ freedomMessage }}</h2>
+            </div>
+            <p class="mfu-bought-back__description">{{ freedomDescription }}</p>
+          </div>
+
+          <!-- Stats Grid (Analytics) -->
+          <div class="mfu-stats">
+            <div class="mfu-stat">
+              <p class="mfu-stat__label">Invested</p>
+              <p class="mfu-stat__value">{{ formatCurrencyCompact(data.periodContributions) }}</p>
+            </div>
+            <div class="mfu-stat">
+              <p class="mfu-stat__label">Change</p>
+              <div class="mfu-stat__value" [ngClass]="changeClass">
+                <span class="material-symbols-outlined mfu-stat__arrow">{{ changeDirection }}</span>
+                <p>{{ formatCurrencyCompact(data.equityValueChange) }}</p>
+              </div>
+            </div>
+            <div class="mfu-stat mfu-stat--highlighted">
+              <p class="mfu-stat__label mfu-stat__label--primary">Return</p>
+              <p class="mfu-stat__value mfu-stat__value--primary">{{ formatPercent(data.returnRate) }}</p>
+            </div>
+          </div>
+
+          <!-- Quarterly Compare-to-Past-Self  -->
+          <div class="mfu-quarterly" *ngIf="data.showQuarterlyCompare">
+            <div class="mfu-quarterly__header">
+              <span class="material-symbols-outlined mfu-quarterly__icon">compare_arrows</span>
+              <p class="mfu-quarterly__title">Compared to 12 months ago:</p>
+            </div>
+            <div class="mfu-quarterly__stats">
+              <p class="mfu-quarterly__stat mfu-quarterly__stat--positive">
+                +{{ formatCurrency(data.netWorthChange) }} net worth
+              </p>
+              <p class="mfu-quarterly__stat mfu-quarterly__stat--positive" *ngIf="data.freedomYearsChange > 0">
+                Gained {{ data.freedomYearsChange }} years of freedom
+              </p>
+            </div>
+          </div>
+
+          <!-- Freedom Tracker -->
+          <div class="mfu-tracker">
+            <span class="material-symbols-outlined mfu-tracker__icon">rocket_launch</span>
+            <div class="mfu-tracker__text">
+              <p class="mfu-tracker__title">
+                On track for Financial Freedom in <span class="mfu-tracker__year">{{ data.projectedFreedomYear }}</span>
+              </p>
+              <p class="mfu-tracker__subtitle">Based on historical 9% returns.</p>
+            </div>
+          </div>
+
+          <!-- Best Next Move CTA -->
+          <div class="mfu-cta">
+            <div class="mfu-cta__glow"></div>
+            <div class="mfu-cta__content">
+              <div class="mfu-cta__header">
+                <span class="material-symbols-outlined mfu-cta__bolt">bolt</span>
+                <span class="mfu-cta__label">Best Next Move</span>
+              </div>
+              <p class="mfu-cta__title">{{ bestNextMoveTitle }}</p>
+              <p class="mfu-cta__description">{{ bestNextMoveDescription }}</p>
+              <button class="mfu-cta__button" (click)="updateContribution()">
+                Update Contribution
+                <span class="material-symbols-outlined mfu-cta__button-arrow">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mfu-footer">
+          To see this again, tap "FRED" on the settings page.
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

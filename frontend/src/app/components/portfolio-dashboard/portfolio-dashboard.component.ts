@@ -2,8 +2,11 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService, PortfolioDashboardData, Position, PerformanceData, PortfolioHistory } from '../../services/portfolio.service';
-import { LoadingController } from '@ionic/angular';
+import { LoadingController, ModalController } from '@ionic/angular/standalone';
 import { ToastService } from '../../services/toast.service';
+import { MonthlyFreedomUpdateService } from '../../services/monthly-freedom-update.service';
+import { MonthlyFreedomUpdateComponent } from '../monthly-freedom-update/monthly-freedom-update.component';
+import { Router } from '@angular/router';
 import { PortfolioChartComponent, PortfolioDataPoint } from '../portfolio-chart/portfolio-chart.component';
 import {
   IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent,
@@ -53,11 +56,55 @@ export class PortfolioDashboardComponent implements OnInit {
   constructor(
     private portfolioService: PortfolioService,
     private loadingController: LoadingController,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private mfuService: MonthlyFreedomUpdateService,
+    private modalController: ModalController,
+    private router: Router
   ) { }
 
   ngOnInit() {
     this.loadPortfolioData();
+  }
+
+  /**
+   * Check and show the Monthly Freedom Update modal if needed.
+   * Called after portfolio data loads successfully.
+   */
+  private checkMonthlyFreedomUpdate() {
+    this.mfuService.checkShouldShow().subscribe({
+      next: (result) => {
+        if (result.shouldShow) {
+          this.showMonthlyFreedomUpdateModal(false);
+        }
+      },
+      error: (err) => {
+        console.warn('MFU check failed:', err);
+      }
+    });
+  }
+
+  /**
+   * Show the Monthly Freedom Update modal.
+   * @param isReopen If true, skip the 5-second lock (from FRED tab).
+   */
+  async showMonthlyFreedomUpdateModal(isReopen: boolean) {
+    const modal = await this.modalController.create({
+      component: MonthlyFreedomUpdateComponent,
+      componentProps: { isReopen },
+      cssClass: 'monthly-freedom-update-modal',
+      backdropDismiss: false // Non-dismissible; close handled by component
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    if (data?.action === 'updateContribution') {
+      // Navigate to recurring investments with +$50 hint
+      const newAmount = (data.currentAmount || 0) + 50;
+      this.router.navigate(['/recurring-investments'], {
+        queryParams: { suggestedAmount: newAmount }
+      });
+    }
   }
 
   async loadPortfolioData(isRefresh = false) {
@@ -135,6 +182,11 @@ export class PortfolioDashboardComponent implements OnInit {
       // Load initial chart data for the default period
       if (this.dashboard) {
         await this.loadHistoryForPeriod(this.selectedPeriod);
+      }
+
+      // Check if Monthly Freedom Update should be shown (only on initial load)
+      if (!isRefresh && this.dashboard && this.dashboard.summary.equity > 0) {
+        this.checkMonthlyFreedomUpdate();
       }
 
     } catch (error: any) {

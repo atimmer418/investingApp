@@ -18,7 +18,8 @@ import {
   IonText,
   IonBadge,
   IonRippleEffect,
-  IonFooter
+  IonFooter,
+  ModalController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -45,12 +46,14 @@ import {
   phonePortraitOutline,
   moonOutline,
   checkmarkCircle,
-  giftOutline
+  giftOutline,
+  sparklesOutline
 } from 'ionicons/icons';
 import { SettingsService, UserPreferences, RecurringInvestment } from '../services/settings.service';
 import { PlaidService, BankAccount } from '../services/plaid.service';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
+import { MonthlyFreedomUpdateComponent } from '../components/monthly-freedom-update/monthly-freedom-update.component';
 
 interface SettingSection {
   title: string;
@@ -100,6 +103,18 @@ export class Tab3Page implements OnInit, OnDestroy {
   public userEmail: string = '';
 
   public settingSections: SettingSection[] = [
+    {
+      title: 'Your FRED Updates',
+      items: [
+        {
+          title: 'Monthly Freedom Update',
+          subtitle: 'Review your latest freedom progress report',
+          icon: 'sparkles-outline',
+          action: 'monthlyFreedomUpdate',
+          type: 'action'
+        }
+      ]
+    },
     {
       title: 'Investment Management',
       items: [
@@ -199,7 +214,8 @@ export class Tab3Page implements OnInit, OnDestroy {
     private settingsService: SettingsService,
     private plaidService: PlaidService,
     private authService: AuthService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private modalController: ModalController
   ) {
     addIcons({
       settingsOutline,
@@ -225,7 +241,8 @@ export class Tab3Page implements OnInit, OnDestroy {
       phonePortraitOutline,
       moonOutline,
       checkmarkCircle,
-      giftOutline
+      giftOutline,
+      sparklesOutline
     });
   }
 
@@ -352,6 +369,9 @@ export class Tab3Page implements OnInit, OnDestroy {
       case 'legalInformation':
         this.showComingSoon('Legal Information');
         break;
+      case 'monthlyFreedomUpdate':
+        this.openMonthlyFreedomUpdate();
+        break;
       default:
         console.log('Unknown action:', action);
     }
@@ -410,6 +430,25 @@ export class Tab3Page implements OnInit, OnDestroy {
       const newTheme = this.userPreferences.theme === 'dark' ? 'light' : 'dark';
       this.settingsService.applyTheme(newTheme);
       this.toastService.showToast(`Switched to ${newTheme} theme`, 'success');
+    }
+  }
+
+  async openMonthlyFreedomUpdate() {
+    const modal = await this.modalController.create({
+      component: MonthlyFreedomUpdateComponent,
+      componentProps: { isReopen: true },
+      cssClass: 'monthly-freedom-update-modal',
+      backdropDismiss: true
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    if (data?.action === 'updateContribution') {
+      const suggestedAmount = (data.currentAmount || 0) + 50;
+      this.router.navigate(['/recurring-investments'], {
+        queryParams: { suggestedAmount: suggestedAmount }
+      });
     }
   }
 

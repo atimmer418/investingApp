@@ -151,6 +151,28 @@ public class User {
     private Double retirementIncome;
     private Double monthlyInvestment;
 
+    // Monthly Freedom Update fields
+    @Column(name = "last_logged_in_month")
+    private String lastLoggedInMonth; // Format: "YYYY-MM"
+
+    @Column(name = "user_account_length")
+    private Integer userAccountLength; // Number of months the user has had an account
+
+    @Column(name = "current_freedom_estimate")
+    private Integer currentFreedomEstimate; // Year the user is projected to reach freedom
+
+    @Column(name = "previous_freedom_estimate")
+    private Integer previousFreedomEstimate; // Freedom estimate from 12 months ago
+
+    @Column(name = "recurring_investment_count")
+    private Integer recurringInvestmentCount; // Count of completed recurring executions
+
+    @Column(name = "current_streak")
+    private Integer currentStreak; // Consecutive months with active investment
+
+    @Column(name = "milestone_history", columnDefinition = "TEXT")
+    private String milestoneHistory; // JSON string of achieved milestones e.g. ["INVESTMENT_10","EQUITY_1K"]
+
     // Investment scheduling fields
     @Column(length = 20)
     private String payFrequency; // "weekly", "biweekly", "monthly", "semimonthly"

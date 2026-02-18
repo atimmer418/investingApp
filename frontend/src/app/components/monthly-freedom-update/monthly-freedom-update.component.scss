@@ -1,0 +1,897 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+// --------------------------------------------------------------------------
+// Variables
+// --------------------------------------------------------------------------
+$primary: #136dec;
+$background-light: #f6f7f8;
+$background-dark: #101822;
+$font-family: 'Manrope', sans-serif;
+
+// Slate palette (matching Tailwind defaults)
+$slate-50: #f8fafc;
+$slate-100: #f1f5f9;
+$slate-200: #e2e8f0;
+$slate-300: #cbd5e1;
+$slate-400: #94a3b8;
+$slate-500: #64748b;
+$slate-600: #475569;
+$slate-800: #1e293b;
+$slate-900: #0f172a;
+
+$green-50: #f0fdf4;
+$green-100: #dcfce7;
+$green-300: #86efac;
+$green-400: #4ade80;
+$green-600: #16a34a;
+$green-700: #15803d;
+$green-800: #166534;
+
+$orange-50: #fff7ed;
+$orange-100: #ffedd5;
+$orange-300: #fdba74;
+$orange-700: #c2410c;
+$orange-800: #9a3412;
+
+$blue-50: #eff6ff;
+$blue-100: #dbeafe;
+$blue-600: #2563eb;
+$blue-900: rgba($primary, 0.3);
+
+$indigo-50: #eef2ff;
+
+// --------------------------------------------------------------------------
+// Host
+// --------------------------------------------------------------------------
+:host {
+  display: block;
+  font-family: $font-family;
+  color: $slate-900;
+}
+
+// --------------------------------------------------------------------------
+// Material Symbols baseline
+// --------------------------------------------------------------------------
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+}
+
+// --------------------------------------------------------------------------
+// Hide-scrollbar utility
+// --------------------------------------------------------------------------
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// --------------------------------------------------------------------------
+// Overlay (full-screen container)
+// --------------------------------------------------------------------------
+.mfu-overlay {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: $background-light;
+  font-family: $font-family;
+}
+
+// --------------------------------------------------------------------------
+// Background skeleton (decorative, blurred)
+// --------------------------------------------------------------------------
+.mfu-background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  pointer-events: none;
+  opacity: 0.4;
+  user-select: none;
+  z-index: 0;
+
+  &__inner {
+    max-width: 448px; // max-w-md
+    margin: 0 auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+}
+
+.mfu-skeleton-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.mfu-skeleton-circle {
+  border-radius: 9999px;
+  background: $slate-200;
+
+  &--sm {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.mfu-skeleton-bar {
+  border-radius: 4px;
+  background: $slate-200;
+
+  &--md {
+    height: 16px;
+    width: 96px;
+  }
+}
+
+.mfu-skeleton-card {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  &--lg {
+    height: 192px;
+  }
+
+  &--sm {
+    height: 64px;
+    border-radius: 8px;
+  }
+}
+
+.mfu-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+// --------------------------------------------------------------------------
+// Modal wrapper (fixed, centered)
+// --------------------------------------------------------------------------
+.mfu-modal-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.mfu-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba($slate-900, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+// --------------------------------------------------------------------------
+// Modal card
+// --------------------------------------------------------------------------
+.mfu-modal {
+  position: relative;
+  width: 100%;
+  max-width: 384px; // max-w-sm
+  background: #ffffff;
+  border-radius: 16px; // rounded-2xl
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); // shadow-2xl
+  overflow: hidden;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-top: 0;
+  padding-bottom: 8px;
+  margin-top: -32px;
+
+  @extend .hide-scrollbar;
+}
+
+// --------------------------------------------------------------------------
+// Header
+// --------------------------------------------------------------------------
+.mfu-header {
+  padding: 0 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  margin-top: 20px;
+  margin-bottom: 16px;
+
+  &__spacer {
+    width: 32px;
+  }
+
+  &__title {
+    font-size: 24px; // text-2xl
+    font-weight: 800; // font-extrabold
+    color: $slate-900;
+    line-height: 1.25; // leading-tight
+    flex: 1;
+    text-align: center;
+    margin: -4px 0 0 0;
+  }
+
+  &__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    color: $slate-400;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+    border-radius: 9999px;
+    flex-shrink: 0;
+    z-index: 10;
+    margin-top: -4px;
+    padding: 0;
+
+    .material-symbols-outlined {
+      font-size: 24px;
+    }
+
+    &:hover {
+      color: $slate-600;
+      background: $slate-100;
+    }
+  }
+}
+
+// --------------------------------------------------------------------------
+// Content
+// --------------------------------------------------------------------------
+.mfu-content {
+  padding: 0 24px 8px;
+  text-align: center;
+  margin-top: -4px;
+}
+
+// --------------------------------------------------------------------------
+// Badges
+// --------------------------------------------------------------------------
+.mfu-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.mfu-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  border: 1px solid;
+
+  &--green {
+    background: $green-50;
+    color: $green-700;
+    border-color: $green-100;
+  }
+
+  &--orange {
+    background: $orange-50;
+    color: $orange-700;
+    border-color: $orange-100;
+  }
+
+  &__icon {
+    font-size: 16px;
+    font-weight: bold;
+
+    &--filled {
+      font-variation-settings: 'FILL' 1;
+    }
+  }
+
+  &__label {
+    font-size: 12px; // text-xs
+    font-weight: 700; // font-bold
+    text-transform: uppercase;
+    letter-spacing: 0.05em; // tracking-wide
+  }
+}
+
+// --------------------------------------------------------------------------
+// Milestone
+// --------------------------------------------------------------------------
+.mfu-milestone {
+  margin-bottom: 24px;
+  margin-top: -8px;
+
+  &__card {
+    padding: 12px;
+    border-radius: 12px;
+    background: $slate-50;
+    border: 1px solid $slate-100;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 105%;
+    margin-left: -2.5%;
+    z-index: 10;
+  }
+
+  &__icon-wrapper {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    background: linear-gradient(to bottom, #00B0FF, #0288D1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+
+    .material-symbols-outlined {
+      font-weight: bold;
+      color: #ffffff;
+    }
+  }
+
+  &__text {
+    text-align: left;
+    flex: 1;
+  }
+
+  &__title {
+    font-size: 16px; // text-base
+    font-weight: 700;
+    color: $slate-900;
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 12px;
+    color: $slate-500;
+    margin: 2px 0 0 0;
+  }
+
+  &__chevron {
+    color: $slate-400;
+
+    .material-symbols-outlined {
+      font-size: 20px;
+    }
+  }
+}
+
+// --------------------------------------------------------------------------
+// Bought Back
+// --------------------------------------------------------------------------
+.mfu-bought-back {
+  margin-bottom: 16px;
+  text-align: left;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  &__icon {
+    color: $primary;
+    font-size: 20px;
+  }
+
+  &__title {
+    font-size: 18px; // text-lg
+    font-weight: 700;
+    color: $slate-900;
+    margin: 0;
+  }
+
+  &__description {
+    font-size: 14px; // text-sm
+    color: $slate-500;
+    margin: 0 0 8px 0;
+    line-height: 1.625; // leading-relaxed
+  }
+}
+
+.mfu-text-emphasis {
+  font-weight: 700;
+  color: $slate-800;
+}
+
+.mfu-text-emphasis-light {
+  font-weight: 700;
+  color: $slate-900;
+}
+
+// --------------------------------------------------------------------------
+// Stats Grid
+// --------------------------------------------------------------------------
+.mfu-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.mfu-stat {
+  background: $slate-50;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid $slate-100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+
+  &--highlighted {
+    background: rgba($primary, 0.05);
+    border-color: rgba($primary, 0.1);
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: $slate-500;
+    text-transform: uppercase;
+    letter-spacing: -0.025em; // tracking-tight
+    margin: 0;
+
+    &--primary {
+      color: $primary;
+    }
+  }
+
+  &__value {
+    font-size: 14px;
+    font-weight: 700;
+    color: $slate-900;
+    margin: 0;
+
+    &--positive {
+      display: flex;
+      align-items: center;
+      color: $green-600;
+    }
+
+    &--primary {
+      color: $primary;
+    }
+  }
+
+  &__arrow {
+    font-size: 14px;
+  }
+}
+
+// --------------------------------------------------------------------------
+// Freedom Tracker
+// --------------------------------------------------------------------------
+.mfu-tracker {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: $slate-50;
+  padding: 12px;
+  border-radius: 8px;
+
+  &__icon {
+    color: $slate-400;
+    margin-top: 2px;
+  }
+
+  &__text {
+    text-align: left;
+  }
+
+  &__title {
+    font-size: 14px;
+    color: $slate-800;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  &__year {
+    font-weight: 800;
+    color: $primary;
+  }
+
+  &__subtitle {
+    font-size: 12px;
+    color: $slate-400;
+    margin: 2px 0 0 0;
+  }
+}
+
+// --------------------------------------------------------------------------
+// CTA Card (Best Next Move)
+// --------------------------------------------------------------------------
+.mfu-cta {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: linear-gradient(to bottom right, $blue-50, $indigo-50);
+  border: 1px solid $blue-100;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  text-align: left;
+
+  &__glow {
+    position: absolute;
+    right: -24px;
+    bottom: -24px;
+    width: 128px;
+    height: 128px;
+    background: rgba($primary, 0.1);
+    border-radius: 9999px;
+    filter: blur(40px);
+  }
+
+  &__content {
+    position: relative;
+    z-index: 10;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  &__bolt {
+    color: $primary;
+    font-size: 20px;
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 700;
+    color: $primary;
+    text-transform: uppercase;
+    letter-spacing: 0.1em; // tracking-wider
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 700;
+    color: $slate-900;
+    margin: 0 0 4px 0;
+  }
+
+  &__description {
+    font-size: 14px;
+    color: $slate-600;
+    margin: 0 0 16px 0;
+  }
+
+  &__button {
+    width: 100%;
+    background: $primary;
+    color: #ffffff;
+    font-family: $font-family;
+    font-weight: 700;
+    font-size: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    &:hover {
+      background: $blue-600;
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  &__button-arrow {
+    font-size: 18px;
+    transition: transform 0.15s;
+  }
+
+  &__button:hover &__button-arrow {
+    transform: translateX(4px);
+  }
+}
+
+// --------------------------------------------------------------------------
+// Footer
+// --------------------------------------------------------------------------
+.mfu-footer {
+  height: 24px;
+  font-size: 12px;
+  text-align: center;
+  color: $slate-400;
+  margin-top: 2px;
+}
+
+// --------------------------------------------------------------------------
+// Dark Mode
+// --------------------------------------------------------------------------
+@media (prefers-color-scheme: dark) {
+  .mfu-overlay {
+    background: $background-dark;
+  }
+
+  .mfu-modal {
+    background: #1a202c;
+  }
+
+  .mfu-header {
+    &__title {
+      color: #ffffff;
+    }
+
+    &__close:hover {
+      color: $slate-200;
+      background: $slate-800;
+    }
+  }
+
+  .mfu-badge {
+    &--green {
+      background: rgba($green-800, 0.3);
+      color: $green-300;
+      border-color: $green-800;
+    }
+
+    &--orange {
+      background: rgba($orange-800, 0.3);
+      color: $orange-300;
+      border-color: $orange-800;
+    }
+  }
+
+  .mfu-milestone {
+    &__card {
+      background: rgba($slate-800, 0.6);
+      border-color: darken($slate-800, 7%);
+    }
+
+    &__title {
+      color: #ffffff;
+    }
+
+    &__subtitle {
+      color: $slate-400;
+    }
+
+    &__chevron {
+      color: $slate-500;
+    }
+  }
+
+  .mfu-bought-back {
+    &__title {
+      color: #ffffff;
+    }
+
+    &__description {
+      color: $slate-400;
+    }
+  }
+
+  .mfu-text-emphasis {
+    color: $slate-200;
+  }
+
+  .mfu-text-emphasis-light {
+    color: #ffffff;
+  }
+
+  .mfu-stat {
+    background: rgba($slate-800, 0.5);
+    border-color: darken($slate-800, 7%);
+
+    &--highlighted {
+      background: rgba($primary, 0.2);
+      border-color: rgba($primary, 0.2);
+    }
+
+    &__label {
+      color: $slate-400;
+    }
+
+    &__value {
+      color: #ffffff;
+
+      &--positive {
+        color: $green-400;
+      }
+    }
+  }
+
+  .mfu-tracker {
+    background: rgba($slate-800, 0.4);
+
+    &__icon {
+      color: $slate-500;
+    }
+
+    &__title {
+      color: $slate-200;
+    }
+
+    &__subtitle {
+      color: $slate-500;
+    }
+  }
+
+  .mfu-cta {
+    background: linear-gradient(to bottom right, $slate-800, lighten($slate-900, 7%));
+    border-color: rgba(30, 64, 175, 0.3);
+
+    &__title {
+      color: #ffffff;
+    }
+
+    &__description {
+      color: rgba($slate-200, 0.85);
+    }
+  }
+
+  .mfu-footer {
+    color: $slate-500;
+  }
+
+  .mfu-quarterly {
+    background: rgba($slate-800, 0.4);
+    border-color: rgba($slate-600, 0.3);
+
+    &__title {
+      color: $slate-200;
+    }
+
+    &__stat {
+      color: $slate-300;
+
+      &--positive {
+        color: $green-400;
+      }
+    }
+  }
+
+  .mfu-loading {
+    color: $slate-300;
+  }
+}
+
+// --------------------------------------------------------------------------
+// Loading state
+// --------------------------------------------------------------------------
+.mfu-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 16px;
+
+  &__spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid $slate-200;
+    border-top-color: $primary;
+    border-radius: 50%;
+    animation: mfu-spin 0.8s linear infinite;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: $slate-500;
+  }
+}
+
+@keyframes mfu-spin {
+  to { transform: rotate(360deg); }
+}
+
+// --------------------------------------------------------------------------
+// Locked close button placeholder
+// --------------------------------------------------------------------------
+.mfu-header__close--locked {
+  width: 36px;
+  height: 36px;
+  visibility: hidden;
+}
+
+// --------------------------------------------------------------------------
+// Negative value styling
+// --------------------------------------------------------------------------
+.mfu-stat__value--negative {
+  color: #ef4444 !important;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+// --------------------------------------------------------------------------
+// Quarterly compare section
+// --------------------------------------------------------------------------
+.mfu-quarterly {
+  background: $slate-50;
+  border: 1px solid $slate-200;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 0;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  &__icon {
+    font-size: 20px;
+    color: $primary;
+  }
+
+  &__title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $slate-800;
+  }
+
+  &__stats {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 28px;
+  }
+
+  &__stat {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $slate-600;
+
+    &--positive {
+      color: $green-700;
+    }
+  }
+}
