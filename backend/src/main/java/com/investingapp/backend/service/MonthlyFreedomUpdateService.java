@@ -130,19 +130,28 @@ public class MonthlyFreedomUpdateService {
         String lastLoggedMonth = user.getLastLoggedInMonth();
 
         // --- Period Calculation ---
-        YearMonth lastMonth = lastLoggedMonth != null && !lastLoggedMonth.isEmpty()
-                ? YearMonth.parse(lastLoggedMonth)
-                : YearMonth.now().minusMonths(1);
-        YearMonth currentYM = YearMonth.now();
+        // On reopen, use stored period dates if available
+        LocalDate periodStart;
+        LocalDate periodEnd;
 
-        // Period: first day of last logged month → last day of month before current
-        LocalDate periodStart = lastMonth.atDay(1);
-        LocalDate periodEnd = currentYM.minusMonths(1).atEndOfMonth();
+        if (isReopen && user.getLastMfuPeriodStart() != null && user.getLastMfuPeriodEnd() != null) {
+            periodStart = LocalDate.parse(user.getLastMfuPeriodStart());
+            periodEnd = LocalDate.parse(user.getLastMfuPeriodEnd());
+        } else {
+            YearMonth lastMonth = lastLoggedMonth != null && !lastLoggedMonth.isEmpty()
+                    ? YearMonth.parse(lastLoggedMonth)
+                    : YearMonth.now().minusMonths(1);
+            YearMonth currentYM = YearMonth.now();
 
-        // If periodEnd < periodStart (same month scenario), adjust
-        if (periodEnd.isBefore(periodStart)) {
-            periodStart = currentYM.minusMonths(1).atDay(1);
+            // Period: first day of lastLoggedInMonth → last day of month before current
+            periodStart = lastMonth.atDay(1);
             periodEnd = currentYM.minusMonths(1).atEndOfMonth();
+
+            // If periodEnd < periodStart (same month scenario), adjust
+            if (periodEnd.isBefore(periodStart)) {
+                periodStart = currentYM.minusMonths(1).atDay(1);
+                periodEnd = currentYM.minusMonths(1).atEndOfMonth();
+            }
         }
 
         dto.setPeriodStart(periodStart.toString());
@@ -172,8 +181,17 @@ public class MonthlyFreedomUpdateService {
         int percentile = calculateStatusPercentile(user, currentEquity);
         dto.setStatusPercentile(percentile);
 
-        // --- Streak ---
-        int streak = user.getCurrentStreak() != null ? user.getCurrentStreak() : 0;
+        // --- Streak (compute fresh for accurate display) ---
+        int streak;
+        Optional<InvestmentSchedule> activeSchedule = scheduleRepository.findTopByUserOrderByCreatedAtDesc(user);
+        if (activeSchedule.isEmpty() || activeSchedule.get().getIsPaused()) {
+            streak = 0;
+        } else {
+            streak = (user.getCurrentStreak() != null ? user.getCurrentStreak() : 0);
+            if (!isReopen) {
+                streak += 1; // Will be persisted in updateUserState
+            }
+        }
         dto.setCurrentStreak(streak);
 
         // --- Milestones ---
@@ -239,6 +257,11 @@ public class MonthlyFreedomUpdateService {
         dto.setBestNextMoveYearsEarlier(yearsEarlier);
         dto.setBestNextMoveYear(boostedFreedomYear);
 
+        // --- Days Bought Back (days freedom moved closer this period) ---
+        BigDecimal targetBD = new BigDecimal(targetPortfolio);
+        int daysBoughtBack = calculateDaysBoughtBack(startEquity, endEquity, monthlyContribution, targetBD);
+        dto.setDaysBoughtBack(daysBoughtBack);
+
         // --- Quarterly Compare (every 3rd month) ---
         Integer accountLength = user.getUserAccountLength();
         if (accountLength == null) accountLength = 0;
@@ -265,7 +288,7 @@ public class MonthlyFreedomUpdateService {
         // --- Persist user state (idempotent) ---
         if (!isReopen) {
             updateUserState(user, currentMonthStr, freedomYear, (int) totalInvestmentCount,
-                    milestones, startEquity, endEquity);
+                    milestones, startEquity, endEquity, periodStart, periodEnd, streak);
         }
 
         return dto;
@@ -277,10 +300,15 @@ public class MonthlyFreedomUpdateService {
     @Transactional
     public void updateUserState(User user, String currentMonth, int freedomYear,
                                 int totalInvestmentCount, List<MilestoneDTO> newMilestones,
-                                BigDecimal startEquity, BigDecimal endEquity) {
+                                BigDecimal startEquity, BigDecimal endEquity,
+                                LocalDate periodStart, LocalDate periodEnd, int newStreak) {
 
         // Update lastLoggedInMonth
         user.setLastLoggedInMonth(currentMonth);
+
+        // Store period for reopen
+        user.setLastMfuPeriodStart(periodStart.toString());
+        user.setLastMfuPeriodEnd(periodEnd.toString());
 
         // Update userAccountLength
         if (user.getUserAccountLength() == null) {
@@ -321,8 +349,8 @@ public class MonthlyFreedomUpdateService {
         // Update recurring investment count
         user.setRecurringInvestmentCount(totalInvestmentCount);
 
-        // Update streak
-        updateStreak(user);
+        // Update streak (pre-computed in generateUpdate)
+        user.setCurrentStreak(newStreak);
 
         // Update milestone history
         updateMilestoneHistory(user, newMilestones);
@@ -330,24 +358,7 @@ public class MonthlyFreedomUpdateService {
         userRepository.save(user);
     }
 
-    /**
-     * Update the user's investment streak.
-     * Consecutive months where the user has not paused their investment.
-     */
-    private void updateStreak(User user) {
-        Optional<InvestmentSchedule> scheduleOpt = scheduleRepository.findTopByUserOrderByCreatedAtDesc(user);
 
-        if (scheduleOpt.isEmpty() || scheduleOpt.get().getIsPaused()) {
-            // Investment is paused or doesn't exist → reset streak
-            user.setCurrentStreak(0);
-            return;
-        }
-
-        // Investment is active → increment streak
-        Integer currentStreak = user.getCurrentStreak();
-        if (currentStreak == null) currentStreak = 0;
-        user.setCurrentStreak(currentStreak + 1);
-    }
 
     /**
      * Merge new milestones into the user's milestone history (JSON string).
@@ -364,7 +375,14 @@ public class MonthlyFreedomUpdateService {
         }
 
         for (MilestoneDTO m : newMilestones) {
-            existing.add(m.getType());
+            // Combined type keys may contain comma-separated values
+            if (m.getType() != null && !"DEFAULT".equals(m.getType())) {
+                for (String key : m.getType().split(",")) {
+                    if (!key.trim().isEmpty()) {
+                        existing.add(key.trim());
+                    }
+                }
+            }
         }
 
         // Rebuild JSON array string
@@ -409,47 +427,105 @@ public class MonthlyFreedomUpdateService {
 
     /**
      * Calculate milestones achieved during the period.
+     * Returns a single combined milestone or a default "no milestones" entry.
+     * - Investment Count: prevCount < milestone <= currentCount
+     * - Total Equity Value: startEquity <= milestone <= endEquity (highest only)
+     * All milestones are combined into one card with a merged title and subtitle.
      */
     private List<MilestoneDTO> calculateMilestones(User user, long totalInvestmentCount,
                                                     BigDecimal startEquity, BigDecimal endEquity) {
-        List<MilestoneDTO> milestones = new ArrayList<>();
-
-        // Parse existing milestone history
-        Set<String> achieved = new HashSet<>();
-        String history = user.getMilestoneHistory();
-        if (history != null && !history.isEmpty()) {
-            history = history.replace("[", "").replace("]", "").replace("\"", "");
-            if (!history.isEmpty()) {
-                achieved.addAll(Arrays.asList(history.split(",")));
-            }
-        }
+        List<MilestoneDTO> result = new ArrayList<>();
 
         // Previous investment count (from last update)
         int prevCount = user.getRecurringInvestmentCount() != null ? user.getRecurringInvestmentCount() : 0;
 
-        // Check investment count milestones
+        // Collect investment count milestones crossed: prevCount < milestone <= currentCount
+        List<String> investmentLabels = new ArrayList<>();
+        List<String> investmentKeys = new ArrayList<>();
         for (int milestone : INVESTMENT_COUNT_MILESTONES) {
-            String key = "INVESTMENT_" + milestone;
-            if (!achieved.contains(key) && totalInvestmentCount >= milestone && prevCount < milestone) {
-                String label;
-                if (milestone == 1) label = "1st Investment!";
-                else label = milestone + "th Investment!";
-                milestones.add(new MilestoneDTO(key, label, "You reached a major milestone."));
+            if (prevCount < milestone && totalInvestmentCount >= milestone) {
+                investmentKeys.add("INVESTMENT_" + milestone);
+                investmentLabels.add(formatOrdinal(milestone));
             }
         }
 
-        // Check equity value milestones
-        for (BigDecimal milestone : EQUITY_VALUE_MILESTONES) {
-            String key = "EQUITY_" + formatMilestoneKey(milestone);
-            if (!achieved.contains(key)
-                    && endEquity.compareTo(milestone) >= 0
-                    && startEquity.compareTo(milestone) < 0) {
-                String label = formatEquityMilestoneLabel(milestone);
-                milestones.add(new MilestoneDTO(key, label, "Your portfolio crossed a new threshold!"));
+        // Collect equity milestone: startEquity <= milestone <= endEquity, take highest only
+        String equityLabel = null;
+        String equityKey = null;
+        for (int i = EQUITY_VALUE_MILESTONES.length - 1; i >= 0; i--) {
+            BigDecimal milestone = EQUITY_VALUE_MILESTONES[i];
+            if (startEquity.compareTo(milestone) <= 0 && endEquity.compareTo(milestone) >= 0) {
+                equityKey = "EQUITY_" + formatMilestoneKey(milestone);
+                equityLabel = formatEquityLabel(milestone);
+                break; // Take highest only
             }
         }
 
-        return milestones;
+        // Build combined milestone
+        int totalMilestones = investmentLabels.size() + (equityLabel != null ? 1 : 0);
+
+        if (totalMilestones == 0) {
+            // Default: no milestones reached
+            result.add(new MilestoneDTO("DEFAULT", "No major milestones reached",
+                    "FRED's still so proud of you though"));
+        } else {
+            // Build combined title
+            StringBuilder title = new StringBuilder();
+            if (!investmentLabels.isEmpty()) {
+                title.append(String.join(" and ", investmentLabels));
+                title.append(" Investment!");
+            }
+            if (equityLabel != null) {
+                if (title.length() > 0) title.append(" ");
+                title.append(equityLabel).append(" Total Equity Reached!");
+            }
+
+            // Build subtitle
+            String subtitle;
+            if (totalMilestones == 1) {
+                subtitle = "You reached a major milestone.";
+            } else {
+                subtitle = "You reached " + totalMilestones + " major milestones.";
+            }
+
+            // Combined type key for milestone history
+            String combinedType = String.join(",", investmentKeys);
+            if (equityKey != null) {
+                if (!combinedType.isEmpty()) combinedType += ",";
+                combinedType += equityKey;
+            }
+
+            result.add(new MilestoneDTO(combinedType, title.toString(), subtitle));
+        }
+
+        return result;
+    }
+
+    /**
+     * Format a number as an ordinal: 1→"1st", 10→"10th", 100→"100th", 1000→"1,000th", 10000→"10,000th"
+     */
+    private String formatOrdinal(int n) {
+        String formatted;
+        if (n >= 1000) {
+            formatted = String.format("%,d", n);
+        } else {
+            formatted = String.valueOf(n);
+        }
+
+        if (n == 1) return formatted + "st";
+        if (n == 2) return formatted + "nd";
+        if (n == 3) return formatted + "rd";
+        return formatted + "th";
+    }
+
+    /**
+     * Format equity milestone label: $1k, $10k, $50k, $100k, $250k, $500k, $1M
+     */
+    private String formatEquityLabel(BigDecimal value) {
+        double val = value.doubleValue();
+        if (val >= 1_000_000) return "$" + ((int)(val / 1_000_000)) + "M";
+        if (val >= 1_000) return "$" + ((int)(val / 1_000)) + "k";
+        return "$" + (int)val;
     }
 
     private String formatMilestoneKey(BigDecimal value) {
@@ -459,12 +535,7 @@ public class MonthlyFreedomUpdateService {
         return String.valueOf((int)val);
     }
 
-    private String formatEquityMilestoneLabel(BigDecimal value) {
-        double val = value.doubleValue();
-        if (val >= 1_000_000) return "$" + ((int)(val / 1_000_000)) + "M Portfolio!";
-        if (val >= 1_000) return "$" + ((int)(val / 1_000)) + "k Portfolio!";
-        return "$" + (int)val + " Portfolio!";
-    }
+
 
     /**
      * Find equity value at a specific date from portfolio history.
@@ -500,50 +571,60 @@ public class MonthlyFreedomUpdateService {
     }
 
     /**
+     * Calculate months to reach target portfolio with compound growth and monthly contributions.
+     * Core formula: FV = PV*(1+r)^n + PMT*((1+r)^n - 1)/r
+     * Solved for n.
+     */
+    private double calculateMonthsToTarget(BigDecimal currentEquity, BigDecimal monthlyContribution,
+                                            BigDecimal targetPortfolio) {
+        if (currentEquity.compareTo(targetPortfolio) >= 0) return 0;
+        if (currentEquity.compareTo(BigDecimal.ZERO) <= 0 &&
+            monthlyContribution.compareTo(BigDecimal.ZERO) <= 0) return 600;
+
+        double r = ASSUMED_ANNUAL_RETURN / 12.0;
+        double PV = currentEquity.doubleValue();
+        double FV = targetPortfolio.doubleValue();
+        double PMT = monthlyContribution.doubleValue();
+
+        if (PMT <= 0) {
+            // Growth only, no contributions
+            if (PV <= 0) return 600;
+            double months = Math.log(FV / PV) / Math.log(1 + r);
+            if (Double.isNaN(months) || Double.isInfinite(months) || months < 0) return 600;
+            return months;
+        }
+
+        double numerator = Math.log((FV + PMT / r) / (PV + PMT / r));
+        double denominator = Math.log(1 + r);
+
+        if (denominator == 0 || Double.isNaN(numerator) || Double.isInfinite(numerator)) return 600;
+        double months = numerator / denominator;
+        if (Double.isNaN(months) || Double.isInfinite(months) || months < 0) return 600;
+        return months;
+    }
+
+    /**
      * Calculate time to reach target portfolio value.
      * Returns the projected year.
      */
     private int calculateFreedomYear(BigDecimal currentEquity, BigDecimal monthlyContribution,
                                       BigDecimal targetPortfolio) {
-        if (currentEquity.compareTo(targetPortfolio) >= 0) {
-            return LocalDate.now().getYear(); // Already reached!
-        }
-        if (monthlyContribution.compareTo(BigDecimal.ZERO) <= 0) {
-            // Only compound growth, no contributions
-            double months = calculateMonthsWithGrowthOnly(currentEquity, targetPortfolio);
-            int years = (int) Math.ceil(months / 12.0);
-            return Math.min(LocalDate.now().getYear() + years, LocalDate.now().getYear() + 100);
-        }
-
-        double r = ASSUMED_ANNUAL_RETURN / 12.0; // monthly rate
-        double PV = currentEquity.doubleValue();
-        double PMT = monthlyContribution.doubleValue();
-        double FV = targetPortfolio.doubleValue();
-
-        // Future Value formula: FV = PV*(1+r)^n + PMT*((1+r)^n - 1)/r
-        // Solve for n: n = ln((FV + PMT/r) / (PV + PMT/r)) / ln(1+r)
-        double numerator = Math.log((FV + PMT / r) / (PV + PMT / r));
-        double denominator = Math.log(1 + r);
-
-        if (denominator == 0 || Double.isNaN(numerator) || Double.isInfinite(numerator)) {
-            return LocalDate.now().getYear() + 50;
-        }
-
-        double months = numerator / denominator;
-        if (Double.isNaN(months) || Double.isInfinite(months) || months < 0) {
-            return LocalDate.now().getYear() + 50;
-        }
-
+        double months = calculateMonthsToTarget(currentEquity, monthlyContribution, targetPortfolio);
         int years = (int) Math.ceil(months / 12.0);
         return Math.min(LocalDate.now().getYear() + years, LocalDate.now().getYear() + 100);
     }
 
-    private double calculateMonthsWithGrowthOnly(BigDecimal currentEquity, BigDecimal targetPortfolio) {
-        if (currentEquity.compareTo(BigDecimal.ZERO) <= 0) return 600; // 50 years
-        double r = ASSUMED_ANNUAL_RETURN / 12.0;
-        double months = Math.log(targetPortfolio.doubleValue() / currentEquity.doubleValue()) / Math.log(1 + r);
-        if (Double.isNaN(months) || Double.isInfinite(months)) return 600;
-        return months;
+    /**
+     * Calculate days bought back from the standard 59.5 retirement age.
+     * Compares months-to-target from startEquity vs endEquity.
+     */
+    private int calculateDaysBoughtBack(BigDecimal startEquity, BigDecimal endEquity,
+                                         BigDecimal monthlyContribution, BigDecimal targetPortfolio) {
+        double monthsFromStart = calculateMonthsToTarget(startEquity, monthlyContribution, targetPortfolio);
+        double monthsFromEnd = calculateMonthsToTarget(endEquity, monthlyContribution, targetPortfolio);
+        double monthsDiff = monthsFromStart - monthsFromEnd;
+        int days = (int) Math.round(monthsDiff * 30.44);
+        return Math.max(0, days);
     }
 
     /**

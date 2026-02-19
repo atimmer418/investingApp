@@ -34,6 +34,7 @@ export interface MonthlyFreedomUpdateData {
   periodContributions: number;
   equityValueChange: number;
   returnRate: number;
+  daysBoughtBack: number;
 
   // Projection
   projectedFreedomYear: number;

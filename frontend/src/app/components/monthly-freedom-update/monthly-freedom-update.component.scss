@@ -45,7 +45,11 @@ $indigo-50: #eef2ff;
 // Host
 // --------------------------------------------------------------------------
 :host {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 16px;
   font-family: $font-family;
   color: $slate-900;
 }
@@ -449,7 +453,7 @@ $indigo-50: #eef2ff;
 
 .mfu-stat {
   background: $slate-50;
-  padding: 8px;
+  padding: 14px 12px;
   border-radius: 8px;
   border: 1px solid $slate-100;
   display: flex;
@@ -457,7 +461,7 @@ $indigo-50: #eef2ff;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 4px;
+  gap: 6px;
 
   &--highlighted {
     background: rgba($primary, 0.05);
@@ -478,7 +482,7 @@ $indigo-50: #eef2ff;
   }
 
   &__value {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
     color: $slate-900;
     margin: 0;

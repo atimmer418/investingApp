@@ -173,6 +173,12 @@ public class User {
     @Column(name = "milestone_history", columnDefinition = "TEXT")
     private String milestoneHistory; // JSON string of achieved milestones e.g. ["INVESTMENT_10","EQUITY_1K"]
 
+    @Column(name = "last_mfu_period_start")
+    private String lastMfuPeriodStart; // ISO date "yyyy-MM-dd" of last MFU period start
+
+    @Column(name = "last_mfu_period_end")
+    private String lastMfuPeriodEnd; // ISO date "yyyy-MM-dd" of last MFU period end
+
     // Investment scheduling fields
     @Column(length = 20)
     private String payFrequency; // "weekly", "biweekly", "monthly", "semimonthly"

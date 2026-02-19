@@ -116,17 +116,23 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
   get freedomMessage(): string {
     if (!this.data) return '';
     if (this.data.positive) {
-      return `Bought back end: ${this.formatCurrency(this.data.endEquityValue)} vs start: ${this.formatCurrency(this.data.startEquityValue)} days`;
+      return `Start: ${this.formatCurrency(this.data.startEquityValue)} vs End: ${this.formatCurrency(this.data.endEquityValue)}`;
     }
     return "Markets dip. Your system didn't.";
   }
 
-  get freedomDescription(): string {
+  get freedomDescriptionHtml(): string {
     if (!this.data) return '';
     if (this.data.positive) {
-      return `From ${this.data.periodLabel}, your investments secured progress toward your future self.`;
+      const days = this.data.daysBoughtBack || 0;
+      return `From <b>${this.data.periodLabel}</b>, your investments secured you <b>~${days} days</b> bought back from the standard 59.5 retirement age.`;
     }
-    return `From ${this.data.periodLabel}, the market was down but your investment system kept running.`;
+    return `From <b>${this.data.periodLabel}</b>, the market was down but your investment system kept running.`;
+  }
+
+  get milestoneIcon(): string {
+    if (!this.data || !this.data.milestones || this.data.milestones.length === 0) return 'military_tech';
+    return this.data.milestones[0].type === 'DEFAULT' ? 'sentiment_satisfied' : 'military_tech';
   }
 
   get changeDirection(): string {

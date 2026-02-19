@@ -47,6 +47,9 @@ public class MonthlyFreedomUpdateDTO {
     private BigDecimal netWorthChange;
     private BigDecimal freedomYearsChange;      // previousFreedomEstimate - currentFreedomEstimate
 
+    // Days bought back (days freedom moved closer this period)
+    private int daysBoughtBack;
+
     // Best Next Action
     private int bestNextMoveYearsEarlier;
     private int bestNextMoveYear;
@@ -134,6 +137,9 @@ public class MonthlyFreedomUpdateDTO {
 
     public BigDecimal getCurrentInvestmentAmount() { return currentInvestmentAmount; }
     public void setCurrentInvestmentAmount(BigDecimal currentInvestmentAmount) { this.currentInvestmentAmount = currentInvestmentAmount; }
+
+    public int getDaysBoughtBack() { return daysBoughtBack; }
+    public void setDaysBoughtBack(int daysBoughtBack) { this.daysBoughtBack = daysBoughtBack; }
 
     public boolean isReopen() { return isReopen; }
     public void setReopen(boolean reopen) { isReopen = reopen; }
