@@ -285,7 +285,7 @@ public class MonthlyFreedomUpdateService {
 
         // --- Days Bought Back (days freedom moved closer this period) ---
         BigDecimal targetBD = new BigDecimal(targetPortfolio);
-        int daysBoughtBack = calculateDaysBoughtBack(startEquity, endEquity, monthlyContribution, targetBD);
+        int daysBoughtBack = calculateDaysBoughtBack(startEquity, endEquity, monthlyContribution, targetBD, age);
         dto.setDaysBoughtBack(daysBoughtBack);
 
         // --- Quarterly Compare (every 3rd month) ---
@@ -705,14 +705,27 @@ public class MonthlyFreedomUpdateService {
 
     /**
      * Calculate days bought back from the standard 59.5 retirement age.
-     * Compares months-to-target from startEquity vs endEquity.
+     *
+     * Uses the user's actual age (from DOB) to project when they'd reach their target.
+     * Projected retirement age = userAge + monthsToTarget / 12, capped at 59.5.
+     * Days bought back = (projectedAgeFromStart - projectedAgeFromEnd) × 365.25
+     *
+     * If both projections are already under 59.5, this equals the raw months-to-target
+     * difference. The cap matters when a projection would exceed 59.5 — the user
+     * wouldn't wait past 59.5 anyway, so gains that push the projection past 59.5
+     * are clamped.
      */
     private int calculateDaysBoughtBack(BigDecimal startEquity, BigDecimal endEquity,
-                                         BigDecimal monthlyContribution, BigDecimal targetPortfolio) {
+                                         BigDecimal monthlyContribution, BigDecimal targetPortfolio, int userAge) {
         double monthsFromStart = calculateMonthsToTarget(startEquity, monthlyContribution, targetPortfolio);
         double monthsFromEnd = calculateMonthsToTarget(endEquity, monthlyContribution, targetPortfolio);
-        double monthsDiff = monthsFromStart - monthsFromEnd;
-        int days = (int) Math.round(monthsDiff * 30.44);
+
+        double retirementAgeCeiling = 59.5;
+        double projectedAgeFromStart = Math.min(userAge + monthsFromStart / 12.0, retirementAgeCeiling);
+        double projectedAgeFromEnd = Math.min(userAge + monthsFromEnd / 12.0, retirementAgeCeiling);
+
+        double yearsDiff = projectedAgeFromStart - projectedAgeFromEnd;
+        int days = (int) Math.round(yearsDiff * 365.25);
         return Math.max(0, days);
     }
 

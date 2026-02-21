@@ -115,22 +115,20 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
 
   get freedomMessage(): string {
     if (!this.data) return '';
-    if (this.data.positive) {
-      return `Start: ${this.formatCurrency(this.data.startEquityValue)} vs End: ${this.formatCurrency(this.data.endEquityValue)}`;
+    if (this.data.daysBoughtBack > 0) {
+      return `Bought back ${this.data.daysBoughtBack} days`;
     }
     return "Markets dip. Your system didn't.";
   }
 
   get freedomDescriptionHtml(): string {
     if (!this.data) return '';
-    if (this.data.positive) {
-      const days = this.data.daysBoughtBack || 0;
-      const retirementAge = 59.5;
+    if (this.data.daysBoughtBack > 0) {
+      const days = this.data.daysBoughtBack;
       const userAge = this.data.age || 35;
-      const yearsLeft = Math.max(0, Math.round(retirementAge - userAge));
-      return `From <b>${this.data.periodLabel}</b>, your investments secured you <b>~${days} days</b> bought back from the standard ${yearsLeft}-year wait to retirement.`;
+      return `From <b>${this.data.periodLabel}</b>, your investments moved you about <b>${days} days</b> ahead a typical 59.5 retirement age.`;
     }
-    return `From <b>${this.data.periodLabel}</b>, the market was down but your investment system kept running.`;
+    return `From <b>${this.data.periodLabel}</b>, you stayed on course. Market swings are normal - they recover with time. It'll bounce back.`;
   }
 
   get milestoneIcon(): string {
