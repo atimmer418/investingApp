@@ -99,7 +99,7 @@ public class MonthlyFreedomUpdateController {
                     portfolioDashboardService.getPortfolioHistoryForPeriod(user, "ALL");
 
             MonthlyFreedomUpdateDTO result = monthlyFreedomUpdateService.generateUpdate(
-                    user, currentEquity, history, reopen);
+                    user, currentEquity, history, dashboard.positions, reopen);
 
             return ResponseEntity.ok(result);
 

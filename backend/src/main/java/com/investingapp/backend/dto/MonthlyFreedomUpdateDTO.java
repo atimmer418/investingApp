@@ -56,6 +56,9 @@ public class MonthlyFreedomUpdateDTO {
     private String frequencyLabel;              // "paycheck", "week", "month" etc.
     private BigDecimal currentInvestmentAmount;
 
+    // User age (from dateOfBirth or default 35)
+    private int age;
+
     // Re-open from FRED tab (no 5-second lock)
     private boolean isReopen;
 
@@ -140,6 +143,9 @@ public class MonthlyFreedomUpdateDTO {
 
     public int getDaysBoughtBack() { return daysBoughtBack; }
     public void setDaysBoughtBack(int daysBoughtBack) { this.daysBoughtBack = daysBoughtBack; }
+
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
 
     public boolean isReopen() { return isReopen; }
     public void setReopen(boolean reopen) { isReopen = reopen; }

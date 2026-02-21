@@ -31,20 +31,23 @@ public class MonthlyFreedomUpdateService {
     private static final double ASSUMED_ANNUAL_RETURN = 0.09;
     private static final BigDecimal FIFTY_DOLLARS = new BigDecimal("50");
 
-    // Age-based equity percentile lookup (simplified global population estimates)
-    // Key: age bracket upper bound, Value: median equity for that bracket
+    // Age-based equity percentile lookup
+    // Source: Federal Reserve Survey of Consumer Finances (SCF 2022)
+    // Values represent median financial assets (stocks, bonds, retirement accounts) by age bracket
+    // Key: age bracket upper bound, Value: median financial assets for that bracket
     private static final TreeMap<Integer, BigDecimal> AGE_EQUITY_ESTIMATES = new TreeMap<>();
     static {
-        AGE_EQUITY_ESTIMATES.put(25, new BigDecimal("10000"));
-        AGE_EQUITY_ESTIMATES.put(30, new BigDecimal("30000"));
-        AGE_EQUITY_ESTIMATES.put(35, new BigDecimal("70000"));
-        AGE_EQUITY_ESTIMATES.put(40, new BigDecimal("120000"));
-        AGE_EQUITY_ESTIMATES.put(45, new BigDecimal("200000"));
-        AGE_EQUITY_ESTIMATES.put(50, new BigDecimal("300000"));
-        AGE_EQUITY_ESTIMATES.put(55, new BigDecimal("400000"));
-        AGE_EQUITY_ESTIMATES.put(60, new BigDecimal("500000"));
-        AGE_EQUITY_ESTIMATES.put(65, new BigDecimal("650000"));
-        AGE_EQUITY_ESTIMATES.put(100, new BigDecimal("800000"));
+        AGE_EQUITY_ESTIMATES.put(25, new BigDecimal("5400"));     // Under 25: ~$5.4k median financial assets
+        AGE_EQUITY_ESTIMATES.put(30, new BigDecimal("11800"));    // 25-34: ~$11.8k
+        AGE_EQUITY_ESTIMATES.put(35, new BigDecimal("11800"));    // (same bracket as 25-34)
+        AGE_EQUITY_ESTIMATES.put(40, new BigDecimal("45740"));    // 35-44: ~$45.7k
+        AGE_EQUITY_ESTIMATES.put(45, new BigDecimal("45740"));    // (same bracket as 35-44)
+        AGE_EQUITY_ESTIMATES.put(50, new BigDecimal("80000"));    // 45-54: ~$80k
+        AGE_EQUITY_ESTIMATES.put(55, new BigDecimal("80000"));    // (same bracket as 45-54)
+        AGE_EQUITY_ESTIMATES.put(60, new BigDecimal("134000"));   // 55-64: ~$134k
+        AGE_EQUITY_ESTIMATES.put(65, new BigDecimal("134000"));   // (same bracket as 55-64)
+        AGE_EQUITY_ESTIMATES.put(75, new BigDecimal("164000"));   // 65-74: ~$164k
+        AGE_EQUITY_ESTIMATES.put(100, new BigDecimal("143000"));  // 75+: ~$143k
     }
 
     // Investment count milestones
@@ -75,7 +78,11 @@ public class MonthlyFreedomUpdateService {
     /**
      * Check if the Monthly Freedom Update should be shown for the given user.
      * Returns a short DTO with just shouldShow and the user's lastLoggedInMonth.
+     *
+     * If lastLoggedInMonth is null (first login), initializes it to the current month
+     * so the update will trigger next month.
      */
+    @Transactional
     public MonthlyFreedomUpdateDTO checkShouldShow(User user, BigDecimal currentEquity) {
         MonthlyFreedomUpdateDTO dto = new MonthlyFreedomUpdateDTO();
         dto.setShouldShow(false);
@@ -83,8 +90,10 @@ public class MonthlyFreedomUpdateService {
         String currentMonth = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
         String lastLoggedMonth = user.getLastLoggedInMonth();
 
-        // If no last logged month, this is first time -> set it and don't show
+        // If no last logged month, this is first time -> initialize it and don't show
         if (lastLoggedMonth == null || lastLoggedMonth.isEmpty()) {
+            user.setLastLoggedInMonth(currentMonth);
+            userRepository.save(user);
             dto.setShouldShow(false);
             return dto;
         }
@@ -113,6 +122,7 @@ public class MonthlyFreedomUpdateService {
      * @param user         The user
      * @param currentEquity Current equity value from Alpaca
      * @param portfolioHistory ALL-time portfolio history (timestamps as ISO dates, values as equity)
+     * @param positions    Current real-time positions for position-based return calculation
      * @param isReopen     Whether this is a reopen from FRED tab (no 5-second lock)
      */
     @Transactional
@@ -120,6 +130,7 @@ public class MonthlyFreedomUpdateService {
             User user,
             BigDecimal currentEquity,
             PortfolioDashboardService.PortfolioHistory portfolioHistory,
+            List<PortfolioDashboardService.Position> positions,
             boolean isReopen) {
 
         MonthlyFreedomUpdateDTO dto = new MonthlyFreedomUpdateDTO();
@@ -178,8 +189,10 @@ public class MonthlyFreedomUpdateService {
         dto.setPositive(periodDelta.compareTo(BigDecimal.ZERO) > 0);
 
         // --- Status Percentile ---
+        int age = user.getAge() != null ? user.getAge() : 35;
         int percentile = calculateStatusPercentile(user, currentEquity);
         dto.setStatusPercentile(percentile);
+        dto.setAge(age);
 
         // --- Streak (compute fresh for accurate display) ---
         int streak;
@@ -207,12 +220,25 @@ public class MonthlyFreedomUpdateService {
         dto.setPeriodContributions(periodContributions);
         dto.setEquityValueChange(periodDelta);
 
-        // Return rate = (periodDelta - contributions) / startEquity
+        // Return rate = weighted average of individual position returns (by cost basis)
+        // Each position: return = (currentPrice - avgCostBasis) / avgCostBasis
+        // Portfolio return = sum(costBasis_i * return_i) / sum(costBasis_i)
+        //                  = totalUnrealizedPL / totalCostBasis
         BigDecimal returnRate = BigDecimal.ZERO;
-        if (startEquity.compareTo(BigDecimal.ZERO) > 0) {
-            returnRate = periodDelta.subtract(periodContributions)
-                    .divide(startEquity, 4, RoundingMode.HALF_UP)
-                    .multiply(new BigDecimal("100"));
+        if (positions != null && !positions.isEmpty()) {
+            BigDecimal totalCostBasis = BigDecimal.ZERO;
+            BigDecimal totalUnrealizedPL = BigDecimal.ZERO;
+            for (PortfolioDashboardService.Position pos : positions) {
+                if (pos.getCostBasis() != null && pos.getUnrealizedPL() != null) {
+                    totalCostBasis = totalCostBasis.add(pos.getCostBasis());
+                    totalUnrealizedPL = totalUnrealizedPL.add(pos.getUnrealizedPL());
+                }
+            }
+            if (totalCostBasis.compareTo(BigDecimal.ZERO) > 0) {
+                returnRate = totalUnrealizedPL
+                        .divide(totalCostBasis, 4, RoundingMode.HALF_UP)
+                        .multiply(new BigDecimal("100"));
+            }
         }
         dto.setReturnRate(returnRate);
 
@@ -402,7 +428,7 @@ public class MonthlyFreedomUpdateService {
      */
     private int calculateStatusPercentile(User user, BigDecimal currentEquity) {
         Integer age = user.getAge();
-        if (age == null) age = 30; // Default age
+        if (age == null) age = 35; // Default age
 
         // Find the median equity for the user's age bracket
         Map.Entry<Integer, BigDecimal> entry = AGE_EQUITY_ESTIMATES.ceilingEntry(age);

@@ -125,7 +125,10 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
     if (!this.data) return '';
     if (this.data.positive) {
       const days = this.data.daysBoughtBack || 0;
-      return `From <b>${this.data.periodLabel}</b>, your investments secured you <b>~${days} days</b> bought back from the standard 59.5 retirement age.`;
+      const retirementAge = 59.5;
+      const userAge = this.data.age || 35;
+      const yearsLeft = Math.max(0, Math.round(retirementAge - userAge));
+      return `From <b>${this.data.periodLabel}</b>, your investments secured you <b>~${days} days</b> bought back from the standard ${yearsLeft}-year wait to retirement.`;
     }
     return `From <b>${this.data.periodLabel}</b>, the market was down but your investment system kept running.`;
   }

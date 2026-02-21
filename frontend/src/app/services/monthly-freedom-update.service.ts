@@ -54,6 +54,9 @@ export interface MonthlyFreedomUpdateData {
   frequencyLabel: string;
   currentInvestmentAmount: number;
 
+  // User age
+  age: number;
+
   // Reopen flag
   reopen: boolean;
 }
