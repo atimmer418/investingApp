@@ -128,7 +128,7 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
       const userAge = this.data.age || 35;
       return `From <b>${this.data.periodLabel}</b>, your investments moved you about <b>${days} days</b> ahead a typical 59.5 retirement age.`;
     }
-    return `From <b>${this.data.periodLabel}</b>, you stayed on course. Market swings are normal - they recover with time. It'll bounce back.`;
+    return `From <b>${this.data.periodLabel}</b>, you stayed on course. Market swings are normal - they recover with time.`;
   }
 
   get milestoneIcon(): string {

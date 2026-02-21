@@ -704,28 +704,19 @@ public class MonthlyFreedomUpdateService {
     }
 
     /**
-     * Calculate days bought back from the standard 59.5 retirement age.
+     * Calculate days bought back toward financial freedom.
      *
-     * Uses the user's actual age (from DOB) to project when they'd reach their target.
-     * Projected retirement age = userAge + monthsToTarget / 12, capped at 59.5.
-     * Days bought back = (projectedAgeFromStart - projectedAgeFromEnd) × 365.25
-     *
-     * If both projections are already under 59.5, this equals the raw months-to-target
-     * difference. The cap matters when a projection would exceed 59.5 — the user
-     * wouldn't wait past 59.5 anyway, so gains that push the projection past 59.5
-     * are clamped.
+     * Compares months-to-target from startEquity vs endEquity to find how many
+     * months closer to freedom the user moved during the period, then converts
+     * to days. The 59.5 retirement age reference is only used in the frontend
+     * display text for context — it does not clamp this calculation.
      */
     private int calculateDaysBoughtBack(BigDecimal startEquity, BigDecimal endEquity,
                                          BigDecimal monthlyContribution, BigDecimal targetPortfolio, int userAge) {
         double monthsFromStart = calculateMonthsToTarget(startEquity, monthlyContribution, targetPortfolio);
         double monthsFromEnd = calculateMonthsToTarget(endEquity, monthlyContribution, targetPortfolio);
-
-        double retirementAgeCeiling = 59.5;
-        double projectedAgeFromStart = Math.min(userAge + monthsFromStart / 12.0, retirementAgeCeiling);
-        double projectedAgeFromEnd = Math.min(userAge + monthsFromEnd / 12.0, retirementAgeCeiling);
-
-        double yearsDiff = projectedAgeFromStart - projectedAgeFromEnd;
-        int days = (int) Math.round(yearsDiff * 365.25);
+        double monthsDiff = monthsFromStart - monthsFromEnd;
+        int days = (int) Math.round(monthsDiff * 30.44);
         return Math.max(0, days);
     }
 
