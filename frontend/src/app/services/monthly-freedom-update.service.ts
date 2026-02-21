@@ -42,23 +42,28 @@ export interface MonthlyFreedomUpdateData {
   recurringInvestmentAmount: number;
   investmentFrequency: string;
 
-  // Quarterly compare
+  // Quarterly review
   showQuarterlyCompare: boolean;
   equity12MonthsAgo: number;
   netWorthChange: number;
   freedomYearsChange: number;
+  yearlyContributions: number;
 
   // Best next action
   bestNextMoveYearsEarlier: number;
   bestNextMoveYear: number;
   frequencyLabel: string;
   currentInvestmentAmount: number;
+  bestNextMoveBoostAmount: number;
 
   // User age
   age: number;
 
   // Reopen flag
   reopen: boolean;
+
+  // MFU count (number of unique non-reopen MFUs the user has seen)
+  mfuCount: number;
 }
 
 @Injectable({

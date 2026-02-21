@@ -41,11 +41,12 @@ public class MonthlyFreedomUpdateDTO {
     private BigDecimal recurringInvestmentAmount;
     private String investmentFrequency;
 
-    // Quarterly compare (every 3rd update)
+    // Quarterly review (every 3rd MFU)
     private boolean showQuarterlyCompare;
     private BigDecimal equity12MonthsAgo;
-    private BigDecimal netWorthChange;
-    private BigDecimal freedomYearsChange;      // previousFreedomEstimate - currentFreedomEstimate
+    private BigDecimal netWorthChange;           // currentEquity - equity12MonthsAgo
+    private BigDecimal freedomYearsChange;       // years closer to freedom vs 12 months ago
+    private BigDecimal yearlyContributions;      // total invested in past 12 months
 
     // Days bought back (days freedom moved closer this period)
     private int daysBoughtBack;
@@ -55,12 +56,16 @@ public class MonthlyFreedomUpdateDTO {
     private int bestNextMoveYear;
     private String frequencyLabel;              // "paycheck", "week", "month" etc.
     private BigDecimal currentInvestmentAmount;
+    private BigDecimal bestNextMoveBoostAmount; // $50 or $25 depending on cycle
 
     // User age (from dateOfBirth or default 35)
     private int age;
 
     // Re-open from FRED tab (no 5-second lock)
     private boolean isReopen;
+
+    // MFU count (number of unique non-reopen MFUs the user has seen)
+    private int mfuCount;
 
     // Getters and Setters
     public boolean isShouldShow() { return shouldShow; }
@@ -129,6 +134,9 @@ public class MonthlyFreedomUpdateDTO {
     public BigDecimal getFreedomYearsChange() { return freedomYearsChange; }
     public void setFreedomYearsChange(BigDecimal freedomYearsChange) { this.freedomYearsChange = freedomYearsChange; }
 
+    public BigDecimal getYearlyContributions() { return yearlyContributions; }
+    public void setYearlyContributions(BigDecimal yearlyContributions) { this.yearlyContributions = yearlyContributions; }
+
     public int getBestNextMoveYearsEarlier() { return bestNextMoveYearsEarlier; }
     public void setBestNextMoveYearsEarlier(int bestNextMoveYearsEarlier) { this.bestNextMoveYearsEarlier = bestNextMoveYearsEarlier; }
 
@@ -141,6 +149,9 @@ public class MonthlyFreedomUpdateDTO {
     public BigDecimal getCurrentInvestmentAmount() { return currentInvestmentAmount; }
     public void setCurrentInvestmentAmount(BigDecimal currentInvestmentAmount) { this.currentInvestmentAmount = currentInvestmentAmount; }
 
+    public BigDecimal getBestNextMoveBoostAmount() { return bestNextMoveBoostAmount; }
+    public void setBestNextMoveBoostAmount(BigDecimal bestNextMoveBoostAmount) { this.bestNextMoveBoostAmount = bestNextMoveBoostAmount; }
+
     public int getDaysBoughtBack() { return daysBoughtBack; }
     public void setDaysBoughtBack(int daysBoughtBack) { this.daysBoughtBack = daysBoughtBack; }
 
@@ -149,6 +160,9 @@ public class MonthlyFreedomUpdateDTO {
 
     public boolean isReopen() { return isReopen; }
     public void setReopen(boolean reopen) { isReopen = reopen; }
+
+    public int getMfuCount() { return mfuCount; }
+    public void setMfuCount(int mfuCount) { this.mfuCount = mfuCount; }
 
     /**
      * Nested DTO for milestones

@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+// Material Symbols font is preloaded in index.html — no @import needed here
 
 // --------------------------------------------------------------------------
 // Variables
@@ -70,6 +70,11 @@ $indigo-50: #eef2ff;
   white-space: nowrap;
   direction: ltr;
   -webkit-font-smoothing: antialiased;
+
+  // Hide icon text until the font is loaded — prevents FOUT
+  overflow: hidden;
+  width: 1em;
+  height: 1em;
 }
 
 // --------------------------------------------------------------------------
@@ -784,20 +789,34 @@ $indigo-50: #eef2ff;
     color: $slate-500;
   }
 
-  .mfu-quarterly {
-    background: rgba($slate-800, 0.4);
-    border-color: rgba($slate-600, 0.3);
+  .mfu-quarterly-review {
+    background: rgba(#064e3b, 0.25);
+    border-color: rgba($green-400, 0.25);
 
     &__title {
-      color: $slate-200;
+      color: $slate-100;
     }
 
-    &__stat {
-      color: $slate-300;
+    &__subtitle,
+    &__closing {
+      color: $slate-400;
+    }
+
+    &__stats {
+      background: rgba($slate-800, 0.5);
+      border-color: rgba($green-400, 0.15);
+    }
+
+    &__stat-value {
+      color: $slate-200;
 
       &--positive {
         color: $green-400;
       }
+    }
+
+    &__stat-label {
+      color: $slate-400;
     }
   }
 
@@ -814,7 +833,7 @@ $indigo-50: #eef2ff;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
+  padding: 60px 20px 30px 20px;
   text-align: center;
   gap: 16px;
 
@@ -857,11 +876,11 @@ $indigo-50: #eef2ff;
 }
 
 // --------------------------------------------------------------------------
-// Quarterly compare section
+// Quarterly review section (every 3rd MFU)
 // --------------------------------------------------------------------------
-.mfu-quarterly {
-  background: $slate-50;
-  border: 1px solid $slate-200;
+.mfu-quarterly-review {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
   border-radius: 14px;
   padding: 16px;
   margin-bottom: 0;
@@ -870,34 +889,65 @@ $indigo-50: #eef2ff;
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
   }
 
   &__icon {
-    font-size: 20px;
-    color: $primary;
+    font-size: 22px;
+    color: $green-700;
   }
 
   &__title {
-    font-size: 0.8125rem;
-    font-weight: 600;
+    font-size: 0.9375rem;
+    font-weight: 700;
     color: $slate-800;
   }
 
+  &__subtitle {
+    font-size: 0.8125rem;
+    color: $slate-500;
+    margin-bottom: 12px;
+    padding-left: 30px;
+  }
+
   &__stats {
+    background: white;
+    border: 1px solid #d1fae5;
+    border-radius: 12px;
+    padding: 14px 16px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding-left: 28px;
+    gap: 10px;
+    margin-bottom: 12px;
   }
 
   &__stat {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: $slate-600;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  &__stat-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $slate-800;
 
     &--positive {
       color: $green-700;
     }
+  }
+
+  &__stat-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: $slate-500;
+  }
+
+  &__closing {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: $slate-600;
+    text-align: center;
+    padding-top: 2px;
   }
 }

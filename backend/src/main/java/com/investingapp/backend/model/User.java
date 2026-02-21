@@ -185,6 +185,9 @@ public class User {
     @Column(name = "last_mfu_milestones", columnDefinition = "TEXT")
     private String lastMfuMilestones; // JSON of milestones shown in last MFU e.g. [{"type":"...","label":"...","subtitle":"..."}]
 
+    @Column(name = "mfu_count")
+    private Integer mfuCount; // Number of unique (non-reopen) MFUs the user has seen
+
     // Investment scheduling fields
     @Column(length = 20)
     private String payFrequency; // "weekly", "biweekly", "monthly", "semimonthly"

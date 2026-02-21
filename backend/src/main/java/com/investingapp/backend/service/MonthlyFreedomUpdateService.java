@@ -30,6 +30,7 @@ public class MonthlyFreedomUpdateService {
 
     private static final double ASSUMED_ANNUAL_RETURN = 0.09;
     private static final BigDecimal FIFTY_DOLLARS = new BigDecimal("50");
+    private static final BigDecimal TWENTY_FIVE_DOLLARS = new BigDecimal("25");
 
     // Age-based equity percentile lookup
     // Source: Federal Reserve Survey of Consumer Finances (SCF 2022)
@@ -136,6 +137,10 @@ public class MonthlyFreedomUpdateService {
         MonthlyFreedomUpdateDTO dto = new MonthlyFreedomUpdateDTO();
         dto.setReopen(isReopen);
         dto.setShouldShow(true);
+
+        // Set mfuCount (current count before this update; will be incremented in updateUserState for non-reopen)
+        Integer mfuCountVal = user.getMfuCount();
+        dto.setMfuCount(mfuCountVal != null ? mfuCountVal : 0);
 
         String currentMonthStr = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
         String lastLoggedMonth = user.getLastLoggedInMonth();
@@ -275,8 +280,11 @@ public class MonthlyFreedomUpdateService {
         int freedomYear = calculateFreedomYear(currentEquity, monthlyContribution, new BigDecimal(targetPortfolio));
         dto.setProjectedFreedomYear(freedomYear);
 
-        // --- Best Next Action (+$50) ---
-        BigDecimal boostedMonthly = monthlyContribution.add(calculateMonthlyEquivalent(FIFTY_DOLLARS, frequency));
+        // --- Best Next Action (boost amount based on mfuCount cycle) ---
+        int mfuCycle = (mfuCountVal != null ? mfuCountVal : 0) % 3;
+        BigDecimal boostAmount = (mfuCycle == 1) ? TWENTY_FIVE_DOLLARS : FIFTY_DOLLARS;
+        dto.setBestNextMoveBoostAmount(boostAmount);
+        BigDecimal boostedMonthly = monthlyContribution.add(calculateMonthlyEquivalent(boostAmount, frequency));
         int boostedFreedomYear = calculateFreedomYear(currentEquity, boostedMonthly, new BigDecimal(targetPortfolio));
         int yearsEarlier = freedomYear - boostedFreedomYear;
         if (yearsEarlier < 0) yearsEarlier = 0;
@@ -288,27 +296,31 @@ public class MonthlyFreedomUpdateService {
         int daysBoughtBack = calculateDaysBoughtBack(startEquity, endEquity, monthlyContribution, targetBD, age);
         dto.setDaysBoughtBack(daysBoughtBack);
 
-        // --- Quarterly Compare (every 3rd month) ---
-        Integer accountLength = user.getUserAccountLength();
-        if (accountLength == null) accountLength = 0;
-        boolean showQuarterly = accountLength > 0 && accountLength % 3 == 0;
+        // --- Quarterly Review (every 3rd MFU, i.e. mfuCycle == 2) ---
+        boolean showQuarterly = mfuCycle == 2;
         dto.setShowQuarterlyCompare(showQuarterly);
 
         if (showQuarterly) {
-            BigDecimal equity12MonthsAgo = BigDecimal.ZERO;
-            if (accountLength >= 12) {
-                equity12MonthsAgo = findEquityAtDate(portfolioHistory, LocalDate.now().minusMonths(12));
-            }
+            // Net worth change over past 12 months
+            BigDecimal equity12MonthsAgo = findEquityAtDate(portfolioHistory, LocalDate.now().minusMonths(12));
             dto.setEquity12MonthsAgo(equity12MonthsAgo);
             dto.setNetWorthChange(currentEquity.subtract(equity12MonthsAgo));
 
-            Integer prevEstimate = user.getPreviousFreedomEstimate();
-            Integer currentEstimate = user.getCurrentFreedomEstimate();
-            if (prevEstimate == null) prevEstimate = LocalDate.now().getYear();
-            if (currentEstimate == null) currentEstimate = freedomYear;
+            // Years closer to freedom (same logic as daysBoughtBack but with 12-month-ago equity, in years)
+            double monthsFrom12Ago = calculateMonthsToTarget(equity12MonthsAgo, monthlyContribution, new BigDecimal(targetPortfolio));
+            double monthsFromNow = calculateMonthsToTarget(currentEquity, monthlyContribution, new BigDecimal(targetPortfolio));
+            double yearsDiff = (monthsFrom12Ago - monthsFromNow) / 12.0;
+            // Round to 1 decimal
+            BigDecimal yearsFreedomGained = new BigDecimal(yearsDiff).setScale(1, RoundingMode.HALF_UP);
+            dto.setFreedomYearsChange(yearsFreedomGained);
 
-            BigDecimal freedomYearsChange = new BigDecimal(prevEstimate - currentEstimate);
-            dto.setFreedomYearsChange(freedomYearsChange);
+            // Total contributions over past 12 months
+            LocalDateTime yearAgoDT = LocalDate.now().minusMonths(12).atStartOfDay();
+            LocalDateTime nowDT = LocalDate.now().atTime(23, 59, 59);
+            BigDecimal yearlyContributions = executionRepository.sumCompletedAmountsByUserAndDateRange(
+                    user.getId(), yearAgoDT, nowDT);
+            if (yearlyContributions == null) yearlyContributions = BigDecimal.ZERO;
+            dto.setYearlyContributions(yearlyContributions);
         }
 
         // --- Persist user state (idempotent) ---
@@ -374,6 +386,10 @@ public class MonthlyFreedomUpdateService {
 
         // Update recurring investment count
         user.setRecurringInvestmentCount(totalInvestmentCount);
+
+        // Increment MFU count (only non-reopen updates reach here)
+        Integer currentMfuCount = user.getMfuCount();
+        user.setMfuCount(currentMfuCount != null ? currentMfuCount + 1 : 1);
 
         // Note: streak is managed independently by StreakService, not updated here
 

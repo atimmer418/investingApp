@@ -50,20 +50,36 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
     }
   }
 
+  private static fontsLoaded = false;
+
   private loadData() {
     this.loading = true;
-    this.mfuService.generateUpdate(this.isReopen).subscribe({
-      next: (data) => {
-        this.data = data;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading Monthly Freedom Update:', err);
-        this.error = 'Failed to load your monthly update.';
-        this.loading = false;
-        // Allow dismiss on error
-        this.canDismiss = true;
-      }
+
+    const dataReady = new Promise<MonthlyFreedomUpdateData>((resolve, reject) => {
+      this.mfuService.generateUpdate(this.isReopen).subscribe({
+        next: (data) => resolve(data),
+        error: (err) => reject(err)
+      });
+    });
+
+    // Only wait for fonts on first open — after that they're cached
+    const fontsReady = MonthlyFreedomUpdateComponent.fontsLoaded
+      ? Promise.resolve()
+      : document.fonts.load('24px "Material Symbols Outlined"').then(() => {
+          MonthlyFreedomUpdateComponent.fontsLoaded = true;
+        }).catch(() => {
+          // Don't block on font failure
+          MonthlyFreedomUpdateComponent.fontsLoaded = true;
+        });
+
+    Promise.all([dataReady, fontsReady]).then(([data]) => {
+      this.data = data;
+      this.loading = false;
+    }).catch((err) => {
+      console.error('Error loading Monthly Freedom Update:', err);
+      this.error = 'Failed to load your monthly update.';
+      this.loading = false;
+      this.canDismiss = true;
     });
   }
 
@@ -162,7 +178,20 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
 
   get bestNextMoveDescription(): string {
     if (!this.data) return '';
-    return `Increase your contribution by just $50/${this.data.frequencyLabel}.`;
+    const amount = this.data.bestNextMoveBoostAmount || 50;
+    return `Increase your contribution by just $${amount}/${this.data.frequencyLabel}.`;
+  }
+
+  formatYearlyNetWorth(amount: number | undefined | null): string {
+    if (amount === undefined || amount === null) return '+$0';
+    const prefix = amount >= 0 ? '+' : '-';
+    return `${prefix}${this.formatCurrency(Math.abs(amount))}`;
+  }
+
+  formatYearsFreedom(years: number | undefined | null): string {
+    if (years === undefined || years === null || years === 0) return '0';
+    const prefix = years > 0 ? '-' : '+';
+    return `${prefix}${Math.abs(years)}`;
   }
 }
 
