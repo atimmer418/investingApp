@@ -99,9 +99,9 @@ public interface InvestmentExecutionRepository extends JpaRepository<InvestmentE
     long countCompletedExecutionsByUser(@Param("userId") Long userId);
 
     /**
-     * Sum of amounts for completed executions in a date range for a user
+     * Sum of amounts for completed executions in a date range for a user (by updated_at date)
      */
-    @Query("SELECT COALESCE(SUM(ie.amount), 0) FROM InvestmentExecution ie WHERE ie.user.id = :userId AND ie.status = 'COMPLETED' AND ie.executionDate >= :startDate AND ie.executionDate <= :endDate")
+    @Query("SELECT COALESCE(SUM(ie.amount), 0) FROM InvestmentExecution ie WHERE ie.user.id = :userId AND ie.status = 'COMPLETED' AND ie.updatedAt >= :startDate AND ie.updatedAt <= :endDate")
     java.math.BigDecimal sumCompletedAmountsByUserAndDateRange(
         @Param("userId") Long userId,
         @Param("startDate") LocalDateTime startDate,

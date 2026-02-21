@@ -447,13 +447,13 @@ $indigo-50: #eef2ff;
 .mfu-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 16px;
 }
 
 .mfu-stat {
   background: $slate-50;
-  padding: 14px 12px;
+  padding: 6px;
   border-radius: 8px;
   border: 1px solid $slate-100;
   display: flex;
@@ -461,7 +461,8 @@ $indigo-50: #eef2ff;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 6px;
+  gap: 2px;
+  height: 60px;
 
   &--highlighted {
     background: rgba($primary, 0.05);
@@ -473,7 +474,7 @@ $indigo-50: #eef2ff;
     font-weight: 600;
     color: $slate-500;
     text-transform: uppercase;
-    letter-spacing: -0.025em; // tracking-tight
+    letter-spacing: -0.025em;
     margin: 0;
 
     &--primary {
@@ -509,7 +510,7 @@ $indigo-50: #eef2ff;
 .mfu-tracker {
   margin-bottom: 16px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   background: $slate-50;
   padding: 12px;
@@ -517,7 +518,8 @@ $indigo-50: #eef2ff;
 
   &__icon {
     color: $slate-400;
-    margin-top: 2px;
+    font-size: 32px;
+    flex-shrink: 0;
   }
 
   &__text {

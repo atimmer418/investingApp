@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService, PortfolioDashboardData, Position, PerformanceData, PortfolioHistory } from '../../services/portfolio.service';
-import { LoadingController, ModalController } from '@ionic/angular/standalone';
+import { LoadingController, ModalController, createAnimation } from '@ionic/angular/standalone';
 import { ToastService } from '../../services/toast.service';
 import { MonthlyFreedomUpdateService } from '../../services/monthly-freedom-update.service';
 import { MonthlyFreedomUpdateComponent } from '../monthly-freedom-update/monthly-freedom-update.component';
@@ -92,7 +92,24 @@ export class PortfolioDashboardComponent implements OnInit {
       component: MonthlyFreedomUpdateComponent,
       componentProps: { isReopen },
       cssClass: 'monthly-freedom-update-modal',
-      backdropDismiss: false // Non-dismissible; close handled by component
+      backdropDismiss: false,
+      leaveAnimation: (baseEl: HTMLElement) => {
+        const backdropEl = baseEl.querySelector('ion-backdrop') || baseEl.shadowRoot?.querySelector('ion-backdrop');
+        const wrapperEl = baseEl.querySelector('.modal-wrapper') || baseEl.shadowRoot?.querySelector('.modal-wrapper') || baseEl;
+        const backdropAnim = createAnimation()
+          .addElement(backdropEl || baseEl)
+          .fromTo('opacity', '1', '0')
+          .easing('ease-in');
+        const contentAnim = createAnimation()
+          .addElement(wrapperEl)
+          .fromTo('opacity', '1', '0')
+          .fromTo('transform', 'translateY(0)', 'translateY(24px)')
+          .easing('cubic-bezier(0.4, 0, 0.2, 1)');
+        return createAnimation()
+          .addElement(baseEl)
+          .duration(400)
+          .addAnimation([backdropAnim, contentAnim]);
+      }
     });
 
     await modal.present();

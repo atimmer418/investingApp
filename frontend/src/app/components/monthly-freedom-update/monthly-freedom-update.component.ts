@@ -135,14 +135,23 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
     return this.data.milestones[0].type === 'DEFAULT' ? 'sentiment_satisfied' : 'military_tech';
   }
 
+  /**
+   * Compute change from rounded start/end so the displayed values are consistent.
+   * e.g. End $863 - Start $741 = exactly $122, not $123 from unrounded decimals.
+   */
+  get computedChange(): number {
+    if (!this.data) return 0;
+    return Math.round(this.data.endEquityValue) - Math.round(this.data.startEquityValue);
+  }
+
   get changeDirection(): string {
     if (!this.data) return '';
-    return this.data.periodProgressDelta >= 0 ? 'arrow_upward' : 'arrow_downward';
+    return this.computedChange >= 0 ? 'arrow_upward' : 'arrow_downward';
   }
 
   get changeClass(): string {
     if (!this.data) return '';
-    return this.data.periodProgressDelta >= 0 ? 'mfu-stat__value--positive' : 'mfu-stat__value--negative';
+    return this.computedChange >= 0 ? 'mfu-stat__value--positive' : 'mfu-stat__value--negative';
   }
 
   get bestNextMoveTitle(): string {

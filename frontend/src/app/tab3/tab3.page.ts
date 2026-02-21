@@ -19,7 +19,8 @@ import {
   IonBadge,
   IonRippleEffect,
   IonFooter,
-  ModalController
+  ModalController,
+  createAnimation
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -438,7 +439,24 @@ export class Tab3Page implements OnInit, OnDestroy {
       component: MonthlyFreedomUpdateComponent,
       componentProps: { isReopen: true },
       cssClass: 'monthly-freedom-update-modal',
-      backdropDismiss: true
+      backdropDismiss: true,
+      leaveAnimation: (baseEl: HTMLElement) => {
+        const backdropEl = baseEl.querySelector('ion-backdrop') || baseEl.shadowRoot?.querySelector('ion-backdrop');
+        const wrapperEl = baseEl.querySelector('.modal-wrapper') || baseEl.shadowRoot?.querySelector('.modal-wrapper') || baseEl;
+        const backdropAnim = createAnimation()
+          .addElement(backdropEl || baseEl)
+          .fromTo('opacity', '1', '0')
+          .easing('ease-in');
+        const contentAnim = createAnimation()
+          .addElement(wrapperEl)
+          .fromTo('opacity', '1', '0')
+          .fromTo('transform', 'translateY(0)', 'translateY(24px)')
+          .easing('cubic-bezier(0.4, 0, 0.2, 1)');
+        return createAnimation()
+          .addElement(baseEl)
+          .duration(400)
+          .addAnimation([backdropAnim, contentAnim]);
+      }
     });
 
     await modal.present();

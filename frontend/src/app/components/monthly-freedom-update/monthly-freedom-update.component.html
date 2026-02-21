@@ -47,9 +47,6 @@
             <p class="mfu-milestone__title">{{ data.milestones[0].label }}</p>
             <p class="mfu-milestone__subtitle">{{ data.milestones[0].subtitle }}</p>
           </div>
-          <div class="mfu-milestone__chevron">
-            <span class="material-symbols-outlined">chevron_right</span>
-          </div>
         </div>
       </div>
 
@@ -70,10 +67,10 @@
         </div>
         <div class="mfu-stat">
           <p class="mfu-stat__label">Change</p>
-          <div class="mfu-stat__value" [ngClass]="changeClass">
+          <p class="mfu-stat__value" [ngClass]="changeClass">
             <span class="material-symbols-outlined mfu-stat__arrow">{{ changeDirection }}</span>
-            <p>{{ formatCurrencyCompact(data.equityValueChange) }}</p>
-          </div>
+            {{ formatCurrencyCompact(computedChange) }}
+          </p>
         </div>
         <div class="mfu-stat mfu-stat--highlighted">
           <p class="mfu-stat__label mfu-stat__label--primary">Return</p>
