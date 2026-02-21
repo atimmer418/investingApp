@@ -168,7 +168,10 @@ public class User {
     private Integer recurringInvestmentCount; // Count of completed recurring executions
 
     @Column(name = "current_streak")
-    private Integer currentStreak; // Consecutive months with active investment
+    private Integer currentStreak; // Consecutive months with active (non-paused) investment schedule
+
+    @Column(name = "last_streak_update")
+    private String lastStreakUpdate; // "YYYY-MM" of last streak increment to prevent double-counting
 
     @Column(name = "milestone_history", columnDefinition = "TEXT")
     private String milestoneHistory; // JSON string of achieved milestones e.g. ["INVESTMENT_10","EQUITY_1K"]
@@ -178,6 +181,9 @@ public class User {
 
     @Column(name = "last_mfu_period_end")
     private String lastMfuPeriodEnd; // ISO date "yyyy-MM-dd" of last MFU period end
+
+    @Column(name = "last_mfu_milestones", columnDefinition = "TEXT")
+    private String lastMfuMilestones; // JSON of milestones shown in last MFU e.g. [{"type":"...","label":"...","subtitle":"..."}]
 
     // Investment scheduling fields
     @Column(length = 20)

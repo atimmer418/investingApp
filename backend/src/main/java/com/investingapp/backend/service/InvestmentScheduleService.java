@@ -23,12 +23,14 @@ public class InvestmentScheduleService {
 
     private final InvestmentScheduleRepository investmentScheduleRepository;
     private final PortfolioService portfolioService;
+    private final StreakService streakService;
 
     @Autowired
     public InvestmentScheduleService(InvestmentScheduleRepository investmentScheduleRepository,
-            PortfolioService portfolioService) {
+            PortfolioService portfolioService, StreakService streakService) {
         this.investmentScheduleRepository = investmentScheduleRepository;
         this.portfolioService = portfolioService;
+        this.streakService = streakService;
     }
 
     /**
@@ -258,6 +260,9 @@ public class InvestmentScheduleService {
 
         InvestmentSchedule updatedSchedule = investmentScheduleRepository.save(schedule);
         logger.info("Successfully paused investment schedule ID: {}", scheduleId);
+
+        // Reset the user's consecutive-month streak
+        streakService.resetStreak(user);
 
         return updatedSchedule;
     }

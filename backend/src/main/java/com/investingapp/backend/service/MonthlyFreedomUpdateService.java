@@ -194,22 +194,22 @@ public class MonthlyFreedomUpdateService {
         dto.setStatusPercentile(percentile);
         dto.setAge(age);
 
-        // --- Streak (compute fresh for accurate display) ---
-        int streak;
-        Optional<InvestmentSchedule> activeSchedule = scheduleRepository.findTopByUserOrderByCreatedAtDesc(user);
-        if (activeSchedule.isEmpty() || activeSchedule.get().getIsPaused()) {
-            streak = 0;
-        } else {
-            streak = (user.getCurrentStreak() != null ? user.getCurrentStreak() : 0);
-            if (!isReopen) {
-                streak += 1; // Will be persisted in updateUserState
-            }
-        }
+        // --- Streak (read current value — managed independently by StreakService) ---
+        int streak = user.getCurrentStreak() != null ? user.getCurrentStreak() : 0;
         dto.setCurrentStreak(streak);
 
         // --- Milestones ---
         long totalInvestmentCount = executionRepository.countCompletedExecutionsByUser(user.getId());
-        List<MilestoneDTO> milestones = calculateMilestones(user, totalInvestmentCount, startEquity, endEquity);
+        List<MilestoneDTO> milestones;
+        if (isReopen) {
+            // On reopen, restore the milestones that were shown during the original period
+            milestones = deserializeMilestones(user.getLastMfuMilestones());
+            if (milestones == null || milestones.isEmpty()) {
+                milestones = calculateMilestones(user, totalInvestmentCount, startEquity, endEquity);
+            }
+        } else {
+            milestones = calculateMilestones(user, totalInvestmentCount, startEquity, endEquity);
+        }
         dto.setMilestones(milestones);
 
         // --- Analytics Section ---
@@ -314,7 +314,7 @@ public class MonthlyFreedomUpdateService {
         // --- Persist user state (idempotent) ---
         if (!isReopen) {
             updateUserState(user, currentMonthStr, freedomYear, (int) totalInvestmentCount,
-                    milestones, startEquity, endEquity, periodStart, periodEnd, streak);
+                    milestones, startEquity, endEquity, periodStart, periodEnd);
         }
 
         return dto;
@@ -327,7 +327,7 @@ public class MonthlyFreedomUpdateService {
     public void updateUserState(User user, String currentMonth, int freedomYear,
                                 int totalInvestmentCount, List<MilestoneDTO> newMilestones,
                                 BigDecimal startEquity, BigDecimal endEquity,
-                                LocalDate periodStart, LocalDate periodEnd, int newStreak) {
+                                LocalDate periodStart, LocalDate periodEnd) {
 
         // Update lastLoggedInMonth
         user.setLastLoggedInMonth(currentMonth);
@@ -375,11 +375,13 @@ public class MonthlyFreedomUpdateService {
         // Update recurring investment count
         user.setRecurringInvestmentCount(totalInvestmentCount);
 
-        // Update streak (pre-computed in generateUpdate)
-        user.setCurrentStreak(newStreak);
+        // Note: streak is managed independently by StreakService, not updated here
 
         // Update milestone history
         updateMilestoneHistory(user, newMilestones);
+
+        // Store milestones for reopen
+        user.setLastMfuMilestones(serializeMilestones(newMilestones));
 
         userRepository.save(user);
     }
@@ -421,6 +423,67 @@ public class MonthlyFreedomUpdateService {
         }
         sb.append("]");
         user.setMilestoneHistory(sb.toString());
+    }
+
+    /**
+     * Serialize milestones to a simple JSON string for storage on the user.
+     */
+    private String serializeMilestones(List<MilestoneDTO> milestones) {
+        if (milestones == null || milestones.isEmpty()) return "[]";
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < milestones.size(); i++) {
+            MilestoneDTO m = milestones.get(i);
+            if (i > 0) sb.append(",");
+            sb.append("{\"type\":\"").append(escapeJson(m.getType()))
+              .append("\",\"label\":\"").append(escapeJson(m.getLabel()))
+              .append("\",\"subtitle\":\"").append(escapeJson(m.getSubtitle()))
+              .append("\"}");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    /**
+     * Deserialize milestones from the stored JSON string.
+     */
+    private List<MilestoneDTO> deserializeMilestones(String json) {
+        if (json == null || json.isEmpty() || "[]".equals(json)) return null;
+        List<MilestoneDTO> result = new ArrayList<>();
+        try {
+            // Simple JSON array of objects parsing
+            // Remove outer brackets
+            String inner = json.substring(1, json.length() - 1);
+            // Split by },{ pattern
+            String[] parts = inner.split("\\},\\{");
+            for (String part : parts) {
+                part = part.replace("{", "").replace("}", "");
+                String type = extractJsonValue(part, "type");
+                String label = extractJsonValue(part, "label");
+                String subtitle = extractJsonValue(part, "subtitle");
+                if (label != null) {
+                    result.add(new MilestoneDTO(type, label, subtitle));
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to deserialize MFU milestones: {}", e.getMessage());
+            return null;
+        }
+        return result.isEmpty() ? null : result;
+    }
+
+    private String extractJsonValue(String json, String key) {
+        String search = "\"" + key + "\":\"";
+        int start = json.indexOf(search);
+        if (start < 0) return null;
+        start += search.length();
+        int end = json.indexOf("\"", start);
+        if (end < 0) return null;
+        return json.substring(start, end).replace("\\\"", "\"").replace("\\\\", "\\");
+    }
+
+    private String escapeJson(String value) {
+        if (value == null) return "";
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     /**
