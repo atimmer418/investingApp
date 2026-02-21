@@ -67,6 +67,9 @@ public class MonthlyFreedomUpdateDTO {
     // MFU count (number of unique non-reopen MFUs the user has seen)
     private int mfuCount;
 
+    // Whether the user has any MFU history (has had at least one MFU period generated)
+    private boolean hasMfuHistory;
+
     // Getters and Setters
     public boolean isShouldShow() { return shouldShow; }
     public void setShouldShow(boolean shouldShow) { this.shouldShow = shouldShow; }
@@ -163,6 +166,9 @@ public class MonthlyFreedomUpdateDTO {
 
     public int getMfuCount() { return mfuCount; }
     public void setMfuCount(int mfuCount) { this.mfuCount = mfuCount; }
+
+    public boolean isHasMfuHistory() { return hasMfuHistory; }
+    public void setHasMfuHistory(boolean hasMfuHistory) { this.hasMfuHistory = hasMfuHistory; }
 
     /**
      * Nested DTO for milestones

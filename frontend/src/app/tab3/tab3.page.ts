@@ -55,6 +55,7 @@ import { PlaidService, BankAccount } from '../services/plaid.service';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
 import { MonthlyFreedomUpdateComponent } from '../components/monthly-freedom-update/monthly-freedom-update.component';
+import { MonthlyFreedomUpdateService } from '../services/monthly-freedom-update.service';
 
 interface SettingSection {
   title: string;
@@ -102,20 +103,9 @@ export class Tab3Page implements OnInit, OnDestroy {
   public recurringInvestment: RecurringInvestment | null = null;
   public currentBankAccount: BankAccount | null = null;
   public userEmail: string = '';
+  public hasMfuPeriod: boolean = false;
 
   public settingSections: SettingSection[] = [
-    {
-      title: 'Your FRED Updates',
-      items: [
-        {
-          title: 'Monthly Freedom Update',
-          subtitle: 'Review your latest freedom progress report',
-          icon: 'sparkles-outline',
-          action: 'monthlyFreedomUpdate',
-          type: 'action'
-        }
-      ]
-    },
     {
       title: 'Investment Management',
       items: [
@@ -216,7 +206,8 @@ export class Tab3Page implements OnInit, OnDestroy {
     private plaidService: PlaidService,
     private authService: AuthService,
     private toastService: ToastService,
-    private modalController: ModalController
+    private modalController: ModalController,
+    private mfuService: MonthlyFreedomUpdateService
   ) {
     addIcons({
       settingsOutline,
@@ -255,6 +246,7 @@ export class Tab3Page implements OnInit, OnDestroy {
 
     this.initializeSettingSections();
     this.setupDemoData();
+    this.checkMfuAvailability();
 
     // Subscribe to user preferences
     this.settingsService.getPreferences()
@@ -282,6 +274,8 @@ export class Tab3Page implements OnInit, OnDestroy {
     // Refresh bank account data when entering this page
     // This ensures we get the latest data from the backend if user is authenticated
     this.plaidService.refreshBankAccountData();
+    // Re-check MFU availability each time the tab is visited
+    this.checkMfuAvailability();
   }
 
   ngOnDestroy() {
@@ -292,6 +286,26 @@ export class Tab3Page implements OnInit, OnDestroy {
   private initializeSettingSections() {
     // This method will be called to set up the settings sections
     // The settingSections property is already defined as a static array above
+  }
+
+  private checkMfuAvailability() {
+    this.mfuService.checkShouldShow()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          // hasMfuHistory indicates the user has had at least one MFU generated
+          this.hasMfuPeriod = !!(data && (data.hasMfuHistory || data.shouldShow));
+        },
+        error: () => {
+          this.hasMfuPeriod = false;
+        }
+      });
+  }
+
+  onFredLogoClick() {
+    if (this.hasMfuPeriod) {
+      this.openMonthlyFreedomUpdate();
+    }
   }
 
   private setupDemoData() {

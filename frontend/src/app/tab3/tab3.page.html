@@ -10,7 +10,9 @@
           <p class="email">Firstname Lastname</p>
         </div>
       </div>
-      <div class="header-branding"> FRED</div>
+      <div class="header-branding"
+           [class.mfu-active]="hasMfuPeriod"
+           (click)="onFredLogoClick()"> FRED</div>
     </div>
   </div>
 </ion-header>

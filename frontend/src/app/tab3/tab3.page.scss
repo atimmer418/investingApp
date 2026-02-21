@@ -137,6 +137,23 @@ ion-header {
     line-height: 1;
     pointer-events: none; 
     margin: 0;
+
+    // When MFU period is available, make it look & act like a button
+    &.mfu-active {
+      pointer-events: auto;
+      cursor: pointer;
+      z-index: 11; // Above .user-details (z-index: 10) so clicks register
+      opacity: 0.85;
+      text-shadow:
+        0 0 8px rgba(255, 255, 255, 0.3);
+      -webkit-text-stroke: 0.6px rgba(255, 255, 255, 0.55);
+      transition: opacity 0.25s ease, text-shadow 0.25s ease;
+
+      &:active {
+        opacity: 0.6;
+        transform: translateY(calc(-50% + 8px)) scale(0.97);
+      }
+    }
   }
 }
 

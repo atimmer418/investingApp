@@ -64,6 +64,9 @@ export interface MonthlyFreedomUpdateData {
 
   // MFU count (number of unique non-reopen MFUs the user has seen)
   mfuCount: number;
+
+  // Whether the user has any MFU history available to reopen
+  hasMfuHistory: boolean;
 }
 
 @Injectable({

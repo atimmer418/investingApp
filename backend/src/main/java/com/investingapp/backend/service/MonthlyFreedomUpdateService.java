@@ -88,6 +88,9 @@ public class MonthlyFreedomUpdateService {
         MonthlyFreedomUpdateDTO dto = new MonthlyFreedomUpdateDTO();
         dto.setShouldShow(false);
 
+        // Check if user has any MFU history (has had at least one MFU period generated)
+        dto.setHasMfuHistory(user.getLastMfuPeriodStart() != null && !user.getLastMfuPeriodStart().isEmpty());
+
         String currentMonth = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
         String lastLoggedMonth = user.getLastLoggedInMonth();
 

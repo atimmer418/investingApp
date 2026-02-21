@@ -78,36 +78,6 @@
         </div>
       </div>
 
-      <!-- Quarterly Review (every 3rd MFU — replaces Best Next Move) -->
-      <div class="mfu-quarterly-review" *ngIf="data.showQuarterlyCompare">
-        <div class="mfu-quarterly-review__header">
-          <span class="material-symbols-outlined mfu-quarterly-review__icon">insights</span>
-          <h3 class="mfu-quarterly-review__title">Your Progress This Year</h3>
-        </div>
-        <p class="mfu-quarterly-review__subtitle">Compared to 12 months ago:</p>
-        <div class="mfu-quarterly-review__stats">
-          <div class="mfu-quarterly-review__stat">
-            <span class="mfu-quarterly-review__stat-value mfu-quarterly-review__stat-value--positive">
-              {{ formatYearlyNetWorth(data.netWorthChange) }}
-            </span>
-            <span class="mfu-quarterly-review__stat-label">net worth</span>
-          </div>
-          <div class="mfu-quarterly-review__stat">
-            <span class="mfu-quarterly-review__stat-value mfu-quarterly-review__stat-value--positive">
-              {{ formatYearsFreedom(data.freedomYearsChange) }}
-            </span>
-            <span class="mfu-quarterly-review__stat-label">years till freedom</span>
-          </div>
-          <div class="mfu-quarterly-review__stat">
-            <span class="mfu-quarterly-review__stat-value">
-              {{ formatCurrency(data.yearlyContributions) }}
-            </span>
-            <span class="mfu-quarterly-review__stat-label">invested this year</span>
-          </div>
-        </div>
-        <p class="mfu-quarterly-review__closing">You're further ahead today than you were a year ago.</p>
-      </div>
-
       <!-- Freedom Tracker -->
       <div class="mfu-tracker">
         <span class="material-symbols-outlined mfu-tracker__icon">rocket_launch</span>
@@ -117,6 +87,36 @@
           </p>
           <p class="mfu-tracker__subtitle">Based on historical 9% returns.</p>
         </div>
+      </div>
+
+      <!-- Quarterly Review (every 3rd MFU — replaces Best Next Move) -->
+      <div class="mfu-quarterly-review" *ngIf="data.showQuarterlyCompare">
+        <div class="mfu-quarterly-review__header">
+          <span class="material-symbols-outlined mfu-quarterly-review__icon">insights</span>
+          <h3 class="mfu-quarterly-review__title">Your Progress This Year</h3>
+        </div>
+        <p class="mfu-quarterly-review__subtitle" style="margin-top: 0px;"><i>Compared to 12 months ago:</i></p>
+        <div class="mfu-quarterly-review__stats">
+          <div class="mfu-quarterly-review__stat">
+            <span class="mfu-quarterly-review__stat-value mfu-quarterly-review__stat-value--positive">
+              {{ formatYearlyNetWorth(data.netWorthChange) }}
+            </span>
+            <span class="mfu-quarterly-review__stat-label">net worth</span>
+          </div>
+          <div class="mfu-quarterly-review__stat">
+            <span class="mfu-quarterly-review__stat-value mfu-quarterly-review__stat-value--positive">
+              {{ formatCurrency(data.yearlyContributions) }}
+            </span>
+            <span class="mfu-quarterly-review__stat-label">invested this year</span>
+          </div>
+          <div class="mfu-quarterly-review__stat">
+            <span class="mfu-quarterly-review__stat-value">
+              {{ formatYearsFreedom(data.freedomYearsChange) }}
+            </span>
+            <span class="mfu-quarterly-review__stat-label">years of corporate life</span>
+          </div>
+        </div>
+        <p class="mfu-quarterly-review__closing">You're further ahead today than you were a year ago.</p>
       </div>
 
       <!-- Best Next Move CTA (hidden on quarterly review months) -->
@@ -139,7 +139,7 @@
 
     <!-- Footer -->
     <div class="mfu-footer">
-      To see this again, tap "FRED" on the settings page.
+      To see this again, tap the FRED logo on the settings page.
     </div>
   </ng-container>
 </div>
