@@ -81,7 +81,7 @@ ion-header {
 
 .section-subtitle {
   color: #8e8e93;
-  font-size: 14px;
+  font-size: 12px;
   margin: 0;
 }
 
@@ -111,10 +111,12 @@ ion-header {
 
 .benefit-list {
   padding-left: 20px;
+  line-height: 1.2;
+  margin-top: 5px;
 }
 
 .li-detail {
-  font-size: 12.5px;
+  font-size: 11px;
 }
 
 .info-note {

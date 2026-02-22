@@ -552,10 +552,37 @@ export class PortfolioCustomizeComponent implements OnInit {
 
   // Reset to default portfolio
   resetToDefault() {
+    // If the user's saved portfolio is already the default, just show success toast
+    if (!this.isSavedPortfolioDifferentFromDefault()) {
+      this.portfolio = this.getDefaultPortfolioStructure();
+      this.toastService.showToast('Portfolio reset to default.', 'success');
+      return;
+    }
+
     // Reset local state only - changes are not persisted until "Save" is clicked
     this.portfolio = this.getDefaultPortfolioStructure();
     console.log('[PortfolioCustomizeComponent] Reset to default portfolio (frontend only)');
     this.toastService.showToast('Portfolio reset to default. Click Save to apply.', 'warning');
+  }
+
+  // Check if the user's saved (original) portfolio differs from the default portfolio
+  private isSavedPortfolioDifferentFromDefault(): boolean {
+    const defaultPortfolio = this.getDefaultPortfolioStructure();
+
+    if (this.originalPortfolio.length !== defaultPortfolio.length) {
+      return true;
+    }
+
+    for (let i = 0; i < this.originalPortfolio.length; i++) {
+      const saved = this.originalPortfolio[i];
+      const defaultStock = defaultPortfolio.find(stock => stock.symbol === saved.symbol);
+
+      if (!defaultStock || saved.percentage !== defaultStock.percentage) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   // Save portfolio and return to confirmation

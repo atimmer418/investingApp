@@ -477,7 +477,7 @@ export class Tab3Page implements OnInit, OnDestroy {
 
     const { data } = await modal.onDidDismiss();
     if (data?.action === 'updateContribution') {
-      const suggestedAmount = (data.currentAmount || 0) + 50;
+      const suggestedAmount = (data.currentAmount || 0) + (data.boostAmount || 50);
       this.router.navigate(['/recurring-investments'], {
         queryParams: { suggestedAmount: suggestedAmount }
       });

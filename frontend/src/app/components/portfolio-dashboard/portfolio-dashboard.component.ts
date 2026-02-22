@@ -116,8 +116,8 @@ export class PortfolioDashboardComponent implements OnInit {
 
     const { data } = await modal.onDidDismiss();
     if (data?.action === 'updateContribution') {
-      // Navigate to recurring investments with +$50 hint
-      const newAmount = (data.currentAmount || 0) + 50;
+      // Navigate to recurring investments with boost amount from MFU
+      const newAmount = (data.currentAmount || 0) + (data.boostAmount || 50);
       this.router.navigate(['/recurring-investments'], {
         queryParams: { suggestedAmount: newAmount }
       });

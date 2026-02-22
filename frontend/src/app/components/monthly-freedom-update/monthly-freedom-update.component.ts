@@ -100,7 +100,8 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
     this.modalController.dismiss({
       action: 'updateContribution',
       currentAmount: this.data?.currentInvestmentAmount || 0,
-      frequency: this.data?.investmentFrequency || 'MONTHLY'
+      frequency: this.data?.investmentFrequency || 'MONTHLY',
+      boostAmount: this.data?.bestNextMoveBoostAmount || 50
     });
   }
 

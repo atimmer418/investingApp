@@ -83,7 +83,7 @@
     </div>
 
     <!-- No Investment Schedule Message -->
-    <div class="no-schedule-section" *ngIf="!currentInvestment">
+    <div class="no-schedule-section" *ngIf="!currentInvestment && !isLoading">
       <div class="section-card mobile-card">
         <div class="empty-state">
           <ion-icon name="calendar-outline"></ion-icon>
