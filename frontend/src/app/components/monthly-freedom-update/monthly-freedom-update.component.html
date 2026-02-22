@@ -125,9 +125,9 @@
         <div class="mfu-cta__content">
           <div class="mfu-cta__header">
             <span class="material-symbols-outlined mfu-cta__bolt">bolt</span>
-            <span class="mfu-cta__label">Best Next Move</span>
+            <span class="mfu-cta__label">What If You Invested More?</span>
           </div>
-          <p class="mfu-cta__title">{{ bestNextMoveTitle }}</p>
+          <p class="mfu-cta__title" [innerHTML]="bestNextMoveTitle"></p>
           <p class="mfu-cta__description">{{ bestNextMoveDescription }}</p>
           <button class="mfu-cta__button" (click)="updateContribution()">
             Update Contribution
@@ -139,7 +139,7 @@
 
     <!-- Footer -->
     <div class="mfu-footer">
-      To see this again, tap the FRED logo on the settings page.
+      To see this again, tap "FRED" on the settings page.
     </div>
   </ng-container>
 </div>

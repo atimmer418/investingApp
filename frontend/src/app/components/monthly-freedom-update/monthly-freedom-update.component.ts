@@ -173,13 +173,13 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
 
   get bestNextMoveTitle(): string {
     if (!this.data) return '';
-    return `Retire ${this.data.bestNextMoveYearsEarlier} years earlier (${this.data.bestNextMoveYear})`;
+    return `Freedom Date: ${this.data.projectedFreedomYear} -> ${this.data.bestNextMoveYear}<br>(${this.data.bestNextMoveYearsEarlier} years sooner)`;
   }
 
   get bestNextMoveDescription(): string {
     if (!this.data) return '';
     const amount = this.data.bestNextMoveBoostAmount || 50;
-    return `Increase your contribution by just $${amount}/${this.data.frequencyLabel}.`;
+    return `If you increased your contribution by $${amount}/${this.data.frequencyLabel}.`;
   }
 
   formatYearlyNetWorth(amount: number | undefined | null): string {
