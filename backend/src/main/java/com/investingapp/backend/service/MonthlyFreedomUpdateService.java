@@ -28,7 +28,7 @@ public class MonthlyFreedomUpdateService {
 
     private static final Logger logger = LoggerFactory.getLogger(MonthlyFreedomUpdateService.class);
 
-    private static final double ASSUMED_ANNUAL_RETURN = 0.09;
+    private static final double ASSUMED_ANNUAL_RETURN = 0.12;
     private static final BigDecimal FIFTY_DOLLARS = new BigDecimal("50");
     private static final BigDecimal TWENTY_FIVE_DOLLARS = new BigDecimal("25");
 

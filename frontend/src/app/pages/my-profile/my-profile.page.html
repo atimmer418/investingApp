@@ -29,12 +29,12 @@
   <ion-card class="plan-card">
     <ion-card-content>
       <div class="card-header">
-        <span class="header-title">RETIREMENT PLAN</span>
+        <span class="header-title">FREEDOM PLAN</span>
         <ion-icon name="wallet-outline" class="header-icon"></ion-icon>
       </div>
 
       <div class="plan-sentence">
-        To retire with
+        To be free with
         <div class="inline-input-wrapper">
           <span class="prefix">$</span>
           <input type="number" [(ngModel)]="retirementIncomeGoal" (ngModelChange)="onIncomeChange()"
@@ -50,7 +50,7 @@
           <input type="number" [(ngModel)]="monthlyInvestGoal" (ngModelChange)="onInvestChange()" class="inline-input"
             oninput="if(this.value.length > 5) this.value = this.value.slice(0, 5);" />
           <span class="suffix">/mo</span>
-        </div>, you will reach that portfolio in <strong>{{ yearsToReach }} years</strong>.
+        </div>, you can reach that portfolio in <strong>{{ yearsToReach }} years</strong>.
       </div>
 
       <div class="insight-box">
@@ -61,9 +61,8 @@
           At your current investment rate of <strong>{{ currentScheduledInvestment | currency }} {{
             investmentFrequencyText }}</strong>
           <span *ngIf="currentMonthlyEquivalent > 0 && currentFrequency !== 'monthly'" style="color: var(--text-secondary); font-weight: normal;">
-            ({{ currentMonthlyEquivalent | currency:'USD':'symbol':'1.0-0' }}/mo)
-          </span>,
-          you'll reach <strong>{{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</strong> in roughly <strong>{{
+            ({{ currentMonthlyEquivalent | currency:'USD':'symbol':'1.0-0' }}/mo)</span>,
+          you'd reach <strong>{{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</strong> in roughly <strong>{{
             yearsToReachRemaining }} more years</strong>.
         </div>
 
@@ -77,7 +76,7 @@
       </div>
 
       <div class="disclaimer-text">
-        Our calculations assume a 9% average annual return.<br>Past performance is not indicative of future results.
+        Our calculations assume a conservative 12% average annual return.<br>Past performance is not indicative of future results.
       </div>
 
     </ion-card-content>

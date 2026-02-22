@@ -179,7 +179,7 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
   get bestNextMoveDescription(): string {
     if (!this.data) return '';
     const amount = this.data.bestNextMoveBoostAmount || 50;
-    return `If you increased your contribution by $${amount}/${this.data.frequencyLabel}.`;
+    return `If you increased contributions by $${amount}/${this.data.frequencyLabel}.`;
   }
 
   formatYearlyNetWorth(amount: number | undefined | null): string {
