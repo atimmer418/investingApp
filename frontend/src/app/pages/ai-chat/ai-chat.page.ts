@@ -73,14 +73,12 @@ export class AiChatPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    console.log('ngOnInit called');
     this.loadSessions();
     this.syncBackendHistory();
     this.loadDailySuggestions();
   }
 
   ngAfterViewInit() {
-    console.log('ngAfterViewInit called');
     // Give time for async operations to complete and populate messages
     setTimeout(() => {
       if (this.messages.length > 0) {
@@ -96,7 +94,6 @@ export class AiChatPage implements OnInit, AfterViewInit {
     if (this.messages.length > 0) {
       setTimeout(() => this.scrollToBottom(), 300);
     }
-    console.log('ionViewDidEnter');
   }
 
   ionViewWillLeave() {

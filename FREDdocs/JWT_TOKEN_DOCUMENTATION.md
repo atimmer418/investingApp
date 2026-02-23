@@ -1,276 +1,179 @@
 # JWT Token System Documentation
 
 ## Overview
-The JWT (JSON Web Token) system manages user authentication and session persistence in the investing app. Tokens have a 24-hour expiration and are stored in the browser's localStorage.
+The JWT (JSON Web Token) system manages user authentication and session persistence. Tokens have a **1-hour expiration** and are stored in the browser's localStorage. Active users get their tokens refreshed automatically — the JWT expiry effectively acts as the inactivity timeout. When a token expires (because the user was inactive), the app lock screen appears and the user re-authenticates with their passkey to get a fresh token.
 
 ## Token Structure
 
 ### JWT Claims (Payload)
-Each JWT token contains the following claims:
-
 ```json
 {
   "sub": "user@example.com",        // Subject: User's email
-  "jti": "a1b2c3d4-e5f6-7890-1234", // JWT ID: Unique token identifier
+  "jti": "a1b2c3d4-e5f6-7890-1234", // JWT ID: Unique token identifier (UUID)
   "iat": 1638360000,                // Issued At: When token was created
-  "exp": 1638446400,                // Expiration: When token expires
+  "exp": 1638363600,                // Expiration: 1 hour after creation
   "iss": "investingapp"             // Issuer: Application identifier
 }
 ```
 
-### Uniqueness Guarantee
-- **Each token is unique** due to the `jti` (JWT ID) claim containing a UUID
-- **Even if generated for the same user simultaneously**, tokens will have different JTI values
-- **Enables individual token tracking** for security and session management
+### localStorage Keys
+| Key | Value | Purpose |
+|-----|-------|---------|
+| `jwtToken` | JWT string | Auth header for API requests |
+| `jwtExpiration` | Unix timestamp (seconds) | Client-side expiry check |
+| `userId` | Database ID | Identify logged-in user |
+| `userEmail` | Email string | Display / identify user |
 
-## Token Flow
+## Token Lifecycle
 
-### 1. Token Generation & Storage
-- **When**: User successfully authenticates via passkey
-- **Storage Location**: Browser localStorage
-- **Data Stored**:
-  - `jwtToken`: The actual JWT token string
-  - `jwtExpiration`: Unix timestamp of expiration (24 hours from creation)
-  - `userId`: User's database ID
-  - `userEmail`: User's email address
+### 1. Token Creation
+Tokens are created in three scenarios:
+- **Passkey login**: `POST /api/passkey/authenticate/finish` → new JWT
+- **Passkey re-auth (lock screen)**: Same endpoint → new JWT
+- **Dev login** (non-production): `POST /api/dev/authenticate-as-user` → new JWT
+- **Token refresh**: `POST /api/auth/refresh` → new JWT (replaces current)
 
-### 2. Token Validation
-- **Auto-Check**: Every request validates token expiration
-- **Buffer Time**: 5-minute buffer before actual expiration
-- **Auto-Cleanup**: Expired tokens are automatically removed from localStorage
-
-### 3. Session Restoration
-On app startup, the system:
-1. Checks for valid (non-expired) JWT token
-2. If valid: Fetches user progress from backend and restores session
-3. If invalid/expired: User needs to re-authenticate
-
-## Code Implementation
-
-### Frontend (TypeScript)
+### 2. Token Storage
 ```typescript
-// JWT Token Utilities - /frontend/src/app/utils/jwt-token.utils.ts
+// JwtTokenUtils.storeJwtToken(token, userId, email)
+// Decodes the JWT payload to extract `exp`, stores all four localStorage keys
+```
+
+### 3. Token Refresh (Proactive)
+The `AppLockService` runs a check every 60 seconds:
+- If user was **active within the last 5 minutes** AND token **expires within 30 minutes** → call `POST /api/auth/refresh`
+- The 30-minute window (half the token lifetime) ensures any user active past the halfway point of a token's life gets a refresh
+- The refresh endpoint validates the current JWT, then issues a brand new 1-hour token
+- **Net effect**: Token never expires while the user is actively using the app
+
+### 4. Token Expiry → App Lock
+When the token expires (user stopped interacting and refresh stopped):
+- `checkTokenExpiry()` runs every 60 seconds, calls `JwtTokenUtils.getValidJwtToken()`
+- If it returns `null` and user was previously logged in (`userId` in localStorage) → **lock screen**
+- Lock screen uses passkey re-auth (`/api/passkey/**` — `permitAll` endpoints, no JWT needed)
+- Successful passkey auth issues a fresh JWT → app unlocks
+
+## Inactivity & App Lock Flow
+
+### Single-Clock Design
+There is **no separate inactivity timer**. The JWT expiry IS the inactivity timeout:
+
+```
+User active → activity tracked (touch/click/keydown/scroll/HTTP requests)
+           → token refreshed proactively when nearing expiry
+           → token never expires
+
+User inactive → no activity events
+             → after 5 min of no interaction, token stops being refreshed
+             → token expires naturally (30-60 min from last refresh)
+             → lock screen appears
+             → passkey re-auth → new JWT → unlock
+```
+
+### Effective Timeout
+- **Minimum**: ~30 min of inactivity (if user stopped right after a refresh at the 30-min mark)
+- **Maximum**: ~60 min of inactivity (if user stopped right after getting a fresh token)
+
+### App Backgrounding
+- No code runs while the app is in background — no refresh happens
+- On resume:
+  - If **App Lock setting is ON** → always lock (security preference)
+  - If **App Lock setting is OFF** → lock only if JWT expired while backgrounded
+- Passkey re-auth works regardless of token state (endpoints are `permitAll`)
+
+### Activity Tracking
+Activity is captured from two sources:
+1. **DOM events** in `AppComponent`: `touchstart`, `touchmove`, `scroll`, `click`, `keydown` — throttled to 1 update per 60 seconds via RxJS `throttleTime`
+2. **HTTP requests** via functional interceptor in `main.ts`: every API call updates `lastActiveTime`
+
+Both call `AppLockService.updateLastActiveTime()`.
+
+## Code Reference
+
+### Frontend
+
+#### JwtTokenUtils (`/frontend/src/app/utils/jwt-token.utils.ts`)
+```typescript
 export class JwtTokenUtils {
-  
-  // Store JWT with user info
   static storeJwtToken(token: string, userId?: number, email?: string): void
-  
-  // Check if token is expired (with 5-min buffer) - USE THIS FOR AUTHENTICATION CHECKS
-  static isJwtExpired(): boolean
-  
-  // Get valid token or null if expired - USE THIS FOR API REQUESTS
-  static getValidJwtToken(): string | null
-  
-  // Clear all JWT data
-  static clearJwtData(): void
-  
-  // Get minutes until expiration
-  static getMinutesUntilExpiration(): number | null
+  static isJwtExpired(): boolean                    // Pure check, no side effects
+  static getValidJwtToken(): string | null          // Returns token or null if expired (non-destructive)
+  static shouldRefreshToken(): boolean              // True if valid but ≤30 min until expiry
+  static getMinutesUntilExpiration(): number | null // Minutes remaining
+  static clearJwtData(): void                       // Remove all 4 localStorage keys
 }
 ```
 
-### **Best Practices for JWT Utility Usage:**
+Key behaviors:
+- `isJwtExpired()` — no buffer, no side effects. Returns `true` if `Date.now() >= exp * 1000`
+- `getValidJwtToken()` — **non-destructive**: returns `null` if expired but does NOT clear data
+- `shouldRefreshToken()` — returns `true` when token is valid AND ≤30 min until expiry
 
-#### ✅ **Use `isJwtExpired()` for:**
-- Authentication state checks
-- Deciding if user needs to re-authenticate
-- Component initialization logic
-- Progress flow decisions
-
+#### AuthService (`/frontend/src/app/services/auth.service.ts`)
 ```typescript
-// ✅ CORRECT - Check authentication state
-isAuthenticated(): boolean {
-  return !JwtTokenUtils.isJwtExpired();
-}
+// Token refresh — called by AppLockService
+refreshToken(): Observable<boolean>
+  // POST /api/auth/refresh with current JWT in Authorization header
+  // On success: stores new JWT via JwtTokenUtils.storeJwtToken()
+  // On failure: returns false, does not clear session
 
-// ✅ CORRECT - Component authentication check
-ngOnInit() {
-  this.isUserAuthenticated = !JwtTokenUtils.isJwtExpired();
-}
-
-// ✅ CORRECT - Re-authentication logic
-shouldPromptForPasskeyReauth(): boolean {
-  return JwtTokenUtils.isJwtExpired();
-}
+// Session check on app startup
+checkExistingSession(): void
+  // Valid token → isLoggedIn = true, load progress from API
+  // Expired/missing → clearJwtData(), load progress from localStorage
+  // Production + passkey support → may prompt passkey re-auth
 ```
 
-#### ✅ **Use `getValidJwtToken()` for:**
-- API request headers
-- When you need the actual token value
-- Backend authentication calls
-
+#### AppLockService (`/frontend/src/app/services/app-lock.service.ts`)
 ```typescript
-// ✅ CORRECT - API request headers
-private getAuthHeaders(): HttpHeaders {
-  const token = JwtTokenUtils.getValidJwtToken();
-  if (token) {
-    headers = headers.set('Authorization', `Bearer ${token}`);
-  }
-  return headers;
-}
+// Runs every 60 seconds:
+checkTokenRefresh()   // Refresh if active (last 5 min) AND token expiring (≤30 min)
+checkTokenExpiry()    // Lock if token expired AND user was logged in
 
-// ✅ CORRECT - API call with token
-makeAuthenticatedRequest() {
-  const token = JwtTokenUtils.getValidJwtToken();
-  if (token) {
-    // Make API call
-  } else {
-    // Redirect to login
-  }
-}
+// On app resume from background:
+checkLockOnResume()   // App Lock ON → always lock; OFF → lock if token expired
+
+// Activity tracking:
+updateLastActiveTime()  // Called by AppComponent (DOM events) and HTTP interceptor
 ```
 
-#### ❌ **Avoid These Patterns:**
-```typescript
-// ❌ WRONG - Don't check localStorage directly
-const token = localStorage.getItem('jwtToken');
-const isAuth = !!token; // Doesn't check expiration!
+### Backend
 
-// ❌ WRONG - Don't duplicate expiration logic
-const expiration = localStorage.getItem('jwtExpiration');
-const isExpired = Date.now() > parseInt(expiration) * 1000;
+#### Token Refresh Endpoint (`AuthController.java`)
+```
+POST /api/auth/refresh
+Authorization: Bearer <current-valid-jwt>
 
-// ❌ WRONG - Don't use getValidJwtToken() for boolean checks
-const isAuth = !!JwtTokenUtils.getValidJwtToken(); // Less clear intent
+Response: { success: true, jwtToken: "<new-jwt>", id: 123, email: "user@example.com" }
+```
+- Requires a valid (non-expired) JWT — uses `SecurityContextHolder` to get current auth
+- Issues a fresh 1-hour token for the same user
+
+#### AuthTokenFilter (`/backend/.../security/jwt/AuthTokenFilter.java`)
+- Intercepts every request, extracts JWT from `Authorization` header
+- Validates signature and expiration using JJWT library
+- Sets `SecurityContext` with authenticated user for downstream controllers
+- All log statements are `logger.debug()` level (not info)
+
+#### SecurityConfig — Endpoint Authorization
+```
+permitAll (no JWT needed):
+  /api/auth/**          — login, register, refresh
+  /api/passkey/**       — passkey start/finish (used by lock screen)
+  /api/dev/**           — dev-only auth endpoints
+  /api/user/should-prompt-reauth
+  /api/plaid/create_link_token_anonymous
+  /api/plaid/exchange_public_token_anonymous
+
+authenticated (JWT required):
+  /api/user/progress    — user progress data
+  Everything else       — all other /api/** endpoints
 ```
 
-### Authentication Service
-```typescript
-// /frontend/src/app/services/auth.service.ts
-export class AuthService {
-  
-  // Check existing session on app startup
-  private checkExistingSession(): void
-  
-  // Handle successful authentication
-  handleSuccessfulAuthentication(jwtToken: string, userId: number, email: string): void
-  
-  // Check if should prompt for passkey re-auth (IP-based + passkey support)
-  shouldPromptForPasskeyReauth(): Promise<boolean>
-  
-  // Prompt user for usernameless passkey authentication
-  promptForPasskeyReauth(): Promise<boolean>
-  
-  // Check if device supports WebAuthn passkeys
-  supportsPasskeys(): boolean
-}
-```
+## Security Notes
 
-## App State Persistence
-
-### Scenario 1: User Switches Apps (Token Still Valid)
-- **Behavior**: User returns to the same page they left
-- **Example**: User leaves app on "portfolio customize" page, returns to same page
-- **Condition**: JWT token hasn't expired and app wasn't terminated
-
-### Scenario 2: User Returns After Token Expiration
-- **Behavior**: User is redirected based on their progress in the onboarding flow
-- **Flow**: get-started → surveyinitial → fi-plan-results → authfinalize → kyc-verification → linkplaid → investment-schedule → investmentconfirmation → home
-- **Condition**: JWT token expired (after 24 hours)
-
-### Scenario 3: App Backgrounding
-- **Behavior**: User typically stays on current page when returning
-- **Condition**: App backgrounded but not terminated by OS
-
-## Token Expiration Handling
-
-### Automatic Detection
-```typescript
-// System automatically detects expired tokens
-const token = JwtTokenUtils.getValidJwtToken();
-if (!token) {
-  // Token expired - check for re-authentication options
-  if (await this.shouldPromptForPasskeyReauth()) {
-    // User's IP is in database AND device supports passkeys - can prompt for usernameless auth
-    await this.promptForPasskeyReauth();
-  } else {
-    // New IP or no passkey support - redirect to get-started
-    this.router.navigate(['/get-started']);
-  }
-}
-```
-
-### Re-authentication Flow
-1. **Detection**: System detects expired token
-2. **Passkey Check**: Uses WebAuthn discoverable credentials (usernameless authentication)
-3. **Smart Prompt**: Only prompts for re-auth if user's IP address is in database (indicating previous registration)
-4. **Benefit**: User doesn't need to provide any information - passkeys identify the user automatically
-5. **Implementation**: Fully integrated with WebAuthnService usernameless authentication methods
-
-## Usernameless Passkey Authentication
-
-### How It Works
-- **No Email Required**: WebAuthn discoverable credentials allow authentication without username/email
-- **Device Recognition**: Passkeys are stored on the user's device and automatically identify the user
-- **Smart Re-auth**: System only prompts for passkey if user's IP address exists in database
-- **Seamless Flow**: User just needs to authenticate with their passkey (fingerprint, face, etc.)
-
-### Implementation Details
-```typescript
-// Backend - WebAuthnService usernameless authentication
-startAuthenticationFlow(): AssertionRequest
-finishAuthenticationFlow(assertionResponse: AuthenticatorAssertionResponse): AuthenticationResult
-
-// Frontend - AuthService integration
-async shouldPromptForPasskeyReauth(): Promise<boolean> {
-  if (!this.supportsPasskeys()) return false;
-  
-  try {
-    const response = await this.http.get<{shouldPrompt: boolean}>('/api/user/should-prompt-reauth').toPromise();
-    return response?.shouldPrompt || false;
-  } catch {
-    return false;
-  }
-}
-```
-
-### Smart IP-Based Prompting
-- **Purpose**: Only show passkey prompt to users who have previously registered
-- **Logic**: Check if current IP address exists in database from previous authfinalize step
-- **Fallback**: If IP not found or passkeys not supported, redirect to normal flow
-- **Security**: Prevents prompting random users for passkey authentication
-
-## Security Features
-
-### Token Uniqueness
-- **JWT ID (JTI)**: Each token has a unique UUID identifier
-- **Prevents token confusion**: No two tokens are identical, even for the same user
-- **Enables token revocation**: Individual tokens can be blacklisted by JTI
-
-### IP Address Tracking
-- **When**: User completes `authfinalize` step
-- **Storage**: Recorded in user database
-- **Purpose**: Security tracking and fraud prevention
-- **Implementation**: Handles proxies and load balancers
-
-### Token Buffer
-- **5-minute buffer**: Tokens considered expired 5 minutes before actual expiration
-- **Purpose**: Prevents edge cases where token expires during active use
-- **Behavior**: Automatic refresh/re-authentication prompt
-
-### Enhanced Security Benefits
-1. **Session Tracking**: Each login creates a unique token that can be individually monitored
-2. **Token Revocation**: Specific tokens can be invalidated without affecting other user sessions
-3. **Audit Trail**: JWT ID provides clear tracking of which token was used for each action
-4. **Replay Attack Prevention**: Unique tokens prevent reuse even within expiration window
-5. **Multi-Device Support**: Users can have multiple active sessions with unique tokens
-
-## Development Notes
-
-### Testing
-- **Mock Tokens**: Test users get mock JWT tokens for development
-- **Identifier**: Test tokens contain `mock_signature_for_testing`
-- **Behavior**: Different handling for test vs. production tokens
-
-### Error Handling
-- **Server Validation**: Backend validates all JWT tokens
-- **Graceful Degradation**: Invalid tokens result in clean logout and re-auth prompt
-- **Logging**: Comprehensive logging for debugging authentication issues
-
-## Future Enhancements
-
-### Potential Improvements
-1. **Refresh Tokens**: Implement refresh tokens for seamless session extension
-2. **Biometric Quick Auth**: Use device biometrics for quick re-authentication
-3. **Session Analytics**: Track session patterns for security insights
-4. **Multi-Device Management**: Handle multiple active sessions across devices
+- **Token uniqueness**: Each token has a UUID `jti` claim — no two tokens are identical
+- **Signing**: HS512 (HMAC-SHA512) with a secret key configured in `application.properties`
+- **Passkey re-auth is JWT-independent**: Lock screen works even with an expired token because passkey endpoints are `permitAll` and issue a new JWT on success
+- **CORS**: Explicit allowed headers (`Authorization`, `Content-Type`, `X-Device-ID`, `Accept`, `Origin`) — no wildcard
+- **Dev endpoints**: `/api/dev/**` is `permitAll` — should be behind `@Profile("dev")` or removed in production

@@ -9,19 +9,17 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter; // Use OncePerRequestFilter
 
 import java.io.IOException;
 
-// @Component // Mark as a Spring component to be auto-detected
+// AuthTokenFilter - processes JWT authentication for each request
 public class AuthTokenFilter extends OncePerRequestFilter { // Extend OncePerRequestFilter
     @Autowired
     private JwtUtils jwtUtils;
@@ -37,26 +35,25 @@ public class AuthTokenFilter extends OncePerRequestFilter { // Extend OncePerReq
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        logger.info("AuthTokenFilter: Processing request to {}", request.getRequestURI());
+        logger.debug("AuthTokenFilter: Processing request to {}", request.getRequestURI());
 
         // If already authenticated from a previous pass of this filter in the same
         // request, skip
         Authentication existingAuthentication = SecurityContextHolder.getContext().getAuthentication();
         if (existingAuthentication != null && existingAuthentication.isAuthenticated() &&
                 !(existingAuthentication instanceof AnonymousAuthenticationToken)) {
-            logger.info(
-                    "AuthTokenFilter: Already authenticated as '{}' for request {}. Skipping further JWT processing.",
+            logger.debug(
+                    "AuthTokenFilter: Already authenticated as '{}' for request {}. Skipping.",
                     existingAuthentication.getName(), request.getRequestURI());
-            filterChain.doFilter(request, response); // Pass to next filter
-            logger.info("AuthTokenFilter: END (already authenticated) for request {}", request.getRequestURI());
-            return; // <<<<----- CRUCIAL: Exit filter early
+            filterChain.doFilter(request, response);
+            return;
         }
 
         try {
-            String jwt = parseJwt(request); // Ensure parseJwt is working (from your JwtUtils or locally)
+            String jwt = parseJwt(request);
 
             if (jwt != null) {
-                boolean isValid = jwtUtils.validateJwtToken(jwt); // Explicitly store result
+                boolean isValid = jwtUtils.validateJwtToken(jwt);
                 if (isValid) {
                     // Check for Session Revocation
                     Long sessionId = jwtUtils.getSessionIdFromJwtToken(jwt);
@@ -66,7 +63,7 @@ public class AuthTokenFilter extends OncePerRequestFilter { // Extend OncePerReq
                                 .orElse(false);
                         
                         if (!isSessionActive) {
-                            logger.warn("AuthTokenFilter: Session {} is revoked or invalid. Blocking request.", sessionId);
+                            logger.warn("AuthTokenFilter: Session {} is revoked. Blocking request to {}.", sessionId, request.getRequestURI());
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Session has been revoked");
                             return;
                         }
@@ -82,22 +79,18 @@ public class AuthTokenFilter extends OncePerRequestFilter { // Extend OncePerReq
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    logger.info("AuthTokenFilter: User '{}' authenticated and set in SecurityContext with {}.", email, userDetails.getAuthorities());
+                    logger.debug("AuthTokenFilter: User '{}' authenticated for {}.", email, request.getRequestURI());
                 } else {
-                    logger.warn("AuthTokenFilter: JWT token is invalid and was not set in SecurityContext.");
+                    logger.debug("AuthTokenFilter: Invalid JWT token for request {}.", request.getRequestURI());
                 }
             } else {
-                logger.info("AuthTokenFilter: No JWT token found in Authorization header.");
+                logger.debug("AuthTokenFilter: No JWT token in request to {}.", request.getRequestURI());
             }
         } catch (Exception e) {
-            // This catch block might be too broad; specific exceptions are caught in
-            // validateJwtToken
-            // But good for unexpected errors during the filter process.
-            logger.error("AuthTokenFilter: Error processing JWT authentication: {}", e.getMessage(), e);
+            logger.error("AuthTokenFilter: Error processing JWT for {}: {}", request.getRequestURI(), e.getMessage());
         }
-        logger.info("AuthTokenFilter START: Request Hash: {}, URI: {}", request.hashCode(), request.getRequestURI());
+
         filterChain.doFilter(request, response);
-        logger.info("AuthTokenFilter END: Request Hash: {}, URI: {}", request.hashCode(), request.getRequestURI());
     }
 
     private String parseJwt(HttpServletRequest request) {

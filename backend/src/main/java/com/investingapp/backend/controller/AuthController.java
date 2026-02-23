@@ -141,4 +141,43 @@ public class AuthController {
                 .body(new MessageResponse("Login process error.")); // Should not reach here
     }
 
+    /**
+     * Refresh JWT token endpoint.
+     * Accepts a valid (not-yet-expired) JWT and returns a new one with a fresh expiration.
+     * The frontend calls this proactively when the token is close to expiring and the user is active.
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken() {
+        // The request already passed through AuthTokenFilter, so if we get here
+        // the user is authenticated with a valid JWT
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null || !authentication.isAuthenticated() 
+                || "anonymousUser".equals(authentication.getPrincipal().toString())) {
+            logger.warn("Token refresh attempted without valid authentication");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("No valid token to refresh"));
+        }
+
+        String username = authentication.getName();
+        String newToken = jwtUtils.generateTokenFromUsername(username);
+        
+        // Look up user to include id and email in response
+        User user = userService.getUserByEmail(username);
+        if (user == null) {
+            logger.error("Token refresh failed: user not found for email {}", username);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("User not found"));
+        }
+
+        logger.info("JWT token refreshed for user: {}", username);
+        
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "jwtToken", newToken,
+                "id", user.getId(),
+                "email", user.getEmail()
+        ));
+    }
+
 }

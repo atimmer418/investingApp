@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { App, AppState } from '@capacitor/app';
 import { BehaviorSubject } from 'rxjs';
 import { Platform, ModalController } from '@ionic/angular/standalone';
 import { PasskeyPromptComponent } from '../components/passkey-prompt/passkey-prompt.component';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,17 +14,34 @@ export class AppLockService {
   public isLocked$ = this.isLockedSubject.asObservable();
   
   private readonly LOCK_ENABLED_KEY = 'app_lock_enabled';
-  private readonly INACTIVITY_THRESHOLD_MS = 60 * 60 * 1000; // 1 hour
+
+  /**
+   * How recently the user must have interacted to be considered "active"
+   * for token refresh purposes. If user hasn't touched the app in 5 min,
+   * we stop refreshing — letting the JWT expire naturally (which triggers the lock).
+   */
+  private readonly REFRESH_ACTIVITY_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
   
   private lastActiveTime: number = Date.now();
   private isModalOpen = false;
-  private inactivityCheckInterval: any;
+  private checkInterval: any;
+
+  // Use Injector to break circular dependency (AppLockService ↔ AuthService)
+  private _authService: any;
 
   constructor(
     private platform: Platform,
-    private modalController: ModalController
+    private modalController: ModalController,
+    private injector: Injector
   ) {
     this.init();
+  }
+
+  private getAuthService(): AuthService {
+    if (!this._authService) {
+      this._authService = this.injector.get(AuthService);
+    }
+    return this._authService;
   }
 
   private init() {
@@ -31,33 +49,57 @@ export class AppLockService {
       App.addListener('appStateChange', (state: AppState) => {
         this.handleAppStateChange(state);
       });
-
-      // Start periodic check for inactivity while app is open
-      this.startInactivityCheck();
+      this.startPeriodicCheck();
     });
   }
 
-  private startInactivityCheck() {
-    // Check every minute
-    this.inactivityCheckInterval = setInterval(() => {
-      this.checkInactivityWhileForeground();
-    }, 60 * 1000); 
+  /**
+   * Every 60 seconds:
+   * 1. If user is active and token is expiring soon → refresh token
+   * 2. If token has expired → lock app (passkey reauth will issue a new JWT)
+   */
+  private startPeriodicCheck() {
+    this.checkInterval = setInterval(() => {
+      this.checkTokenRefresh();
+      this.checkTokenExpiry();
+    }, 60 * 1000);
   }
 
-  private async checkInactivityWhileForeground() {
-    // If already locked or app lock is enabled (which locks on resume anyway), skip
-    // Actually, if App Lock is enabled, we might still want to lock if they leave the screen on for > 1 hour?
-    // The requirement says: "if a user has been active on the frontend but not the backend... when the timer expires, the user should see the app lock screen"
-    
-    // Only check if logged in
-    const token = JwtTokenUtils.getValidJwtToken();
-    if (!token) return;
+  /**
+   * Proactively refresh the JWT if user was active within the last 5 minutes
+   * AND the token is within 15 minutes of expiry. This keeps the token alive
+   * while the user is actively using the app.
+   *
+   * Once the user stops interacting, the token stops refreshing and will
+   * eventually expire — which triggers the lock screen.
+   */
+  private checkTokenRefresh() {
+    if (!JwtTokenUtils.getValidJwtToken()) return;
 
     const now = Date.now();
-    if (now - this.lastActiveTime > this.INACTIVITY_THRESHOLD_MS) {
-      console.log('Inactivity threshold exceeded while in foreground. Locking app.');
+    const recentlyActive = (now - this.lastActiveTime) < this.REFRESH_ACTIVITY_THRESHOLD_MS;
+
+    if (recentlyActive && JwtTokenUtils.shouldRefreshToken()) {
+      this.getAuthService().refreshToken().subscribe();
+    }
+  }
+
+  /**
+   * If the JWT has expired and the user was previously logged in, lock the app.
+   * This is the primary lock trigger — the JWT expiry IS the session timeout.
+   * Passkey reauth endpoints are permitAll, so they work without a valid JWT.
+   */
+  private async checkTokenExpiry() {
+    if (!this.isUserLoggedIn()) return;
+
+    if (!JwtTokenUtils.getValidJwtToken()) {
       await this.lockApp();
     }
+  }
+
+  /** Check if the user has an active session (regardless of token validity) */
+  private isUserLoggedIn(): boolean {
+    return !!localStorage.getItem('userId');
   }
 
   public updateLastActiveTime() {
@@ -66,31 +108,28 @@ export class AppLockService {
 
   private async handleAppStateChange(state: AppState) {
     if (!state.isActive) {
-      // App went to background
+      // App went to background — record when they left
       this.lastActiveTime = Date.now();
     } else {
-      // App came to foreground
-      await this.checkLockRequirement();
+      // App came back to foreground
+      await this.checkLockOnResume();
     }
   }
 
-  private async checkLockRequirement() {
-    // Only lock if user is logged in (has a token)
-    const token = JwtTokenUtils.getValidJwtToken();
-    if (!token) {
-      return;
-    }
+  /**
+   * When app returns to foreground:
+   * - If App Lock is enabled: always lock (security setting)
+   * - Otherwise: lock if JWT expired while in background
+   */
+  private async checkLockOnResume() {
+    if (!this.isUserLoggedIn()) return;
 
     if (this.isEnabled()) {
-      // App Lock Enabled: Always lock on resume
+      // App Lock setting ON: always require reauth on resume
       await this.lockApp();
-    } else {
-      // App Lock Disabled: Check inactivity
-      const now = Date.now();
-      if (now - this.lastActiveTime > this.INACTIVITY_THRESHOLD_MS) {
-        console.log('Inactivity threshold exceeded. Locking app.');
-        await this.lockApp();
-      }
+    } else if (!JwtTokenUtils.getValidJwtToken()) {
+      // Token expired while backgrounded → lock
+      await this.lockApp();
     }
   }
 

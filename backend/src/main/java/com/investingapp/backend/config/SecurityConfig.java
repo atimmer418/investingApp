@@ -39,13 +39,9 @@ public class SecurityConfig {
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
 
-    // Assuming your Angular app (when accessed from iPhone) runs on port 8100
-    // and your MacBook's IP is something like 192.168.1.123
-    // You should get this from your application.properties or environment variables if possible,
-    // or define it clearly here. For now, let's hardcode for demonstration.
-    // IMPORTANT: Replace "YOUR_MACBOOK_IP_ADDRESS" with your actual MacBook's IP.
-    // IMPORTANT: Replace "YOUR_ANGULAR_PORT_ON_IPHONE" with the port (e.g., 8100, 4200).
-    private final String iphoneAngularOrigin = "http://YOUR_MACBOOK_IP_ADDRESS:YOUR_ANGULAR_PORT_ON_IPHONE";
+    // Additional allowed origin for testing on physical devices (set via environment variable)
+    @Value("${cors.additional.origin:}")
+    private String additionalCorsOrigin;
 
 
     @Bean
@@ -79,22 +75,24 @@ public class SecurityConfig {
         // - localhost for local browser testing
         // - capacitor://localhost, ionic://localhost if you use those schemes for native builds
         // - The IP address origin for testing on your physical iPhone
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:8100",          // Common for Ionic/Capacitor serve
-                "http://localhost:4200",          // Common for ng serve
-                "http://localhost:3000",          // Common for ng serve
+        List<String> origins = new java.util.ArrayList<>(Arrays.asList(
+                "http://localhost:8100",
+                "http://localhost:4200",
+                "http://localhost:3000",
                 "capacitor://localhost",
                 "ionic://localhost",
-                "http://localhost",               // Sometimes needed by native wrappers
-                iphoneAngularOrigin,               // Your iPhone's access point
-                "http://192.168.1.166:3000",
-                "http://api-test.fredvested.com:3000",
+                "http://localhost",
                 "https://potential-engine-97999gqqw9q4hpj7w-8100.app.github.dev",
                 "https://local.fredvested.com"
         ));
+        // Add optional additional origin from environment (e.g., for physical device testing)
+        if (additionalCorsOrigin != null && !additionalCorsOrigin.isBlank()) {
+            origins.add(additionalCorsOrigin);
+        }
+        configuration.setAllowedOrigins(origins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("*")); // Allow all headers
-        configuration.setAllowCredentials(true); // Important for cookies, authorization headers with HTTPS
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Device-ID", "Accept", "Origin"));
+        configuration.setAllowCredentials(true);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration); // Apply this configuration to all paths
@@ -118,7 +116,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/plaid/exchange_public_token_anonymous").permitAll()
                 .requestMatchers("/api/passkey/**").permitAll()
                 .requestMatchers("/api/user/should-prompt-reauth").permitAll() // Allow checking reauth status without authentication
-                .requestMatchers("/api/user/progress").permitAll() // Allow checking user progress without authentication
                 .requestMatchers("/api/dev/**").permitAll() // 🧪 DEV ONLY: Allow dev endpoints without authentication
                 .requestMatchers("/hello").permitAll()
                 .anyRequest().authenticated()

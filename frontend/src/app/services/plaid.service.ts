@@ -32,7 +32,7 @@ export class PlaidService {
   private currentAccountSubject = new BehaviorSubject<BankAccount | null>(null);
 
   constructor(private http: HttpClient) {
-    this.loadBankAccounts();
+    // Don't eagerly load bank accounts — consumers call refreshBankAccountData() when needed
   }
 
   // Observable for bank accounts

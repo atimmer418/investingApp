@@ -49,6 +49,7 @@ export class AuthService {
   public userProgress$ = this.userProgressSubject.asObservable();
 
   private reAuthInProgress = false;
+  private tokenRefreshInProgress = false;
 
   constructor(private http: HttpClient, private deviceIdService: DeviceIdService) {
     // Check if user is already logged in on app start
@@ -70,115 +71,52 @@ export class AuthService {
   }
 
   private checkExistingSession(): void {
-    const token = JwtTokenUtils.getValidJwtToken(); // This checks expiration automatically
-    if (token && !JwtTokenUtils.isJwtExpired()) {
-      // Check if this is a test user (mock JWT)
-      const isTestUser = token.includes('mock_signature_for_testing');
-
-      if (isTestUser) {
-        console.log('[AuthService] Test user detected, using simulated session');
-        this.isLoggedInSubject.next(true);
-        // For test users, create mock progress (the app will read from localStorage)
-        const mockProgress = {
-          getStartedCompleted: true,
-          surveyInitialCompleted: true,
-          fiPlanResultsCompleted: true,
-          authFinalizeCompleted: true,
-          kycVerificationCompleted: true,
-          linkPlaidCompleted: true,
-          investmentScheduleCompleted: false,
-          investmentConfirmationCompleted: false
-        };
-        this.userProgressSubject.next(mockProgress);
-        return;
-      }
-
-      // Real user - validate with server and get user progress
-      this.getUserProgress().subscribe({
-        next: (progress) => {
-          this.isLoggedInSubject.next(true);
-          this.userProgressSubject.next(progress);
-          console.log('[AuthService] Existing session restored with progress:', progress);
-        },
-        error: (err) => {
-          console.error('[AuthService] Invalid token or server error, clearing session:', err);
-          this.logout();
-        }
-      });
+    const token = JwtTokenUtils.getValidJwtToken();
+    
+    if (token) {
+      // Valid token exists — restore session and load progress from backend
+      this.isLoggedInSubject.next(true);
+      this.loadUserProgress();
     } else {
-      console.log('[AuthService] JWT token expired or missing, checking if should prompt for passkey re-auth');
-
-      // For non-authenticated users, load their localStorage progress into the subject
-      // This ensures getUnifiedProgress() and components have consistent access to progress
+      // No valid token — set up localStorage progress for unauthenticated state
+      // Clear any stale JWT data since token is expired/missing
+      JwtTokenUtils.clearJwtData();
       const localStorageProgress = this.buildProgressFromLocalStorage();
       this.userProgressSubject.next(localStorageProgress);
-      console.log('[AuthService] Loaded localStorage progress for non-authenticated user:', localStorageProgress);
 
-      // Check if this device should be prompted for passkey re-authentication
-      if (this.supportsPasskeys()) {
+      // In production, check if device should prompt for passkey re-auth
+      if (environment.production && this.supportsPasskeys()) {
         this.shouldPromptForReauth().subscribe({
           next: async (response) => {
             if (response.shouldPromptReauth) {
-              console.log('[AuthService] Device has previous users, prompting for passkey re-auth');
-              const reauthSuccess = await this.promptForPasskeyReauth();
-
-              if (!reauthSuccess) {
-                console.log('[AuthService] Passkey re-auth failed or cancelled, user needs to authenticate normally');
-                // User will be directed by app.component.ts routing logic
-              }
-            } else {
-              console.log('[AuthService] New device or no completed registrations, no passkey prompt needed');
-              // User will be directed by app.component.ts routing logic
+              await this.promptForPasskeyReauth();
             }
           },
-          error: (err) => {
-            console.error('[AuthService] Error checking reauth prompt status, skipping passkey prompt:', err);
-            // Continue with normal flow
-          }
+          error: () => { /* Continue with normal flow */ }
         });
-      } else {
-        console.log('[AuthService] Device does not support passkeys');
-        // User will be directed by app.component.ts routing logic
       }
     }
   }
 
-  // This method should be called after successful passkey registration/authentication
-  // Your existing PasskeyService already handles the JWT storage, so this just updates the auth state
+  /**
+   * Called after successful authentication (passkey, dev login, etc.).
+   * Stores JWT once, syncs localStorage progress if needed, then loads backend progress.
+   */
   handleSuccessfulAuthentication(jwtToken: string, userId: number, email: string): void {
     JwtTokenUtils.storeJwtToken(jwtToken, userId, email);
     this.isLoggedInSubject.next(true);
 
-    // Check if this is a first-time authentication (user just completed authfinalize)
-    // If so, sync their localStorage progress to the database
+    // Check if there's pre-auth localStorage progress to sync
     const hasLocalProgress = localStorage.getItem('getStartedCompleted') === 'true' ||
       localStorage.getItem('surveyInitialCompleted') === 'true' ||
       localStorage.getItem('fiPlanResultsCompleted') === 'true';
 
-    console.log('[AuthService] Checking for localStorage progress to sync:', {
-      getStartedCompleted: localStorage.getItem('getStartedCompleted'),
-      surveyInitialCompleted: localStorage.getItem('surveyInitialCompleted'),
-      fiPlanResultsCompleted: localStorage.getItem('fiPlanResultsCompleted'),
-      hasLocalProgress: hasLocalProgress
-    });
-
     if (hasLocalProgress) {
-      console.log('[AuthService] First-time authentication detected, syncing localStorage progress to database');
       this.syncLocalStorageProgressToDatabase().subscribe({
-        next: () => {
-          console.log('[AuthService] Sync completed successfully, loading user progress');
-          // After successful sync, load the updated progress from database
-          this.loadUserProgress();
-        },
-        error: (err) => {
-          console.error('[AuthService] Failed to sync localStorage progress:', err);
-          // Still load progress from database even if sync failed
-          this.loadUserProgress();
-        }
+        next: () => this.loadUserProgress(),
+        error: () => this.loadUserProgress()
       });
     } else {
-      console.log('[AuthService] No localStorage progress to sync, loading user progress from database');
-      // No localStorage progress to sync, just load from database
       this.loadUserProgress();
     }
   }
@@ -206,15 +144,6 @@ export class AuthService {
     const monthlyInvestment = localStorage.getItem('surveyMonthlyInvestment');
     const retirementIncome = localStorage.getItem('surveyRetirementIncome');
 
-    // Debug: Log all relevant localStorage values
-    console.log('[AuthService] Current localStorage values during sync:', {
-      getStartedCompleted: localStorage.getItem('getStartedCompleted'),
-      surveyInitialCompleted: localStorage.getItem('surveyInitialCompleted'),
-      fiPlanResultsCompleted: localStorage.getItem('fiPlanResultsCompleted'),
-      monthlyInvestment: monthlyInvestment,
-      retirementIncome: retirementIncome
-    });
-
     const localProgress: Partial<UserProgress> = {
       getStartedCompleted: localStorage.getItem('getStartedCompleted') === 'true',
       surveyInitialCompleted: localStorage.getItem('surveyInitialCompleted') === 'true',
@@ -225,13 +154,9 @@ export class AuthService {
       // Don't sync post-auth flags from localStorage (they should come from database)
     };
 
-    console.log('[AuthService] Syncing localStorage progress to database:', localProgress);
-
     return this.updateProgress(localProgress).pipe(
       tap(() => {
-        console.log('[AuthService] Successfully synced localStorage progress to database');
         // Don't clear localStorage flags immediately - wait until after authFinalize is complete
-        // this.clearLocalStorageProgressFlags();
       })
     );
   }
@@ -265,7 +190,6 @@ export class AuthService {
     if (!this.isAuthenticated()) {
       const updatedProgress = this.buildProgressFromLocalStorage();
       this.userProgressSubject.next(updatedProgress);
-      console.log('[AuthService] Refreshed localStorage progress:', updatedProgress);
     }
   }
 
@@ -290,15 +214,12 @@ export class AuthService {
     flagsToRemove.forEach(flag => {
       localStorage.removeItem(flag);
     });
-
-    console.log('[AuthService] Cleared localStorage progress flags - database is now source of truth');
   }
 
   loadUserProgress(): void {
     this.getUserProgress().subscribe({
       next: (progress) => {
         this.userProgressSubject.next(progress);
-        console.log('[AuthService] User progress loaded:', progress);
       },
       error: (err) => {
         console.error('[AuthService] Failed to load user progress:', err);
@@ -327,39 +248,27 @@ export class AuthService {
   updateStepProgress(step: string, completed: boolean): Observable<any> {
     // Always update localStorage first
     localStorage.setItem(`${step}Completed`, completed.toString());
-    console.log(`[AuthService] Updated localStorage ${step} progress: ${completed}`);
 
     // Check if user is authenticated before trying to update backend
     if (!this.isAuthenticated()) {
-      console.log(`[AuthService] User not authenticated, skipping backend update for ${step}`);
-
       // Update the userProgressSubject with the latest localStorage data
       const updatedProgress = this.buildProgressFromLocalStorage();
       this.userProgressSubject.next(updatedProgress);
-      console.log(`[AuthService] Updated userProgressSubject with localStorage data:`, updatedProgress);
-
-      // Return a completed observable since localStorage update succeeded
-      return of({ success: true, message: 'localStorage updated, user not authenticated for backend update' });
+      return of({ success: true, message: 'localStorage updated' });
     }
 
-    // Create the progress update object using bracket notation
+    // Create the progress update object
     const progressUpdate: any = {};
     progressUpdate[`${step}Completed`] = completed;
 
-    console.log(`[AuthService] Sending progress update to backend:`, progressUpdate);
-
     // Update backend only if authenticated
     return this.updateProgress(progressUpdate).pipe(
-      tap((response) => {
-        console.log(`[AuthService] Backend response for ${step} progress:`, response);
-        console.log(`[AuthService] Updated backend ${step} progress: ${completed}`);
+      tap(() => {
         // Reload user progress to keep it in sync
         this.loadUserProgress();
       }),
       catchError((err: any) => {
         console.error(`[AuthService] Failed to update backend ${step} progress:`, err);
-        // Don't throw error - localStorage update still succeeded
-        console.log(`[AuthService] localStorage update for ${step} was successful despite backend error`);
         return of({ success: true, message: 'localStorage updated, backend update failed' });
       })
     );
@@ -381,16 +290,10 @@ export class AuthService {
     const currentProgress = this.getUnifiedProgress();
     const isLikelyDirectNavigation = this.isDirectNavigation(step, currentProgress);
 
-    console.log(`[AuthService] markStepIncomplete('${step}') called`);
-    console.log(`[AuthService] Current progress:`, currentProgress);
-    console.log(`[AuthService] Is likely direct navigation:`, isLikelyDirectNavigation);
-
     if (isLikelyDirectNavigation) {
-      console.log(`[AuthService] Detected direct navigation to ${step}, skipping mark as incomplete`);
       return of({ success: true, message: 'Direct navigation detected, skipping mark as incomplete' });
     }
 
-    console.log(`[AuthService] Proceeding to mark ${step} as incomplete`);
     return this.updateStepProgress(step, false);
   }
 
@@ -426,12 +329,32 @@ export class AuthService {
   }
 
   /**
-   * Check if we should prompt user for passkey re-authentication
-   * Now we don't need stored email - passkeys work without it!
+   * Proactively refresh the JWT token before it expires.
+   * Called by AppLockService when user is active and token is within 10 min of expiry.
+   * Returns true if refresh succeeded.
    */
-  shouldPromptForPasskeyReauth(): boolean {
-    // Use the utility method to check if JWT is expired
-    return JwtTokenUtils.isJwtExpired();
+  refreshToken(): Observable<boolean> {
+    if (this.tokenRefreshInProgress || !this.isAuthenticated()) {
+      return of(false);
+    }
+
+    this.tokenRefreshInProgress = true;
+
+    return this.http.post<any>(`${BACKEND_API_URL}/auth/refresh`, {}, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap(response => {
+        if (response?.success && response.jwtToken) {
+          JwtTokenUtils.storeJwtToken(response.jwtToken, response.id, response.email);
+        }
+        this.tokenRefreshInProgress = false;
+      }),
+      catchError(err => {
+        console.error('[AuthService] Token refresh failed:', err);
+        this.tokenRefreshInProgress = false;
+        return of(false);
+      })
+    ) as Observable<boolean>;
   }
 
   /**
@@ -646,38 +569,20 @@ export class AuthService {
   }
 
   /**
-   * 🧪 DEVELOPMENT: Authenticate as an existing user from the database
-   * This is for development/testing to simulate logging in as any user
+   * DEVELOPMENT ONLY: Authenticate as an existing user from the database
    */
   authenticateAsUser(email?: string, userHandle?: string): Observable<AuthResponse> {
-    console.log('[AuthService] 🧪 Authenticating as existing user:', { email, userHandle });
-
     const payload = {
       email: email || null,
       userHandle: userHandle || null
     };
 
-    const url = `${BACKEND_API_URL}/dev/authenticate-as-user`;
-    console.log('[AuthService] Making HTTP POST to:', url);
-    console.log('[AuthService] Payload:', payload);
-
-    return this.http.post<AuthResponse>(url, payload, {
+    return this.http.post<AuthResponse>(`${BACKEND_API_URL}/dev/authenticate-as-user`, payload, {
       headers: this.getAuthHeaders()
     }).pipe(
-      tap(response => {
-        console.log('[AuthService] 🔍 Raw HTTP response:', response);
-        if (response.success) {
-          console.log('[AuthService] ✅ Successfully authenticated as user:', response.email);
-        } else {
-          console.log('[AuthService] ❌ Authentication failed:', response.message);
-        }
-      }),
-      tap({
-        error: (error) => {
-          console.error('[AuthService] ❌ HTTP Error during authentication:', error);
-          console.error('[AuthService] Error status:', error?.status);
-          console.error('[AuthService] Error message:', error?.message);
-        }
+      catchError(error => {
+        console.error('[AuthService] Dev auth failed:', error?.status, error?.message);
+        throw error;
       })
     );
   }
@@ -735,9 +640,6 @@ export class AuthService {
     };
   }
 
-  // You could add automatic token refresh logic here in the future
-  // refreshTokenIfNeeded(): void { ... }
-  
   applyReferralCode(code: string): Observable<any> {
     const url = `${BACKEND_API_URL}/user/referral/apply`;
     return this.http.post(url, { code }, { headers: this.getAuthHeaders() });

@@ -51,7 +51,7 @@ import {
   sparklesOutline
 } from 'ionicons/icons';
 import { SettingsService, UserPreferences, RecurringInvestment } from '../services/settings.service';
-import { PlaidService, BankAccount } from '../services/plaid.service';
+import { PlaidService } from '../services/plaid.service';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
 import { MonthlyFreedomUpdateComponent } from '../components/monthly-freedom-update/monthly-freedom-update.component';
@@ -101,7 +101,6 @@ export class Tab3Page implements OnInit, OnDestroy {
 
   public userPreferences: UserPreferences | null = null;
   public recurringInvestment: RecurringInvestment | null = null;
-  public currentBankAccount: BankAccount | null = null;
   public userEmail: string = '';
   public hasMfuPeriod: boolean = false;
 
@@ -262,18 +261,9 @@ export class Tab3Page implements OnInit, OnDestroy {
         this.recurringInvestment = investment;
       });
 
-    // Subscribe to current bank account
-    this.plaidService.getCurrentAccount()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(account => {
-        this.currentBankAccount = account;
-      });
   }
 
   ionViewWillEnter() {
-    // Refresh bank account data when entering this page
-    // This ensures we get the latest data from the backend if user is authenticated
-    this.plaidService.refreshBankAccountData();
     // Re-check MFU availability each time the tab is visited
     this.checkMfuAvailability();
   }
@@ -417,13 +407,19 @@ export class Tab3Page implements OnInit, OnDestroy {
   }
 
   private handleBankAccountsView() {
-    if (this.currentBankAccount) {
-      const linkDate = this.plaidService.formatLinkDate(this.currentBankAccount.linkDate);
-      const status = this.plaidService.getStatusText(this.currentBankAccount.status);
-      this.toastService.showToast(`${this.currentBankAccount.institutionName} (${status}) - Linked: ${linkDate}`, 'primary');
-    } else {
-      this.toastService.showToast('No bank accounts linked. Use "Change Bank Account" to link one.', 'warning');
-    }
+    // Fetch bank account on-demand instead of eagerly on tab load
+    this.plaidService.refreshBankAccountData();
+    this.plaidService.getCurrentAccount()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(account => {
+        if (account) {
+          const linkDate = this.plaidService.formatLinkDate(account.linkDate);
+          const status = this.plaidService.getStatusText(account.status);
+          this.toastService.showToast(`${account.institutionName} (${status}) - Linked: ${linkDate}`, 'primary');
+        } else {
+          this.toastService.showToast('No bank accounts linked. Use "Change Bank Account" to link one.', 'warning');
+        }
+      });
   }
 
   private handleChangeBankAccount() {

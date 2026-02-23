@@ -32,8 +32,6 @@ export class JwtTokenUtils {
       
       if (userId) localStorage.setItem('userId', userId.toString());
       if (email) localStorage.setItem('userEmail', email);
-      
-      console.log('JWT stored with expiration:', new Date(payload.exp * 1000));
     } else {
       console.error('Failed to decode JWT, storing token only');
       localStorage.setItem('jwtToken', token);
@@ -41,7 +39,8 @@ export class JwtTokenUtils {
   }
 
   /**
-   * Check if stored JWT is expired (client-side check)
+   * Check if stored JWT is expired (client-side check).
+   * This is a pure check — does NOT clear any data.
    */
   static isJwtExpired(): boolean {
     const token = localStorage.getItem('jwtToken');
@@ -54,10 +53,23 @@ export class JwtTokenUtils {
     const expirationTime = parseInt(expiration) * 1000; // Convert to milliseconds
     const currentTime = Date.now();
     
-    // Add a 5-minute buffer to refresh before actual expiration
-    const bufferTime = 5 * 60 * 1000; // 5 minutes in milliseconds
-    
-    return currentTime >= (expirationTime - bufferTime);
+    return currentTime >= expirationTime;
+  }
+
+  /**
+   * Check if the token should be refreshed (within 30 minutes of expiry).
+   * Returns true if the token is valid but will expire soon.
+   * Using half the token lifetime (30 of 60 min) ensures any user
+   * active past the halfway point gets a refresh, giving a consistent
+   * minimum inactivity timeout of ~30 minutes.
+   */
+  static shouldRefreshToken(): boolean {
+    if (this.isJwtExpired()) {
+      return false; // Already expired, can't refresh
+    }
+
+    const minutesLeft = this.getMinutesUntilExpiration();
+    return minutesLeft !== null && minutesLeft <= 30;
   }
 
   /**
@@ -88,12 +100,11 @@ export class JwtTokenUtils {
   }
 
   /**
-   * Get stored JWT token if it's not expired
+   * Get stored JWT token if it's not expired.
+   * Non-destructive: does NOT clear data if expired. Use clearJwtData() explicitly when needed.
    */
   static getValidJwtToken(): string | null {
     if (this.isJwtExpired()) {
-      console.log('JWT token is expired, clearing data');
-      this.clearJwtData();
       return null;
     }
     
