@@ -143,9 +143,9 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
     if (this.data.daysBoughtBack > 0) {
       const days = this.data.daysBoughtBack;
       const userAge = this.data.age || 35;
-      return `From <b>${this.data.periodLabel}</b>, your investments moved you about <b>${days} days</b> ahead a typical 59.5 retirement age.`;
+      return `From <b>${this.data.periodLabel}</b>, FRED helped move you about <b>${days} days</b> ahead a typical 59.5 retirement age.`;
     }
-    return `From <b>${this.data.periodLabel}</b>, you stayed on course. Market swings are normal - they recover with time.`;
+    return `From <b>${this.data.periodLabel}</b>, FRED helped you stay on course. Market swings are normal - they recover with time.`;
   }
 
   get milestoneIcon(): string {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { ModalController } from '@ionic/angular/standalone';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonButton, IonSpinner } from '@ionic/angular/standalone';
 import { PasskeyService } from '../../services/passkey.service';
@@ -18,6 +18,11 @@ import { lockClosedOutline, fingerPrintOutline } from 'ionicons/icons';
 })
 export class PasskeyPromptComponent implements OnInit {
 
+  /**
+   * When provided, uses account-specific passkey auth (allowCredentials scoped to this user).
+   * When absent, falls back to discoverable credentials (usernameless flow).
+   */
+  @Input() userEmail?: string;
   isUnlocking = false;
 
   constructor(
@@ -38,7 +43,12 @@ export class PasskeyPromptComponent implements OnInit {
     if (this.isUnlocking) return;
     this.isUnlocking = true;
 
-    this.passkeyService.startAuthentication().subscribe({
+    // Use account-specific flow if we know which user should be authenticating
+    const start$ = this.userEmail
+      ? this.passkeyService.startAuthenticationForUser(this.userEmail)
+      : this.passkeyService.startAuthentication();
+
+    start$.subscribe({
       next: async (response) => {
         try {
           console.log('🔍 [PasskeyPrompt] Start response:', response);

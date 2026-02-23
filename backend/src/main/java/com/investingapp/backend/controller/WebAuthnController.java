@@ -197,14 +197,23 @@ public class WebAuthnController {
      * re-authenticating matches the currently logged-in user.
      */
     @PostMapping("/authenticate/start")
-    public ResponseEntity<?> startAuthentication(HttpServletRequest request) {
+    public ResponseEntity<?> startAuthentication(@RequestBody(required = false) Map<String, Object> body, HttpServletRequest request) {
         String origin = request.getHeader("Origin");
         logger.info("Authentication request from ORIGIN: {}", origin);
         
         try {
-            // Always use Usernameless flow for maximum compatibility
-            logger.info("Starting robust passkey authentication (Usernameless flow)");
-            PublicKeyCredentialRequestOptions options = webAuthnService.startAuthenticationFlow();
+            String email = (body != null) ? (String) body.get("email") : null;
+            
+            PublicKeyCredentialRequestOptions options;
+            if (email != null && !email.isBlank()) {
+                // Account-specific flow: restricts allowCredentials to this user's passkeys
+                logger.info("Starting account-specific passkey authentication for: {}", email);
+                options = webAuthnService.startAuthenticationFlow(email);
+            } else {
+                // Usernameless (discoverable) flow: any passkey on the device
+                logger.info("Starting discoverable passkey authentication (Usernameless flow)");
+                options = webAuthnService.startAuthenticationFlow();
+            }
             
             // Generate a temporary session ID to cache the challenge
             String sessionId = java.util.UUID.randomUUID().toString();

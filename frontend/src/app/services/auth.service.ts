@@ -388,8 +388,10 @@ export class AuthService {
       this.reAuthInProgress = true;
       console.log('[AuthService] Starting passkey re-authentication');
 
-      // 1. Start authentication
-      const startResponse = await this.http.post<{ requestOptions: string, sessionId: string }>(`${BACKEND_API_URL}/passkey/authenticate/start`, {},
+      // 1. Start authentication — use account-specific flow if we know the user
+      const userEmail = localStorage.getItem('userEmail');
+      const requestBody = userEmail ? { email: userEmail } : {};
+      const startResponse = await this.http.post<{ requestOptions: string, sessionId: string }>(`${BACKEND_API_URL}/passkey/authenticate/start`, requestBody,
         { headers: this.getAuthHeaders() }).toPromise();
 
       if (!startResponse) {

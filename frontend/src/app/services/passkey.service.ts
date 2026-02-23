@@ -76,13 +76,30 @@ export class PasskeyService {
   }
 
   /**
-   * Start passkey authentication - NO EMAIL REQUIRED!
-   * Uses discoverable credentials to identify user from their passkey
+   * Start passkey authentication using discoverable credentials (usernameless).
+   * Used for initial login when we don't know who the user is.
    */
   startAuthentication(): Observable<{requestOptions: string, sessionId: string}> {
     return new Observable(observer => {
       this.getHeadersAsync().then(headers => {
         this.http.post<{requestOptions: string, sessionId: string}>(`${BACKEND_API_URL}/passkey/authenticate/start`, {}, { headers })
+          .subscribe({
+            next: res => { observer.next(res); observer.complete(); },
+            error: err => observer.error(err)
+          });
+      });
+    });
+  }
+
+  /**
+   * Start account-specific passkey authentication.
+   * Restricts allowCredentials to the given user's registered passkeys,
+   * ensuring only that account can re-authenticate.
+   */
+  startAuthenticationForUser(email: string): Observable<{requestOptions: string, sessionId: string}> {
+    return new Observable(observer => {
+      this.getHeadersAsync().then(headers => {
+        this.http.post<{requestOptions: string, sessionId: string}>(`${BACKEND_API_URL}/passkey/authenticate/start`, { email }, { headers })
           .subscribe({
             next: res => { observer.next(res); observer.complete(); },
             error: err => observer.error(err)

@@ -141,6 +141,9 @@ export class AppLockService {
 
     const modal = await this.modalController.create({
       component: PasskeyPromptComponent,
+      componentProps: {
+        userEmail: localStorage.getItem('userEmail') || undefined
+      },
       backdropDismiss: false,
       keyboardClose: false,
       cssClass: 'full-screen-modal'
