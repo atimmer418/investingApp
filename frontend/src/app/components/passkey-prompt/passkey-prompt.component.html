@@ -4,8 +4,7 @@
       <ion-icon name="lock-closed-outline"></ion-icon>
     </div>
     <h2>FRED is Locked</h2>
-    <p *ngIf="userEmail">Verify as <strong>{{ userEmail }}</strong></p>
-    <p *ngIf="!userEmail">Unlock with passkey to continue</p>
+    <p>Unlock with passkey to continue</p>
     
     <ion-button expand="block" class="unlock-btn" (click)="authenticate()" [disabled]="isUnlocking">
       <ion-spinner name="crescent" *ngIf="isUnlocking"></ion-spinner>
