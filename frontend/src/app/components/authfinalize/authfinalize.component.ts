@@ -1,5 +1,3 @@
-// src/app/pages/authfinalize/authfinalize.component.ts
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
@@ -11,7 +9,7 @@ import {
   IonBackButton, IonButtons, IonIcon, NavController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { personCircleOutline, helpCircleOutline } from 'ionicons/icons';
+import { personCircleOutline, helpCircleOutline, lockClosed } from 'ionicons/icons';
 
 // --- NEW IMPORTS ---
 import { PasskeyService } from '../../services/passkey.service';
@@ -56,7 +54,7 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
     private passkeyService: PasskeyService, // Inject the new service
     private authService: AuthService
   ) {
-    addIcons({ personCircleOutline, helpCircleOutline });
+    addIcons({lockClosed,helpCircleOutline,personCircleOutline});
     this.registerForm = new FormGroup({
       email: new FormControl('', [Validators.required, Validators.email, Validators.maxLength(100)]),
     });
@@ -349,42 +347,6 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
           console.error('Error starting registration:', err);
         }
       });
-  }
-
-  /**
-   * Manual option for users to try existing account authentication
-   * This is for edge cases like:
-   * - User reinstalled app (lost device ID)
-   * - User on same network as existing user (apartment scenario)
-   * - User wants to continue existing account instead of creating new one
-   */
-  async tryExistingAccount() {
-    this.errorMessage = null;
-    this.successMessage = null;
-    this.isLoading = true;
-
-    try {
-      console.log('[AuthFinalize] User requesting manual passkey authentication');
-      
-      // Attempt passkey re-authentication
-      const success = await this.authService.promptForPasskeyReauth();
-      
-      if (success) {
-        this.successMessage = 'Welcome back! Redirecting to your progress...';
-        console.log('[AuthFinalize] Manual re-authentication successful');
-        
-        // Let the AppComponent handle navigation based on user progress
-        // No need to navigate manually here
-      } else {
-        this.errorMessage = 'Authentication failed. You can continue creating a new account or try again.';
-        console.log('[AuthFinalize] Manual re-authentication failed');
-      }
-    } catch (error) {
-      console.error('[AuthFinalize] Error during manual re-authentication:', error);
-      this.errorMessage = 'Authentication error. You can continue creating a new account or try again.';
-    }
-    
-    this.isLoading = false;
   }
 
   recoverAccount() {

@@ -95,7 +95,7 @@
         <span>I'm at work (no face or touch ID)</span>
       </ion-button>
 
-      <!-- Manual Re-auth Option -->
+      <!-- Account Recovery Option -->
       <div class="divider-section">
         <div class="divider-line"></div>
         <span class="divider-text">or</span>
@@ -104,23 +104,12 @@
 
       <ion-button 
         expand="block" 
-        fill="outline"
-        color="medium"
-        class="existing-account-button" 
-        type="button"  
-        (click)="tryExistingAccount()">
-        <ion-icon name="person-circle-outline" slot="start"></ion-icon>
-        <span>Already have an account? Sign in with passkey</span>
-      </ion-button>
-
-      <ion-button 
-        expand="block" 
         fill="clear"
         color="medium"
         class="recovery-button" 
         type="button"  
         (click)="recoverAccount()"
-        style="margin-top: 12px; font-size: 0.9em;">
+        style="margin-top: 4px; font-size: 0.9em;">
         <ion-icon name="help-circle-outline" slot="start"></ion-icon>
         <span>Lost Device / Recover Account</span>
       </ion-button>

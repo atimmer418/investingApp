@@ -4,5 +4,9 @@
 <dict>
 	<key>com.apple.developer.associated-domains</key>
 	<string>webcredentials:api.fredvested.com</string>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.fredvested.app</string>
+	</array>
 </dict>
 </plist>

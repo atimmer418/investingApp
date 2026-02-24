@@ -4,6 +4,7 @@ import { Observable, BehaviorSubject, tap, catchError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
 import { DeviceIdService } from './device-id.service';
+import { KeychainSyncService } from './keychain-sync.service';
 
 const BACKEND_API_URL = environment.backendApiUrl;
 
@@ -51,7 +52,11 @@ export class AuthService {
   private reAuthInProgress = false;
   private tokenRefreshInProgress = false;
 
-  constructor(private http: HttpClient, private deviceIdService: DeviceIdService) {
+  constructor(
+    private http: HttpClient,
+    private deviceIdService: DeviceIdService,
+    private keychainSyncService: KeychainSyncService
+  ) {
     // Check if user is already logged in on app start
     this.checkExistingSession();
   }
@@ -84,16 +89,10 @@ export class AuthService {
       const localStorageProgress = this.buildProgressFromLocalStorage();
       this.userProgressSubject.next(localStorageProgress);
 
-      // In production, check if device should prompt for passkey re-auth
+      // In production, check if we should auto-prompt for passkey re-auth.
+      // Priority: iCloud Keychain (survives device upgrades) → device ID fallback
       if (environment.production && this.supportsPasskeys()) {
-        this.shouldPromptForReauth().subscribe({
-          next: async (response) => {
-            if (response.shouldPromptReauth) {
-              await this.promptForPasskeyReauth();
-            }
-          },
-          error: () => { /* Continue with normal flow */ }
-        });
+        this.checkKeychainThenDevice();
       }
     }
   }
@@ -101,10 +100,19 @@ export class AuthService {
   /**
    * Called after successful authentication (passkey, dev login, etc.).
    * Stores JWT once, syncs localStorage progress if needed, then loads backend progress.
+   * Also persists the user's email to iCloud Keychain for cross-device recognition.
    */
   handleSuccessfulAuthentication(jwtToken: string, userId: number, email: string): void {
     JwtTokenUtils.storeJwtToken(jwtToken, userId, email);
     this.isLoggedInSubject.next(true);
+
+    // Persist email to iCloud Keychain so new devices can auto-prompt reauth
+    // Only write if not already stored (avoids redundant Keychain writes)
+    this.keychainSyncService.getAccountEmail().then(existing => {
+      if (existing !== email) {
+        this.keychainSyncService.storeAccountEmail(email);
+      }
+    });
 
     // Check if there's pre-auth localStorage progress to sync
     const hasLocalProgress = localStorage.getItem('getStartedCompleted') === 'true' ||
@@ -118,6 +126,42 @@ export class AuthService {
       });
     } else {
       this.loadUserProgress();
+    }
+  }
+
+  /**
+   * Check iCloud Keychain first (survives device upgrades), then fall back to
+   * device ID. If either indicates a returning user, auto-trigger passkey reauth.
+   */
+  private async checkKeychainThenDevice(): Promise<void> {
+    try {
+      // 1. Check iCloud Keychain — works across devices on the same Apple ID
+      const keychainEmail = await this.keychainSyncService.getAccountEmail();
+      if (keychainEmail) {
+        console.log('[AuthService] Found account in iCloud Keychain — prompting reauth');
+        await this.promptForPasskeyReauth();
+        return;
+      }
+
+      // 2. Fall back to device ID check (original behavior)
+      this.shouldPromptForReauth().subscribe({
+        next: async (response) => {
+          if (response.shouldPromptReauth) {
+            await this.promptForPasskeyReauth();
+          }
+        },
+        error: () => { /* Continue with normal flow */ }
+      });
+    } catch {
+      // Keychain read failed — fall back to device ID
+      this.shouldPromptForReauth().subscribe({
+        next: async (response) => {
+          if (response.shouldPromptReauth) {
+            await this.promptForPasskeyReauth();
+          }
+        },
+        error: () => { /* Continue with normal flow */ }
+      });
     }
   }
 
