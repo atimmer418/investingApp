@@ -1,92 +1,166 @@
-# Investment Scheduler Documentation
+# Investment Scheduler & Execution Documentation
 
 ## Overview
 
-The Investment Scheduler is a critical automation system that manages recurring investments and ensures proper funding and execution of trades. It operates on a daily cycle to process scheduled investments and batch ACH transfers.
-
-## Key Features
-
-### **Smart Schedule Management** 📅
-- **Preserves Preferred Dates**: The system remembers the user's originally chosen day (e.g., "Mondays" or "15th of the month") and snaps future dates back to that preference, even if holidays or weekends cause temporary shifts.
-- **Dual Triggers**: Schedules are triggered if:
-  1. **First-time**: `startDate` matches today.
-  2. **Recurring**: `nextInvestmentDate` matches today (or is past due).
-
-### **Batch Processing** 📦
-- **Daily Batch**: All recurring investments and bank-funded lump sums are aggregated into a single ACH transfer at the end of the day.
-- **Limit Compliance**: This design respects the "one ACH transfer per day" limitation often present in brokerage integrations (like Alpaca).
+The Investment Scheduler is the automation system that manages recurring investments, lump-sum investments, and ensures proper funding and execution of trades. It operates on a daily cycle with three phases: **Schedule → Fund → Trade**.
 
 ## Architecture & Timing
 
-The system relies on two synchronized cron jobs to handle the "Schedule then Execute" workflow.
+### Cron Jobs
 
-### 1. Scheduler Job (11:55 PM ET)
-**Cron:** `0 55 23 * * *`
-**Class:** `InvestmentScheduler.processScheduledInvestments()`
+| Job | Cron | Schedule | Class |
+|-----|------|----------|-------|
+| **Schedule Recurring** | `0 55 23 * * *` | 11:55 PM ET daily | `InvestmentScheduler.processScheduledInvestments()` |
+| **Batch Fund** | `0 59 23 * * *` | 11:59 PM ET daily | `InvestmentExecutionService.processEndOfDayBatchTransfers()` |
+| **Check Funding** | `0 */30 8-17 * * MON-FRI` | Every 30 min, 8AM–5PM ET, Mon–Fri | `InvestmentScheduler.checkFundingStatus()` |
+| **Check Trading** | `0 */15 9-15 * * MON-FRI` | Every 15 min, 9AM–4PM ET, Mon–Fri | `InvestmentScheduler.checkTradingStatus()` |
 
-This job identifies what *needs* to be invested today but does not execute money movement yet.
-- **Finds Ready Schedules**: Scans for active schedules where the date matches "today".
-- **Creates Execution Records**: Generates `InvestmentExecution` records with status `SCHEDULED`.
-- **Updates Next Cycle**: Calculates and saves the *next* investment date for the schedule so it's ready for the next period.
+### Phase 1: Scheduling (11:55 PM ET)
+Identifies what needs to be invested today but does **not** move money yet.
+- Scans for active `InvestmentSchedule` records where `startDate` or `nextInvestmentDate` matches today (or is past due).
+- Creates `InvestmentExecution` records with status `SCHEDULED`.
+- Calculates and saves the next investment date for each schedule using preferred-date logic to prevent drift.
 
-### 2. Batch Execution Job (11:59 PM ET)
-**Cron:** `0 59 23 * * *`
-**Class:** `InvestmentExecutionService.processEndOfDayBatchTransfers()`
+### Phase 2: Batch Funding (11:59 PM ET)
+Executes funding for everything queued during the day.
+- Collects all `SCHEDULED` executions from the 11:55 PM job **and** any bank-funded lump-sum investments made via the API during the day.
+- Groups by user.
+- Sends a **single** ACH transfer request per user for the total amount via `alpacaService.initiateAchTransfer()`.
+- All executions in the batch share the same `alpacaTransferId`.
+- Status moves to `FUNDING_INITIATED`.
 
-This job executes the funding for everything queued up during the day.
-- **Aggregates**: Collects all `SCHEDULED` executions from the 11:55 PM job AND any ad-hoc lump sum investments made via Bank Funding during the day.
-- **Batches**: Groups them by user.
-- **Funds**: Sends a **single** ACH transfer request for the total amount.
-- **Status Update**: Updates executions to `FUNDING_INITIATED`.
+**Note:** This cron runs every day including weekends. If a user makes a lump-sum investment on Saturday, the ACH request is submitted Saturday night. Alpaca queues it, and actual NACHA processing happens the next business day. The funding status poller only runs Mon–Fri, so the transfer is picked up Monday morning.
 
-### 3. Execution (Morning)
-**Frequency:** Every 15-30 minutes
-**Class:** `InvestmentScheduler.checkFundingStatus()` / `checkTradingStatus()`
+### Phase 3: Funding & Trading Checks (Next Business Day)
+- **`checkFundingStatus()`** — Polls Alpaca's transfers endpoint (`GET /accounts/{account_id}/transfers?direction=INCOMING`) every 30 minutes during business hours. Finds the transfer by ID and reads its status directly.
+- **`checkTradingStatus()`** — Polls Alpaca's orders endpoint every 15 minutes during market hours. Also calls `initiateDelayedTrading()` first to pick up any `FUNDING_COMPLETED` executions that were funded after market close.
 
-- **Checks Funding**: Polls for ACH completion.
-- **Trades**: Once funding is "COMPLETED", it triggers the stock purchase order.
-  - If Market is **Open**: Buys immediately.
-  - If Market is **Closed**: Queues trade for next market open (9:30 AM ET).
+---
+
+## InvestmentExecution Lifecycle
+
+### Status Flow
+```
+SCHEDULED → FUNDING_INITIATED → FUNDING_COMPLETED → TRADING_INITIATED → COMPLETED
+                ↓                                         ↓
+          FUNDING_FAILED                            TRADING_FAILED
+                                                                    → FAILED
+```
+
+### Status Definitions
+
+| Status | Meaning | What Happens Next |
+|--------|---------|-------------------|
+| `SCHEDULED` | Created by controller (lump sum) or 11:55 PM cron (recurring). Bank-funded investments sit here until the 11:59 PM batch. | Picked up by `processEndOfDayBatchTransfers()` |
+| `FUNDING_INITIATED` | ACH transfer submitted to Alpaca. All batch siblings share one `alpacaTransferId`. | Polled by `checkFundingStatus()` Mon–Fri 8AM–5PM |
+| `FUNDING_COMPLETED` | Alpaca transfer status is `COMPLETE`. | Trading initiated immediately if market is open; otherwise queued for `initiateDelayedTrading()` |
+| `FUNDING_FAILED` | Alpaca transfer status is `REJECTED`, `CANCELED`, or `RETURNED`. User notified via email. | Terminal state |
+| `TRADING_INITIATED` | Market order(s) placed via Alpaca. Portfolio type → one order per allocation symbol. Stock type → one order for target symbol. | Polled by `checkTradingStatus()` Mon–Fri 9AM–4PM |
+| `COMPLETED` | All orders filled. User notified via email. | Terminal state |
+| `TRADING_FAILED` | Order rejected or canceled by Alpaca. User notified via email. | Terminal state |
+| `FAILED` | Generic failure state. | Terminal state |
+
+### Buying Power Path
+If `fundingSource` is `"buying_power"`, the entire funding phase is skipped. The execution goes directly from `SCHEDULED` → `FUNDING_COMPLETED` → trading.
+
+---
+
+## Funding Status Check (Alpaca Integration)
+
+### Endpoint Used
+```
+GET /v1/accounts/{account_id}/transfers?direction=INCOMING&limit=20&offset=0
+```
+
+The system retrieves the account's incoming transfers list and finds the one matching the stored `alpacaTransferId`. This gives us the exact transfer status from Alpaca.
+
+### Alpaca Transfer Statuses (mapped to our behavior)
+
+| Alpaca Status | Our Behavior |
+|---------------|-------------|
+| `QUEUED` | Pending — keep polling |
+| `APPROVAL_PENDING` | Pending — keep polling |
+| `PENDING` | Pending — keep polling |
+| `SENT_TO_CLEARING` | Pending — keep polling |
+| `APPROVED` | Pending — keep polling |
+| `COMPLETE` | → `FUNDING_COMPLETED`, initiate trading |
+| `REJECTED` | → `FUNDING_FAILED`, notify user |
+| `CANCELED` | → `FUNDING_FAILED`, notify user |
+| `RETURNED` | → `FUNDING_FAILED`, notify user ("bank returned the ACH transfer") |
+
+### Pagination
+Transfers are fetched in pages of 20 (`limit=20`). Since recent transfers appear first and we're always checking recently-initiated transfers, the first page almost always contains it. Up to 5 pages (100 records) are searched before giving up.
+
+### Staleness Warning
+If a transfer has been in `FUNDING_INITIATED` for more than 7 days, a warning is logged for manual review.
+
+### Batch Handling
+When multiple executions share the same `alpacaTransferId` (from end-of-day batching), a status update for the transfer applies to **all** sibling executions.
+
+---
+
+## Investment Types
+
+| Type | Created By | Funding | Trading |
+|------|-----------|---------|---------|
+| `"portfolio"` | Recurring schedule or lump-sum portfolio investment | Bank ACH or buying power | Fractional/notional orders for each symbol in user's portfolio allocation |
+| `"stock"` | Lump-sum individual stock investment | Bank ACH or buying power | Single order for `targetSymbol` |
+| `"recurring"` | Recurring schedule | Bank ACH | Same as portfolio |
+
+### Order Placement
+- Uses `placeOrderWithFractionalCheck()` — checks `alpacaService.isFractionable(symbol)` to decide between notional (fractional) vs. quantity (whole shares) orders.
+- Portfolio investments split the funded amount proportionally across all allocation symbols.
+
+---
+
+## Lump-Sum Investment Flow
+
+### Entry Point
+`POST /api/investments/execute`
+
+1. Validates user has `alpacaAccountId` and `plaidRelationshipId`.
+2. Validates amount ($1–$1,000,000).
+3. Creates `InvestmentExecution` entity with `investmentType`, `targetSymbol`, `fundingSource`.
+4. Calls `processInvestmentExecutionImmediately(execution)`.
+
+### Behavior by Funding Source
+- **`"buying_power"`** — Checks Alpaca buying power balance, immediately moves to `FUNDING_COMPLETED` → trading.
+- **`"bank"`** — Sets status to `SCHEDULED` with message "Queued for end-of-day batch processing". Picked up at 11:59 PM by the batch cron.
+
+### Weekend/Holiday Behavior
+There is no business-day guard on the EOD batch cron. If a user invests on Saturday:
+- 11:59 PM Saturday: ACH request submitted to Alpaca (Alpaca queues it).
+- Monday 8AM: `checkFundingStatus()` starts polling. Actual ACH settlement happens on the business day.
+
+---
 
 ## Investment Schedule Logic
 
-### Ready Criteria (`isReadyForInvestment`)
-A schedule is considered "Ready" to run if all of the following are true:
-1. `isPaused` is **false**.
-2. `achRequestId` is **not null** (User has a verified bank linked).
-3. **Date Check**:
-   - `startDate` == TODAY (First run)
-   - OR `nextInvestmentDate` <= TODAY (Recurring)
+### Ready Criteria
+A schedule is ready for execution if:
+1. `isPaused` is `false`.
+2. `achRequestId` is not null (verified bank linked).
+3. `startDate` == today (first run) **or** `nextInvestmentDate` <= today (recurring).
 
 ### Frequency & Date Calculation
+Uses "Preferred Date" logic with stored `chosenDate`, `dayOfWeek`, `dayOfMonth` to prevent schedule drift.
 
-The system uses a "Preferred Date" logic to prevent schedule drift. It stores `chosenDate`, `dayOfWeek`, and `dayOfMonth` to ensure consistency.
-
-#### 1. WEEKLY
-- **Logic**: Finds the next occurrence of the stored `dayOfWeek`.
-- **Example**: If you pick "Monday", it will always target the next Monday.
-
-#### 2. BIWEEKLY
-- **Logic**: Adds 2 weeks (14 days) to the current cycle.
-- **Drift Prevention**: Checks the parity against the `startDate` to ensure it stays on the correct 2-week cadence (even/odd weeks).
-
-#### 3. SEMI_MONTHLY
-- **Logic**: Fixed schedule of **1st** and **15th**.
-- **Calculation**: Finds the next upcoming 1st or 15th relative to the current date.
-
-#### 4. MONTHLY
-- **Logic**: Finds the next month's occurrence of `dayOfMonth`.
-- **End-of-Month Handling**: If preferred day is 31st and next month is Feb, it clamps to the last day of the month (28th/29th). Next month it tries to snap back to 31st if possible.
-
-#### Business Day Preservation Logic
-When an investment date requires adjustment for weekends or holidays:
-- **WEEKLY / BIWEEKLY**: Preserves the **Day of the Week** (e.g. shifts execution to Tuesday, but next schedule remains Monday).
-- **MONTHLY**: Preserves the **Day of the Month** (e.g. shifts execution to 17th, but next schedule remains 15th).
+| Frequency | Logic |
+|-----------|-------|
+| `WEEKLY` | Next occurrence of stored `dayOfWeek` |
+| `BIWEEKLY` | +14 days, with parity check against `startDate` to maintain cadence |
+| `SEMI_MONTHLY` | Fixed 1st and 15th of each month |
+| `MONTHLY` | Next month's `dayOfMonth`, clamped to last day if month is shorter |
 
 ### Business Day Adjustment
+After calculating the ideal date, `adjustForBusinessDay()` is applied:
+1. **Weekends** — moves forward to Monday.
+2. **US Market Holidays** — New Year's, MLK Day, Presidents' Day, Memorial Day, Independence Day, Labor Day, Columbus Day, Veterans Day, Thanksgiving, Christmas. Moves forward to next business day.
 
-After calculating the "Ideal Date" (e.g., Saturday the 15th), the system applies `adjustForBusinessDay()`:
-1. **Weekends**: Moves forward to Monday.
-2. **Holidays**: Checks against rigid list of US Market Holidays (New Years, MLK, Presidents, Memorial, Juneteenth, Independence, Labor, Thanksgiving, Christmas). Moves forward to next business day.
+**Important:** The stored `nextInvestmentDate` is the adjusted (business) day. But the *next cycle* calculation uses the original preferred components (day of week, day of month) to avoid permanent drift.
 
-**Crucial**: The `nextInvestmentDate` stored in the database is the *Adjusted* (business) day. However, the calculation logic for the *following* cycle uses the preserved "Preferred" components to calculate the next Ideal date to avoid permanent drift.
+**Note:** Juneteenth is mentioned in some docs but is not currently in the holiday list in code.
+
+---
+
+*Last Updated: February 27, 2026*

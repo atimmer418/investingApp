@@ -13,9 +13,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -157,168 +154,131 @@ public class AlpacaService {
     }
 
     /**
-     * Check transfer status by looking at cash deposit activities (CSD) with
-     * context
-     * According to Alpaca docs: "After around 10-30 minutes (to simulate ACH delay)
-     * the transfer should reflect on the user's balance via a cash deposit activity
-     * (CSD)"
+     * Check transfer status by retrieving the account's transfers list and
+     * finding the one matching our transfer ID.
      * 
-     * API Reference: GET /v1/accounts/activities/CSD?account_id={account_id}
+     * API Reference: GET /v1/accounts/{account_id}/transfers?direction=INCOMING
+     * 
+     * Alpaca transfer statuses:
+     *   QUEUED, APPROVAL_PENDING, PENDING, SENT_TO_CLEARING → still in progress
+     *   APPROVED → approved but not yet settled
+     *   COMPLETE → funds available
+     *   REJECTED → transfer denied
+     *   CANCELED → client-initiated cancellation
+     *   RETURNED → bank issued an ACH return after initial processing
      */
-    public AlpacaTransferResponse checkTransferStatus(String accountId, String transferId,
-            BigDecimal expectedAmount, LocalDateTime transferInitiatedTime) {
-        try {
-            // Check for cash deposit activities (CSD) which indicate completed transfers
-            String url = alpacaBaseUrl + "/accounts/activities/CSD?account_id=" + accountId;
+    /**
+     * Initial page size for the transfers list lookup.
+     * Since transfers are ordered by created_at and we're always checking recent
+     * transfers, this will almost always contain the one we're looking for.
+     */
+    private static final int TRANSFER_LOOKUP_PAGE_SIZE = 20;
 
+    /**
+     * Maximum number of pages to search through before giving up.
+     * 20 per page × 5 pages = 100 transfers max.
+     */
+    private static final int TRANSFER_LOOKUP_MAX_PAGES = 5;
+
+    public AlpacaTransferResponse checkTransferStatus(String accountId, String transferId) {
+        try {
             HttpHeaders headers = createAuthHeaders();
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-            logger.info(
-                    "Checking cash deposit activities for account {} to verify transfer {} (amount: {}, initiated: {})",
-                    accountId, transferId, expectedAmount, transferInitiatedTime);
+            logger.info("Checking transfer status for account {} transfer {}", accountId, transferId);
 
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            // Paginate through the transfers list to find our transfer ID.
+            // The list is ordered by created_at, and we're looking for recent transfers,
+            // so the first page will almost always contain it.
+            int offset = 0;
+            for (int page = 0; page < TRANSFER_LOOKUP_MAX_PAGES; page++) {
+                String url = alpacaBaseUrl + "/accounts/" + accountId
+                        + "/transfers?direction=INCOMING&limit=" + TRANSFER_LOOKUP_PAGE_SIZE
+                        + "&offset=" + offset;
 
-            if (response.getStatusCode() == HttpStatus.OK) {
-                JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+                ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
-                // Alpaca API returns array of activities with two types:
-                // 1. TRADEACTIVITY - has transaction_time, type, price, qty, etc. (for stock
-                // trades)
-                // 2. NONTRADEACTIVITY - has date, net_amount, description, etc. (for cash
-                // movements)
-                //
-                // CSD (Cash Disbursement) appears in BOTH, but we want NONTRADEACTIVITY
-                // because:
-                // - Cash transfers are non-trading activities
-                // - We need 'net_amount' field (not available in TRADEACTIVITY)
-                // - We need 'date' field (TRADEACTIVITY uses 'transaction_time')
-                logger.info(
-                        "Checking {} activities for CSD (Cash Disbursement) NONTRADEACTIVITY entries matching transfer {}",
-                        jsonResponse.size(), transferId);
-
-                // Look for recent cash deposit activities that match our criteria
-                if (jsonResponse.isArray()) {
-                    for (JsonNode activity : jsonResponse) {
-                        // Verify we have the required fields for NONTRADEACTIVITY (CSD is non-trade)
-                        if (!activity.has("activity_type")) {
-                            logger.warn("Activity missing activity_type field: {}", activity);
-                            continue;
-                        }
-
-                        String activityType = activity.get("activity_type").asText();
-                        if ("CSD".equals(activityType)) {
-                            // Determine if this is a TRADEACTIVITY or NONTRADEACTIVITY CSD
-                            // TRADEACTIVITY has: transaction_time, price, qty, symbol
-                            // NONTRADEACTIVITY has: date, net_amount, description
-                            boolean isTradeActivity = activity.has("transaction_time") && activity.has("price");
-                            boolean isNonTradeActivity = activity.has("date") && activity.has("net_amount");
-
-                            if (isTradeActivity) {
-                                logger.debug(
-                                        "Skipping CSD TRADEACTIVITY (we need NONTRADEACTIVITY for cash transfers)");
-                                continue;
-                            }
-
-                            if (!isNonTradeActivity) {
-                                logger.warn("CSD activity missing NONTRADEACTIVITY fields (date/net_amount): {}",
-                                        activity);
-                                continue;
-                            }
-
-                            // Process NONTRADEACTIVITY CSD (cash disbursement)
-
-                            try {
-                                // Parse the activity date - CSD uses 'date' field (date format, not datetime)
-                                String activityDateStr = activity.get("date").asText();
-                                LocalDateTime activityDate;
-
-                                if (activityDateStr.contains("T")) {
-                                    // ISO datetime format: "2023-10-07T14:30:00Z" or "2023-10-07T14:30:00"
-                                    activityDate = LocalDateTime.parse(
-                                            activityDateStr.replace("Z", ""),
-                                            DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                                } else {
-                                    // Date only format: "2023-10-07" - assume start of day
-                                    activityDate = LocalDate.parse(activityDateStr).atStartOfDay();
-                                }
-
-                                // Parse the net_amount - always a string according to API docs
-                                String amountStr = activity.get("net_amount").asText();
-                                if ("null".equals(amountStr) || amountStr.trim().isEmpty()) {
-                                    logger.warn("CSD activity has null or empty net_amount, skipping: {}", activity);
-                                    continue;
-                                }
-
-                                BigDecimal activityAmount;
-                                try {
-                                    activityAmount = new BigDecimal(amountStr);
-                                } catch (NumberFormatException e) {
-                                    logger.warn("Failed to parse net_amount '{}' as BigDecimal, skipping activity: {}",
-                                            amountStr, activity);
-                                    continue;
-                                }
-
-                                // Check if this CSD activity matches our transfer:
-                                // 1. Occurred on or after our transfer was initiated (same day or later)
-                                // 2. Amount matches (within $0.01 tolerance for rounding)
-                                // 3. Occurred within reasonable ACH timeframe (3 business days)
-                                boolean timeMatch = activityDate.toLocalDate()
-                                        .isEqual(transferInitiatedTime.toLocalDate()) ||
-                                        (activityDate.isAfter(transferInitiatedTime) &&
-                                                activityDate.isBefore(transferInitiatedTime.plusDays(3)));
-                                boolean amountMatch = activityAmount.subtract(expectedAmount).abs()
-                                        .compareTo(new BigDecimal("0.01")) <= 0;
-
-                                logger.debug(
-                                        "CSD Activity Analysis - Date: {}, Amount: {}, Time Match: {}, Amount Match: {} (expected: {}), Transfer Initiated: {}",
-                                        activityDateStr, activityAmount, timeMatch, amountMatch, expectedAmount,
-                                        transferInitiatedTime);
-
-                                if (timeMatch && amountMatch) {
-                                    logger.info(
-                                            "✅ Found matching CSD (NONTRADEACTIVITY) for transfer {} - Amount: {}, Date: {}, Initiated: {}",
-                                            transferId, activityAmount, activityDateStr, transferInitiatedTime);
-
-                                    return new AlpacaTransferResponse(
-                                            transferId,
-                                            "COMPLETED",
-                                            activityAmount,
-                                            activityDateStr,
-                                            null);
-                                } else {
-                                    logger.debug(
-                                            "❌ CSD activity doesn't match - Time: {} ({}), Amount: {} (expected: {})",
-                                            timeMatch, activityDateStr, amountMatch, expectedAmount);
-                                }
-
-                            } catch (Exception e) {
-                                logger.warn("Failed to parse CSD activity: {}", activity, e);
-                            }
-                        }
-                    }
+                if (response.getStatusCode() != HttpStatus.OK) {
+                    logger.error("Failed to fetch transfers. Status: {}, Response: {}",
+                            response.getStatusCode(), response.getBody());
+                    return new AlpacaTransferResponse(transferId, "UNKNOWN", null, null, null, null,
+                            "HTTP " + response.getStatusCode() + ": " + response.getBody());
                 }
 
-                // No matching CSD activity found - transfer still pending
-                logger.info("No matching cash deposit activity found for transfer {}, still pending", transferId);
-                return new AlpacaTransferResponse(transferId, "PENDING", null, null, null);
+                JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+                if (!jsonResponse.isArray() || jsonResponse.isEmpty()) {
+                    // No more transfers to check
+                    break;
+                }
 
-            } else if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
-                logger.info("No activities found for account {}, transfer {} still pending", accountId, transferId);
-                return new AlpacaTransferResponse(transferId, "PENDING", null, null, null);
+                // Search this page for our transfer
+                AlpacaTransferResponse found = findTransferInPage(jsonResponse, transferId);
+                if (found != null) {
+                    return found;
+                }
 
-            } else {
-                logger.error("Failed to check cash deposit activities. Status: {}, Response: {}",
-                        response.getStatusCode(), response.getBody());
-                return new AlpacaTransferResponse(transferId, "UNKNOWN", null, null,
-                        "HTTP " + response.getStatusCode() + ": " + response.getBody());
+                // If we got fewer results than the page size, there are no more pages
+                if (jsonResponse.size() < TRANSFER_LOOKUP_PAGE_SIZE) {
+                    break;
+                }
+
+                offset += TRANSFER_LOOKUP_PAGE_SIZE;
             }
+
+            // Transfer ID not found after searching all pages
+            logger.warn("Transfer {} not found in transfers list for account {} (searched {} records)",
+                    transferId, accountId, offset > 0 ? offset : TRANSFER_LOOKUP_PAGE_SIZE);
+            return new AlpacaTransferResponse(transferId, "UNKNOWN", null, null, null, null,
+                    "Transfer not found in account transfers list");
 
         } catch (Exception e) {
             logger.error("Error checking transfer status for transfer {}", transferId, e);
-            return new AlpacaTransferResponse(transferId, "ERROR", null, null, e.getMessage());
+            return new AlpacaTransferResponse(transferId, "ERROR", null, null, null, null, e.getMessage());
         }
+    }
+
+    /**
+     * Search a single page of transfer results for the given transfer ID.
+     * Returns the parsed response if found, null otherwise.
+     */
+    private AlpacaTransferResponse findTransferInPage(JsonNode transfers, String transferId) {
+        for (JsonNode transfer : transfers) {
+            if (!transfer.has("id")) {
+                continue;
+            }
+
+            String id = transfer.get("id").asText();
+            if (!transferId.equals(id)) {
+                continue;
+            }
+
+            // Found our transfer — extract status and metadata
+            String status = transfer.has("status") ? transfer.get("status").asText() : "UNKNOWN";
+            String createdAt = transfer.has("created_at") ? transfer.get("created_at").asText() : null;
+            String updatedAt = transfer.has("updated_at") ? transfer.get("updated_at").asText() : null;
+            String reason = transfer.has("reason") && !transfer.get("reason").isNull()
+                    ? transfer.get("reason").asText() : null;
+
+            BigDecimal amount = null;
+            if (transfer.has("amount") && !transfer.get("amount").isNull()) {
+                String amountStr = transfer.get("amount").asText();
+                if (!"null".equals(amountStr) && !amountStr.trim().isEmpty()) {
+                    try {
+                        amount = new BigDecimal(amountStr);
+                    } catch (NumberFormatException e) {
+                        logger.warn("Failed to parse transfer amount '{}'", amountStr);
+                    }
+                }
+            }
+
+            logger.info("Transfer {} status: {} (reason: {}, updated: {})",
+                    transferId, status, reason, updatedAt);
+
+            return new AlpacaTransferResponse(
+                    id, status, amount, createdAt, updatedAt, reason, null);
+        }
+
+        return null;
     }
 
     /**
@@ -521,19 +481,58 @@ public class AlpacaService {
         public final String status;
         public final BigDecimal amount;
         public final String createdAt;
+        public final String updatedAt;
+        public final String reason;
         public final String errorMessage;
 
         public AlpacaTransferResponse(String id, String status, BigDecimal amount, String createdAt,
                 String errorMessage) {
+            this(id, status, amount, createdAt, null, null, errorMessage);
+        }
+
+        public AlpacaTransferResponse(String id, String status, BigDecimal amount, String createdAt,
+                String updatedAt, String reason, String errorMessage) {
             this.id = id;
             this.status = status;
             this.amount = amount;
             this.createdAt = createdAt;
+            this.updatedAt = updatedAt;
+            this.reason = reason;
             this.errorMessage = errorMessage;
         }
 
         public boolean isSuccess() {
             return errorMessage == null && !"FAILED".equals(status) && !"ERROR".equals(status);
+        }
+
+        /**
+         * Whether the transfer has reached a terminal completed state.
+         * Maps from Alpaca's COMPLETE status.
+         */
+        public boolean isComplete() {
+            return "COMPLETE".equalsIgnoreCase(status) || "COMPLETED".equalsIgnoreCase(status);
+        }
+
+        /**
+         * Whether the transfer has reached a terminal failure state.
+         * Alpaca statuses: REJECTED, CANCELED, RETURNED
+         */
+        public boolean isFailed() {
+            return "REJECTED".equalsIgnoreCase(status) ||
+                    "CANCELED".equalsIgnoreCase(status) ||
+                    "RETURNED".equalsIgnoreCase(status);
+        }
+
+        /**
+         * Whether the transfer is still in progress.
+         * Alpaca statuses: QUEUED, APPROVAL_PENDING, PENDING, SENT_TO_CLEARING, APPROVED
+         */
+        public boolean isPending() {
+            return "QUEUED".equalsIgnoreCase(status) ||
+                    "APPROVAL_PENDING".equalsIgnoreCase(status) ||
+                    "PENDING".equalsIgnoreCase(status) ||
+                    "SENT_TO_CLEARING".equalsIgnoreCase(status) ||
+                    "APPROVED".equalsIgnoreCase(status);
         }
     }
 

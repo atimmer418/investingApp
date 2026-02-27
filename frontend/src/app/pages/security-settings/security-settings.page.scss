@@ -9,7 +9,7 @@ $fred-danger-red: #ff3b30;
 
 // Header Styling (Consistent with Tab3)
 .security-header {
-  --background: var(--ion-color-primary);
+  --background: linear-gradient(0deg, var(--ion-color-primary) 0%, var(--ion-color-primary-tint) 100%);
   --border-width: 0;
 
   ion-title {

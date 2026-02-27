@@ -285,11 +285,55 @@ export class Tab3Page implements OnInit, OnDestroy {
         next: (data) => {
           // hasMfuHistory indicates the user has had at least one MFU generated
           this.hasMfuPeriod = !!(data && (data.hasMfuHistory || data.shouldShow));
+
+          // Auto-show the MFU popup if shouldShow is true
+          if (data && data.shouldShow) {
+            this.showAutoMfuPopup();
+          }
         },
         error: () => {
           this.hasMfuPeriod = false;
         }
       });
+  }
+
+  /**
+   * Show the MFU modal as an auto-popup (isReopen = false, non-dismissable for 5s).
+   */
+  private async showAutoMfuPopup() {
+    const modal = await this.modalController.create({
+      component: MonthlyFreedomUpdateComponent,
+      componentProps: { isReopen: false },
+      cssClass: 'monthly-freedom-update-modal',
+      backdropDismiss: false,
+      leaveAnimation: (baseEl: HTMLElement) => {
+        const backdropEl = baseEl.querySelector('ion-backdrop') || baseEl.shadowRoot?.querySelector('ion-backdrop');
+        const wrapperEl = baseEl.querySelector('.modal-wrapper') || baseEl.shadowRoot?.querySelector('.modal-wrapper') || baseEl;
+        const backdropAnim = createAnimation()
+          .addElement(backdropEl || baseEl)
+          .fromTo('opacity', '1', '0')
+          .easing('ease-in');
+        const contentAnim = createAnimation()
+          .addElement(wrapperEl)
+          .fromTo('opacity', '1', '0')
+          .fromTo('transform', 'translateY(0)', 'translateY(24px)')
+          .easing('cubic-bezier(0.4, 0, 0.2, 1)');
+        return createAnimation()
+          .addElement(baseEl)
+          .duration(400)
+          .addAnimation([backdropAnim, contentAnim]);
+      }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    if (data?.action === 'updateContribution') {
+      const suggestedAmount = (data.currentAmount || 0) + (data.boostAmount || 50);
+      this.router.navigate(['/recurring-investments'], {
+        queryParams: { suggestedAmount: suggestedAmount }
+      });
+    }
   }
 
   onFredLogoClick() {

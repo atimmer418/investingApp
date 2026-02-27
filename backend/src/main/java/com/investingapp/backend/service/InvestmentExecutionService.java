@@ -441,73 +441,90 @@ public class InvestmentExecutionService {
     }
 
     /**
-     * Check funding status for a specific execution
+     * Check funding status for a specific execution.
+     * Uses GET /accounts/{id}/transfers to look up the transfer by ID directly
+     * rather than heuristic CSD activity matching.
      */
     private void checkExecutionFundingStatus(InvestmentExecution execution) {
         logger.info("Checking funding status for execution {}", execution.getId());
 
-        // Smart Batch Check:
-        // Find ALL executions sharing this transfer ID to calculate the total expected amount
-        // because the transfer amount on Alpaca side will be the SUM, not the individual amount.
-        BigDecimal totalBatchAmount = execution.getAmount(); // default to self
+        // Find ALL executions sharing this transfer ID (batch siblings)
         List<InvestmentExecution> batchedExecutions = List.of(execution);
-        
         if (execution.getAlpacaTransferId() != null) {
             List<InvestmentExecution> peerExecutions = executionRepository.findByAlpacaTransferId(execution.getAlpacaTransferId());
             if (peerExecutions.size() > 1) {
                 batchedExecutions = peerExecutions;
-                totalBatchAmount = peerExecutions.stream()
-                    .map(InvestmentExecution::getAmount)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-                logger.info("Execution {} is part of a batch of {} items. Total batch amount: {}", 
-                    execution.getId(), peerExecutions.size(), totalBatchAmount);
+                logger.info("Execution {} is part of a batch of {} items sharing transfer {}",
+                    execution.getId(), peerExecutions.size(), execution.getAlpacaTransferId());
             }
         }
 
+        // Query Alpaca's transfers endpoint — matches by transfer ID, no amount heuristics needed
         AlpacaService.AlpacaTransferResponse transferStatus = alpacaService.checkTransferStatus(
                 execution.getAlpacaAccountId(),
-                execution.getAlpacaTransferId(),
-                totalBatchAmount, // Use the proper TOTAL amount for validation
-                execution.getExecutionDate());
+                execution.getAlpacaTransferId());
 
-        if ("COMPLETED".equalsIgnoreCase(transferStatus.status)) {
-            logger.info("Funding completed for transfer {} (Total: {}). Updating {} associated executions.", 
-                execution.getAlpacaTransferId(), totalBatchAmount, batchedExecutions.size());
+        if (transferStatus.isComplete()) {
+            logger.info("Funding completed for transfer {}. Updating {} associated executions.",
+                execution.getAlpacaTransferId(), batchedExecutions.size());
 
-            // Mark ALL executions in this batch as completed
+            // Mark ALL executions in this batch as funded
             for (InvestmentExecution batchedExec : batchedExecutions) {
-                 // Double check status to avoid re-triggering logic if already processed by a parallel check
-                 if (InvestmentExecution.ExecutionStatus.FUNDING_INITIATED.equals(batchedExec.getStatus())) {
+                // Double check status to avoid re-triggering logic if already processed by a parallel check
+                if (InvestmentExecution.ExecutionStatus.FUNDING_INITIATED.equals(batchedExec.getStatus())) {
                     batchedExec.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_COMPLETED);
                     batchedExec.setFundingCompletedAt(LocalDateTime.now(MARKET_TIMEZONE));
                     executionRepository.save(batchedExec);
-    
+
                     logger.info("Funding confirmed for execution {}, initiating trading logic", batchedExec.getId());
                     initiateTradingForExecution(batchedExec);
-                 }
+                }
             }
 
             // Check for any queued executions for the same user that can now be processed
             processQueuedExecutionsForUser(execution.getUser());
 
-        } else if ("FAILED".equalsIgnoreCase(transferStatus.status) ||
-                "REJECTED".equalsIgnoreCase(transferStatus.status)) {
-            // Funding failed - Fail ALL of them
+        } else if (transferStatus.isFailed()) {
+            // REJECTED, CANCELED, or RETURNED — fail ALL batch siblings
+            String failReason = transferStatus.reason != null
+                    ? transferStatus.status + ": " + transferStatus.reason
+                    : transferStatus.status;
+
+            String userMessage;
+            if ("RETURNED".equalsIgnoreCase(transferStatus.status)) {
+                userMessage = "Your bank returned the ACH transfer. This typically means insufficient funds or an account issue. Please verify your bank details and try again.";
+            } else if ("CANCELED".equalsIgnoreCase(transferStatus.status)) {
+                userMessage = "The ACH transfer was canceled. Please try again or contact support.";
+            } else {
+                userMessage = "Your investment could not be processed due to insufficient funds or banking issues.";
+            }
+
             for (InvestmentExecution batchedExec : batchedExecutions) {
-                batchedExec.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_FAILED);
-                batchedExec.setErrorMessage("ACH transfer failed with status: " + transferStatus.status);
-                executionRepository.save(batchedExec);
-    
-                if (batchedExec.getId().equals(execution.getId())) { // Notify once or per exec? Per exec logic exists.
-                     notifyUserOfFailure(batchedExec, "Funding Failed",
-                        "Your investment could not be processed due to insufficient funds or banking issues.");
+                if (InvestmentExecution.ExecutionStatus.FUNDING_INITIATED.equals(batchedExec.getStatus())) {
+                    batchedExec.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_FAILED);
+                    batchedExec.setErrorMessage("ACH transfer failed: " + failReason);
+                    executionRepository.save(batchedExec);
+
+                    notifyUserOfFailure(batchedExec, "Funding Failed", userMessage);
                 }
             }
-        } else {
-            // Still pending
-            if (execution.getExecutionDate().isBefore(LocalDateTime.now(MARKET_TIMEZONE).minusHours(24))) {
-                // Timeout logic...
+        } else if (transferStatus.isPending()) {
+            // Still in progress — log current Alpaca status for visibility
+            logger.info("Transfer {} still pending with Alpaca status: {}",
+                    execution.getAlpacaTransferId(), transferStatus.status);
+
+            // Staleness timeout: if funding has been pending for more than 5 business days, flag it
+            if (execution.getExecutionDate() != null &&
+                    execution.getExecutionDate().isBefore(LocalDateTime.now(MARKET_TIMEZONE).minusDays(7))) {
+                logger.warn("Transfer {} for execution {} has been pending for over 7 days (initiated {}). " +
+                        "Alpaca status: {}. May require manual review.",
+                        execution.getAlpacaTransferId(), execution.getId(),
+                        execution.getExecutionDate(), transferStatus.status);
             }
+        } else {
+            // UNKNOWN or ERROR from our API call — log but don't change execution status
+            logger.warn("Unexpected transfer status '{}' for transfer {} (error: {}). Will retry next cycle.",
+                    transferStatus.status, execution.getAlpacaTransferId(), transferStatus.errorMessage);
         }
     }
 

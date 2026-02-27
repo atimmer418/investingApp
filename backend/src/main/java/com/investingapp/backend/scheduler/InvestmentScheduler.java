@@ -7,10 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-
 @Component
 public class InvestmentScheduler {
     
@@ -19,48 +15,6 @@ public class InvestmentScheduler {
     @Autowired
     private InvestmentExecutionService investmentExecutionService;
 
-    /**
-     * Check if markets are currently open (US Eastern Time)
-     * Market hours: Monday-Friday 9:30 AM - 4:00 PM ET
-     */
-    private boolean isMarketHours() {
-        LocalDateTime now = LocalDateTime.now();
-        DayOfWeek dayOfWeek = now.getDayOfWeek();
-        LocalTime currentTime = now.toLocalTime();
-        
-        // Weekend check
-        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-            return false;
-        }
-        
-        // Market hours: 9:30 AM - 4:00 PM ET
-        LocalTime marketOpen = LocalTime.of(9, 30);
-        LocalTime marketClose = LocalTime.of(16, 0);
-        
-        return currentTime.isAfter(marketOpen) && currentTime.isBefore(marketClose);
-    }
-
-    /**
-     * Check if it's a reasonable time to process funding
-     * Allow broader hours for funding (8 AM - 6 PM ET) since funding can happen outside market hours
-     */
-    private boolean isFundingHours() {
-        LocalDateTime now = LocalDateTime.now();
-        DayOfWeek dayOfWeek = now.getDayOfWeek();
-        LocalTime currentTime = now.toLocalTime();
-        
-        // Weekend check
-        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-            return false;
-        }
-        
-        // Broader hours for funding activities: 8:00 AM - 6:00 PM ET
-        LocalTime fundingStart = LocalTime.of(8, 0);
-        LocalTime fundingEnd = LocalTime.of(18, 0);
-        
-        return currentTime.isAfter(fundingStart) && currentTime.isBefore(fundingEnd);
-    }
-    
     /**
      * Process scheduled investments every day at 11:55 PM ET
      * This runs before the 11:59 PM batch process, allowing users to update their
@@ -80,15 +34,11 @@ public class InvestmentScheduler {
     
     /**
      * Check funding status every 30 minutes during funding hours
-     * This allows for the 10-30 minute ACH delay mentioned in the requirements
+     * ACH transfers process on business days roughly 8 AM - 6 PM ET
+     * Cron: every 30 min, hours 8-17, Mon-Fri ET
      */
-    @Scheduled(fixedRate = 1800000) // 30 minutes = 1800000 milliseconds
+    @Scheduled(cron = "0 */30 8-17 * * MON-FRI", zone = "America/New_York")
     public void checkFundingStatus() {
-        if (!isFundingHours()) {
-            logger.debug("Skipping funding status check - outside funding hours");
-            return;
-        }
-        
         logger.info("Starting funding status check job");
         try {
             investmentExecutionService.checkFundingStatus();
@@ -99,16 +49,12 @@ public class InvestmentScheduler {
     }
 
     /**
-     * Check trading status every 15 minutes during market hours only
-     * This ensures quick detection of filled orders when market is open
+     * Check trading status every 15 minutes during US market hours
+     * US equity markets: 9:30 AM - 4:00 PM ET, Mon-Fri
+     * Cron: every 15 min, hours 9-15, Mon-Fri ET (covers 9:00-15:45)
      */
-    @Scheduled(fixedRate = 900000) // 15 minutes = 900000 milliseconds
+    @Scheduled(cron = "0 */15 9-15 * * MON-FRI", zone = "America/New_York")
     public void checkTradingStatus() {
-        if (!isMarketHours()) {
-            logger.debug("Skipping trading status check - market is closed");
-            return;
-        }
-        
         logger.info("Starting trading status check job");
         try {
             investmentExecutionService.checkTradingStatus();

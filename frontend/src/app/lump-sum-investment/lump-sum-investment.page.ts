@@ -115,14 +115,15 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
   isProcessingTransfer: boolean = false;
 
   brokerageOptions = [
-    { name: 'Robinhood', dtc: '6769' },
-    { name: 'Fidelity', dtc: '0226' },
+    { name: 'Alinea', dtc: '2402' },
     { name: 'Charles Schwab', dtc: '0164' },
     { name: 'E*TRADE', dtc: '0385' },
+    { name: 'Fidelity', dtc: '0226' },
+    { name: 'Public', dtc: '0158' },
+    { name: 'Robinhood', dtc: '6769' },
     { name: 'TD Ameritrade', dtc: '0188' },
     { name: 'Vanguard', dtc: '0062' },
-    { name: 'Webull', dtc: '0002' }, // Note check this DTC, standard clearing
-    { name: 'Public', dtc: '0443' }  // Apex Clearing
+    { name: 'Webull', dtc: '0158' },
   ];
 
   constructor(

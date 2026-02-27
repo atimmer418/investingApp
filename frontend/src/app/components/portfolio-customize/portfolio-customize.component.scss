@@ -13,7 +13,7 @@ ion-content {
 
 ion-header {
   ion-toolbar {
-    --background: var(--ion-color-primary);
+    --background: linear-gradient(0deg, var(--ion-color-primary) 0%, var(--ion-color-primary-tint) 100%);
     --color: white;
     
     ion-title {

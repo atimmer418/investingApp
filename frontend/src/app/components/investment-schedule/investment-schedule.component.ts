@@ -67,13 +67,15 @@ export class InvestmentScheduleComponent implements OnInit {
   transferAccountNumber: string = '';
   
   brokerageOptions = [
-    { name: 'Robinhood', dtc: '6769' },
-    { name: 'Fidelity', dtc: '0226' },
+    { name: 'Alinea', dtc: '2402' },
     { name: 'Charles Schwab', dtc: '0164' },
-    { name: 'Vanguard', dtc: '0062' },
-    { name: 'E*Trade', dtc: '0385' },
+    { name: 'E*TRADE', dtc: '0385' },
+    { name: 'Fidelity', dtc: '0226' },
+    { name: 'Public', dtc: '0158' },
+    { name: 'Robinhood', dtc: '6769' },
     { name: 'TD Ameritrade', dtc: '0188' },
-    { name: 'Webull', dtc: '0158' }
+    { name: 'Vanguard', dtc: '0062' },
+    { name: 'Webull', dtc: '0158' },
   ];
 
   constructor(

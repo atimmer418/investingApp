@@ -1,12 +1,10 @@
 # Investing App API Endpoints
 
-This file documents all available API endpoints in the Investing App backend. When new endpoints are added, they should be documented here following the same format.
+All available API endpoints in the backend. Keep this file updated when adding new endpoints.
 
 ## Base URL
-```
-http://localhost:8080 (development)
-https://your-production-domain.com (production)
-```
+- **Development:** `http://localhost:8080`
+- **Cloudflare Tunnel:** `https://local.fredvested.com`
 
 ---
 
@@ -14,242 +12,225 @@ https://your-production-domain.com (production)
 
 ### Auth Controller (`/api/auth`)
 
-| Method | Endpoint                | Description                       | Auth Required | Request Body  | Response                |
-|--------|-------------------------|-----------------------------------|---------------|---------------|-------------------------|
-| `GET`  | `/api/auth/testuser`    | Test endpoint for user authentication | ✅            | None          | User details            |
-| `POST` | `/api/auth/login`       | User login with credentials       | ❌            | LoginRequest  | JWT token + user info   |
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `POST` | `/api/auth/login` | Login with credentials (triggers 2FA OTP) | No | `LoginRequest { email, password }` | 202 `{ message, email, twoFactorRequired }` or 200 `{ jwtToken, id, email }` |
+| `POST` | `/api/auth/refresh` | Refresh JWT token (called proactively by frontend) | Yes | None | `{ success, jwtToken, id, email }` |
+| `GET` | `/api/auth/testuser` | Debug: returns authenticated user info | Yes | None | String |
 
 ### WebAuthn/Passkey Controller (`/api/passkey`)
 
-| Method | Endpoint                        | Description                       | Auth Required | Request Body              | Response                |
-|--------|---------------------------------|-----------------------------------|---------------|---------------------------|-------------------------|
-| `POST` | `/api/passkey/register/start`   | Start passkey registration flow   | ❌            | RegistrationStartRequest  | Registration challenge  |
-| `POST` | `/api/passkey/register/finish`  | Complete passkey registration     | ❌            | RegistrationFinishRequest | JWT token + user info   |
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `POST` | `/api/passkey/register/start` | Start passkey registration | No | RegistrationStartRequest | Registration challenge |
+| `POST` | `/api/passkey/register/finish` | Complete passkey registration | No | RegistrationFinishRequest | `{ jwtToken, id, email }` |
+| `POST` | `/api/passkey/authenticate/start` | Start usernameless passkey authentication | No | None | Authentication challenge |
+| `POST` | `/api/passkey/authenticate/finish` | Complete passkey authentication | No | Assertion response | `{ jwtToken, id, email }` |
 
-### Development Auth Controller (`/api/dev`)
+### Account Recovery (`/api/auth/recovery`)
 
-| Method | Endpoint                        | Description                       | Auth Required | Request Body    | Response      |
-|--------|---------------------------------|-----------------------------------|---------------|-----------------|---------------|
-| `POST` | `/api/dev/authenticate-as-user` | Dev-only: Authenticate as any user | ❌ (Dev only) | User ID/Email   | JWT token     |
-| `GET`  | `/api/dev/list-users`           | Dev-only: List all users         | ❌ (Dev only) | None            | User list     |
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `POST` | `/api/auth/recovery/initiate` | Initiate recovery (SSN lookup, OTP email) | No | `{ ssn }` | `{ success, message, token }` |
+| `POST` | `/api/auth/recovery/verify` | Verify OTP, purge passkeys, issue recovery JWT | No | `{ ssn, otp }` | `{ success, message, token }` |
+
+### Development Auth (`/api/dev`) — Dev only
+
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `POST` | `/api/dev/authenticate-as-user` | Authenticate as any user | No | `{ email }` | `{ jwtToken, id, email }` |
+| `GET` | `/api/dev/list-users` | List all users | No | None | User list |
 
 ---
 
-## 2. User Management
+## 2. User Management (`/api/user`)
 
-### User Controller (`/api/user`)
-
-| Method | Endpoint               | Description                      | Auth Required | Request Body | Response            |
-|--------|------------------------|----------------------------------|---------------|--------------|---------------------|
-| `GET`  | `/api/user/progress`   | Get user's onboarding progress   | ✅            | None         | UserProgress object |
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `GET` | `/api/user/progress` | Get onboarding progress (8-step flow) | Yes | None | `UserProgressResponse` (step booleans, nextStep, completionPercentage, profile fields, referral info) |
+| `PUT` | `/api/user/progress` | Update onboarding progress | Yes | `{ getStartedCompleted?, surveyInitialCompleted?, fiPlanResultsCompleted?, authFinalizeCompleted?, kycVerificationCompleted?, linkPlaidCompleted?, investmentScheduleCompleted?, investmentConfirmationCompleted? }` | `UserProgressResponse` |
+| `PUT` | `/api/user/profile` | Update profile fields | Yes | `{ monthlyInvestment?, retirementIncome? }` | `UserProgressResponse` |
+| `POST` | `/api/user/update-email` | Change email address (issues new JWT) | Yes | `{ newEmail, currentEmail? }` | `{ message, newEmail, jwtToken }` |
+| `POST` | `/api/user/referral/apply` | Apply a referral code | Yes | `{ code }` | `{ message }` |
+| `GET` | `/api/user/should-prompt-reauth` | Check if device should see passkey prompt vs onboarding | No | Header: `X-Device-ID` (optional) | `{ shouldPromptReauth, message, trackingMethod }` |
+| `GET` | `/api/user/sessions` | List all active sessions | Yes | None | `{ currentSessionId, sessions }` |
+| `POST` | `/api/user/sessions/{id}/revoke` | Revoke a specific session | Yes | None | `{ message }` |
 
 ---
 
-## 3. Investment Schedules
+## 3. Investment Schedules (`/api/investment-schedule`)
 
-### Investment Schedule Controller (`/api/investment-schedule`)
-
-| Method | Endpoint                                           | Description                           | Auth Required | Request Body                  | Response                        |
-|--------|----------------------------------------------------|---------------------------------------|---------------|-------------------------------|---------------------------------|
-| `POST` | `/api/investment-schedule/create`                  | Create or update investment schedule (upsert) | ✅            | CreateInvestmentScheduleRequest | InvestmentScheduleResponse      |
-| `GET`  | `/api/investment-schedule/current`                 | Get user's current investment schedule | ✅            | None                          | InvestmentScheduleResponse      |
-| `GET`  | `/api/investment-schedule/all`                     | Get all user's investment schedules   | ✅            | None                          | List<InvestmentScheduleResponse> |
-| `POST` | `/api/investment-schedule/update-ach-request-id`   | Update ACH request ID for schedule    | ✅            | UpdateAchRequestIdRequest     | InvestmentScheduleResponse      |
-| `POST` | `/api/investment-schedule/{scheduleId}/pause`      | Pause an investment schedule          | ✅            | None                          | InvestmentScheduleResponse      |
-| `POST` | `/api/investment-schedule/{scheduleId}/resume`     | Resume a paused investment schedule   | ✅            | None                          | InvestmentScheduleResponse      |
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `POST` | `/api/investment-schedule/create` | Create or update schedule (upsert) | Yes | `CreateInvestmentScheduleRequest` | `InvestmentScheduleResponse` |
+| `GET` | `/api/investment-schedule/current` | Get current schedule | Yes | None | `InvestmentScheduleResponse` |
+| `GET` | `/api/investment-schedule/all` | Get all schedules | Yes | None | `List<InvestmentScheduleResponse>` |
+| `POST` | `/api/investment-schedule/update-ach-request-id` | Update ACH request ID | Yes | `{ achRequestId, userEmail }` | `InvestmentScheduleResponse` |
+| `POST` | `/api/investment-schedule/{scheduleId}/pause` | Pause schedule | Yes | None | `InvestmentScheduleResponse` |
+| `POST` | `/api/investment-schedule/{scheduleId}/resume` | Resume paused schedule | Yes | None | `InvestmentScheduleResponse` |
 
 **DTOs:**
-- `CreateInvestmentScheduleRequest`: `{ investmentAmount, frequency, startDate }` (frequency: "WEEKLY", "BIWEEKLY", "SEMI_MONTHLY", "MONTHLY")
-- `UpdateAchRequestIdRequest`: `{ achRequestId, userEmail }`
+- `CreateInvestmentScheduleRequest`: `{ investmentAmount, frequency, startDate }` — frequency: WEEKLY, BIWEEKLY, SEMI_MONTHLY, MONTHLY
 - `InvestmentScheduleResponse`: `{ id, monthlyAmount, investmentAmount, frequency, startDate, nextInvestmentDate, achRequestId, isPaused, createdAt, updatedAt }`
 
 ---
 
-## 4. Portfolio Management
+## 4. Investments (`/api/investments`)
 
-### Portfolio Controller (`/api/portfolio`)
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `POST` | `/api/investments/execute` | Create lump-sum investment | Yes | `{ amount, type?, symbol?, fundingSource? }` | `{ success, message, executionId, amount, status, queued }` |
+| `POST` | `/api/investments/schedule` | Update investment schedule settings | Yes | `{ monthlyInvestment?, payFrequency?, nextInvestmentDate? }` | `{ success, message, ... }` |
+| `GET` | `/api/investments/history` | Get last 6 months of executions | Yes | None | `{ success, executions, nextInvestmentDate, monthlyInvestment, payFrequency }` |
+| `GET` | `/api/investments/execution/{executionId}` | Get execution details + trades | Yes | None | `{ success, execution, trades }` |
+| `GET` | `/api/investments/dashboard` | Investment dashboard summary | Yes | None | `{ success, totalInvested, pendingCount, failedCount, nextInvestmentDate, monthlyInvestment, payFrequency, recentExecutions }` |
 
-| Method | Endpoint                    | Description                              | Auth Required | Request Body              | Response                |
-|--------|-----------------------------|------------------------------------------|---------------|---------------------------|-------------------------|
-| `PUT`  | `/api/portfolio/update`     | Update user's portfolio allocations     | ✅            | UpdatePortfolioRequest    | PortfolioResponse       |
-| `GET`  | `/api/portfolio/current`    | Get current portfolio for user           | ✅            | None                      | PortfolioResponse       |
-| `POST` | `/api/portfolio/reset-to-default` | Reset portfolio to default allocation | ✅            | None                      | PortfolioResponse       |
+**Execute request details:**
+- `amount`: Required, $1–$1,000,000
+- `type`: `"portfolio"` (default) or `"stock"`
+- `symbol`: Required if type=stock
+- `fundingSource`: `"bank"` (default) or `"buying_power"`
+
+---
+
+## 5. Portfolio Management (`/api/portfolio`)
+
+### Allocation
+
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `PUT` | `/api/portfolio/update` | Update portfolio allocations | Yes | `UpdatePortfolioRequest` | `PortfolioResponse` |
+| `GET` | `/api/portfolio/current` | Get current portfolio | Yes | None | `PortfolioResponse` |
+| `POST` | `/api/portfolio/reset-to-default` | Reset to default allocation | Yes | None | `PortfolioResponse` |
 
 **DTOs:**
-- `UpdatePortfolioRequest`: `{ portfolioItems: [{ symbol, name, percentage, assetType? }] }`
-- `PortfolioResponse`: `{ id, name, totalPercentage, isDefault, portfolioItems: [{ id, symbol, name, percentage, assetType }], createdAt, updatedAt }`
-- `PortfolioItemDto`: `{ symbol, name, percentage, assetType }` (percentage must total 100% across all items)
+- `UpdatePortfolioRequest`: `{ portfolioItems: [{ symbol, name, percentage, assetType? }] }` — percentages must total 100%
+- `PortfolioResponse`: `{ id, name, totalPercentage, isDefault, portfolioItems, createdAt, updatedAt }`
 
-**Example UpdatePortfolioRequest:**
-```json
-{
-  "portfolioItems": [
-    {
-      "symbol": "VTI",
-      "name": "Vanguard Total Stock Market ETF",
-      "percentage": 60.00,
-      "assetType": "ETF"
-    },
-    {
-      "symbol": "VXUS", 
-      "name": "Vanguard Total International Stock ETF",
-      "percentage": 30.00,
-      "assetType": "ETF"
-    },
-    {
-      "symbol": "BND",
-      "name": "Vanguard Total Bond Market ETF", 
-      "percentage": 10.00,
-      "assetType": "ETF"
-    }
-  ]
-}
-```
+### Dashboard
+
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `GET` | `/api/portfolio/dashboard` | Full portfolio dashboard (equity, positions, gain/loss) | Yes | None | `PortfolioDashboardData` |
+| `GET` | `/api/portfolio/history` | Portfolio value history for charting | Yes | Query: `period` (1D/1W/1M/3M/6M/1Y/ALL, default 1M) | `PortfolioHistory` |
+| `GET` | `/api/portfolio/positions` | Current holdings with summary | Yes | None | `{ positions, summary }` |
+| `GET` | `/api/portfolio/performance` | Performance metrics (Today + Total) | Yes | None | `[{ period, startValue, endValue, totalReturn, totalReturnPercent }]` |
 
 ---
 
-## 5. Banking & Plaid Integration
+## 6. Banking & Plaid (`/api/plaid`)
 
-### Plaid Controller (`/api/plaid`)
-
-| Method | Endpoint | Description | Authentication Required | Request Body | Response |
-|--------|----------|-------------|------------------------|--------------|----------|
-| `POST` | `/api/plaid/create_link_token` | Create Plaid link token for authenticated user | ✅ | None | LinkTokenResponse |
-| `POST` | `/api/plaid/exchange_public_token` | Exchange public token for access token | ✅ | `{ public_token }` | Success/Error message |
-| `GET` | `/api/plaid/user-data` | Get user's Plaid data | ✅ | None | User bank data |
-| `GET` | `/api/plaid/access-token` | Get stored access token | ✅ | None | Access token info |
-| `GET` | `/api/plaid/primary-bank-account` | Get user's primary bank account | ✅ | None | Bank account details |
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `POST` | `/api/plaid/create_link_token` | Create Plaid link token | Yes | None | LinkTokenResponse |
+| `POST` | `/api/plaid/exchange_public_token` | Exchange public token for access token | Yes | `{ public_token }` | Success/Error |
+| `GET` | `/api/plaid/user-data` | Get user's Plaid data | Yes | None | Bank data |
+| `GET` | `/api/plaid/access-token` | Get stored access token | Yes | None | Access token info |
+| `GET` | `/api/plaid/primary-bank-account` | Get primary bank account | Yes | None | Bank account details |
 
 ---
 
-## 6. Alpaca Trading Integration
+## 7. Alpaca Brokerage (`/api/alpaca`)
 
-### Alpaca Controller (`/api/alpaca`)
-
-| Method | Endpoint | Description | Authentication Required | Request Body | Response |
-|--------|----------|-------------|------------------------|--------------|----------|
-| `GET` | `/api/alpaca/account` | Get Alpaca account details | ✅ | None | Account information |
-| `POST` | `/api/alpaca/create-account` | Create new Alpaca account | ✅ | Account creation data | Account details |
-| `GET` | `/api/alpaca/assets` | Get available trading assets | ✅ | None | List of assets |
-| `POST` | `/api/alpaca/accounts/{accountId}/ach-relationships` | Create ACH relationship | ✅ | ACH relationship data | ACH relationship |
-| `POST` | `/api/alpaca/accounts/{accountId}/ach-relationships/plaid` | Create ACH relationship via Plaid | ✅ | Plaid ACH data | ACH relationship |
-| `GET` | `/api/alpaca/accounts/{accountId}/ach-relationships` | Get ACH relationships | ✅ | None | List of ACH relationships |
-| `GET` | `/api/alpaca/account/{accountId}/status` | Get account status | ✅ | None | Account status |
-
----
-
-## 7. Trading Operations
-
-### Trading Controller (`/api/trading`)
-
-| Method | Endpoint | Description | Authentication Required | Request Body | Response |
-|--------|----------|-------------|------------------------|--------------|----------|
-| `GET` | `/api/trading/positions` | Get current stock positions | ✅ | None | List of positions |
-| `POST` | `/api/trading/sell/percentage` | Sell percentage of stock position | ✅ | SellPercentageRequest | Order details |
-| `POST` | `/api/trading/liquidate` | Sell all positions (liquidate portfolio) | ✅ | None | Order details |
-| `POST` | `/api/trading/withdraw` | Withdraw cash to bank account | ✅ | WithdrawRequest | Transfer details |
-| `GET` | `/api/trading/account/balance` | Get account balance and buying power | ✅ | None | Balance information |
-
-**DTOs:**
-- `SellPercentageRequest`: `{ symbol, percentage }` (percentage: 0.01-100.00)
-- `WithdrawRequest`: `{ amount }` (amount: positive decimal)
-
-**Example SellPercentageRequest:**
-```json
-{
-  "symbol": "VTI",
-  "percentage": 25.00
-}
-```
-
-**Example WithdrawRequest:**
-```json
-{
-  "amount": 1000.00
-}
-```
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `GET` | `/api/alpaca/account` | Get Alpaca account info | Yes | None | Account JSON |
+| `POST` | `/api/alpaca/create-account` | Create Alpaca brokerage account | Yes | `{ email, firstName, lastName, dateOfBirth, ssn, phone, address }` | `{ account_id, account_number }` |
+| `POST` | `/api/alpaca/sync-account-number` | Sync account number from Alpaca | Yes | None | `{ account_number }` |
+| `GET` | `/api/alpaca/assets` | Search/list available assets | Yes | Query: `status`, `asset_class`, `search` | Assets JSON |
+| `POST` | `/api/alpaca/accounts/{accountId}/ach-relationships` | Create ACH relationship (manual) | Yes | `{ accountOwnerName, bankAccountType, bankAccountNumber, bankRoutingNumber, nickname }` | ACH relationship |
+| `POST` | `/api/alpaca/accounts/{accountId}/ach-relationships/plaid` | Create ACH relationship via Plaid | Yes | `{ plaidAccessToken, plaidAccountId, accountOwnerName }` | ACH relationship |
+| `GET` | `/api/alpaca/accounts/{accountId}/ach-relationships` | List ACH relationships | Yes | None | ACH relationships JSON |
+| `GET` | `/api/alpaca/account/{accountId}/status` | Get account status | Yes | None | Status JSON |
+| `POST` | `/api/alpaca/acats/transfer` | Initiate ACATS transfer from another brokerage | Yes | `{ dtcNumber, accountNumber }` | `{ status, transferId, message }` |
 
 ---
 
-## 8. System & Health
+## 8. Trading (`/api/trading`)
 
-### Health Check Controller
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `GET` | `/api/trading/positions` | Get current positions | Yes | None | Positions list |
+| `POST` | `/api/trading/sell/percentage` | Sell percentage of a position | Yes | `{ symbol, percentage }` (0.01–100.00) | Order details |
+| `POST` | `/api/trading/liquidate` | Sell all positions | Yes | None | Order details |
+| `POST` | `/api/trading/withdraw` | Withdraw cash to bank | Yes | `{ amount }` | Transfer details |
+| `GET` | `/api/trading/account/balance` | Get balance and buying power | Yes | None | Balance info |
 
-| Method | Endpoint | Description | Authentication Required | Request Body | Response |
-|--------|----------|-------------|------------------------|--------------|----------|
-| `GET` | `/hello` | Basic health check endpoint | ❌ | None | "Hello World" |
+---
 
-### Apple App Site Association
+## 9. Beneficiaries (`/api/beneficiaries`)
 
-| Method | Endpoint | Description | Authentication Required | Request Body | Response |
-|--------|----------|-------------|------------------------|--------------|----------|
-| `GET` | `/.well-known/apple-app-site-association` | Apple App Site Association for iOS | ❌ | None | JSON configuration |
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `GET` | `/api/beneficiaries` | Get all beneficiaries | Yes | None | `List<Beneficiary>` |
+| `GET` | `/api/beneficiaries/active` | Get active beneficiaries only | Yes | None | `List<Beneficiary>` |
+| `GET` | `/api/beneficiaries/summary` | Get allocation summary | Yes | None | `BeneficiaryAllocationSummary` |
+| `GET` | `/api/beneficiaries/primary` | Get primary beneficiaries | Yes | None | `List<Beneficiary>` |
+| `GET` | `/api/beneficiaries/contingent` | Get contingent beneficiaries | Yes | None | `List<Beneficiary>` |
+| `POST` | `/api/beneficiaries` | Create beneficiary | Yes | `Beneficiary` (validated) | `Beneficiary` |
+| `PUT` | `/api/beneficiaries/{id}` | Update beneficiary | Yes | `Beneficiary` (validated) | `Beneficiary` |
+| `DELETE` | `/api/beneficiaries/{id}` | Delete beneficiary | Yes | None | 200 OK |
+| `POST` | `/api/beneficiaries/{id}/submit` | Submit beneficiary to Alpaca | Yes | None | `{ success, message }` |
+| `POST` | `/api/beneficiaries/submit-all` | Submit all approved beneficiaries to Alpaca | Yes | None | `{ success, message }` |
+
+---
+
+## 10. PIN Security (`/api/user/pin`)
+
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `POST` | `/api/user/pin/set` | Set or reset 4-digit PIN | Yes | `{ pin }` (4 digits) | `PinResponse { success, message, locked, lockoutSecondsRemaining }` |
+| `POST` | `/api/user/pin/verify` | Verify PIN (5 attempts, escalating lockout) | Yes | `{ pin }` | `PinResponse` |
+| `GET` | `/api/user/pin/status` | Check if PIN is set | Yes | None | `Boolean` |
+| `GET` | `/api/user/pin/lockout-status` | Get lockout status | Yes | None | `PinResponse` |
+| `DELETE` | `/api/user/pin/delete` | Remove PIN and reset lockout | Yes | None | `PinResponse` |
+
+---
+
+## 11. AI Chat (`/api/chat`)
+
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `POST` | `/api/chat` | Send message to AI assistant | Yes | `ChatRequest` | `ChatResponse` |
+| `GET` | `/api/chat/history` | Get chat history | Yes | Query: `sessionId?`, `userId?` | `List<ChatMessage>` |
+| `GET` | `/api/chat/suggestions` | Get personalized question suggestions | Yes | Query: `userId` | `List<String>` (3 suggestions) |
+
+---
+
+## 12. Documents (`/api/documents`)
+
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `GET` | `/api/documents/tax` | Get tax documents from Alpaca | Yes | Query: `start?`, `end?` | Tax documents JSON |
+| `GET` | `/api/documents/tax/{documentId}/download` | Download tax document as PDF | Yes | None | PDF bytes |
+
+---
+
+## 13. Monthly Freedom Update (`/api/monthly-freedom-update`)
+
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|-------------|----------|
+| `GET` | `/api/monthly-freedom-update/check` | Check if monthly update should show | Yes | None | `MonthlyFreedomUpdateDTO { shouldShow, ... }` |
+| `GET` | `/api/monthly-freedom-update/generate` | Generate full monthly update data | Yes | Query: `reopen` (boolean, default false) | `MonthlyFreedomUpdateDTO` |
+| `POST` | `/api/monthly-freedom-update/dismiss` | Mark update as seen | Yes | None | `{ success: true }` |
+
+---
+
+## 14. System & Health
+
+| Method | Endpoint | Description | Auth | Response |
+|--------|----------|-------------|------|----------|
+| `GET` | `/hello` | Health check | No | "Hello World" |
+| `GET` | `/.well-known/apple-app-site-association` | iOS universal links config | No | JSON |
 
 ---
 
 ## Authentication Notes
 
-### JWT Token Usage
-- Include JWT token in Authorization header: `Authorization: Bearer <token>`
-- Tokens are obtained through login (`/api/auth/login`) or passkey registration completion
-- Tokens are required for all endpoints marked with ✅
+- JWT tokens go in the `Authorization: Bearer <token>` header.
+- Tokens are 1-hour expiry, HS512 signed. Frontend refreshes proactively.
+- Primary auth is via passkey (biometric). Login with email/password triggers 2FA OTP.
+- `/api/dev/*` endpoints are development-only, disabled in production.
+- See AUTHENTICATION_AND_JWT.md for full auth system docs.
 
-### Development Authentication
-- Development endpoints (`/api/dev/*`) are only available in development environment
-- Production environments should have these endpoints disabled
-
----
-
-## Error Handling
-
-All endpoints return standardized error responses:
-
-```json
-{
-  "message": "Error description",
-  "timestamp": "2025-09-22T10:30:00Z",
-  "status": 400/401/403/404/500
-}
-```
-
-Common HTTP status codes:
-- `200` - Success
-- `400` - Bad Request (validation errors)
-- `401` - Unauthorized (authentication required)
-- `403` - Forbidden (insufficient permissions)
-- `404` - Not Found (resource doesn't exist)
-- `500` - Internal Server Error
-
----
-
-## Adding New Endpoints
-
-When adding new endpoints to this API:
-
-1. **Update this documentation** with the new endpoint details
-2. **Follow RESTful conventions**:
-   - `GET` for retrieving data
-   - `POST` for creating new resources
-   - `PUT` for updating existing resources
-   - `DELETE` for removing resources
-3. **Include appropriate authentication** requirements
-4. **Document request/response DTOs** with example JSON
-5. **Add error handling** following the standard format
-6. **Update frontend service methods** in `auth.service.ts` or create new service files
-
-### Documentation Template for New Endpoints:
-
-```markdown
-| Method | Endpoint | Description | Authentication Required | Request Body | Response |
-|--------|----------|-------------|------------------------|--------------|----------|
-| `POST` | `/api/new-feature/action` | Description of what it does | ✅/❌ | RequestDTO | ResponseDTO |
-```
-
-**Example DTOs:**
-- `RequestDTO`: `{ field1, field2, field3? }` (? indicates optional)
-- `ResponseDTO`: `{ id, field1, field2, createdAt }`
-
----
-
-*Last Updated: September 22, 2025*
-*Total Endpoints: 25*
+*Last Updated: February 27, 2026*
