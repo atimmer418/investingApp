@@ -35,12 +35,87 @@
         <p class="section-subtitle text-gray text-sm">Select a stock to sell. Proceeds will be added to your Buying Power immediately.</p>
       </div>
 
-      <!-- No positions message -->
-      <div *ngIf="positions.length === 0" class="no-positions p-md text-center">
-        <div class="empty-state">
+      <!-- No positions message — show close account guidance -->
+      <div *ngIf="positions.length === 0" class="no-positions p-md">
+        <div class="empty-state text-center">
           <ion-icon name="pie-chart-outline" class="empty-icon text-gray text-4xl m-b-sm"></ion-icon>
           <h4 class="empty-title font-medium text-dark">No Holdings Found</h4>
-          <p class="empty-description text-gray text-sm">You don't have any stock positions to sell yet.</p>
+          <p class="empty-description text-gray text-sm">You don't have any stock positions to sell.</p>
+        </div>
+
+        <!-- Close Account Guidance -->
+        <div class="close-account-section m-t-md fade-in">
+          <div class="close-account-info-box">
+            <div class="close-account-info-header display-flex align-center m-b-sm">
+              <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
+              <span class="font-semibold text-dark text-sm">Want to close your account?</span>
+            </div>
+            <p class="text-xs text-gray m-0 m-b-sm">
+              To permanently close your FRED account, you must first:
+            </p>
+            <div class="close-account-checklist m-b-md">
+              <div class="checklist-item display-flex align-center m-b-xs">
+                <ion-icon 
+                  [name]="positions.length === 0 ? 'checkmark-circle-outline' : 'close-circle-outline'" 
+                  [class]="positions.length === 0 ? 'text-success m-r-xs' : 'text-danger m-r-xs'"
+                  style="font-size: 18px;">
+                </ion-icon>
+                <span class="text-sm" [class.text-dark]="positions.length === 0" [class.text-gray]="positions.length > 0">Sell all holdings</span>
+              </div>
+              <div class="checklist-item display-flex align-center">
+                <ion-icon 
+                  [name]="getWithdrawableCash() <= 0 ? 'checkmark-circle-outline' : 'close-circle-outline'" 
+                  [class]="getWithdrawableCash() <= 0 ? 'text-success m-r-xs' : 'text-danger m-r-xs'"
+                  style="font-size: 18px;">
+                </ion-icon>
+                <span class="text-sm" [class.text-dark]="getWithdrawableCash() <= 0" [class.text-gray]="getWithdrawableCash() > 0">Withdraw all cash</span>
+              </div>
+            </div>
+
+            <!-- Close Account Button -->
+            <ion-button 
+              expand="block" 
+              fill="outline"
+              color="danger"
+              class="close-account-btn"
+              [disabled]="!canCloseAccount || isClosingAccount"
+              (click)="initiateCloseAccount()">
+              <ion-icon slot="start" name="trash-outline"></ion-icon>
+              {{!canCloseAccount ? 'Complete steps above first' : 'Close My Account'}}
+            </ion-button>
+
+            <!-- Confirmation Panel -->
+            <div *ngIf="showCloseConfirmation" class="close-confirm-panel fade-in m-t-md">
+              <div class="close-confirm-warning">
+                <ion-icon name="alert-circle-outline" class="text-danger" style="font-size: 28px;"></ion-icon>
+                <h4 class="font-semibold text-danger m-t-xs m-b-xs">Are you sure?</h4>
+                <p class="text-sm text-gray m-0 m-b-md">
+                  This action is <strong>irreversible</strong> and will permanently destroy your account associated with FRED. 
+                  All your data, settings, and history will be deleted. If you return, you'll need to start over from scratch.
+                </p>
+              </div>
+              <div class="close-confirm-actions display-flex gap-sm">
+                <ion-button 
+                  expand="block" 
+                  fill="outline"
+                  color="medium"
+                  class="flex-1"
+                  [disabled]="isClosingAccount"
+                  (click)="cancelCloseAccount()">
+                  Cancel
+                </ion-button>
+                <ion-button 
+                  expand="block" 
+                  color="danger"
+                  class="flex-1"
+                  [disabled]="isClosingAccount"
+                  (click)="confirmCloseAccount()">
+                  <ion-spinner *ngIf="isClosingAccount" name="crescent" slot="start"></ion-spinner>
+                  {{isClosingAccount ? 'Closing...' : 'Close Account'}}
+                </ion-button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

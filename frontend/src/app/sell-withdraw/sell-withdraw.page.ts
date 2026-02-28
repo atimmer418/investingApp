@@ -17,12 +17,14 @@ import {
   IonRange,
   IonToggle,
   IonPopover,
-  AlertController
+  AlertController,
+  ModalController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   pieChartOutline,
   checkmarkCircle,
+  checkmarkCircleOutline,
   radioButtonOff,
   cashOutline,
   trendingUpOutline,
@@ -32,7 +34,10 @@ import {
   warningOutline,
   informationCircleOutline,
   arrowForwardOutline,
-  pricetagOutline
+  pricetagOutline,
+  closeCircleOutline,
+  trashOutline,
+  alertCircleOutline
 } from 'ionicons/icons';
 
 import { TradingService, SellRequest, WithdrawRequest } from '../services/trading.service';
@@ -40,6 +45,7 @@ import { PortfolioService, PortfolioDashboardData, Position, AccountSummary } fr
 import { ToastService } from '../services/toast.service';
 import { PasskeyService } from '../services/passkey.service';
 import { PinService } from '../services/pin.service';
+import { PasskeyPromptComponent } from '../components/passkey-prompt/passkey-prompt.component';
 
 @Component({
   selector: 'app-sell-withdraw',
@@ -90,11 +96,16 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
   public dripLoading = false;
   public dripToggling = false;
 
+  // Close account state
+  public isClosingAccount = false;
+  public showCloseConfirmation = false;
+
   constructor(
     private router: Router,
     private tradingService: TradingService,
     private portfolioService: PortfolioService,
     private alertController: AlertController,
+    private modalController: ModalController,
     private toastService: ToastService,
     private passkeyService: PasskeyService,
     private pinService: PinService
@@ -102,6 +113,7 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     addIcons({
       pieChartOutline,
       checkmarkCircle,
+      checkmarkCircleOutline,
       radioButtonOff,
       cashOutline,
       trendingUpOutline,
@@ -111,7 +123,10 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
       warningOutline,
       informationCircleOutline,
       arrowForwardOutline,
-      pricetagOutline
+      pricetagOutline,
+      closeCircleOutline,
+      trashOutline,
+      alertCircleOutline
     });
   }
 
@@ -446,14 +461,78 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     return result;
   }
 
+  // ==================== Close Account ====================
+
+  get canCloseAccount(): boolean {
+    return this.positions.length === 0 && this.getWithdrawableCash() <= 0;
+  }
+
+  async initiateCloseAccount() {
+    if (!this.canCloseAccount || this.isClosingAccount) return;
+
+    try {
+      // Step-up authentication via passkey (WebAuthn)
+      const userEmail = localStorage.getItem('userEmail') || undefined;
+
+      const modal = await this.modalController.create({
+        component: PasskeyPromptComponent,
+        componentProps: { userEmail },
+        backdropDismiss: true,
+        cssClass: 'full-screen-modal'
+      });
+
+      await modal.present();
+      const { data } = await modal.onDidDismiss();
+
+      if (!data?.authenticated) {
+        this.showToast('Authentication required to close your account.', 'warning');
+        return;
+      }
+
+      // Show the inline confirmation
+      this.showCloseConfirmation = true;
+    } catch (error) {
+      console.error('Error during close account auth:', error);
+      this.showToast('Authentication failed. Please try again.', 'danger');
+    }
+  }
+
+  cancelCloseAccount() {
+    this.showCloseConfirmation = false;
+  }
+
+  async confirmCloseAccount() {
+    if (this.isClosingAccount) return;
+
+    try {
+      this.isClosingAccount = true;
+
+      const response = await this.tradingService.closeAccount().toPromise();
+
+      if (response?.success) {
+        this.showToast('Your account has been permanently closed.', 'success');
+        // Clear any stored auth tokens and navigate to root
+        localStorage.clear();
+        sessionStorage.clear();
+        this.router.navigateByUrl('/', { replaceUrl: true });
+      } else {
+        this.showToast(response?.error || 'Failed to close account. Please try again.', 'danger');
+      }
+    } catch (error) {
+      console.error('Error closing account:', error);
+      this.showToast('Failed to close account. Please ensure all positions are sold and all cash is withdrawn.', 'danger');
+    } finally {
+      this.isClosingAccount = false;
+      this.showCloseConfirmation = false;
+    }
+  }
+
   private showToast(message: string, color: string = 'primary') {
     this.toastService.showToast(message, color);
   }
 
   private async showConfirmation(header: string, message: string): Promise<boolean> {
     return new Promise((resolve) => {
-      // For now, use a simple confirm dialog
-      // In a real app, you'd use an Ionic alert controller
       const confirmed = confirm(`${header}\n\n${message}`);
       resolve(confirmed);
     });

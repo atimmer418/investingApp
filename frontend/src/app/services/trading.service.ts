@@ -62,6 +62,12 @@ export interface LiquidateResponse {
   error?: string;
 }
 
+export interface CloseAccountResponse {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -239,6 +245,18 @@ export class TradingService {
     return this.http.put<{ dripEnabled: boolean; message: string }>(
       `${this.baseUrl}/user/drip`,
       { enabled },
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  /**
+   * Close the user's brokerage account and delete their FRED user record.
+   * Requires all positions to be sold and all cash withdrawn first.
+   */
+  closeAccount(): Observable<CloseAccountResponse> {
+    return this.http.post<CloseAccountResponse>(
+      `${this.baseUrl}/trading/account/close`,
+      {},
       { headers: this.getAuthHeaders() }
     );
   }

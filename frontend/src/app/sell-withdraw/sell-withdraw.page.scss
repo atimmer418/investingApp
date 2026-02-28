@@ -435,5 +435,62 @@ ion-popover {
   --handle-background-checked: white;
 }
 
+/* Close Account Section */
+.close-account-section {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 16px;
+}
+
+.close-account-info-box {
+  background: #fff5f5;
+  border: 1px solid #ffe0e0;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.close-account-checklist {
+  padding-left: 4px;
+}
+
+.checklist-item {
+  padding: 4px 0;
+}
+
+.close-account-btn {
+  --border-radius: 10px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.close-confirm-panel {
+  background: #fff;
+  border: 1px solid #ff3b30;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+}
+
+.close-confirm-warning {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.close-confirm-actions {
+  gap: 8px;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.gap-sm {
+  gap: 8px;
+}
+
+.gap-xs {
+  gap: 4px;
+}
+
 
 

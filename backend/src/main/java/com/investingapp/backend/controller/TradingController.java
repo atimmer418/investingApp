@@ -276,6 +276,47 @@ public class TradingController {
         }
     }
 
+    /**
+     * Close the user's brokerage account and delete their FRED user record.
+     * Prerequisites: all positions must be liquidated and all cash withdrawn.
+     */
+    @PostMapping("/account/close")
+    public ResponseEntity<Map<String, Object>> closeAccount(Authentication authentication) {
+        try {
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+
+            if (user == null || user.getAlpacaAccountId() == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User or Alpaca account not found"));
+            }
+
+            String accountId = user.getAlpacaAccountId();
+
+            // Close the Alpaca brokerage account
+            alpacaService.closeAccount(accountId);
+
+            // Delete the user from our database (cascades to passkey credentials, user progress, etc.)
+            userRepository.delete(user);
+
+            logger.info("Account closed and user deleted for alpaca account: {}", accountId);
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Your account has been permanently closed."
+            ));
+
+        } catch (Exception e) {
+            logger.error("Error closing account: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to close account. Please ensure all positions are sold and all cash is withdrawn."));
+        }
+    }
+
     // DTOs for request bodies
     public static class SellPercentageRequest {
         private String symbol;

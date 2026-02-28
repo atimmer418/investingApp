@@ -469,6 +469,38 @@ public class AlpacaService {
         }
     }
 
+    /**
+     * Close an Alpaca brokerage account.
+     * Prerequisites: all positions must be closed and all cash withdrawn.
+     */
+    public void closeAccount(String accountId) {
+        try {
+            String url = alpacaBaseUrl + "/accounts/" + accountId + "/actions/close";
+
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            logger.info("Closing Alpaca account: {}", accountId);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                logger.info("Successfully closed Alpaca account: {}", accountId);
+            } else {
+                String errorBody = response.getBody();
+                logger.error("Failed to close Alpaca account {}: HTTP {} - {}", accountId, response.getStatusCode(), errorBody);
+                throw new RuntimeException("Alpaca returned HTTP " + response.getStatusCode() + ": " + errorBody);
+            }
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            logger.error("HTTP error closing Alpaca account {}: {} - {}", accountId, e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("Failed to close Alpaca account: " + e.getResponseBodyAsString(), e);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error closing Alpaca account {}: {}", accountId, e.getMessage(), e);
+            throw new RuntimeException("Failed to close Alpaca account", e);
+        }
+    }
+
     private HttpHeaders createAuthHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
