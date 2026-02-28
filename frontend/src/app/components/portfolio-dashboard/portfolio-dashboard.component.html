@@ -51,12 +51,16 @@
         <!-- Front Side -->
         <div class="portfolio-hero-front">
           <div class="portfolio-value text-center">
-            <h1 class="value-amount text-4xl font-bold text-dark">{{ formatCurrency(dashboard.summary.equity) }}</h1>
-            <div class="portfolio-change" [class]="'change-' + getGainLossColor(dashboard.totalGainLoss)">
-              <ion-icon [name]="getGainLossIcon(dashboard.totalGainLoss)"></ion-icon>
-              <span class="text-lg font-medium">{{ formatCurrency(dashboard.totalGainLoss) }}</span>
+            <span class="value-label">Total Equity</span>
+            <div class="value-amount-row">
+              <span class="value-amount-whole">{{ getEquityParts(dashboard.summary.equity).whole }}</span>
+              <span class="value-amount-cents">{{ getEquityParts(dashboard.summary.equity).cents }}</span>
             </div>
-            <p class="value-subtitle text-gray text-sm m-xs">Total Equity</p>
+            <!-- Motivational Badge -->
+            <div class="freedom-badge" *ngIf="freedomLabel">
+              <ion-icon name="shield-checkmark"></ion-icon>
+              <span>{{ freedomLabel }}</span>
+            </div>
           </div>
         </div>
 

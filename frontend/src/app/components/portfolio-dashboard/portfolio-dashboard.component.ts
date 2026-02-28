@@ -1,9 +1,10 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService, PortfolioDashboardData, Position, PerformanceData, PortfolioHistory } from '../../services/portfolio.service';
 import { LoadingController, ModalController, createAnimation } from '@ionic/angular/standalone';
 import { ToastService } from '../../services/toast.service';
+import { AuthService } from '../../services/auth.service';
 import { MonthlyFreedomUpdateService } from '../../services/monthly-freedom-update.service';
 import { MonthlyFreedomUpdateComponent } from '../monthly-freedom-update/monthly-freedom-update.component';
 import { Router } from '@angular/router';
@@ -43,6 +44,7 @@ export class PortfolioDashboardComponent implements OnInit {
   chartData: PortfolioDataPoint[] = [];
   isFlipped = false;
   backgroundIcons: string[] = [];
+  freedomLabel: string = '';
 
   // Time period options for chart
   periodOptions = [
@@ -57,9 +59,11 @@ export class PortfolioDashboardComponent implements OnInit {
     private portfolioService: PortfolioService,
     private loadingController: LoadingController,
     private toastService: ToastService,
+    private authService: AuthService,
     private mfuService: MonthlyFreedomUpdateService,
     private modalController: ModalController,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
@@ -199,6 +203,11 @@ export class PortfolioDashboardComponent implements OnInit {
       // Load initial chart data for the default period
       if (this.dashboard) {
         await this.loadHistoryForPeriod(this.selectedPeriod);
+      }
+
+      // Calculate financial freedom label
+      if (this.dashboard && this.dashboard.summary.equity > 0) {
+        this.updateFreedomLabel(this.dashboard.summary.equity);
       }
 
       // Check if Monthly Freedom Update should be shown (only on initial load)
@@ -464,6 +473,59 @@ export class PortfolioDashboardComponent implements OnInit {
 
   getGainLossIcon(value: number): string {
     return value >= 0 ? 'trending-up' : 'trending-down';
+  }
+
+  /**
+   * Split equity into whole-dollar and cents parts for display.
+   * Returns e.g. { whole: '$124,500', cents: '.00' }
+   */
+  getEquityParts(equity: number): { whole: string; cents: string } {
+    const formatted = this.formatCurrency(equity); // e.g. "$124,500.00"
+    const dotIndex = formatted.lastIndexOf('.');
+    if (dotIndex === -1) {
+      return { whole: formatted, cents: '.00' };
+    }
+    return {
+      whole: formatted.substring(0, dotIndex),
+      cents: formatted.substring(dotIndex)
+    };
+  }
+
+  /**
+   * Calculate and update the financial freedom label based on equity and retirement income.
+   * Formula: months = equity / (retirementIncome / 12)
+   * Displays as months until >= 24, then switches to years.
+   */
+  private updateFreedomLabel(equity: number): void {
+    this.authService.getUserProgress().subscribe({
+      next: (progress) => {
+        const annualIncome = progress.retirementIncome || 60000;
+        const dailyExpenses = annualIncome / 365;
+        if (dailyExpenses <= 0) {
+          this.freedomLabel = '';
+          this.cdr.detectChanges();
+          return;
+        }
+        const totalDays = Math.floor(equity / dailyExpenses);
+        if (totalDays < 1) {
+          this.freedomLabel = '';
+        } else if (totalDays <= 99) {
+          this.freedomLabel = `${totalDays} day${totalDays !== 1 ? 's' : ''} of financial freedom (est.)`;
+        } else {
+          const totalMonths = Math.floor(totalDays / 30);
+          if (totalMonths <= 23) {
+            this.freedomLabel = `${totalMonths} month${totalMonths !== 1 ? 's' : ''} of financial freedom (est.)`;
+          } else {
+            const years = Math.floor(totalMonths / 12);
+            this.freedomLabel = `${years} year${years !== 1 ? 's' : ''} of financial freedom (est.)`;
+          }
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.freedomLabel = '';
+      }
+    });
   }
 
   onTabChange(event: any) {

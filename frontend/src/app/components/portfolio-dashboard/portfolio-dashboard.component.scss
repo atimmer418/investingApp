@@ -82,7 +82,7 @@
   margin-bottom: var(--app-spacing-md);
   cursor: pointer;
   height: 200px; // Fixed height to ensure flip works well
-  position: relative; // Ensure positioning context
+  position: relative;
   z-index: 1;
 }
 
@@ -122,35 +122,64 @@
   transform: rotateY(0deg);
 
   .portfolio-value {
+    position: relative;
+    z-index: 1;
     padding: var(--app-spacing-lg) 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 
-    .value-amount {
-      margin: 0 0 var(--app-spacing-xs) 0;
-      letter-spacing: -1px;
+    .value-label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--portfolio-text-secondary);
+      margin-bottom: 6px;
     }
 
-    .portfolio-change {
+    .value-amount-row {
       display: flex;
+      align-items: baseline;
+      gap: 2px;
+      margin-bottom: 16px;
+    }
+
+    .value-amount-whole {
+      font-size: 2.75rem;
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      color: var(--portfolio-text-primary);
+      line-height: 1;
+    }
+
+    .value-amount-cents {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--portfolio-text-secondary);
+      line-height: 1;
+    }
+
+    .freedom-badge {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: var(--app-spacing-xs);
-      margin: var(--app-spacing-sm) 0;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: color-mix(in srgb, var(--portfolio-primary) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--portfolio-primary) 20%, transparent);
 
       ion-icon {
-        font-size: var(--app-font-size-lg);
+        font-size: 14px;
+        color: var(--portfolio-primary);
       }
 
-      &.change-success {
-        color: var(--portfolio-success);
+      span {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--portfolio-primary);
+        line-height: 1;
       }
-
-      &.change-danger {
-        color: var(--portfolio-danger);
-      }
-    }
-
-    .value-subtitle {
-      opacity: 0.8;
     }
   }
 }
@@ -160,6 +189,8 @@
   padding: var(--app-spacing-lg);
 
   .hero-grid {
+    position: relative;
+    z-index: 1;
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
