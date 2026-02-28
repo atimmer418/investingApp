@@ -14,6 +14,8 @@ The Investment Scheduler is the automation system that manages recurring investm
 | **Batch Fund** | `0 59 23 * * *` | 11:59 PM ET daily | `InvestmentExecutionService.processEndOfDayBatchTransfers()` |
 | **Check Funding** | `0 */30 8-17 * * MON-FRI` | Every 30 min, 8AM–5PM ET, Mon–Fri | `InvestmentScheduler.checkFundingStatus()` |
 | **Check Trading** | `0 */15 9-15 * * MON-FRI` | Every 15 min, 9AM–4PM ET, Mon–Fri | `InvestmentScheduler.checkTradingStatus()` |
+| **DRIP Process** | `0 0 10 * * TUE,THU` | 10:00 AM ET, Tue & Thu | `InvestmentScheduler.processDripDividends()` |
+| **DRIP Order Check** | `0 */15 10-15 * * MON-FRI` | Every 15 min, 10AM–3PM ET, Mon–Fri | `InvestmentScheduler.checkDripOrderStatus()` |
 
 ### Phase 1: Scheduling (11:55 PM ET)
 Identifies what needs to be invested today but does **not** move money yet.
@@ -160,6 +162,127 @@ After calculating the ideal date, `adjustForBusinessDay()` is applied:
 **Important:** The stored `nextInvestmentDate` is the adjusted (business) day. But the *next cycle* calculation uses the original preferred components (day of week, day of month) to avoid permanent drift.
 
 **Note:** Juneteenth is mentioned in some docs but is not currently in the holiday list in code.
+
+---
+
+## DRIP (Dividend Reinvestment Plan)
+
+### Overview
+
+DRIP automatically reinvests cash dividends back into the stock that paid them. Since the Alpaca Broker API does not support native DRIP, the system implements it by polling for dividend activity and placing notional buy orders.
+
+### How It Works
+
+1. **Detect dividends** — On Tuesdays and Thursdays at 10:00 AM ET, `DripService.processAllDividends()` iterates all users.
+2. **Filter eligible users** — A user is eligible if `dripEnabled` is not `false` (null = true for backwards compatibility) **and** they have an `alpacaAccountId`.
+3. **Query Alpaca** — For each eligible user, calls `GET /v1/accounts/activities/DIV` with `after` and `until` parameters. Paginates up to 10 pages (100 per page).
+4. **Filter to CDIV** — Only `activity_sub_type = "CDIV"` (Cash Dividend) with `status = "executed"` are processed.
+5. **Dedup** — Each dividend's unique `id` field is stored as `alpacaActivityId` in the `drip_executions` table (unique constraint). Already-processed dividends are skipped.
+6. **Minimum check** — Dividends below **$1.00** are recorded with status `SKIPPED` (Alpaca's minimum for notional orders).
+7. **Place buy order** — A notional market buy order is placed via `AlpacaService.placeBuyOrder(accountId, symbol, netAmount)` for the full dividend amount back into the same stock.
+8. **Track status** — The `DripExecution` record moves from `DETECTED` → `ORDER_PLACED` → `FILLED` (or `FAILED`).
+
+### The `after` Window
+
+The `after` parameter for the Alpaca query is derived from the most recent `dividendDate` in the `drip_executions` table for that user. If the user has no DRIP history, a default lookback of **90 days** is used. This ensures:
+- No dividends are missed between polling cycles.
+- Already-processed dividends are caught by the dedup check if there's date overlap.
+
+### Order Status Checking
+
+Every 15 minutes from 10 AM to 3 PM ET, Monday through Friday, `DripService.checkDripOrderStatus()` polls all `ORDER_PLACED` records:
+- If Alpaca reports `filled` → mark `FILLED`, record `executedAt` timestamp.
+- If Alpaca reports `canceled`, `expired`, or `rejected` → mark `FAILED` with error message.
+- Otherwise (e.g., `new`, `partially_filled`, `pending_new`) → keep polling.
+
+### DripExecution Lifecycle
+
+```
+DETECTED → ORDER_PLACED → FILLED
+               ↓
+             FAILED
+
+DETECTED → SKIPPED  (amount < $1.00)
+```
+
+| Status | Meaning |
+|--------|---------|
+| `DETECTED` | Dividend found from Alpaca, not yet reinvested (transient — immediately moves to ORDER_PLACED or SKIPPED) |
+| `ORDER_PLACED` | Notional buy order submitted to Alpaca |
+| `FILLED` | Buy order filled successfully |
+| `FAILED` | Order placement failed, or Alpaca canceled/rejected the order |
+| `SKIPPED` | Dividend amount below $1.00 minimum |
+
+### Database: `drip_executions` Table
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | BIGINT PK | Auto-increment primary key |
+| `user_id` | BIGINT FK | References `users.id` |
+| `alpaca_activity_id` | VARCHAR (unique) | Alpaca's dividend activity ID — **dedup key** |
+| `symbol` | VARCHAR(20) | Stock that paid the dividend |
+| `net_amount` | DECIMAL(10,2) | Dollar amount of the dividend |
+| `dividend_date` | VARCHAR(20) | Date the dividend was paid (from Alpaca's `date` field) |
+| `alpaca_order_id` | VARCHAR | Alpaca's order ID for the reinvestment buy |
+| `status` | VARCHAR(30) | DETECTED / ORDER_PLACED / FILLED / FAILED / SKIPPED |
+| `description` | TEXT | Alpaca's description (e.g., "Cash DIV @ 0.54 Pos QTY:9.03...") |
+| `error_message` | TEXT | Error details if FAILED |
+| `created_at` | DATETIME | Record creation time (ET) |
+| `updated_at` | DATETIME | Last update time (ET) |
+| `executed_at` | DATETIME | When the buy order was filled (ET) |
+
+### User Model: `drip_enabled` Field
+
+- Column: `drip_enabled` (BOOLEAN) on the `users` table.
+- Default: `true` (set in entity field initializer and constructor).
+- Null handling: `null` is treated as `true` for backwards compatibility with existing users.
+- Hibernate `ddl-auto=update` creates the column automatically.
+
+### API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/user/drip` | Returns `{ "dripEnabled": true/false }` |
+| `PUT` | `/api/user/drip` | Body: `{ "enabled": true/false }`. Returns `{ "dripEnabled": bool, "message": "..." }` |
+
+Both endpoints require JWT authentication.
+
+### Frontend Toggle
+
+Located on the **Sell & Withdraw** page, inside the "Withdraw Cash" section header. The UI shows:
+- **DRIP** label with an **(i)** popover icon that explains what DRIP is.
+- An `ion-toggle` bound to the user's `dripEnabled` status.
+- Toggle is disabled during load/save operations. Guards prevent spurious `ionChange` events from firing during programmatic `[checked]` updates.
+
+### Alpaca API Used
+
+**Dividend Activities:**
+```
+GET /v1/accounts/activities/DIV?account_id={id}&after={date}&until={date}&direction=asc&page_size=100
+Headers: APCA-API-KEY-ID, APCA-API-SECRET-KEY
+```
+
+**Response (CDIV object):**
+```json
+{
+  "activity_type": "DIV",
+  "activity_sub_type": "CDIV",
+  "id": "20190801011955195::5f596936-6f23-4cef-bdf1-3806aae57dbf",
+  "date": "2019-08-01",
+  "net_amount": "1.02",
+  "symbol": "T",
+  "qty": "2",
+  "per_share_amount": "0.51",
+  "description": "Cash DIV @ 0.54 Pos QTY:9.03...",
+  "status": "executed",
+  "account_id": "uuid",
+  "created_at": "2021-05-10T14:01:04.650275Z"
+}
+```
+
+**Reinvestment Order:** Uses `AlpacaService.placeBuyOrder(accountId, symbol, notionalAmount)` — a notional market buy order.
+
+**Order Status:** Uses `AlpacaService.checkOrderStatus(accountId, orderId)` — same method used by the regular trading status checker.
 
 ---
 
