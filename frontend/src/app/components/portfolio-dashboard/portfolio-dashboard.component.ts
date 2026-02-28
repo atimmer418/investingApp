@@ -493,8 +493,22 @@ export class PortfolioDashboardComponent implements OnInit {
 
   /**
    * Calculate and update the financial freedom label based on equity and retirement income.
-   * Formula: months = equity / (retirementIncome / 12)
-   * Displays as months until >= 24, then switches to years.
+   *
+   * Formula: totalDays = equity / (retirementIncome / 365)
+   *
+   * This shows the cumulative runway — how many days, months, or years the user's
+   * current equity could sustain their desired retirement lifestyle (based on their
+   * retirementIncome goal, treated as annual spending).
+   *
+   * This is the lifetime total of the same metric used in the Monthly Freedom Update (MFU),
+   * where "days bought back" represents how much closer the user moved toward their
+   * desired retirement lifestyle during a specific period. Here, the badge reflects the
+   * full picture: every day of freedom the user has accumulated to date.
+   *
+   * Display thresholds:
+   *   1–99 days  → "X days of financial freedom"
+   *   100+ days  → "X months of financial freedom" (up to 23 months)
+   *   24+ months → "X years of financial freedom"
    */
   private updateFreedomLabel(equity: number): void {
     this.authService.getUserProgress().subscribe({
