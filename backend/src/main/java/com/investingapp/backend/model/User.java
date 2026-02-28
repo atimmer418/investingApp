@@ -188,6 +188,10 @@ public class User {
     @Column(name = "mfu_count")
     private Integer mfuCount; // Number of unique (non-reopen) MFUs the user has seen
 
+    // DRIP (Dividend Reinvestment Plan)
+    @Column(name = "drip_enabled")
+    private Boolean dripEnabled = true;
+
     // Investment scheduling fields
     @Column(length = 20)
     private String payFrequency; // "weekly", "biweekly", "monthly", "semimonthly"
@@ -249,6 +253,7 @@ public class User {
         this.monthlyInvestment = 0.0;
         this.payFrequency = "monthly";
         this.selectedStrategy = "balanced";
+        this.dripEnabled = true;
 
         // Don't create UserProgress here - handle in service layer to avoid circular
         // reference

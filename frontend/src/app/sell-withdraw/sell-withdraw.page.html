@@ -151,7 +151,30 @@
     <!-- Withdraw Cash Section -->
     <div class="section-card mobile-card">
       <div class="section-header p-b-sm border-bottom" style="padding-bottom: 0px;">
-        <h3 class="section-title font-semibold text-dark text-lg" style="margin-top: 0px;">Withdraw Cash</h3>
+        <div class="display-flex justify-between align-center">
+          <h3 class="section-title font-semibold text-dark text-lg" style="margin-top: 4px; margin-bottom: 6px;">Withdraw Cash</h3>
+          <div class="drip-controls display-flex align-center">
+            <div class="drip-label-group display-flex align-center">
+              <span class="drip-label">DRIP</span>
+              <ion-button fill="clear" size="small" id="drip-tooltip" class="tooltip-icon-button">
+                <ion-icon name="information-circle-outline"></ion-icon>
+              </ion-button>
+              <ion-popover trigger="drip-tooltip" triggerAction="click" side="bottom" alignment="center">
+                <ng-template>
+                  <ion-content [scrollY]="false" class="ion-padding">
+                    <p style="font-size: 13px; margin-top: 0px; margin-bottom: 0px;"><strong>DRIP</strong> (Dividend Reinvestment Plan) automatically reinvests your cash dividends back into the stock that paid them. Over time, this compounds your returns significantly.</p>
+                  </ion-content>
+                </ng-template>
+              </ion-popover>
+            </div>
+            <ion-toggle
+              [checked]="dripEnabled"
+              [disabled]="dripLoading || dripToggling"
+              (ionChange)="toggleDrip($event)"
+              class="drip-toggle">
+            </ion-toggle>
+          </div>
+        </div>
         <p class="section-subtitle text-gray text-sm">Transfer settled cash to your linked bank account.</p>
       </div>
 
@@ -218,8 +241,6 @@
         </div>
       </div>
     </div>
-
-
 
 
 

@@ -15,6 +15,8 @@ import {
   IonSpinner,
   IonInput,
   IonRange,
+  IonToggle,
+  IonPopover,
   AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -56,7 +58,9 @@ import { PinService } from '../services/pin.service';
     IonIcon,
     IonSpinner,
     IonInput,
-    IonRange
+    IonRange,
+    IonToggle,
+    IonPopover
   ]
 })
 export class SellWithdrawPage implements OnInit, OnDestroy {
@@ -80,6 +84,11 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
   public quickWithdrawAmounts = [100, 500, 1000, 2500];
 
   public maxSellPercentage = 100;
+
+  // DRIP state
+  public dripEnabled = true;
+  public dripLoading = false;
+  public dripToggling = false;
 
   constructor(
     private router: Router,
@@ -137,12 +146,29 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
         this.balance = dashboardData.summary || null;
       }
 
+      // Load DRIP status
+      this.loadDripStatus();
+
     } catch (error) {
       console.error('Error loading trading data:', error);
       this.showToast('Failed to load portfolio data', 'danger');
     } finally {
       this.isLoading = false;
     }
+  }
+
+  private loadDripStatus() {
+    this.dripLoading = true;
+    this.tradingService.getDripStatus().subscribe({
+      next: (response) => {
+        this.dripEnabled = response.dripEnabled;
+        this.dripLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading DRIP status:', err);
+        this.dripLoading = false;
+      }
+    });
   }
 
   selectPosition(position: Position) {
@@ -308,6 +334,38 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     } finally {
       this.isWithdrawing = false;
     }
+  }
+
+  toggleDrip(event: any) {
+    // Ignore ionChange events fired during programmatic [checked] updates
+    if (this.dripLoading || this.dripToggling) return;
+
+    const newValue: boolean = event?.detail?.checked ?? !this.dripEnabled;
+
+    // No-op if the value hasn't actually changed
+    if (newValue === this.dripEnabled) return;
+
+    this.dripToggling = true;
+
+    this.tradingService.setDripEnabled(newValue).subscribe({
+      next: (response) => {
+        this.dripEnabled = response.dripEnabled;
+        this.showToast(
+          response.dripEnabled
+            ? 'DRIP enabled — dividends will be reinvested automatically.'
+            : 'DRIP disabled — dividends will stay as cash.',
+          'success'
+        );
+        this.dripToggling = false;
+      },
+      error: (err) => {
+        console.error('Error toggling DRIP:', err);
+        // Revert the toggle visually
+        this.dripEnabled = !newValue;
+        this.showToast('Failed to update DRIP setting.', 'danger');
+        this.dripToggling = false;
+      }
+    });
   }
 
   formatCurrency(amount: string | number | null | undefined): string {

@@ -219,4 +219,27 @@ export class TradingService {
         return annualAmount / 12;
     }
   }
+
+  // ==================== DRIP (Dividend Reinvestment) ====================
+
+  /**
+   * Get the user's current DRIP status
+   */
+  getDripStatus(): Observable<{ dripEnabled: boolean }> {
+    return this.http.get<{ dripEnabled: boolean }>(
+      `${this.baseUrl}/user/drip`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  /**
+   * Enable or disable DRIP for the authenticated user
+   */
+  setDripEnabled(enabled: boolean): Observable<{ dripEnabled: boolean; message: string }> {
+    return this.http.put<{ dripEnabled: boolean; message: string }>(
+      `${this.baseUrl}/user/drip`,
+      { enabled },
+      { headers: this.getAuthHeaders() }
+    );
+  }
 }

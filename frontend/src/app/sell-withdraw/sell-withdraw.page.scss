@@ -217,7 +217,7 @@ ion-header {
 .quick-amount-btn {
   flex: 1;
   min-width: 80px;
-  padding: 10px;
+  padding: 8px;
   border-radius: 8px;
   background: #f2f2f7;
   color: #333;
@@ -383,4 +383,57 @@ ion-header {
 .position-check {
   flex-shrink: 0;
 }
+
+/* DRIP Section */
+.drip-section {
+  border: 1px solid #d1e9ff;
+}
+
+.tooltip-icon-button {
+  --padding-start: 0;
+  --padding-end: 0;
+  margin: 0;
+  min-height: 0;
+  height: 20px;
+  position: relative;
+  top: 1px;
+
+  ion-icon {
+    font-size: 18px;
+  }
+}
+
+ion-popover {
+  --width: 280px;
+  --offset-x: -16px;
+
+  &::part(arrow) {
+    left: auto !important;
+    right: 108px !important;
+  }
+}
+
+.drip-controls {
+  gap: 10px;
+}
+
+.drip-label-group {
+  gap: 2px;
+}
+
+.drip-label {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1c1c1e;
+  line-height: 1;
+}
+
+.drip-toggle {
+  --track-background: #e0e0e0;
+  --track-background-checked: #34c759;
+  --handle-background: white;
+  --handle-background-checked: white;
+}
+
+
 

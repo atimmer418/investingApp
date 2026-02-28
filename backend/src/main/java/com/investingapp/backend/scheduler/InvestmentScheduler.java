@@ -1,5 +1,6 @@
 package com.investingapp.backend.scheduler;
 
+import com.investingapp.backend.service.DripService;
 import com.investingapp.backend.service.InvestmentExecutionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,9 @@ public class InvestmentScheduler {
     
     @Autowired
     private InvestmentExecutionService investmentExecutionService;
+
+    @Autowired
+    private DripService dripService;
 
     /**
      * Process scheduled investments every day at 11:55 PM ET
@@ -62,7 +66,41 @@ public class InvestmentScheduler {
         } catch (Exception e) {
             logger.error("Error in trading status check job", e);
         }
-    }    /**
+    }    // ==================== DRIP (Dividend Reinvestment) ====================
+
+    /**
+     * Process DRIP dividends on Tuesdays and Thursdays at 10:00 AM ET.
+     * Scans all DRIP-eligible users for new cash dividend (CDIV) activities
+     * and places notional buy orders to reinvest dividends back into the
+     * original stock.
+     */
+    @Scheduled(cron = "0 0 10 * * TUE,THU", zone = "America/New_York")
+    public void processDripDividends() {
+        logger.info("Starting DRIP dividend processing job");
+        try {
+            dripService.processAllDividends();
+            logger.info("Completed DRIP dividend processing job successfully");
+        } catch (Exception e) {
+            logger.error("Error in DRIP dividend processing job", e);
+        }
+    }
+
+    /**
+     * Check DRIP order statuses every 15 minutes during market hours (Mon-Fri).
+     * Verifies whether reinvestment buy orders have been filled or failed.
+     */
+    @Scheduled(cron = "0 */15 10-15 * * MON-FRI", zone = "America/New_York")
+    public void checkDripOrderStatus() {
+        logger.info("Starting DRIP order status check job");
+        try {
+            dripService.checkDripOrderStatus();
+            logger.info("Completed DRIP order status check job successfully");
+        } catch (Exception e) {
+            logger.error("Error in DRIP order status check job", e);
+        }
+    }
+
+    /**
      * For testing purposes - run every minute (disable in production)
      * Uncomment and use this for testing the investment flow
      */

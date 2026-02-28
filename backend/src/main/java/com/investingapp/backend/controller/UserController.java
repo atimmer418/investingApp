@@ -62,6 +62,7 @@ public class UserController {
         private String referralCode;
         private int referralCount;
         private boolean hasAppliedReferral;
+        private boolean dripEnabled;
 
         public UserProgressResponse(User user) {
             UserProgress progress = user.getUserProgress();
@@ -97,6 +98,8 @@ public class UserController {
             this.referralCode = user.getReferralCode();
             this.referralCount = user.getReferralCount() != null ? user.getReferralCount() : 0;
             this.hasAppliedReferral = Boolean.TRUE.equals(user.getHasAppliedReferral());
+            // DRIP defaults to true if null (for existing users before this field was added)
+            this.dripEnabled = !Boolean.FALSE.equals(user.getDripEnabled());
         }
 
         // Getters
@@ -160,12 +163,83 @@ public class UserController {
             return hasAppliedReferral;
         }
 
+        public boolean isDripEnabled() {
+            return dripEnabled;
+        }
+
         public String getNextStep() {
             return nextStep;
         }
 
         public double getCompletionPercentage() {
             return completionPercentage;
+        }
+    }
+
+    /**
+     * Toggle DRIP (Dividend Reinvestment Plan) for the current user
+     * PUT /user/drip
+     */
+    @PutMapping("/drip")
+    public ResponseEntity<?> toggleDrip(@RequestBody Map<String, Object> payload, Authentication authentication) {
+        try {
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(401).build();
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String email = userDetails.getUsername();
+
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Object enabledVal = payload.get("enabled");
+            if (enabledVal == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "'enabled' field is required"));
+            }
+
+            boolean enabled = Boolean.parseBoolean(enabledVal.toString());
+            user.setDripEnabled(enabled);
+            userRepository.save(user);
+
+            logger.info("[UserController] DRIP {} for user: {}", enabled ? "enabled" : "disabled", email);
+
+            return ResponseEntity.ok(Map.of(
+                "message", "DRIP " + (enabled ? "enabled" : "disabled") + " successfully",
+                "dripEnabled", enabled
+            ));
+        } catch (Exception e) {
+            logger.error("[UserController] Error toggling DRIP: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Get the current user's DRIP status
+     * GET /user/drip
+     */
+    @GetMapping("/drip")
+    public ResponseEntity<?> getDripStatus(Authentication authentication) {
+        try {
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(401).build();
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String email = userDetails.getUsername();
+
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            boolean dripEnabled = !Boolean.FALSE.equals(user.getDripEnabled());
+            return ResponseEntity.ok(Map.of("dripEnabled", dripEnabled));
+        } catch (Exception e) {
+            logger.error("[UserController] Error getting DRIP status: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 

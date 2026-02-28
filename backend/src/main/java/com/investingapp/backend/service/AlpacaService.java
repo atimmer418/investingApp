@@ -13,7 +13,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -982,6 +984,136 @@ public class AlpacaService {
         } catch (Exception e) {
             logger.error("Error initiating ACATS transfer", e);
             throw new RuntimeException("Failed to initiate ACATS transfer: " + e.getMessage());
+        }
+    }
+
+    // ==================== DRIP (Dividend Reinvestment) ====================
+
+    /**
+     * Fetch cash dividend (CDIV) activities for an account from Alpaca.
+     * 
+     * API: GET /v1/accounts/activities/DIV?account_id={id}&after={after}&until={until}&direction=asc&page_size=100
+     * 
+     * Returns only executed CDIV activities. Handles pagination if >100 results.
+     *
+     * @param accountId Alpaca account UUID
+     * @param after     ISO date string (e.g., "2026-01-01") — activities after this date
+     * @param until     ISO date string (e.g., "2026-02-27") — activities up to this date
+     * @return List of DividendActivity objects
+     */
+    public List<DividendActivity> getDividendActivities(String accountId, String after, String until) {
+        List<DividendActivity> allActivities = new ArrayList<>();
+        String pageToken = null;
+
+        try {
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            // Paginate through results
+            for (int page = 0; page < 10; page++) { // Safety: max 10 pages (1000 activities)
+                StringBuilder urlBuilder = new StringBuilder(alpacaBaseUrl)
+                        .append("/accounts/activities/DIV")
+                        .append("?account_id=").append(accountId)
+                        .append("&after=").append(after)
+                        .append("&until=").append(until)
+                        .append("&direction=asc")
+                        .append("&page_size=100");
+
+                if (pageToken != null) {
+                    urlBuilder.append("&page_token=").append(pageToken);
+                }
+
+                String url = urlBuilder.toString();
+                logger.info("Fetching dividend activities for account {} (page {}): {}", accountId, page, url);
+
+                ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+
+                if (response.getStatusCode() != HttpStatus.OK) {
+                    logger.error("Failed to fetch dividend activities. Status: {}, Response: {}",
+                            response.getStatusCode(), response.getBody());
+                    break;
+                }
+
+                JsonNode activitiesArray = objectMapper.readTree(response.getBody());
+                if (!activitiesArray.isArray() || activitiesArray.size() == 0) {
+                    break; // No more results
+                }
+
+                for (JsonNode activity : activitiesArray) {
+                    // Only process CDIV (Cash Dividend) activities that are executed
+                    String subType = activity.has("activity_sub_type") ? activity.get("activity_sub_type").asText() : "";
+                    String status = activity.has("status") ? activity.get("status").asText() : "";
+
+                    if ("CDIV".equals(subType) && "executed".equalsIgnoreCase(status)) {
+                        DividendActivity div = new DividendActivity(
+                                activity.get("id").asText(),
+                                activity.has("activity_type") ? activity.get("activity_type").asText() : "DIV",
+                                subType,
+                                activity.has("date") ? activity.get("date").asText() : null,
+                                activity.has("net_amount") ? new BigDecimal(activity.get("net_amount").asText()) : BigDecimal.ZERO,
+                                activity.has("symbol") ? activity.get("symbol").asText() : null,
+                                activity.has("qty") ? activity.get("qty").asText() : null,
+                                activity.has("per_share_amount") ? activity.get("per_share_amount").asText() : null,
+                                activity.has("description") ? activity.get("description").asText() : null,
+                                status,
+                                activity.has("account_id") ? activity.get("account_id").asText() : accountId,
+                                activity.has("created_at") ? activity.get("created_at").asText() : null
+                        );
+                        allActivities.add(div);
+                    }
+                }
+
+                // Pagination: if we got a full page, use the last activity's ID as page_token
+                if (activitiesArray.size() < 100) {
+                    break; // Last page
+                }
+                JsonNode lastActivity = activitiesArray.get(activitiesArray.size() - 1);
+                pageToken = lastActivity.get("id").asText();
+            }
+
+            logger.info("Found {} executed CDIV activities for account {} between {} and {}",
+                    allActivities.size(), accountId, after, until);
+
+        } catch (Exception e) {
+            logger.error("Error fetching dividend activities for account {}: {}", accountId, e.getMessage(), e);
+        }
+
+        return allActivities;
+    }
+
+    /**
+     * DTO representing a Cash Dividend activity from Alpaca
+     */
+    public static class DividendActivity {
+        public final String id;                // Unique activity ID (dedup key)
+        public final String activityType;      // "DIV"
+        public final String activitySubType;   // "CDIV"
+        public final String date;              // Dividend date
+        public final BigDecimal netAmount;     // Dollar amount credited to account
+        public final String symbol;            // Stock that paid the dividend
+        public final String qty;               // Position quantity on record date
+        public final String perShareAmount;    // Dividend per share
+        public final String description;       // e.g., "Cash DIV @ 0.54 Pos QTY:9.03..."
+        public final String status;            // "executed"
+        public final String accountId;         // Alpaca account UUID
+        public final String createdAt;         // Timestamp
+
+        public DividendActivity(String id, String activityType, String activitySubType,
+                                String date, BigDecimal netAmount, String symbol, String qty,
+                                String perShareAmount, String description, String status,
+                                String accountId, String createdAt) {
+            this.id = id;
+            this.activityType = activityType;
+            this.activitySubType = activitySubType;
+            this.date = date;
+            this.netAmount = netAmount;
+            this.symbol = symbol;
+            this.qty = qty;
+            this.perShareAmount = perShareAmount;
+            this.description = description;
+            this.status = status;
+            this.accountId = accountId;
+            this.createdAt = createdAt;
         }
     }
 }
