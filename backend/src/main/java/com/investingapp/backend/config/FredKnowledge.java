@@ -643,5 +643,58 @@ public class FredKnowledge {
                 "faq",
                 "low",
                 true));
+
+        // Chunk — Financial Freedom Calculations
+        CANONICAL_CHUNKS.add(new CanonicalChunk(
+                "financial_freedom_calculations_v1",
+                "Financial Freedom Calculations: Dashboard Badge vs MFU Days Bought Back",
+                """
+                        # Financial Freedom Calculations
+
+                        FRED uses two different "financial freedom" calculations in different parts of the app. They measure different things and will show different numbers — this is intentional.
+
+                        ## 1. Dashboard Freedom Badge (Portfolio Dashboard)
+                        **Location:** Hero card on the portfolio dashboard
+                        **What it measures:** Simple spending runway — how long your current equity could sustain your lifestyle if you stopped working today.
+
+                        ### Formula
+                        dailyExpenses = retirementIncome / 365
+                        totalDays = equity / dailyExpenses
+
+                        ### Display Rules
+                        - 0-99 days → shown as "X days of financial freedom"
+                        - 100+ days (converted to months) → "X months of financial freedom"
+                        - 24+ months (converted to years) → "X years of financial freedom"
+
+                        ### Example
+                        If equity = $10,000 and retirementIncome = $70,000:
+                        dailyExpenses = $70,000 / 365 = $191.78/day
+                        totalDays = $10,000 / $191.78 = 52 days
+                        Badge shows: "52 days of financial freedom"
+
+                        ## 2. MFU Days Bought Back (Monthly Freedom Update)
+                        **Location:** Monthly Freedom Update emails and progress tracking
+                        **What it measures:** How many days your investments have bought you ahead of a typical retirement age, accounting for compound growth over time.
+
+                        ### Formula
+                        Uses Future Value of Annuity with compound growth:
+                        monthlyRate = 0.12 / 12 = 0.01 (assumes 12% annual return)
+                        monthlyInvestment = converted from user's frequency (weekly, biweekly, monthly)
+                        futureValue = monthlyInvestment × ((1 + monthlyRate)^months - 1) / monthlyRate
+                        monthsToTarget = months needed until futureValue >= retirementIncome
+                        daysBoughtBack = (monthsToTarget_without_this_month - monthsToTarget_with_this_month) × 30
+
+                        ### Why It Is Different
+                        The MFU calculation projects forward using compound growth assumptions. It answers: "How many days ahead of a typical retirement age have my investments moved me?" The dashboard badge answers: "If I stopped everything right now, how long could I live off my equity?"
+
+                        ## Why Both Exist
+                        - The **dashboard badge** gives a grounded, tangible snapshot — no assumptions about future returns.
+                        - The **MFU days bought back** motivates by showing the compounding power of each contribution over time.
+                        - They are intentionally different metrics serving different psychological purposes.
+                        """,
+                "v1",
+                "metrics",
+                "low",
+                true));
     }
 }
