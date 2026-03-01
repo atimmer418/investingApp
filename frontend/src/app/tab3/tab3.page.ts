@@ -245,7 +245,6 @@ export class Tab3Page implements OnInit, OnDestroy {
 
     this.initializeSettingSections();
     this.setupDemoData();
-    this.checkMfuAvailability();
 
     // Subscribe to user preferences
     this.settingsService.getPreferences()
