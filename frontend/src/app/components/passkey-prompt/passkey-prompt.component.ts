@@ -35,7 +35,14 @@ export class PasskeyPromptComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Auto-trigger authentication when the modal opens
+    // No-op: authentication is triggered after modal render in ionViewDidEnter
+  }
+
+  /**
+   * Fires after the modal enter animation completes, so the lock screen
+   * is fully visible before we trigger the WebAuthn / biometric prompt.
+   */
+  ionViewDidEnter() {
     this.authenticate();
   }
 

@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, filter, take } from 'rxjs';
 import {
   IonHeader,
   IonToolbar,
@@ -56,6 +56,7 @@ import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
 import { MonthlyFreedomUpdateComponent } from '../components/monthly-freedom-update/monthly-freedom-update.component';
 import { MonthlyFreedomUpdateService } from '../services/monthly-freedom-update.service';
+import { AppLockService } from '../services/app-lock.service';
 
 interface SettingSection {
   title: string;
@@ -206,7 +207,8 @@ export class Tab3Page implements OnInit, OnDestroy {
     private authService: AuthService,
     private toastService: ToastService,
     private modalController: ModalController,
-    private mfuService: MonthlyFreedomUpdateService
+    private mfuService: MonthlyFreedomUpdateService,
+    private appLockService: AppLockService
   ) {
     addIcons({
       settingsOutline,
@@ -287,13 +289,32 @@ export class Tab3Page implements OnInit, OnDestroy {
 
           // Auto-show the MFU popup if shouldShow is true
           if (data && data.shouldShow) {
-            this.showAutoMfuPopup();
+            this.showMfuAfterUnlock();
           }
         },
         error: () => {
           this.hasMfuPeriod = false;
         }
       });
+  }
+
+  /**
+   * If the app is currently locked, wait for a successful reauth before
+   * showing the MFU popup. Otherwise show immediately.
+   */
+  private showMfuAfterUnlock() {
+    if (this.appLockService.isCurrentlyLocked()) {
+      // Wait for the lock to be released (successful reauth)
+      this.appLockService.isLocked$
+        .pipe(
+          filter(locked => !locked),
+          take(1),
+          takeUntil(this.destroy$)
+        )
+        .subscribe(() => this.showAutoMfuPopup());
+    } else {
+      this.showAutoMfuPopup();
+    }
   }
 
   /**

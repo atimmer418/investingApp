@@ -133,6 +133,11 @@ export class AppLockService {
     }
   }
 
+  /** Synchronous check for current lock state */
+  isCurrentlyLocked(): boolean {
+    return this.isLockedSubject.getValue();
+  }
+
   async lockApp() {
     if (this.isModalOpen) return;
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService, PortfolioDashboardData, Position, PerformanceData, PortfolioHistory } from '../../services/portfolio.service';
@@ -7,7 +7,9 @@ import { ToastService } from '../../services/toast.service';
 import { AuthService } from '../../services/auth.service';
 import { MonthlyFreedomUpdateService } from '../../services/monthly-freedom-update.service';
 import { MonthlyFreedomUpdateComponent } from '../monthly-freedom-update/monthly-freedom-update.component';
+import { AppLockService } from '../../services/app-lock.service';
 import { Router } from '@angular/router';
+import { filter, take, Subject, takeUntil } from 'rxjs';
 import { PortfolioChartComponent, PortfolioDataPoint } from '../portfolio-chart/portfolio-chart.component';
 import {
   IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent,
@@ -32,7 +34,7 @@ import {
     IonSegmentButton, IonGrid, IonRow, IonCol, IonList, IonChip
   ]
 })
-export class PortfolioDashboardComponent implements OnInit {
+export class PortfolioDashboardComponent implements OnInit, OnDestroy {
 
   dashboard: PortfolioDashboardData | null = null;
   performanceData: PerformanceData[] = [];
@@ -61,10 +63,13 @@ export class PortfolioDashboardComponent implements OnInit {
     private toastService: ToastService,
     private authService: AuthService,
     private mfuService: MonthlyFreedomUpdateService,
+    private appLockService: AppLockService,
     private modalController: ModalController,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) { }
+
+  private destroy$ = new Subject<void>();
 
   ngOnInit() {
     this.loadPortfolioData();
@@ -78,13 +83,31 @@ export class PortfolioDashboardComponent implements OnInit {
     this.mfuService.checkShouldShow().subscribe({
       next: (result) => {
         if (result.shouldShow) {
-          this.showMonthlyFreedomUpdateModal(false);
+          this.showMfuAfterUnlock();
         }
       },
       error: (err) => {
         console.warn('MFU check failed:', err);
       }
     });
+  }
+
+  /**
+   * If the app is currently locked, wait for a successful reauth before
+   * showing the MFU popup. Otherwise show immediately.
+   */
+  private showMfuAfterUnlock() {
+    if (this.appLockService.isCurrentlyLocked()) {
+      this.appLockService.isLocked$
+        .pipe(
+          filter(locked => !locked),
+          take(1),
+          takeUntil(this.destroy$)
+        )
+        .subscribe(() => this.showMonthlyFreedomUpdateModal(false));
+    } else {
+      this.showMonthlyFreedomUpdateModal(false);
+    }
   }
 
   /**
@@ -601,5 +624,10 @@ export class PortfolioDashboardComponent implements OnInit {
     // Create an array of icons directly. We'll use CSS Grid/Flex to arrange them "neatly".
     // 80 icons should be plenty to fill the background without overdoing DOM elements.
     this.backgroundIcons = Array(80).fill(iconName);
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
