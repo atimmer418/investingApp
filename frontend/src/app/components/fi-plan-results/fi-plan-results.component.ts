@@ -222,7 +222,7 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
   
   private calculateTimeToFI(monthlyInvestment: number, retirementIncome: number): string {
     const targetPortfolio = retirementIncome / 0.04;
-    const monthlyRate = 0.09 / 12; // 9% annual return
+    const monthlyRate = 0.10 / 12; // 10% annual return
     
     if (monthlyInvestment <= 0) {
       return '∞';

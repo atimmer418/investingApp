@@ -56,7 +56,7 @@ export class SurveyInitialComponent implements OnInit {
   isCalculationExpanded: boolean = false;
 
   // --- Economic Assumptions for the SWR/FIRE calculation ---
-  private readonly AVG_MARKET_YIELD = 0.09; // A standard assumption for a growth portfolio
+  private readonly AVG_MARKET_YIELD = 0.10; // Conservative long-term assumption for a growth portfolio
   private readonly SAFE_WITHDRAWAL_RATE = 0.04; // The classic 4% rule
 
   constructor(private router: Router, private authService: AuthService) {

@@ -6,7 +6,7 @@ import {
   IonCard, IonCardContent, IonInput, IonButton, IonIcon, IonAvatar, IonItem, IonLabel
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { shareOutline, checkmarkCircleOutline, saveOutline } from 'ionicons/icons';
+import { shareOutline, checkmarkCircleOutline, saveOutline, camera, walletOutline, timeOutline, ticketOutline } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
 import { SettingsService } from '../../services/settings.service';
 import { ToastService } from '../../services/toast.service';
@@ -56,7 +56,7 @@ export class MyProfilePage implements OnInit {
 
   // Constants
   private readonly SAFE_WITHDRAWAL_RATE = 0.04;
-  private readonly AVG_MARKET_YIELD = 0.09;
+  private readonly AVG_MARKET_YIELD = 0.10;
 
   // Internal state
   private exactAnnualIncome: number | null = null;
@@ -68,7 +68,7 @@ export class MyProfilePage implements OnInit {
     private toastService: ToastService,
     private portfolioService: PortfolioService
   ) {
-    addIcons({ shareOutline, checkmarkCircleOutline, saveOutline });
+    addIcons({camera,walletOutline,timeOutline,shareOutline,ticketOutline,checkmarkCircleOutline,saveOutline});
   }
 
 

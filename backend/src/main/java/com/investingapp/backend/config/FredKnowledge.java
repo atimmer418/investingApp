@@ -678,7 +678,7 @@ public class FredKnowledge {
 
                         ### Formula
                         Uses Future Value of Annuity with compound growth:
-                        monthlyRate = 0.12 / 12 = 0.01 (assumes 12% annual return)
+                        monthlyRate = 0.10 / 12 ≈ 0.00833 (assumes 10% annual return)
                         monthlyInvestment = converted from user's frequency (weekly, biweekly, monthly)
                         futureValue = monthlyInvestment × ((1 + monthlyRate)^months - 1) / monthlyRate
                         monthsToTarget = months needed until futureValue >= retirementIncome

@@ -513,8 +513,8 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
   }
 
   getProjectedGrowth(): number {
-    // 9% annual growth compounded for 10 years, accounting for DRIP
-    const annualRate = 0.09;
+    // 10% annual growth compounded for 10 years, accounting for DRIP
+    const annualRate = 0.10;
     const years = 10;
     return (this.investmentAmount || 0) * Math.pow(1 + annualRate, years);
   }
