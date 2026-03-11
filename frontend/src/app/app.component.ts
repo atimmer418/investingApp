@@ -47,7 +47,7 @@ export class AppComponent implements OnInit {
 
   @HostListener('window:touchstart')
   @HostListener('window:touchmove')
-  @HostListener('window:scroll', ['$event'])
+  @HostListener('window:scroll')
   @HostListener('window:click')
   @HostListener('window:keydown')
   onUserActivity() {
