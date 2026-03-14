@@ -2,6 +2,7 @@ package com.investingapp.backend.controller;
 
 import com.investingapp.backend.service.AlpacaService;
 import com.investingapp.backend.service.AlpacaApiService;
+import com.investingapp.backend.service.EncryptionService;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -30,12 +31,15 @@ public class TradingController {
     
     @Autowired
     private AlpacaService alpacaService;
-    
+
     @Autowired
     private AlpacaApiService alpacaApiService;
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EncryptionService encryptionService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -57,10 +61,10 @@ public class TradingController {
                     .body(Map.of("error", "User or Alpaca account not found"));
             }
 
-            String accountId = user.getAlpacaAccountId();
-            
+            String accountId = encryptionService.decrypt(user.getAlpacaAccountId());
+
             String positionsJson = alpacaService.getCurrentPositions(accountId);
-            
+
             if (positionsJson != null) {
                 JsonNode positions = objectMapper.readTree(positionsJson);
                 Map<String, Object> result = new HashMap<>();
@@ -109,8 +113,8 @@ public class TradingController {
                     .body(Map.of("error", "User or Alpaca account not found"));
             }
 
-            String accountId = user.getAlpacaAccountId();
-            
+            String accountId = encryptionService.decrypt(user.getAlpacaAccountId());
+
             AlpacaService.AlpacaOrderResponse orderResponse = alpacaService.placeSellOrderByPercentage(
                 accountId, request.getSymbol().toUpperCase(), request.getPercentage());
             
@@ -153,8 +157,8 @@ public class TradingController {
                     .body(Map.of("error", "User or Alpaca account not found"));
             }
 
-            String accountId = user.getAlpacaAccountId();
-            
+            String accountId = encryptionService.decrypt(user.getAlpacaAccountId());
+
             AlpacaService.AlpacaOrderResponse orderResponse = alpacaService.liquidatePortfolio(accountId);
             
             Map<String, Object> result = new HashMap<>();
@@ -201,8 +205,9 @@ public class TradingController {
                     .body(Map.of("error", "User or Alpaca account not found"));
             }
 
-            String accountId = user.getAlpacaAccountId();
-            String relationshipId = user.getAlpacaAchRelationshipId();
+            String accountId = encryptionService.decrypt(user.getAlpacaAccountId());
+            String relationshipId = user.getAlpacaAchRelationshipId() != null
+                    ? encryptionService.decrypt(user.getAlpacaAchRelationshipId()) : null;
 
             if (relationshipId == null) {
                 return ResponseEntity.badRequest()
@@ -251,7 +256,7 @@ public class TradingController {
                     .body(Map.of("error", "User or Alpaca account not found"));
             }
 
-            String accountInfo = alpacaApiService.getAccountStatus(user.getAlpacaAccountId());
+            String accountInfo = alpacaApiService.getAccountStatus(encryptionService.decrypt(user.getAlpacaAccountId()));
             
             if (accountInfo != null) {
                 JsonNode accountJson = objectMapper.readTree(accountInfo);
@@ -295,7 +300,7 @@ public class TradingController {
                     .body(Map.of("error", "User or Alpaca account not found"));
             }
 
-            String accountId = user.getAlpacaAccountId();
+            String accountId = encryptionService.decrypt(user.getAlpacaAccountId());
 
             // Close the Alpaca brokerage account
             alpacaService.closeAccount(accountId);

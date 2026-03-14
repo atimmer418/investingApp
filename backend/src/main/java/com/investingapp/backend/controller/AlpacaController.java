@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.investingapp.backend.service.AlpacaApiService;
+import com.investingapp.backend.service.EncryptionService;
 import com.investingapp.backend.service.PlaidToAlpacaService;
 import com.investingapp.backend.security.services.UserDetailsImpl;
 import java.util.Map;
@@ -25,13 +26,16 @@ public class AlpacaController {
     private final AlpacaService alpacaService;
     private final PlaidToAlpacaService plaidToAlpacaService;
     private final com.investingapp.backend.repository.UserRepository userRepository;
+    private final EncryptionService encryptionService;
 
     public AlpacaController(AlpacaApiService alpacaApiService, AlpacaService alpacaService, PlaidToAlpacaService plaidToAlpacaService,
-            com.investingapp.backend.repository.UserRepository userRepository) {
+            com.investingapp.backend.repository.UserRepository userRepository,
+            EncryptionService encryptionService) {
         this.alpacaApiService = alpacaApiService;
         this.alpacaService = alpacaService;
         this.plaidToAlpacaService = plaidToAlpacaService;
         this.userRepository = userRepository;
+        this.encryptionService = encryptionService;
     }
 
     @GetMapping("/account")
@@ -73,19 +77,24 @@ public class AlpacaController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
             }
 
-            // Save Alpaca Account ID and Number to User entity
+            // Save Alpaca Account ID, Number, and encrypted SSN to User entity
             String email = request.getEmail();
             if (email != null && !email.isEmpty()) {
                 com.investingapp.backend.model.User user = userRepository.findByEmail(email).orElse(null);
                 if (user != null) {
                     if (result.containsKey("account_id")) {
-                        user.setAlpacaAccountId((String) result.get("account_id"));
+                        user.setAlpacaAccountId(encryptionService.encrypt((String) result.get("account_id")));
                     }
                     if (result.containsKey("account_number")) {
-                        user.setAlpacaAccountNumber((String) result.get("account_number"));
+                        user.setAlpacaAccountNumber(encryptionService.encrypt((String) result.get("account_number")));
+                    }
+                    // Encrypt SSN at rest and store a hash for lookup
+                    if (request.getSsn() != null && !request.getSsn().isEmpty()) {
+                        user.setSsn(encryptionService.encrypt(request.getSsn()));
+                        user.setSsnHash(encryptionService.hashSsn(request.getSsn()));
                     }
                     userRepository.save(user);
-                    logger.info("Saved Alpaca Account ID and Number for user: {}", email);
+                    logger.info("Saved encrypted Alpaca Account ID, Number, and SSN for user: {}", email);
                 } else {
                     logger.warn("User not found for email: {}, could not save Alpaca details locally", email);
                 }
@@ -98,31 +107,6 @@ public class AlpacaController {
             Map<String, Object> error = new HashMap<>();
             error.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
-    }
-
-    @PostMapping("/sync-account-number")
-    public ResponseEntity<?> syncAccountNumber(org.springframework.security.core.Authentication authentication) {
-        String email = authentication.getName();
-        com.investingapp.backend.model.User user = userRepository.findByEmail(email).orElse(null);
-
-        if (user == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
-        }
-
-        String accountId = user.getAlpacaAccountId();
-        if (accountId == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "No Alpaca account ID found for user"));
-        }
-
-        String accountNumber = alpacaApiService.getAccountNumber(accountId);
-        if (accountNumber != null) {
-            user.setAlpacaAccountNumber(accountNumber);
-            userRepository.save(user);
-            logger.info("Synced Alpaca Account Number for user: {}", email);
-            return ResponseEntity.ok(Map.of("account_number", accountNumber));
-        } else {
-            return ResponseEntity.badRequest().body(Map.of("error", "Could not fetch account number from Alpaca"));
         }
     }
 
@@ -179,16 +163,21 @@ public class AlpacaController {
         try {
             logger.info("Creating ACH relationship for account {} using Plaid", accountId);
 
-            // Get user email from authentication
+            // Get user from authentication
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             String userEmail = userDetails.getUsername();
+            com.investingapp.backend.model.User user = userRepository.findByEmail(userEmail).orElse(null);
+            if (user == null) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "User not found");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+            }
 
             Map<String, Object> result = plaidToAlpacaService.createAchRelationshipFromPlaid(
                     accountId,
-                    request.getPlaidAccessToken(),
                     request.getPlaidAccountId(),
                     request.getAccountOwnerName(),
-                    userEmail);
+                    user);
 
             if (result.containsKey("error")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
@@ -307,10 +296,11 @@ public class AlpacaController {
                 return ResponseEntity.badRequest().body("User does not have an Alpaca account");
             }
 
+            String alpacaAccountId = encryptionService.decrypt(user.getAlpacaAccountId());
             String transferId = alpacaService.initiateAcatsTransfer(
-                user.getAlpacaAccountId(), 
-                request.getAccountNumber(), 
-                "BROKERAGE", 
+                alpacaAccountId,
+                request.getAccountNumber(),
+                "BROKERAGE",
                 request.getDtcNumber()
             );
             
@@ -389,19 +379,10 @@ public class AlpacaController {
 
     // DTO for ACH relationship creation using Plaid
     public static class CreateAchFromPlaidRequest {
-        private String plaidAccessToken;
         private String plaidAccountId;
         private String accountOwnerName;
 
         // Getters and setters
-        public String getPlaidAccessToken() {
-            return plaidAccessToken;
-        }
-
-        public void setPlaidAccessToken(String plaidAccessToken) {
-            this.plaidAccessToken = plaidAccessToken;
-        }
-
         public String getPlaidAccountId() {
             return plaidAccountId;
         }

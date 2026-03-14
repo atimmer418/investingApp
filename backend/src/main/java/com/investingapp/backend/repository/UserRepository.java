@@ -21,7 +21,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByReferralCode(String referralCode);
     boolean existsByReferralCode(String referralCode);
 
-    Optional<User> findBySsn(String ssn);
+    Optional<User> findBySsnHash(String ssnHash);
 
     // Find a user by email with UserProgress eagerly fetched (avoids lazy loading
     // cache issues)

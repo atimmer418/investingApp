@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "servlocal",
+      "port": 8100,
+      "autoPort": false
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "./gradlew",
+      "runtimeArgs": ["bootRun"],
+      "port": 8080,
+      "env": { "SPRING_PROFILES_ACTIVE": "local" },
+      "autoPort": false
+    }
+  ]
+}

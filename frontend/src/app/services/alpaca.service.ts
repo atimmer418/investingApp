@@ -105,13 +105,14 @@ export class AlpacaService {
   }
 
   /**
-   * Create ACH relationship using Plaid data
+   * Create ACH relationship using Plaid data.
+   * The Plaid access token is loaded server-side from the user's stored credentials —
+   * it is not accepted from the frontend.
    */
-  createAchRelationshipFromPlaid(accountId: string, plaidAccessToken: string, plaidAccountId: string, accountOwnerName: string): Observable<any> {
+  createAchRelationshipFromPlaid(accountId: string, plaidAccountId: string, accountOwnerName: string): Observable<any> {
     return this.http.post(
       `${this.baseUrl}/alpaca/accounts/${accountId}/ach-relationships/plaid`,
       {
-        plaidAccessToken,
         plaidAccountId,
         accountOwnerName
       },

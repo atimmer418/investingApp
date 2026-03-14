@@ -5,6 +5,7 @@ import com.investingapp.backend.model.Beneficiary.BeneficiaryStatus;
 import com.investingapp.backend.model.Beneficiary.BeneficiaryType;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.BeneficiaryRepository;
+import com.investingapp.backend.service.EncryptionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,9 +36,12 @@ public class BeneficiaryService {
     
     @Autowired
     private BeneficiaryRepository beneficiaryRepository;
-    
+
     @Autowired
     private AlpacaService alpacaService; // For submitting beneficiaries to Alpaca
+
+    @Autowired
+    private EncryptionService encryptionService;
     
     /**
      * Get all beneficiaries for a user
@@ -181,7 +185,7 @@ public class BeneficiaryService {
                     .collect(Collectors.toList());
 
                 // Even if the list is empty (last beneficiary deleted), we should sync (send empty list)
-                alpacaService.updateAccountBeneficiaries(user.getAlpacaAccountId(), activeBeneficiaries);
+                alpacaService.updateAccountBeneficiaries(encryptionService.decrypt(user.getAlpacaAccountId()), activeBeneficiaries);
                 
                 logger.info("Successfully synced beneficiaries to Alpaca after deletion");
             } catch (Exception e) {
@@ -212,9 +216,9 @@ public class BeneficiaryService {
         }
         
         try {
-            logger.info("Submitting beneficiaries to Alpaca for user: {} (account: {})", 
-                user.getEmail(), user.getAlpacaAccountId());
-            
+            String alpacaAccountId = encryptionService.decrypt(user.getAlpacaAccountId());
+            logger.info("Submitting beneficiaries to Alpaca for user: {}", user.getEmail());
+
             // Get all active beneficiaries for the user that should be submitted
             List<Beneficiary> activeBeneficiaries = beneficiaryRepository.findByUserIdAndStatusOrderByBeneficiaryTypeAscPercentageAllocationDesc(
                 user.getId(), BeneficiaryStatus.APPROVED);
@@ -244,8 +248,8 @@ public class BeneficiaryService {
             }
             
             // Submit to Alpaca using the new API
-            boolean success = alpacaService.updateAccountBeneficiaries(user.getAlpacaAccountId(), activeBeneficiaries);
-            
+            boolean success = alpacaService.updateAccountBeneficiaries(alpacaAccountId, activeBeneficiaries);
+
             if (success) {
                 // Update all submitted beneficiaries as approved
                 for (Beneficiary b : activeBeneficiaries) {
@@ -292,8 +296,8 @@ public class BeneficiaryService {
         }
         
         try {
-            logger.info("Submitting all beneficiaries to Alpaca for user: {} (account: {})", 
-                user.getEmail(), user.getAlpacaAccountId());
+            String alpacaAccountId = encryptionService.decrypt(user.getAlpacaAccountId());
+            logger.info("Submitting all beneficiaries to Alpaca for user: {}", user.getEmail());
             
             // Get all beneficiaries for the user and filter for approved and pending
             List<Beneficiary> allBeneficiaries = beneficiaryRepository.findByUserIdOrderByBeneficiaryTypeAscPercentageAllocationDesc(user.getId());
@@ -326,8 +330,8 @@ public class BeneficiaryService {
             }
             
             // Submit to Alpaca using the new API
-            boolean success = alpacaService.updateAccountBeneficiaries(user.getAlpacaAccountId(), activeBeneficiaries);
-            
+            boolean success = alpacaService.updateAccountBeneficiaries(alpacaAccountId, activeBeneficiaries);
+
             if (success) {
                 // Update all submitted beneficiaries with submission timestamp and approved status
                 LocalDateTime submissionTime = LocalDateTime.now();

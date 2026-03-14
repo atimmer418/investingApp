@@ -85,11 +85,14 @@ public class User {
     private Integer referralCount = 0;
 
     // Account Recovery
-    @Column(name = "ssn")
-    private String ssn; // In production, this MUST be encrypted!
+    @Column(name = "ssn", length = 512)
+    private String ssn; // Stored as ENC:<base64(iv+ciphertext)> — encrypted at rest
 
-    @Column(name = "recovery_otp")
-    private String recoveryOtp;
+    @Column(name = "ssn_hash", length = 64)
+    private String ssnHash; // SHA-256 hex of raw SSN — used for lookup only (not decryptable)
+
+    @Column(name = "recovery_otp", length = 512)
+    private String recoveryOtp; // Stored as ENC:<base64(iv+ciphertext)> — encrypted at rest
 
     @Column(name = "recovery_otp_expiry")
     private LocalDateTime recoveryOtpExpiry;
@@ -103,8 +106,8 @@ public class User {
     private UserProgress userProgress;
 
     // Plaid specific fields
-    @Column(length = 255) // Adjust length as needed
-    private String plaidAccessToken; // IMPORTANT: Encrypt this at rest!
+    @Column(length = 512)
+    private String plaidAccessToken; // Stored as ENC:<base64(iv+ciphertext)> — encrypted at rest
 
     @Column(length = 255)
     private String plaidItemId;
@@ -125,14 +128,14 @@ public class User {
     private String plaidAccountSubtype; // "checking", "savings", etc.
 
     // Alpaca ACH relationship fields
-    @Column(length = 255)
-    private String alpacaAccountId; // Alpaca brokerage account ID (UUID)
+    @Column(length = 512)
+    private String alpacaAccountId; // Stored as ENC:<base64(iv+ciphertext)> — encrypted at rest
 
-    @Column(length = 255)
-    private String alpacaAccountNumber; // Alpaca brokerage account number (e.g. PA... or AC...)
+    @Column(length = 512)
+    private String alpacaAccountNumber; // Stored as ENC:<base64(iv+ciphertext)> — encrypted at rest
 
-    @Column(length = 255)
-    private String alpacaAchRelationshipId; // ACH relationship ID for funding
+    @Column(length = 512)
+    private String alpacaAchRelationshipId; // Stored as ENC:<base64(iv+ciphertext)> — encrypted at rest
 
     @Column(length = 50)
     private String alpacaAchStatus; // "QUEUED", "APPROVED", "PENDING", etc.

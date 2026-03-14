@@ -39,20 +39,31 @@ public class PlaidToAlpacaService {
     private EncryptionService encryptionService;
 
     /**
-     * Create ACH relationship using Plaid access token
-     * This gets bank account details from Plaid and creates ACH relationship in Alpaca
+     * Create ACH relationship using the user's stored (encrypted) Plaid access token.
+     * The token is loaded from the User entity and decrypted internally — it is never
+     * accepted from the caller to prevent round-tripping sensitive data through the frontend.
      */
-    public Map<String, Object> createAchRelationshipFromPlaid(String alpacaAccountId, 
-                                                            String plaidAccessToken, 
-                                                            String plaidAccountId, 
+    public Map<String, Object> createAchRelationshipFromPlaid(String alpacaAccountId,
+                                                            String plaidAccountId,
                                                             String accountOwnerName,
-                                                            String userEmail) {
-        logger.info("Creating ACH relationship for Alpaca account {} using Plaid account {}", 
+                                                            User user) {
+        logger.info("Creating ACH relationship for Alpaca account {} using Plaid account {}",
                    alpacaAccountId, plaidAccountId);
-        
+
+        String userEmail = user.getEmail();
+
         try {
+            // Load the encrypted Plaid access token from the User entity and decrypt it
+            // internally. The token never travels through the frontend.
+            String encryptedAccessToken = user.getPlaidAccessToken();
+            if (encryptedAccessToken == null) {
+                Map<String, Object> errorResult = new HashMap<>();
+                errorResult.put("error", "No Plaid access token found for user");
+                return errorResult;
+            }
+
             // Get bank account details from Plaid
-            PlaidBankAccount bankAccount = getBankAccountFromPlaid(plaidAccessToken, plaidAccountId);
+            PlaidBankAccount bankAccount = getBankAccountFromPlaid(encryptedAccessToken, plaidAccountId);
             
             if (bankAccount == null) {
                 Map<String, Object> errorResult = new HashMap<>();
@@ -94,17 +105,18 @@ public class PlaidToAlpacaService {
     /**
      * Save ACH relationship information to user profile for future funding operations
      */
-    private void saveAchRelationshipToUser(String userEmail, String alpacaAccountId, 
+    private void saveAchRelationshipToUser(String userEmail, String alpacaAccountId,
                                          String achRelationshipId, String achStatus) {
         try {
             Optional<User> userOpt = userRepository.findByEmail(userEmail);
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
-                user.setAlpacaAccountId(alpacaAccountId);
-                user.setAlpacaAchRelationshipId(achRelationshipId);
-                user.setAlpacaAchStatus(achStatus);
+                // Encrypt sensitive IDs before storing
+                user.setAlpacaAccountId(encryptionService.encrypt(alpacaAccountId));
+                user.setAlpacaAchRelationshipId(encryptionService.encrypt(achRelationshipId));
+                user.setAlpacaAchStatus(achStatus); // status is not sensitive (e.g. "QUEUED", "APPROVED")
                 userRepository.save(user);
-                logger.info("Successfully saved ACH relationship data for user: {}", userEmail);
+                logger.info("Successfully saved encrypted ACH relationship data for user: {}", userEmail);
             } else {
                 logger.error("User not found when trying to save ACH relationship: {}", userEmail);
             }

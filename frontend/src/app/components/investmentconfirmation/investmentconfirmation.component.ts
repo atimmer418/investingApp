@@ -554,30 +554,29 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
     try {
       console.log('🏦 Creating ACH relationship for account:', alpacaAccountId);
       
-      // Get Plaid data from database
+      // Get Plaid data from database (only accountId is needed by the frontend;
+      // the access token is loaded server-side and never sent to the client)
       const plaidData = await this.plaidDataService.getUserPlaidData().toPromise();
-      
-      if (!plaidData?.accessToken || !plaidData?.accountId) {
+
+      if (!plaidData?.accountId) {
         console.warn('⚠️ No Plaid banking data found in database. User may need to re-link their bank account.');
-        
+
         await this.toastService.showToast('Bank account linking skipped - please link your bank account in settings later.', 'warning', 3000);
         return;
       }
 
-      console.log('✅ Found Plaid data in database:', { 
-        hasAccessToken: !!plaidData.accessToken,
+      console.log('✅ Found Plaid data in database:', {
         hasAccountId: !!plaidData.accountId,
-        institutionName: plaidData.institutionName 
+        institutionName: plaidData.institutionName
       });
 
       // Get user's full name for account owner (using current user email as fallback)
       const kycData = this.getKycData();
       const accountOwnerName = `${kycData.firstName} ${kycData.lastName}`; // Get actual name from KYC data
 
-      // Create ACH relationship using database Plaid data
+      // Create ACH relationship — the Plaid access token is resolved server-side
       const achResult = await this.alpacaService.createAchRelationshipFromPlaid(
         alpacaAccountId,
-        plaidData.accessToken,
         plaidData.accountId,
         accountOwnerName
       ).toPromise();

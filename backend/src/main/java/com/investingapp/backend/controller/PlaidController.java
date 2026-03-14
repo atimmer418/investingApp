@@ -4,6 +4,7 @@ import com.investingapp.backend.dto.MessageResponse;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.UserRepository;
 import com.investingapp.backend.security.services.UserDetailsImpl;
+import com.investingapp.backend.service.EncryptionService;
 import com.investingapp.backend.service.PlaidService;
 import com.plaid.client.model.ItemPublicTokenExchangeResponse; // Make sure this is imported
 import com.plaid.client.model.LinkTokenCreateResponse;
@@ -34,6 +35,9 @@ public class PlaidController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EncryptionService encryptionService;
 
     // --- AUTHENTICATED FLOW ENDPOINTS ---
     
@@ -110,11 +114,13 @@ public class PlaidController {
             User user = userOpt.get();
             
             // Create response with essential Plaid data for ACH creation
+            String rawAccessToken = user.getPlaidAccessToken() != null
+                    ? encryptionService.decrypt(user.getPlaidAccessToken()) : null;
             Map<String, Object> plaidData = new HashMap<>();
-            plaidData.put("accessToken", user.getPlaidAccessToken());
+            plaidData.put("accessToken", rawAccessToken);
             plaidData.put("accountId", user.getPlaidAccountId());
             plaidData.put("institutionName", user.getPlaidInstitutionName());
-            plaidData.put("hasValidToken", user.getPlaidAccessToken() != null && !user.getPlaidAccessToken().isEmpty());
+            plaidData.put("hasValidToken", rawAccessToken != null && !rawAccessToken.isEmpty());
             
             return ResponseEntity.ok(plaidData);
         } catch (Exception e) {
@@ -134,13 +140,13 @@ public class PlaidController {
             }
             
             User user = userOpt.get();
-            String accessToken = user.getPlaidAccessToken();
-            
-            if (accessToken == null || accessToken.isEmpty()) {
+            String encryptedToken = user.getPlaidAccessToken();
+
+            if (encryptedToken == null || encryptedToken.isEmpty()) {
                 return ResponseEntity.badRequest().body("No Plaid access token found");
             }
-            
-            return ResponseEntity.ok(accessToken);
+
+            return ResponseEntity.ok(encryptionService.decrypt(encryptedToken));
         } catch (Exception e) {
             logger.error("Error retrieving access token", e);
             return ResponseEntity.status(500).body("Error retrieving access token");
@@ -160,9 +166,11 @@ public class PlaidController {
             User user = userOpt.get();
             
             // Create response with bank account info needed for ACH
+            String rawToken = user.getPlaidAccessToken() != null
+                    ? encryptionService.decrypt(user.getPlaidAccessToken()) : null;
             Map<String, Object> bankAccount = new HashMap<>();
             bankAccount.put("accountId", user.getPlaidAccountId());
-            bankAccount.put("accessToken", user.getPlaidAccessToken());
+            bankAccount.put("accessToken", rawToken);
             bankAccount.put("institutionName", user.getPlaidInstitutionName());
             bankAccount.put("accountName", user.getPlaidAccountName());
             bankAccount.put("accountType", user.getPlaidAccountType());

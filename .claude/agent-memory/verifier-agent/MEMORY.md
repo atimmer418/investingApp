@@ -1,0 +1,1 @@
+- [project_encryption_upgrade.md](project_encryption_upgrade.md) — Notes from AES-256/GCM encryption upgrade review; known gaps and patterns to watch

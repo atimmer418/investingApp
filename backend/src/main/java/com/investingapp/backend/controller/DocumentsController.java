@@ -4,6 +4,7 @@ import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.UserRepository;
 import com.investingapp.backend.security.services.UserDetailsImpl;
 import com.investingapp.backend.service.AlpacaApiService;
+import com.investingapp.backend.service.EncryptionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class DocumentsController {
     private UserRepository userRepository;
 
     @Autowired
+    private EncryptionService encryptionService;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     @GetMapping("/tax")
@@ -49,8 +53,9 @@ public class DocumentsController {
                 return ResponseEntity.badRequest().body(Map.of("error", "User does not have an Alpaca account"));
             }
 
-            logger.info("Fetching documents for account: {}", user.getAlpacaAccountId());
-            String documentsJson = alpacaApiService.getAccountDocuments(user.getAlpacaAccountId(), start, end);
+            String alpacaAccountId = encryptionService.decrypt(user.getAlpacaAccountId());
+            logger.info("Fetching documents for user: {}", user.getEmail());
+            String documentsJson = alpacaApiService.getAccountDocuments(alpacaAccountId, start, end);
             
             // Parse the JSON string to an Object to ensure correct serialization in the response
             Object documents = objectMapper.readValue(documentsJson, Object.class);
@@ -76,7 +81,7 @@ public class DocumentsController {
                 return ResponseEntity.badRequest().build();
             }
 
-            byte[] document = alpacaApiService.downloadDocument(user.getAlpacaAccountId(), documentId);
+            byte[] document = alpacaApiService.downloadDocument(encryptionService.decrypt(user.getAlpacaAccountId()), documentId);
             
             if (document == null || document.length == 0) {
                 logger.warn("Received empty document for documentId: {}", documentId);

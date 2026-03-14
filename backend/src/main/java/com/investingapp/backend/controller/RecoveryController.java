@@ -6,43 +6,51 @@ import com.investingapp.backend.dto.RecoveryVerifyRequest;
 import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.UserRepository;
 import com.investingapp.backend.security.jwt.JwtUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.investingapp.backend.service.EncryptionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Random;
 
 @RestController
 @RequestMapping("/api/auth/recovery")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class RecoveryController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(RecoveryController.class);
 
-    @Autowired
-    private JwtUtils jwtUtils;
+    private final UserRepository userRepository;
+    private final JwtUtils jwtUtils;
+    private final EncryptionService encryptionService;
+
+    public RecoveryController(UserRepository userRepository, JwtUtils jwtUtils, EncryptionService encryptionService) {
+        this.userRepository = userRepository;
+        this.jwtUtils = jwtUtils;
+        this.encryptionService = encryptionService;
+    }
 
     @PostMapping("/initiate")
     public ResponseEntity<RecoveryResponse> initiateRecovery(@RequestBody RecoveryInitiateRequest request) {
-        // 1. Lookup User by SSN
-        // In a real app, we would hash the input SSN and search for that hash
-        User user = userRepository.findBySsn(request.getSsn()).orElse(null);
+        // Look up user by SHA-256 hash of the submitted SSN (plaintext SSN is never stored)
+        String ssnHash = encryptionService.hashSsn(request.getSsn());
+        User user = userRepository.findBySsnHash(ssnHash).orElse(null);
 
         if (user == null) {
-            // Security: Return success even if user not found to prevent enumeration
-            // But for this demo, we might want to be explicit or just delay
-            try { Thread.sleep(1000); } catch (InterruptedException e) {}
+            // Security: return success regardless to prevent enumeration
+            try { Thread.sleep(1000); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
             return ResponseEntity.ok(new RecoveryResponse(true, "If an account exists, a recovery code has been sent.", null));
         }
 
-        // 2. Generate OTP
-        String otp = String.format("%06d", new Random().nextInt(999999));
-        user.setRecoveryOtp(otp);
+        // Generate OTP and encrypt before storing
+        String otp = String.format("%06d", new SecureRandom().nextInt(999999));
+        user.setRecoveryOtp(encryptionService.encrypt(otp));
         user.setRecoveryOtpExpiry(LocalDateTime.now().plusMinutes(15));
         userRepository.save(user);
 
-        // 3. Mock Email Sending
+        // Mock email sending
         System.out.println("============================================");
         System.out.println("MOCK EMAIL TO: " + user.getEmail());
         System.out.println("SUBJECT: Account Recovery Code");
@@ -54,29 +62,39 @@ public class RecoveryController {
 
     @PostMapping("/verify")
     public ResponseEntity<RecoveryResponse> verifyRecovery(@RequestBody RecoveryVerifyRequest request) {
-        User user = userRepository.findBySsn(request.getSsn()).orElse(null);
+        String ssnHash = encryptionService.hashSsn(request.getSsn());
+        User user = userRepository.findBySsnHash(ssnHash).orElse(null);
 
         if (user == null) {
             return ResponseEntity.status(401).body(new RecoveryResponse(false, "Invalid request", null));
         }
 
-        // Check OTP
-        if (user.getRecoveryOtp() == null || 
-            !user.getRecoveryOtp().equals(request.getOtp()) || 
-            user.getRecoveryOtpExpiry().isBefore(LocalDateTime.now())) {
+        if (user.getRecoveryOtp() == null || user.getRecoveryOtpExpiry() == null) {
             return ResponseEntity.status(401).body(new RecoveryResponse(false, "Invalid or expired code", null));
         }
 
-        // Success!
-        // 1. Clear OTP
+        // Decrypt stored OTP before comparing
+        String storedOtp;
+        try {
+            storedOtp = encryptionService.decrypt(user.getRecoveryOtp());
+        } catch (Exception e) {
+            logger.error("Failed to decrypt recovery OTP for user {}: {}", user.getEmail(), e.getMessage());
+            return ResponseEntity.status(500).body(new RecoveryResponse(false, "Internal error verifying code", null));
+        }
+
+        if (!storedOtp.equals(request.getOtp()) || user.getRecoveryOtpExpiry().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.status(401).body(new RecoveryResponse(false, "Invalid or expired code", null));
+        }
+
+        // Clear OTP
         user.setRecoveryOtp(null);
         user.setRecoveryOtpExpiry(null);
 
-        // 2. Security Purge: Delete all existing passkeys
+        // Security: delete all existing passkeys so the user must register a new one
         user.getPasskeyCredentials().clear();
         userRepository.save(user);
 
-        // 3. Issue Token
+        // Issue token
         String token = jwtUtils.generateJwtTokenFromUsername(user.getEmail());
 
         return ResponseEntity.ok(new RecoveryResponse(true, "Recovery successful. Please register a new passkey.", token));

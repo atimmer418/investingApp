@@ -3,6 +3,7 @@ package com.investingapp.backend.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.investingapp.backend.model.User;
+import com.investingapp.backend.service.EncryptionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,6 +57,9 @@ public class PortfolioDashboardService {
     // Cache for company names to avoid repeated lookups
     private final Map<String, String> companyNameCache = new ConcurrentHashMap<>();
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private EncryptionService encryptionService;
+
     public PortfolioDashboardService() {
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
@@ -91,7 +95,7 @@ public class PortfolioDashboardService {
             throw new IllegalArgumentException("User does not have an Alpaca account");
         }
 
-        String accountId = user.getAlpacaAccountId();
+        String accountId = encryptionService.decrypt(user.getAlpacaAccountId());
 
         try {
             // Get all required data from Alpaca
@@ -198,7 +202,7 @@ public class PortfolioDashboardService {
             throw new IllegalArgumentException("User does not have an Alpaca account");
         }
 
-        String accountId = user.getAlpacaAccountId();
+        String accountId = encryptionService.decrypt(user.getAlpacaAccountId());
 
         try {
             return getPortfolioHistory(accountId, period);

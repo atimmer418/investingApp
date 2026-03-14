@@ -6,6 +6,7 @@ import com.investingapp.backend.repository.DripExecutionRepository;
 import com.investingapp.backend.repository.UserRepository;
 import com.investingapp.backend.service.AlpacaService.AlpacaOrderResponse;
 import com.investingapp.backend.service.AlpacaService.DividendActivity;
+import com.investingapp.backend.service.EncryptionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,9 @@ public class DripService {
     @Autowired
     private AlpacaService alpacaService;
 
+    @Autowired
+    private EncryptionService encryptionService;
+
     // ==================== Main DRIP Processing ====================
 
     /**
@@ -92,7 +96,7 @@ public class DripService {
      */
     @Transactional
     public int[] processDividendsForUser(User user) {
-        String accountId = user.getAlpacaAccountId();
+        String accountId = encryptionService.decrypt(user.getAlpacaAccountId());
         int dividendsFound = 0;
         int ordersPlaced = 0;
 
@@ -100,8 +104,8 @@ public class DripService {
         String afterDate = getLastProcessedDividendDate(user);
         String untilDate = LocalDate.now(ZoneId.of("America/New_York")).toString();
 
-        logger.info("[DRIP] Checking dividends for user {} (alpaca: {}), window: {} to {}",
-                user.getEmail(), accountId, afterDate, untilDate);
+        logger.info("[DRIP] Checking dividends for user {}, window: {} to {}",
+                user.getEmail(), afterDate, untilDate);
 
         // Fetch dividend activities from Alpaca
         List<DividendActivity> dividends = alpacaService.getDividendActivities(accountId, afterDate, untilDate);
@@ -193,14 +197,15 @@ public class DripService {
         for (DripExecution dripExecution : pendingOrders) {
             try {
                 User user = dripExecution.getUser();
-                String accountId = user.getAlpacaAccountId();
+                String encryptedAccountId = user.getAlpacaAccountId();
                 String orderId = dripExecution.getAlpacaOrderId();
 
-                if (accountId == null || orderId == null) {
+                if (encryptedAccountId == null || orderId == null) {
                     logger.warn("[DRIP] Skipping status check — missing accountId or orderId for DRIP #{}", dripExecution.getId());
                     continue;
                 }
 
+                String accountId = encryptionService.decrypt(encryptedAccountId);
                 AlpacaOrderResponse orderStatus = alpacaService.checkOrderStatus(accountId, orderId);
 
                 if (orderStatus == null) {

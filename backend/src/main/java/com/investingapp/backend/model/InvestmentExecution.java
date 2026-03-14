@@ -33,7 +33,7 @@ public class InvestmentExecution {
     @Column(name = "alpaca_transfer_id")
     private String alpacaTransferId;
     
-    @Column(name = "alpaca_account_id")
+    @Column(name = "alpaca_account_id", length = 512)
     private String alpacaAccountId;
     
     @Column(name = "error_message", columnDefinition = "TEXT")

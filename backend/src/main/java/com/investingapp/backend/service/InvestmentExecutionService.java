@@ -61,6 +61,9 @@ public class InvestmentExecutionService {
     @Autowired
     private TaskScheduler taskScheduler;
 
+    @Autowired
+    private EncryptionService encryptionService;
+
 
 
     /**
@@ -136,25 +139,28 @@ public class InvestmentExecutionService {
         logger.info("Total amount for batched investments: {}", totalAmount);
 
         try {
+            // Decrypt sensitive IDs before passing to Alpaca API
+            String alpacaAccountId = encryptionService.decrypt(user.getAlpacaAccountId());
+            String plaidRelationshipId = encryptionService.decrypt(user.getPlaidRelationshipId());
+
             // Initiate single ACH transfer for TOTAL amount
             AlpacaService.AlpacaTransferResponse transferResponse = alpacaService.initiateAchTransfer(
-                    user.getAlpacaAccountId(),
-                    user.getPlaidRelationshipId(),
+                    alpacaAccountId,
+                    plaidRelationshipId,
                     totalAmount);
 
             if (transferResponse.isSuccess()) {
                 LocalDateTime now = LocalDateTime.now(MARKET_TIMEZONE);
-                
-                // Update ALL executions in the batch with the SAME transfer ID
 
+                // Update ALL executions in the batch with the SAME transfer ID
                 // This links them all to the single ACH event
                 for (InvestmentExecution execution : batchExecutions) {
                     execution.setAlpacaTransferId(transferResponse.id);
                     execution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_INITIATED);
                     execution.setExecutionDate(now);
-                    execution.setAlpacaAccountId(user.getAlpacaAccountId());
+                    execution.setAlpacaAccountId(encryptionService.encrypt(alpacaAccountId)); // snapshot: encrypted at rest
                     // Clear the "queued" error message
-                    execution.setErrorMessage(null); 
+                    execution.setErrorMessage(null);
                     executionRepository.save(execution);
                 }
 
@@ -342,8 +348,11 @@ public class InvestmentExecutionService {
             throw new RuntimeException("User missing required Alpaca account ID");
         }
 
+        // Decrypt the Alpaca account ID before using it with the API
+        String alpacaAccountId = encryptionService.decrypt(user.getAlpacaAccountId());
+
         // Check buying power
-        BigDecimal buyingPower = alpacaService.getBuyingPower(user.getAlpacaAccountId());
+        BigDecimal buyingPower = alpacaService.getBuyingPower(alpacaAccountId);
 
         if (buyingPower.compareTo(execution.getAmount()) >= 0) {
             // Sufficient funds
@@ -352,7 +361,7 @@ public class InvestmentExecutionService {
 
             execution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_COMPLETED);
             execution.setFundingCompletedAt(LocalDateTime.now(MARKET_TIMEZONE));
-            execution.setAlpacaAccountId(user.getAlpacaAccountId());
+            execution.setAlpacaAccountId(encryptionService.encrypt(alpacaAccountId)); // snapshot: encrypted at rest
             executionRepository.save(execution);
 
             // Initiate trading immediately
@@ -385,16 +394,20 @@ public class InvestmentExecutionService {
             throw new RuntimeException("User missing required Alpaca account ID or Plaid relationship ID");
         }
 
+        // Decrypt sensitive IDs before passing to Alpaca API
+        String alpacaAccountId = encryptionService.decrypt(user.getAlpacaAccountId());
+        String plaidRelationshipId = encryptionService.decrypt(user.getPlaidRelationshipId());
+
         // Update execution status and date
         execution.setStatus(InvestmentExecution.ExecutionStatus.FUNDING_INITIATED);
         execution.setExecutionDate(LocalDateTime.now(MARKET_TIMEZONE));
-        execution.setAlpacaAccountId(user.getAlpacaAccountId());
+        execution.setAlpacaAccountId(encryptionService.encrypt(alpacaAccountId)); // snapshot: encrypted at rest
         executionRepository.save(execution);
 
         // Initiate ACH funding
         AlpacaService.AlpacaTransferResponse transferResponse = alpacaService.initiateAchTransfer(
-                user.getAlpacaAccountId(),
-                user.getPlaidRelationshipId(),
+                alpacaAccountId,
+                plaidRelationshipId,
                 execution.getAmount());
 
         if (transferResponse.isSuccess()) {
@@ -461,7 +474,7 @@ public class InvestmentExecutionService {
 
         // Query Alpaca's transfers endpoint — matches by transfer ID, no amount heuristics needed
         AlpacaService.AlpacaTransferResponse transferStatus = alpacaService.checkTransferStatus(
-                execution.getAlpacaAccountId(),
+                encryptionService.decrypt(execution.getAlpacaAccountId()),
                 execution.getAlpacaTransferId());
 
         if (transferStatus.isComplete()) {
@@ -681,7 +694,7 @@ public class InvestmentExecutionService {
 
                 // Place order with Alpaca (handling fractional vs whole shares)
                 AlpacaService.AlpacaOrderResponse orderResponse = placeOrderWithFractionalCheck(
-                        execution.getAlpacaAccountId(), targetSymbol, execution.getAmount());
+                        encryptionService.decrypt(execution.getAlpacaAccountId()), targetSymbol, execution.getAmount());
 
                 if (orderResponse.isSuccess()) {
                     trade.setAlpacaOrderId(orderResponse.id);
@@ -731,7 +744,7 @@ public class InvestmentExecutionService {
 
                     // Place order with Alpaca (handling fractional vs whole shares)
                     AlpacaService.AlpacaOrderResponse orderResponse = placeOrderWithFractionalCheck(
-                            execution.getAlpacaAccountId(), symbol, amount);
+                            encryptionService.decrypt(execution.getAlpacaAccountId()), symbol, amount);
 
                     if (orderResponse.isSuccess()) {
                         trade.setAlpacaOrderId(orderResponse.id);
@@ -833,7 +846,7 @@ public class InvestmentExecutionService {
             if (trade.getStatus() == InvestmentTrade.TradeStatus.SUBMITTED) {
                 // Check order status
                 AlpacaService.AlpacaOrderResponse orderStatus = alpacaService.checkOrderStatus(
-                        execution.getAlpacaAccountId(), trade.getAlpacaOrderId());
+                        encryptionService.decrypt(execution.getAlpacaAccountId()), trade.getAlpacaOrderId());
 
                 if (orderStatus.isFilled()) {
                     trade.setStatus(InvestmentTrade.TradeStatus.FILLED);
