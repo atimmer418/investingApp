@@ -1,3 +1,12 @@
+:host.fade-in-from-get-started {
+  animation: survey-fade-in 0.4s ease-out forwards;
+}
+
+@keyframes survey-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 // Use CSS variables for a consistent theme
 :host {
   --ion-background-color: #f2f2f7; // A very light, clean background

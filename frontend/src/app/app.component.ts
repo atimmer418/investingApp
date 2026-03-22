@@ -76,7 +76,7 @@ export class AppComponent implements OnInit {
     // In dev mode, simulate login as an existing user BEFORE setting up navigation
     // This prevents the race condition where navigation fires before auth completes
     if (!environment.production) {
-      this.simulateUserLogin('facebook@gmail.com');
+      // this.simulateUserLogin('facebook@gmail.com');
       // this.simulateUserLogin('', 'user_handle_123');
       // this.simulateUserLogin('test@test.com');
     }

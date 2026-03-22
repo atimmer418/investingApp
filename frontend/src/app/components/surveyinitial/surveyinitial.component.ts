@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostBinding } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -44,6 +44,7 @@ import {
   ],
 })
 export class SurveyInitialComponent implements OnInit {
+  @HostBinding('class.fade-in-from-get-started') fadeIn = false;
   // --- User Input Properties ---
   monthlyInvestment: number = 2500; // A more common starting point for the target audience
   retirementIncome: number = 60000;
@@ -60,6 +61,7 @@ export class SurveyInitialComponent implements OnInit {
   private readonly SAFE_WITHDRAWAL_RATE = 0.04; // The classic 4% rule
 
   constructor(private router: Router, private authService: AuthService) {
+    this.fadeIn = this.router.getCurrentNavigation()?.extras?.state?.['fromGetStarted'] === true;
     addIcons({ informationCircleOutline, chevronUp });
   }
 

@@ -1,5 +1,7 @@
 <ion-content [fullscreen]="true" [scroll]="false" class="get-started-content">
 
+  <div class="page-wrapper" [class.fading-out]="isFadingOut">
+
   <!-- The Swiper container now takes up the main flexible space -->
   <!-- SWIPER NEEDS css-mode="true" in prod -->
   <swiper-container #swiper initial-slide="4" [pagination]="true">
@@ -64,5 +66,7 @@
     </swiper-slide>
 
   </swiper-container>
+
+  </div>
 
 </ion-content>

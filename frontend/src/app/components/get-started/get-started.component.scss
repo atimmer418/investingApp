@@ -13,6 +13,18 @@
   height: 100%;
 }
 
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  opacity: 1;
+  transition: opacity 0.4s ease-out;
+
+  &.fading-out {
+    opacity: 0;
+  }
+}
+
 swiper-container {
   // The swiper should take up all available space, pushing the footer down
   flex: 1;
@@ -84,7 +96,6 @@ swiper-slide {
   padding-left: 24px;
   padding-right: 24px;
   padding-top: 16px;
-  background-color: var(--ion-background-color); // Ensures it sits on top of content
   overflow: hidden; 
   position: absolute;
   bottom: 60px; // Adjust this to sit right above the swiper pagination

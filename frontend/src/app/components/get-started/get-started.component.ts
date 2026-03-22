@@ -1,7 +1,7 @@
 import { Component, ViewChild, ElementRef, AfterViewInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 import { IonContent, IonButton } from '@ionic/angular/standalone';
+import { NavController } from '@ionic/angular';
 import { AuthService } from '../../services/auth.service';
 import type { SwiperContainer } from 'swiper/element';
 import type { Swiper } from 'swiper';
@@ -19,8 +19,9 @@ export class GetStartedComponent implements AfterViewInit {
   @ViewChild('swiper') swiperRef: ElementRef<SwiperContainer> | undefined;
 
   isLastSlide = false;
+  isFadingOut = false;
 
-  constructor(private router: Router, private authService: AuthService) { }
+  constructor(private navController: NavController, private authService: AuthService) { }
 
   ngAfterViewInit() {
     // Refresh localStorage progress when component loads (for non-authenticated users)
@@ -62,19 +63,19 @@ export class GetStartedComponent implements AfterViewInit {
   // --- No longer need onSlideChange() or checkSlideStatus() ---
 
   getSetUp() {
-    // Complete the getStarted step using the unified method
-    this.authService.completeStep('getStarted').subscribe({
-      next: () => {
-        console.log('GetStarted step completed successfully');
-        localStorage.setItem('getStartedCompleted', 'true');
-        this.router.navigate(['/survey-initial'], { replaceUrl: true });
-      },
-      error: (err) => {
-        console.log('GetStarted step could not be completed (likely not authenticated yet):', err);
-        // Still update localStorage and navigate even if backend update fails
-        localStorage.setItem('getStartedCompleted', 'true');
-        this.router.navigate(['/survey-initial'], { replaceUrl: true });
-      }
-    });
+    this.isFadingOut = true;
+    // Set localStorage immediately so any progress checks during the fade see the right state
+    localStorage.setItem('getStartedCompleted', 'true');
+
+    // Navigate after fade completes with no animation, then call the API.
+    // Calling completeStep AFTER navigation means setupNavigationLogic fires
+    // when router.url is already /survey-initial, so its duplicate-route guard prevents a slide-in.
+    setTimeout(() => {
+      this.navController.navigateRoot('/survey-initial', { animated: false, state: { fromGetStarted: true } });
+      this.authService.completeStep('getStarted').subscribe({
+        next: () => console.log('GetStarted step completed successfully'),
+        error: (err) => console.log('GetStarted step could not be completed (likely not authenticated yet):', err)
+      });
+    }, 400);
   }
 }
