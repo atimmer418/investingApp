@@ -1,16 +1,14 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { IonHeader, IonToolbar, IonButtons, IonBackButton, IonProgressBar, IonTitle, IonContent, IonIcon, IonFooter, IonButton } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons'; // Import for custom icons
-import { star, trendingUp, shieldCheckmark, swapHorizontal, shield } from 'ionicons/icons';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostBinding } from '@angular/core';
+import { CommonModule, CurrencyPipe, Location } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { IonHeader, IonToolbar, IonContent, IonFooter } from '@ionic/angular/standalone';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 
 // Define a type for our strategy for clean code
 export interface StrategyTag {
   label: string;
-  type: 'positive' | 'neutral' | 'caution'; // For color-coding
+  type: 'blue' | 'green' | 'gray' | 'amber';
 }
 
 export interface Strategy {
@@ -26,53 +24,53 @@ export interface Strategy {
   templateUrl: './fi-plan-results.component.html',
   styleUrls: ['./fi-plan-results.component.scss'],
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, RouterLink, IonHeader, IonToolbar, IonButtons, IonBackButton, IonProgressBar, IonTitle, IonContent, IonIcon, IonFooter, IonButton],
+  imports: [CommonModule, CurrencyPipe, IonHeader, IonToolbar, IonContent, IonFooter],
 })
 export class FiPlanResultsComponent implements OnInit, OnDestroy {
 
   strategies: Strategy[] = [
     {
-      id: 'optimal',
-      title: 'Optimal Growth',
-      description: 'Withdraw from your portfolio and use a line of credit in down years to protect and grow your wealth.',
-      icon: 'trending-up',
+      id: 'yield',
+      title: 'Yield-Based Income',
+      description: 'Live off dividends and interest. Principal stays invested — never sell a share.',
+      icon: 'savings',
       tags: [
-        { label: 'Highest Growth', type: 'positive' },
-        { label: 'Volatility Mitigation', type: 'positive' },
-        { label: 'App-Managed', type: 'neutral' }
+        { label: 'No Selling', type: 'blue' },
+        { label: 'Always Growing', type: 'green' },
+        { label: 'Yield-Dependent', type: 'gray' },
       ]
     },
     {
-      id: 'balanced',
-      title: 'Balanced Security',
-      description: 'Guarantee your essential income with an annuity and invest the rest for growth and lifestyle spending.',
-      icon: 'shield-checkmark',
+      id: 'guardrails',
+      title: 'Dynamic Guardrails',
+      description: 'Spend more in good years, pull back in bad ones. No debt, ever.',
+      icon: 'tune',
       tags: [
-        { label: 'Good Growth', type: 'positive' },
-        { label: 'Essentials Guaranteed', type: 'positive' },
-        { label: 'Less Flexible', type: 'caution' }
+        { label: 'High Growth', type: 'green' },
+        { label: 'Debt-Free', type: 'green' },
+        { label: 'Flex Spending', type: 'amber' },
       ]
     },
     {
-      id: 'adaptive',
-      title: 'Adaptive Spending',
-      description: 'Withdraw from your portfolio using smart guardrails, adapting your spending to the market.',
-      icon: 'swap-horizontal',
+      id: 'sbloc',
+      title: 'Sell High, Borrow Low',
+      description: 'Sell 4% when markets are up. Borrow against your portfolio when they dip.',
+      icon: 'swap_vert',
       tags: [
-        { label: 'High Growth', type: 'positive' },
-        { label: 'No Debt Ever', type: 'positive' },
-        { label: 'Lifestyle Fluctuates', type: 'caution' }
+        { label: 'Protects Gains', type: 'green' },
+        { label: 'App-Managed', type: 'green' },
+        { label: 'Uses Credit', type: 'amber' },
       ]
     },
     {
-      id: 'safety',
-      title: 'Safety First',
-      description: 'Convert your portfolio into a guaranteed paycheck for life with an annuity. No market risk.',
-      icon: 'shield',
+      id: 'annuity',
+      title: 'Annuity',
+      description: 'Turn your portfolio into a guaranteed paycheck for life. Zero market risk.',
+      icon: 'lock',
       tags: [
-        { label: 'Guaranteed Income', type: 'positive' },
-        { label: 'Set & Forget', type: 'positive' },
-        { label: 'No Market Growth', type: 'caution' }
+        { label: 'Guaranteed', type: 'green' },
+        { label: 'Set & Forget', type: 'green' },
+        { label: 'No Growth', type: 'amber' },
       ]
     }
   ];
@@ -81,13 +79,18 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
   targetPortfolio: number = 0;
   retirementIncome: number = 0;
   monthlyInvestment: number = 0;
-  selectedStrategyId: string = 'optimal';
+  @HostBinding('class.page-ready') isReady = false;
+  selectedStrategyId: string = '';
   
   private routeSub: Subscription | undefined;
   
-  constructor(private route: ActivatedRoute, private router: Router, private authService: AuthService, private cdr: ChangeDetectorRef) {
-    addIcons({ star, trendingUp, shieldCheckmark, swapHorizontal, shield });
-  }
+  constructor(
+    private route: ActivatedRoute,
+    public router: Router,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef,
+    private location: Location
+  ) {}
 
   ngOnInit() {
     // Make component accessible from browser console for debugging
@@ -128,7 +131,7 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
     // Load strategy selection FIRST, before saving any data
     setTimeout(() => {
       this.loadSelectedStrategy();
-      
+
       // Only save data after strategy is loaded to avoid overwriting the selection
       if (this.timeToFI && this.retirementIncome && this.monthlyInvestment) {
         setTimeout(() => {
@@ -136,8 +139,23 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
         }, 50);
       }
     }, 100);
+
+    this.preloadAssets();
   }
-  
+
+  private preloadAssets() {
+    const fontsReady = Promise.all([
+      document.fonts.load('700 16px "Manrope"').catch(() => []),
+      document.fonts.load('400 24px "Material Symbols Outlined"').catch(() => []),
+    ]);
+    const timeout = new Promise<void>(resolve => setTimeout(resolve, 2000));
+    Promise.race([fontsReady, timeout]).then(() => { this.isReady = true; });
+  }
+
+  goBack() {
+    this.location.back();
+  }
+
   private loadSelectedStrategy() {
     const savedStrategy = localStorage.getItem('fiPlanSelectedStrategy');
     console.log('Loading strategy from localStorage:', savedStrategy);
@@ -208,7 +226,7 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
     
     // Only save strategy if it's not the default, or if there's no existing strategy saved
     const existingStrategy = localStorage.getItem('fiPlanSelectedStrategy');
-    if (!existingStrategy || this.selectedStrategyId !== 'optimal') {
+    if (!existingStrategy || this.selectedStrategyId !== '') {
       localStorage.setItem('fiPlanSelectedStrategy', this.selectedStrategyId);
     }
     
