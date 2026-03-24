@@ -1,153 +1,347 @@
+// --- Force light mode regardless of system theme ---
 :host {
-  --ion-background-color: #f2f2f7;
-  --ion-toolbar-background: var(--ion-background-color);
-  --ion-text-color: #000000;
-  --ion-color-primary: #007aff;
-  --ion-color-medium: #555;
-  --card-background: #ffffff;
-  --card-border-color: #e5e5ea;
-  --card-selected-border: var(--ion-color-primary);
+  --results-primary: #2563EB;
+  --results-bg: #f8fafc;
+  --results-text: #0f172a;
+  --results-gray: #6b7280;
+
+  // Override Ionic theme variables so dark.system.css doesn't bleed in
+  --ion-background-color: #f8fafc;
+  --ion-toolbar-background: rgba(248, 250, 252, 0.95);
+  --ion-toolbar-color: #0f172a;
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
+  --ion-footer-background: #f8fafc;
 }
 
-.page-intro {
-  padding: 0 16px 16px 16px;
-  text-align: center;
-  font-size: 16px;
-  color: var(--ion-color-medium);
-  line-height: 1.6;
-
-  h2 {
-    font-size: 26px;
-    font-weight: 700;
-    line-height: 1.25;
-    margin: 0 0 8px 0;
-    color: var(--ion-text-color);
-  }
-
-  p {
-    margin: 0;
-  }
-
-  strong {
-    color: var(--ion-text-color);
-    font-weight: 600;
-  }
+// --- Toolbar ---
+ion-toolbar {
+  --background: rgba(248, 250, 252, 0.95);
+  --border-width: 0;
+  --min-height: 52px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.strategy-cards-container {
-  padding: 0 16px;
-}
-
-// When the parent card is selected, change the badge background
-.strategy-card.selected .recommended-badge {
-  background: var(--ion-color-primary);
-}
-
-.strategy-card {
-  background: var(--card-background);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
-  border: 2px solid var(--card-border-color);
-  transition: all 0.2s ease-in-out;
-  position: relative;
-  cursor: pointer;
-
-  h2 {
-    font-size: 18px;
-    font-weight: 700;
-    margin: 0 0 6px 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    ion-icon {
-      font-size: 20px;
-      color: var(--ion-color-primary);
-    }
-  }
-
-  p {
-    font-size: 14px;
-    color: var(--ion-color-medium);
-    margin: 0 0 12px 0;
-    line-height: 1.4;
-  }
-
-  &.selected {
-    border-color: var(--card-selected-border);
-    box-shadow: 0 5px 15px rgba(0, 122, 255, 0.15);
-  }
-
-  &.recommended {
-    // Could add special styling for recommended cards here if needed
-  }
-}
-
-.recommended-badge {
-  position: absolute;
-  top: -12px;
-  left: 16px;
-  background: var(--card-border-color);
-  color: #ffffff;
-  padding: 4px 10px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 600;
+// --- Header ---
+.header-inner {
   display: flex;
   align-items: center;
-  gap: 4px;
+  padding: 0 4px;
+}
 
-  ion-icon {
-    font-size: 14px;
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--results-text);
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+
+  &:active {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
   }
 }
 
-// --- NEW: Styles for the tags ---
-.strategy-tags {
+.header-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-align: center;
+  flex: 1;
+  margin: 0;
+  padding-right: 40px;
+  color: var(--results-text);
+}
+
+// --- Content ---
+ion-content {
+  --background: var(--results-bg);
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+// Make the ion-content scroll host a flex column so content-inner can grow
+ion-content::part(scroll) {
   display: flex;
-  flex-wrap: wrap; // Allows tags to wrap onto the next line on small screens
-  gap: 4px; // Space between tags
-  border-top: 1px solid var(--card-border-color);
-  padding-top: 12px;
+  flex-direction: column;
+  height: 100%;
+}
+
+.content-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px 8px;
+  font-family: 'Manrope', sans-serif;
+}
+
+// --- Hero ---
+.hero-section {
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.hero-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  margin: 0 0 4px 0;
+  color: var(--results-text);
+}
+
+.hero-subtitle {
+  font-size: 13px;
+  color: var(--results-gray);
+  margin: 0;
+  line-height: 1.4;
+
+  strong {
+    color: var(--results-text);
+    font-weight: 700;
+  }
+}
+
+// --- Cards Container ---
+.strategy-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0; // allow flex children to shrink below their natural size
+}
+
+// --- Individual Card ---
+.strategy-card {
+  flex: 1;
+  min-height: 120px;
+  background: white;
+  border-radius: 14px;
+  padding: 12px 14px;
+  border: 2px solid #e5e7eb;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &.selected {
+    border-color: #2563eb;
+    box-shadow: 0 3px 14px rgba(37, 99, 235, 0.13);
+  }
+
+  &:active {
+    opacity: 0.92;
+  }
+}
+
+// --- Selected Checkmark ---
+.selected-indicator {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .material-symbols-outlined {
+    font-size: 13px;
+    color: white;
+    font-variation-settings: 'FILL' 1, 'wght' 700;
+  }
+}
+
+// --- Card Content ---
+.card-top {
+  flex-shrink: 0;
+}
+
+.card-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  padding-right: 28px; // prevent title overlapping the checkmark
+}
+
+.card-icon {
+  font-size: 18px;
+  color: var(--results-primary);
+  font-variation-settings: 'FILL' 1;
+  flex-shrink: 0;
+}
+
+.card-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--results-text);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.card-description {
+  font-size: 12px;
+  color: var(--results-gray);
+  line-height: 1.45;
+  margin: 0;
+}
+
+// --- Tags ---
+.strategy-tags {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 8px;
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
 }
 
 .tag {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
+  white-space: nowrap;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
   line-height: 1;
+  font-family: 'Manrope', sans-serif;
 }
 
-// Color coding for the different tag types
-.tag-positive {
-  background-color: #eef7ee; // A light, friendly green
-  color: #348437; // A darker green for the text
+.tag-blue {
+  background: #eff6ff;
+  color: #2563eb;
 }
 
-.tag-neutral {
-  background-color: #f2f2f7; // The same as our page background
-  color: #555;
+.tag-green {
+  background: #f0fdf4;
+  color: #16a34a;
 }
 
-.tag-caution {
-  background-color: #fff8e6; // A light, warm yellow
-  color: #a77c00; // A darker yellow/brown for the text
+.tag-gray {
+  background: #f8fafc;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
 }
 
-// Footer
-.footer-container {
-  background: #ffffff;
-  padding: 16px 24px calc(env(safe-area-inset-bottom, 10px)) 24px;
-  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.04);
-  
-  .cta-main {
-    --border-radius: 12px;
-    font-weight: 600;
-    height: 50px;
-    text-transform: none;
-    font-size: 17px;
+.tag-amber {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+// --- Footer ---
+ion-footer {
+  --background: transparent;
+  --border-width: 0;
+}
+
+.cta-footer {
+  padding: 14px 18px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  background: white;
+  border-top: 1px solid #f1f5f9;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+
+.cta-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+
+  &:not(:disabled) {
+    background: #2563eb;
+    color: white;
+    box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
+
+    &:active {
+      transform: scale(0.99);
+      background: #1d4ed8;
+    }
+  }
+
+  &:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+}
+
+// --- Error State ---
+.error-state {
+  padding: 40px 24px;
+  text-align: center;
+  font-family: 'Manrope', sans-serif;
+}
+
+.error-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--results-text);
+  margin: 0 0 8px;
+}
+
+.error-text {
+  font-size: 14px;
+  color: var(--results-gray);
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.error-cta {
+  background: #2563eb;
+  color: white;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px 28px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
+}
+
+// --- Loading Veil ---
+.loading-veil {
+  position: fixed;
+  inset: 0;
+  background: var(--results-bg);
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+
+  &.veil-hidden {
+    opacity: 0;
   }
 }
