@@ -234,7 +234,7 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
       timeToFI: this.timeToFI,
       targetPortfolio: this.targetPortfolio,
       selectedStrategy: localStorage.getItem('fiPlanSelectedStrategy'), // Show what's actually saved
-      skippedStrategyOverwrite: existingStrategy && this.selectedStrategyId === 'optimal'
+      skippedStrategyOverwrite: existingStrategy && this.selectedStrategyId === ''
     });
   }
   
