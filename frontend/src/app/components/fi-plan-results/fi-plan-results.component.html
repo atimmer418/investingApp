@@ -1,70 +1,86 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/survey-initial" text="" icon="chevron-back-outline"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Choose Your FI Strategy</ion-title>
-    <!-- ADDED: The progress indicator for consistency -->
-    <ion-progress-bar [value]="0.28"></ion-progress-bar>
+    <div class="header-inner">
+      <button class="back-btn" (click)="goBack()">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      </button>
+      <h2 class="header-title">Choose Your Strategy</h2>
+    </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-  <!-- Show error message if data is missing -->
-  <div *ngIf="!timeToFI || !targetPortfolio || timeToFI === 'N/A'" class="error-message">
-    <h2>Missing Survey Data</h2>
-    <p>We need your investment details to show your personalized FI strategies.</p>
-    <ion-button [routerLink]="['/survey-initial']" color="primary">
+<ion-content class="results-content">
+
+  <!-- Error state: shown when survey data is missing -->
+  <div *ngIf="!timeToFI || !targetPortfolio || timeToFI === 'N/A'" class="error-state">
+    <h2 class="error-title">Missing Survey Data</h2>
+    <p class="error-text">We need your investment details to show your personalized FI strategies.</p>
+    <button class="error-cta" (click)="router.navigateByUrl('/survey-initial')">
       Complete Investment Survey
-    </ion-button>
+    </button>
   </div>
 
-  <!-- Show normal content if data is available -->
-  <div *ngIf="timeToFI && targetPortfolio && timeToFI !== 'N/A'" class="page-intro">
-    <h2>Fast Forward to {{ getFutureYear() }}</h2>
-    <p>
-      Your portfolio is worth <strong>{{ targetPortfolio | currency:'USD':'symbol':'1.0-0' }}</strong>. 
-      Choose from one of these four strategies to turn this wealth into lifetime income. You can always change this later.
-    </p>
-  </div>
+  <!-- Main content: shown when survey data is present -->
+  <div *ngIf="timeToFI && targetPortfolio && timeToFI !== 'N/A'" class="content-inner">
 
-  <!-- Strategy Cards Container - only show if data is available -->
-  <div *ngIf="timeToFI && targetPortfolio && timeToFI !== 'N/A'" class="strategy-cards-container">
-    <div 
-      *ngFor="let strategy of strategies" 
-      class="strategy-card"
-      [class.recommended]="strategy.id === 'optimal'"
-      [class.selected]="selectedStrategyId === strategy.id"
-      [attr.data-strategy]="strategy.id"
-      (click)="selectStrategy(strategy.id)"
-      (mousedown)="debugCardClick(strategy.id)"
-      style="cursor: pointer;">
+    <!-- Hero text -->
+    <div class="hero-section">
+      <h1 class="hero-title">Fast Forward to {{ getFutureYear() }}.</h1>
+      <p class="hero-subtitle">
+        Your portfolio hits <strong>{{ targetPortfolio | currency:'USD':'symbol':'1.0-0' }}</strong>. Pick how you want to live off it.
+      </p>
+    </div>
 
-      <div *ngIf="strategy.id === 'optimal'" class="recommended-badge">
-        <ion-icon name="star"></ion-icon> Recommended
-      </div>
+    <!-- Strategy cards -->
+    <div class="strategy-cards-container">
+      <div
+        *ngFor="let strategy of strategies"
+        class="strategy-card"
+        [class.selected]="selectedStrategyId === strategy.id"
+        [attr.data-strategy]="strategy.id"
+        (click)="selectStrategy(strategy.id)"
+        (mousedown)="debugCardClick(strategy.id)">
 
-      <h2>
-        {{ strategy.title }}
-        <ion-icon [name]="strategy.icon"></ion-icon>
-      </h2>
-      <p>{{ strategy.description }}</p>
+        <!-- Selected checkmark indicator -->
+        <div class="selected-indicator" *ngIf="selectedStrategyId === strategy.id">
+          <span class="material-symbols-outlined">check</span>
+        </div>
 
-      <!-- REWRITTEN: The stats section is now a container for tags -->
-      <div class="strategy-tags">
-        <span *ngFor="let tag of strategy.tags" class="tag" [class]="'tag-' + tag.type">
-          {{ tag.label }}
-        </span>
+        <!-- Icon + title + description -->
+        <div class="card-top">
+          <div class="card-header-row">
+            <span class="material-symbols-outlined card-icon">{{ strategy.icon }}</span>
+            <span class="card-title">{{ strategy.title }}</span>
+          </div>
+          <p class="card-description">{{ strategy.description }}</p>
+        </div>
+
+        <!-- Tags -->
+        <div class="strategy-tags">
+          <span
+            *ngFor="let tag of strategy.tags"
+            class="tag"
+            [ngClass]="'tag-' + tag.type">
+            {{ tag.label }}
+          </span>
+        </div>
+
       </div>
     </div>
-  </div>
 
+  </div>
 </ion-content>
 
 <ion-footer *ngIf="timeToFI && targetPortfolio && timeToFI !== 'N/A'" class="ion-no-border">
-  <div class="footer-container">
-    <ion-button expand="block" (click)="confirmSelection()" class="cta-main">
-      Continue with {{ getSelectedStrategyName() }}
-    </ion-button>
+  <div class="cta-footer">
+    <button
+      class="cta-btn"
+      [disabled]="!selectedStrategyId"
+      (click)="confirmSelection()">
+      Continue
+      <span class="material-symbols-outlined" *ngIf="selectedStrategyId">arrow_forward</span>
+    </button>
   </div>
 </ion-footer>
+
+<div class="loading-veil" [class.veil-hidden]="isReady"></div>
