@@ -60,7 +60,7 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
   ) {
     addIcons({lockClosed,helpCircleOutline,personCircleOutline});
     this.registerForm = new FormGroup({
-      email: new FormControl('', [Validators.required, Validators.email, Validators.maxLength(100)]),
+      email: new FormControl('', [Validators.email, Validators.maxLength(100)]),
     });
   }
 
@@ -359,6 +359,11 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
 
   goBack() {
     this.navCtrl.back();
+  }
+
+  get isEmailValid(): boolean {
+    const val = this.email?.value || '';
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
   }
 
   ngOnDestroy() {

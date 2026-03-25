@@ -46,18 +46,13 @@
       <!-- Email input -->
       <form [formGroup]="registerForm" novalidate>
         <div class="email-field">
+          <span class="email-label">EMAIL</span>
           <ion-input
             type="email"
             formControlName="email"
-            placeholder="Enter your email address"
-            (ionBlur)="emailTouched = true"
-            required
+            placeholder="your@email.com"
             email
           ></ion-input>
-        </div>
-        <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="error-message">
-          <ion-note color="danger" *ngIf="email?.errors?.['required']">Email is required.</ion-note>
-          <ion-note color="danger" *ngIf="email?.errors?.['email']">Please enter a valid email.</ion-note>
         </div>
       </form>
 
@@ -96,14 +91,14 @@
 
 </ion-content>
 
-<!-- Footer: only shown once params are valid and email has been blurred -->
-<ion-footer *ngIf="hasRequiredParams && emailTouched" class="ion-no-border">
+<!-- Footer: always shown when params are valid; button disabled until email is valid -->
+<ion-footer *ngIf="hasRequiredParams" class="ion-no-border">
   <div class="cta-footer">
     <button
       class="cta-btn"
       type="button"
       (click)="createPasskey()"
-      [disabled]="isLoading">
+      [disabled]="isLoading || !isEmailValid">
       <ng-container *ngIf="!isLoading">
         <span>Create Account</span>
         <span class="material-symbols-outlined">arrow_forward</span>
