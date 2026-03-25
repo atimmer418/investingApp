@@ -1,141 +1,115 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/fi-plan-results" text="" icon="chevron-back-outline"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Create Your Account</ion-title>
-    <ion-progress-bar [value]="0.42"></ion-progress-bar>
+    <div class="header-inner">
+      <button class="back-btn" (click)="goBack()">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      </button>
+      <h2 class="header-title">Create Your Account</h2>
+    </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-  <div class="auth-form-container">
-    
-    <!-- Show error message if required parameters are missing -->
-    <div *ngIf="!hasRequiredParams" class="missing-data-message">
-      <div class="page-intro">
-        <h2>Missing Plan Data</h2>
-        <p class="helper-text">We need your investment plan details to continue with account creation.</p>
-      </div>
-      <div *ngIf="errorMessage" class="error-message-global">
-        <ion-text color="danger">{{ errorMessage }}</ion-text>
-        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
-          <!-- First try to reload data -->
-          <ion-button color="secondary" size="default" (click)="debugMissingParams()">
-            Try Loading Saved Data
-          </ion-button>
-          
-          <!-- Go back to plan results -->
-          <ion-button [routerLink]="['/fi-plan-results']" color="primary" size="default">
-            Back to Plan Selection
-          </ion-button>
-          
-          <!-- Last resort - restart survey -->
-          <ion-button [routerLink]="['/survey-initial']" fill="outline" color="primary" size="default">
-            Restart Investment Survey
-          </ion-button>
-        </div>
-      </div>
+<ion-content class="auth-content">
+
+  <!-- Error state: missing plan data -->
+  <div *ngIf="!hasRequiredParams" class="error-state">
+    <h2 class="error-title">Missing Plan Data</h2>
+    <p class="error-text">We need your investment plan details to continue with account creation.</p>
+    <div *ngIf="errorMessage" class="error-message-text">{{ errorMessage }}</div>
+    <div class="error-actions">
+      <button class="error-cta" type="button" (click)="debugMissingParams()">
+        Try Loading Saved Data
+      </button>
+      <button class="error-cta error-cta-outline" type="button" [routerLink]="['/fi-plan-results']">
+        Back to Plan Selection
+      </button>
+      <button class="error-cta error-cta-outline" type="button" [routerLink]="['/survey-initial']">
+        Restart Investment Survey
+      </button>
+    </div>
+  </div>
+
+  <!-- Main content: shown when plan data is present -->
+  <div *ngIf="hasRequiredParams" class="content-inner">
+
+    <!-- Hero — top-pinned -->
+    <div class="hero-section">
+      <h1 class="hero-title">Let's lock it in.</h1>
+      <p class="hero-subtitle">
+        Create an account and be one step closer to making this plan a reality.
+      </p>
     </div>
 
-    <!-- Show normal auth form if we have required parameters -->
-    <div *ngIf="hasRequiredParams">
-      <!-- Page Introduction -->
-      <div class="page-intro">
-        <h2>Let's lock it in...</h2>
-        <p class="helper-text">By creating an account, you'll lock in your strategy and be one step closer to making this plan into reality.</p>
-      </div>
+    <!-- Center zone — vertically centered in remaining space -->
+    <div class="center-zone">
 
-    <!-- Email Input Section -->
-    <div class="input-section">
+      <!-- Email input -->
       <form [formGroup]="registerForm" novalidate>
-        <div class="input-display-wrapper">
+        <div class="email-field">
           <ion-input
             type="email"
             formControlName="email"
             placeholder="Enter your email address"
+            (ionBlur)="emailTouched = true"
             required
             email
           ></ion-input>
         </div>
-        
         <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="error-message">
           <ion-note color="danger" *ngIf="email?.errors?.['required']">Email is required.</ion-note>
           <ion-note color="danger" *ngIf="email?.errors?.['email']">Please enter a valid email.</ion-note>
         </div>
       </form>
-    </div>
 
-    <!-- Divider -->
-    <!-- <hr class="section-divider" /> -->
+      <!-- Passkey helper text -->
+      <p class="passkey-note">
+        No passwords needed — just Face ID or fingerprint. Your email is backup recovery if needed.
+      </p>
 
-    <!-- Passkey Section -->
-    <div class="passkey-section">
-      <!-- <h2>Create a passkey</h2> -->
-      <p class="helper-text">No passwords needed—just Face ID or fingerprint. Your email is backup recovery if needed.</p>
-      
-      <ion-button 
-        expand="block" 
-        class="passkey-button" 
-        type="button"  
-        (click)="createPasskey()" 
-        [disabled]="registerForm.invalid || isLoading">
-        
-        <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
-        <span *ngIf="!isLoading">Sign up <ion-icon name="lock-closed"></ion-icon></span>
-        <span *ngIf="isLoading">Follow browser prompt...</span>
-      </ion-button>
-      
-      <ion-button 
-        expand="block" 
-        fill="clear"
-        class="bypass-button" 
-        type="button"  
-        (click)="bypassAuthID()">
-        <span>I'm at work (no face or touch ID)</span>
-      </ion-button>
+      <!-- Dev-only bypass button (local build only) -->
+      <button *ngIf="env.local" class="bypass-btn" type="button" (click)="bypassAuthID()">
+        I'm at work (no face or touch ID)
+      </button>
 
-      <!-- Account Recovery Option -->
-      <div class="divider-section">
+      <!-- Divider -->
+      <div class="divider-row">
         <div class="divider-line"></div>
         <span class="divider-text">or</span>
         <div class="divider-line"></div>
       </div>
 
-      <ion-button 
-        expand="block" 
-        fill="clear"
-        color="medium"
-        class="recovery-button" 
-        type="button"  
-        (click)="recoverAccount()"
-        style="margin-top: 4px; font-size: 0.9em;">
-        <ion-icon name="help-circle-outline" slot="start"></ion-icon>
+      <!-- Lost Device / Recover Account -->
+      <button class="recovery-btn" type="button" (click)="recoverAccount()">
+        <span class="material-symbols-outlined">help</span>
         <span>Lost Device / Recover Account</span>
-      </ion-button>
+      </button>
+
     </div>
 
-    <!-- Feedback Messages -->
-    <div *ngIf="errorMessage && !hasRequiredParams" class="error-message-global">
-      <ion-text color="danger">{{ errorMessage }}</ion-text>
-      <div style="margin-top: 16px;">
-        <ion-button [routerLink]="['/survey-initial']" color="primary" size="default">
-          Go to Investment Survey
-        </ion-button>
-      </div>
+    <!-- Feedback messages (only when params are valid — avoids double-rendering with error-state block) -->
+    <div class="feedback-zone">
+      <div *ngIf="errorMessage && hasRequiredParams" class="feedback-error">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="feedback-success">{{ successMessage }}</div>
     </div>
-    
-    <!-- Show normal auth form feedback messages if we have required parameters -->
-    <div *ngIf="hasRequiredParams">
-      <div *ngIf="errorMessage" class="error-message-global">
-        <ion-text color="danger">{{ errorMessage }}</ion-text>
-      </div>
-      <div *ngIf="successMessage" class="success-message-global">
-        <ion-text color="success">{{ successMessage }}</ion-text>
-      </div>
-    </div>
-    
-    </div> <!-- Close hasRequiredParams conditional -->
 
   </div>
+
 </ion-content>
+
+<!-- Footer: only shown once params are valid and email has been blurred -->
+<ion-footer *ngIf="hasRequiredParams && emailTouched" class="ion-no-border">
+  <div class="cta-footer">
+    <button
+      class="cta-btn"
+      type="button"
+      (click)="createPasskey()"
+      [disabled]="isLoading">
+      <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+      <ng-container *ngIf="!isLoading">
+        <span>Create Account</span>
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </ng-container>
+      <span *ngIf="isLoading">Follow browser prompt...</span>
+    </button>
+  </div>
+</ion-footer>
