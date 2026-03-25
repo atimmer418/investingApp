@@ -104,12 +104,14 @@
       type="button"
       (click)="createPasskey()"
       [disabled]="isLoading">
-      <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
       <ng-container *ngIf="!isLoading">
         <span>Create Account</span>
         <span class="material-symbols-outlined">arrow_forward</span>
       </ng-container>
-      <span *ngIf="isLoading">Follow browser prompt...</span>
+      <ng-container *ngIf="isLoading">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>Follow browser prompt...</span>
+      </ng-container>
     </button>
   </div>
 </ion-footer>
