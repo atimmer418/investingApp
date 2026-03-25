@@ -137,6 +137,8 @@ ion-content::part(scroll) {
   padding-bottom: 4px;
 
   ion-input {
+    border: none;
+    border-radius: 0;
     font-size: 18px;
     font-weight: 500;
     font-family: 'Manrope', sans-serif;
