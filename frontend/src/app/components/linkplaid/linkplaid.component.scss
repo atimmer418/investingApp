@@ -1,101 +1,361 @@
-// Use CSS variables for a consistent theme
+// --- Force light mode regardless of system theme ---
 :host {
-  --ion-background-color: #f2f2f7; // A very light, clean background
-  --ion-toolbar-background: var(--ion-background-color);
-  --ion-text-color: #000000;
-  --ion-color-primary: #007aff;
-  --ion-color-medium: #8e8e93;
+  --plaid-primary: #2563EB;
+  --plaid-bg: #f8fafc;
+  --plaid-text: #0f172a;
+  --plaid-gray: #6b7280;
+
+  --ion-background-color: #f8fafc;
+  --ion-toolbar-background: rgba(248, 250, 252, 0.95);
+  --ion-toolbar-color: #0f172a;
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
+  --ion-footer-background: #f8fafc;
 }
 
+// --- Toolbar ---
 ion-toolbar {
-  --border-width: 0 !important;
+  --background: rgba(248, 250, 252, 0.95);
+  --border-width: 0;
+  --min-height: 52px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-ion-progress-bar {
-  height: 3px;
-  --progress-background: var(--ion-color-primary);
+// --- Header ---
+.header-inner {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
 }
 
-// Unified container for the form
-.linkplaid-form-container {
-  padding: 16px;
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--plaid-text);
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+
+  &:active {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
 }
 
-.page-intro {
-  margin-bottom: 32px;
+.header-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
   text-align: center;
+  flex: 1;
+  margin: 0;
+  padding-right: 40px;
+  color: var(--plaid-text);
+}
 
-  h2 {
-    font-size: 26px;
-    font-weight: 700;
-    line-height: 1.25;
-    margin: 0 0 8px 0;
+// --- Content ---
+ion-content {
+  --background: var(--plaid-bg);
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+ion-content::part(scroll) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.content-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px 24px;
+  font-family: 'Manrope', sans-serif;
+}
+
+// --- Hero (top-pinned) ---
+.hero-section {
+  flex-shrink: 0;
+  padding-bottom: 16px;
+}
+
+.hero-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  text-align: center;
+  margin: 0 0 8px 0;
+  color: var(--plaid-text);
+}
+
+.hero-subtitle {
+  font-size: 14px;
+  color: var(--plaid-gray);
+  margin: 0;
+  line-height: 1.5;
+  text-align: center;
+  padding: 0 12px;
+}
+
+// --- Center zone (vertically centered in remaining space) ---
+.center-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+// --- Illustration card ---
+.illustration-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
+  border-radius: 16px;
+  padding: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #bfdbfe;
+  min-height: 110px;
+}
+
+.illus-blob {
+  position: absolute;
+  border-radius: 50%;
+
+  &--top {
+    top: -20px;
+    right: -20px;
+    width: 80px;
+    height: 80px;
+    background: rgba(37, 99, 235, 0.12);
+    filter: blur(20px);
   }
 
-  .helper-text {
-    font-size: 16px;
-    color: var(--ion-color-medium);
-    margin: 0;
-    line-height: 1.4;
+  &--bottom {
+    bottom: -16px;
+    left: -16px;
+    width: 64px;
+    height: 64px;
+    background: rgba(139, 92, 246, 0.1);
+    filter: blur(16px);
   }
 }
 
-.benefits-section {
-  margin-bottom: 32px;
+.illus-icons {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  height: 64px;
+}
 
-  .benefit-features {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+.illus-main {
+  width: 64px;
+  height: 64px;
+  background: white;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transform: rotate(-6deg);
+  z-index: 2;
 
-    .feature-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  .material-symbols-outlined {
+    font-size: 32px;
+    color: var(--plaid-primary);
+    font-variation-settings: 'FILL' 1;
+  }
+}
 
-      .feature-icon {
-        font-size: 20px;
-        color: var(--ion-color-primary);
-        flex-shrink: 0;
-      }
+.illus-secondary {
+  width: 48px;
+  height: 48px;
+  background: #dbeafe;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: -24px;
+  top: -4px;
+  transform: rotate(12deg);
+  border: 2px solid white;
+  z-index: 1;
 
-      span {
-        font-size: 15px;
-        font-weight: 500;
-        color: var(--ion-text-color);
-      }
+  .material-symbols-outlined {
+    font-size: 20px;
+    color: var(--plaid-primary);
+  }
+}
+
+// --- Security badge ---
+.security-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 14px;
+
+  .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--plaid-gray);
+    font-variation-settings: 'FILL' 1;
+  }
+
+  span:last-child {
+    font-size: 12px;
+    color: var(--plaid-gray);
+    font-weight: 500;
+  }
+}
+
+// --- Benefits list ---
+.benefits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.benefit-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.benefit-icon-wrap {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .material-symbols-outlined {
+    font-size: 20px;
+    color: var(--plaid-primary);
+    font-variation-settings: 'FILL' 1;
+  }
+}
+
+.benefit-text {
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--plaid-text);
+    margin: 0 0 3px 0;
+  }
+
+  p {
+    font-size: 13px;
+    color: var(--plaid-gray);
+    line-height: 1.45;
+    margin: 0;
+  }
+}
+
+// --- Feedback zone ---
+.feedback-zone {
+  text-align: center;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.feedback-error { color: #dc2626; }
+.feedback-success { color: #16a34a; }
+
+// --- Footer ---
+ion-footer {
+  --background: transparent;
+  --border-width: 0;
+}
+
+.cta-footer {
+  padding: 14px 18px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  background: white;
+  border-top: 1px solid #f1f5f9;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+
+.cta-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+
+  &:not(:disabled) {
+    background: #111827;
+    color: white;
+    box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.35);
+
+    &:active {
+      transform: scale(0.99);
+      background: #1f2937;
     }
   }
-}
 
-.connection-button-section {
-  text-align: center;
-
-  .connection-button {
-    --border-radius: 12px;
-    font-weight: 600;
-    height: 50px;
-    text-transform: none;
-    font-size: 17px;
-    margin-bottom: 16px;
+  &:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
   }
 
-  .connection-note {
-    font-size: 14px;
-    color: var(--ion-color-medium);
-    margin: 0;
-    line-height: 1.4;
-    padding: 0 16px;
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  ion-spinner {
+    width: 18px;
+    height: 18px;
+    color: white;
   }
 }
 
-.error-message-global, .success-message-global {
-  text-align: center;
-  margin-top: 24px;
-  font-size: 15px;
-  font-weight: 500;
+// --- Loading veil ---
+.loading-veil {
+  position: fixed;
+  inset: 0;
+  background: var(--plaid-bg);
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+
+  &.veil-hidden {
+    opacity: 0;
+  }
 }
