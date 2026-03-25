@@ -4,8 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
-  IonSpinner, IonText, IonButtons, IonBackButton, IonProgressBar, NavController
+  IonHeader, IonToolbar, IonContent, IonFooter, IonSpinner, NavController
 } from '@ionic/angular/standalone';
 import { Observable, throwError, Subscription } from 'rxjs';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
@@ -31,8 +30,7 @@ const BACKEND_API_URL = environment.backendApiUrl;
   imports: [
     CommonModule,
     FormsModule,
-    IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
-    IonSpinner, IonText, IonButtons, IonBackButton, IonProgressBar
+    IonHeader, IonToolbar, IonContent, IonFooter, IonSpinner
   ],
 })
 export class LinkPlaidComponent implements OnInit, OnDestroy {
@@ -68,7 +66,7 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
       this.isPlaidReady = true;
     }, 1500);
 
-    const jwtToken = localStorage.getItem('jwtToken'); // Or your token storage mechanism
+    const jwtToken = JwtTokenUtils.getValidJwtToken();
     this.isUserAuthenticated = !!jwtToken; // Convert to boolean
 
     console.log(`LinkPlaidComponent ngOnInit - User Authenticated: ${this.isUserAuthenticated}`);
@@ -146,12 +144,10 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
   }
 
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('jwtToken');
-    let headers = new HttpHeaders();
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-    return headers;
+    return new HttpHeaders({
+      'Authorization': `Bearer ${JwtTokenUtils.getValidJwtToken()}`,
+      'Content-Type': 'application/json'
+    });
   }
 
   private getLinkTokenAuthenticated(): Observable<LinkTokenAuthenticatedResponse> {
