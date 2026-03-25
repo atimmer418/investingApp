@@ -5,11 +5,12 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel,
-  IonInput, IonButton, IonSpinner, IonText, IonNote, IonProgressBar, 
-  IonBackButton, IonButtons, IonIcon, NavController
+  IonInput, IonButton, IonSpinner, IonText, IonNote, IonProgressBar,
+  IonBackButton, IonButtons, IonIcon, IonFooter, NavController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { personCircleOutline, helpCircleOutline, lockClosed } from 'ionicons/icons';
+import { environment } from '../../../environments/environment';
 
 // --- NEW IMPORTS ---
 import { PasskeyService } from '../../services/passkey.service';
@@ -26,7 +27,7 @@ import { create } from '@github/webauthn-json';
     FormsModule, ReactiveFormsModule, RouterLink,
     IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel,
     IonInput, IonButton, IonSpinner, IonText, IonNote, IonProgressBar,
-    IonBackButton, IonButtons, IonIcon
+    IonBackButton, IonButtons, IonIcon, IonFooter
   ]
 })
 export class AuthFinalizeComponent implements OnInit, OnDestroy {
@@ -44,6 +45,9 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
 
   // for work development
   simulatePasskey: boolean = false; // Toggle this to simulate passkey creation
+
+  emailTouched: boolean = false;
+  protected env = environment;
 
   private routeSub: Subscription | undefined;
 
@@ -351,6 +355,10 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
 
   recoverAccount() {
     this.router.navigate(['/recovery']);
+  }
+
+  goBack() {
+    this.navCtrl.back();
   }
 
   ngOnDestroy() {
