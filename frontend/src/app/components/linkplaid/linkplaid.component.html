@@ -1,60 +1,110 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-title>Connect Your Bank</ion-title>
-    <ion-progress-bar [value]="0.7"></ion-progress-bar>
+    <div class="header-inner">
+      <button class="back-btn" (click)="goBack()">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      </button>
+      <h2 class="header-title">Link Bank Account</h2>
+    </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-  <div class="linkplaid-form-container">
-    
-    <!-- Page Introduction -->
-    <div class="page-intro">
-      <h2>Connect Your Bank Account</h2>
-      <p class="helper-text">Link the checking account where you receive your income to enable seamless, scheduled investments. We'll help you set up automatic transfers that align with your pay schedule.</p>
+<ion-content class="plaid-content">
+  <div class="content-inner">
+
+    <!-- Hero — top-pinned -->
+    <div class="hero-section">
+      <h1 class="hero-title">Seamless investing<br>starts here.</h1>
+      <p class="hero-subtitle">Link your primary checking account to enable automatic deposits and see your timeline update in real-time.</p>
     </div>
 
-    <!-- Benefits Section -->
-    <div class="benefits-section">
-      <div class="benefit-features">
-        <div class="feature-item">
-          <ion-icon name="calendar-outline" class="feature-icon"></ion-icon>
-          <span>Schedule investments based on your pay frequency</span>
-        </div>
-        <div class="feature-item">
-          <ion-icon name="shield-checkmark" class="feature-icon"></ion-icon>
-          <span>Bank-level security with 256-bit encryption</span>
-        </div>
-        <div class="feature-item">
-          <ion-icon name="settings-outline" class="feature-icon"></ion-icon>
-          <span>Full control over timing and amounts</span>
+    <!-- Center zone — vertically centered in remaining space -->
+    <div class="center-zone">
+
+      <!-- 1. Illustration card -->
+      <div class="illustration-card">
+        <div class="illus-blob illus-blob--top"></div>
+        <div class="illus-blob illus-blob--bottom"></div>
+        <div class="illus-icons">
+          <div class="illus-main">
+            <span class="material-symbols-outlined">account_balance</span>
+          </div>
+          <div class="illus-secondary">
+            <span class="material-symbols-outlined">sync_alt</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Connection Button Section -->
-    <div class="connection-button-section">
-      <ion-button 
-        expand="block" 
-        class="connection-button" 
-        type="button"  
-        (click)="openPlaid()" 
-        [disabled]="isLoading || !isPlaidReady">
-        <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
-        <span *ngIf="!isLoading && isPlaidReady">Connect Your Checking Account</span>
-        <span *ngIf="!isLoading && !isPlaidReady">Preparing secure connection...</span>
-        <span *ngIf="isLoading">{{ statusMessage || 'Establishing secure connection...' }}</span>
-      </ion-button>
-      
-      <p class="connection-note">
-        Your account details are encrypted and secure. We only access what's needed to facilitate your investments.
-      </p>
-    </div>
+      <!-- 2. Security badge -->
+      <div class="security-badge">
+        <span class="material-symbols-outlined">verified_user</span>
+        <span>Secured by Plaid • AES-256 Encryption</span>
+      </div>
 
-    <!-- Feedback Messages -->
-    <div *ngIf="statusMessage && !isLoading" class="error-message-global">
-      <ion-text [color]="statusMessage && (statusMessage.includes('error') || statusMessage.includes('Could not')) ? 'danger' : 'success'">{{ statusMessage }}</ion-text>
-    </div>
+      <!-- 3. Benefits list -->
+      <div class="benefits-list">
+        <div class="benefit-item">
+          <div class="benefit-icon-wrap">
+            <span class="material-symbols-outlined">calendar_month</span>
+          </div>
+          <div class="benefit-text">
+            <h3>Schedule investments</h3>
+            <p>Align transfers with your pay frequency so you never miss a beat.</p>
+          </div>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon-wrap">
+            <span class="material-symbols-outlined">lock</span>
+          </div>
+          <div class="benefit-text">
+            <h3>Bank-level security</h3>
+            <p>Your data is protected with 256-bit encryption and never stored locally.</p>
+          </div>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon-wrap">
+            <span class="material-symbols-outlined">tune</span>
+          </div>
+          <div class="benefit-text">
+            <h3>Full control</h3>
+            <p>Adjust timing and amounts instantly. Pause or cancel anytime.</p>
+          </div>
+        </div>
+      </div>
 
+      <!-- Status feedback (non-loading only) -->
+      <div *ngIf="statusMessage && !isLoading" class="feedback-zone">
+        <span
+          [class.feedback-error]="statusMessage.includes('Error') || statusMessage.includes('error') || statusMessage.includes('Could not')"
+          [class.feedback-success]="!(statusMessage.includes('Error') || statusMessage.includes('error') || statusMessage.includes('Could not'))">
+          {{ statusMessage }}
+        </span>
+      </div>
+
+    </div>
   </div>
 </ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="cta-footer">
+    <button
+      class="cta-btn"
+      type="button"
+      (click)="openPlaid()"
+      [disabled]="isLoading || !isPlaidReady">
+      <ng-container *ngIf="!isLoading && isPlaidReady">
+        <span>Connect with Plaid</span>
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </ng-container>
+      <ng-container *ngIf="!isLoading && !isPlaidReady">
+        <span>Preparing secure connection...</span>
+      </ng-container>
+      <ng-container *ngIf="isLoading">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>{{ statusMessage || 'Establishing secure connection...' }}</span>
+      </ng-container>
+    </button>
+  </div>
+</ion-footer>
+
+<div class="loading-veil" [class.veil-hidden]="isPlaidReady"></div>
