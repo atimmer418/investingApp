@@ -358,7 +358,7 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.navCtrl.back();
+    this.navCtrl.navigateBack('/fi-plan-results');
   }
 
   get isEmailValid(): boolean {

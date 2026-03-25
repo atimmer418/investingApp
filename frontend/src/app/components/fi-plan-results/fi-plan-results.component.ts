@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostBinding } from '@angular/core';
-import { CommonModule, CurrencyPipe, Location } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IonHeader, IonToolbar, IonContent, IonFooter } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, IonFooter, NavController } from '@ionic/angular/standalone';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 
@@ -89,7 +89,7 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
     public router: Router,
     private authService: AuthService,
     private cdr: ChangeDetectorRef,
-    private location: Location
+    private navCtrl: NavController
   ) {}
 
   ngOnInit() {
@@ -153,7 +153,7 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.location.back();
+    this.navCtrl.navigateBack('/survey-initial');
   }
 
   private loadSelectedStrategy() {

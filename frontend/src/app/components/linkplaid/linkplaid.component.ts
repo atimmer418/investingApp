@@ -205,7 +205,7 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.navCtrl.back();
+    this.navCtrl.navigateBack('/auth-finalize');
   }
 
   private handleError(error: HttpErrorResponse) {

@@ -1,23 +1,14 @@
 import { Component, OnInit, HostBinding } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { addIcons } from 'ionicons';
-import { informationCircleOutline, chevronUp } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
 import {
   IonContent,
   IonHeader,
   IonToolbar,
-  IonTitle,
-  IonProgressBar,
-  IonInput,
-  IonRange,
-  IonButton,
   IonFooter,
-  IonButtons,
-  IonBackButton,
-  IonIcon,
+  NavController,
 } from '@ionic/angular/standalone';
 
 @Component({
@@ -28,52 +19,92 @@ import {
   imports: [
     CommonModule,
     FormsModule,
-    CurrencyPipe,
     IonContent,
     IonHeader,
     IonToolbar,
-    IonTitle,
-    IonProgressBar,
-    IonInput,
-    IonRange,
-    IonButton,
     IonFooter,
-    IonButtons,
-    IonBackButton,
-    IonIcon,
   ],
 })
 export class SurveyInitialComponent implements OnInit {
   @HostBinding('class.fade-in-from-get-started') fadeIn = false;
+  @HostBinding('class.page-ready') isReady = false;
+
   // --- User Input Properties ---
-  monthlyInvestment: number = 2500; // A more common starting point for the target audience
-  retirementIncome: number = 60000;
+  monthlyInvestment: number = 1000;
+  retirementIncome: number = 65000;
 
-  formattedMonthlyInvestment: string = '2,500';
-  formattedRetirementIncome: string = '60,000';
+  formattedMonthlyInvestment: string = '1,000';
+  formattedRetirementIncome: string = '65,000';
 
-  // --- Display Property ---
+  // --- Display Properties ---
   timeToFI: string = '';
   isCalculationExpanded: boolean = false;
 
   // --- Economic Assumptions for the SWR/FIRE calculation ---
-  private readonly AVG_MARKET_YIELD = 0.10; // Conservative long-term assumption for a growth portfolio
-  private readonly SAFE_WITHDRAWAL_RATE = 0.04; // The classic 4% rule
+  private readonly AVG_MARKET_YIELD = 0.1049; // Presented to users as ~10% average annual return
+  private readonly SAFE_WITHDRAWAL_RATE = 0.0449; // Presented to users as ~4% withdrawal rate
 
-  constructor(private router: Router, private authService: AuthService) {
+  constructor(private router: Router, private authService: AuthService, private navCtrl: NavController) {
     this.fadeIn = this.router.getCurrentNavigation()?.extras?.state?.['fromGetStarted'] === true;
-    addIcons({ informationCircleOutline, chevronUp });
   }
 
   ngOnInit() {
-    // Mark this step as incomplete when user enters/returns to this page
     this.authService.markStepIncomplete('surveyInitial').subscribe({
       next: () => console.log('SurveyInitial step marked as incomplete'),
       error: (err) => console.log('SurveyInitial step could not be marked incomplete (likely not authenticated yet):', err)
     });
-    
+
     this.loadSavedValues();
+
+    // Clamp to the new slider ranges after loading
+    if (this.monthlyInvestment < 100) this.monthlyInvestment = 100;
+    if (this.monthlyInvestment > 5000) this.monthlyInvestment = 5000;
+    if (this.retirementIncome < 40000) this.retirementIncome = 40000;
+    if (this.retirementIncome > 200000) this.retirementIncome = 200000;
+
+    this.updateFormattedValues();
     this.calculateFITimeline();
+    this.preloadAssets();
+  }
+
+  private preloadAssets() {
+    const imageReady = new Promise<void>(resolve => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      img.src = '/assets/images/whenPigsFly-2.png';
+    });
+
+    // Explicitly wait for the two fonts used on this page
+    const fontsReady = Promise.all([
+      document.fonts.load('700 16px "Manrope"').catch(() => []),
+      document.fonts.load('400 24px "Material Symbols Outlined"').catch(() => []),
+    ]);
+
+    const allReady = Promise.all([fontsReady, imageReady]);
+    const timeout = new Promise<void>(resolve => setTimeout(resolve, 2000));
+
+    // Lift the veil as soon as everything is ready, but never wait longer than 2s
+    Promise.race([allReady, timeout]).then(() => {
+      this.isReady = true;
+    });
+  }
+
+  goBack() {
+    this.navCtrl.navigateBack('/get-started');
+  }
+
+  get formattedTargetPortfolio(): string {
+    const target = this.retirementIncome / this.SAFE_WITHDRAWAL_RATE;
+    if (target >= 1_000_000) {
+      return '$' + (target / 1_000_000).toFixed(1) + 'M';
+    }
+    return '$' + (target / 1_000).toFixed(0) + 'K';
+  }
+
+  getSliderGradient(value: number, min: number, max: number): string {
+    const pct = ((value - min) / (max - min)) * 100;
+    return `linear-gradient(to right, #2563EB ${pct}%, #e5e7eb ${pct}%)`;
   }
 
   // Load saved values from localStorage or user progress
@@ -92,15 +123,15 @@ export class SurveyInitialComponent implements OnInit {
     // Fallback to localStorage for any missing values (for non-authenticated users)
     const savedMonthlyInvestment = localStorage.getItem('surveyMonthlyInvestment');
     const savedRetirementIncome = localStorage.getItem('surveyRetirementIncome');
-    
-    if (savedMonthlyInvestment && this.monthlyInvestment === 2500) { // Only override default
+
+    if (savedMonthlyInvestment && this.monthlyInvestment === 1000) {
       this.monthlyInvestment = parseInt(savedMonthlyInvestment, 10);
     }
-    
-    if (savedRetirementIncome && this.retirementIncome === 60000) { // Only override default
+
+    if (savedRetirementIncome && this.retirementIncome === 65000) {
       this.retirementIncome = parseInt(savedRetirementIncome, 10);
     }
-    
+
     this.updateFormattedValues();
     console.log('[SurveyInitial] Loaded saved values:', {
       monthlyInvestment: this.monthlyInvestment,
@@ -112,13 +143,12 @@ export class SurveyInitialComponent implements OnInit {
   private saveValues() {
     localStorage.setItem('surveyMonthlyInvestment', this.monthlyInvestment.toString());
     localStorage.setItem('surveyRetirementIncome', this.retirementIncome.toString());
-    
-    // Update user progress with both values
-    this.authService.updateProgress({ 
+
+    this.authService.updateProgress({
       monthlyInvestment: this.monthlyInvestment,
       retirementIncome: this.retirementIncome
     }).subscribe({
-      next: (progress) => {
+      next: (_) => {
         console.log('[SurveyInitial] Updated user progress with values:', {
           monthlyInvestment: this.monthlyInvestment,
           retirementIncome: this.retirementIncome
@@ -134,7 +164,7 @@ export class SurveyInitialComponent implements OnInit {
   onSliderChange() {
     this.updateFormattedValues();
     this.calculateFITimeline();
-    this.saveValues(); // Save to localStorage and sync with user progress
+    this.saveValues();
   }
 
   unformatMonthlyInvestment() {
@@ -146,7 +176,7 @@ export class SurveyInitialComponent implements OnInit {
     this.monthlyInvestment = isNaN(numericValue) ? 100 : numericValue;
     this.updateFormattedValues();
     this.calculateFITimeline();
-    this.saveValues(); // Save to localStorage and sync with user progress
+    this.saveValues();
   }
 
   unformatRetirementIncome() {
@@ -158,9 +188,9 @@ export class SurveyInitialComponent implements OnInit {
     this.retirementIncome = isNaN(numericValue) ? 40000 : numericValue;
     this.updateFormattedValues();
     this.calculateFITimeline();
-    this.saveValues(); // Save to localStorage and sync with user progress
+    this.saveValues();
   }
-  
+
   private updateFormattedValues() {
     this.formattedMonthlyInvestment = this.monthlyInvestment.toLocaleString('en-US');
     this.formattedRetirementIncome = this.retirementIncome.toLocaleString('en-US');
@@ -170,19 +200,15 @@ export class SurveyInitialComponent implements OnInit {
    * Calculates the timeline to reach the FIRE number based on the 4% rule.
    */
   private calculateFITimeline() {
-    // Step 1: Calculate the target portfolio needed for the 4% rule.
-    const targetPortfolio = this.retirementIncome / this.SAFE_WITHDRAWAL_RATE; // (e.g., $60k / 0.04 = $1.5M)
-
-    // Step 2: Calculate years to reach that target (using our existing formula).
+    const targetPortfolio = this.retirementIncome / this.SAFE_WITHDRAWAL_RATE;
     const monthlyRate = this.AVG_MARKET_YIELD / 12;
     if (this.monthlyInvestment <= 0) {
       this.timeToFI = '∞';
       return;
     }
-    
+
     const numberOfMonths = Math.log((targetPortfolio * monthlyRate / this.monthlyInvestment) + 1) / Math.log(1 + monthlyRate);
     const years = numberOfMonths / 12;
-
     this.timeToFI = isFinite(years) ? years.toFixed(1) : '∞';
   }
 
@@ -199,24 +225,21 @@ export class SurveyInitialComponent implements OnInit {
       annual: this.retirementIncome,
       years: this.timeToFI
     });
-    
-    // Complete the surveyInitial step
+
     this.authService.completeStep('surveyInitial').subscribe({
       next: (response) => {
         console.log('SurveyInitial step completed successfully:', response);
-        
-        // Verify localStorage was updated
+
         const localStorageValue = localStorage.getItem('surveyInitialCompleted');
         console.log('SurveyInitial localStorage value after completion:', localStorageValue);
-        
-        // Verify current progress
+
         this.authService.userProgress$.subscribe(progress => {
           if (progress) {
             console.log('SurveyInitial current progress after completion:', progress.surveyInitialCompleted);
           }
         });
-        
-        this.router.navigate(['/fi-plan-results'], { // A new route for your detailed plan page
+
+        this.router.navigate(['/fi-plan-results'], {
           queryParams: {
             mI: this.monthlyInvestment,
             rI: this.retirementIncome,
@@ -226,13 +249,11 @@ export class SurveyInitialComponent implements OnInit {
       },
       error: (err) => {
         console.log('SurveyInitial step could not be completed (likely not authenticated yet):', err);
-        
-        // Check localStorage even if backend failed
+
         const localStorageValue = localStorage.getItem('surveyInitialCompleted');
         console.log('SurveyInitial localStorage value after failed completion:', localStorageValue);
-        
-        // Still navigate even if progress update fails
-        this.router.navigate(['/fi-plan-results'], { // A new route for your detailed plan page
+
+        this.router.navigate(['/fi-plan-results'], {
           queryParams: {
             mI: this.monthlyInvestment,
             rI: this.retirementIncome,
