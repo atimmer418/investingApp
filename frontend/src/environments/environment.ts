@@ -4,6 +4,7 @@
 
 export const environment = {
   production: false, // It's a test build, not a full production build
+  local: true,
   backendApiUrl: 'https://local.fredvested.com/api',
   rpId: 'local.fredvested.com' // Your test frontend/app origin hostname
 };
