@@ -127,6 +127,23 @@ ion-content::part(scroll) {
   margin-bottom: 28px;
 }
 
+// --- Side-by-side date + amount row ---
+.form-row-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 12px;
+
+  .form-section {
+    margin-bottom: 0;
+  }
+}
+
+.info-tip--below-pair {
+  margin-top: 0;
+  margin-bottom: 28px;
+}
+
 // --- Frequency pill grid ---
 .freq-grid {
   display: grid;

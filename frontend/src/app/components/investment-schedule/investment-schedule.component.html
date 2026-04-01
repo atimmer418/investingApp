@@ -33,41 +33,44 @@
       </div>
     </div>
 
-    <!-- Section 2: Next Pay Date -->
-    <div class="form-section">
-      <p class="field-label">Next pay date</p>
-      <div class="field-row">
-        <input
-          class="field-input"
-          type="date"
-          [(ngModel)]="schedule.startDate"
-          (change)="onStartDateChange($any($event).target.value)"
-          [min]="getMinDate()" />
+    <!-- Sections 2 + 3: Next Pay Date & Investment Amount (side by side) -->
+    <div class="form-row-pair">
+
+      <div class="form-section">
+        <p class="field-label">Next pay date</p>
+        <div class="field-row">
+          <input
+            class="field-input"
+            type="date"
+            [(ngModel)]="schedule.startDate"
+            (change)="onStartDateChange($any($event).target.value)"
+            [min]="getMinDate()" />
+        </div>
       </div>
+
+      <div class="form-section">
+        <p class="field-label">Investment amount</p>
+        <div class="field-row">
+          <span class="field-prefix">$</span>
+          <input
+            class="field-input"
+            type="number"
+            [(ngModel)]="schedule.investmentAmount"
+            (blur)="onAmountChange()"
+            placeholder="0"
+            min="1" />
+        </div>
+      </div>
+
     </div>
 
-    <!-- Section 3: Investment Amount -->
-    <div class="form-section">
-      <p class="field-label">Investment amount per {{ getSelectedFrequencyDetails()?.label?.toLowerCase() || 'payment' }}</p>
-      <div class="field-row">
-        <span class="field-prefix">$</span>
-        <input
-          class="field-input"
-          type="number"
-          [(ngModel)]="schedule.investmentAmount"
-          (blur)="onAmountChange()"
-          placeholder="0"
-          min="1" />
-      </div>
-
-      <!-- Recommendation tip -->
-      <div class="info-tip" *ngIf="monthlyGoal > 0">
-        <span class="material-symbols-outlined info-tip-icon">info</span>
-        <p class="info-tip-text">
-          Recommended: <strong>{{ formatCurrency(monthlyGoal / (getSelectedFrequencyDetails()?.paychecksPerMonth || 1)) }}</strong>
-          to meet your <strong>{{ formatCurrency(monthlyGoal) }}/mo</strong> goal
-        </p>
-      </div>
+    <!-- Recommendation tip (below the pair) -->
+    <div class="info-tip info-tip--below-pair" *ngIf="monthlyGoal > 0">
+      <span class="material-symbols-outlined info-tip-icon">info</span>
+      <p class="info-tip-text">
+        Recommended: <strong>{{ formatCurrency(monthlyGoal / (getSelectedFrequencyDetails()?.paychecksPerMonth || 1)) }}</strong>
+        to meet your <strong>{{ formatCurrency(monthlyGoal) }}/mo</strong> goal
+      </p>
     </div>
 
     <!-- Section 4: Projections (conditional) -->
