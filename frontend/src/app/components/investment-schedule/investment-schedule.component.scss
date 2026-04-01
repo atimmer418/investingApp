@@ -1,323 +1,482 @@
-// Use CSS variables for a consistent theme
+// --- Force light mode regardless of system theme ---
 :host {
-  --ion-background-color: #f2f2f7; // A very light, clean background
-  --ion-toolbar-background: var(--ion-background-color);
-  --ion-text-color: #000000;
-  --ion-color-primary: #007aff;
-  --ion-color-medium: #8e8e93;
+  --schedule-primary: #2563EB;
+  --schedule-bg: #f8fafc;
+  --schedule-text: #0f172a;
+  --schedule-gray: #6b7280;
+  --schedule-border: #e5e7eb;
+
+  --ion-background-color: #f8fafc;
+  --ion-toolbar-background: #f8fafc;
+  --ion-toolbar-color: #0f172a;
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
+  --ion-footer-background: #f8fafc;
 }
 
+// --- Toolbar ---
 ion-toolbar {
-  --border-width: 0 !important;
+  --background: #f8fafc;
+  --border-width: 0;
+  --min-height: 52px;
 }
 
-ion-progress-bar {
-  height: 3px;
-  --progress-background: var(--ion-color-primary);
+// --- Header ---
+.header-inner {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
 }
 
-// Unified container for the form
-.investment-schedule-container {
-  padding: 16px;
-}
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--schedule-text);
+  transition: background 0.2s ease;
+  flex-shrink: 0;
 
-.page-intro {
-  margin-bottom: 32px;
-  text-align: center;
-
-  h2 {
-    font-size: 26px;
-    font-weight: 700;
-    line-height: 1.25;
-    margin: 0 0 8px 0;
+  &:active {
+    background: rgba(0, 0, 0, 0.05);
   }
 
-  .helper-text {
-    font-size: 16px;
-    color: var(--ion-color-medium);
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+}
+
+.header-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  text-align: center;
+  flex: 1;
+  margin: 0;
+  padding-right: 40px;
+  color: var(--schedule-text);
+}
+
+// --- Content ---
+ion-content {
+  --background: var(--schedule-bg);
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+ion-content::part(scroll) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.content-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px 32px;
+  font-family: 'Manrope', sans-serif;
+}
+
+// --- Hero ---
+.hero-section {
+  flex-shrink: 0;
+  margin-bottom: 28px;
+}
+
+.hero-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  text-align: center;
+  margin: 0;
+  color: var(--schedule-text);
+}
+
+.hero-subtitle {
+  font-size: 14px;
+  color: var(--schedule-gray);
+  margin: 8px 0 0 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
+// --- Field label (shared by all sections) ---
+.field-label {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--schedule-gray);
+  margin: 0 0 10px 0;
+}
+
+// --- Form sections ---
+.form-section {
+  margin-bottom: 28px;
+}
+
+// --- Frequency pill grid ---
+.freq-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.freq-pill {
+  background: white;
+  border: 2px solid var(--schedule-border);
+  border-radius: 10px;
+  padding: 12px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &.selected {
+    border-color: var(--schedule-primary);
+    background: #eff6ff;
+
+    .freq-pill-title {
+      color: var(--schedule-primary);
+    }
+
+    .freq-pill-desc {
+      color: var(--schedule-primary);
+      opacity: 0.8;
+    }
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.freq-pill-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--schedule-text);
+  margin: 0 0 3px 0;
+}
+
+.freq-pill-desc {
+  font-size: 11px;
+  color: var(--schedule-gray);
+  margin: 0;
+  line-height: 1.3;
+}
+
+// --- Date / amount field ---
+.field-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid var(--schedule-primary);
+  padding-bottom: 6px;
+}
+
+.field-prefix {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--schedule-gray);
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.field-input {
+  font-family: 'Manrope', sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--schedule-text);
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  -webkit-appearance: none;
+
+  &::placeholder {
+    color: #cbd5e1;
+    font-weight: 400;
+  }
+}
+
+input[type='date'].field-input {
+  color-scheme: light;
+}
+
+input[type='number'].field-input {
+  -moz-appearance: textfield;
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+  }
+}
+
+// --- Info tip (recommendation) ---
+.info-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.07);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  margin-top: 12px;
+}
+
+.info-tip-icon {
+  color: var(--schedule-primary);
+  font-size: 18px;
+  flex-shrink: 0;
+  font-variation-settings: 'FILL' 1;
+  margin-top: 1px;
+}
+
+.info-tip-text {
+  font-size: 13px;
+  color: var(--schedule-primary);
+  margin: 0;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+// --- Projections ---
+.projection-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.projection-card {
+  background: white;
+  border: 1px solid var(--schedule-border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.projection-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--schedule-primary);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.projection-label {
+  font-size: 12px;
+  color: var(--schedule-gray);
+  margin: 0;
+  font-weight: 500;
+}
+
+.goal-comparison {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Manrope', sans-serif;
+
+  .material-symbols-outlined {
+    font-size: 17px;
+    flex-shrink: 0;
+    font-variation-settings: 'FILL' 1;
+  }
+
+  &.on-track {
+    color: #16a34a;
+  }
+
+  &.short {
+    color: #b45309;
+  }
+}
+
+// --- ACATS transfer section ---
+.transfer-section {
+  border-top: 1px solid var(--schedule-border);
+  padding-top: 20px;
+}
+
+.disclosure-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.disclosure-text {
+  flex: 1;
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--schedule-text);
+    margin: 0 0 3px 0;
+    font-family: 'Manrope', sans-serif;
+  }
+
+  p {
+    font-size: 13px;
+    color: var(--schedule-gray);
     margin: 0;
     line-height: 1.4;
+    font-family: 'Manrope', sans-serif;
   }
 }
 
-// Input sections styling
-.input-section {
-  margin-bottom: 32px;
+.toggle-btn {
+  flex-shrink: 0;
+  min-width: 52px;
+  height: 30px;
+  border-radius: 15px;
+  border: 1.5px solid var(--schedule-border);
+  background: #f1f5f9;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--schedule-gray);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  .section-label {
-    margin-bottom: 16px;
-
-    h3 {
-      font-size: 20px;
-      font-weight: 600;
-      line-height: 1.25;
-      margin: 0 0 4px 0;
-      color: var(--ion-text-color);
-    }
-
-    .helper-text {
-      font-size: 14px;
-      color: var(--ion-color-medium);
-      margin: 0;
-      line-height: 1.4;
-    }
+  &.toggle-on {
+    background: var(--schedule-primary);
+    border-color: var(--schedule-primary);
+    color: white;
   }
 
-  .input-display-wrapper {
-    display: flex;
-    align-items: center;
-    border-bottom: 2px solid #e5e5ea;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
-
-    &:focus-within {
-      border-bottom-color: var(--ion-color-primary);
-    }
-
-    .currency-symbol {
-      font-weight: 500;
-      font-size: 18px;
-      color: var(--ion-text-color);
-      margin-right: 8px;
-    }
-
-    ion-input, ion-select {
-      --padding-start: 0;
-      --padding-end: 0;
-      font-size: 18px;
-      font-weight: 400;
-      color: var(--ion-text-color);
-    }
-
-    ion-select {
-      --placeholder-color: var(--ion-color-medium);
-    }
-
-    ion-note {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 16px;
-      padding: 12px 16px;
-      background: #f0f9ff;
-      border-radius: 8px;
-      border: 1px solid #e1f5fe;
-      color: #0277bd;
-      width: 100%;
-
-      ion-icon {
-        font-size: 18px;
-      }
-    }
-  }
-
-  .amount-recommendations {
-    margin-top: 12px;
-
-    .helper-text {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      color: var(--ion-color-primary);
-      margin: 0;
-
-      ion-icon {
-        font-size: 16px;
-      }
-    }
+  &:active {
+    transform: scale(0.96);
   }
 }
 
-// Projections section
-.projections-section {
-  margin-bottom: 32px;
-
-  .section-label {
-    margin-bottom: 16px;
-
-    h3 {
-      font-size: 20px;
-      font-weight: 600;
-      line-height: 1.25;
-      margin: 0 0 4px 0;
-      color: var(--ion-text-color);
-    }
-
-    .helper-text {
-      font-size: 14px;
-      color: var(--ion-color-medium);
-      margin: 0;
-      line-height: 1.4;
-    }
-  }
-
-  .projection-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-
-  .projection-item {
-    text-align: center;
-    padding: 20px 16px;
-    background: #ffffff;
-    border-radius: 10px;
-    border: 1px solid #d1d1d6;
-
-    .projection-value {
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--ion-color-primary);
-      margin-bottom: 4px;
-    }
-
-    .projection-label {
-      font-size: 13px;
-      color: var(--ion-color-medium);
-      font-weight: 400;
-    }
-  }
-
-  .goal-comparison {
-    .helper-text {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      margin: 0;
-      line-height: 1.4;
-
-      &.success-text {
-        color: #34c759;
-      }
-
-      &.warning-text {
-        color: #ff9500;
-      }
-
-      ion-icon {
-        font-size: 16px;
-      }
-    }
-  }
+.transfer-form {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-// Summary section
-.summary-section {
-  margin-bottom: 32px;
+// Select wrapper for brokerage dropdown
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid var(--schedule-primary);
 
-  .section-label {
-    margin-bottom: 16px;
-
-    h3 {
-      font-size: 20px;
-      font-weight: 600;
-      line-height: 1.25;
-      margin: 0 0 4px 0;
-      color: var(--ion-text-color);
-    }
-
-    .helper-text {
-      font-size: 14px;
-      color: var(--ion-color-medium);
-      margin: 0;
-      line-height: 1.4;
-    }
-  }
-
-  .summary-card {
-    background: #ffffff;
-    border-radius: 10px;
-    border: 1px solid #d1d1d6;
-    padding: 16px;
-
-    .summary-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-
-      &:not(:last-child) {
-        border-bottom: 1px solid #f2f2f7;
-      }
-
-      .summary-label {
-        font-size: 15px;
-        color: var(--ion-color-medium);
-        font-weight: 400;
-      }
-
-      .summary-value {
-        font-size: 15px;
-        color: var(--ion-text-color);
-        font-weight: 500;
-      }
-    }
-  }
-}
-
-// Navigation controls
-.navigation-controls {
-  margin-top: 32px;
-  padding-bottom: 16px;
-
-  ion-button {
-    --border-radius: 10px;
-    height: 50px;
-    font-size: 17px;
-    font-weight: 600;
-    margin: 0;
-
-    &[disabled] {
-      --opacity: 0.4;
-    }
-  }
-}
-
-// Investment preview section
-.investment-preview {
-  margin-top: 12px;
-  padding: 12px 16px;
-  background: #e8f4fd;
-  border-radius: 8px;
-  border-left: 3px solid var(--ion-color-primary);
-
-  .helper-text {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: var(--ion-color-primary);
-    margin: 0;
-    font-weight: 500;
-
-    ion-icon {
-      font-size: 16px;
-      flex-shrink: 0;
-    }
-  }
-}
-
-// Responsive design
-@media (max-width: 768px) {
-  .projection-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  
-  .projection-item {
-    .projection-value {
-      font-size: 20px;
-    }
-  }
-
-  .page-intro h2 {
-    font-size: 24px;
-  }
-
-  .section-label h3 {
+  .select-arrow {
+    position: absolute;
+    right: 0;
     font-size: 18px;
+    color: var(--schedule-gray);
+    pointer-events: none;
+  }
+}
+
+.field-select {
+  font-family: 'Manrope', sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--schedule-text);
+  background: transparent;
+  border: none;
+  padding: 6px 24px 6px 0;
+  outline: none;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--schedule-gray);
+  margin-top: 6px;
+  font-family: 'Manrope', sans-serif;
+}
+
+// --- Footer ---
+ion-footer {
+  --background: transparent;
+  --border-width: 0;
+}
+
+.cta-footer {
+  padding: 14px 18px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  background: white;
+  border-top: 1px solid #f1f5f9;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+
+.cta-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+
+  &:not(:disabled) {
+    background: #2563EB;
+    color: white;
+    box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
+
+    &:active {
+      transform: scale(0.99);
+      background: #1d4ed8;
+    }
+  }
+
+  &:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  ion-spinner {
+    width: 18px;
+    height: 18px;
+    color: white;
+  }
+}
+
+// --- Loading veil ---
+.loading-veil {
+  position: fixed;
+  inset: 0;
+  background: var(--schedule-bg);
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+
+  &.veil-hidden {
+    opacity: 0;
   }
 }
