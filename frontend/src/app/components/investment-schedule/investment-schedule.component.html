@@ -1,167 +1,167 @@
-<!-- Investment Schedule Page -->
 <ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-title>Investment Schedule</ion-title>
-    <ion-progress-bar [value]="0.85"></ion-progress-bar>
+    <div class="header-inner">
+      <button class="back-btn" (click)="goBack()">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      </button>
+      <h2 class="header-title">Investment Schedule</h2>
+    </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-  <div class="investment-schedule-container">
+<ion-content class="schedule-content">
+  <div class="content-inner">
 
-    <!-- Page Introduction -->
-    <div class="page-intro">
-      <h2>Set Up Your Investment Schedule</h2>
-      <p class="helper-text">
-        We'll automatically invest from your linked checking account on your pay dates.
-        This ensures consistent wealth building aligned with your income schedule.
-      </p>
+    <!-- Hero -->
+    <div class="hero-section">
+      <h1 class="hero-title">Set your pace.</h1>
+      <p class="hero-subtitle">Align your investments with your paycheck.</p>
     </div>
 
-    <!-- Pay Frequency Selection -->
-    <div class="input-section">
-      <div class="section-label">
-        <h3>How often are you paid?</h3>
-        <p class="helper-text">Your investments should happen on the same schedule as your paychecks</p>
-      </div>
-
-      <div class="input-display-wrapper">
-        <ion-select [(ngModel)]="schedule.payFrequency" (ionChange)="onFrequencyChange($event.detail.value)"
-          placeholder="Select your pay frequency" interface="popover">
-          <ion-select-option *ngFor="let freq of frequencyOptions" [value]="freq.value">
-            {{ freq.label }}
-          </ion-select-option>
-        </ion-select>
+    <!-- Section 1: Pay Frequency -->
+    <div class="form-section">
+      <p class="field-label">How often are you paid?</p>
+      <div class="freq-grid">
+        <div
+          *ngFor="let freq of frequencyOptions"
+          class="freq-pill"
+          [class.selected]="schedule.payFrequency === freq.value"
+          (click)="onFrequencyChange(freq.value)">
+          <p class="freq-pill-title">{{ freq.label }}</p>
+          <p class="freq-pill-desc">{{ freq.description }}</p>
+        </div>
       </div>
     </div>
 
-    <!-- Next Pay Date -->
-    <div class="input-section">
-      <div class="section-label">
-        <h3>When is your next pay date?</h3>
-        <p class="helper-text">We'll start your investments on this date and continue based on your pay frequency</p>
-      </div>
-
-      <div class="input-display-wrapper">
-        <ion-input type="date" [(ngModel)]="schedule.startDate"
-          (ionChange)="onStartDateChange($event.detail.value || '')" [min]="getMinDate()"
-          placeholder="Select your next pay date">
-        </ion-input>
+    <!-- Section 2: Next Pay Date -->
+    <div class="form-section">
+      <p class="field-label">Next pay date</p>
+      <div class="field-row">
+        <input
+          class="field-input"
+          type="date"
+          [(ngModel)]="schedule.startDate"
+          (change)="onStartDateChange($any($event).target.value)"
+          [min]="getMinDate()" />
       </div>
     </div>
 
-    <!-- Investment Amount -->
-    <div class="input-section">
-      <div class="section-label">
-        <h3>Investment amount</h3>
-        <p class="helper-text">Amount to invest per {{ getSelectedFrequencyDetails()?.label?.toLowerCase() || 'payment'
-          }}</p>
+    <!-- Section 3: Investment Amount -->
+    <div class="form-section">
+      <p class="field-label">Investment amount per {{ getSelectedFrequencyDetails()?.label?.toLowerCase() || 'payment' }}</p>
+      <div class="field-row">
+        <span class="field-prefix">$</span>
+        <input
+          class="field-input"
+          type="number"
+          [(ngModel)]="schedule.investmentAmount"
+          (blur)="onAmountChange()"
+          placeholder="0"
+          min="1" />
       </div>
 
-      <div class="input-display-wrapper">
-        <span class="currency-symbol">$</span>
-        <ion-input type="number" [(ngModel)]="schedule.investmentAmount" (ionBlur)="onAmountChange()" placeholder="0"
-          min="1">
-        </ion-input>
-      </div>
-
-      <div class="amount-recommendations" *ngIf="monthlyGoal > 0">
-        <p class="helper-text">
-          <ion-icon name="lightbulb-outline"></ion-icon>
-          Recommended: {{ formatCurrency(monthlyGoal / (getSelectedFrequencyDetails()?.paychecksPerMonth || 1)) }}
-          to meet your monthly goal of {{ formatCurrency(monthlyGoal) }}
+      <!-- Recommendation tip -->
+      <div class="info-tip" *ngIf="monthlyGoal > 0">
+        <span class="material-symbols-outlined info-tip-icon">info</span>
+        <p class="info-tip-text">
+          Recommended: <strong>{{ formatCurrency(monthlyGoal / (getSelectedFrequencyDetails()?.paychecksPerMonth || 1)) }}</strong>
+          to meet your <strong>{{ formatCurrency(monthlyGoal) }}/mo</strong> goal
         </p>
       </div>
     </div>
 
-    <!-- Investment Projections -->
-    <div class="projections-section" *ngIf="schedule.investmentAmount > 0">
-      <div class="section-label">
-        <h3>Projections</h3>
-        <p class="helper-text">How much you'll invest over time</p>
-      </div>
-
+    <!-- Section 4: Projections (conditional) -->
+    <div class="form-section" *ngIf="schedule.investmentAmount > 0">
+      <p class="field-label">Projections</p>
       <div class="projection-grid">
-        <div class="projection-item">
-          <div class="projection-value">{{ formatCurrency(getMonthlyProjection()) }}</div>
-          <div class="projection-label">Per Month</div>
+        <div class="projection-card">
+          <p class="projection-value">{{ formatCurrency(getMonthlyProjection()) }}</p>
+          <p class="projection-label">Per Month</p>
         </div>
-        <div class="projection-item">
-          <div class="projection-value">{{ formatCurrency(getAnnualProjection()) }}</div>
-          <div class="projection-label">Per Year</div>
+        <div class="projection-card">
+          <p class="projection-value">{{ formatCurrency(getAnnualProjection()) }}</p>
+          <p class="projection-label">Per Year</p>
         </div>
       </div>
 
-      <div class="goal-comparison" *ngIf="monthlyGoal > 0">
-        <p class="helper-text" [class.success-text]="getMonthlyProjection() >= monthlyGoal"
-          [class.warning-text]="getMonthlyProjection() < monthlyGoal">
-          <ion-icon [name]="getMonthlyProjection() >= monthlyGoal ? 'checkmark-circle' : 'warning'"></ion-icon>
-          {{ getMonthlyProjection() >= monthlyGoal ? 'You\'re on track to meet your goal!' : 'Consider increasing to
-          meet your goal (' + formatCurrency(monthlyGoal - getMonthlyProjection()) + ' short)' }}
-        </p>
+      <div class="goal-comparison on-track" *ngIf="monthlyGoal > 0 && getMonthlyProjection() >= monthlyGoal">
+        <span class="material-symbols-outlined">check_circle</span>
+        You're on track to meet your goal!
+      </div>
+      <div class="goal-comparison short" *ngIf="monthlyGoal > 0 && getMonthlyProjection() < monthlyGoal">
+        <span class="material-symbols-outlined">warning</span>
+        {{ formatCurrency(monthlyGoal - getMonthlyProjection()) }} short of your monthly goal
       </div>
     </div>
 
-    <!-- ACATS Transfer Option -->
-    <div class="input-section transfer-section">
-      <div class="transfer-toggle-wrapper" style="display: flex; align-items: flex-start; gap: 16px; padding: 16px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-         <ion-checkbox slot="start" [(ngModel)]="showTransferOptions" mode="ios"></ion-checkbox>
-         <div class="transfer-label">
-            <h3 style="margin: 0 0 4px; font-size: 17px; font-weight: 600;">Transfer existing assets?</h3>
-            <p style="margin: 0; font-size: 14px; color: var(--ion-color-medium); line-height: 1.4;">
-               Move your portfolio from another brokerage like Robinhood or Fidelity directly into this account.
-            </p>
-         </div>
+    <!-- Section 5: ACATS Transfer -->
+    <div class="form-section transfer-section">
+      <div class="disclosure-row">
+        <div class="disclosure-text">
+          <h3>Transfer existing assets?</h3>
+          <p>Move your portfolio from Robinhood, Fidelity, or another brokerage directly into this account.</p>
+        </div>
+        <button
+          type="button"
+          class="toggle-btn"
+          [class.toggle-on]="showTransferOptions"
+          (click)="showTransferOptions = !showTransferOptions">
+          <span>{{ showTransferOptions ? 'Yes' : 'No' }}</span>
+        </button>
       </div>
 
-      <div *ngIf="showTransferOptions" class="transfer-form" style="margin-top: 24px; padding-left: 8px; padding-right: 8px;">
-        
-        <!-- Brokerage Selection -->
-        <div class="sub-section" style="margin-bottom: 24px;">
-             <p style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 8px; color: var(--ion-color-medium);">Brokerage</p>
-             <div class="input-display-wrapper">
-                <ion-select [(ngModel)]="transferBrokerageDtc" placeholder="Select your current brokerage" interface="action-sheet" cancelText="Cancel">
-                  <ion-select-option *ngFor="let broker of brokerageOptions" [value]="broker.dtc">
-                    {{ broker.name }}
-                  </ion-select-option>
-                </ion-select>
-             </div>
+      <div class="transfer-form" *ngIf="showTransferOptions">
+
+        <!-- Brokerage -->
+        <div>
+          <p class="field-label">Brokerage</p>
+          <div class="select-wrapper">
+            <select class="field-select" [(ngModel)]="transferBrokerageDtc">
+              <option value="" disabled>Select your current brokerage</option>
+              <option *ngFor="let broker of brokerageOptions" [value]="broker.dtc">
+                {{ broker.name }}
+              </option>
+            </select>
+            <span class="select-arrow material-symbols-outlined">expand_more</span>
+          </div>
         </div>
 
         <!-- Account Number -->
-        <div class="sub-section">
-             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                <p style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin: 0; color: var(--ion-color-medium);">Account Number</p>
-                <ion-button fill="clear" size="small" id="acats-tooltip" style="--padding-start:0; --padding-end:0; height: 20px;">
-                    <ion-icon slot="icon-only" name="information-circle-outline" style="font-size: 18px;"></ion-icon>
-                </ion-button>
-             </div>
-             
-             <ion-popover trigger="acats-tooltip" triggerAction="click">
-                <ng-template>
-                  <ion-content class="ion-padding">
-                    <p style="font-size: 14px; line-height: 1.5; margin: 0;">Found in your monthly statements or account settings under "Account Number".</p>
-                  </ion-content>
-                </ng-template>
-             </ion-popover>
-             
-             <div class="input-display-wrapper">
-                <ion-input type="text" [(ngModel)]="transferAccountNumber" placeholder="Enter account number"></ion-input>
-             </div>
+        <div>
+          <p class="field-label">Account Number</p>
+          <div class="field-row">
+            <input
+              class="field-input"
+              type="text"
+              [(ngModel)]="transferAccountNumber"
+              placeholder="Enter account number" />
+          </div>
+          <p class="field-hint">Found in your monthly statements or account settings.</p>
         </div>
 
       </div>
-    </div>
-
-    <!-- Navigation Controls -->
-    <div class="navigation-controls">
-      <ion-button expand="block" [disabled]="!canProceed() || isSubmitting" (click)="goToStockPreferences()">
-        <ion-spinner name="crescent" *ngIf="isSubmitting" slot="start"></ion-spinner>
-        <span *ngIf="!isSubmitting">Review & Finalize</span>
-        <span *ngIf="isSubmitting">Setting up schedule...</span>
-        <ion-icon name="chevron-forward" slot="end" *ngIf="!isSubmitting"></ion-icon>
-      </ion-button>
     </div>
 
   </div>
 </ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="cta-footer">
+    <button
+      class="cta-btn"
+      type="button"
+      [disabled]="!canProceed() || isSubmitting"
+      (click)="goToStockPreferences()">
+      <ng-container *ngIf="!isSubmitting">
+        <span>Review &amp; Finalize</span>
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </ng-container>
+      <ng-container *ngIf="isSubmitting">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>Setting up schedule...</span>
+      </ng-container>
+    </button>
+  </div>
+</ion-footer>
+
+<div class="loading-veil" [class.veil-hidden]="isReady"></div>
