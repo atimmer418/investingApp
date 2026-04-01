@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
-  IonContent, IonHeader, IonTitle, IonToolbar, IonFooter, IonSpinner
+  IonContent, IonHeader, IonToolbar, IonFooter, IonSpinner
 } from '@ionic/angular/standalone';
 
 import { AuthService } from '../../services/auth.service';
@@ -44,7 +44,7 @@ export interface InvestmentScheduleResponse {
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    IonContent, IonHeader, IonTitle, IonToolbar, IonFooter, IonSpinner
+    IonContent, IonHeader, IonToolbar, IonFooter, IonSpinner
   ]
 })
 export class InvestmentScheduleComponent implements OnInit {
