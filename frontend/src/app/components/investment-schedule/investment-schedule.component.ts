@@ -4,10 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
-  IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel,
-  IonSelect, IonSelectOption, IonInput, IonNote, IonIcon, IonCard, IonCardContent,
-  IonCardHeader, IonCardTitle, IonButtons, IonBackButton, IonProgressBar, IonSpinner,
-  IonCheckbox, IonPopover
+  IonContent, IonHeader, IonTitle, IonToolbar, IonFooter, IonSpinner
 } from '@ionic/angular/standalone';
 
 import { AuthService } from '../../services/auth.service';
@@ -47,10 +44,7 @@ export interface InvestmentScheduleResponse {
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel,
-    IonSelect, IonSelectOption, IonInput, IonNote, IonIcon, IonCard, IonCardContent,
-    IonCardHeader, IonCardTitle, IonButtons, IonBackButton, IonProgressBar, IonSpinner,
-    IonCheckbox, IonPopover
+    IonContent, IonHeader, IonTitle, IonToolbar, IonFooter, IonSpinner
   ]
 })
 export class InvestmentScheduleComponent implements OnInit {
@@ -60,6 +54,7 @@ export class InvestmentScheduleComponent implements OnInit {
   timeToFI: number = 0;
 
   isSubmitting: boolean = false;
+  isReady: boolean = false;
   
   // ACATS Transfer
   showTransferOptions: boolean = false;
@@ -137,6 +132,13 @@ export class InvestmentScheduleComponent implements OnInit {
     this.loadUserFinancialData();
     // Set default next pay date to tomorrow (user can adjust)
     this.schedule.startDate = this.getInvestmentDate();
+
+    // Let Manrope render before revealing content
+    setTimeout(() => this.isReady = true, 50);
+  }
+
+  goBack(): void {
+    this.router.navigate(['/kyc-verification']);
   }
 
   loadUserFinancialData(): void {
