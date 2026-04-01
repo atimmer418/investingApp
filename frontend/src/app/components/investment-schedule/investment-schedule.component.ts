@@ -138,7 +138,7 @@ export class InvestmentScheduleComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/kyc-verification']);
+    this.router.navigateByUrl('/kyc-verification', { replaceUrl: true });
   }
 
   loadUserFinancialData(): void {
