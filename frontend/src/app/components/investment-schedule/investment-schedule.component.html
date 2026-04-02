@@ -37,18 +37,6 @@
     <div class="form-row-pair">
 
       <div class="form-section">
-        <p class="field-label">Next pay date</p>
-        <div class="field-row">
-          <input
-            class="field-input"
-            type="date"
-            [(ngModel)]="schedule.startDate"
-            (change)="onStartDateChange($any($event).target.value)"
-            [min]="getMinDate()" />
-        </div>
-      </div>
-
-      <div class="form-section">
         <p class="field-label">Investment amount</p>
         <div class="field-row">
           <span class="field-prefix">$</span>
@@ -59,6 +47,18 @@
             (blur)="onAmountChange()"
             placeholder="0"
             min="1" />
+        </div>
+      </div>
+
+      <div class="form-section">
+        <p class="field-label">Next pay date</p>
+        <div class="field-row">
+          <input
+            class="field-input"
+            type="date"
+            [(ngModel)]="schedule.startDate"
+            (change)="onStartDateChange($any($event).target.value)"
+            [min]="getMinDate()" />
         </div>
       </div>
 
