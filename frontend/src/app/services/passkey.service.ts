@@ -108,6 +108,21 @@ export class PasskeyService {
     });
   }
 
+  startRecoveryRegistration(): Observable<RegistrationStartResponse> {
+    return new Observable(observer => {
+      this.getHeadersAsync().then(headers => {
+        this.http.post<RegistrationStartResponse>(
+          `${BACKEND_API_URL}/passkey/register/recovery/start`,
+          {},
+          { headers }
+        ).subscribe({
+          next: res => { observer.next(res); observer.complete(); },
+          error: err => observer.error(err)
+        });
+      });
+    });
+  }
+
   /**
    * Finish passkey authentication using the credential response and session ID
    */
