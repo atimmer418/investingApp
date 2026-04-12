@@ -122,7 +122,7 @@ public class WebAuthnService {
         return relyingParty.startRegistration(optionsToPassToRp);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public PublicKeyCredentialCreationOptions startRecoveryRegistrationFlow(String email) {
         logger.info("Starting recovery passkey re-registration for existing user: {}", email);
 
