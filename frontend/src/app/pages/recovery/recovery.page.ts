@@ -91,6 +91,7 @@ export class RecoveryPage implements OnInit {
               this.passkeyService.finishRegistration({ email: this.email, credential }).subscribe({
                 next: (finishResponse) => {
                   if (finishResponse.success) {
+                    this.isLoading = false;
                     this.router.navigate(['/tabs/tab3']);
                   } else {
                     this.toastService.showToast(finishResponse.message || 'Passkey registration failed. Please try again.');
