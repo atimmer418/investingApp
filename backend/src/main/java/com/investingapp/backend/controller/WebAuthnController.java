@@ -109,6 +109,39 @@ public class WebAuthnController {
         }
     }
 
+    @PostMapping("/register/recovery/start")
+    public ResponseEntity<?> startRecoveryRegistration(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authorization required");
+        }
+        String token = authHeader.substring(7);
+        if (!jwtUtils.validateJwtToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token");
+        }
+        String email = jwtUtils.getUserNameFromJwtToken(token);
+        logger.info("Received recovery passkey re-registration start for email: {}", email);
+
+        try {
+            PublicKeyCredentialCreationOptions options = webAuthnService.startRecoveryRegistrationFlow(email);
+            challengeCache.put(email, options);
+            logger.info("Recovery registration options cached for: {}", email);
+
+            String optionsJson = options.toCredentialsCreateJson();
+            JsonNode fullResponse = objectMapper.readTree(optionsJson);
+            JsonNode publicKeyNode = fullResponse.get("publicKey");
+            String publicKeyJson = objectMapper.writeValueAsString(publicKeyNode);
+
+            return ResponseEntity.ok(new RegistrationStartResponse(publicKeyJson));
+        } catch (IllegalArgumentException e) {
+            logger.warn("Recovery registration failed — user not found: {}", email);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        } catch (Exception e) {
+            logger.error("Failed to generate recovery registration options for: {}", email, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating registration options");
+        }
+    }
+
     @PostMapping("/register/finish")
     public ResponseEntity<RegistrationFinishResponse> finishRegistration(
             @Valid @RequestBody RegistrationFinishRequest finishRequest) {
