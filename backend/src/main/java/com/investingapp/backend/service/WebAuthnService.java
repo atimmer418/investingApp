@@ -123,6 +123,30 @@ public class WebAuthnService {
     }
 
     @Transactional
+    public PublicKeyCredentialCreationOptions startRecoveryRegistrationFlow(String email) {
+        logger.info("Starting recovery passkey re-registration for existing user: {}", email);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + email));
+
+        UserIdentity userIdentity = UserIdentity.builder()
+                .name(user.getEmail())
+                .displayName(user.getEmail())
+                .id(PasskeyCredential.base64UrlToByteArray(user.getUserHandle()))
+                .build();
+
+        StartRegistrationOptions optionsToPassToRp = StartRegistrationOptions.builder()
+                .user(userIdentity)
+                .authenticatorSelection(AuthenticatorSelectionCriteria.builder()
+                    .residentKey(ResidentKeyRequirement.PREFERRED)
+                    .userVerification(UserVerificationRequirement.PREFERRED)
+                    .build())
+                .build();
+
+        return relyingParty.startRegistration(optionsToPassToRp);
+    }
+
+    @Transactional
     public RegistrationFinishResponse finishRegistrationFlow(String userEmail, JsonNode registrationJsonFromClient, PublicKeyCredentialCreationOptions requestOptionsFromServer) {
         logger.info("Finishing passkey registration for email: {}", userEmail);
         RegistrationResult registrationResult; 
