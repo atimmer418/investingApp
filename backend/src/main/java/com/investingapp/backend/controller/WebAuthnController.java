@@ -134,7 +134,7 @@ public class WebAuthnController {
 
             return ResponseEntity.ok(new RegistrationStartResponse(publicKeyJson));
         } catch (IllegalArgumentException e) {
-            logger.warn("Recovery registration failed — user not found: {}", email);
+            logger.warn("Recovery registration failed - user not found: {}", email);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         } catch (Exception e) {
             logger.error("Failed to generate recovery registration options for: {}", email, e);
