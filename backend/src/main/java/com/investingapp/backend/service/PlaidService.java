@@ -48,6 +48,9 @@ public class PlaidService {
     @Autowired
     private EncryptionService encryptionService;
 
+    @Autowired
+    private AccountStatusService accountStatusService;
+
     public LinkTokenCreateResponse createLinkTokenForAuthenticatedUser(String clientUserId) throws IOException {
         logger.info("Creating Plaid Link token for authenticated user ID: {}", clientUserId);
         LinkTokenCreateRequestUser user = new LinkTokenCreateRequestUser().clientUserId(clientUserId);
@@ -107,8 +110,16 @@ public class PlaidService {
             // Don't fail the whole process if this fails - user can still use the app
         }
         
+        // Clear stale ACH data — the new bank account requires a fresh ACH relationship
+        appUser.setAlpacaAchRelationshipId(null);
+        appUser.setAlpacaAchStatus(null);
+
         userRepository.save(appUser);
         logger.info("Plaid item linked to user ID: {} with account details", appUser.getId());
+
+        // Reset investment schedule and trigger ACH creation if account is already ACTIVE
+        accountStatusService.handleBankAccountChange(appUser);
+
         return exchangeResponse;
     }
     

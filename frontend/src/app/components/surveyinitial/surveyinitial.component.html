@@ -1,103 +1,116 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/" text="" icon="chevron-back-outline"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Your Path to FI</ion-title>
-    <ion-progress-bar [value]="0.14"></ion-progress-bar>
+    <div class="header-inner">
+      <button class="back-btn" (click)="goBack()">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      </button>
+      <h2 class="header-title">Set Your Goals</h2>
+    </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-  <div class="survey-form-container">
+<ion-content class="survey-content">
+  <div class="content-inner">
 
-    <!-- Question 1: Monthly Investment -->
-    <div class="question-wrapper">
-      <h2>First, how much can you invest each month?</h2>
-      <p class="helper-text">This is the lifeline to your financial independence. The more you invest, the sooner you're free.</p>
-      
-      <div class="input-display-wrapper">
-        <span class="currency-symbol">$</span>
-        <ion-input
-          type="text"
-          inputmode="numeric"
-          [(ngModel)]="formattedMonthlyInvestment"
-          (ionBlur)="formatAndSetMonthlyInvestment()"
-          (ionFocus)="unformatMonthlyInvestment()"
-        ></ion-input>
-        <span class="per-month-label">/ month</span>
-      </div>
-
-      <ion-range
-        aria-label="Monthly Investment"
-        [min]="100"
-        [max]="10000"
-        [step]="100"
-        [(ngModel)]="monthlyInvestment"
-        (ionChange)="onSliderChange()"
-      ></ion-range>
+    <!-- Hero text -->
+    <div class="hero-section">
+      <h1 class="hero-title">Let's plan your future.</h1>
+      <p class="hero-subtitle">Adjust your inputs to see your projected timeline.</p>
     </div>
 
-    <!-- Divider -->
-    <hr class="section-divider" />
+    <!-- Timeline card -->
+    <div class="timeline-card">
+      <div class="timeline-overlay"></div>
+      <div class="timeline-footer">
+        <div class="timeline-main">
+          <p class="timeline-label">Estimated Time to Goal</p>
+          <div class="timeline-years">
+            <span class="years-number">{{ timeToFI }}</span>
+            <span class="years-unit">Years</span>
+          </div>
+        </div>
+        <div class="portfolio-badge">
+          <span class="portfolio-badge-label">Portfolio</span>
+          <span class="portfolio-badge-value">{{ formattedTargetPortfolio }}</span>
+        </div>
+      </div>
+    </div>
 
-    <!-- Question 2: Retirement Income -->
-    <div class="question-wrapper">
-      <h2>What annual income do you want your portfolio to replace?</h2>
-      <p class="helper-text">Think of the yearly salary you'd need to live comfortably without a traditional job.</p>
-      
-      <div class="input-display-wrapper">
-        <span class="currency-symbol">$</span>
-        <ion-input
-          type="text"
-          inputmode="numeric"
-          [(ngModel)]="formattedRetirementIncome"
-          (ionBlur)="formatAndSetRetirementIncome()"
-          (ionFocus)="unformatRetirementIncome()"
-        ></ion-input>
-        <span class="per-month-label">/ year</span>
+    <!-- Sliders -->
+    <div class="sliders-section">
+
+      <!-- Monthly Investment -->
+      <div class="slider-group">
+        <div class="slider-header">
+          <label class="slider-label">Monthly Investment</label>
+          <div class="value-badge">
+            <span class="value-text">${{ formattedMonthlyInvestment }}</span>
+          </div>
+        </div>
+        <div class="slider-wrapper">
+          <input
+            type="range"
+            class="native-slider"
+            [min]="100"
+            [max]="5000"
+            [step]="100"
+            [(ngModel)]="monthlyInvestment"
+            (ngModelChange)="onSliderChange()"
+            [style.background]="getSliderGradient(monthlyInvestment, 100, 5000)"
+          />
+        </div>
+        <div class="slider-limits">
+          <span>$100</span>
+          <span>$5,000</span>
+        </div>
       </div>
 
-      <ion-range
-        aria-label="Retirement Income"
-        [min]="40000"
-        [max]="250000"
-        [step]="5000"
-        [(ngModel)]="retirementIncome"
-        (ionChange)="onSliderChange()"
-      ></ion-range>
+      <!-- Yearly Income Goal -->
+      <div class="slider-group">
+        <div class="slider-header">
+          <label class="slider-label">Yearly Income Goal</label>
+          <div class="value-badge">
+            <span class="value-text">${{ formattedRetirementIncome }}</span>
+          </div>
+        </div>
+        <div class="slider-wrapper">
+          <input
+            type="range"
+            class="native-slider"
+            [min]="40000"
+            [max]="200000"
+            [step]="5000"
+            [(ngModel)]="retirementIncome"
+            (ngModelChange)="onSliderChange()"
+            [style.background]="getSliderGradient(retirementIncome, 40000, 200000)"
+          />
+        </div>
+        <div class="slider-limits">
+          <span>$40K</span>
+          <span>$200K</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Info tip -->
+    <div class="info-tip">
+      <span class="material-symbols-outlined info-icon">info</span>
+      <p class="info-text">
+        Based on FRED's default portfolio's <strong>10% average annual return</strong>. Past performance does not guarantee future results.
+      </p>
     </div>
 
   </div>
 </ion-content>
 
 <ion-footer class="ion-no-border">
-  <div class="footer-container">
-    <!-- NEW: Expandable calculation info card -->
-    <div class="calculation-info-card" [class.expanded]="isCalculationExpanded">
-      <p class="dynamic-result-text" (click)="toggleCalculationInfo()">
-        With this setup, you can have financial independence in just <strong>{{ timeToFI }} years</strong>. 
-        <ion-icon 
-          [name]="isCalculationExpanded ? 'chevron-up' : 'information-circle-outline'" 
-          class="info-icon">
-        </ion-icon>
-        <br/>
-        Next, we'll show you proven strategies to turn this wealth into lifetime income.
-      </p>
-      
-      <div class="calculation-details" *ngIf="isCalculationExpanded">
-        <div class="calculation-explanation">
-          <p><strong>Your personalized timeline isn't a guess—it's a projection based on a proven wealth-building formula.</strong></p>
-          <p>We calculate the portfolio size needed to support your desired annual income, using a sustainable 4% withdrawal rate. We then estimate how long your monthly investments, growing at a conservative 10% average annual return, will take to reach that goal.</p>
-          <p>The result is a realistic estimate of your journey to financial independence.</p>
-        </div>
-      </div>
-    </div>
-    
-    <!-- NEW: The Call to Action -->
-    <ion-button expand="block" (click)="viewMyPlan()" class="cta-main">
-      See My FI Plan
-    </ion-button>
+  <div class="cta-footer">
+    <button class="cta-btn" (click)="viewMyPlan()">
+      See My Plan
+      <span class="material-symbols-outlined">arrow_forward</span>
+    </button>
   </div>
 </ion-footer>
 
+<div class="loading-veil" [class.veil-hidden]="isReady"></div>

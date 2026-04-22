@@ -1,0 +1,99 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <div class="header-inner">
+      <button class="back-btn" (click)="goBack()">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      </button>
+      <h2 class="header-title">Upload Documents</h2>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="upload-content">
+  <div class="content-inner">
+
+    <!-- Hero — top-pinned -->
+    <div class="hero-section">
+      <div class="hero-icon-wrap">
+        <span class="material-symbols-outlined hero-icon">upload_file</span>
+      </div>
+      <h1 class="hero-title">Additional verification needed.</h1>
+      <p class="hero-subtitle">Alpaca has flagged your account for additional review. Upload a document to complete your verification.</p>
+    </div>
+
+    <!-- Center zone -->
+    <div class="center-zone">
+
+      <!-- Document type selector -->
+      <div class="form-section">
+        <span class="field-label">DOCUMENT TYPE</span>
+        <div class="select-wrapper">
+          <select class="field-select" [value]="selectedDocumentType" (change)="onDocumentTypeChange($event)">
+            <option value="" disabled selected>Select document type...</option>
+            <option *ngFor="let dt of documentTypes" [value]="dt.value">{{ dt.label }}</option>
+          </select>
+          <span class="select-arrow material-symbols-outlined">expand_more</span>
+        </div>
+      </div>
+
+      <!-- File picker drop zone -->
+      <div class="form-section">
+        <span class="field-label">FILE</span>
+        <input id="file-input" type="file" accept="image/*,.pdf" class="hidden-file-input" (change)="onFileSelected($event)" />
+
+        <!-- Drop zone (tap to pick file) -->
+        <div class="drop-zone" (click)="triggerFilePicker()" [class.drop-zone-has-file]="selectedFile">
+
+          <!-- No file selected -->
+          <ng-container *ngIf="!selectedFile">
+            <span class="material-symbols-outlined drop-icon">attach_file</span>
+            <p class="drop-text">Tap to select a file</p>
+            <p class="drop-hint">Images or PDF, max 10 MB</p>
+          </ng-container>
+
+          <!-- File selected: image preview -->
+          <ng-container *ngIf="selectedFile && filePreviewUrl">
+            <img [src]="filePreviewUrl" class="file-preview-img" alt="Selected document" />
+            <p class="file-name">{{ selectedFile.name }}</p>
+            <p class="file-meta">{{ formatFileSize(selectedFile.size) }} &bull; Tap to change</p>
+          </ng-container>
+
+          <!-- File selected: PDF (no preview) -->
+          <ng-container *ngIf="selectedFile && !filePreviewUrl">
+            <span class="material-symbols-outlined drop-icon pdf-icon">description</span>
+            <p class="file-name">{{ selectedFile.name }}</p>
+            <p class="file-meta">{{ formatFileSize(selectedFile.size) }} &bull; Tap to change</p>
+          </ng-container>
+
+        </div>
+
+        <!-- File error -->
+        <div *ngIf="fileError" class="file-error">
+          <span class="material-symbols-outlined">error</span>
+          <span>{{ fileError }}</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="cta-footer">
+    <button
+      class="cta-btn"
+      type="button"
+      (click)="uploadDocument()"
+      [disabled]="!canUpload || isLoading"
+      [class.btn-visible]="canUpload && !isLoading">
+      <ng-container *ngIf="!isLoading">
+        <span>Upload Document</span>
+        <span class="material-symbols-outlined">cloud_upload</span>
+      </ng-container>
+      <ng-container *ngIf="isLoading">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>Uploading...</span>
+      </ng-container>
+    </button>
+  </div>
+</ion-footer>

@@ -1,9 +1,6 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
     <div class="header-inner">
-      <button class="back-btn" (click)="goBack()">
-        <span class="material-symbols-outlined">arrow_back_ios_new</span>
-      </button>
       <h2 class="header-title">Investment Schedule</h2>
     </div>
   </ion-toolbar>
@@ -58,7 +55,8 @@
             type="date"
             [(ngModel)]="schedule.startDate"
             (change)="onStartDateChange($any($event).target.value)"
-            [min]="getMinDate()" />
+            [min]="getMinDate()"
+            [disabled]="schedule.payFrequency === 'SEMI_MONTHLY'" />
         </div>
       </div>
 
@@ -69,7 +67,7 @@
       <span class="material-symbols-outlined info-tip-icon">info</span>
       <p class="info-tip-text">
         Recommended: <strong>{{ formatCurrency(monthlyGoal / (getSelectedFrequencyDetails()?.paychecksPerMonth || 1)) }}</strong>
-        to meet your <strong>{{ formatCurrency(monthlyGoal) }}/mo</strong> goal
+        to meet <strong>{{ formatCurrency(monthlyGoal) }}/mo</strong> goal
       </p>
     </div>
 
@@ -98,7 +96,7 @@
     </div>
 
     <!-- Section 5: ACATS Transfer -->
-    <div class="form-section transfer-section">
+    <div class="form-section transfer-section" style="margin-bottom: 0px;">
       <div class="disclosure-row">
         <div class="disclosure-text">
           <h3>Transfer existing assets?</h3>

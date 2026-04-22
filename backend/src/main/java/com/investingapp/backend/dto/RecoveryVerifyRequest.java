@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class RecoveryVerifyRequest {
-    private String ssn;
+    private String email;
     private String otp;
 }

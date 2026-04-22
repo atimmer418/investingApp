@@ -1,21 +1,22 @@
-// Use CSS variables for easy theme management
+// --- Force light mode regardless of system theme ---
 :host {
+  --gs-primary: #2563EB;
+  --gs-bg: #ffffff;
+  --gs-text: #0f172a;
+  --gs-gray: #6b7280;
+  --gs-card-bg: #f5f3ef;
+
   --ion-background-color: #ffffff;
-  --ion-text-color: #1c1c1e;
-  --ion-text-color-light: #8e8e93;
-  --ion-color-primary: #007aff; // A classic iOS blue
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
 }
 
 .get-started-content {
-  // Use flexbox to structure the page into two main sections: swiper and footer
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  --background: var(--gs-bg);
 }
 
+// --- Page wrapper with fade transition ---
 .page-wrapper {
-  display: flex;
-  flex-direction: column;
   height: 100%;
   opacity: 1;
   transition: opacity 0.4s ease-out;
@@ -25,144 +26,375 @@
   }
 }
 
+// --- Swiper container ---
 swiper-container {
-  // The swiper should take up all available space, pushing the footer down
-  flex: 1;
   width: 100%;
   height: 100%;
 
-  // --- Styling the Pagination Dots ("Breadcrumbs") ---
-  // This targets the pagination container itself
   &::part(pagination) {
-    bottom: 20px; // Position them nicely above the buttons
+    bottom: 18px;
   }
 
-  // This targets an individual dot
   &::part(bullet) {
-    background: var(--ion-text-color-light);
-    opacity: 0.4;
-    width: 8px;
-    height: 8px;
+    background: #d1d5db;
+    opacity: 1;
+    width: 6px;
+    height: 6px;
     transition: all 0.3s ease;
   }
 
-  // This targets the currently active dot
   &::part(bullet-active) {
-    background: var(--ion-color-primary);
-    opacity: 1;
-    width: 24px; // Make the active dot wider for a modern look
-    border-radius: 8px;
+    background: var(--gs-primary);
+    width: 20px;
+    border-radius: 6px;
   }
 }
 
-.slide-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 0 40px; // Generous horizontal padding
-  height: 100%;
-  box-sizing: border-box;
-
-  .slide-image {
-    max-height: 220px;
-    margin-bottom: 48px;
-  }
-
-  h2 {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 16px;
-    color: var(--ion-text-color);
-  }
-
-  p {
-    font-size: 17px;
-    line-height: 1.6;
-    color: var(--ion-text-color-light);
-  }
-}
-
-swiper-container,
 swiper-slide {
   height: 100%;
   overflow: hidden;
 }
 
-.footer-cta {
-  // This contains the buttons at the bottom of the screen
-  padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px); // Safe area for iPhone home bar
-  padding-left: 24px;
-  padding-right: 24px;
-  padding-top: 16px;
-  overflow: hidden; 
-  position: absolute;
-  bottom: 60px; // Adjust this to sit right above the swiper pagination
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90%; // or any desired width
-  z-index: 10; // ensure it's above slide content
+// --- Slide inner (scrollable if needed on small devices) ---
+.slide-inner {
+  height: 100%;
+  overflow-y: auto;
+  padding: 100px 28px 72px;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  font-family: 'Manrope', sans-serif;
+}
 
-  .cta-main {
-    width: 100%;
-    --border-radius: 12px;
-    font-weight: 600;
-    height: 50px;
-    text-transform: none;
-    font-size: 17px;
-    transition: opacity 0.3s ease;
+// =============================================================
+// TAG PILLS
+// =============================================================
+.slide-tag {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 20px;
+  margin-bottom: 20px;
 
-    // Style for the disabled state
-    &[disabled] {
-      opacity: 0.4;
-    }
+  &.slide-tag--amber {
+    background: #fef3c7;
+    color: #92400e;
   }
 
-  .cta-secondary {
-    --color: var(--ion-color-primary);
-    font-weight: 500;
-    text-transform: none;
-    font-size: 16px;
+  &.slide-tag--teal {
+    background: #ccfbf1;
+    color: #065f46;
+  }
+
+  &.slide-tag--blue {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  &.slide-tag--purple {
+    background: #fce7f3;
+    color: #9d174d;
+  }
+
+  &.slide-tag--green {
+    background: #dcfce7;
+    color: #14532d;
   }
 }
 
-// This is the wrapper for the primary button
-.cta-primary-wrapper {
-  // We use a custom animation property
-  animation: slide-up-fade-in 0.6s ease-out forwards;
+// =============================================================
+// HEADLINE
+// =============================================================
+.slide-headline {
+  font-family: 'Manrope', sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.22;
+  color: var(--gs-text);
+  margin: 0 0 16px 0;
+  display: flex;
+  flex-direction: column;
 }
 
-// This wrapper is for the secondary button
-.cta-secondary {
-  // We can add a subtle fade-in to this one as well
-  animation: fade-in 0.5s 0.2s ease-out forwards;
-  opacity: 0; // Start transparent
+.headline-line {
+  display: block;
 }
 
-// --- Define the Keyframe Animations ---
-
-// Keyframes for the primary button's entrance
-@keyframes slide-up-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(100%); // Start completely below the view
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0); // End in its natural position
-  }
+.headline-italic {
+  font-style: italic;
 }
 
-// A simpler fade-in for the secondary button
-@keyframes fade-in {
-  from {
-    opacity: 0;
+// =============================================================
+// BODY TEXT
+// =============================================================
+.slide-body {
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--gs-text);
+  margin: 0 0 16px 0;
+
+  &.slide-body--gap {
+    margin-top: 12px;
+    margin-bottom: 16px;
   }
-  to {
-    opacity: 1;
+
+  strong {
+    font-weight: 700;
+    color: var(--gs-text);
   }
 }
 
-// You can remove the [disabled] style for the button, as it's no longer needed
-// .cta-main[disabled] { ... } // DELETE THIS
+// Closing tagline used on slides 2, 3
+.slide-footer-text {
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: var(--gs-text);
+  margin: 16px 0 0 0;
+
+  strong {
+    font-weight: 700;
+  }
+}
+
+// =============================================================
+// SLIDE 1 — Comparison Cards
+// =============================================================
+.comparison-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.comp-card {
+  background: var(--gs-card-bg);
+  border-radius: 14px;
+  padding: 14px 14px 16px;
+}
+
+.comp-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gs-gray);
+  margin-bottom: 4px;
+}
+
+.comp-amount {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 4px;
+
+  &.comp-amount--green { color: #166534; }
+  &.comp-amount--amber { color: #92400e; }
+}
+
+.comp-sub {
+  font-size: 10.5px;
+  color: var(--gs-gray);
+  line-height: 1.4;
+}
+
+// =============================================================
+// SLIDE 2 — Growth Chart
+// =============================================================
+.chart-card {
+  background: var(--gs-card-bg);
+  border-radius: 14px;
+  padding: 16px 16px 10px;
+  margin-top: 4px;
+}
+
+.growth-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.chart-x-axis {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 4px 0;
+  font-family: 'Manrope', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--gs-gray);
+}
+
+// =============================================================
+// SLIDE 3 — Retirement Strategy Chips
+// =============================================================
+.strategy-container {
+  background: var(--gs-card-bg);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 4px;
+}
+
+.strategy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.strategy-chip {
+  border-radius: 12px;
+  padding: 10px 8px;
+  text-align: center;
+
+  &.strategy-chip--blue  { background: #dbeafe; }
+  &.strategy-chip--teal  { background: #ccfbf1; }
+  &.strategy-chip--purple { background: #ede9fe; }
+}
+
+.chip-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 5px;
+
+  .strategy-chip--blue &  { color: #1e40af; }
+  .strategy-chip--teal &  { color: #065f46; }
+  .strategy-chip--purple & { color: #5b21b6; }
+}
+
+.chip-sub {
+  font-size: 9.5px;
+  line-height: 1.4;
+  color: var(--gs-gray);
+}
+
+.strategy-helper {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11.5px;
+  color: var(--gs-gray);
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+}
+
+// =============================================================
+// SLIDE 4 — Schedule Preview
+// =============================================================
+.schedule-preview {
+  margin-top: 4px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--gs-card-bg);
+}
+
+.schedule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.055);
+
+  &.schedule-row--last {
+    border-bottom: none;
+  }
+}
+
+.schedule-label {
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--gs-gray);
+}
+
+.schedule-value-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.schedule-value {
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gs-text);
+}
+
+.schedule-synced {
+  font-family: 'Manrope', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: #065f46;
+  background: #ccfbf1;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+// =============================================================
+// SLIDE 5 — Effort Cards + CTA
+// =============================================================
+.effort-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+  margin-bottom: 24px;
+}
+
+.effort-card {
+  background: var(--gs-card-bg);
+  border-radius: 14px;
+  padding: 16px 14px;
+}
+
+.effort-label {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--gs-gray);
+  margin-bottom: 6px;
+}
+
+.effort-value {
+  font-family: 'Manrope', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--gs-text);
+}
+
+.effort-sub {
+  font-family: 'Manrope', sans-serif;
+  font-size: 10.5px;
+  color: var(--gs-gray);
+  margin-top: 4px;
+}
+
+// --- CTA Button ---
+.cta-main-btn {
+  width: 100%;
+  height: 56px;
+  background: var(--gs-primary);
+  color: white;
+  font-family: 'Manrope', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
+  transition: all 0.15s ease;
+
+  .cta-icon {
+    font-size: 20px;
+  }
+
+  &:active {
+    transform: scale(0.99);
+    background: #1d4ed8;
+  }
+}

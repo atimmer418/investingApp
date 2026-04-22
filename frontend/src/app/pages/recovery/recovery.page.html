@@ -1,9 +1,11 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/login" color="dark" text="" icon="chevron-back-outline"></ion-back-button>
-    </ion-buttons>
-    <ion-title color="dark">Account Recovery</ion-title>
+    <div *ngIf="step === 'email'" class="header-inner">
+      <button class="back-btn" (click)="goBack()">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      </button>
+      <h2 class="header-title">Account Recovery</h2>
+    </div>
   </ion-toolbar>
 </ion-header>
 
@@ -13,44 +15,53 @@
       <ion-icon name="shield-checkmark-outline" color="primary"></ion-icon>
     </div>
 
-    <div *ngIf="step === 'ssn'">
-      <h2>Identity Verification</h2>
-      <p>Please open Persona inquiry here and now!</p>
+    <div *ngIf="step === 'email'">
+      <h2>Already have an account?</h2>
+      <p>Enter the email you used when you created your account. We'll send you a 6-digit recovery code.</p>
 
-      <ion-item class="input-item" lines="none">
-        <ion-icon name="key-outline" slot="start" color="medium"></ion-icon>
-        <ion-input 
-          [(ngModel)]="ssn" 
-          placeholder="Enter SSN" 
-          type="password"
+      <div class="email-field">
+        <span class="email-label">EMAIL</span>
+        <ion-input
+          [(ngModel)]="email"
+          placeholder="your@email.com"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
         ></ion-input>
-      </ion-item>
+      </div>
 
-      <ion-button expand="block" (click)="sendCode()" [disabled]="!ssn || isLoading" class="action-btn">
+      <ion-button expand="block" (click)="sendCode()" [disabled]="!isEmailValid || isLoading" class="action-btn">
         <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
         <span *ngIf="!isLoading">Send Recovery Code</span>
       </ion-button>
+
+      <p class="support-link">
+        Still can't get in?
+        <a href="mailto:help@fredvested.com?subject=FRED%20Account%20Recovery%20Help">Contact support</a>
+      </p>
     </div>
 
     <div *ngIf="step === 'otp'">
       <h2>Enter Recovery Code</h2>
-      <p>We sent a code to the email associated with this SSN.</p>
+      <p>We sent a 6-digit code to <strong>{{ email }}</strong>.<br>It expires in 3 minutes.</p>
 
-      <ion-item class="input-item" lines="none">
-        <ion-icon name="mail-outline" slot="start" color="medium"></ion-icon>
-        <ion-input 
-          [(ngModel)]="otp" 
-          placeholder="Enter 6-digit Code" 
-          type="number"
+      <div class="email-field">
+        <span class="email-label">RECOVERY CODE</span>
+        <ion-input
+          [(ngModel)]="otp"
+          placeholder="000000"
+          type="text"
+          inputmode="numeric"
+          maxlength="6"
         ></ion-input>
-      </ion-item>
+      </div>
 
-      <ion-button expand="block" (click)="verifyCode()" [disabled]="!otp || isLoading" class="action-btn">
+      <ion-button expand="block" (click)="verifyCode()" [disabled]="!otp || isLoading || ('' + otp).length !== 6" class="action-btn">
         <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
         <span *ngIf="!isLoading">Verify & Recover</span>
       </ion-button>
-      
-      <ion-button fill="clear" expand="block" (click)="step = 'ssn'" [disabled]="isLoading">
+
+      <ion-button fill="clear" expand="block" (click)="step = 'email'" [disabled]="isLoading">
         Back
       </ion-button>
     </div>

@@ -5,6 +5,8 @@ import { PasskeyService } from '../../services/passkey.service';
 import { get } from '@github/webauthn-json';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
+import { NativePasskeyService } from '../../services/native-passkey.service';
+import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import { CommonModule } from '@angular/common';
 import { addIcons } from 'ionicons';
 import { lockClosedOutline, fingerPrintOutline } from 'ionicons/icons';
@@ -23,14 +25,16 @@ export class PasskeyPromptComponent implements OnInit {
    * When absent, falls back to discoverable credentials (usernameless flow).
    */
   @Input() userEmail?: string;
+  @Input() jwtExpired = false;
   isUnlocking = false;
 
   constructor(
     private modalController: ModalController,
     private passkeyService: PasskeyService,
     private authService: AuthService,
-    private toastService: ToastService
-  ) { 
+    private toastService: ToastService,
+    private nativePasskeyService: NativePasskeyService
+  ) {
     addIcons({ lockClosedOutline, fingerPrintOutline });
   }
 
@@ -50,7 +54,10 @@ export class PasskeyPromptComponent implements OnInit {
     if (this.isUnlocking) return;
     this.isUnlocking = true;
 
-    // Use account-specific flow if we know which user should be authenticating
+    // Always use the full FIDO2 ceremony (ASAuthorizationController on iOS, WebAuthn on web).
+    // This guarantees the "Use passkey" sheet always appears, avoids the LAContext biometric
+    // session cache (which can silently succeed with no visible UI), and always issues a fresh
+    // JWT from the backend regardless of whether the current token is expired or still valid.
     const start$ = this.userEmail
       ? this.passkeyService.startAuthenticationForUser(this.userEmail)
       : this.passkeyService.startAuthentication();
@@ -77,18 +84,36 @@ export class PasskeyPromptComponent implements OnInit {
             throw new Error('Missing key: challenge in request options');
           }
           
-          // Trigger the browser/device WebAuthn prompt
-          // If requestOptions already has publicKey, pass it directly. 
-          // Otherwise wrap it (legacy behavior if backend returned just the inner part)
-          const credential = requestOptions.publicKey ? 
-              await get(requestOptions) : 
+          const publicKey = requestOptions.publicKey ?? requestOptions;
+          const rpId = publicKey.rpId ?? publicKey.rp?.id;
+          const userVerification = publicKey.userVerification;
+          const allowedCredentials = (publicKey.allowCredentials ?? []).map((c: any) => ({ id: c.id }));
+
+          let credential: any;
+          if (this.nativePasskeyService.isAvailable) {
+            credential = await this.nativePasskeyService.authenticate({
+              challenge,
+              rpId,
+              userVerification,
+              allowedCredentials
+            });
+          } else {
+            credential = requestOptions.publicKey ?
+              await get(requestOptions) :
               await get({ publicKey: requestOptions });
-          
+          }
+
           // Send the credential back to the server
           this.passkeyService.finishAuthentication(credential, response.sessionId).subscribe({
             next: (finishResponse) => {
               if (finishResponse.success) {
-                this.showToast('Authentication successful', 'success');
+                // Always update auth state — stores fresh JWT, sets isLoggedIn, loads DB progress.
+                // Needed whether JWT was expired (resumes navigation) or still valid (refreshes token).
+                this.authService.handleSuccessfulAuthentication(
+                  finishResponse.jwtToken,
+                  finishResponse.userId,
+                  finishResponse.email
+                );
                 this.modalController.dismiss({ authenticated: true });
               } else {
                 this.showToast('Authentication failed: ' + finishResponse.message, 'danger');
@@ -101,11 +126,12 @@ export class PasskeyPromptComponent implements OnInit {
               this.isUnlocking = false;
             }
           });
-        } catch (error) {
+        } catch (error: any) {
+          if (error?.message === 'USER_CANCELLED') {
+            this.isUnlocking = false;
+            return;
+          }
           console.error('WebAuthn error', error);
-          // User might have cancelled the prompt
-          // Don't show toast for cancellation to avoid annoyance on auto-prompt
-          // this.showToast('Authentication cancelled or failed.', 'warning');
           this.isUnlocking = false;
         }
       },

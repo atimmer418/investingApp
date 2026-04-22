@@ -686,6 +686,16 @@ public class PortfolioDashboardService {
                         timestamps.size() == equityValues.size()) {
 
                     for (int i = 0; i < timestamps.size(); i++) {
+                        // Skip entries where equity is null (non-trading days, missing data)
+                        JsonNode equityNode = equityValues.get(i);
+                        if (equityNode == null || equityNode.isNull()) {
+                            continue;
+                        }
+                        String equityText = equityNode.asText();
+                        if ("null".equals(equityText) || equityText.trim().isEmpty()) {
+                            continue;
+                        }
+
                         // Convert timestamp to date string (timestamps are in epoch seconds)
                         long epochSeconds = timestamps.get(i).asLong();
 
@@ -697,34 +707,48 @@ public class PortfolioDashboardService {
                                 .toLocalDate();
                         String dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
-                        BigDecimal equity = new BigDecimal(equityValues.get(i).asText());
+                        BigDecimal equity;
+                        try {
+                            equity = new BigDecimal(equityText);
+                        } catch (NumberFormatException e) {
+                            logger.warn("Skipping portfolio history entry at index {} with unparseable equity '{}'", i, equityText);
+                            continue;
+                        }
 
                         dates.add(dateStr);
                         values.add(equity);
 
                         // Also parse profit/loss data if available
                         if (profitLossValues != null && profitLossValues.isArray() && i < profitLossValues.size()) {
-                            BigDecimal pl = new BigDecimal(profitLossValues.get(i).asText());
-                            profitLoss.add(pl);
+                            JsonNode plNode = profitLossValues.get(i);
+                            if (plNode != null && !plNode.isNull()) {
+                                String plText = plNode.asText();
+                                if (!"null".equals(plText) && !plText.trim().isEmpty()) {
+                                    try {
+                                        profitLoss.add(new BigDecimal(plText));
+                                    } catch (NumberFormatException e) {
+                                        logger.warn("Skipping profit_loss at index {} with unparseable value '{}'", i, plText);
+                                    }
+                                }
+                            }
                         }
 
                         // Parse profit/loss percent data if available
                         if (profitLossPercentValues != null && profitLossPercentValues.isArray()
                                 && i < profitLossPercentValues.size()) {
-                            // Alpaca returns decimal (e.g. 0.05 for 5%), we might want to keep it as is or
-                            // convert to percent
-                            // Frontend expects percent (e.g. 5.0), but let's check what Alpaca returns.
-                            // Usually Alpaca returns 0.015 for 1.5%.
-                            // Let's store it as is, and frontend can multiply by 100 if needed, OR multiply
-                            // here.
-                            // Existing code for totalGainLossPercent multiplies by 100.
-                            // Let's multiply by 100 here to be consistent with "Percent" naming in other
-                            // places if they are 0-100.
-                            // Wait, totalGainLossPercent in DashboardData is 0-100 based.
-                            // Let's multiply by 100.
-                            BigDecimal plPct = new BigDecimal(profitLossPercentValues.get(i).asText())
-                                    .multiply(new BigDecimal("100"));
-                            profitLossPercent.add(plPct);
+                            JsonNode plPctNode = profitLossPercentValues.get(i);
+                            if (plPctNode != null && !plPctNode.isNull()) {
+                                String plPctText = plPctNode.asText();
+                                if (!"null".equals(plPctText) && !plPctText.trim().isEmpty()) {
+                                    try {
+                                        BigDecimal plPct = new BigDecimal(plPctText)
+                                                .multiply(new BigDecimal("100"));
+                                        profitLossPercent.add(plPct);
+                                    } catch (NumberFormatException e) {
+                                        logger.warn("Skipping profit_loss_pct at index {} with unparseable value '{}'", i, plPctText);
+                                    }
+                                }
+                            }
                         }
                     }
                 }

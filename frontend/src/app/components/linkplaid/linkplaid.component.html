@@ -14,8 +14,8 @@
 
     <!-- Hero — top-pinned -->
     <div class="hero-section">
-      <h1 class="hero-title">Seamless investing<br>starts here.</h1>
-      <p class="hero-subtitle">Link your primary checking account to enable automatic deposits and see your timeline update in real-time.</p>
+      <h1 class="hero-title">Invest on autopilot.</h1>
+      <p class="hero-subtitle">Link your primary checking account to enable automatic deposits.</p>
     </div>
 
     <!-- Center zone — vertically centered in remaining space -->
@@ -73,7 +73,7 @@
       </div>
 
       <!-- Status feedback (non-loading only) -->
-      <div *ngIf="statusMessage && !isLoading" class="feedback-zone">
+      <div *ngIf="statusMessage && !isLoading && statusMessage !== 'Ready to link your bank.'" class="feedback-zone">
         <span
           [class.feedback-error]="statusMessage.includes('Error') || statusMessage.includes('error') || statusMessage.includes('Could not')"
           [class.feedback-success]="!(statusMessage.includes('Error') || statusMessage.includes('error') || statusMessage.includes('Could not'))">
@@ -107,4 +107,4 @@
   </div>
 </ion-footer>
 
-<div class="loading-veil" [class.veil-hidden]="isPlaidReady"></div>
+<div class="loading-veil" [class.veil-hidden]="isReady"></div>

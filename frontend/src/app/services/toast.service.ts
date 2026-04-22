@@ -11,7 +11,7 @@ export class ToastService {
 
   constructor(private toastController: ToastController) {}
 
-  async showToast(message: string, color: string = 'primary', duration: number = 4500) {
+  async showToast(message: string, color: string = 'primary', duration: number = 3000) {
     // Create the new toast
     const toast = await this.toastController.create({
       message: message,

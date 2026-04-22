@@ -49,6 +49,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByDeviceIdAndAuthFinalizeCompleted(@Param("deviceId") String deviceId,
             @Param("completed") boolean authFinalizeCompleted);
 
+    // Find users whose account status is non-terminal (i.e., not ACTIVE or REJECTED)
+    // and non-null — used by the account status poller.
+    @Query("SELECT u FROM User u WHERE u.accountStatus IS NOT NULL AND u.accountStatus NOT IN ('ACTIVE', 'REJECTED')")
+    List<User> findUsersWithPendingAccountStatus();
+
+    // Find ACTIVE users who have Plaid data but no ACH relationship yet —
+    // used by the ACH setup retry scheduler.
+    @Query("SELECT u FROM User u WHERE u.accountStatus = 'ACTIVE' AND u.alpacaAccountId IS NOT NULL AND u.plaidAccessToken IS NOT NULL AND u.alpacaAchRelationshipId IS NULL")
+    List<User> findActiveUsersNeedingAchSetup();
+
     // You can add more custom query methods here as needed following Spring Data
     // JPA conventions
     // e.g., List<User> findByLastName(String lastName);

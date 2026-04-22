@@ -1,151 +1,377 @@
-:host.fade-in-from-get-started {
-  animation: survey-fade-in 0.4s ease-out forwards;
-}
-
-@keyframes survey-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-// Use CSS variables for a consistent theme
+// --- Force light mode for this component regardless of system theme ---
 :host {
-  --ion-background-color: #f2f2f7; // A very light, clean background
-  --ion-toolbar-background: var(--ion-background-color);
-  --ion-text-color: #000000;
-  --ion-color-primary: #007aff;
-  --ion-color-medium: #8e8e93;
+  --survey-primary: #2563EB;
+  --survey-bg: #f8fafc;
+  --survey-text: #0f172a;
+  --survey-gray: #6b7280;
+  --survey-track-empty: #e5e7eb;
+
+  // Override Ionic theme variables so dark.system.css doesn't bleed in
+  --ion-background-color: #f8fafc;
+  --ion-toolbar-background: #f8fafc;
+  --ion-toolbar-color: #0f172a;
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
+  --ion-footer-background: #f8fafc;
 }
 
+// --- Header ---
 ion-toolbar {
-  --border-width: 0 !important;
-}
-
-ion-progress-bar {
-  height: 3px;
-  --progress-background: var(--ion-color-primary);
-}
-
-// Unified container for the questions
-.survey-form-container {
-  padding: 16px;
-}
-
-.question-wrapper {
-  margin-bottom: 48px;
-
-  h2 {
-    font-size: 26px;
-    font-weight: 700;
-    line-height: 1.25;
-    margin: 0 0 8px 0;
-  }
-
-  .helper-text {
-    font-size: 16px;
-    color: var(--ion-color-medium);
-    margin: 0 0 32px 0;
-  }
-}
-
-// --- Input Styling (largely the same, slightly refined) ---
-.input-display-wrapper {
-  display: flex;
-  align-items: baseline;
-  border-bottom: 2px solid #e5e5ea;
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-
-  .currency-symbol, .per-month-label {
-    font-weight: 500;
-    color: var(--ion-color-medium);
-  }
-
-  .currency-symbol { font-size: 28px; margin-right: 4px; }
-  .per-month-label { font-size: 16px; margin-left: 4px; }
-
-  ion-input {
-    font-size: 44px;
-    font-weight: 700;
-    --padding-start: 0;
-    --padding-end: 8px;
-    max-width: fit-content;
-  }
-}
-
-ion-range {
-  --bar-background: #e5e5ea;
-  --bar-background-active: var(--ion-color-primary);
-  --knob-background: #ffffff;
-  --knob-border: 1px solid #e5e5ea;
-  --knob-box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  padding: 0;
-  margin-top: 16px;
-}
-
-// --- NEW "GLassmorphic" Footer Styling ---
-ion-footer {
-  // This removes the default footer background and border
-  --background: transparent;
+  --background: #f8fafc;
   --border-width: 0;
-  // This allows the footer to sit on top of the content
+  --min-height: 56px;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--survey-text);
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+
+  &:active {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+}
+
+.header-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  text-align: center;
+  flex: 1;
+  margin: 0;
+  // Offset to visually center past the back button
+  padding-right: 40px;
+  color: var(--survey-text);
+}
+
+// --- Content ---
+ion-content {
+  --background: var(--survey-bg);
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+.content-inner {
+  padding: 0 24px 20px 24px;
+  font-family: 'Manrope', sans-serif;
+}
+
+// --- Hero Section ---
+.hero-section {
+  padding: 16px 0;
+}
+
+.hero-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  text-align: center;
+  margin: 0;
+  color: var(--survey-text);
+}
+
+.hero-subtitle {
+  text-align: center;
+  font-size: 14px;
+  color: var(--survey-gray);
+  margin: 8px 0 0 0;
+}
+
+// --- Timeline Card ---
+.timeline-card {
+  position: relative;
+  width: 100%;
+  height: 192px;
+  border-radius: 16px;
+  overflow: hidden;
+  background-image: url('/assets/images/whenPigsFly-2.png');
+  background-size: cover;
+  background-position: center;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+.timeline-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+}
+
+.timeline-footer {
   position: absolute;
   bottom: 0;
+  left: 0;
   width: 100%;
+  padding: 24px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
 }
 
-.footer-container {
-  padding: 16px 24px calc(env(safe-area-inset-bottom, 10px)) 24px;
+.timeline-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timeline-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.timeline-years {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.years-number {
+  color: white;
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+
+.years-unit {
+  color: var(--survey-primary);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.portfolio-badge {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
   text-align: center;
-  
-  // The "Frosted Glass" Effect
-  background: rgba(255, 255, 255, 0.75); // Semi-transparent white
-  backdrop-filter: blur(20px); // This is the key for the blur effect
-  -webkit-backdrop-filter: blur(20px); // Safari support
-  
-  // Add a subtle border to the top to separate it from the content
-  border-top: 0.5px solid rgba(0, 0, 0, 0.1);
-  
-  .dynamic-result-text {
-    font-size: 16px;
-    line-height: 1.4; // Slightly tighter line-height to help it fit
-    color: var(--ion-text-color); // Darker text for better contrast on the blur
-    margin: 0 0 16px 0;
-    font-weight: 500;
-    
-    strong {
-      font-weight: 700;
-      color: var(--ion-color-primary); // Highlight numbers in primary color
+}
+
+.portfolio-badge-label {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.portfolio-badge-value {
+  display: block;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+// --- Sliders Section ---
+.sliders-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.slider-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.slider-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--survey-text);
+}
+
+.value-badge {
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 4px 12px;
+  border-radius: 8px;
+}
+
+.value-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--survey-primary);
+}
+
+.slider-wrapper {
+  position: relative;
+  height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+// --- Native Range Input ---
+.native-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+
+  // WebKit thumb (iOS / Safari / Chrome)
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: white;
+    border: 4px solid var(--survey-primary);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
     }
   }
-  
-  .cta-main {
-    --border-radius: 12px;
-    font-weight: 600;
-    height: 50px;
-    text-transform: none;
-    font-size: 17px;
+
+  // Firefox thumb
+  &::-moz-range-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: white;
+    border: 4px solid var(--survey-primary);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    cursor: grab;
   }
 }
 
-// Info icon styling
+.slider-limits {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 500;
+  color: #9ca3af;
+  padding: 0 4px;
+}
+
+// --- Info Tip ---
+.info-tip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
 .info-icon {
-  font-size: 18px;
-  color: var(--ion-color-primary);
-  cursor: pointer;
-  margin-left: 4px;
-  vertical-align: middle;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
+  color: var(--survey-primary);
+  font-size: 20px;
+  flex-shrink: 0;
+  font-variation-settings: 'FILL' 1;
+}
 
-  &:hover {
-    opacity: 1;
+.info-text {
+  font-size: 10px;
+  line-height: 1.6;
+  color: #4b5563;
+  margin: 0;
+
+  strong {
+    font-weight: 700;
+    color: var(--survey-text);
   }
 }
 
-// Modal content styling
-.modal-explanation {
+// --- CTA Footer ---
+ion-footer {
+  --background: transparent;
+  --border-width: 0;
+  height: 80px;
+}
+
+.cta-footer {
+  padding: 10px 34px 26px 34px;
+  background: transparent;
+  border-top: 1px solid #f1f5f9;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.07);
+}
+
+.cta-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Manrope', sans-serif;
   font-size: 16px;
-  line-height: 1.6;
-  margin-bottom: 16px;
-  color: var(--ion-text-color);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+
+  &:not(:disabled) {
+    background: #2563eb;
+    color: white;
+    box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
+
+    &:active {
+      transform: scale(0.99);
+      background: #1d4ed8;
+    }
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+}
+
+// --- Loading veil: covers the page until fonts + image are ready ---
+.loading-veil {
+  position: fixed;
+  inset: 0;
+  background: var(--survey-bg);
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+
+  &.veil-hidden {
+    opacity: 0;
+  }
 }

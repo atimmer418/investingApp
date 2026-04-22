@@ -1,3 +1,71 @@
+// --- Force light mode regardless of system theme ---
+:host {
+  --auth-primary: #2563EB;
+  --auth-bg: #f8fafc;
+  --auth-text: #0f172a;
+  --auth-gray: #6b7280;
+
+  --ion-background-color: #f8fafc;
+  --ion-toolbar-background: #f8fafc;
+  --ion-toolbar-color: #0f172a;
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
+}
+
+// --- Toolbar ---
+ion-toolbar {
+  --background: #f8fafc;
+  --border-width: 0;
+  --min-height: 52px;
+}
+
+// --- Header ---
+.header-inner {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--auth-text);
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+
+  &:active {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+}
+
+.header-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  text-align: center;
+  flex: 1;
+  margin: 0;
+  padding-right: 40px;
+  color: var(--auth-text);
+}
+
+// --- Content ---
+ion-content {
+  --background: var(--auth-bg);
+}
+
 .recovery-container {
   display: flex;
   flex-direction: column;
@@ -7,6 +75,7 @@
   text-align: center;
   max-width: 400px;
   margin: 0 auto;
+  font-family: 'Manrope', sans-serif;
 
   .icon-area {
     background: var(--ion-color-light);
@@ -27,20 +96,43 @@
     font-size: 24px;
     font-weight: 700;
     margin-bottom: 8px;
-    color: var(--ion-color-dark);
+    color: var(--auth-text);
   }
 
   p {
-    color: var(--ion-color-medium);
+    color: var(--auth-gray);
     margin-bottom: 32px;
     line-height: 1.5;
   }
 
-  .input-item {
-    --background: var(--ion-color-light);
-    border-radius: 12px;
-    margin-bottom: 24px;
-    --padding-start: 16px;
+  // --- Input field (matches authfinalize underline style) ---
+  .email-field {
+    width: 100%;
+    border-bottom: 2px solid var(--auth-primary);
+    margin-bottom: 32px;
+
+    ion-input {
+      border: none;
+      border-radius: 0;
+      font-size: 18px;
+      font-weight: 500;
+      font-family: 'Manrope', sans-serif;
+      --padding-start: 0;
+      --padding-end: 0;
+      --border-style: none;
+      --border-width: 0;
+      --highlight-height: 0;
+    }
+  }
+
+  .email-label {
+    display: block;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--auth-gray);
   }
 
   .action-btn {
@@ -48,5 +140,18 @@
     height: 50px;
     font-weight: 600;
     margin-bottom: 16px;
+    width: 100%;
+  }
+
+  .support-link {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--auth-gray);
+
+    a {
+      color: var(--auth-primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
   }
 }

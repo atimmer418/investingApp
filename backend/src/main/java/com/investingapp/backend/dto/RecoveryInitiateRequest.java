@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class RecoveryInitiateRequest {
-    private String ssn;
+    private String email;
 }

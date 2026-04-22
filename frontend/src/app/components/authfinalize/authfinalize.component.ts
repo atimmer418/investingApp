@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -12,9 +12,12 @@ import { addIcons } from 'ionicons';
 import { personCircleOutline, helpCircleOutline, lockClosed } from 'ionicons/icons';
 import { environment } from '../../../environments/environment';
 
+import { Keyboard } from '@capacitor/keyboard';
+
 // --- NEW IMPORTS ---
 import { PasskeyService } from '../../services/passkey.service';
 import { AuthService } from '../../services/auth.service';
+import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import { create } from '@github/webauthn-json';
 
 @Component({
@@ -43,6 +46,8 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
   retirementIncome: number | null = null;
   monthlyInvestment: number | null = null;
 
+  keyboardVisible = false;
+
   // for work development
   simulatePasskey: boolean = false; // Toggle this to simulate passkey creation
 
@@ -50,13 +55,16 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
   protected env = environment;
 
   private routeSub: Subscription | undefined;
+  private keyboardShowListener: any;
+  private keyboardHideListener: any;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private navCtrl: NavController,
-    private passkeyService: PasskeyService, // Inject the new service
-    private authService: AuthService
+    private passkeyService: PasskeyService,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {
     addIcons({lockClosed,helpCircleOutline,personCircleOutline});
     this.registerForm = new FormGroup({
@@ -67,7 +75,16 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // Make component accessible from browser console for debugging
     (window as any)['authFinalizeComponent'] = this;
-    
+
+    this.keyboardShowListener = Keyboard.addListener('keyboardWillShow', () => {
+      this.keyboardVisible = true;
+      this.cdr.detectChanges();
+    });
+    this.keyboardHideListener = Keyboard.addListener('keyboardWillHide', () => {
+      this.keyboardVisible = false;
+      this.cdr.detectChanges();
+    });
+
     this.routeSub = this.route.queryParamMap.subscribe(params => {
       const pParam = params.get('p');
       const rIParam = params.get('rI');
@@ -221,6 +238,20 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Diagnostic logging — check WKWebView passkey environment
+    let passkeySupported = false;
+    try {
+      const fn = (window.PublicKeyCredential as any)?.isUserVerifyingPlatformAuthenticatorAvailable;
+      passkeySupported = fn ? await fn.call(window.PublicKeyCredential) : false;
+    } catch (e) {
+      console.warn('[PASSKEY_DIAG] isUserVerifyingPlatformAuthenticatorAvailable threw:', e);
+      passkeySupported = false;
+    }
+    console.log('[PASSKEY_DIAG] origin:', window.location.origin);
+    console.log('[PASSKEY_DIAG] isSecureContext:', window.isSecureContext);
+    console.log('[PASSKEY_DIAG] PublicKeyCredential defined:', typeof (window as any).PublicKeyCredential);
+    console.log('[PASSKEY_DIAG] isUserVerifyingPlatformAuthenticatorAvailable:', passkeySupported);
+
     this.isLoading = true;
     const userEmail = this.email?.value;
 
@@ -257,22 +288,31 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
                   next: (response) => {
                     if (response.success && response.jwtToken) {
                       console.log('SIMULATED registration and login successful!', response);
-                      
-                      // IMPORTANT: Call handleSuccessfulAuthentication to trigger localStorage sync
-                      this.authService.handleSuccessfulAuthentication(response.jwtToken, response.userId || 0, userEmail);
-                      
-                      // Complete the authFinalize step
+
+                      // Store JWT first so completeStep can authenticate against the backend.
+                      // We call handleSuccessfulAuthentication AFTER completeStep so that when
+                      // loadUserProgress fires, the DB already has authFinalizeCompleted=true.
+                      // Without this order, the GET resolves before the PUT and navigation
+                      // routes back to /auth-finalize.
+                      JwtTokenUtils.storeJwtToken(response.jwtToken!, response.userId || 0, userEmail);
+
                       this.authService.completeStep('authFinalize').subscribe({
                         next: () => {
                           console.log('AuthFinalize step completed successfully');
-                          // Now that authFinalize is complete, clear localStorage flags since database is source of truth
+                          // Do NOT clear localStorage flags before handleSuccessfulAuthentication.
+                          // hasLocalProgress=true triggers syncLocalStorageProgressToDatabase,
+                          // which gives a second DB update path and delays loadUserProgress
+                          // until AFTER the sync PUT completes — reducing the race window.
+                          this.authService.handleSuccessfulAuthentication(response.jwtToken!, response.userId || 0, userEmail);
+                          // Clear flags after handleSuccessfulAuthentication has already read
+                          // them for the sync (clearing here is safe since the sync PUT body
+                          // was already constructed synchronously inside handleSuccessfulAuthentication).
                           this.authService.clearLocalStorageProgressFlags();
-                          this.router.navigate(['/kyc-verification'], { replaceUrl: true });
                         },
                         error: (err) => {
                           console.error('Failed to complete AuthFinalize step:', err);
-                          // Still navigate even if progress update fails
-                          this.router.navigate(['/kyc-verification'], { replaceUrl: true });
+                          this.authService.handleSuccessfulAuthentication(response.jwtToken!, response.userId || 0, userEmail);
+                          this.authService.clearLocalStorageProgressFlags();
                         }
                       });
                     } else {
@@ -307,22 +347,24 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
                 next: (response) => {
                   if (response.success && response.jwtToken) {
                     console.log('Registration and login successful!', response);
-                    
-                    // IMPORTANT: Call handleSuccessfulAuthentication to trigger localStorage sync
-                    this.authService.handleSuccessfulAuthentication(response.jwtToken, response.userId || 0, userEmail);
-                    
-                    // Complete the authFinalize step
+
+                    // Store JWT first so completeStep can authenticate against the backend.
+                    // We call handleSuccessfulAuthentication AFTER completeStep so that when
+                    // loadUserProgress fires, the DB already has authFinalizeCompleted=true.
+                    // Without this order, the GET resolves before the PUT and navigation
+                    // routes back to /auth-finalize.
+                    JwtTokenUtils.storeJwtToken(response.jwtToken!, response.userId || 0, userEmail);
+
                     this.authService.completeStep('authFinalize').subscribe({
                       next: () => {
                         console.log('AuthFinalize step completed successfully');
-                        // Now that authFinalize is complete, clear localStorage flags since database is source of truth
+                        this.authService.handleSuccessfulAuthentication(response.jwtToken!, response.userId || 0, userEmail);
                         this.authService.clearLocalStorageProgressFlags();
-                        this.router.navigate(['/kyc-verification'], { replaceUrl: true });
                       },
                       error: (err) => {
                         console.error('Failed to complete AuthFinalize step:', err);
-                        // Still navigate even if progress update fails
-                        this.router.navigate(['/kyc-verification'], { replaceUrl: true });
+                        this.authService.handleSuccessfulAuthentication(response.jwtToken!, response.userId || 0, userEmail);
+                        this.authService.clearLocalStorageProgressFlags();
                       }
                     });
                   } else {
@@ -353,6 +395,12 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
       });
   }
 
+  async dismissKeyboard() {
+    if (this.keyboardVisible) {
+      await Keyboard.hide();
+    }
+  }
+
   recoverAccount() {
     this.router.navigate(['/recovery']);
   }
@@ -368,6 +416,8 @@ export class AuthFinalizeComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.routeSub) this.routeSub.unsubscribe();
+    this.keyboardShowListener?.then((h: any) => h.remove());
+    this.keyboardHideListener?.then((h: any) => h.remove());
   }
 
   /**

@@ -1,0 +1,345 @@
+// --- Force light mode regardless of system theme ---
+:host {
+  --upload-primary: #2563EB;
+  --upload-bg: #f8fafc;
+  --upload-text: #0f172a;
+  --upload-gray: #6b7280;
+  --upload-border: #e5e7eb;
+  --upload-error: #dc2626;
+
+  --ion-background-color: #f8fafc;
+  --ion-toolbar-background: #f8fafc;
+  --ion-toolbar-color: #0f172a;
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
+  --ion-footer-background: #f8fafc;
+}
+
+// --- Toolbar ---
+ion-toolbar {
+  --background: #f8fafc;
+  --border-width: 0;
+  --min-height: 52px;
+}
+
+// --- Header ---
+.header-inner {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--upload-text);
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+
+  &:active {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+}
+
+.header-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  text-align: center;
+  flex: 1;
+  margin: 0;
+  padding-right: 40px;
+  color: var(--upload-text);
+}
+
+// --- Content ---
+ion-content {
+  --background: var(--upload-bg);
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+ion-content::part(scroll) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.content-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px 24px;
+  font-family: 'Manrope', sans-serif;
+}
+
+// --- Hero ---
+.hero-section {
+  flex-shrink: 0;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.hero-icon {
+  font-size: 28px;
+  color: #dc2626;
+  font-variation-settings: 'FILL' 1;
+}
+
+.hero-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  text-align: center;
+  margin: 0;
+  color: var(--upload-text);
+}
+
+.hero-subtitle {
+  font-size: 14px;
+  color: var(--upload-gray);
+  margin: 8px 0 0 0;
+  line-height: 1.4;
+  text-align: center;
+  padding: 0 20px;
+}
+
+// --- Center zone ---
+.center-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// --- Form sections ---
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-label {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--upload-gray);
+}
+
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid var(--upload-primary);
+
+  .select-arrow {
+    position: absolute;
+    right: 0;
+    font-size: 18px;
+    color: var(--upload-gray);
+    pointer-events: none;
+  }
+}
+
+.field-select {
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--upload-text);
+  background: transparent;
+  border: none;
+  padding: 8px 24px 8px 0;
+  outline: none;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+// --- File picker ---
+.hidden-file-input {
+  display: none;
+}
+
+.drop-zone {
+  border: 2px dashed var(--upload-border);
+  border-radius: 14px;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  min-height: 140px;
+  gap: 6px;
+
+  &:active {
+    background: #f8fafc;
+    border-color: var(--upload-primary);
+  }
+
+  &.drop-zone-has-file {
+    border-color: var(--upload-primary);
+    border-style: solid;
+    background: #eff6ff;
+  }
+}
+
+.drop-icon {
+  font-size: 36px;
+  color: var(--upload-gray);
+  font-variation-settings: 'FILL' 0;
+}
+
+.pdf-icon {
+  color: var(--upload-primary);
+  font-variation-settings: 'FILL' 1;
+}
+
+.drop-text {
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--upload-text);
+  margin: 0;
+}
+
+.drop-hint {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  color: var(--upload-gray);
+  margin: 0;
+}
+
+.file-preview-img {
+  max-width: 100%;
+  max-height: 180px;
+  border-radius: 8px;
+  object-fit: cover;
+  margin-bottom: 4px;
+}
+
+.file-name {
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--upload-text);
+  margin: 0;
+  text-align: center;
+  word-break: break-all;
+}
+
+.file-meta {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  color: var(--upload-gray);
+  margin: 0;
+}
+
+// --- File error ---
+.file-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  color: var(--upload-error);
+
+  .material-symbols-outlined {
+    font-size: 16px;
+  }
+}
+
+// --- Footer ---
+ion-footer {
+  --background: transparent;
+  --border-width: 0;
+}
+
+.cta-footer {
+  padding: 14px 18px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  background: white;
+  border-top: 1px solid #f1f5f9;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+
+.cta-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #e5e7eb;
+  color: #9ca3af;
+  box-shadow: none;
+  opacity: 0.7;
+  transform: translateY(4px);
+
+  &.btn-visible {
+    background: #111827;
+    color: white;
+    box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.35);
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  &:not(:disabled).btn-visible:active {
+    transform: scale(0.99);
+    background: #1f2937;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  ion-spinner {
+    width: 18px;
+    height: 18px;
+    color: white;
+  }
+}

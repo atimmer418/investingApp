@@ -59,7 +59,6 @@ ion-toolbar {
   text-align: center;
   flex: 1;
   margin: 0;
-  padding-right: 40px;
   color: var(--schedule-text);
 }
 
@@ -228,6 +227,11 @@ ion-content::part(scroll) {
 
 input[type='date'].field-input {
   color-scheme: light;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
 input[type='number'].field-input {
@@ -431,13 +435,14 @@ input[type='number'].field-input {
 ion-footer {
   --background: transparent;
   --border-width: 0;
+  height: 80px;
 }
 
 .cta-footer {
-  padding: 14px 18px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  padding: 10px 34px 26px 34px;
   background: white;
   border-top: 1px solid #f1f5f9;
-  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.07);
 }
 
 .cta-btn {

@@ -17,8 +17,8 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   background: rgba(255, 255, 255, 0.95);
-  min-height: calc(56px + env(safe-area-inset-bottom, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-top: 10px !important;
+  padding-bottom: 16px !important;
 
   @media (prefers-color-scheme: dark) {
     background: rgba(28, 28, 30, 0.95);
@@ -55,6 +55,30 @@
 ion-router-outlet {
   /* Use 'bottom' to physically constrain the absolute container height */
   bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+}
+
+// --- Tab icon wrapper for badge positioning ---
+.tab-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  --background: #dc2626;
+  --color: white;
+  --padding-start: 3px;
+  --padding-end: 3px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
 }
 
 @media (prefers-color-scheme: dark) {

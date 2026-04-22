@@ -35,6 +35,7 @@ const BACKEND_API_URL = environment.backendApiUrl;
 })
 export class LinkPlaidComponent implements OnInit, OnDestroy {
   isLoading: boolean = false;
+  isReady: boolean = false;
   statusMessage: string | null = null;
   isPlaidReady: boolean = false;
   plaidHandler: any = null;
@@ -50,21 +51,8 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    // Mark this step as incomplete when user enters/returns to this page
-    this.authService.markStepIncomplete('linkPlaid').subscribe({
-      next: () => console.log('LinkPlaid step marked as incomplete'),
-      error: (err) => console.error('Failed to mark LinkPlaid step as incomplete:', err)
-    });
-
-    // This is where you would typically:
-    // 1. Load the Plaid Link SDK script (if not loaded globally)
-    // 2. Call your backend to get a link_token
-    // 3. Initialize Plaid Link with the token
-    // For this layout example, we'll simulate readiness.
-    // this.initializePlaid();
-    setTimeout(() => { // Simulate Plaid SDK loading and token fetching
-      this.isPlaidReady = true;
-    }, 1500);
+    // Reveal page content after font rendering (~50ms), independent of Plaid SDK loading
+    setTimeout(() => this.isReady = true, 50);
 
     const jwtToken = JwtTokenUtils.getValidJwtToken();
     this.isUserAuthenticated = !!jwtToken; // Convert to boolean
@@ -87,12 +75,11 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
         linkToken = linkTokenData.link_token;
         console.log('Received authenticated link_token.');
       } else {
+        // JWT is not available — the AppLockService will handle re-authentication.
+        // Do not force a page reload or redirect here; let the auth flow resolve it.
         console.error('User is not authenticated. Cannot proceed with Plaid Link.');
-        this.statusMessage = 'Authentication required. Redirecting to login...';
-        // Redirect back to the authentication step
-        setTimeout(() => {
-          window.location.href = '/auth-finalize';
-        }, 2000);
+        this.statusMessage = 'Authentication required. Please sign in to continue.';
+        this.isLoading = false;
         return;
       }
 
@@ -173,12 +160,12 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
             next: () => {
               console.log('LinkPlaid step completed successfully');
               // Navigate to the investment schedule setup
-              this.router.navigate(['/investment-schedule'], { replaceUrl: true });
+              this.navCtrl.navigateForward('/investment-schedule', { replaceUrl: true });
             },
             error: (err) => {
               console.error('Failed to complete LinkPlaid step:', err);
               // Still navigate even if progress update fails
-              this.router.navigate(['/investment-schedule'], { replaceUrl: true });
+              this.navCtrl.navigateForward('/investment-schedule', { replaceUrl: true });
             }
           });
         }),

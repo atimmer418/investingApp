@@ -17,15 +17,15 @@ export class RecoveryService {
 
   constructor(private http: HttpClient) {}
 
-  async initiateRecovery(ssn: string): Promise<RecoveryResponse> {
+  async initiateRecovery(email: string): Promise<RecoveryResponse> {
     return await firstValueFrom(
-      this.http.post<RecoveryResponse>(`${this.apiUrl}/initiate`, { ssn })
+      this.http.post<RecoveryResponse>(`${this.apiUrl}/initiate`, { email })
     );
   }
 
-  async verifyRecovery(ssn: string, otp: string): Promise<RecoveryResponse> {
+  async verifyRecovery(email: string, otp: string): Promise<RecoveryResponse> {
     return await firstValueFrom(
-      this.http.post<RecoveryResponse>(`${this.apiUrl}/verify`, { ssn, otp })
+      this.http.post<RecoveryResponse>(`${this.apiUrl}/verify`, { email, otp })
     );
   }
 }

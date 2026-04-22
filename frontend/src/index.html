@@ -7,7 +7,7 @@
 
   <base href="/" />
 
-  <meta name="color-scheme" content="light dark" />
+  <meta name="color-scheme" content="light" />
   <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="format-detection" content="telephone=no" />
   <meta name="msapplication-tap-highlight" content="no" />
@@ -16,6 +16,8 @@
 
   <!-- Preload fonts so icons/text render instantly without FOUT -->
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" /></noscript>
   <link rel="preload" href="assets/fonts/Montserrat-BlackItalic.ttf" as="font" type="font/ttf" crossorigin />
 
@@ -29,6 +31,9 @@
 </head>
 
 <body>
+  <div id="app-resume-cover" style="position:fixed;inset:0;background:#ffffff;z-index:99999;pointer-events:none;display:flex;align-items:center;justify-content:center;">
+    <span style="font-family:Manrope,sans-serif;font-size:16px;color:#6b7280;">this will be the loading screen</span>
+  </div>
   <app-root></app-root>
 
   <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>

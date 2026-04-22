@@ -4,7 +4,10 @@ import com.investingapp.backend.service.AlpacaService;
 import com.investingapp.backend.service.AlpacaApiService;
 import com.investingapp.backend.service.EncryptionService;
 import com.investingapp.backend.model.User;
+import com.investingapp.backend.repository.InvestmentScheduleRepository;
+import com.investingapp.backend.repository.PortfolioRepository;
 import com.investingapp.backend.repository.UserRepository;
+import com.investingapp.backend.repository.UserSessionRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -14,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -37,6 +41,15 @@ public class TradingController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private InvestmentScheduleRepository investmentScheduleRepository;
+
+    @Autowired
+    private UserSessionRepository userSessionRepository;
+
+    @Autowired
+    private PortfolioRepository portfolioRepository;
 
     @Autowired
     private EncryptionService encryptionService;
@@ -285,6 +298,7 @@ public class TradingController {
      * Close the user's brokerage account and delete their FRED user record.
      * Prerequisites: all positions must be liquidated and all cash withdrawn.
      */
+    @Transactional
     @PostMapping("/account/close")
     public ResponseEntity<Map<String, Object>> closeAccount(Authentication authentication) {
         try {
@@ -304,6 +318,15 @@ public class TradingController {
 
             // Close the Alpaca brokerage account
             alpacaService.closeAccount(accountId);
+
+            // Delete investment schedules first (FK not covered by JPA cascade)
+            investmentScheduleRepository.deleteAllByUser(user);
+
+            // Delete user sessions (FK not covered by JPA cascade)
+            userSessionRepository.deleteAllByUserId(user.getId());
+
+            // Delete portfolio and its items (FK not covered by JPA cascade; items cascade from portfolio)
+            portfolioRepository.findByUser(user).ifPresent(portfolioRepository::delete);
 
             // Delete the user from our database (cascades to passkey credentials, user progress, etc.)
             userRepository.delete(user);

@@ -11,4 +11,5 @@ public interface UserSessionRepository extends JpaRepository<UserSession, Long> 
     List<UserSession> findByUserId(Long userId);
     List<UserSession> findByUserIdAndActiveTrue(Long userId);
     java.util.Optional<UserSession> findByUserIdAndDeviceId(Long userId, String deviceId);
+    void deleteAllByUserId(Long userId);
 }

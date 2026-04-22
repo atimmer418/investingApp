@@ -13,6 +13,7 @@ import { RecoveryService } from '../../services/recovery.service';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import { ToastService } from '../../services/toast.service';
 import { PasskeyService } from '../../services/passkey.service';
+import { AuthService } from '../../services/auth.service';
 import { create } from '@github/webauthn-json';
 
 @Component({
@@ -38,7 +39,8 @@ export class RecoveryPage implements OnInit {
     private router: Router,
     private toastService: ToastService,
     private location: Location,
-    private passkeyService: PasskeyService
+    private passkeyService: PasskeyService,
+    private authService: AuthService
   ) {
     addIcons({ shieldCheckmarkOutline, keyOutline, mailOutline });
   }
@@ -91,6 +93,7 @@ export class RecoveryPage implements OnInit {
               this.passkeyService.finishRegistration({ email: this.email, credential }).subscribe({
                 next: (finishResponse) => {
                   if (finishResponse.success) {
+                    this.authService.handleSuccessfulAuthentication(finishResponse.jwtToken!, finishResponse.userId!, finishResponse.email!);
                     this.isLoading = false;
                     this.router.navigate(['/tabs/tab3']);
                   } else {

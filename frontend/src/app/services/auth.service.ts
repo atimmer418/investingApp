@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap, catchError, of } from 'rxjs';
+import { Observable, BehaviorSubject, tap, catchError, of, lastValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
 import { DeviceIdService } from './device-id.service';
@@ -49,7 +49,8 @@ export class AuthService {
   private userProgressSubject = new BehaviorSubject<UserProgress | null>(null);
   public userProgress$ = this.userProgressSubject.asObservable();
 
-  private reAuthInProgress = false;
+  private reAuthInProgressSubject = new BehaviorSubject<boolean>(false);
+  public reAuthInProgress$ = this.reAuthInProgressSubject.asObservable();
   private tokenRefreshInProgress = false;
 
   constructor(
@@ -77,22 +78,41 @@ export class AuthService {
 
   private checkExistingSession(): void {
     const token = JwtTokenUtils.getValidJwtToken();
-    
+
     if (token) {
       // Valid token exists — restore session and load progress from backend
       this.isLoggedInSubject.next(true);
       this.loadUserProgress();
     } else {
-      // No valid token — set up localStorage progress for unauthenticated state
-      // Clear any stale JWT data since token is expired/missing
-      JwtTokenUtils.clearJwtData();
+      // No valid token — check if there's a known user whose session expired
+      const existingUserId = localStorage.getItem('userId');
+      const willPromptReauth = !!(existingUserId && this.supportsPasskeys());
+
+      if (willPromptReauth) {
+        // Returning user with expired session: preserve userId/userEmail so reauth
+        // can use them, and so AppLockService.isUserLoggedIn() stays accurate.
+        // Only remove the expired token data itself.
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('jwtExpiration');
+      } else {
+        JwtTokenUtils.clearJwtData();
+      }
+
       const localStorageProgress = this.buildProgressFromLocalStorage();
       this.userProgressSubject.next(localStorageProgress);
 
-      // In production, check if we should auto-prompt for passkey re-auth.
-      // Priority: iCloud Keychain (survives device upgrades) → device ID fallback
-      if (environment.production && this.supportsPasskeys()) {
-        this.checkKeychainThenDevice();
+      if (this.supportsPasskeys()) {
+        if (existingUserId) {
+          // Returning user — set reAuthInProgress synchronously so navigation defers
+          // until AppLockService shows the passkey modal via the appStateChange event.
+          // PasskeyPromptComponent calls handleSuccessfulAuthentication() on success,
+          // which resets this flag and triggers correct navigation.
+          this.reAuthInProgressSubject.next(true);
+        } else {
+          // No known user on this device — check iCloud Keychain / device ID
+          // for cross-device re-auth.
+          this.checkKeychainThenDevice();
+        }
       }
     }
   }
@@ -105,6 +125,10 @@ export class AuthService {
   handleSuccessfulAuthentication(jwtToken: string, userId: number, email: string): void {
     JwtTokenUtils.storeJwtToken(jwtToken, userId, email);
     this.isLoggedInSubject.next(true);
+    this.reAuthInProgressSubject.next(false); // Clear any pending reauth gate
+    // Reset progress to null so the navigation logic waits for fresh DB data
+    // rather than briefly routing based on stale localStorage values.
+    this.userProgressSubject.next(null);
 
     // Persist email to iCloud Keychain so new devices can auto-prompt reauth
     // Only write if not already stored (avoids redundant Keychain writes)
@@ -115,9 +139,7 @@ export class AuthService {
     });
 
     // Check if there's pre-auth localStorage progress to sync
-    const hasLocalProgress = localStorage.getItem('getStartedCompleted') === 'true' ||
-      localStorage.getItem('surveyInitialCompleted') === 'true' ||
-      localStorage.getItem('fiPlanResultsCompleted') === 'true';
+    const hasLocalProgress = parseInt(localStorage.getItem('onboardingStep') || '0', 10) >= 1;
 
     if (hasLocalProgress) {
       this.syncLocalStorageProgressToDatabase().subscribe({
@@ -185,17 +207,17 @@ export class AuthService {
    * This migrates anonymous pre-auth progress to the authenticated user's database record
    */
   syncLocalStorageProgressToDatabase(): Observable<any> {
+    const ordinal = parseInt(localStorage.getItem('onboardingStep') || '0', 10);
     const monthlyInvestment = localStorage.getItem('surveyMonthlyInvestment');
     const retirementIncome = localStorage.getItem('surveyRetirementIncome');
 
     const localProgress: Partial<UserProgress> = {
-      getStartedCompleted: localStorage.getItem('getStartedCompleted') === 'true',
-      surveyInitialCompleted: localStorage.getItem('surveyInitialCompleted') === 'true',
-      fiPlanResultsCompleted: localStorage.getItem('fiPlanResultsCompleted') === 'true',
+      getStartedCompleted: ordinal >= 1,
+      surveyInitialCompleted: ordinal >= 2,
+      fiPlanResultsCompleted: ordinal >= 3,
       monthlyInvestment: monthlyInvestment ? parseInt(monthlyInvestment, 10) : undefined,
       retirementIncome: retirementIncome ? parseInt(retirementIncome, 10) : undefined
       // authFinalizeCompleted is set to true by the backend when this sync happens
-      // Don't sync post-auth flags from localStorage (they should come from database)
     };
 
     return this.updateProgress(localProgress).pipe(
@@ -209,18 +231,18 @@ export class AuthService {
    * Build UserProgress object from localStorage (for non-authenticated users)
    */
   private buildProgressFromLocalStorage(): UserProgress {
+    const ordinal = parseInt(localStorage.getItem('onboardingStep') || '0', 10);
     const monthlyInvestment = localStorage.getItem('surveyMonthlyInvestment');
     const retirementIncome = localStorage.getItem('surveyRetirementIncome');
-
     return {
-      getStartedCompleted: localStorage.getItem('getStartedCompleted') === 'true',
-      surveyInitialCompleted: localStorage.getItem('surveyInitialCompleted') === 'true',
-      fiPlanResultsCompleted: localStorage.getItem('fiPlanResultsCompleted') === 'true',
-      authFinalizeCompleted: localStorage.getItem('authFinalizeCompleted') === 'true',
-      kycVerificationCompleted: localStorage.getItem('kycVerificationCompleted') === 'true',
-      linkPlaidCompleted: localStorage.getItem('linkPlaidCompleted') === 'true',
-      investmentScheduleCompleted: localStorage.getItem('investmentScheduleCompleted') === 'true',
-      investmentConfirmationCompleted: localStorage.getItem('investmentConfirmationCompleted') === 'true',
+      getStartedCompleted: ordinal >= 1,
+      surveyInitialCompleted: ordinal >= 2,
+      fiPlanResultsCompleted: ordinal >= 3,
+      authFinalizeCompleted: ordinal >= 4,
+      kycVerificationCompleted: ordinal >= 5,
+      linkPlaidCompleted: ordinal >= 6,
+      investmentScheduleCompleted: ordinal >= 7,
+      investmentConfirmationCompleted: ordinal >= 8,
       monthlyInvestment: monthlyInvestment ? parseInt(monthlyInvestment, 10) : undefined,
       retirementIncome: retirementIncome ? parseInt(retirementIncome, 10) : undefined
     };
@@ -242,22 +264,9 @@ export class AuthService {
    * This prevents confusion between localStorage and database as source of truth
    */
   clearLocalStorageProgressFlags(): void {
-    const flagsToRemove = [
-      'getStartedCompleted',
-      'surveyInitialCompleted',
-      'fiPlanResultsCompleted',
-      'authFinalizeCompleted',
-      'kycVerificationCompleted',
-      'linkPlaidCompleted',
-      'investmentScheduleCompleted',
-      'investmentConfirmationCompleted',
-      'surveyMonthlyInvestment',
-      'surveyRetirementIncome'
-    ];
-
-    flagsToRemove.forEach(flag => {
-      localStorage.removeItem(flag);
-    });
+    localStorage.removeItem('onboardingStep');
+    localStorage.removeItem('surveyMonthlyInvestment');
+    localStorage.removeItem('surveyRetirementIncome');
   }
 
   loadUserProgress(): void {
@@ -267,6 +276,9 @@ export class AuthService {
       },
       error: (err) => {
         console.error('[AuthService] Failed to load user progress:', err);
+        // Emit localStorage fallback so userProgress$ is never permanently null.
+        // Without this, the navigation filter blocks forever and the cover never hides.
+        this.userProgressSubject.next(this.buildProgressFromLocalStorage());
       }
     });
   }
@@ -285,13 +297,27 @@ export class AuthService {
       { headers: this.getAuthHeaders() });
   }
 
+  private stepToOrdinal(step: string): number {
+    const map: Record<string, number> = {
+      getStarted: 1, surveyInitial: 2, fiPlanResults: 3, authFinalize: 4,
+      kycVerification: 5, linkPlaid: 6, investmentSchedule: 7, investmentConfirmation: 8
+    };
+    return map[step] ?? 0;
+  }
+
   /**
    * Comprehensive method to update both localStorage and backend progress
    * Use this method whenever a user completes or revisits a step
    */
   updateStepProgress(step: string, completed: boolean): Observable<any> {
     // Always update localStorage first
-    localStorage.setItem(`${step}Completed`, completed.toString());
+    if (completed) {
+      const newOrdinal = this.stepToOrdinal(step);
+      const current = parseInt(localStorage.getItem('onboardingStep') || '0', 10);
+      if (newOrdinal > current) {
+        localStorage.setItem('onboardingStep', String(newOrdinal));
+      }
+    }
 
     // Check if user is authenticated before trying to update backend
     if (!this.isAuthenticated()) {
@@ -323,53 +349,6 @@ export class AuthService {
    */
   completeStep(step: string): Observable<any> {
     return this.updateStepProgress(step, true);
-  }
-
-  /**
-   * Mark a step as incomplete (user returned to the step)
-   * Only call this when user is actually going backwards in the flow
-   */
-  markStepIncomplete(step: string): Observable<any> {
-    // Check if this is likely a direct navigation (testing) vs backwards navigation
-    const currentProgress = this.getUnifiedProgress();
-    const isLikelyDirectNavigation = this.isDirectNavigation(step, currentProgress);
-
-    if (isLikelyDirectNavigation) {
-      return of({ success: true, message: 'Direct navigation detected, skipping mark as incomplete' });
-    }
-
-    return this.updateStepProgress(step, false);
-  }
-
-  /**
-   * Detect if this is likely a direct navigation (for testing) vs normal flow navigation
-   */
-  private isDirectNavigation(step: string, progress: UserProgress): boolean {
-    const stepOrder = [
-      'getStarted',
-      'surveyInitial',
-      'fiPlanResults',
-      'authFinalize',
-      'kycVerification',
-      'linkPlaid',
-      'investmentSchedule',
-      'investmentConfirmation'
-    ];
-
-    const currentStepIndex = stepOrder.indexOf(step);
-    if (currentStepIndex === -1) return false;
-
-    // Check if previous steps are completed
-    for (let i = 0; i < currentStepIndex; i++) {
-      const prevStep = stepOrder[i];
-      const isCompleted = (progress as any)[`${prevStep}Completed`];
-      if (!isCompleted) {
-        // Previous step is not completed, this looks like direct navigation
-        return true;
-      }
-    }
-
-    return false;
   }
 
   /**
@@ -405,7 +384,7 @@ export class AuthService {
    * Check if re-authentication is currently in progress
    */
   isReAuthInProgress(): boolean {
-    return this.reAuthInProgress;
+    return this.reAuthInProgressSubject.value;
   }
 
   /**
@@ -429,14 +408,14 @@ export class AuthService {
    */
   async promptForPasskeyReauth(): Promise<boolean> {
     try {
-      this.reAuthInProgress = true;
+      this.reAuthInProgressSubject.next(true);
       console.log('[AuthService] Starting passkey re-authentication');
 
       // 1. Start authentication — use account-specific flow if we know the user
       const userEmail = localStorage.getItem('userEmail');
       const requestBody = userEmail ? { email: userEmail } : {};
-      const startResponse = await this.http.post<{ requestOptions: string, sessionId: string }>(`${BACKEND_API_URL}/passkey/authenticate/start`, requestBody,
-        { headers: this.getAuthHeaders() }).toPromise();
+      const startResponse = await lastValueFrom(this.http.post<{ requestOptions: string, sessionId: string }>(`${BACKEND_API_URL}/passkey/authenticate/start`, requestBody,
+        { headers: this.getAuthHeaders() }));
 
       if (!startResponse) {
         throw new Error('Failed to start authentication');
@@ -444,6 +423,15 @@ export class AuthService {
 
       // 2. Show browser passkey prompt
       const credentialRequestOptions = JSON.parse(startResponse.requestOptions);
+
+      // If the server returned no allowedCredentials, there are no passkeys registered
+      // for this account. Showing the OS picker in this case is confusing — skip it.
+      const allowedCreds = credentialRequestOptions?.publicKey?.allowedCredentials ?? [];
+      if (allowedCreds.length === 0) {
+        console.log('[AuthService] No passkeys registered — skipping reauth prompt');
+        this.reAuthInProgressSubject.next(false);
+        return false;
+      }
 
       // Convert base64url strings to ArrayBuffers for WebAuthn API
       if (credentialRequestOptions.publicKey) {
@@ -469,10 +457,10 @@ export class AuthService {
       const credentialJson = this.credentialToJson(credential as PublicKeyCredential);
 
       // 3. Finish authentication 
-      const authResponse = await this.http.post<any>(`${BACKEND_API_URL}/passkey/authenticate/finish`, {
+      const authResponse = await lastValueFrom(this.http.post<any>(`${BACKEND_API_URL}/passkey/authenticate/finish`, {
         credential: credentialJson,
         sessionId: startResponse.sessionId
-      }, { headers: this.getAuthHeaders() }).toPromise();
+      }, { headers: this.getAuthHeaders() }));
 
       if (authResponse?.success) {
         // User re-authenticated! Update auth state
@@ -482,15 +470,15 @@ export class AuthService {
           authResponse.email
         );
         console.log('[AuthService] Passkey re-authentication successful');
-        this.reAuthInProgress = false;
+        this.reAuthInProgressSubject.next(false);
         return true;
       } else {
-        this.reAuthInProgress = false;
+        this.reAuthInProgressSubject.next(false);
         throw new Error(authResponse?.message || 'Authentication failed');
       }
 
     } catch (error) {
-      this.reAuthInProgress = false;
+      this.reAuthInProgressSubject.next(false);
       console.error('[AuthService] Passkey re-authentication failed:', error);
       return false;
     }

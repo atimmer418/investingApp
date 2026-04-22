@@ -2,70 +2,185 @@
 
   <div class="page-wrapper" [class.fading-out]="isFadingOut">
 
-  <!-- The Swiper container now takes up the main flexible space -->
-  <!-- SWIPER NEEDS css-mode="true" in prod -->
-  <swiper-container #swiper initial-slide="4" [pagination]="true">
+    <!-- SWIPER NEEDS css-mode="true" in prod -->
+    <swiper-container #swiper initial-slide="0" [pagination]="true" css-mode="true">
 
-    <!-- Slide 1: The Problem -->
-    <swiper-slide>
-      <div class="slide-content">
-        <img src="assets/icon/wilted-plant.svg" alt="Wilted plant in a piggy bank" class="slide-image" />
-        <h2>Your Savings Are Leaking</h2>
-        <p>In a standard savings account, inflation quietly eats away at your money's value. To truly grow wealth, your
-          money needs to work harder.</p>
-      </div>
-    </swiper-slide>
-
-    <!-- Slide 2: The Foundation -->
-    <swiper-slide>
-      <div class="slide-content">
-        <img src="assets/icon/financial-growth.svg" alt="Upward trending graph" class="slide-image" />
-        <h2>Put Your Wealth on Autopilot</h2>
-        <p>We make it effortless. Automatically invest a piece of every paycheck into a smart, diversified portfolio
-          designed to outpace inflation and build your foundation.</p>
-      </div>
-    </swiper-slide>
-
-    <!-- Slide 3: The Secret Weapon -->
-    <swiper-slide>
-      <div class="slide-content">
-        <img src="assets/icon/sbloc.svg" alt="A key unlocking portfolio growth" class="slide-image" />
-        <h2>Live Like the Wealthy</h2>
-        <p>The secret isn't selling—it's borrowing. Access cash when you need it by borrowing against your assets, all
-          while they continue to grow, untouched and untaxed.</p>
-      </div>
-    </swiper-slide>
-
-    <!-- Slide 4: The Safety Net -->
-    <swiper-slide>
-      <div class="slide-content">
-        <img src="assets/icon/shield.svg" alt="A shield protecting investments" class="slide-image" />
-        <h2>Your Digital Financial Guard</h2>
-        <p>This powerful strategy requires careful management. Our app is your safety net, constantly monitoring risk
-          factors like LTV to ensure you grow wealth safely.</p>
-      </div>
-    </swiper-slide>
-
-    <!-- Slide 5: The Call to Action -->
-    <swiper-slide>
-      <div class="slide-content">
-        <img src="assets/icon/rocket.svg" alt="A rocket taking off" class="slide-image" />
-        <h2>Your Future Starts Now</h2>
-        <p>Begin your journey to financial independence with a plan that's smarter, safer, and more powerful. Let's
-          build your perpetual wealth engine, together.</p>
-      </div>
-      <!-- This footer section contains the buttons and is fixed at the bottom -->
-      <div class="footer-cta ion-padding">
-        <div class="cta-primary-wrapper">
-          <ion-button expand="block" (click)="getSetUp()" class="cta-main">
-            Get Started
-          </ion-button>
+      <!-- Slide 1: The Wake-Up Call -->
+      <swiper-slide>
+        <div class="slide-inner">
+          <div class="slide-tag slide-tag--amber">THE COST OF WAITING</div>
+          <h1 class="slide-headline">
+            <span class="headline-line">Every month you don't</span>
+            <span class="headline-line headline-italic">invest costs you more than you think.</span>
+          </h1>
+          <p class="slide-body">
+            2 people invest $500/month.<br>One person ends up with 3x more.<br>The only difference is when they started.
+            <!-- Someone who starts at <strong>25</strong> and invests $500/month can retire 8–10 years
+            earlier than someone who starts at <strong>35</strong> with the same contributions. -->
+          </p>
+          <div class="comparison-cards">
+            <div class="comp-card">
+              <div class="comp-label">Start at 25</div>
+              <div class="comp-amount comp-amount--green">$1.13m</div>
+              <div class="comp-sub">at age 55, 10% avg return</div>
+            </div>
+            <div class="comp-card">
+              <div class="comp-label">Start at 35</div>
+              <div class="comp-amount comp-amount--amber">$384k</div>
+              <div class="comp-sub">at age 55, same $500/mo</div>
+            </div>
+          </div>
+          <p class="slide-body slide-body--gap">It's not discipline that sets them apart.<br>It's having <strong>a system.</strong></p>
         </div>
-      </div>
+      </swiper-slide>
 
-    </swiper-slide>
+      <!-- Slide 2: Compound Growth + DRIP -->
+      <swiper-slide>
+        <div class="slide-inner">
+          <div class="slide-tag slide-tag--teal">COMPOUND GROWTH + DRIP</div>
+          <h1 class="slide-headline">
+            <span class="headline-line">Your dividends buy more shares.</span>
+            <span class="headline-line headline-italic">Those shares pay more dividends.</span>
+          </h1>
+          <p class="slide-body">
+            This is the compounding growth loop. <strong>DRIP (Dividend Reinvestment)</strong>
+            keeps it spinning automatically. You don't lift a finger. Each reinvested dividend
+            deepens the curve below.
+          </p>
+          <div class="chart-card">
+            <svg viewBox="0 0 300 115" class="growth-svg" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="drip-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#10b981" stop-opacity="0.2"/>
+                  <stop offset="100%" stop-color="#10b981" stop-opacity="0.01"/>
+                </linearGradient>
+              </defs>
+              <!-- Area under curve -->
+              <path d="M 8 104 Q 248 104 292 8 L 292 110 L 8 110 Z" fill="url(#drip-fill)"/>
+              <!-- Curve line -->
+              <path d="M 8 104 Q 248 104 292 8" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+              <!-- Endpoint dot -->
+              <circle cx="292" cy="8" r="5" fill="#10b981"/>
+              <!-- +340% label -->
+              <text x="284" y="6" font-size="8.5" fill="#10b981" text-anchor="end"
+                    font-family="Manrope, sans-serif" font-weight="700">+340%</text>
+            </svg>
+            <div class="chart-x-axis">
+              <span>Year 1</span>
+              <span>Year 15</span>
+              <span>Year 30</span>
+            </div>
+          </div>
+          <p class="slide-footer-text">
+            Time in the market, not timing the market. <strong>FRED keeps you in automatically.</strong>
+          </p>
+        </div>
+      </swiper-slide>
 
-  </swiper-container>
+      <!-- Slide 3: Retirement Strategies -->
+      <swiper-slide>
+        <div class="slide-inner">
+          <div class="slide-tag slide-tag--blue">RETIREMENT STRATEGIES</div>
+          <h1 class="slide-headline">
+            <span class="headline-line">Know exactly what</span>
+            <span class="headline-line headline-italic">you're building toward.</span>
+          </h1>
+          <p class="slide-body">
+            FRED educates you on proven withdrawal strategies — like the
+            <strong>4% Rule</strong> and <strong>dividend income floors</strong> — so your
+            portfolio doesn't just grow. It lasts.
+          </p>
+          <div class="strategy-container">
+            <div class="strategy-grid">
+              <div class="strategy-chip strategy-chip--blue">
+                <div class="chip-title">4% Rule</div>
+                <div class="chip-sub">Withdraw 4%/yr<br>funds last 30+ yrs</div>
+              </div>
+              <div class="strategy-chip strategy-chip--teal">
+                <div class="chip-title">Yield-Based</div>
+                <div class="chip-sub">Live on dividends,<br>portfolio grows</div>
+              </div>
+              <div class="strategy-chip strategy-chip--purple">
+                <div class="chip-title">Annuity</div>
+                <div class="chip-sub">Guaranteed income for life</div>
+              </div>
+            </div>
+            <p class="strategy-helper">FRED helps you understand each approach<br>so you choose what fits your life.</p>
+          </div>
+          <p class="slide-footer-text">
+            No jargon. No unnecessary complexity.<br>Just <strong>your number</strong>, a plan to hit it, and a portfolio that's built to last.
+          </p>
+        </div>
+      </swiper-slide>
+
+      <!-- Slide 4: Automated Investing -->
+      <swiper-slide>
+        <div class="slide-inner">
+          <div class="slide-tag slide-tag--purple">AUTOMATED INVESTING</div>
+          <h1 class="slide-headline">
+            <span class="headline-line">Set your schedule.</span>
+            <span class="headline-line headline-italic">FRED handles the rest.</span>
+          </h1>
+          <p class="slide-body">
+            Sync with your pay cycle. Every payday, FRED automatically invests your chosen
+            amount into the default FRED portfolio or one you've customized yourself.
+          </p>
+          <div class="schedule-preview">
+            <div class="schedule-row">
+              <span class="schedule-label">Pay frequency</span>
+              <div class="schedule-value-wrap">
+                <span class="schedule-value">Biweekly</span>
+                <span class="schedule-synced">synced</span>
+              </div>
+            </div>
+            <div class="schedule-row">
+              <span class="schedule-label">Investment amount</span>
+              <span class="schedule-value">$300 / payday</span>
+            </div>
+            <div class="schedule-row">
+              <span class="schedule-label">Portfolio</span>
+              <span class="schedule-value">FRED Default</span>
+            </div>
+            <div class="schedule-row schedule-row--last">
+              <span class="schedule-label">Next invest date</span>
+              <span class="schedule-value">Apr 18</span>
+            </div>
+          </div>
+        </div>
+      </swiper-slide>
+
+      <!-- Slide 5: You're Ready (CTA) -->
+      <swiper-slide>
+        <div class="slide-inner">
+          <div class="slide-tag slide-tag--green">YOU'RE READY</div>
+          <h1 class="slide-headline">
+            <span class="headline-line">You don't need to be</span>
+            <span class="headline-line headline-italic">a finance person.</span>
+          </h1>
+          <p class="slide-body">
+            FRED was built for people who are busy doing the work they love (or don't) and want their
+            money working just as hard in the background.
+          </p>
+          <p class="slide-body slide-body--gap">Set it up once. Let it run.<br>Check in when you want to.</p>
+          <div class="effort-cards">
+            <div class="effort-card">
+              <div class="effort-label">Setup time</div>
+              <div class="effort-value">~5 min</div>
+            </div>
+            <div class="effort-card">
+              <div class="effort-label">Ongoing effort</div>
+              <div class="effort-value">0 min</div>
+              <div class="effort-sub">FRED automates it</div>
+            </div>
+          </div>
+          <button class="cta-main-btn" (click)="getSetUp()">
+            Get Started
+            <span class="material-symbols-outlined cta-icon">north_east</span>
+          </button>
+        </div>
+      </swiper-slide>
+
+    </swiper-container>
 
   </div>
 

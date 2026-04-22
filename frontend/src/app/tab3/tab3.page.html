@@ -2,12 +2,15 @@
   <div class="custom-profile-header safe-area-top">
     <div class="header-content">
       <div class="user-details">
-        <ion-avatar class="user-avatar" (click)="goToMyProfile()">
-          <img src="https://ionicframework.com/docs/img/demos/avatar.svg" />
-        </ion-avatar>
+        <div class="avatar-badge-wrap" (click)="goToMyProfile()">
+          <ion-avatar class="user-avatar">
+            <img src="https://ionicframework.com/docs/img/demos/avatar.svg" />
+          </ion-avatar>
+          <ion-badge *ngIf="(profileActionRequired$ | async)" class="profile-badge">1</ion-badge>
+        </div>
         <div class="user-text">
           <h1 class="name">Account Settings</h1>
-          <p class="email">Firstname Lastname</p>
+          <p class="email">Hi, Firstname Lastname</p>
         </div>
       </div>
       <div class="header-branding"

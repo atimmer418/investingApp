@@ -106,7 +106,7 @@ public class Portfolio {
         PortfolioItem vti = new PortfolioItem();
         vti.setSymbol("VTI");
         vti.setName("Vanguard Total Stock Market ETF");
-        vti.setPercentage(new BigDecimal("70.00"));
+        vti.setPercentage(new BigDecimal("75.00"));
         vti.setPortfolio(portfolio);
 
         PortfolioItem vxus = new PortfolioItem();
@@ -115,15 +115,15 @@ public class Portfolio {
         vxus.setPercentage(new BigDecimal("20.00"));
         vxus.setPortfolio(portfolio);
 
-        PortfolioItem bnd = new PortfolioItem();
-        bnd.setSymbol("BND");
-        bnd.setName("Vanguard Total Bond Market ETF");
-        bnd.setPercentage(new BigDecimal("10.00"));
-        bnd.setPortfolio(portfolio);
+        PortfolioItem vbr = new PortfolioItem();
+        vbr.setSymbol("VBR");
+        vbr.setName("Vanguard Small-Cap Value ETF");
+        vbr.setPercentage(new BigDecimal("5.00"));
+        vbr.setPortfolio(portfolio);
 
         portfolio.getPortfolioItems().add(vti);
         portfolio.getPortfolioItems().add(vxus);
-        portfolio.getPortfolioItems().add(bnd);
+        portfolio.getPortfolioItems().add(vbr);
         
         portfolio.recalculateTotalPercentage();
         

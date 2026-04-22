@@ -1,5 +1,6 @@
 package com.investingapp.backend.service;
 
+import com.investingapp.backend.dto.CreateAlpacaAccountRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -13,6 +14,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.time.Instant;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
@@ -78,10 +80,10 @@ public class AlpacaApiService {
     }
 
     /**
-     * Create an Alpaca account for a user
-     * This is a simplified version - in reality, Alpaca requires extensive KYC
-     * information
+     * @deprecated Use {@link #createAccount(CreateAlpacaAccountRequest, String)} instead,
+     *             which sends the full KYC payload with real disclosures and all 3 agreements.
      */
+    @Deprecated
     public Map<String, Object> createAccount(String email, String firstName, String lastName,
             String dateOfBirth, String ssn, String phone,
             Map<String, String> address) {
@@ -200,6 +202,165 @@ public class AlpacaApiService {
             logger.error("Error creating Alpaca account for {}: {}", email, e.getMessage());
             Map<String, Object> errorResult = new HashMap<>();
             errorResult.put("error", "Failed to create account: " + e.getMessage());
+            return errorResult;
+        }
+    }
+
+    /**
+     * Create an Alpaca account using the full KYC payload.
+     * Agreement timestamps and client IP are captured server-side — the frontend
+     * does NOT send these values.
+     *
+     * @param request         full KYC data from the frontend form
+     * @param clientIpAddress the real client IP extracted from HttpServletRequest
+     */
+    public Map<String, Object> createAccount(CreateAlpacaAccountRequest request, String clientIpAddress) {
+        logger.info("Creating Alpaca account (full KYC) for email: {}", request.getEmailAddress());
+
+        String signedAt = Instant.now().toString();
+
+        // Contact
+        Map<String, Object> contact = new HashMap<>();
+        contact.put("email_address", request.getEmailAddress());
+        contact.put("phone_number", request.getPhoneNumber());
+        contact.put("street_address", List.of(request.getStreetAddress()));
+        contact.put("city", request.getCity());
+        contact.put("state", request.getState());
+        contact.put("postal_code", request.getPostalCode());
+        contact.put("country", "USA");
+
+        // Identity
+        Map<String, Object> identity = new HashMap<>();
+        identity.put("given_name", request.getGivenName());
+        identity.put("family_name", request.getFamilyName());
+        identity.put("date_of_birth", request.getDateOfBirth());
+        identity.put("tax_id", request.getTaxId().replaceAll("-", ""));
+        identity.put("tax_id_type", request.getTaxIdType() != null ? request.getTaxIdType() : "USA_SSN");
+        identity.put("country_of_citizenship", "USA");
+        identity.put("country_of_birth", "USA");
+        identity.put("country_of_tax_residence", "USA");
+        identity.put("funding_source", request.getFundingSource());
+
+        // Disclosures
+        Map<String, Object> disclosures = new HashMap<>();
+        disclosures.put("is_control_person", request.isControlPerson());
+        disclosures.put("is_affiliated_exchange_or_finra", request.isAffiliatedExchangeOrFinra());
+        disclosures.put("is_affiliated_exchange_or_iiroc", false);
+        disclosures.put("is_politically_exposed", request.isPoliticallyExposed());
+        disclosures.put("immediate_family_exposed", request.isImmediateFamilyExposed());
+
+        // Agreements — all 3 required by Alpaca, signed server-side
+        // TODO: Replace with real Alpaca agreement URLs once provided
+        List<Map<String, String>> agreements = List.of(
+                Map.of("agreement", "customer_agreement", "signed_at", signedAt, "ip_address", clientIpAddress),
+                Map.of("agreement", "margin_agreement",   "signed_at", signedAt, "ip_address", clientIpAddress),
+                Map.of("agreement", "account_agreement",  "signed_at", signedAt, "ip_address", clientIpAddress)
+        );
+
+        // Trusted contact (use the account holder's own info)
+        Map<String, String> trustedContact = new HashMap<>();
+        trustedContact.put("given_name", request.getGivenName());
+        trustedContact.put("family_name", request.getFamilyName());
+        trustedContact.put("email_address", request.getEmailAddress());
+
+        Map<String, Object> accountData = new HashMap<>();
+        accountData.put("contact", contact);
+        accountData.put("identity", identity);
+        accountData.put("disclosures", disclosures);
+        accountData.put("agreements", agreements);
+        accountData.put("trusted_contact", trustedContact);
+
+        try {
+            String jsonBody = objectMapper.writeValueAsString(accountData);
+            // Log request without sensitive fields (SSN redacted)
+            logger.debug("Alpaca full KYC account creation request length: {} chars", jsonBody.length());
+
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, createHeaders());
+            ResponseEntity<String> response = restTemplate.exchange(
+                    brokerBaseUrl + "/accounts",
+                    HttpMethod.POST,
+                    entity,
+                    String.class);
+
+            String responseBody = response.getBody();
+            JsonNode responseNode = objectMapper.readTree(responseBody);
+            Map<String, Object> result = new HashMap<>();
+            String accountId = responseNode.get("id").asText();
+            result.put("account_id", accountId);
+            if (responseNode.has("account_number")) {
+                result.put("account_number", responseNode.get("account_number").asText());
+            }
+            result.put("status", responseNode.get("status").asText());
+            result.put("created_at", responseNode.get("created_at").asText());
+            result.put("raw_response", responseBody);
+
+            logger.info("Successfully created Alpaca account (full KYC): {}", accountId);
+
+            // Configure account for cash-only trading (no margin)
+            logger.info("Configuring account {} for cash-only trading...", accountId);
+            alpacaService.setupCashOnlyAccount(accountId);
+
+            return result;
+
+        } catch (JsonProcessingException e) {
+            logger.error("Error processing JSON for full KYC account creation", e);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("error", "Failed to process JSON: " + e.getMessage());
+            return errorResult;
+        } catch (Exception e) {
+            logger.error("Error creating Alpaca account (full KYC) for {}: {}", request.getEmailAddress(), e.getMessage(), e);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("error", "Failed to create account: " + e.getMessage());
+            return errorResult;
+        }
+    }
+
+    /**
+     * Upload a KYC document to Alpaca for an account that requires additional
+     * verification (ACTION_REQUIRED status).
+     *
+     * @param accountId      the Alpaca account ID
+     * @param documentType   Alpaca document type (e.g. identity_verification)
+     * @param mimeType       MIME type of the file (e.g. image/jpeg, application/pdf)
+     * @param base64Content  base64-encoded file content (without the data: URI prefix)
+     */
+    public Map<String, Object> uploadDocument(String accountId, String documentType,
+            String mimeType, String base64Content) {
+        logger.info("Uploading document type {} for account {}", documentType, accountId);
+
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("document_type", documentType);
+            // document_sub_type omitted — let Alpaca infer from document_type
+            payload.put("content", base64Content);
+            payload.put("mime_type", mimeType);
+
+            String jsonBody = objectMapper.writeValueAsString(payload);
+
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, createHeaders());
+            ResponseEntity<String> response = restTemplate.exchange(
+                    brokerBaseUrl + "/accounts/" + accountId + "/documents/upload",
+                    HttpMethod.POST,
+                    entity,
+                    String.class);
+
+            String responseBody = response.getBody();
+            logger.info("Successfully uploaded document for account {}", accountId);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("raw_response", responseBody);
+            return result;
+
+        } catch (JsonProcessingException e) {
+            logger.error("Error processing JSON for document upload", e);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("error", "Failed to process JSON: " + e.getMessage());
+            return errorResult;
+        } catch (Exception e) {
+            logger.error("Error uploading document for account {}: {}", accountId, e.getMessage(), e);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("error", "Failed to upload document: " + e.getMessage());
             return errorResult;
         }
     }

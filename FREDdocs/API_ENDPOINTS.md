@@ -135,13 +135,15 @@ All available API endpoints in the backend. Keep this file updated when adding n
 | Method | Endpoint | Description | Auth | Request Body | Response |
 |--------|----------|-------------|------|-------------|----------|
 | `GET` | `/api/alpaca/account` | Get Alpaca account info | Yes | None | Account JSON |
-| `POST` | `/api/alpaca/create-account` | Create Alpaca brokerage account | Yes | `{ email, firstName, lastName, dateOfBirth, ssn, phone, address }` | `{ account_id, account_number }` |
+| `POST` | `/api/alpaca/create-account` | Create Alpaca brokerage account (full KYC) | Yes | `CreateAlpacaAccountRequest { emailAddress, phoneNumber, streetAddress, city, state, postalCode, givenName, familyName, dateOfBirth, taxId, fundingSource[], isControlPerson, isAffiliatedExchangeOrFinra, isPoliticallyExposed, immediateFamilyExposed }` | `{ account_id, account_number }` |
 | `POST` | `/api/alpaca/sync-account-number` | Sync account number from Alpaca | Yes | None | `{ account_number }` |
 | `GET` | `/api/alpaca/assets` | Search/list available assets | Yes | Query: `status`, `asset_class`, `search` | Assets JSON |
 | `POST` | `/api/alpaca/accounts/{accountId}/ach-relationships` | Create ACH relationship (manual) | Yes | `{ accountOwnerName, bankAccountType, bankAccountNumber, bankRoutingNumber, nickname }` | ACH relationship |
 | `POST` | `/api/alpaca/accounts/{accountId}/ach-relationships/plaid` | Create ACH relationship via Plaid | Yes | `{ plaidAccessToken, plaidAccountId, accountOwnerName }` | ACH relationship |
 | `GET` | `/api/alpaca/accounts/{accountId}/ach-relationships` | List ACH relationships | Yes | None | ACH relationships JSON |
-| `GET` | `/api/alpaca/account/{accountId}/status` | Get account status | Yes | None | Status JSON |
+| `GET` | `/api/alpaca/account/{accountId}/status` | Get account status by Alpaca account ID | Yes | None | Status JSON |
+| `GET` | `/api/alpaca/my-account-status` | Get current user's Alpaca account status | Yes | None | `AccountStatusResponse { accountStatus, hasActionRequired }` |
+| `POST` | `/api/alpaca/upload-document` | Upload KYC document (only when status=ACTION_REQUIRED) | Yes | `{ documentType, mimeType, content }` (content=base64) | `{ success, raw_response }` |
 | `POST` | `/api/alpaca/acats/transfer` | Initiate ACATS transfer from another brokerage | Yes | `{ dtcNumber, accountNumber }` | `{ status, transferId, message }` |
 
 ---

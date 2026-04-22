@@ -53,7 +53,7 @@ export class SecuritySettingsPage implements OnInit {
   isAuthenticating = true;
 
   // Settings State
-  appLockEnabled = true;
+  appLockEnabled = false;
   sensitiveAuthEnabled = false; // Default to false until loaded
   userEmail: string = '';
 

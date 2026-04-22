@@ -67,6 +67,15 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    document.addEventListener('focusin', (event: FocusEvent) => {
+      const target = event.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 300);
+      }
+    });
+
     // Skip navigation logic for testing (add ?testing=true to URL)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('testing') === 'true') {
@@ -80,6 +89,12 @@ export class AppComponent implements OnInit {
       // this.simulateUserLogin('', 'user_handle_123');
       // this.simulateUserLogin('test@test.com');
     }
+
+    // On background resume with no lock needed: re-check current route so
+    // navigateBasedOnProgress() can hide the cover (same-route early return or navigation).
+    this.appLockService.resumeNoLock$.subscribe(() => {
+      requestAnimationFrame(() => this.checkSurveyStatusAndNavigate());
+    });
 
     // Set up the single navigation subscription
     this.setupNavigationLogic();
@@ -113,15 +128,19 @@ export class AppComponent implements OnInit {
   private setupNavigationLogic(): void {
     combineLatest([
       this.authService.isLoggedIn$,
-      this.authService.userProgress$
+      this.authService.userProgress$,
+      this.authService.reAuthInProgress$
     ]).pipe(
       debounceTime(300),
       distinctUntilChanged((prev, curr) => {
         return prev[0] === curr[0] &&
-          JSON.stringify(prev[1]) === JSON.stringify(curr[1]);
+          JSON.stringify(prev[1]) === JSON.stringify(curr[1]) &&
+          prev[2] === curr[2];
       }),
-      filter(([isLoggedIn, progress]) => {
-        // Always process when not logged in
+      filter(([isLoggedIn, progress, reAuthInProgress]) => {
+        // Defer while a reauth ceremony is in flight
+        if (!isLoggedIn && reAuthInProgress) return false;
+        // Always process when not logged in (and no reauth pending)
         if (!isLoggedIn) return true;
         // When logged in, only process if we have progress data
         return progress !== null;
@@ -129,7 +148,7 @@ export class AppComponent implements OnInit {
     ).subscribe(([isLoggedIn, progress]) => {
       if (isLoggedIn && progress) {
         this.navigateBasedOnProgress(progress);
-      } else if (!isLoggedIn && !this.authService.isReAuthInProgress()) {
+      } else if (!isLoggedIn) {
         const unifiedProgress = this.authService.getUnifiedProgress();
         const hasAnyProgress = unifiedProgress.getStartedCompleted ||
           unifiedProgress.surveyInitialCompleted ||
@@ -138,7 +157,9 @@ export class AppComponent implements OnInit {
         if (hasAnyProgress) {
           this.navigateBasedOnProgress(unifiedProgress);
         } else {
-          this.router.navigate(['/get-started'], { replaceUrl: true });
+          this.router.navigate(['/get-started'], { replaceUrl: true }).then(() => {
+            requestAnimationFrame(() => this.appLockService.hideAllCovers());
+          });
         }
       }
     });
@@ -172,6 +193,13 @@ export class AppComponent implements OnInit {
 
     // Don't navigate if already on the target route
     if (currentBaseUrl === targetRoute) {
+      this.appLockService.hideAllCovers();
+      return;
+    }
+
+    // Don't interrupt mid-recovery — user is unauthenticated by design on this route
+    if (currentBaseUrl === '/recovery') {
+      this.appLockService.hideAllCovers();
       return;
     }
 
@@ -183,15 +211,19 @@ export class AppComponent implements OnInit {
         '/investment-schedule', '/investment-confirmation', '/'
       ];
       if (!onboardingRoutes.includes(currentBaseUrl)) {
+        this.appLockService.hideAllCovers();
         return;
       }
     }
 
-    this.router.navigateByUrl(targetRoute, { replaceUrl: true });
+    this.router.navigateByUrl(targetRoute, { replaceUrl: true }).then(() => {
+      requestAnimationFrame(() => this.appLockService.hideAllCovers());
+    });
   }
 
   checkSurveyStatusAndNavigate(): void {
-    const progress = this.authService.getUnifiedProgress();
+    const progress = this.authService.getCurrentProgress();
+    if (!progress) return;
     this.navigateBasedOnProgress(progress);
   }
 }

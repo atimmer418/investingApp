@@ -171,6 +171,23 @@ public class InvestmentScheduleService {
     }
 
     /**
+     * Clear ACH data and re-pause the schedule when a user changes their bank account.
+     * A new ACH relationship will be created by attemptAchCreation after this.
+     */
+    public void resetForBankChange(User user) {
+        Optional<InvestmentSchedule> scheduleOpt = investmentScheduleRepository.findTopByUserOrderByCreatedAtDesc(user);
+        if (scheduleOpt.isEmpty()) {
+            logger.info("No investment schedule found for user {} — nothing to reset", user.getEmail());
+            return;
+        }
+        InvestmentSchedule schedule = scheduleOpt.get();
+        schedule.setAchRequestId(null);
+        schedule.setIsPaused(true);
+        investmentScheduleRepository.save(schedule);
+        logger.info("Investment schedule re-paused for bank account change — user {}", user.getEmail());
+    }
+
+    /**
      * Update investment schedule with ACH request ID
      */
     public InvestmentSchedule updateWithAchRequestId(User user, String achRequestId) {
@@ -211,14 +228,19 @@ public class InvestmentScheduleService {
     }
 
     /**
-     * Get all schedules ready for investment execution (for cron processing)
+     * Get all schedules ready for investment execution (for cron processing).
+     * Only returns schedules where:
+     *   - isPaused == false (the user has not paused the schedule), AND
+     *   - user.accountStatus == "ACTIVE" (the Alpaca account is fully active)
+     * Both conditions must be true for a trade to be placed.
      */
     @Transactional(readOnly = true)
     public List<InvestmentSchedule> getSchedulesReadyForInvestment() {
         logger.info("Finding investment schedules ready for execution...");
 
-        List<InvestmentSchedule> allSchedules = investmentScheduleRepository.findAll();
-        List<InvestmentSchedule> readySchedules = allSchedules.stream()
+        List<InvestmentSchedule> readySchedules = investmentScheduleRepository
+                .findByUser_AccountStatus("ACTIVE")
+                .stream()
                 .filter(InvestmentSchedule::isReadyForInvestment)
                 .toList();
 
@@ -268,10 +290,21 @@ public class InvestmentScheduleService {
     }
 
     /**
-     * Resume an investment schedule
+     * Resume an investment schedule.
+     * The user's Alpaca account must be ACTIVE before a schedule can be resumed.
+     *
+     * @throws IllegalStateException with message "ACCOUNT_NOT_ACTIVE" if the account
+     *                               is not yet active — the controller converts this to a 403.
      */
     public InvestmentSchedule resumeSchedule(User user, Long scheduleId) {
         logger.info("Resuming investment schedule ID: {} for user: {}", scheduleId, user.getEmail());
+
+        // Gate: account must be ACTIVE before schedules can be resumed
+        if (!"ACTIVE".equals(user.getAccountStatus())) {
+            logger.warn("Resume blocked for user {}: accountStatus is '{}', not ACTIVE",
+                    user.getEmail(), user.getAccountStatus());
+            throw new IllegalStateException("ACCOUNT_NOT_ACTIVE");
+        }
 
         Optional<InvestmentSchedule> scheduleOpt = investmentScheduleRepository.findByIdAndUser(scheduleId, user);
 

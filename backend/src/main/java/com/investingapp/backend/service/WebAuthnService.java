@@ -182,6 +182,16 @@ public class WebAuthnService {
             passkeyCredentialRepository.save(newCredential);
             logger.info("Passkey successfully registered for user {} with credential ID: {}", userEmail, newCredential.getExternalId());
 
+            // Mark authFinalize complete transactionally with credential save so the
+            // client-side progress GET always sees the flag set, even if the separate
+            // frontend PUT to /user/progress fails or races with the GET.
+            UserProgress userProgress = user.getUserProgress();
+            if (userProgress != null && !userProgress.isAuthFinalizeCompleted()) {
+                userProgress.setAuthFinalizeCompleted(true);
+                userProgressRepository.save(userProgress);
+                logger.info("Marked authFinalizeCompleted=true for user {}", userEmail);
+            }
+
             // --- User is registered with passkey, now generate JWT ---
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
             Authentication authentication = new UsernamePasswordAuthenticationToken(

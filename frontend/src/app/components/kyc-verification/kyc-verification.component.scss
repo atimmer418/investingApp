@@ -1,109 +1,525 @@
-// Use CSS variables for a consistent theme
+// --- Force light mode regardless of system theme ---
 :host {
-  --ion-background-color: #f2f2f7; // A very light, clean background
-  --ion-toolbar-background: var(--ion-background-color);
-  --ion-text-color: #000000;
-  --ion-color-primary: #007aff;
-  --ion-color-medium: #8e8e93;
+  --kyc-primary: #2563EB;
+  --kyc-bg: #f8fafc;
+  --kyc-text: #0f172a;
+  --kyc-gray: #6b7280;
+  --kyc-border: #e5e7eb;
+  --kyc-error: #dc2626;
+
+  --ion-background-color: #f8fafc;
+  --ion-toolbar-background: #f8fafc;
+  --ion-toolbar-color: #0f172a;
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
+  --ion-footer-background: #f8fafc;
 }
 
+// --- Toolbar ---
 ion-toolbar {
-  --border-width: 0 !important;
+  --background: #f8fafc;
+  --border-width: 0;
+  --min-height: 52px;
 }
 
-ion-progress-bar {
-  height: 3px;
-  --progress-background: var(--ion-color-primary);
+// --- Header ---
+.header-inner {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
 }
 
-// Unified container for the form
-.kyc-form-container {
-  padding: 16px;
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--kyc-text);
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+
+  &:active {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
 }
 
-.page-intro {
-  margin-bottom: 32px;
+.header-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
   text-align: center;
+  flex: 1;
+  margin: 0;
+  padding-right: 40px;
+  color: var(--kyc-text);
+}
 
-  h2 {
-    font-size: 26px;
-    font-weight: 700;
-    line-height: 1.25;
-    margin: 0 0 8px 0;
+// --- Content ---
+ion-content {
+  --background: var(--kyc-bg);
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+ion-content::part(scroll) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.content-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px;
+  font-family: 'Manrope', sans-serif;
+}
+
+// --- Hero (top-pinned) ---
+.hero-section {
+  flex-shrink: 0;
+  margin-bottom: 20px;
+}
+
+.hero-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  text-align: center;
+  margin: 0;
+  color: var(--kyc-text);
+}
+
+.hero-subtitle {
+  font-size: 14px;
+  color: var(--kyc-gray);
+  margin: 8px 0 16px 0;
+  line-height: 1.4;
+  text-align: center;
+  padding: 0 80px;
+}
+
+// --- Step indicators ---
+.step-indicators {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--kyc-border);
+  transition: background 0.3s ease;
+
+  &.active {
+    background: var(--kyc-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
   }
 
-  .helper-text {
-    font-size: 16px;
-    color: var(--ion-color-medium);
-    margin: 0;
-    line-height: 1.4;
+  &.done {
+    background: #10b981;
   }
 }
 
-.verification-info-section {
-  margin-bottom: 32px;
+.step-line {
+  width: 32px;
+  height: 2px;
+  background: var(--kyc-border);
+  margin: 0 8px;
+}
 
-  .verification-description {
-    font-size: 16px;
-    color: var(--ion-color-medium);
-    margin: 0 0 24px 0;
-    line-height: 1.5;
-    text-align: center;
+// --- Center zone ---
+.center-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Manrope', sans-serif;
+}
+
+// --- Step panels ---
+.step-panel {
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+.step-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+// CSS animation fires automatically when step 2 enters the DOM —
+// no JS timeout or change detection needed
+@keyframes panelEnter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.step-panel--enter {
+  animation: panelEnter 0.25s ease both;
+}
+
+// --- KYC Form ---
+.kyc-form.kyc-form--disclosures {
+  gap: 0;
+
+  & > *:first-child {
+    margin-bottom: 12px;
   }
 
-  .verification-features {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  & > *:last-child {
+    margin-top: 10px;
+  }
+}
 
-    .feature-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.kyc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
-      .feature-icon {
-        font-size: 20px;
-        color: var(--ion-color-primary);
-        flex-shrink: 0;
-      }
+.form-row {
+  &.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
 
-      span {
-        font-size: 15px;
-        font-weight: 500;
-        color: var(--ion-text-color);
-      }
+  &.city-state-zip {
+    display: grid;
+    grid-template-columns: 5fr 2fr 3fr;
+    gap: 12px;
+  }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &.field-error {
+    .field-label {
+      color: var(--kyc-error);
+    }
+
+    .field-input,
+    .field-select {
+      border-bottom-color: var(--kyc-error);
+    }
+
+    .select-wrapper {
+      border-bottom-color: var(--kyc-error);
     }
   }
 }
 
-.verification-button-section {
-  text-align: center;
+.field-label {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--kyc-gray);
+}
 
-  .verification-button {
-    --border-radius: 12px;
-    font-weight: 600;
-    height: 50px;
-    text-transform: none;
-    font-size: 17px;
-    margin-bottom: 16px;
+.field-input {
+  font-family: 'Manrope', sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--kyc-text);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--kyc-primary);
+  border-radius: 0;
+  padding: 6px 0;
+  outline: none;
+  width: 100%;
+  -webkit-appearance: none;
+
+  &::placeholder {
+    color: #cbd5e1;
+    font-weight: 400;
   }
 
-  .verification-note {
-    font-size: 14px;
-    color: var(--ion-color-medium);
-    margin: 0;
-    line-height: 1.4;
-    padding: 0 16px;
+  &:focus {
+    border-bottom-color: var(--kyc-primary);
   }
 }
 
-.error-message-global, .success-message-global {
-  text-align: center;
-  margin-top: 24px;
-  font-size: 15px;
+input[type="date"].field-input {
+  color-scheme: light;
+}
+
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid var(--kyc-primary);
+
+  .select-arrow {
+    position: absolute;
+    right: 0;
+    font-size: 18px;
+    color: var(--kyc-gray);
+    pointer-events: none;
+  }
+}
+
+.field-select {
+  font-family: 'Manrope', sans-serif;
+  font-size: 17px;
   font-weight: 500;
+  color: var(--kyc-text);
+  background: transparent;
+  border: none;
+  padding: 6px 24px 6px 0;
+  outline: none;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--kyc-gray);
+  margin-top: 2px;
+}
+
+.error-msg {
+  font-size: 12px;
+  color: var(--kyc-error);
+  font-family: 'Manrope', sans-serif;
+  margin-top: 2px;
+}
+
+// --- Disclosures (Step 2) ---
+.disclosures-header {
+  margin-bottom: 8px;
+}
+
+.disclosures-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--kyc-text);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.015em;
+}
+
+.disclosures-subtitle {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  color: var(--kyc-gray);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.disclosure-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--kyc-border);
+}
+
+.disclosure-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.disclosure-label {
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kyc-text);
+}
+
+.disclosure-desc {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  color: var(--kyc-gray);
+  line-height: 1.4;
+}
+
+.toggle-btn {
+  flex-shrink: 0;
+  min-width: 52px;
+  height: 30px;
+  border-radius: 15px;
+  border: 1.5px solid var(--kyc-border);
+  background: #f1f5f9;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--kyc-gray);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.toggle-on {
+    background: var(--kyc-primary);
+    border-color: var(--kyc-primary);
+    color: white;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.toggle-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+// --- Agreement checkbox ---
+.agreement-section {
+  margin-top: 8px;
+}
+
+.agreement-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.agreement-checkbox-wrap {
+  flex-shrink: 0;
+  position: relative;
+  width: 22px;
+  height: 22px;
+}
+
+.agreement-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  z-index: 1;
+  margin: 0;
+}
+
+.custom-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--kyc-border);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+
+  &.checked {
+    background: var(--kyc-primary);
+    border-color: var(--kyc-primary);
+  }
+
+  .material-symbols-outlined {
+    font-size: 14px;
+    color: white;
+    font-variation-settings: 'wght' 700;
+  }
+}
+
+.agreement-text {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  color: var(--kyc-text);
+  line-height: 1.5;
+}
+
+.agreement-link {
+  color: var(--kyc-primary);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+// --- Footer ---
+ion-footer {
+  --background: transparent;
+  --border-width: 0;
+  height: 80px;
+}
+
+.cta-footer {
+  padding: 10px 34px 26px 34px;
+  background: white;
+  border-top: 1px solid #f1f5f9;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+
+.cta-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  background: #e5e7eb;
+  color: #9ca3af;
+
+  &.btn-visible {
+    background: #111827;
+    color: white;
+    box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.35);
+  }
+
+  &:not(:disabled).btn-visible:active {
+    transform: scale(0.99);
+    background: #1f2937;
+  }
+
+  // Loading state — form is valid but request is in-flight
+  &:disabled.btn-visible {
+    background: #1f2937;
+    color: white;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.8;
+  }
+
+  &:disabled:not(.btn-visible) {
+    cursor: not-allowed;
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  ion-spinner {
+    width: 18px;
+    height: 18px;
+    color: white;
+  }
 }

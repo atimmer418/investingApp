@@ -7,7 +7,7 @@
 
   // Override Ionic theme variables so dark.system.css doesn't bleed in
   --ion-background-color: #f8fafc;
-  --ion-toolbar-background: rgba(248, 250, 252, 0.95);
+  --ion-toolbar-background: #f8fafc;
   --ion-toolbar-color: #0f172a;
   --ion-text-color: #0f172a;
   --ion-color-primary: #2563EB;
@@ -16,11 +16,9 @@
 
 // --- Toolbar ---
 ion-toolbar {
-  --background: rgba(248, 250, 252, 0.95);
+  --background: #f8fafc;
   --border-width: 0;
   --min-height: 52px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 // --- Header ---
@@ -250,10 +248,11 @@ ion-content::part(scroll) {
 ion-footer {
   --background: transparent;
   --border-width: 0;
+  height: 80px;
 }
 
 .cta-footer {
-  padding: 14px 18px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  padding: 10px 34px 26px 34px;
   background: white;
   border-top: 1px solid #f1f5f9;
   box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.06);

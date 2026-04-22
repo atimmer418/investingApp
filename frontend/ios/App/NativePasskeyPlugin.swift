@@ -1,6 +1,7 @@
 import Foundation
 import Capacitor
 import AuthenticationServices
+import LocalAuthentication
 import UIKit
 
 /// Native Capacitor plugin for passkey authentication.
@@ -21,6 +22,30 @@ public class NativePasskeyPlugin: CAPPlugin, CAPBridgedPlugin {
     private var activeHandler: AnyObject?
 
     @objc func authenticate(_ call: CAPPluginCall) {
+        // Biometric-only path: use LAContext directly, no passkey dialog.
+        if call.getString("challenge") == nil {
+            let reason = call.getString("reason") ?? "Unlock FRED"
+            let context = LAContext()
+            var error: NSError?
+            guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
+                call.reject(error?.localizedDescription ?? "Biometrics not available")
+                return
+            }
+            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, authError in
+                DispatchQueue.main.async {
+                    if success {
+                        call.resolve(["verified": true])
+                    } else if let laError = authError as? LAError, laError.code == .userCancel {
+                        call.reject("USER_CANCELLED")
+                    } else {
+                        call.reject(authError?.localizedDescription ?? "Biometric authentication failed")
+                    }
+                }
+            }
+            return
+        }
+
+        // Full FIDO2 passkey path.
         guard #available(iOS 16.0, *) else {
             call.reject("Passkey authentication requires iOS 16 or later")
             return

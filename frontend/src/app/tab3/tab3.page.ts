@@ -57,6 +57,8 @@ import { ToastService } from '../services/toast.service';
 import { MonthlyFreedomUpdateComponent } from '../components/monthly-freedom-update/monthly-freedom-update.component';
 import { MonthlyFreedomUpdateService } from '../services/monthly-freedom-update.service';
 import { AppLockService } from '../services/app-lock.service';
+import { AccountStatusService } from '../services/account-status.service';
+import { Observable } from 'rxjs';
 
 interface SettingSection {
   title: string;
@@ -104,6 +106,7 @@ export class Tab3Page implements OnInit, OnDestroy {
   public recurringInvestment: RecurringInvestment | null = null;
   public userEmail: string = '';
   public hasMfuPeriod: boolean = false;
+  public profileActionRequired$: Observable<boolean>;
 
   public settingSections: SettingSection[] = [
     {
@@ -208,8 +211,10 @@ export class Tab3Page implements OnInit, OnDestroy {
     private toastService: ToastService,
     private modalController: ModalController,
     private mfuService: MonthlyFreedomUpdateService,
-    private appLockService: AppLockService
+    private appLockService: AppLockService,
+    private accountStatusService: AccountStatusService
   ) {
+    this.profileActionRequired$ = this.accountStatusService.actionRequired$;
     addIcons({
       settingsOutline,
       walletOutline,

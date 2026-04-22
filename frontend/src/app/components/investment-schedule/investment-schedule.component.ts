@@ -2,9 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import {
-  IonContent, IonHeader, IonToolbar, IonFooter, IonSpinner
+  IonContent, IonHeader, IonToolbar, IonFooter, IonSpinner, NavController
 } from '@ionic/angular/standalone';
 
 import { AuthService } from '../../services/auth.service';
@@ -75,6 +75,7 @@ export class InvestmentScheduleComponent implements OnInit {
 
   constructor(
     private router: Router,
+    private navCtrl: NavController,
     private authService: AuthService,
     private investmentService: InvestmentService,
     private http: HttpClient
@@ -100,7 +101,7 @@ export class InvestmentScheduleComponent implements OnInit {
     {
       value: 'BIWEEKLY',
       label: 'Bi-weekly',
-      description: 'Every 2 weeks (26 times per year)',
+      description: 'Every 2 weeks',
       paychecksPerMonth: 2.17,
       daysBetween: 14
     },
@@ -122,19 +123,26 @@ export class InvestmentScheduleComponent implements OnInit {
 
   ngOnInit() {
     console.log('[InvestmentScheduleComponent] ngOnInit - Initializing Investment Schedule Page.');
-    
-    // Mark this step as incomplete when user enters/returns to this page
-    this.authService.markStepIncomplete('investmentSchedule').subscribe({
-      next: () => console.log('InvestmentSchedule step marked as incomplete'),
-      error: (err) => console.error('Failed to mark InvestmentSchedule step as incomplete:', err)
-    });
-    
+
+    this.restoreAcatsFromStorage();
     this.loadUserFinancialData();
-    // Set default next pay date to tomorrow (user can adjust)
-    this.schedule.startDate = this.getInvestmentDate();
 
     // Let Manrope render before revealing content
     setTimeout(() => this.isReady = true, 50);
+  }
+
+  private restoreAcatsFromStorage(): void {
+    const saved = localStorage.getItem('pendingAcats');
+    if (saved) {
+      try {
+        const { dtc, account } = JSON.parse(saved);
+        this.transferBrokerageDtc = dtc || '';
+        this.transferAccountNumber = account || '';
+        if (this.transferBrokerageDtc || this.transferAccountNumber) {
+          this.showTransferOptions = true;
+        }
+      } catch (_) {}
+    }
   }
 
   goBack(): void {
@@ -143,37 +151,44 @@ export class InvestmentScheduleComponent implements OnInit {
 
   loadUserFinancialData(): void {
     console.log('[InvestmentScheduleComponent] Loading user financial data...');
-    
-    // First try to get current progress
+
+    // Try to restore a previously saved schedule first
+    this.authService.getCurrentInvestmentSchedule().subscribe({
+      next: (savedSchedule) => {
+        if (savedSchedule && savedSchedule.frequency && savedSchedule.investmentAmount) {
+          console.log('[InvestmentScheduleComponent] ✅ Restoring saved schedule:', savedSchedule);
+          this.schedule.payFrequency = savedSchedule.frequency;
+          this.schedule.investmentAmount = savedSchedule.investmentAmount;
+          this.schedule.startDate = savedSchedule.startDate || this.getInvestmentDate();
+        } else {
+          this.schedule.startDate = this.getInvestmentDate();
+          this.loadMonthlyGoalAndCalculate();
+        }
+      },
+      error: () => {
+        this.schedule.startDate = this.getInvestmentDate();
+        this.loadMonthlyGoalAndCalculate();
+      }
+    });
+  }
+
+  private loadMonthlyGoalAndCalculate(): void {
     const currentProgress = this.authService.getCurrentProgress();
-    console.log('[InvestmentScheduleComponent] Current progress from cache:', currentProgress);
-    
+
     if (currentProgress && currentProgress.monthlyInvestment) {
-      console.log('[InvestmentScheduleComponent] ✅ Found monthlyInvestment in cached progress:', currentProgress.monthlyInvestment);
       this.setFinancialData(currentProgress);
     } else {
-      console.log('[InvestmentScheduleComponent] ⚠️ No current progress or no monthlyInvestment found, fetching fresh data...');
-      console.log('[InvestmentScheduleComponent] Details - hasProgress:', !!currentProgress, 'hasMonthlyInvestment:', currentProgress?.monthlyInvestment);
-      
-      // If no current progress, fetch fresh data from backend
       this.authService.getUserProgress().subscribe({
-        next: (progress) => {
-          console.log('[InvestmentScheduleComponent] ✅ Fresh progress data received from API:', progress);
-          this.setFinancialData(progress);
-        },
-        error: (error) => {
-          console.error('[InvestmentScheduleComponent] ❌ Error loading user progress:', error);
-          // Set defaults if API fails
-          this.monthlyGoal = 500; // Default fallback
+        next: (progress) => this.setFinancialData(progress),
+        error: () => {
+          this.monthlyGoal = 500;
           this.calculateRecommendedAmount();
         }
       });
     }
 
-    // Also subscribe to ongoing changes
     this.authService.userProgress$.subscribe(progress => {
       if (progress && progress.monthlyInvestment) {
-        console.log('[InvestmentScheduleComponent] Progress updated via subscription:', progress);
         this.setFinancialData(progress);
       }
     });
@@ -378,19 +393,11 @@ export class InvestmentScheduleComponent implements OnInit {
     let nextDate: Date;
 
     if (currentDay < 15) {
-      // Before 15th, so next pay date is 15th of this month
+      // Before 15th — next date is 15th of this month
       nextDate = new Date(currentYear, currentMonth, 15);
     } else {
-      // On or after 15th, so next pay date is last day of this month
-      const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-      
-      if (currentDay < lastDayOfMonth) {
-        // Before last day, schedule for last day of current month
-        nextDate = new Date(currentYear, currentMonth, lastDayOfMonth);
-      } else {
-        // Already at or past last day, schedule for 15th of next month
-        nextDate = new Date(currentYear, currentMonth + 1, 15);
-      }
+      // On or after 15th — next date is 1st of next month
+      nextDate = new Date(currentYear, currentMonth + 1, 1);
     }
 
     // Format date as YYYY-MM-DD in local time to avoid timezone issues
@@ -402,7 +409,6 @@ export class InvestmentScheduleComponent implements OnInit {
 
   private getNextFirstOfMonth(): string {
     const today = new Date();
-    const currentDay = today.getDate();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
     
@@ -484,20 +490,7 @@ export class InvestmentScheduleComponent implements OnInit {
         return `Every other ${biweeklyDay}`;
       
       case 'SEMI_MONTHLY':
-        const dayOfMonth = startDate.getDate();
-        const semiMonthlyDayWithSuffix = this.getDayWithOrdinalSuffix(dayOfMonth);
-        
-        if (dayOfMonth === 1) {
-          return `Every 1st and 15th of the month`;
-        } else if (dayOfMonth === 15) {
-          return `Every 15th and 1st of the month`;
-        } else if (dayOfMonth <= 15) {
-          // If user picked a date in first half of month, pair it with 15th
-          return `Every ${semiMonthlyDayWithSuffix} and 15th of the month`;
-        } else {
-          // If user picked a date in second half of month, it goes with 1st of next month
-          return `Every ${semiMonthlyDayWithSuffix} and 1st of the month`;
-        }
+        return `Every 1st and 15th of the month`;
       
       case 'MONTHLY':
         const monthlyDay = startDate.getDate();
@@ -533,16 +526,9 @@ export class InvestmentScheduleComponent implements OnInit {
   }
 
   canProceed(): boolean {
-    return this.schedule.investmentAmount > 0 && this.schedule.startDate !== '';
-  }
-
-  private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('jwtToken');
-    let headers = new HttpHeaders();
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-    return headers;
+    if (this.schedule.investmentAmount <= 0 || this.schedule.startDate === '') return false;
+    if (this.showTransferOptions && (!this.transferBrokerageDtc || !this.transferAccountNumber)) return false;
+    return true;
   }
 
   goToStockPreferences(): void {
@@ -565,9 +551,11 @@ export class InvestmentScheduleComponent implements OnInit {
             dtcNumber: this.transferBrokerageDtc,
             accountNumber: this.transferAccountNumber
         };
+        localStorage.setItem('pendingAcats', JSON.stringify({ dtc: this.transferBrokerageDtc, account: this.transferAccountNumber }));
         console.log('Saved pending ACATS request');
     } else {
         this.investmentService.pendingAcatsRequest = null;
+        localStorage.removeItem('pendingAcats');
     }
 
     // Save investment schedule using AuthService
@@ -582,12 +570,12 @@ export class InvestmentScheduleComponent implements OnInit {
             next: () => {
               console.log('InvestmentSchedule step completed successfully');
               // Navigate to investment confirmation
-              this.router.navigate(['/investment-confirmation']);
+              this.navCtrl.navigateForward('/investment-confirmation', { replaceUrl: true });
             },
             error: (err) => {
               console.error('Failed to complete InvestmentSchedule step:', err);
               // Still navigate even if progress update fails
-              this.router.navigate(['/investment-confirmation']);
+              this.navCtrl.navigateForward('/investment-confirmation', { replaceUrl: true });
             }
           });
         },

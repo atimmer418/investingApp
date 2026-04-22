@@ -1,18 +1,27 @@
-import { Component } from '@angular/core';
-import { IonTabs, IonTabBar, IonTabButton, IonIcon } from '@ionic/angular/standalone';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule, AsyncPipe } from '@angular/common';
+import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonBadge } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { triangle, ellipse, square, pieChartOutline, trendingUpOutline, personOutline, chatbubblesOutline } from 'ionicons/icons';
+import { AccountStatusService } from '../services/account-status.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-tabs',
   templateUrl: 'tabs.page.html',
   styleUrls: ['tabs.page.scss'],
   standalone: true,
-  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon],
+  imports: [CommonModule, AsyncPipe, IonTabs, IonTabBar, IonTabButton, IonIcon, IonBadge],
 })
-export class TabsPage {
+export class TabsPage implements OnInit {
+  settingsTabBadge$: Observable<string | null>;
 
-  constructor() {
+  constructor(private accountStatusService: AccountStatusService) {
     addIcons({ pieChartOutline, trendingUpOutline, personOutline, chatbubblesOutline, triangle, ellipse, square });
+    this.settingsTabBadge$ = this.accountStatusService.settingsTabBadge$;
+  }
+
+  ngOnInit() {
+    this.accountStatusService.refreshStatus();
   }
 }

@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { LinkPlaidComponent } from './components/linkplaid/linkplaid.component';
 
 export const routes: Routes = [
   {
@@ -32,8 +33,8 @@ export const routes: Routes = [
     loadComponent: () => import('./components/stockselection/stockselection.component').then(m => m.StockSelectionComponent)
   },
   {
-    path: 'link-bank', // Or 'plaid-link'
-    loadComponent: () => import('./components/linkplaid/linkplaid.component').then(m => m.LinkPlaidComponent)
+    path: 'link-bank',
+    component: LinkPlaidComponent
   },
   {
     path: 'investment-schedule',
@@ -113,5 +114,9 @@ export const routes: Routes = [
   {
     path: 'my-profile',
     loadComponent: () => import('./pages/my-profile/my-profile.page').then( m => m.MyProfilePage)
+  },
+  {
+    path: 'document-upload',
+    loadComponent: () => import('./components/document-upload/document-upload.component').then(m => m.DocumentUploadComponent)
   },
 ];

@@ -6,31 +6,79 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
+    // Tracks whether the app fully entered background (vs. briefly inactive for Face ID, calls, etc.)
+    private var didEnterBackground = false
+    private let loadingOverlayTag = 9001
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Force light background on the native window so it shows through
+        // keyboard rounded corners even when the device is in dark mode.
+        window?.backgroundColor = UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
         return true
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
-        // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
-        // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
+        // Show the loading overlay synchronously here — iOS takes its background snapshot
+        // between applicationWillResignActive and applicationDidEnterBackground, so this
+        // guarantees the snapshot captures the loading screen instead of app content.
+        showLoadingOverlay()
     }
 
     func applicationDidEnterBackground(_ application: UIApplication) {
-        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
-        // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+        didEnterBackground = true
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
-        // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
+        // Nothing needed — overlay removal is handled in applicationDidBecomeActive.
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        if didEnterBackground {
+            // Safety fallback only — JS calls LoadingOverlayPlugin.hide() deterministically
+            // once the correct content is ready. This 3s timer only fires if JS fails to signal.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+                self?.removeLoadingOverlay()
+            }
+        } else {
+            // Briefly inactive only (Face ID prompt, incoming call, Control Center, etc.):
+            // remove immediately so the overlay never visibly blocks the UI.
+            removeLoadingOverlay()
+        }
+        didEnterBackground = false
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+    }
+
+    // MARK: - Loading overlay
+
+    private func showLoadingOverlay() {
+        guard let window = window, window.viewWithTag(loadingOverlayTag) == nil else { return }
+
+        let overlay = UIView(frame: window.bounds)
+        overlay.backgroundColor = .white
+        overlay.tag = loadingOverlayTag
+
+        let label = UILabel()
+        label.text = "this will be the loading screen"
+        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        // #6b7280
+        label.textColor = UIColor(red: 107/255, green: 114/255, blue: 128/255, alpha: 1)
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        overlay.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: overlay.centerYAnchor)
+        ])
+
+        window.addSubview(overlay)
+        window.bringSubviewToFront(overlay)
+    }
+
+    func removeLoadingOverlay() {
+        window?.viewWithTag(loadingOverlayTag)?.removeFromSuperview()
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {

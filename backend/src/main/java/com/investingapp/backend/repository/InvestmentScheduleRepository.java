@@ -44,4 +44,14 @@ public interface InvestmentScheduleRepository extends JpaRepository<InvestmentSc
      * Find investment schedule by ID and user (for security)
      */
     Optional<InvestmentSchedule> findByIdAndUser(Long id, User user);
+
+    /**
+     * Find all schedules whose owner has the given Alpaca account status
+     */
+    List<InvestmentSchedule> findByUser_AccountStatus(String accountStatus);
+
+    /**
+     * Delete all investment schedules belonging to a user (used on account rejection)
+     */
+    void deleteAllByUser(User user);
 }

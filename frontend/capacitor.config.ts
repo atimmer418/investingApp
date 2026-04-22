@@ -1,9 +1,15 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'My AWESOME Investing Appga',
+  appId: 'com.fredvested.Fred',
+  appName: 'FRED',
   webDir: 'www',
+  server: {
+    url: 'https://local.fredvested.com'
+  },
+  ios: {
+    backgroundColor: '#f8fafc'
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 0, // We will hide it manually

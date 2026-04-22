@@ -1,439 +1,628 @@
-// Use CSS variables for a consistent theme
+// --- Force light mode regardless of system theme ---
 :host {
-  --ion-background-color: #f2f2f7; // Gray background like other components
-  --ion-toolbar-background: var(--ion-background-color);
-  --ion-text-color: #000000;
-  --ion-color-primary: #007aff;
-  --ion-color-medium: #8e8e93;
+  --confirm-primary: #2563EB;
+  --confirm-bg: #f8fafc;
+  --confirm-text: #0f172a;
+  --confirm-gray: #6b7280;
+  --confirm-border: #e5e7eb;
+
+  --ion-background-color: #f8fafc;
+  --ion-toolbar-background: #f8fafc;
+  --ion-toolbar-color: #0f172a;
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
+  --ion-footer-background: #f8fafc;
 }
 
-.container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 16px;
+// --- Toolbar ---
+ion-toolbar {
+  --background: #f8fafc;
+  --border-width: 0;
+  --min-height: 52px;
 }
 
-.welcome-section {
+// --- Header ---
+.header-inner {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--confirm-text);
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+
+  &:active {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+}
+
+.header-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
   text-align: center;
-  margin-bottom: 24px;
-  
-  h1 {
-    color: var(--ion-color-primary);
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 12px;
+  flex: 1;
+  margin: 0;
+  padding-right: 40px;
+  color: var(--confirm-text);
+}
+
+// --- Content ---
+ion-content {
+  --background: var(--confirm-bg);
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+ion-content::part(scroll) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.content-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px 32px;
+  font-family: 'Manrope', sans-serif;
+  gap: 14px;
+}
+
+// --- Hero ---
+.hero-section {
+  flex-shrink: 0;
+  padding-bottom: 4px;
+}
+
+.hero-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  text-align: center;
+  margin: 0;
+  color: var(--confirm-text);
+}
+
+.hero-subtitle {
+  font-size: 14px;
+  color: var(--confirm-gray);
+  margin: 8px 0 0 0;
+  line-height: 1.4;
+  text-align: center;
+  padding: 0 40px;
+}
+
+// --- Section Cards (schedule + portfolio) ---
+.section-card {
+  background: white;
+  border-radius: 14px;
+  border: 2px solid var(--confirm-border);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.card-icon {
+  font-size: 18px;
+  color: var(--confirm-primary);
+  font-variation-settings: 'FILL' 1;
+  flex-shrink: 0;
+}
+
+.card-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--confirm-text);
+  letter-spacing: -0.01em;
+  margin: 0;
+  flex: 1;
+}
+
+// --- Edit link (portfolio card) ---
+.edit-link {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--confirm-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  text-decoration: none;
+
+  .material-symbols-outlined {
+    font-size: 14px;
   }
-  
-  .subtitle {
-    color: var(--ion-color-medium);
-    font-size: 1.1rem;
-    margin: 0;
+
+  &:active {
+    opacity: 0.7;
   }
 }
 
-.summary-card {
-  margin-bottom: 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  
-  ion-card-title {
-    display: flex;
+// --- Schedule rows ---
+.schedule-cols {
+  display: flex;
+  flex-direction: row;
+  border-top: 1px solid #f1f5f9;
+  padding: 12px 0 4px;
+}
+
+.schedule-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+
+  &:nth-child(2) {
     align-items: center;
-    gap: 12px;
-    font-size: 1.2rem;
-    font-weight: 600;
   }
-  
-  .summary-list {
-    ion-item {
-      --padding-start: 0;
-      --inner-padding-end: 0;
-      
-      ion-icon {
-        margin-right: 16px;
-        font-size: 1.2rem;
-      }
-      
-      h3 {
-        font-weight: 600;
-        margin: 0 0 4px 0;
-        color: var(--ion-color-dark);
-      }
-      
-      p {
-        margin: 0;
-        color: var(--ion-color-medium);
-        font-size: 0.9rem;
-      }
-    }
+
+  &:nth-child(3) {
+    align-items: flex-end;
   }
 }
 
-/* Terms Agreement */
-.terms-agreement {
-  margin-bottom: 1.5rem;
-  
-  .terms-item {
-    --background: transparent;
-    --padding-start: 0;
-    --inner-padding-end: 0;
-    font-size: 0.9rem;
-    
-    ion-checkbox {
-      --size: 20px;
-      margin-right: 12px;
-      --checkbox-background: white;
-      --border-color: #c7c7cc;
-      --border-radius: 4px;
-      
-      &::part(container) {
-        border-width: 2px;
-      }
-    }
-    
-    .terms-label {
-      color: #3a3a3c;
-      font-size: 0.9rem;
-      line-height: 1.4;
-      white-space: normal;
-      
-      a {
-        color: var(--ion-color-primary);
-        text-decoration: none;
-        font-weight: 500;
-        
-        &:hover {
-          text-decoration: underline;
-        }
-      }
-    }
+.row-label {
+  font-family: 'Manrope', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--confirm-gray);
+}
+
+.row-value {
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--confirm-text);
+
+  &.row-value--blue {
+    color: var(--confirm-primary);
   }
 }
 
-.action-buttons {
-  margin-top: 32px;
-  
-  .start-investing-btn {
-    --border-radius: 12px;
-    margin-bottom: 16px;
-    height: 52px;
-    font-weight: 600;
-    
-    ion-icon {
-      margin-right: 8px;
-    }
-  }
-  
-  .legal-disclaimer {
-    font-size: 0.8rem;
-    color: var(--ion-color-medium);
-    text-align: center;
-    margin: 0;
-    padding: 0 16px;
-    line-height: 1.4;
+.freq-pill {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  background: #eff6ff;
+  color: var(--confirm-primary);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.schedule-description {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid var(--confirm-border);
+}
+
+.desc-icon {
+  font-size: 15px;
+  color: var(--confirm-gray);
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-variation-settings: 'FILL' 1;
+}
+
+.desc-text {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  color: var(--confirm-gray);
+  line-height: 1.45;
+  margin: 0;
+}
+
+// --- Portfolio loading ---
+.portfolio-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  color: var(--confirm-gray);
+
+  ion-spinner {
+    width: 16px;
+    height: 16px;
+    color: var(--confirm-primary);
   }
 }
 
-// Portfolio section styles
-.portfolio-summary {
-  .portfolio-type {
-    margin-bottom: 16px;
-    
-    h4 {
-      color: var(--ion-color-dark);
-      margin: 0 0 8px 0;
-      font-weight: 600;
-    }
-    
-    .portfolio-description {
-      color: var(--ion-color-medium);
-      font-size: 0.9rem;
-      margin: 0;
-    }
-  }
-  
-  .portfolio-list {
-    margin-bottom: 16px;
-    
-    .portfolio-item {
-      --padding-start: 0;
-      --inner-padding-end: 0;
-      margin-bottom: 8px;
-      
-      .allocation-badge {
-        background: var(--ion-color-primary);
-        color: white;
-        border-radius: 12px;
-        padding: 4px 8px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-right: 12px;
-        min-width: 40px;
-        text-align: center;
-      }
-      
-      h3 {
-        font-weight: 600;
-        margin: 0 0 4px 0;
-        color: var(--ion-color-dark);
-        font-size: 0.95rem;
-      }
-      
-      p {
-        margin: 0 0 4px 0;
-        color: var(--ion-color-dark);
-        font-size: 0.85rem;
-      }
-      
-      ion-note {
-        color: var(--ion-color-medium);
-        font-size: 0.8rem;
-      }
-    }
-  }
-  
-  .portfolio-actions {
-    display: flex;
-    justify-content: center;
-    margin-top: 8px;
-    
-    .edit-portfolio-btn {
-      --color: var(--ion-color-medium);
-      font-size: 0.85rem;
-      
-      ion-icon {
-        margin-right: 4px;
-        font-size: 0.9rem;
-      }
-    }
-  }
-  
-  // Loading and error states
-  .loading-portfolio {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    
-    ion-spinner {
-      margin-bottom: 8px;
-    }
-    
-    p {
-      color: var(--ion-color-medium);
-      font-size: 0.9rem;
-      margin: 0;
-    }
-  }
-  
-  .portfolio-error {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    background-color: rgba(255, 193, 7, 0.1);
-    border-radius: 8px;
-    margin-bottom: 16px;
-    
-    ion-icon {
-      font-size: 1.2rem;
-    }
-    
-    p {
-      color: var(--ion-color-warning-shade);
-      font-size: 0.9rem;
-      margin: 0;
-    }
-  }
-  
-  // Simplified portfolio display
-  .simple-portfolio-list {
-    margin-bottom: 16px;
-    
-    .portfolio-item-simple {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      .allocation-circle {
-        background: var(--ion-color-primary);
-        color: white;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.8rem;
-        font-weight: 600;
-        flex-shrink: 0;
-      }
-      
-      .stock-info {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        
-        strong {
-          color: var(--ion-color-dark);
-          font-size: 0.95rem;
-          font-weight: 600;
-        }
-        
-        .stock-description {
-          color: var(--ion-color-medium);
-          font-size: 0.8rem;
-        }
-      }
-    }
-  }
-  
-  // Compact portfolio display
-  .compact-portfolio {
-    margin-bottom: 16px;
-    
-    .portfolio-item-compact {
-      padding: 12px;
-      margin-bottom: 8px;
-      background: rgba(var(--ion-color-light-rgb), 0.3);
-      border-radius: 8px;
-      border: 1px solid rgba(var(--ion-color-medium-rgb), 0.2);
-      
-      .stock-header {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        margin-bottom: 8px;
-        
-        .stock-main {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          
-          .stock-symbol {
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: var(--ion-color-dark);
-          }
-          
-          .allocation-percent {
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--ion-color-primary);
-            background: rgba(var(--ion-color-primary-rgb), 0.1);
-            padding: 2px 8px;
-            border-radius: 12px;
-          }
-        }
-        
-        .stock-name {
-          font-size: 0.8rem;
-          color: var(--ion-color-medium);
-          line-height: 1.3;
-        }
-      }
-      
-      .allocation-bar {
-        height: 4px;
-        background: rgba(var(--ion-color-medium-rgb), 0.2);
-        border-radius: 2px;
-        overflow: hidden;
-        
-        .allocation-fill {
-          height: 100%;
-          background: linear-gradient(90deg, var(--ion-color-primary), var(--ion-color-primary-shade));
-          border-radius: 2px;
-          transition: width 0.3s ease;
-        }
-      }
-    }
+// --- Portfolio error note ---
+.portfolio-error-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  color: #b45309;
+
+  .material-symbols-outlined {
+    font-size: 14px;
+    font-variation-settings: 'FILL' 1;
+    flex-shrink: 0;
   }
 }
 
-// Info card styles
-.info-card {
-  .info-content {
-    .info-intro {
-      color: var(--ion-color-dark);
-      font-weight: 500;
-      margin: 0 0 20px 0;
-      font-size: 1rem;
-    }
-    
-    .info-steps {
-      margin-bottom: 20px;
-      
-      .info-step {
-        display: flex;
-        margin-bottom: 16px;
-        align-items: flex-start;
-        
-        .step-number {
-          background: var(--ion-color-tertiary);
-          color: white;
-          border-radius: 50%;
-          width: 24px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.8rem;
-          font-weight: 600;
-          margin-right: 12px;
-          flex-shrink: 0;
-          margin-top: 2px;
-        }
-        
-        .step-content {
-          flex: 1;
-          
-          h4 {
-            color: var(--ion-color-dark);
-            margin: 0 0 6px 0;
-            font-weight: 600;
-            font-size: 0.95rem;
-          }
-          
-          p {
-            color: var(--ion-color-medium);
-            margin: 0;
-            font-size: 0.85rem;
-            line-height: 1.4;
-          }
-        }
-      }
-    }
-    
-    .flexibility-note {
-      background: var(--ion-color-light);
-      border-radius: 12px;
-      padding: 16px;
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      
-      ion-icon {
-        font-size: 1.2rem;
-        margin-top: 2px;
-        flex-shrink: 0;
-      }
-      
-      p {
-        margin: 0;
-        color: var(--ion-color-dark);
-        font-size: 0.9rem;
-        line-height: 1.4;
-        
-        strong {
-          font-weight: 600;
-        }
-      }
-    }
+// --- Portfolio list ---
+.portfolio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.portfolio-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stock-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.stock-symbol {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--confirm-primary);
+  letter-spacing: 0.02em;
+}
+
+.stock-name {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  color: var(--confirm-gray);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stock-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  min-width: 80px;
+}
+
+.alloc-pct {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--confirm-text);
+}
+
+.alloc-bar {
+  width: 80px;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.alloc-fill {
+  height: 100%;
+  background: var(--confirm-primary);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+// --- FRED + Alpaca Trust Section ---
+// Intentionally distinct from the white section cards:
+// off-white bg + blue left-border accent instead of card elevation
+.trust-section {
+  background: #f8fafc;
+  border: 1px solid var(--confirm-border);
+  border-left: 3px solid var(--confirm-primary);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trust-header {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.trust-brands {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-pill {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+}
+
+.brand-pill--fred {
+  background: #2563EB;
+  color: white;
+  font-family: 'Montserrat Black Italic', sans-serif;
+  font-weight: 900;
+  font-style: italic;
+}
+
+// Alpaca brand identity: lowercase wordmark, amber/gold color palette
+.brand-pill--alpaca {
+  background: #fef3c7;
+  color: #d97706;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  font-size: 11px;
+  text-transform: lowercase;
+}
+
+.brand-x {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--confirm-gray);
+}
+
+.brand-sep {
+  font-size: 12px;
+  color: var(--confirm-gray);
+  opacity: 0.4;
+}
+
+.trust-headline {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--confirm-gray);
+}
+
+.trust-body {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  color: var(--confirm-gray);
+  line-height: 1.5;
+  margin: 0;
+
+  strong {
+    font-weight: 700;
+    color: var(--confirm-text);
+  }
+}
+
+.trust-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.trust-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: white;
+  border: 1px solid var(--confirm-border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--confirm-text);
+
+  .material-symbols-outlined {
+    font-size: 13px;
+    color: var(--confirm-primary);
+    font-variation-settings: 'FILL' 1;
+    flex-shrink: 0;
+  }
+}
+
+// --- Terms of Service ---
+.tos-section {
+  padding: 2px 0;
+}
+
+.tos-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.tos-checkbox-wrap {
+  flex-shrink: 0;
+  position: relative;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+}
+
+.tos-checkbox-native {
+  position: absolute;
+  opacity: 0;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  z-index: 1;
+  margin: 0;
+}
+
+.custom-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--confirm-border);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+
+  &.checked {
+    background: var(--confirm-primary);
+    border-color: var(--confirm-primary);
+  }
+
+  .material-symbols-outlined {
+    font-size: 14px;
+    color: white;
+    font-variation-settings: 'wght' 700;
+  }
+}
+
+.tos-text {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  color: var(--confirm-text);
+  line-height: 1.5;
+}
+
+.tos-link {
+  color: var(--confirm-primary);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+// --- Footer ---
+ion-footer {
+  --background: transparent;
+  --border-width: 0;
+  height: 80px;
+}
+
+.cta-footer {
+  padding: 10px 34px 26px 34px;
+  background: white;
+  border-top: 1px solid #f1f5f9;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.cta-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #e5e7eb;
+  color: #9ca3af;
+  box-shadow: none;
+  opacity: 0.7;
+  transform: translateY(4px);
+
+  &.btn-visible {
+    background: #111827;
+    color: white;
+    box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.35);
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  &:not(:disabled).btn-visible:active {
+    transform: scale(0.99);
+    background: #1f2937;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  ion-spinner {
+    width: 18px;
+    height: 18px;
+    color: white;
+  }
+}
+
+.pricing-disclosure {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  color: var(--confirm-gray);
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+}
+
+// --- Loading veil ---
+.loading-veil {
+  position: fixed;
+  inset: 0;
+  background: var(--confirm-bg);
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+
+  &.veil-hidden {
+    opacity: 0;
   }
 }

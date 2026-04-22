@@ -33,7 +33,7 @@ export class KeychainSyncService {
    * Only true on native iOS in production builds.
    */
   get isAvailable(): boolean {
-    return environment.production && Capacitor.getPlatform() === 'ios';
+    return Capacitor.getPlatform() === 'ios';
   }
 
   /**

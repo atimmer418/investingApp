@@ -34,9 +34,7 @@ public class RecoveryController {
 
     @PostMapping("/initiate")
     public ResponseEntity<RecoveryResponse> initiateRecovery(@RequestBody RecoveryInitiateRequest request) {
-        // Look up user by SHA-256 hash of the submitted SSN (plaintext SSN is never stored)
-        String ssnHash = encryptionService.hashSsn(request.getSsn());
-        User user = userRepository.findBySsnHash(ssnHash).orElse(null);
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
 
         if (user == null) {
             // Security: return success regardless to prevent enumeration
@@ -62,8 +60,7 @@ public class RecoveryController {
 
     @PostMapping("/verify")
     public ResponseEntity<RecoveryResponse> verifyRecovery(@RequestBody RecoveryVerifyRequest request) {
-        String ssnHash = encryptionService.hashSsn(request.getSsn());
-        User user = userRepository.findBySsnHash(ssnHash).orElse(null);
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
 
         if (user == null) {
             return ResponseEntity.status(401).body(new RecoveryResponse(false, "Invalid request", null));

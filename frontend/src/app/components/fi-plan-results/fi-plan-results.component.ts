@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostBinding } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonHeader, IonToolbar, IonContent, IonFooter, NavController } from '@ionic/angular/standalone';
 import { Subscription } from 'rxjs';
@@ -24,7 +24,7 @@ export interface Strategy {
   templateUrl: './fi-plan-results.component.html',
   styleUrls: ['./fi-plan-results.component.scss'],
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, IonHeader, IonToolbar, IonContent, IonFooter],
+  imports: [CommonModule, IonHeader, IonToolbar, IonContent, IonFooter],
 })
 export class FiPlanResultsComponent implements OnInit, OnDestroy {
 
@@ -32,7 +32,7 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
     {
       id: 'yield',
       title: 'Yield-Based Income',
-      description: 'Live off dividends and interest. Principal stays invested — never sell a share.',
+      description: 'Never sell a share. Live off dividends and interest; principal stays invested.',
       icon: 'savings',
       tags: [
         { label: 'No Selling', type: 'blue' },
@@ -43,12 +43,12 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
     {
       id: 'guardrails',
       title: 'Dynamic Guardrails',
-      description: 'Spend more in good years, pull back in bad ones. No debt, ever.',
+      description: 'No debt accumulated, ever. Spend more in good years, pull back in bad ones.',
       icon: 'tune',
       tags: [
         { label: 'High Growth', type: 'green' },
         { label: 'Debt-Free', type: 'green' },
-        { label: 'Flex Spending', type: 'amber' },
+        { label: 'Flex Spending', type: 'blue' },
       ]
     },
     {
@@ -58,18 +58,18 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
       icon: 'swap_vert',
       tags: [
         { label: 'Protects Gains', type: 'green' },
-        { label: 'App-Managed', type: 'green' },
-        { label: 'Uses Credit', type: 'amber' },
+        { label: 'Shields Bad Years', type: 'green' },
+        { label: 'Uses Credit', type: 'blue' },
       ]
     },
     {
       id: 'annuity',
       title: 'Annuity',
-      description: 'Turn your portfolio into a guaranteed paycheck for life. Zero market risk.',
+      description: 'Zero market risk. Turn your portfolio into a guaranteed paycheck for life.',
       icon: 'lock',
       tags: [
         { label: 'Guaranteed', type: 'green' },
-        { label: 'Set & Forget', type: 'green' },
+        { label: 'Set & Forget', type: 'blue' },
         { label: 'No Growth', type: 'amber' },
       ]
     }
@@ -95,13 +95,7 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // Make component accessible from browser console for debugging
     (window as any)['fiPlanComponent'] = this;
-    
-    // Mark this step as incomplete when user enters/returns to this page
-    this.authService.markStepIncomplete('fiPlanResults').subscribe({
-      next: () => console.log('FiPlanResults step marked as incomplete'),
-      error: (err) => console.log('FiPlanResults step could not be marked incomplete (likely not authenticated yet):', err)
-    });
-    
+
     this.routeSub = this.route.queryParams.subscribe(params => {
       // First try to get values from query parameters (fresh navigation from surveyInitial)
       this.timeToFI = params['t'];
@@ -114,7 +108,7 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
         this.loadSavedData();
       }
       
-      // Calculate target portfolio based on retirement income
+      // Calculate target portfolio based on retirement income (same rate as surveyinitial)
       if (this.retirementIncome) {
         this.targetPortfolio = this.retirementIncome / 0.04;
       }
@@ -240,7 +234,7 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
   
   private calculateTimeToFI(monthlyInvestment: number, retirementIncome: number): string {
     const targetPortfolio = retirementIncome / 0.04;
-    const monthlyRate = 0.10 / 12; // 10% annual return
+    const monthlyRate = 0.10 / 12;
     
     if (monthlyInvestment <= 0) {
       return '∞';
@@ -279,6 +273,11 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
 
   getSelectedStrategyName(): string {
     return this.strategies.find(s => s.id === this.selectedStrategyId)?.title || 'Strategy';
+  }
+
+  get formattedTargetPortfolio(): string {
+    const rounded = Math.round(this.targetPortfolio / 100_000) * 100_000;
+    return '$' + rounded.toLocaleString('en-US');
   }
 
   getFutureYear(): number {
@@ -331,6 +330,10 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
     console.log('=== MANUAL TEST COMPLETE ===');
   }
   
+  formatDescription(description: string): string {
+    return description.replace(/\. /g, '.<br>');
+  }
+
   // Debug method for template
   debugCardClick(id: string) {
     console.log('Card clicked (mousedown):', id);

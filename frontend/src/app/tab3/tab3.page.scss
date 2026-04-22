@@ -453,6 +453,34 @@ ion-header {
 }
 
 /* =============================================================================
+   PROFILE BADGE (action-required indicator)
+   ============================================================================= */
+
+.avatar-badge-wrap {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  .profile-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    --background: #dc2626;
+    --color: white;
+    --padding-start: 3px;
+    --padding-end: 3px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    border: 1.5px solid white;
+  }
+}
+
+/* =============================================================================
    DARK MODE SUPPORT
    ============================================================================= */
 

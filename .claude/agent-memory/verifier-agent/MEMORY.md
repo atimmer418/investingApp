@@ -1,1 +1,3 @@
 - [project_encryption_upgrade.md](project_encryption_upgrade.md) — Notes from AES-256/GCM encryption upgrade review; known gaps and patterns to watch
+- [feedback_dead_code_cleanup.md](feedback_dead_code_cleanup.md) — Builder leaves orphaned TS properties after full template rewrites; check for dead refs
+- [feedback_design_system_colors.md](feedback_design_system_colors.md) — All onboarding components use #f8fafc bg and cool-gray cards; flag deviations

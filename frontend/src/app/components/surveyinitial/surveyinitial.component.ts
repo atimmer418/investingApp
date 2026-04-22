@@ -41,19 +41,14 @@ export class SurveyInitialComponent implements OnInit {
   isCalculationExpanded: boolean = false;
 
   // --- Economic Assumptions for the SWR/FIRE calculation ---
-  private readonly AVG_MARKET_YIELD = 0.1049; // Presented to users as ~10% average annual return
-  private readonly SAFE_WITHDRAWAL_RATE = 0.0449; // Presented to users as ~4% withdrawal rate
+  private readonly AVG_MARKET_YIELD = 0.10;     // ~10% average annual return
+  private readonly SAFE_WITHDRAWAL_RATE = 0.04; // 4% safe withdrawal rate
 
   constructor(private router: Router, private authService: AuthService, private navCtrl: NavController) {
     this.fadeIn = this.router.getCurrentNavigation()?.extras?.state?.['fromGetStarted'] === true;
   }
 
   ngOnInit() {
-    this.authService.markStepIncomplete('surveyInitial').subscribe({
-      next: () => console.log('SurveyInitial step marked as incomplete'),
-      error: (err) => console.log('SurveyInitial step could not be marked incomplete (likely not authenticated yet):', err)
-    });
-
     this.loadSavedValues();
 
     // Clamp to the new slider ranges after loading
@@ -96,10 +91,11 @@ export class SurveyInitialComponent implements OnInit {
 
   get formattedTargetPortfolio(): string {
     const target = this.retirementIncome / this.SAFE_WITHDRAWAL_RATE;
-    if (target >= 1_000_000) {
-      return '$' + (target / 1_000_000).toFixed(1) + 'M';
+    const rounded = Math.round(target / 100_000) * 100_000;
+    if (rounded >= 1_000_000) {
+      return '$' + (rounded / 1_000_000).toFixed(1) + 'M';
     }
-    return '$' + (target / 1_000).toFixed(0) + 'K';
+    return '$' + (rounded / 1_000).toFixed(0) + 'K';
   }
 
   getSliderGradient(value: number, min: number, max: number): string {

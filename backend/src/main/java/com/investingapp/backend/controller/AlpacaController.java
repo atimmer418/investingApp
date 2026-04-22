@@ -1,5 +1,9 @@
 package com.investingapp.backend.controller;
 
+import com.investingapp.backend.dto.AccountStatusResponse;
+import com.investingapp.backend.dto.CreateAlpacaAccountRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -60,50 +64,121 @@ public class AlpacaController {
     }
 
     @PostMapping("/create-account")
-    public ResponseEntity<Map<String, Object>> createAccount(@RequestBody CreateAccountRequest request) {
+    public ResponseEntity<Map<String, Object>> createAccount(
+            @Valid @RequestBody CreateAlpacaAccountRequest request,
+            HttpServletRequest httpRequest) {
         try {
-            logger.info("Creating Alpaca account for email: {}", request.getEmail());
+            logger.info("Creating Alpaca account (full KYC) for email: {}", request.getEmailAddress());
 
-            Map<String, Object> result = alpacaApiService.createAccount(
-                    request.getEmail(),
-                    request.getFirstName(),
-                    request.getLastName(),
-                    request.getDateOfBirth(),
-                    request.getSsn(),
-                    request.getPhone(),
-                    request.getAddress());
+            // CF-Connecting-IP is set by Cloudflare and cannot be spoofed by the client
+            String clientIp = httpRequest.getHeader("CF-Connecting-IP");
+            if (clientIp == null || clientIp.isBlank()) {
+                clientIp = httpRequest.getRemoteAddr();
+            }
+
+            Map<String, Object> result = alpacaApiService.createAccount(request, clientIp);
 
             if (result.containsKey("error")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
             }
 
-            // Save Alpaca Account ID, Number, and encrypted SSN to User entity
-            String email = request.getEmail();
-            if (email != null && !email.isEmpty()) {
-                com.investingapp.backend.model.User user = userRepository.findByEmail(email).orElse(null);
-                if (user != null) {
-                    if (result.containsKey("account_id")) {
-                        user.setAlpacaAccountId(encryptionService.encrypt((String) result.get("account_id")));
-                    }
-                    if (result.containsKey("account_number")) {
-                        user.setAlpacaAccountNumber(encryptionService.encrypt((String) result.get("account_number")));
-                    }
-                    // Encrypt SSN at rest and store a hash for lookup
-                    if (request.getSsn() != null && !request.getSsn().isEmpty()) {
-                        user.setSsn(encryptionService.encrypt(request.getSsn()));
-                        user.setSsnHash(encryptionService.hashSsn(request.getSsn()));
-                    }
-                    userRepository.save(user);
-                    logger.info("Saved encrypted Alpaca Account ID, Number, and SSN for user: {}", email);
-                } else {
-                    logger.warn("User not found for email: {}, could not save Alpaca details locally", email);
+            // Persist Alpaca Account ID, Number, encrypted SSN, and account status
+            // SECURITY: Use authenticated user from JWT, NOT request body email (prevents privilege escalation)
+            User user = getCurrentUser();
+            if (user != null) {
+                if (result.containsKey("account_id")) {
+                    user.setAlpacaAccountId(encryptionService.encrypt((String) result.get("account_id")));
                 }
+                if (result.containsKey("account_number")) {
+                    user.setAlpacaAccountNumber(encryptionService.encrypt((String) result.get("account_number")));
+                }
+                if (request.getTaxId() != null && !request.getTaxId().isEmpty()) {
+                    user.setSsn(encryptionService.encrypt(request.getTaxId()));
+                    user.setSsnHash(encryptionService.hashSsn(request.getTaxId()));
+                }
+                if (request.getGivenName() != null) {
+                    user.setFirstName(request.getGivenName());
+                }
+                if (request.getFamilyName() != null) {
+                    user.setLastName(request.getFamilyName());
+                }
+                user.setAccountStatus("SUBMITTED");
+                userRepository.save(user);
+                logger.info("Saved Alpaca account details and set accountStatus=SUBMITTED for user: {}",
+                        request.getEmailAddress());
+            } else {
+                logger.warn("User not found for email: {}, could not save Alpaca details locally",
+                        request.getEmailAddress());
             }
 
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
             logger.error("Error creating Alpaca account", e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @GetMapping("/my-account-status")
+    public ResponseEntity<?> getMyAccountStatus() {
+        try {
+            User user = getCurrentUser();
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            }
+
+            String status = user.getAccountStatus();
+            boolean hasActionRequired = "ACTION_REQUIRED".equals(status);
+            return ResponseEntity.ok(new AccountStatusResponse(status, hasActionRequired));
+
+        } catch (Exception e) {
+            logger.error("Error fetching account status for current user", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to retrieve account status"));
+        }
+    }
+
+    @PostMapping("/upload-document")
+    public ResponseEntity<Map<String, Object>> uploadDocument(
+            @Valid @RequestBody UploadDocumentRequest request) {
+        try {
+            User user = getCurrentUser();
+            if (user == null) {
+                Map<String, Object> err = new HashMap<>();
+                err.put("error", "User not authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(err);
+            }
+
+            if (!"ACTION_REQUIRED".equals(user.getAccountStatus())) {
+                Map<String, Object> err = new HashMap<>();
+                err.put("error", "Document upload is only allowed when account status is ACTION_REQUIRED");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(err);
+            }
+
+            if (user.getAlpacaAccountId() == null) {
+                Map<String, Object> err = new HashMap<>();
+                err.put("error", "No Alpaca account found for this user");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
+            }
+
+            String alpacaAccountId = encryptionService.decrypt(user.getAlpacaAccountId());
+
+            Map<String, Object> result = alpacaApiService.uploadDocument(
+                    alpacaAccountId,
+                    request.getDocumentType(),
+                    request.getMimeType(),
+                    request.getContent());
+
+            if (result.containsKey("error")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+            }
+
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            logger.error("Error uploading document", e);
             Map<String, Object> error = new HashMap<>();
             error.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
@@ -155,44 +230,6 @@ public class AlpacaController {
         }
     }
 
-    @PostMapping("/accounts/{accountId}/ach-relationships/plaid")
-    public ResponseEntity<Map<String, Object>> createAchRelationshipFromPlaid(
-            @PathVariable String accountId,
-            @RequestBody CreateAchFromPlaidRequest request,
-            Authentication authentication) {
-        try {
-            logger.info("Creating ACH relationship for account {} using Plaid", accountId);
-
-            // Get user from authentication
-            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-            String userEmail = userDetails.getUsername();
-            com.investingapp.backend.model.User user = userRepository.findByEmail(userEmail).orElse(null);
-            if (user == null) {
-                Map<String, Object> errorResponse = new HashMap<>();
-                errorResponse.put("error", "User not found");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-            }
-
-            Map<String, Object> result = plaidToAlpacaService.createAchRelationshipFromPlaid(
-                    accountId,
-                    request.getPlaidAccountId(),
-                    request.getAccountOwnerName(),
-                    user);
-
-            if (result.containsKey("error")) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
-            }
-
-            return ResponseEntity.ok(result);
-
-        } catch (Exception e) {
-            logger.error("Error creating ACH relationship from Plaid: {}", e.getMessage());
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Failed to create ACH relationship from Plaid: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
-    }
-
     @GetMapping("/accounts/{accountId}/ach-relationships")
     public ResponseEntity<String> getAchRelationships(@PathVariable String accountId) {
         try {
@@ -217,72 +254,21 @@ public class AlpacaController {
         }
     }
 
-    // DTO for account creation request
-    public static class CreateAccountRequest {
-        private String email;
-        private String firstName;
-        private String lastName;
-        private String dateOfBirth;
-        private String ssn;
-        private String phone;
-        private Map<String, String> address;
+    // DTO for document upload request
+    public static class UploadDocumentRequest {
+        @jakarta.validation.constraints.NotBlank(message = "Document type is required")
+        private String documentType;
+        @jakarta.validation.constraints.NotBlank(message = "MIME type is required")
+        private String mimeType;
+        @jakarta.validation.constraints.NotBlank(message = "Document content is required")
+        private String content;
 
-        // Getters and setters
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public String getFirstName() {
-            return firstName;
-        }
-
-        public void setFirstName(String firstName) {
-            this.firstName = firstName;
-        }
-
-        public String getLastName() {
-            return lastName;
-        }
-
-        public void setLastName(String lastName) {
-            this.lastName = lastName;
-        }
-
-        public String getDateOfBirth() {
-            return dateOfBirth;
-        }
-
-        public void setDateOfBirth(String dateOfBirth) {
-            this.dateOfBirth = dateOfBirth;
-        }
-
-        public String getSsn() {
-            return ssn;
-        }
-
-        public void setSsn(String ssn) {
-            this.ssn = ssn;
-        }
-
-        public String getPhone() {
-            return phone;
-        }
-
-        public void setPhone(String phone) {
-            this.phone = phone;
-        }
-
-        public Map<String, String> getAddress() {
-            return address;
-        }
-
-        public void setAddress(Map<String, String> address) {
-            this.address = address;
-        }
+        public String getDocumentType() { return documentType; }
+        public void setDocumentType(String documentType) { this.documentType = documentType; }
+        public String getMimeType() { return mimeType; }
+        public void setMimeType(String mimeType) { this.mimeType = mimeType; }
+        public String getContent() { return content; }
+        public void setContent(String content) { this.content = content; }
     }
 
     @PostMapping("/acats/transfer")
@@ -377,26 +363,4 @@ public class AlpacaController {
         }
     }
 
-    // DTO for ACH relationship creation using Plaid
-    public static class CreateAchFromPlaidRequest {
-        private String plaidAccountId;
-        private String accountOwnerName;
-
-        // Getters and setters
-        public String getPlaidAccountId() {
-            return plaidAccountId;
-        }
-
-        public void setPlaidAccountId(String plaidAccountId) {
-            this.plaidAccountId = plaidAccountId;
-        }
-
-        public String getAccountOwnerName() {
-            return accountOwnerName;
-        }
-
-        public void setAccountOwnerName(String accountOwnerName) {
-            this.accountOwnerName = accountOwnerName;
-        }
-    }
 }

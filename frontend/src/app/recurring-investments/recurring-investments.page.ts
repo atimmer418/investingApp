@@ -37,6 +37,7 @@ import { InvestmentService, InvestmentSchedule, CreateInvestmentScheduleRequest 
 import { PasskeyService } from '../services/passkey.service';
 import { PinService } from '../services/pin.service';
 import { ToastService } from '../services/toast.service';
+import { AccountStatusService } from '../services/account-status.service';
 
 interface InvestmentFrequencyOption {
   value: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'SEMI_MONTHLY';
@@ -123,7 +124,8 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     private investmentService: InvestmentService,
     private passkeyService: PasskeyService,
     private pinService: PinService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private accountStatusService: AccountStatusService
   ) {
     addIcons({ cashOutline, timeOutline, calendarOutline, addOutline, checkmarkCircleOutline, pauseOutline, playOutline, alertCircleOutline, settingsOutline, informationCircleOutline });
   }
@@ -517,6 +519,16 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
         }
       }
 
+      // Gate: only check account status when resuming (unpausing)
+      if (!newStatus && !this.accountStatusService.isAccountActive()) {
+        this.toastService.showToast(
+          'Your account is not yet active. Investments will resume once your account is fully verified.',
+          'warning'
+        );
+        this.isLoading = false;
+        return;
+      }
+
       const operation = newStatus ?
         this.investmentService.pauseSchedule(this.currentInvestment.id) :
         this.investmentService.resumeSchedule(this.currentInvestment.id);
@@ -532,7 +544,15 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
           },
           error: (error) => {
             console.error('Error updating investment status:', error);
-            this.toastService.showToast('Failed to update investment schedule. Please try again.', 'danger');
+            // Fallback: handle 403 from backend as account-not-active gate
+            if (error.status === 403) {
+              this.toastService.showToast(
+                'Your account is not yet active. Investments will resume once your account is fully verified.',
+                'warning'
+              );
+            } else {
+              this.toastService.showToast('Failed to update investment schedule. Please try again.', 'danger');
+            }
             this.isLoading = false;
           }
         });

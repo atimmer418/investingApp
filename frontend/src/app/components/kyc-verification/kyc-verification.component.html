@@ -1,66 +1,234 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-title>Verify Your Identity</ion-title>
-    <ion-progress-bar [value]="0.56"></ion-progress-bar>
+    <div class="header-inner">
+      <button class="back-btn" (click)="goBack()">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      </button>
+      <h2 class="header-title">Identity Verification</h2>
+    </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-  <div class="kyc-form-container">
-    
-    <!-- Page Introduction -->
-    <div class="page-intro">
-      <h2>Before we can continue...</h2>
-      <p class="helper-text">We need to verify that you are who you say you are in order to open a personal brokerage account in your name.</p>
-    </div>
+<ion-content class="kyc-content">
+  <div class="content-inner">
 
-    <!-- Verification Information Section -->
-    <div class="verification-info-section">
-      <p class="verification-description">
-        We use Persona, a trusted identity verification service, to securely verify your identity. This process typically takes just a few minutes and helps us comply with KYC (Know Your Customer) and AML (Anti-Money Laundering) regulations.
-      </p>
-      
-      <div class="verification-features">
-        <div class="feature-item">
-          <ion-icon name="shield-checkmark" class="feature-icon"></ion-icon>
-          <span>Bank-level security</span>
-        </div>
-        <div class="feature-item">
-          <ion-icon name="time" class="feature-icon"></ion-icon>
-          <span>Takes just 2-3 minutes</span>
-        </div>
-        <div class="feature-item">
-          <ion-icon name="document-text" class="feature-icon"></ion-icon>
-          <span>Government ID required</span>
-        </div>
+    <!-- Hero — top-pinned -->
+    <div class="hero-section">
+      <h1 class="hero-title">A few more details.</h1>
+      <p class="hero-subtitle">Alpaca requires us to verify that you are who you say you are.</p>
+
+      <!-- Step indicators -->
+      <div class="step-indicators">
+        <div class="step-dot" [class.active]="currentStep === 1" [class.done]="currentStep === 2"></div>
+        <div class="step-line"></div>
+        <div class="step-dot" [class.active]="currentStep === 2"></div>
       </div>
     </div>
 
-    <!-- Verification Button Section -->
-    <div class="verification-button-section">
-      <ion-button 
-        expand="block" 
-        class="verification-button" 
-        type="button"  
-        (click)="startVerification()" 
-        [disabled]="isLoading">
-        <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
-        <span *ngIf="!isLoading">Start Identity Verification</span>
-        <span *ngIf="isLoading">Preparing verification...</span>
-      </ion-button>
-      
-      <p class="verification-note">
-        Your personal information is encrypted and secure. We'll never share your data with third parties.
-      </p>
-    </div>
+    <!-- Center zone -->
+    <div class="center-zone">
 
-    <!-- Feedback Messages -->
-    <div *ngIf="errorMessage" class="error-message-global">
-      <ion-text color="danger">{{ errorMessage }}</ion-text>
-    </div>
-    <div *ngIf="successMessage" class="success-message-global">
-      <ion-text color="success">{{ successMessage }}</ion-text>
-    </div>
+      <!-- Step 1: Contact + Identity -->
+      <div class="step-panel" [class.step-visible]="!exitingStep1" [class.step-hidden]="exitingStep1" *ngIf="currentStep === 1 || exitingStep1">
+        <form [formGroup]="step1Form" novalidate class="kyc-form">
 
+          <!-- Name row -->
+          <div class="form-row two-col">
+            <div class="form-field" [class.field-error]="step1Form.get('givenName')?.invalid && step1Form.get('givenName')?.touched">
+              <span class="field-label">FIRST NAME</span>
+              <input class="field-input" type="text" formControlName="givenName" placeholder="First name" autocomplete="given-name" (input)="onGivenNameInput($event)" />
+              <div class="error-msg" *ngIf="step1Form.get('givenName')?.invalid && step1Form.get('givenName')?.touched">Required</div>
+            </div>
+            <div class="form-field" [class.field-error]="step1Form.get('familyName')?.invalid && step1Form.get('familyName')?.touched">
+              <span class="field-label">LAST NAME</span>
+              <input id="familyNameInput" class="field-input" type="text" formControlName="familyName" placeholder="Last name" autocomplete="family-name" (input)="onFamilyNameInput($event)" />
+              <div class="error-msg" *ngIf="step1Form.get('familyName')?.invalid && step1Form.get('familyName')?.touched">Required</div>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-field" [class.field-error]="step1Form.get('emailAddress')?.invalid && step1Form.get('emailAddress')?.touched">
+            <span class="field-label">EMAIL</span>
+            <input class="field-input" type="email" formControlName="emailAddress" placeholder="you@email.com" autocomplete="email" />
+            <div class="error-msg" *ngIf="step1Form.get('emailAddress')?.invalid && step1Form.get('emailAddress')?.touched">Valid email required</div>
+          </div>
+
+          <!-- Date of Birth + Phone row -->
+          <div class="form-row two-col">
+            <div class="form-field" [class.field-error]="step1Form.get('dateOfBirth')?.invalid && step1Form.get('dateOfBirth')?.touched">
+              <span class="field-label">DATE OF BIRTH</span>
+              <input id="dateOfBirthInput" class="field-input" type="text" formControlName="dateOfBirth" placeholder="mm/dd/yyyy" inputmode="numeric" maxlength="10" (input)="onDateOfBirthInput($event)" autocomplete="bday" />
+              <div class="error-msg" *ngIf="step1Form.get('dateOfBirth')?.invalid && step1Form.get('dateOfBirth')?.touched">Use mm/dd/yyyy</div>
+            </div>
+            <div class="form-field" [class.field-error]="step1Form.get('phoneNumber')?.invalid && step1Form.get('phoneNumber')?.touched">
+              <span class="field-label">PHONE NUMBER</span>
+              <input id="phoneNumberInput" class="field-input" type="tel" formControlName="phoneNumber" placeholder="+1 (555) 000-0000" autocomplete="tel" (input)="onPhoneNumberInput($event)" />
+              <div class="error-msg" *ngIf="step1Form.get('phoneNumber')?.invalid && step1Form.get('phoneNumber')?.touched">Enter a valid US phone number</div>
+            </div>
+          </div>
+
+          <!-- Street Address -->
+          <div class="form-field" [class.field-error]="step1Form.get('streetAddress')?.invalid && step1Form.get('streetAddress')?.touched">
+            <span class="field-label">STREET ADDRESS</span>
+            <input id="streetAddressInput" class="field-input" type="text" formControlName="streetAddress" placeholder="123 Main St" autocomplete="street-address" (input)="onStreetAddressInput($event)" />
+            <div class="error-msg" *ngIf="step1Form.get('streetAddress')?.invalid && step1Form.get('streetAddress')?.touched">Required</div>
+          </div>
+
+          <!-- City + State + Zip row -->
+          <div class="form-row city-state-zip">
+            <div class="form-field" [class.field-error]="step1Form.get('city')?.invalid && step1Form.get('city')?.touched">
+              <span class="field-label">CITY</span>
+              <input class="field-input" type="text" formControlName="city" placeholder="New York" autocomplete="address-level2" />
+              <div class="error-msg" *ngIf="step1Form.get('city')?.invalid && step1Form.get('city')?.touched">Required</div>
+            </div>
+            <div class="form-field" [class.field-error]="step1Form.get('state')?.invalid && step1Form.get('state')?.touched">
+              <span class="field-label">STATE</span>
+              <div class="select-wrapper">
+                <select class="field-select" formControlName="state">
+                  <option value="" disabled>State</option>
+                  <option *ngFor="let s of states" [value]="s.code">{{ s.code }}</option>
+                </select>
+                <span class="select-arrow material-symbols-outlined">expand_more</span>
+              </div>
+              <div class="error-msg" *ngIf="step1Form.get('state')?.invalid && step1Form.get('state')?.touched">Required</div>
+            </div>
+            <div class="form-field" [class.field-error]="step1Form.get('postalCode')?.invalid && step1Form.get('postalCode')?.touched">
+              <span class="field-label">ZIP CODE</span>
+              <input class="field-input" type="text" formControlName="postalCode" placeholder="10001" maxlength="5" inputmode="numeric" />
+              <div class="error-msg" *ngIf="step1Form.get('postalCode')?.invalid && step1Form.get('postalCode')?.touched">5-digit zip required</div>
+            </div>
+          </div>
+
+          <!-- SSN + Funding Source row -->
+          <div class="form-row two-col">
+            <div class="form-field" [class.field-error]="step1Form.get('taxId')?.invalid && step1Form.get('taxId')?.touched">
+              <span class="field-label">SOCIAL SECURITY NUMBER</span>
+              <input id="taxIdInput" class="field-input" type="text" formControlName="taxId" placeholder="XXX-XX-XXXX" inputmode="numeric" maxlength="11" (input)="onTaxIdInput($event)" autocomplete="off" />
+              <div class="field-hint">Encrypted and stored securely.</div>
+              <div class="error-msg" *ngIf="step1Form.get('taxId')?.invalid && step1Form.get('taxId')?.touched">Format: XXX-XX-XXXX</div>
+            </div>
+            <div class="form-field" [class.field-error]="step1Form.get('fundingSource')?.invalid && step1Form.get('fundingSource')?.touched">
+              <span class="field-label">PRIMARY SOURCE OF FUNDS</span>
+              <div class="select-wrapper">
+                <select class="field-select" formControlName="fundingSource">
+                  <option value="" disabled>Select source...</option>
+                  <option *ngFor="let fs of fundingSources" [value]="fs.value">{{ fs.label }}</option>
+                </select>
+                <span class="select-arrow material-symbols-outlined">expand_more</span>
+              </div>
+              <div class="error-msg" *ngIf="step1Form.get('fundingSource')?.invalid && step1Form.get('fundingSource')?.touched">Required</div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Step 2: Disclosures + Agreement -->
+      <div class="step-panel step-panel--enter" *ngIf="currentStep === 2">
+        <form [formGroup]="step2Form" novalidate class="kyc-form kyc-form--disclosures">
+
+          <div class="disclosures-header">
+            <h3 class="disclosures-title">Regulatory Disclosures</h3>
+            <p class="disclosures-subtitle">Federal law requires us to ask these questions.<br>Please answer honestly.</p>
+          </div>
+
+          <!-- Toggle: Control Person -->
+          <div class="disclosure-item">
+            <div class="disclosure-text">
+              <span class="disclosure-label">Are you a control person?</span>
+              <span class="disclosure-desc">A director, officer, or 10%+ shareholder of a publicly traded company.</span>
+            </div>
+            <button type="button" class="toggle-btn" [class.toggle-on]="step2Form.get('isControlPerson')?.value" (click)="step2Form.patchValue({ isControlPerson: !step2Form.get('isControlPerson')?.value })">
+              <span class="toggle-label">{{ step2Form.get('isControlPerson')?.value ? 'Yes' : 'No' }}</span>
+            </button>
+          </div>
+
+          <!-- Toggle: FINRA affiliated -->
+          <div class="disclosure-item">
+            <div class="disclosure-text">
+              <span class="disclosure-label">Are you affiliated with an exchange or FINRA?</span>
+              <span class="disclosure-desc">Employed by or associated with a registered broker-dealer or securities exchange.</span>
+            </div>
+            <button type="button" class="toggle-btn" [class.toggle-on]="step2Form.get('isAffiliatedExchangeOrFinra')?.value" (click)="step2Form.patchValue({ isAffiliatedExchangeOrFinra: !step2Form.get('isAffiliatedExchangeOrFinra')?.value })">
+              <span class="toggle-label">{{ step2Form.get('isAffiliatedExchangeOrFinra')?.value ? 'Yes' : 'No' }}</span>
+            </button>
+          </div>
+
+          <!-- Toggle: Politically exposed -->
+          <div class="disclosure-item">
+            <div class="disclosure-text">
+              <span class="disclosure-label">Are you politically exposed?</span>
+              <span class="disclosure-desc">A current or former senior government official or political figure.</span>
+            </div>
+            <button type="button" class="toggle-btn" [class.toggle-on]="step2Form.get('isPoliticallyExposed')?.value" (click)="step2Form.patchValue({ isPoliticallyExposed: !step2Form.get('isPoliticallyExposed')?.value })">
+              <span class="toggle-label">{{ step2Form.get('isPoliticallyExposed')?.value ? 'Yes' : 'No' }}</span>
+            </button>
+          </div>
+
+          <!-- Toggle: Immediate family exposed -->
+          <div class="disclosure-item">
+            <div class="disclosure-text">
+              <span class="disclosure-label">Are any immediate family members politically exposed?</span>
+              <span class="disclosure-desc">A spouse, child, parent, or sibling who is a current or former senior government official.</span>
+            </div>
+            <button type="button" class="toggle-btn" [class.toggle-on]="step2Form.get('immediateFamilyExposed')?.value" (click)="step2Form.patchValue({ immediateFamilyExposed: !step2Form.get('immediateFamilyExposed')?.value })">
+              <span class="toggle-label">{{ step2Form.get('immediateFamilyExposed')?.value ? 'Yes' : 'No' }}</span>
+            </button>
+          </div>
+
+          <!-- Agreement checkbox -->
+          <div class="agreement-section">
+            <label class="agreement-label">
+              <div class="agreement-checkbox-wrap">
+                <input type="checkbox" formControlName="agreementsChecked" class="agreement-checkbox" />
+                <div class="custom-checkbox" [class.checked]="step2Form.get('agreementsChecked')?.value">
+                  <span *ngIf="step2Form.get('agreementsChecked')?.value" class="material-symbols-outlined">check</span>
+                </div>
+              </div>
+              <span class="agreement-text">
+                By checking this box, I agree to Alpaca's
+                <!-- TODO: replace with real Alpaca agreement URLs -->
+                <a href="#" class="agreement-link" (click)="$event.preventDefault()">Customer Agreement</a>,
+                <a href="#" class="agreement-link" (click)="$event.preventDefault()">Margin Agreement</a>,
+                and <a href="#" class="agreement-link" (click)="$event.preventDefault()">Account Agreement</a>.
+              </span>
+            </label>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
   </div>
 </ion-content>
+
+<!-- Footer: Step 1 — continue button fades in when form is valid -->
+<ion-footer *ngIf="currentStep === 1 && !keyboardVisible" class="ion-no-border">
+  <div class="cta-footer">
+    <button class="cta-btn" type="button" (click)="proceedToStep2()" [disabled]="!step1Valid || exitingStep1" [class.btn-visible]="step1Valid">
+      <ng-container *ngIf="!exitingStep1">
+        <span>Continue</span>
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </ng-container>
+      <ng-container *ngIf="exitingStep1">
+        <span>Continuing...</span>
+      </ng-container>
+    </button>
+  </div>
+</ion-footer>
+
+<!-- Footer: Step 2 — submit button fades in when agreement checked -->
+<ion-footer *ngIf="currentStep === 2 && !keyboardVisible" class="ion-no-border">
+  <div class="cta-footer">
+    <button class="cta-btn" type="button" (click)="submitKyc()" [disabled]="!step2Valid || isLoading" [class.btn-visible]="step2Valid">
+      <ng-container *ngIf="!isLoading">
+        <span>Create My Account</span>
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </ng-container>
+      <ng-container *ngIf="isLoading">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>Creating account...</span>
+      </ng-container>
+    </button>
+  </div>
+</ion-footer>

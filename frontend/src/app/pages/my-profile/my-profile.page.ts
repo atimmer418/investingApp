@@ -11,6 +11,9 @@ import { AuthService } from '../../services/auth.service';
 import { SettingsService } from '../../services/settings.service';
 import { ToastService } from '../../services/toast.service';
 import { PortfolioService } from '../../services/portfolio.service';
+import { AccountStatusService } from '../../services/account-status.service';
+import { Router } from '@angular/router';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-my-profile',
@@ -24,6 +27,9 @@ import { PortfolioService } from '../../services/portfolio.service';
   ]
 })
 export class MyProfilePage implements OnInit {
+  // Action-required banner
+  actionRequired$: Observable<boolean>;
+
   // User Info
   userName: string = 'Investor';
   userEmail: string = '';
@@ -66,9 +72,16 @@ export class MyProfilePage implements OnInit {
     private authService: AuthService,
     private settingsService: SettingsService,
     private toastService: ToastService,
-    private portfolioService: PortfolioService
+    private portfolioService: PortfolioService,
+    private accountStatusService: AccountStatusService,
+    private router: Router
   ) {
     addIcons({camera,walletOutline,timeOutline,shareOutline,ticketOutline,checkmarkCircleOutline,saveOutline});
+    this.actionRequired$ = this.accountStatusService.actionRequired$;
+  }
+
+  goToDocumentUpload() {
+    this.router.navigateByUrl('/document-upload');
   }
 
 

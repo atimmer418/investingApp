@@ -14,6 +14,13 @@
 
 <ion-content [scrollY]="false" class="ion-padding profile-content">
 
+  <!-- Action-required banner — persists until documents are uploaded -->
+  <div *ngIf="(actionRequired$ | async)" class="action-required-banner" (click)="goToDocumentUpload()">
+    <span class="material-symbols-outlined ar-icon">warning</span>
+    <span class="ar-text">Action required: Upload verification documents</span>
+    <span class="material-symbols-outlined ar-chevron">chevron_right</span>
+  </div>
+
   <div class="profile-header">
     <div class="avatar-container">
       <ion-avatar>

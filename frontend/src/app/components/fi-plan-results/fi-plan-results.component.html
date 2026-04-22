@@ -27,7 +27,7 @@
     <div class="hero-section">
       <h1 class="hero-title">Fast Forward to {{ getFutureYear() }}.</h1>
       <p class="hero-subtitle">
-        Your portfolio hits <strong>{{ targetPortfolio | currency:'USD':'symbol':'1.0-0' }}</strong>. Pick how you want to live off it.
+        Your portfolio hits <strong>{{ formattedTargetPortfolio }}</strong>.<br>Choose how you want to live off it.
       </p>
     </div>
 
@@ -52,7 +52,7 @@
             <span class="material-symbols-outlined card-icon">{{ strategy.icon }}</span>
             <span class="card-title">{{ strategy.title }}</span>
           </div>
-          <p class="card-description">{{ strategy.description }}</p>
+          <p class="card-description" [innerHTML]="formatDescription(strategy.description)"></p>
         </div>
 
         <!-- Tags -->

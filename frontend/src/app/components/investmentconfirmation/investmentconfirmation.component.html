@@ -1,173 +1,168 @@
-<ion-header [translucent]="true">
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/investment-schedule" text="" icon="chevron-back-outline"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Confirm Investment</ion-title>
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <div class="header-inner">
+      <button class="back-btn" (click)="goBack()">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      </button>
+      <h2 class="header-title">Review Your Plan</h2>
+    </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <div class="container">
-    <div class="welcome-section">
-      <h1>You're Almost Ready!</h1>
-      <p class="subtitle">Review your investment details and confirm to get started</p>
+<ion-content class="confirm-content">
+  <div class="content-inner">
+
+    <!-- Hero -->
+    <div class="hero-section">
+      <h1 class="hero-title">One last look.</h1>
+      <p class="hero-subtitle">Confirm your setup and start building financial freedom.</p>
     </div>
 
-    <ion-card class="summary-card">
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="calendar-outline" color="primary"></ion-icon>
-          Your Investment Schedule
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <ion-list lines="none" class="summary-list">
-          <ion-item>
-            <ion-icon name="repeat-outline" slot="start" color="primary"></ion-icon>
-            <ion-label>
-              <h3>Schedule</h3>
-              <p>{{ getInvestmentScheduleDescription() }}</p>
-            </ion-label>
-          </ion-item>
-
-          <ion-item>
-            <ion-icon name="cash-outline" slot="start" color="success"></ion-icon>
-            <ion-label>
-              <h3>Investment Amount</h3>
-              <p>{{ formatCurrency(investmentSchedule.investmentAmount) }}</p>
-            </ion-label>
-          </ion-item>
-        </ion-list>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card class="summary-card">
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="pie-chart-outline" color="secondary"></ion-icon>
-          Your Portfolio
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div class="portfolio-summary">
-          <div class="portfolio-type">
-            <h4>{{ portfolioType === 'auto' ? 'Diversified Portfolio' : 'Custom Portfolio' }}</h4>
-          </div>
-
-          <!-- Loading state -->
-          <div *ngIf="isLoadingPortfolio" class="loading-portfolio">
-            <ion-spinner name="dots"></ion-spinner>
-            <p>Loading your portfolio...</p>
-          </div>
-
-          <!-- Error state -->
-          <div *ngIf="portfolioError" class="portfolio-error">
-            <ion-icon name="warning-outline" color="warning"></ion-icon>
-            <p>{{ portfolioError }}</p>
-          </div>
-
-          <!-- Compact portfolio display -->
-          <div *ngIf="!isLoadingPortfolio && !portfolioError" class="compact-portfolio">
-            <div *ngFor="let stock of userPortfolio" class="portfolio-item-compact">
-              <div class="stock-header">
-                <div class="stock-main">
-                  <span class="stock-symbol">{{ stock.symbol }}</span>
-                  <span class="allocation-percent">{{ stock.allocation }}%</span>
-                </div>
-                <div class="stock-name">{{ stock.description }}</div>
-              </div>
-              <div class="allocation-bar">
-                <div class="allocation-fill" [style.width.%]="stock.allocation"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="portfolio-actions">
-            <ion-button fill="clear" size="small" color="medium" (click)="editPortfolio()" class="edit-portfolio-btn">
-              <ion-icon name="create-outline" slot="start"></ion-icon>
-              Edit Portfolio
-            </ion-button>
-          </div>
+    <!-- Investment Schedule Card -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">calendar_month</span>
+        <h3 class="card-title">Investment Schedule</h3>
+      </div>
+      <div class="schedule-cols">
+        <div class="schedule-col">
+          <span class="row-label">FREQUENCY</span>
+          <div class="freq-pill">{{ getSelectedFrequencyDetails()?.label || investmentSchedule.payFrequency }}</div>
         </div>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card class="info-card">
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="information-circle-outline" color="tertiary"></ion-icon>
-          What Happens Next?
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div class="info-content">
-          <p class="info-intro">When you click "Start Investing", here's what will happen:</p>
-
-          <div class="info-steps">
-            <div class="info-step">
-              <div class="step-number">1</div>
-              <div class="step-content">
-                <h4>Account Creation</h4>
-                <p>We'll create a personal brokerage account for you through Alpaca Securities using your verified
-                  information.</p>
-              </div>
-            </div>
-
-            <div class="info-step">
-              <div class="step-number">2</div>
-              <div class="step-content">
-                <h4>Automated Funding</h4>
-                <p>ACH transfers will initiate on your selected dates ({{
-                  formatCurrency(investmentSchedule.investmentAmount) }} every {{
-                  getSelectedFrequencyDetails()?.label?.toLowerCase() || 'period' }}). Trades execute 1-3 business days
-                  after each transfer initiation.</p>
-              </div>
-            </div>
-
-            <div class="info-step">
-              <div class="step-number">3</div>
-              <div class="step-content">
-                <h4>Smart Investing</h4>
-                <p>Each time funds are added, they'll be automatically invested into your selected portfolio based on
-                  the allocations you've chosen.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="flexibility-note">
-            <ion-icon name="pause-circle-outline" color="medium"></ion-icon>
-            <p><strong>Full Control:</strong> You can pause, modify, or stop your investment schedule at any time
-              through your dashboard.</p>
-          </div>
+        <div class="schedule-col">
+          <span class="row-label">PER TRANSFER</span>
+          <span class="row-value">{{ formatCurrency(investmentSchedule.investmentAmount) }}</span>
         </div>
-      </ion-card-content>
-    </ion-card>
+        <div class="schedule-col">
+          <span class="row-label">MONTHLY TOTAL</span>
+          <span class="row-value row-value--blue">{{ formatCurrency(getMonthlyProjection()) }}</span>
+        </div>
+      </div>
+      <div class="schedule-description" *ngIf="getInvestmentScheduleDescription()">
+        <span class="material-symbols-outlined desc-icon">event_repeat</span>
+        <p class="desc-text">{{ getInvestmentScheduleDescription() }}</p>
+      </div>
+    </div>
 
-    <div class="action-buttons">
-      <!-- Terms Agreement -->
-      <div class="terms-agreement">
-        <ion-item lines="none" class="terms-item">
-          <ion-checkbox slot="start" [(ngModel)]="agreedToTerms" mode="md"></ion-checkbox>
-          <ion-label class="ion-text-wrap terms-label">
-            I agree to the <a href="#" (click)="$event.preventDefault()">Terms of Service</a> and <a href="#"
-              (click)="$event.preventDefault()">Privacy Policy</a>.
-          </ion-label>
-        </ion-item>
+    <!-- Portfolio Card -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">pie_chart</span>
+        <h3 class="card-title">{{ portfolioType === 'auto' ? 'FRED Default Portfolio' : 'Custom Portfolio' }}</h3>
+        <button class="edit-link" type="button" (click)="editPortfolio()">
+          Edit
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
       </div>
 
-      <ion-button expand="block" size="large" color="primary" (click)="authorizeRecurringInvestment()"
-        [disabled]="isAuthorizing || isCreatingAccount || !agreedToTerms" class="start-investing-btn">
-        <ion-icon name="rocket-outline" slot="start"></ion-icon>
-        <span *ngIf="!isAuthorizing && !isCreatingAccount">Start Investing & Create Account</span>
-        <span *ngIf="isAuthorizing">Verifying Identity...</span>
-        <span *ngIf="isCreatingAccount">Creating Your Brokerage Account...</span>
-      </ion-button>
+      <div *ngIf="isLoadingPortfolio" class="portfolio-loading">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>Loading portfolio...</span>
+      </div>
 
-      <p class="legal-disclaimer">
-        By clicking "Start Investing", you agree to create a brokerage account with Alpaca Securities LLC and authorize
-        automatic investments according to your schedule.
-      </p>
+      <div *ngIf="portfolioError && !isLoadingPortfolio" class="portfolio-error-note">
+        <span class="material-symbols-outlined">warning</span>
+        <span>Showing default allocation.</span>
+      </div>
+
+      <div *ngIf="!isLoadingPortfolio" class="portfolio-list">
+        <div *ngFor="let stock of userPortfolio" class="portfolio-item">
+          <div class="stock-left">
+            <span class="stock-symbol">{{ stock.symbol }}</span>
+            <span class="stock-name">{{ stock.name }}</span>
+          </div>
+          <div class="stock-right">
+            <span class="alloc-pct">{{ stock.allocation }}%</span>
+            <div class="alloc-bar">
+              <div class="alloc-fill" [style.width.%]="stock.allocation"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- FRED + Alpaca Trust Section -->
+    <div class="trust-section">
+      <div class="trust-header">
+        <div class="trust-brands">
+          <span class="brand-pill brand-pill--fred">FRED</span>
+          <span class="brand-x">×</span>
+          <span class="brand-pill brand-pill--alpaca">alpaca</span>
+          <span class="brand-sep">·</span>
+          <div class="trust-badge">
+            <span class="material-symbols-outlined">verified_user</span>
+            <span>FINRA</span>
+          </div>
+          <span class="brand-sep">·</span>
+          <div class="trust-badge">
+            <span class="material-symbols-outlined">account_balance</span>
+            <span>SIPC</span>
+          </div>
+        </div>
+        <span class="trust-headline">Powered by a licensed broker-dealer</span>
+      </div>
+      <p class="trust-body">
+        FRED automates your investment schedule and execution logic.
+        <strong>Alpaca</strong>, a FINRA-registered broker-dealer, handles trade execution and
+        holds your account in custody. You stay in full control of your portfolio and schedule —
+        pause or cancel anytime.
+      </p>
+      <!-- <div class="trust-badges">
+        <div class="trust-badge">
+          <span class="material-symbols-outlined">verified_user</span>
+          <span>FINRA Member</span>
+        </div>
+        <div class="trust-badge">
+          <span class="material-symbols-outlined">account_balance</span>
+          <span>SIPC Protected</span>
+        </div>
+        <div class="trust-badge">
+          <span class="material-symbols-outlined">tune</span>
+          <span>Cancel Anytime</span>
+        </div>
+      </div> -->
+    </div>
+
+    <!-- Terms of Service Checkbox -->
+    <div class="tos-section">
+      <label class="tos-label">
+        <div class="tos-checkbox-wrap">
+          <input type="checkbox" [(ngModel)]="agreedToTerms" class="tos-checkbox-native" />
+          <div class="custom-checkbox" [class.checked]="agreedToTerms">
+            <span *ngIf="agreedToTerms" class="material-symbols-outlined">check</span>
+          </div>
+        </div>
+        <span class="tos-text">
+          I agree to the
+          <a href="#" class="tos-link" (click)="$event.preventDefault()">Terms of Service</a>
+          and
+          <a href="#" class="tos-link" (click)="$event.preventDefault()">Privacy Policy</a>.
+        </span>
+      </label>
+    </div>
+
   </div>
 </ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="cta-footer">
+    <button
+      class="cta-btn"
+      type="button"
+      (click)="authorizeRecurringInvestment()"
+      [disabled]="isAuthorizing || isCreatingAccount || !agreedToTerms"
+      [class.btn-visible]="agreedToTerms && !isAuthorizing && !isCreatingAccount">
+      <ng-container *ngIf="!isAuthorizing && !isCreatingAccount">
+        <span>Confirm & Start Investing</span>
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </ng-container>
+      <ng-container *ngIf="isAuthorizing || isCreatingAccount">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>{{ isCreatingAccount ? 'Setting up account...' : 'Authorizing...' }}</span>
+      </ng-container>
+    </button>
+    <p class="pricing-disclosure">$7.99/month, billed through Apple. Cancel anytime.</p>
+  </div>
+</ion-footer>
+
+<div class="loading-veil" [class.veil-hidden]="!isLoadingPortfolio"></div>

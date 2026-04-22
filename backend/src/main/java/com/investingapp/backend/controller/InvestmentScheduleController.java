@@ -214,7 +214,8 @@ public class InvestmentScheduleController {
     }
     
     /**
-     * Resume an investment schedule
+     * Resume an investment schedule.
+     * Returns 403 if the user's Alpaca account is not yet active.
      */
     @PostMapping("/{scheduleId}/resume")
     public ResponseEntity<?> resumeSchedule(@PathVariable Long scheduleId) {
@@ -224,12 +225,21 @@ public class InvestmentScheduleController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new MessageResponse("User not authenticated"));
             }
-            
+
             InvestmentSchedule schedule = investmentScheduleService.resumeSchedule(user, scheduleId);
             InvestmentScheduleResponse response = new InvestmentScheduleResponse(schedule);
-            
+
             return ResponseEntity.ok(response);
-            
+
+        } catch (IllegalStateException e) {
+            if ("ACCOUNT_NOT_ACTIVE".equals(e.getMessage())) {
+                logger.warn("Resume blocked: account not active for schedule ID {}", scheduleId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new MessageResponse("Your account is not yet active."));
+            }
+            logger.error("Illegal state error resuming schedule: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse(e.getMessage()));
         } catch (RuntimeException e) {
             logger.error("Runtime error resuming schedule: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

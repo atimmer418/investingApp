@@ -9,7 +9,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="auth-content">
+<ion-content class="auth-content" >
 
   <!-- Error state: missing plan data -->
   <div *ngIf="!hasRequiredParams" class="error-state">
@@ -36,7 +36,7 @@
     <div class="hero-section">
       <h1 class="hero-title">Let's lock it in.</h1>
       <p class="hero-subtitle">
-        Create an account and be one step closer to making this plan a reality.
+        Create an account and be one step closer to making this plan into your reality.
       </p>
     </div>
 
@@ -51,6 +51,7 @@
             type="email"
             formControlName="email"
             placeholder="your@email.com"
+            autocomplete="email"
             email
           ></ion-input>
         </div>
@@ -58,7 +59,7 @@
 
       <!-- Passkey helper text -->
       <p class="passkey-note">
-        No passwords needed — just Face ID or fingerprint. Your email is backup recovery if needed.
+        No passwords needed — just Face ID or fingerprint.
       </p>
 
       <!-- Dev-only bypass button (local build only) -->
@@ -66,17 +67,10 @@
         I'm at work (no face or touch ID)
       </button>
 
-      <!-- Divider -->
-      <div class="divider-row">
-        <div class="divider-line"></div>
-        <span class="divider-text">or</span>
-        <div class="divider-line"></div>
-      </div>
-
-      <!-- Lost Device / Recover Account -->
+      <!-- Already have an account -->
       <button class="recovery-btn" type="button" (click)="recoverAccount()">
-        <span class="material-symbols-outlined">help</span>
-        <span>Lost Device / Recover Account</span>
+        <span class="material-symbols-outlined">login</span>
+        <span>Already have an account?</span>
       </button>
 
     </div>
@@ -92,7 +86,7 @@
 </ion-content>
 
 <!-- Footer: always shown when params are valid; button disabled until email is valid -->
-<ion-footer *ngIf="hasRequiredParams" class="ion-no-border">
+<ion-footer *ngIf="hasRequiredParams && !keyboardVisible" class="ion-no-border">
   <div class="cta-footer">
     <button
       class="cta-btn"

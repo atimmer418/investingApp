@@ -140,6 +140,9 @@ public class User {
     @Column(length = 50)
     private String alpacaAchStatus; // "QUEUED", "APPROVED", "PENDING", etc.
 
+    @Column(name = "account_status", length = 30)
+    private String accountStatus; // SUBMITTED, APPROVAL_PENDING, APPROVED, ACTIVE, REJECTED, ACTION_REQUIRED
+
     // IP address tracking for security purposes
     @Column(length = 45) // IPv6 addresses can be up to 45 characters
     private String registrationIpAddress;
