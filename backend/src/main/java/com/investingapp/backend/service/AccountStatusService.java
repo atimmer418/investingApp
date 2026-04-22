@@ -230,6 +230,29 @@ public class AccountStatusService {
             return;
         }
 
+        // Guard against cases where Alpaca already has an active ACH relationship but our DB
+        // never recorded it (e.g., a previous run crashed between Alpaca responding and the DB write).
+        try {
+            String alpacaAccountId = encryptionService.decrypt(user.getAlpacaAccountId());
+            String existingRelationships = alpacaApiService.getAchRelationships(alpacaAccountId);
+            JsonNode relationships = objectMapper.readTree(existingRelationships);
+            if (relationships.isArray()) {
+                for (JsonNode rel : relationships) {
+                    String status = rel.has("status") ? rel.get("status").asText() : "";
+                    if ("APPROVED".equals(status) || "QUEUED".equals(status)) {
+                        String achId = rel.get("id").asText();
+                        logger.info("Found existing active ACH relationship {} on Alpaca for user {} — saving and unpausing",
+                                achId, user.getEmail());
+                        investmentScheduleService.updateWithAchRequestId(user, achId);
+                        return;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Could not check existing ACH relationships for user {} — proceeding with creation: {}",
+                    user.getEmail(), e.getMessage());
+        }
+
         String ownerName = firstName + " " + lastName;
 
         try {
