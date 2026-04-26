@@ -6,7 +6,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="schedule-content">
+<ion-content class="schedule-content" (focusin)="scrollFocusedInputIntoView($event)">
   <div class="content-inner">
 
     <!-- Hero -->
@@ -43,6 +43,8 @@
             [(ngModel)]="schedule.investmentAmount"
             (blur)="onAmountChange()"
             placeholder="0"
+            inputmode="numeric" 
+            maxlength="5"
             min="1" />
         </div>
       </div>
@@ -135,14 +137,17 @@
               class="field-input"
               type="text"
               [(ngModel)]="transferAccountNumber"
-              placeholder="Enter account number" />
+              placeholder="Enter account number"
+              inputmode="numeric" 
+              maxlength="20"
+              min="1" />
           </div>
           <p class="field-hint">Found in your monthly statements or account settings.</p>
         </div>
 
       </div>
     </div>
-
+    <div [style.height.px]="spacerHeight"></div>
   </div>
 </ion-content>
 

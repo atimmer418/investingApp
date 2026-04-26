@@ -188,8 +188,9 @@ export class AuthService {
   }
 
   logout(): void {
-    JwtTokenUtils.clearJwtData(); // Clear all JWT-related data
+    JwtTokenUtils.clearJwtData();
     this.isLoggedInSubject.next(false);
+    this.reAuthInProgressSubject.next(false);
     this.userProgressSubject.next(null);
   }
 

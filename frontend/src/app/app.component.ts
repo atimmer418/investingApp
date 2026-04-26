@@ -157,7 +157,7 @@ export class AppComponent implements OnInit {
         if (hasAnyProgress) {
           this.navigateBasedOnProgress(unifiedProgress);
         } else {
-          this.router.navigate(['/get-started'], { replaceUrl: true }).then(() => {
+          this.router.navigate(['/get-started'], { replaceUrl: true }).finally(() => {
             requestAnimationFrame(() => this.appLockService.hideAllCovers());
           });
         }
@@ -216,7 +216,7 @@ export class AppComponent implements OnInit {
       }
     }
 
-    this.router.navigateByUrl(targetRoute, { replaceUrl: true }).then(() => {
+    this.router.navigateByUrl(targetRoute, { replaceUrl: true }).finally(() => {
       requestAnimationFrame(() => this.appLockService.hideAllCovers());
     });
   }

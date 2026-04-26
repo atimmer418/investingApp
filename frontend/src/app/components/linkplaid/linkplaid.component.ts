@@ -91,7 +91,7 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
         token: linkToken,
         onSuccess: (public_token: string, metadata: any) => {
           console.log('Plaid Link success! Public Token:', public_token, "Metadata:", metadata);
-          this.statusMessage = 'Bank account selected! Processing...';
+          this.statusMessage = 'Processing...';
           this.isLoading = true;
           if (this.isUserAuthenticated) {
             this.exchangePublicTokenAuthenticated(public_token);

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -44,10 +44,11 @@ const US_STATES = [
 
 function phoneValidator(control: AbstractControl): ValidationErrors | null {
   const val: string = (control.value || '').replace(/\D/g, '');
+  const e164val: string = (control.value || '');
   // Accept +1XXXXXXXXXX (12 chars) or 10 digits
   const e164 = /^\+1\d{10}$/;
   const tenDigit = /^\d{10}$/;
-  if (!val || e164.test(val) || tenDigit.test(val)) return null;
+  if (!val || e164.test(e164val) || tenDigit.test(val)) return null;
   return { invalidPhone: true };
 }
 
@@ -82,16 +83,17 @@ function dateOfBirthValidator(control: AbstractControl): ValidationErrors | null
   ]
 })
 export class KycVerificationComponent implements OnInit, OnDestroy {
+  @ViewChild(IonContent) private content!: IonContent;
+
   private destroy$ = new Subject<void>();
+  private kbShowListener: any;
+  private kbHideListener: any;
 
   currentStep: 1 | 2 = 1;
   exitingStep1 = false;
   isLoading = false;
-  keyboardVisible = false;
-
-  private keyboardShowListener: any;
-  private keyboardHideListener: any;
-
+  keyboardHeight = 0;
+  spacerHeight = 0;
   readonly states = US_STATES;
   readonly fundingSources = [
     { value: 'employment_income', label: 'Salary' },
@@ -140,14 +142,30 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
     if (this.loadStep1Draft()) {
       this.currentStep = 2;
     }
-    this.keyboardShowListener = Keyboard.addListener('keyboardWillShow', () => {
-      this.keyboardVisible = true;
+    this.kbShowListener = Keyboard.addListener('keyboardWillShow', info => {
+      this.keyboardHeight = info.keyboardHeight;
+      this.spacerHeight = info.keyboardHeight + 16 - 100;
       this.cdr.detectChanges();
     });
-    this.keyboardHideListener = Keyboard.addListener('keyboardWillHide', () => {
-      this.keyboardVisible = false;
+    this.kbHideListener = Keyboard.addListener('keyboardWillHide', () => {
+      this.keyboardHeight = 0;
+      this.spacerHeight = 0;
       this.cdr.detectChanges();
     });
+  }
+
+  async scrollFocusedInputIntoView(event: FocusEvent) {
+    const el = event.target as HTMLElement;
+    if (!el.matches('input, select, textarea')) return;
+    await new Promise(r => setTimeout(r, 300));
+    if (!this.keyboardHeight) return;
+    const fieldEl = (el.closest('.form-field') as HTMLElement) ?? el;
+    const rect = fieldEl.getBoundingClientRect();
+    const visibleBottom = window.innerHeight - this.keyboardHeight - 8;
+    const overshoot = rect.bottom - visibleBottom;
+    if (overshoot > 0) {
+      (this.content as any).scrollByPoint(0, overshoot, 150);
+    }
   }
 
   private get kycDraftKey(): string {
@@ -223,7 +241,10 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
   }
 
   onPhoneNumberInput(event: Event) {
-    if (this.isLikelyAutofill(event)) {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '');
+
+    if (this.isLikelyAutofill(event) || (!input.value.startsWith("+1") && digits.length === 10) || (input.value.startsWith('+1') && digits.length === 11)) {
       setTimeout(() => (document.getElementById('streetAddressInput') as HTMLInputElement)?.focus(), 100);
     }
   }
@@ -382,7 +403,7 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
-    this.keyboardShowListener?.then((h: any) => h.remove());
-    this.keyboardHideListener?.then((h: any) => h.remove());
+    this.kbShowListener?.then((h: any) => h.remove());
+    this.kbHideListener?.then((h: any) => h.remove());
   }
 }

@@ -21,7 +21,9 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Base64;
-import java.util.concurrent.ConcurrentHashMap;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class PortfolioDashboardService {
@@ -55,7 +57,10 @@ public class PortfolioDashboardService {
     private final ObjectMapper objectMapper;
 
     // Cache for company names to avoid repeated lookups
-    private final Map<String, String> companyNameCache = new ConcurrentHashMap<>();
+    private final Cache<String, String> companyNameCache = Caffeine.newBuilder()
+            .maximumSize(5000)
+            .expireAfterWrite(24, TimeUnit.HOURS)
+            .build();
 
     @org.springframework.beans.factory.annotation.Autowired
     private EncryptionService encryptionService;
@@ -1190,8 +1195,9 @@ public class PortfolioDashboardService {
      * Get company name for a symbol, using cache if available
      */
     private String getCompanyName(String symbol) {
-        if (companyNameCache.containsKey(symbol)) {
-            return companyNameCache.get(symbol);
+        String cached = companyNameCache.getIfPresent(symbol);
+        if (cached != null) {
+            return cached;
         }
 
         try {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,10 +6,10 @@ import { HttpClient } from '@angular/common/http';
 import {
   IonContent, IonHeader, IonToolbar, IonFooter, IonSpinner, NavController
 } from '@ionic/angular/standalone';
-
 import { AuthService } from '../../services/auth.service';
 import { InvestmentService } from '../../services/investment.service'; // Import this
 import { environment } from '../../../environments/environment';
+import { Keyboard } from '@capacitor/keyboard';
 
 export interface InvestmentSchedule {
   payFrequency: string;
@@ -47,7 +47,15 @@ export interface InvestmentScheduleResponse {
     IonContent, IonHeader, IonToolbar, IonFooter, IonSpinner
   ]
 })
-export class InvestmentScheduleComponent implements OnInit {
+export class InvestmentScheduleComponent implements OnInit, OnDestroy {
+  @ViewChild(IonContent) private content!: IonContent;
+  
+  private kbShowListener: any;
+  private kbHideListener: any;
+
+  keyboardHeight = 0;
+  spacerHeight = 0;
+
   // User's financial data from initial survey
   monthlyGoal: number = 0;
   targetPortfolio: number = 0;
@@ -60,7 +68,7 @@ export class InvestmentScheduleComponent implements OnInit {
   showTransferOptions: boolean = false;
   transferBrokerageDtc: string = '';
   transferAccountNumber: string = '';
-  
+
   brokerageOptions = [
     { name: 'Alinea', dtc: '2402' },
     { name: 'Charles Schwab', dtc: '0164' },
@@ -78,7 +86,8 @@ export class InvestmentScheduleComponent implements OnInit {
     private navCtrl: NavController,
     private authService: AuthService,
     private investmentService: InvestmentService,
-    private http: HttpClient
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef
   ) {}
 
   // Investment schedule configuration
@@ -129,6 +138,31 @@ export class InvestmentScheduleComponent implements OnInit {
 
     // Let Manrope render before revealing content
     setTimeout(() => this.isReady = true, 50);
+
+    this.kbShowListener = Keyboard.addListener('keyboardWillShow', info => {
+      this.keyboardHeight = info.keyboardHeight;
+      this.spacerHeight = info.keyboardHeight + 16 - 100;
+      this.cdr.detectChanges();
+    });
+    this.kbHideListener = Keyboard.addListener('keyboardWillHide', () => {
+      this.keyboardHeight = 0;
+      this.spacerHeight = 0;
+      this.cdr.detectChanges();
+    });
+  }
+
+  async scrollFocusedInputIntoView(event: FocusEvent) {
+    const el = event.target as HTMLElement;
+    if (!el.matches('input, select, textarea')) return;
+    await new Promise(r => setTimeout(r, 300));
+    if (!this.keyboardHeight) return;
+    const fieldEl = (el.closest('.field-row') as HTMLElement) ?? el;
+    const rect = fieldEl.getBoundingClientRect();
+    const visibleBottom = window.innerHeight - this.keyboardHeight - 8;
+    const overshoot = rect.bottom - visibleBottom;
+    if (overshoot > 0) {
+      (this.content as any).scrollByPoint(0, overshoot, 150);
+    }
   }
 
   private restoreAcatsFromStorage(): void {
@@ -159,11 +193,11 @@ export class InvestmentScheduleComponent implements OnInit {
           console.log('[InvestmentScheduleComponent] ✅ Restoring saved schedule:', savedSchedule);
           this.schedule.payFrequency = savedSchedule.frequency;
           this.schedule.investmentAmount = savedSchedule.investmentAmount;
-          this.schedule.startDate = savedSchedule.startDate || this.getInvestmentDate();
+          this.schedule.startDate = this.parseDateValue(savedSchedule.startDate) || this.getInvestmentDate();
         } else {
           this.schedule.startDate = this.getInvestmentDate();
-          this.loadMonthlyGoalAndCalculate();
         }
+        this.loadMonthlyGoalAndCalculate();
       },
       error: () => {
         this.schedule.startDate = this.getInvestmentDate();
@@ -288,6 +322,18 @@ export class InvestmentScheduleComponent implements OnInit {
     const originalStr = originalDate.toLocaleDateString();
     const adjustedStr = adjustedDate.toLocaleDateString();
     console.warn(`Date adjusted from ${originalStr} to ${adjustedStr} (weekend dates are not allowed for investments)`);
+  }
+
+  private parseDateValue(value: any): string {
+    if (!value) return '';
+    if (Array.isArray(value)) {
+      const [y, m, d] = value;
+      return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    }
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+      return value.substring(0, 10);
+    }
+    return '';
   }
 
   getMinDate(): string {
@@ -595,5 +641,10 @@ export class InvestmentScheduleComponent implements OnInit {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  }
+
+  ngOnDestroy() {
+    this.kbShowListener?.then((h: any) => h.remove());
+    this.kbHideListener?.then((h: any) => h.remove());
   }
 }

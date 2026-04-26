@@ -1,15 +1,12 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
     <div class="header-inner">
-      <button class="back-btn" (click)="goBack()">
-        <span class="material-symbols-outlined">arrow_back_ios_new</span>
-      </button>
       <h2 class="header-title">Identity Verification</h2>
     </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="kyc-content">
+<ion-content class="kyc-content" (focusin)="scrollFocusedInputIntoView($event)">
   <div class="content-inner">
 
     <!-- Hero — top-pinned -->
@@ -62,7 +59,7 @@
             </div>
             <div class="form-field" [class.field-error]="step1Form.get('phoneNumber')?.invalid && step1Form.get('phoneNumber')?.touched">
               <span class="field-label">PHONE NUMBER</span>
-              <input id="phoneNumberInput" class="field-input" type="tel" formControlName="phoneNumber" placeholder="+1 (555) 000-0000" autocomplete="tel" (input)="onPhoneNumberInput($event)" />
+              <input id="phoneNumberInput" class="field-input" type="tel" formControlName="phoneNumber" placeholder="(555) 000-0000" autocomplete="tel" (input)="onPhoneNumberInput($event)" />
               <div class="error-msg" *ngIf="step1Form.get('phoneNumber')?.invalid && step1Form.get('phoneNumber')?.touched">Enter a valid US phone number</div>
             </div>
           </div>
@@ -199,11 +196,12 @@
       </div>
 
     </div>
+    <div [style.height.px]="spacerHeight"></div>
   </div>
 </ion-content>
 
 <!-- Footer: Step 1 — continue button fades in when form is valid -->
-<ion-footer *ngIf="currentStep === 1 && !keyboardVisible" class="ion-no-border">
+<ion-footer *ngIf="currentStep === 1" class="ion-no-border">
   <div class="cta-footer">
     <button class="cta-btn" type="button" (click)="proceedToStep2()" [disabled]="!step1Valid || exitingStep1" [class.btn-visible]="step1Valid">
       <ng-container *ngIf="!exitingStep1">
@@ -218,7 +216,7 @@
 </ion-footer>
 
 <!-- Footer: Step 2 — submit button fades in when agreement checked -->
-<ion-footer *ngIf="currentStep === 2 && !keyboardVisible" class="ion-no-border">
+<ion-footer *ngIf="currentStep === 2" class="ion-no-border">
   <div class="cta-footer">
     <button class="cta-btn" type="button" (click)="submitKyc()" [disabled]="!step2Valid || isLoading" [class.btn-visible]="step2Valid">
       <ng-container *ngIf="!isLoading">

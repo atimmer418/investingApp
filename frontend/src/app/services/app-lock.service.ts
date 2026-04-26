@@ -3,6 +3,7 @@ import { App, AppState } from '@capacitor/app';
 import { registerPlugin } from '@capacitor/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { Platform, ModalController } from '@ionic/angular/standalone';
+import { Router } from '@angular/router';
 import { PasskeyPromptComponent } from '../components/passkey-prompt/passkey-prompt.component';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
 import { AuthService } from './auth.service';
@@ -36,6 +37,9 @@ export class AppLockService {
   private lastUnlockTime: number = 0;
   private isModalOpen = false;
   private checkInterval: any;
+  private failedLockRetries = 0;
+  private readonly MAX_LOCK_RETRIES = 2;
+  private initWatchdog: any;
 
   // Use Injector to break circular dependency (AppLockService ↔ AuthService)
   private _authService: any;
@@ -43,7 +47,8 @@ export class AppLockService {
   constructor(
     private platform: Platform,
     private modalController: ModalController,
-    private injector: Injector
+    private injector: Injector,
+    private router: Router
   ) {
     this.init();
   }
@@ -56,6 +61,21 @@ export class AppLockService {
   }
 
   private init() {
+    // Watchdog: if platform.ready() is very slow or never resolves and reAuthInProgress
+    // is blocking navigation, call lockApp directly so the cover gets hidden.
+    this.initWatchdog = setTimeout(async () => {
+      const auth = this.getAuthService();
+      if (!this.isModalOpen && auth.isReAuthInProgress()) {
+        console.warn('[AppLockService] Init watchdog fired — lockApp was never reached');
+        try {
+          await this.lockApp(true);
+        } catch (e) {
+          console.error('[AppLockService] Watchdog lockApp failed, falling back to recovery', e);
+          this.forceRecovery();
+        }
+      }
+    }, 10_000);
+
     this.platform.ready().then(async () => {
       App.addListener('appStateChange', (state: AppState) => {
         this.handleAppStateChange(state);
@@ -63,7 +83,22 @@ export class AppLockService {
       this.startPeriodicCheck();
       // Cold start: appStateChange never fires on fresh launch, so check immediately.
       await this.checkLockOnResume();
+    }).catch(async (err) => {
+      console.error('[AppLockService] platform.ready() failed', err);
+      clearTimeout(this.initWatchdog);
+      try {
+        await this.lockApp(true);
+      } catch (e) {
+        console.error('[AppLockService] lockApp after platform.ready() failure failed', e);
+        this.forceRecovery();
+      }
     });
+  }
+
+  private forceRecovery(): void {
+    this.getAuthService().logout();
+    this.hideAllCovers();
+    this.router.navigateByUrl('/auth-finalize', { replaceUrl: true });
   }
 
   /**
@@ -205,6 +240,9 @@ export class AppLockService {
       return;
     }
 
+    // If lockApp is running, the init watchdog is no longer needed
+    clearTimeout(this.initWatchdog);
+
     this.lockWasShownThisResume = true;
     this.hideAppCover(); // Always clear the cover so the modal isn't blocked
     this.isLockedSubject.next(true);
@@ -225,14 +263,24 @@ export class AppLockService {
     this.hideNativeOverlay(); // Native overlay removed once lock modal is fully visible
 
     const { data } = await modal.onDidDismiss();
-    
+
     this.isModalOpen = false;
-    
+
     if (data && data.authenticated) {
+      this.failedLockRetries = 0;
       this.unlockApp();
     } else {
-      // Should not happen if backdropDismiss is false, but just in case
-      // Maybe force logout?
+      // Modal closed without a successful auth (abnormal — PasskeyPromptComponent never
+      // dismisses on failure; it leaves the modal open with a retry button). Retry the
+      // lock flow to give the user another chance before we give up on their session.
+      if (this.failedLockRetries < this.MAX_LOCK_RETRIES) {
+        this.failedLockRetries++;
+        await this.lockApp(jwtExpired);
+      } else {
+        // Retry budget exhausted — clear session so the cold-start trap doesn't re-arm
+        this.failedLockRetries = 0;
+        this.forceRecovery();
+      }
     }
   }
 

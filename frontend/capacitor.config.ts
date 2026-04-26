@@ -23,6 +23,9 @@ const config: CapacitorConfig = {
       // spinnerColor: "#999999", // Optional
       // splashFullScreen: true, // Optional
       // splashImmersive: true, // Optional
+    },
+    Keyboard: {
+      resize: 'none' as any,
     }
   }
 };
