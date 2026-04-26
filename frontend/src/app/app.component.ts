@@ -58,11 +58,29 @@ export class AppComponent implements OnInit {
     this.platform.ready().then(async () => {
       if (this.platform.is('capacitor')) {
         try {
-          await SplashScreen.hide();
+          await this.waitForCoverImageReady();
+          await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+          await SplashScreen.hide({ fadeOutDuration: 0 });
         } catch (error) {
           console.error('[AppComponent] Error hiding splash screen:', error);
         }
       }
+    });
+  }
+
+  private waitForCoverImageReady(): Promise<void> {
+    return new Promise(resolve => {
+      const cover = document.getElementById('app-resume-cover');
+      const img = cover?.querySelector('img') as HTMLImageElement | null;
+      if (!img) { resolve(); return; }
+      if (img.complete && img.naturalWidth > 0) { resolve(); return; }
+
+      let done = false;
+      const finish = () => { if (!done) { done = true; resolve(); } };
+
+      img.addEventListener('load', finish, { once: true });
+      img.addEventListener('error', finish, { once: true });
+      setTimeout(finish, 1500);
     });
   }
 
@@ -158,7 +176,7 @@ export class AppComponent implements OnInit {
           this.navigateBasedOnProgress(unifiedProgress);
         } else {
           this.router.navigate(['/get-started'], { replaceUrl: true }).finally(() => {
-            requestAnimationFrame(() => this.appLockService.hideAllCovers());
+            this.hideCoversWhenReady();
           });
         }
       }
@@ -193,13 +211,13 @@ export class AppComponent implements OnInit {
 
     // Don't navigate if already on the target route
     if (currentBaseUrl === targetRoute) {
-      this.appLockService.hideAllCovers();
+      this.hideCoversWhenReady();
       return;
     }
 
     // Don't interrupt mid-recovery — user is unauthenticated by design on this route
     if (currentBaseUrl === '/recovery') {
-      this.appLockService.hideAllCovers();
+      this.hideCoversWhenReady();
       return;
     }
 
@@ -211,14 +229,35 @@ export class AppComponent implements OnInit {
         '/investment-schedule', '/investment-confirmation', '/'
       ];
       if (!onboardingRoutes.includes(currentBaseUrl)) {
-        this.appLockService.hideAllCovers();
+        this.hideCoversWhenReady();
         return;
       }
     }
 
     this.router.navigateByUrl(targetRoute, { replaceUrl: true }).finally(() => {
-      requestAnimationFrame(() => this.appLockService.hideAllCovers());
+      this.hideCoversWhenReady();
     });
+  }
+
+  private hideCoversWhenReady(): void {
+    this.preloadFonts()
+      .then(() => Promise.race([
+        document.fonts.ready,
+        new Promise<void>(r => setTimeout(r, 2000))
+      ]))
+      .then(() => {
+        requestAnimationFrame(() => this.appLockService.hideAllCovers());
+      });
+  }
+
+  private preloadFonts(): Promise<unknown> {
+    const loaders: Promise<unknown>[] = [];
+    document.fonts.forEach((font: FontFace) => {
+      if (font.status === 'unloaded') {
+        loaders.push(font.load().catch(() => undefined));
+      }
+    });
+    return Promise.all(loaders);
   }
 
   checkSurveyStatusAndNavigate(): void {

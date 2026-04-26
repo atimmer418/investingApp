@@ -130,7 +130,15 @@ class NativePasskeyHandler: NSObject, ASAuthorizationControllerDelegate, ASAutho
         controller.delegate = self
         controller.presentationContextProvider = self
         self.controller = controller
-        controller.performRequests()
+
+        if allowedCredentials.isEmpty {
+            // Discoverable mode (fresh install / phone upgrade): fail fast if no passkeys
+            // are available in iCloud Keychain instead of showing the QR code nearby-device sheet.
+            controller.performRequests(options: .preferImmediatelyAvailableCredentials)
+        } else {
+            // Account-specific reauth: normal UI so the user can confirm with Face ID.
+            controller.performRequests()
+        }
     }
 
     // MARK: - ASAuthorizationControllerDelegate

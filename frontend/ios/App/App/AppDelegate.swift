@@ -8,12 +8,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     // Tracks whether the app fully entered background (vs. briefly inactive for Face ID, calls, etc.)
     private var didEnterBackground = false
-    private let loadingOverlayTag = 9001
+    // True until the first time the app becomes active — used to distinguish cold start.
+    private var isColdStart = true
+    private var loadingOverlayWindow: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Force light background on the native window so it shows through
         // keyboard rounded corners even when the device is in dark mode.
-        window?.backgroundColor = UIColor(red: 248/255, green: 250/255, blue: 252/255, alpha: 1)
+        window?.backgroundColor = .white
+        // Cover the WebView during cold start so there's no white flash between
+        // the system launch screen and the HTML cover div becoming visible.
+        showLoadingOverlay()
         return true
     }
 
@@ -33,7 +38,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        if didEnterBackground {
+        if isColdStart {
+            // Cold start: overlay was shown during launch; JS calls LoadingOverlay.hide()
+            // when the app is ready. 3s fallback in case JS never signals.
+            isColdStart = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+                self?.removeLoadingOverlay()
+            }
+        } else if didEnterBackground {
             // Safety fallback only — JS calls LoadingOverlayPlugin.hide() deterministically
             // once the correct content is ready. This 3s timer only fires if JS fails to signal.
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
@@ -54,31 +66,44 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // MARK: - Loading overlay
 
     private func showLoadingOverlay() {
-        guard let window = window, window.viewWithTag(loadingOverlayTag) == nil else { return }
+        guard loadingOverlayWindow == nil else { return }
 
-        let overlay = UIView(frame: window.bounds)
-        overlay.backgroundColor = .white
-        overlay.tag = loadingOverlayTag
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
 
-        let label = UILabel()
-        label.text = "this will be the loading screen"
-        label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        // #6b7280
-        label.textColor = UIColor(red: 107/255, green: 114/255, blue: 128/255, alpha: 1)
-        label.translatesAutoresizingMaskIntoConstraints = false
+        let win: UIWindow
+        if let scene = UIApplication.shared.connectedScenes.first(where: { $0 is UIWindowScene }) as? UIWindowScene {
+            win = UIWindow(windowScene: scene)
+        } else {
+            win = UIWindow(frame: UIScreen.main.bounds)
+        }
+        win.windowLevel = .alert + 1
+        win.backgroundColor = .white
 
-        overlay.addSubview(label)
+        let vc = UIViewController()
+        vc.view.backgroundColor = .white
+
+        let imageView = UIImageView(image: UIImage(named: "FREDLogo"))
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        vc.view.addSubview(imageView)
+
         NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: overlay.centerYAnchor)
+            imageView.centerXAnchor.constraint(equalTo: vc.view.centerXAnchor),
+            imageView.centerYAnchor.constraint(equalTo: vc.view.centerYAnchor),
+            imageView.widthAnchor.constraint(equalToConstant: 200),
+            imageView.heightAnchor.constraint(equalToConstant: 200)
         ])
 
-        window.addSubview(overlay)
-        window.bringSubviewToFront(overlay)
+        win.rootViewController = vc
+        win.isHidden = false
+
+        loadingOverlayWindow = win
     }
 
     func removeLoadingOverlay() {
-        window?.viewWithTag(loadingOverlayTag)?.removeFromSuperview()
+        loadingOverlayWindow?.isHidden = true
+        loadingOverlayWindow?.rootViewController = nil
+        loadingOverlayWindow = nil
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {

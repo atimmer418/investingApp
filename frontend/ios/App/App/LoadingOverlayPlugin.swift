@@ -12,9 +12,12 @@ public class LoadingOverlayPlugin: CAPPlugin, CAPBridgedPlugin {
     ]
 
     @objc func hide(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
             if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
                 appDelegate.removeLoadingOverlay()
+            }
+            if let mvc = self?.bridge?.viewController as? MainViewController {
+                mvc.removeBridgeLoadingOverlay()
             }
         }
         call.resolve()

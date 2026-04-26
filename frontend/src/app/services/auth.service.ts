@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
 import { DeviceIdService } from './device-id.service';
 import { KeychainSyncService } from './keychain-sync.service';
+import { NativePasskeyService } from './native-passkey.service';
 
 const BACKEND_API_URL = environment.backendApiUrl;
 
@@ -56,7 +57,8 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private deviceIdService: DeviceIdService,
-    private keychainSyncService: KeychainSyncService
+    private keychainSyncService: KeychainSyncService,
+    private nativePasskeyService: NativePasskeyService
   ) {
     // Check if user is already logged in on app start
     this.checkExistingSession();
@@ -108,10 +110,11 @@ export class AuthService {
           // PasskeyPromptComponent calls handleSuccessfulAuthentication() on success,
           // which resets this flag and triggers correct navigation.
           this.reAuthInProgressSubject.next(true);
-        } else {
-          // No known user on this device — check iCloud Keychain / device ID
-          // for cross-device re-auth.
-          this.checkKeychainThenDevice();
+        } else if (!localStorage.getItem('userEmail')) {
+          // Fresh install or phone upgrade: no known user on this device.
+          // Attempt discoverable passkey auth — iOS will find any passkeys for this
+          // app's RP in iCloud Keychain and show the picker. Silently fails if none.
+          this.promptForPasskeyReauth();
         }
       }
     }
@@ -148,42 +151,6 @@ export class AuthService {
       });
     } else {
       this.loadUserProgress();
-    }
-  }
-
-  /**
-   * Check iCloud Keychain first (survives device upgrades), then fall back to
-   * device ID. If either indicates a returning user, auto-trigger passkey reauth.
-   */
-  private async checkKeychainThenDevice(): Promise<void> {
-    try {
-      // 1. Check iCloud Keychain — works across devices on the same Apple ID
-      const keychainEmail = await this.keychainSyncService.getAccountEmail();
-      if (keychainEmail) {
-        console.log('[AuthService] Found account in iCloud Keychain — prompting reauth');
-        await this.promptForPasskeyReauth();
-        return;
-      }
-
-      // 2. Fall back to device ID check (original behavior)
-      this.shouldPromptForReauth().subscribe({
-        next: async (response) => {
-          if (response.shouldPromptReauth) {
-            await this.promptForPasskeyReauth();
-          }
-        },
-        error: () => { /* Continue with normal flow */ }
-      });
-    } catch {
-      // Keychain read failed — fall back to device ID
-      this.shouldPromptForReauth().subscribe({
-        next: async (response) => {
-          if (response.shouldPromptReauth) {
-            await this.promptForPasskeyReauth();
-          }
-        },
-        error: () => { /* Continue with normal flow */ }
-      });
     }
   }
 
@@ -408,58 +375,74 @@ export class AuthService {
    * Prompt user for passkey re-authentication
    */
   async promptForPasskeyReauth(): Promise<boolean> {
+    // Guard: only run on fresh install / phone upgrade (no email stored yet).
+    // Returning users with a stored email are handled by the AppLock modal instead.
+    if (localStorage.getItem('userEmail')) {
+      return false;
+    }
+
     try {
       this.reAuthInProgressSubject.next(true);
-      console.log('[AuthService] Starting passkey re-authentication');
+      console.log('[AuthService] Starting discoverable passkey re-authentication');
 
-      // 1. Start authentication — use account-specific flow if we know the user
-      const userEmail = localStorage.getItem('userEmail');
-      const requestBody = userEmail ? { email: userEmail } : {};
-      const startResponse = await lastValueFrom(this.http.post<{ requestOptions: string, sessionId: string }>(`${BACKEND_API_URL}/passkey/authenticate/start`, requestBody,
-        { headers: this.getAuthHeaders() }));
+      // 1. Start with no email — discoverable credential mode.
+      //    The backend returns an empty allowedCredentials list, which tells iOS to
+      //    look in its own Keychain and present any passkeys registered for this RP.
+      const startResponse = await lastValueFrom(
+        this.http.post<{ requestOptions: string, sessionId: string }>(
+          `${BACKEND_API_URL}/passkey/authenticate/start`, {},
+          { headers: this.getAuthHeaders() }
+        )
+      );
 
       if (!startResponse) {
         throw new Error('Failed to start authentication');
       }
 
-      // 2. Show browser passkey prompt
       const credentialRequestOptions = JSON.parse(startResponse.requestOptions);
 
-      // If the server returned no allowedCredentials, there are no passkeys registered
-      // for this account. Showing the OS picker in this case is confusing — skip it.
-      const allowedCreds = credentialRequestOptions?.publicKey?.allowedCredentials ?? [];
-      if (allowedCreds.length === 0) {
-        console.log('[AuthService] No passkeys registered — skipping reauth prompt');
-        this.reAuthInProgressSubject.next(false);
-        return false;
-      }
+      let credentialForFinish: any;
 
-      // Convert base64url strings to ArrayBuffers for WebAuthn API
-      if (credentialRequestOptions.publicKey) {
-        if (credentialRequestOptions.publicKey.challenge) {
-          credentialRequestOptions.publicKey.challenge = this.base64urlToArrayBuffer(credentialRequestOptions.publicKey.challenge);
+      if (this.nativePasskeyService.isAvailable) {
+        // iOS native: use ASAuthorizationController via the native bridge.
+        // navigator.credentials.get() is unreliable in WKWebView.
+        const publicKey = credentialRequestOptions.publicKey ?? credentialRequestOptions;
+        const challenge = credentialRequestOptions.challenge || publicKey.challenge;
+        const rpId = publicKey.rpId ?? publicKey.rp?.id;
+        const userVerification = publicKey.userVerification;
+        const allowedCredentials = (publicKey.allowCredentials ?? []).map((c: any) => ({ id: c.id }));
+
+        credentialForFinish = await this.nativePasskeyService.authenticate({
+          challenge,
+          rpId,
+          userVerification,
+          allowedCredentials
+        });
+      } else {
+        // Web path: convert base64url strings to ArrayBuffers for WebAuthn API
+        if (credentialRequestOptions.publicKey) {
+          if (credentialRequestOptions.publicKey.challenge) {
+            credentialRequestOptions.publicKey.challenge = this.base64urlToArrayBuffer(credentialRequestOptions.publicKey.challenge);
+          }
+          if (credentialRequestOptions.publicKey.allowCredentials) {
+            credentialRequestOptions.publicKey.allowCredentials.forEach((cred: any) => {
+              if (cred.id) {
+                cred.id = this.base64urlToArrayBuffer(cred.id);
+              }
+            });
+          }
         }
-        if (credentialRequestOptions.publicKey.allowCredentials) {
-          credentialRequestOptions.publicKey.allowCredentials.forEach((cred: any) => {
-            if (cred.id) {
-              cred.id = this.base64urlToArrayBuffer(cred.id);
-            }
-          });
+
+        const credential = await navigator.credentials.get(credentialRequestOptions);
+        if (!credential) {
+          throw new Error('User cancelled passkey authentication');
         }
+        credentialForFinish = this.credentialToJson(credential as PublicKeyCredential);
       }
 
-      const credential = await navigator.credentials.get(credentialRequestOptions);
-
-      if (!credential) {
-        throw new Error('User cancelled passkey authentication');
-      }
-
-      // Convert credential to JSON-serializable format
-      const credentialJson = this.credentialToJson(credential as PublicKeyCredential);
-
-      // 3. Finish authentication 
+      // 3. Finish authentication
       const authResponse = await lastValueFrom(this.http.post<any>(`${BACKEND_API_URL}/passkey/authenticate/finish`, {
-        credential: credentialJson,
+        credential: credentialForFinish,
         sessionId: startResponse.sessionId
       }, { headers: this.getAuthHeaders() }));
 

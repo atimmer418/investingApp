@@ -26,7 +26,6 @@ import {
   ],
 })
 export class SurveyInitialComponent implements OnInit {
-  @HostBinding('class.fade-in-from-get-started') fadeIn = false;
   @HostBinding('class.page-ready') isReady = false;
 
   // --- User Input Properties ---
@@ -45,7 +44,6 @@ export class SurveyInitialComponent implements OnInit {
   private readonly SAFE_WITHDRAWAL_RATE = 0.04; // 4% safe withdrawal rate
 
   constructor(private router: Router, private authService: AuthService, private navCtrl: NavController) {
-    this.fadeIn = this.router.getCurrentNavigation()?.extras?.state?.['fromGetStarted'] === true;
   }
 
   ngOnInit() {

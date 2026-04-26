@@ -76,11 +76,13 @@ public class PortfolioService {
         
         // Validate portfolio
         if (!portfolio.isValid()) {
-            logger.error("Portfolio validation failed for user: {}. Total percentage: {}", 
+            logger.error("Portfolio validation failed for user: {}. Total percentage: {}",
                         user.getEmail(), portfolio.getTotalPercentage());
             throw new RuntimeException("Portfolio percentages must add up to 100%");
         }
-        
+
+        portfolio.setIsDefault(isDefaultAllocation(portfolioItemRequests));
+
         Portfolio savedPortfolio = portfolioRepository.save(portfolio);
         logger.info("Successfully updated portfolio for user: {}", user.getEmail());
         return savedPortfolio;
@@ -132,6 +134,19 @@ public class PortfolioService {
                                              item.getPercentage(), allocation);
                 })
                 .toList();
+    }
+
+    private boolean isDefaultAllocation(List<PortfolioItemRequest> items) {
+        if (items.size() != 3) return false;
+        java.util.Map<String, BigDecimal> defaults = java.util.Map.of(
+            "VTI",  new BigDecimal("75.00"),
+            "VXUS", new BigDecimal("20.00"),
+            "VBR",  new BigDecimal("5.00")
+        );
+        return items.stream().allMatch(item -> {
+            BigDecimal expected = defaults.get(item.getSymbol().toUpperCase());
+            return expected != null && expected.compareTo(item.getPercentage()) == 0;
+        });
     }
 
     // Helper classes for requests and responses

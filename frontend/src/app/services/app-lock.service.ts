@@ -65,7 +65,7 @@ export class AppLockService {
     // is blocking navigation, call lockApp directly so the cover gets hidden.
     this.initWatchdog = setTimeout(async () => {
       const auth = this.getAuthService();
-      if (!this.isModalOpen && auth.isReAuthInProgress()) {
+      if (!this.isModalOpen && auth.isReAuthInProgress() && this.isUserLoggedIn()) {
         console.warn('[AppLockService] Init watchdog fired — lockApp was never reached');
         try {
           await this.lockApp(true);
@@ -176,12 +176,16 @@ export class AppLockService {
 
   showAppCover() {
     if (!this.platform.is('capacitor')) return;
+    (document.activeElement as HTMLElement)?.blur();
     let cover = document.getElementById('app-resume-cover');
     if (!cover) {
       cover = document.createElement('div');
       cover.id = 'app-resume-cover';
       cover.style.cssText = 'position:fixed;inset:0;background:#ffffff;z-index:99999;pointer-events:none;display:flex;align-items:center;justify-content:center;';
-      cover.innerHTML = '<span style="font-family:Manrope,sans-serif;font-size:16px;color:#6b7280;">this will be the loading screen</span>';
+      const img = document.createElement('img');
+      img.src = 'assets/images/fred-logo.svg';
+      img.style.cssText = 'width:200px;height:200px;object-fit:contain;';
+      cover.appendChild(img);
       document.body.appendChild(cover);
     }
     cover.style.display = 'flex';

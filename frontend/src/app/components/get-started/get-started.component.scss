@@ -15,15 +15,8 @@
   --background: var(--gs-bg);
 }
 
-// --- Page wrapper with fade transition ---
 .page-wrapper {
   height: 100%;
-  opacity: 1;
-  transition: opacity 0.4s ease-out;
-
-  &.fading-out {
-    opacity: 0;
-  }
 }
 
 // --- Swiper container ---

@@ -107,9 +107,9 @@ ion-content {
   height: 192px;
   border-radius: 16px;
   overflow: hidden;
-  background-image: url('/assets/images/whenPigsFly-2.png');
+  background-image: url('/assets/images/whenPiggybanksFly.png');
   background-size: cover;
-  background-position: center;
+  background-position: center 85%;
   margin-bottom: 20px;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
 }
@@ -208,7 +208,7 @@ ion-content {
 
 .slider-header {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
 }
 
@@ -306,7 +306,7 @@ ion-content {
 
 .info-text {
   font-size: 10px;
-  line-height: 1.6;
+  line-height: 1.4;
   color: #4b5563;
   margin: 0;
 

@@ -8,12 +8,12 @@ const config: CapacitorConfig = {
     url: 'https://local.fredvested.com'
   },
   ios: {
-    backgroundColor: '#f8fafc'
+    backgroundColor: '#ffffff'
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 0, // We will hide it manually
-      launchAutoHide: false, // If true, it hides after launchShowDuration
+      launchShowDuration: 3000, // auto-hide ceiling if JS hide call is late
+      launchAutoHide: true,  // safety net — auto-hides at 3s if platform.ready() is slow
       // backgroundColor: "#ffffff", // Optional
       // androidSplashResourceName: "splash", // Optional
       // androidScaleType: "CENTER_CROP", // Optional
