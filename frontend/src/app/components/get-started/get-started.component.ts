@@ -16,24 +16,25 @@ import type { SwiperContainer } from 'swiper/element';
 export class GetStartedComponent implements AfterViewInit {
   @ViewChild('swiper') swiperRef: ElementRef<SwiperContainer> | undefined;
 
-  private preloadStarted = false;
+  private preloadImg?: HTMLImageElement;
 
   constructor(private navController: NavController, private authService: AuthService) { }
 
   ngAfterViewInit() {
-    const swiperEl = this.swiperRef?.nativeElement;
-    if (!swiperEl) return;
-    (swiperEl as any).addEventListener('slidechange', () => {
-      const swiper = (swiperEl as any).swiper;
-      if (swiper?.activeIndex === 4 && !this.preloadStarted) {
-        this.preloadStarted = true;
-        this.preloadSurveyInitialAssets();
-      }
-    });
+    // Preload starts immediately on mount, regardless of which slide the user is on.
+    // The hidden <img class="hidden-preload"> in the template is the primary mechanism;
+    // this also calls decode() so the image is GPU-ready when survey-initial paints.
+    this.preloadSurveyInitialAssets();
   }
 
-  private preloadSurveyInitialAssets() {
-    new Image().src = '/assets/images/whenPiggybanksFly.png';
+  private async preloadSurveyInitialAssets() {
+    this.preloadImg = new Image();
+    this.preloadImg.src = '/assets/images/whenPiggybanksFly-3.jpg';
+    try {
+      await this.preloadImg.decode();
+    } catch {
+      // ignore — the <img> tag in the template still handles fetch+decode
+    }
     document.fonts.load('700 16px "Manrope"').catch(() => {});
     document.fonts.load('400 24px "Material Symbols Outlined"').catch(() => {});
   }
@@ -52,7 +53,7 @@ export class GetStartedComponent implements AfterViewInit {
         leaveEl.style.zIndex = '2';
 
         return createAnimation()
-          .duration(2750)
+          .duration(3000)
           .easing('ease-out')
           .addAnimation([
             // Get-started fades out — user sees it disappearing

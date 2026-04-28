@@ -3,6 +3,7 @@ package com.investingapp.backend.service;
 import com.investingapp.backend.dto.CreateAlpacaAccountRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -448,6 +449,31 @@ public class AlpacaApiService {
             logger.info("Successfully created ACH relationship: {}", result.get("id"));
             return result;
 
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode().value() == 409) {
+                logger.info("ACH relationship already exists for account {} (409) — fetching existing one", accountId);
+                try {
+                    String existing = getAchRelationships(accountId);
+                    JsonNode relationships = objectMapper.readTree(existing);
+                    for (JsonNode rel : relationships) {
+                        String status = rel.has("status") ? rel.get("status").asText() : "";
+                        if ("APPROVED".equals(status) || "QUEUED".equals(status)) {
+                            Map<String, Object> result = new HashMap<>();
+                            result.put("id", rel.get("id").asText());
+                            result.put("status", status);
+                            result.put("created_at", rel.has("created_at") ? rel.get("created_at").asText() : "");
+                            logger.info("Returning existing ACH relationship: {}", result.get("id"));
+                            return result;
+                        }
+                    }
+                } catch (Exception fetchEx) {
+                    logger.error("Could not fetch existing ACH relationships for account {}: {}", accountId, fetchEx.getMessage());
+                }
+            }
+            logger.error("Error creating ACH relationship for account {}: {}", accountId, e.getMessage(), e);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("error", "Failed to create ACH relationship: " + e.getMessage());
+            return errorResult;
         } catch (Exception e) {
             logger.error("Error creating ACH relationship for account {}: {}", accountId, e.getMessage(), e);
             Map<String, Object> errorResult = new HashMap<>();

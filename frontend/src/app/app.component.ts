@@ -15,6 +15,15 @@ import { lockClosedOutline, fingerPrintOutline } from 'ionicons/icons';
 
 register();
 
+const ROUTE_IMAGE_PRELOADS: Record<string, string[]> = {
+  '/survey-initial': ['/assets/images/whenPiggybanksFly-3.jpg'],
+};
+
+const CRITICAL_FONT_SPECS = [
+  '700 16px "Manrope"',
+  '400 24px "Material Symbols Outlined"',
+];
+
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
@@ -176,7 +185,7 @@ export class AppComponent implements OnInit {
           this.navigateBasedOnProgress(unifiedProgress);
         } else {
           this.router.navigate(['/get-started'], { replaceUrl: true }).finally(() => {
-            this.hideCoversWhenReady();
+            this.hideCoversWhenReady('/get-started');
           });
         }
       }
@@ -211,13 +220,13 @@ export class AppComponent implements OnInit {
 
     // Don't navigate if already on the target route
     if (currentBaseUrl === targetRoute) {
-      this.hideCoversWhenReady();
+      this.hideCoversWhenReady(targetRoute);
       return;
     }
 
     // Don't interrupt mid-recovery — user is unauthenticated by design on this route
     if (currentBaseUrl === '/recovery') {
-      this.hideCoversWhenReady();
+      this.hideCoversWhenReady('/recovery');
       return;
     }
 
@@ -229,35 +238,45 @@ export class AppComponent implements OnInit {
         '/investment-schedule', '/investment-confirmation', '/'
       ];
       if (!onboardingRoutes.includes(currentBaseUrl)) {
-        this.hideCoversWhenReady();
+        this.hideCoversWhenReady(currentBaseUrl);
         return;
       }
     }
 
     this.router.navigateByUrl(targetRoute, { replaceUrl: true }).finally(() => {
-      this.hideCoversWhenReady();
+      this.hideCoversWhenReady(targetRoute);
     });
   }
 
-  private hideCoversWhenReady(): void {
-    this.preloadFonts()
-      .then(() => Promise.race([
-        document.fonts.ready,
-        new Promise<void>(r => setTimeout(r, 2000))
-      ]))
-      .then(() => {
-        requestAnimationFrame(() => this.appLockService.hideAllCovers());
-      });
+  private hideCoversWhenReady(targetRoute?: string): void {
+    const route = (targetRoute ?? this.router.url).split('?')[0].split('#')[0];
+    this.preloadAssetsForRoute(route).then(() => {
+      requestAnimationFrame(() => this.appLockService.hideAllCovers());
+    });
   }
 
-  private preloadFonts(): Promise<unknown> {
-    const loaders: Promise<unknown>[] = [];
-    document.fonts.forEach((font: FontFace) => {
-      if (font.status === 'unloaded') {
-        loaders.push(font.load().catch(() => undefined));
-      }
-    });
-    return Promise.all(loaders);
+  private preloadAssetsForRoute(route: string): Promise<void> {
+    const fontPromises = CRITICAL_FONT_SPECS.map(spec =>
+      document.fonts.load(spec).catch(() => undefined)
+    );
+
+    const imagePromises = (ROUTE_IMAGE_PRELOADS[route] ?? []).map(src =>
+      new Promise<void>(resolve => {
+        const img = new Image();
+        img.src = src;
+        const finish = () => resolve();
+        if (typeof img.decode === 'function') {
+          img.decode().then(finish, finish);
+        } else {
+          img.addEventListener('load', finish, { once: true });
+          img.addEventListener('error', finish, { once: true });
+        }
+      })
+    );
+
+    const allReady = Promise.all([...fontPromises, ...imagePromises]).then(() => {});
+    const safetyTimeout = new Promise<void>(r => setTimeout(r, 3000));
+    return Promise.race([allReady, safetyTimeout]);
   }
 
   checkSurveyStatusAndNavigate(): void {

@@ -1,9 +1,6 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
     <div class="header-inner">
-      <button class="back-btn" (click)="goBack()">
-        <span class="material-symbols-outlined">arrow_back_ios_new</span>
-      </button>
       <h2 class="header-title">Create Your Account</h2>
     </div>
   </ion-toolbar>
@@ -94,7 +91,7 @@
       (click)="createPasskey()"
       [disabled]="isLoading || !isEmailValid">
       <ng-container *ngIf="!isLoading">
-        <span>Create Account</span>
+        <span>Join FRED</span>
         <span class="material-symbols-outlined">arrow_forward</span>
       </ng-container>
       <ng-container *ngIf="isLoading">

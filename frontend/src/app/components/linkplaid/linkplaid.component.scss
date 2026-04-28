@@ -109,12 +109,13 @@ ion-content::part(scroll) {
   padding: 0 60px;
 }
 
-// --- Center zone (vertically centered in remaining space) ---
+// --- Center zone (top-aligned in remaining space) ---
 .center-zone {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 16px;
 }
 

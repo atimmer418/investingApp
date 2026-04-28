@@ -197,8 +197,8 @@ public class InvestmentScheduleService {
         Optional<InvestmentSchedule> scheduleOpt = investmentScheduleRepository.findTopByUserOrderByCreatedAtDesc(user);
 
         if (scheduleOpt.isEmpty()) {
-            logger.error("No investment schedule found for user: {}", user.getEmail());
-            throw new RuntimeException("No investment schedule found for user");
+            logger.warn("No investment schedule found for user: {} — ACH saved to user profile, schedule will pick it up when created", user.getEmail());
+            return null;
         }
 
         InvestmentSchedule schedule = scheduleOpt.get();

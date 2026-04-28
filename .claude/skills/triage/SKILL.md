@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Use when starting a FRED work session to decide what to build today, when the day's work needs to be picked from FREDdocs/backlog.md, or when setting up the backlog for the first time. Pass --mode=override to pick exactly one on-demand item regardless of day.
+description: Use when starting a FRED work session to decide what to build today, when the day's work needs to be picked from FREDdocs/backlog.md, or when setting up the backlog for the first time. Pass --mode=override to pick one on-demand item, --story=FRED-XXX to triage one specific item by ID, or --done=FRED-XXX to mark a story complete.
 ---
 
 # FRED Triage
@@ -18,9 +18,15 @@ Check the actual current date — do not ask.
 | Wed, Fri, Sat | Full day | 3 items: 1 quick win + 1 hard thing + 1 creative thing |
 | Sun, Mon, Thu | Limited time | 2 quick wins only |
 | Tuesday | No time | 0 items — short message + Flags section only |
-| `--mode=override` (any day) | On-demand | Exactly 1 item (any type) |
+| `--mode=override` (any day) | On-demand | Exactly 1 item (any type); also appends to `stories_in_progress.md` |
+| `--story=<ID>` (any day) | Targeted | Exactly 1 item — the backlog entry matching `<ID>`; also appends to `stories_in_progress.md` |
+| `--done=<ID>` (any day) | Completion | Marks one story done in `stories_in_progress.md` and `backlog.md` |
 
-**Override:** If invocation args contain `--mode=override`, pick exactly 1 item regardless of day.
+**Override:** If invocation args contain `--mode=override`, pick exactly 1 item regardless of day. Append the chosen story to `FREDdocs/stories_in_progress.md` (dedup by ID, same as `--story`).
+
+**Story target:** If invocation args contain `--story=<ID>` (e.g. `--story=FRED-119`), skip day-of-week rules and scoring entirely — shape only that one backlog entry. Match `<ID>` case-insensitively. If no match, report the error and list closest matches — stop without writing any file.
+
+**Done flag:** If invocation args contain `--done=<ID>`, run the **Done Flag Flow** — do not pick any work items.
 
 ## Definitions
 
@@ -30,6 +36,10 @@ Check the actual current date — do not ask.
 
 ## Process
 
+0. **Check invocation args first:**
+   - Contains `--story=<ID>` → jump to **Targeted Story Flow**; skip everything below.
+   - Contains `--done=<ID>` → jump to **Done Flag Flow**; skip everything below.
+   - Otherwise, continue with steps 1–9.
 1. Read `FREDdocs/backlog.md`. If it doesn't exist → jump to **First-Run Setup**.
 2. Read `.claude/REFERENCES.md` to know which internal docs exist and their paths.
 3. Read `.claude/skills/triage/priorities.md` if it exists.
@@ -39,6 +49,29 @@ Check the actual current date — do not ask.
 7. Pick the right number per the day-of-week rule.
 8. For each pick, produce a **before/after pair** (see Ticket Format).
 9. Write output to `FREDdocs/today.md`. Do not modify `backlog.md`.
+   - If `--mode=override`: also append the chosen story to `FREDdocs/stories_in_progress.md` under **In Progress** (dedup by ID).
+
+## Targeted Story Flow (`--story=<ID>`)
+
+1. Parse `<ID>` from the invocation arg (e.g. `--story=FRED-119` → `FRED-119`).
+2. Read `FREDdocs/backlog.md`. Find the heading `## <ID> — <title>` (case-insensitive on `<ID>`).
+3. If not found → tell Andrew the ID is not in the backlog, list the closest IDs present, stop. Write nothing.
+4. Read `.claude/REFERENCES.md` to know which internal docs are relevant.
+5. Read `.claude/CONTEXT.md` to orient yourself on the tech stack, conventions, and code layout before building the ticket.
+6. Build a structured ticket using the **Ticket Format** below (before/after pair, file paths, doc references, acceptance criteria, time estimate, label).
+7. Write the ticket to `FREDdocs/.stories/<ID>.md`. Create `.stories/` if it does not exist. Overwrite if `<ID>.md` already exists (re-triaging refreshes the ticket).
+8. Append to `FREDdocs/stories_in_progress.md` under **In Progress** if `<ID>` is not already listed anywhere in that file. Format: `- <ID> — <title>`. Do not duplicate if already present in In Progress or Done.
+9. Do **not** touch `FREDdocs/today.md`. Do **not** produce Punted or Flags sections.
+
+## Done Flag Flow (`--done=<ID>`)
+
+1. Parse `<ID>` from the invocation arg (e.g. `--done=FRED-119` → `FRED-119`).
+2. Read `FREDdocs/stories_in_progress.md`. Find the line `- <ID> — <title>` under **In Progress**.
+3. If not found in In Progress → tell Andrew and stop. (If it's already in Done, say so explicitly.)
+4. Remove the line from **In Progress** and append it to the **Done** section.
+5. Read `FREDdocs/backlog.md`. Find the heading `## <ID> — <title>`. Change it to `## <ID> — ✓ <title>`. This marks the story as complete at a glance in the backlog.
+6. Do **not** delete `FREDdocs/.stories/<ID>.md` — it stays as a record of what was built.
+7. Report to Andrew: story moved to Done, backlog marked.
 
 ## Ticket Format
 
@@ -54,6 +87,8 @@ Check the actual current date — do not ask.
 - Label: `[code]`, `[founder]`, or `[research]`
 
 ## Output Sections in today.md
+
+Applies to day-of-week and `--mode=override` runs only. The `--story` flow writes to `FREDdocs/.stories/<ID>.md`; `--done` modifies `stories_in_progress.md` and `backlog.md`.
 
 1. **Today's Picks** — the before/after pairs
 2. **Punted** — 3–5 items that almost made the cut, one-sentence reason each
@@ -91,6 +126,9 @@ When `FREDdocs/backlog.md` does not exist:
 - Don't pick content that requires public posting until legal review is cleared.
 - Don't invent file paths — use `.claude/REFERENCES.md`; surface unknowns as open questions in the ticket.
 - Don't pad picks. If Sunday only has one good quick win, pick one and explain.
-- Don't reformat or rewrite items in `backlog.md` after first-run setup.
+- Don't reformat or rewrite items in `backlog.md` after first-run setup — except adding `✓` via `--done`.
 - Don't use `.claude/CONTEXT.md` for prioritization — it's for code conventions only.
 - Don't ask Andrew what day it is — check the current date programmatically.
+- Don't write to `today.md` when `--story=<ID>` or `--done=<ID>` is used.
+- Don't append to `stories_in_progress.md` if the ID is already listed anywhere in that file.
+- Don't accept a `--story` or `--done` ID that isn't in `backlog.md` — surface the error and stop.

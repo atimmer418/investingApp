@@ -4,7 +4,7 @@
       <button class="back-btn" (click)="goBack()">
         <span class="material-symbols-outlined">arrow_back_ios_new</span>
       </button>
-      <h2 class="header-title">Review Your Plan</h2>
+      <h2 class="header-title">Finalize Your Plan</h2>
     </div>
   </ion-toolbar>
 </ion-header>
@@ -12,156 +12,263 @@
 <ion-content class="confirm-content">
   <div class="content-inner">
 
-    <!-- Hero -->
+    <!-- Hero — shared across both steps -->
     <div class="hero-section">
-      <h1 class="hero-title">One last look.</h1>
-      <p class="hero-subtitle">Confirm your setup and start building financial freedom.</p>
+      <h1 class="hero-title"
+          *ngIf="currentStep === 1 || exitingStep1"
+          [class.step-hidden]="exitingStep1">One last look.</h1>
+      <h1 class="hero-title step-panel--enter"
+          *ngIf="currentStep === 2">Choose your tier.</h1>
+      <p class="hero-subtitle"
+         *ngIf="currentStep === 1 || exitingStep1"
+         [class.step-hidden]="exitingStep1">Confirm your setup and start building financial freedom.</p>
     </div>
 
-    <!-- Investment Schedule Card -->
-    <div class="section-card">
-      <div class="card-header-row">
-        <span class="material-symbols-outlined card-icon">calendar_month</span>
-        <h3 class="card-title">Investment Schedule</h3>
-      </div>
-      <div class="schedule-cols">
-        <div class="schedule-col">
-          <span class="row-label">FREQUENCY</span>
-          <div class="freq-pill">{{ getSelectedFrequencyDetails()?.label || investmentSchedule.payFrequency }}</div>
+    <!-- Step 1: Schedule + Portfolio + TOS -->
+    <div class="step-panel"
+         [class.step-visible]="!exitingStep1"
+         [class.step-hidden]="exitingStep1"
+         *ngIf="currentStep === 1 || exitingStep1">
+
+      <!-- Investment Schedule Card -->
+      <div class="section-card">
+        <div class="card-header-row">
+          <span class="material-symbols-outlined card-icon">calendar_month</span>
+          <h3 class="card-title">Investment Schedule</h3>
         </div>
-        <div class="schedule-col">
-          <span class="row-label">PER TRANSFER</span>
-          <span class="row-value">{{ formatCurrency(investmentSchedule.investmentAmount) }}</span>
-        </div>
-        <div class="schedule-col">
-          <span class="row-label">MONTHLY TOTAL</span>
-          <span class="row-value row-value--blue">{{ formatCurrency(getMonthlyProjection()) }}</span>
-        </div>
-      </div>
-      <div class="schedule-description" *ngIf="getInvestmentScheduleDescription()">
-        <span class="material-symbols-outlined desc-icon">event_repeat</span>
-        <p class="desc-text">{{ getInvestmentScheduleDescription() }}</p>
-      </div>
-    </div>
-
-    <!-- Portfolio Card -->
-    <div class="section-card">
-      <div class="card-header-row">
-        <span class="material-symbols-outlined card-icon">pie_chart</span>
-        <h3 class="card-title">{{ portfolioType === 'auto' ? 'FRED Default Portfolio' : 'Your Custom Portfolio' }}</h3>
-        <button class="edit-link" type="button" (click)="editPortfolio()">
-          Edit
-          <span class="material-symbols-outlined">arrow_forward</span>
-        </button>
-      </div>
-
-      <div *ngIf="isLoadingPortfolio" class="portfolio-loading">
-        <ion-spinner name="crescent"></ion-spinner>
-        <span>Loading portfolio...</span>
-      </div>
-
-      <div *ngIf="portfolioError && !isLoadingPortfolio" class="portfolio-error-note">
-        <span class="material-symbols-outlined">warning</span>
-        <span>Showing default allocation.</span>
-      </div>
-
-      <div *ngIf="!isLoadingPortfolio" class="portfolio-list">
-        <div *ngFor="let stock of userPortfolio" class="portfolio-item">
-          <div class="stock-left">
-            <span class="stock-symbol">{{ stock.symbol }}</span>
-            <span class="stock-name">{{ stock.name }}</span>
+        <div class="schedule-cols">
+          <div class="schedule-col">
+            <span class="row-label">FREQUENCY</span>
+            <div class="freq-pill">{{ getSelectedFrequencyDetails()?.label || investmentSchedule.payFrequency }}</div>
           </div>
-          <div class="stock-right">
-            <span class="alloc-pct">{{ stock.allocation }}%</span>
-            <div class="alloc-bar">
-              <div class="alloc-fill" [style.width.%]="stock.allocation"></div>
+          <div class="schedule-col">
+            <span class="row-label">PER TRANSFER</span>
+            <span class="row-value">{{ formatCurrency(investmentSchedule.investmentAmount) }}</span>
+          </div>
+          <div class="schedule-col">
+            <span class="row-label">MONTHLY TOTAL</span>
+            <span class="row-value row-value--blue">{{ formatCurrency(getMonthlyProjection()) }}</span>
+          </div>
+        </div>
+        <div class="schedule-description" *ngIf="getInvestmentScheduleDescription()">
+          <span class="material-symbols-outlined desc-icon">event_repeat</span>
+          <p class="desc-text">{{ getInvestmentScheduleDescription() }}</p>
+        </div>
+      </div>
+
+      <!-- Portfolio Card -->
+      <div class="section-card">
+        <div class="card-header-row">
+          <span class="material-symbols-outlined card-icon">pie_chart</span>
+          <h3 class="card-title">{{ portfolioType === 'auto' ? 'FRED Default Portfolio' : 'Your Custom Portfolio' }}</h3>
+          <button class="edit-link" type="button" (click)="editPortfolio()">
+            Edit
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </div>
+
+        <div *ngIf="isLoadingPortfolio" class="portfolio-loading">
+          <ion-spinner name="crescent"></ion-spinner>
+          <span>Loading portfolio...</span>
+        </div>
+
+        <div *ngIf="portfolioError && !isLoadingPortfolio" class="portfolio-error-note">
+          <span class="material-symbols-outlined">warning</span>
+          <span>Showing default allocation.</span>
+        </div>
+
+        <div *ngIf="!isLoadingPortfolio" class="portfolio-list">
+          <div *ngFor="let stock of userPortfolio" class="portfolio-item">
+            <div class="stock-left">
+              <span class="stock-symbol">{{ stock.symbol }}</span>
+              <span class="stock-name">{{ stock.name }}</span>
+            </div>
+            <div class="stock-right">
+              <span class="alloc-pct">{{ stock.allocation }}%</span>
+              <div class="alloc-bar">
+                <div class="alloc-fill" [style.width.%]="stock.allocation"></div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- FRED + Alpaca Trust Section -->
-    <div class="trust-section">
-      <div class="trust-header">
-        <div class="trust-brands">
-          <span class="brand-pill brand-pill--fred">FRED</span>
-          <span class="brand-x">×</span>
-          <span class="brand-pill brand-pill--alpaca">alpaca</span>
-          <span class="brand-sep">·</span>
-          <div class="trust-badge">
-            <span class="material-symbols-outlined">verified_user</span>
-            <span>FINRA</span>
+      <!-- Trust Card -->
+      <div class="trust-section">
+        <div class="trust-header">
+          <div class="trust-brands">
+            <span class="brand-pill brand-pill--fred">FRED</span>
+            <span class="brand-x">×</span>
+            <span class="brand-pill brand-pill--alpaca">alpaca</span>
+            <span class="brand-sep">·</span>
+            <div class="trust-badge">
+              <span class="material-symbols-outlined">verified_user</span>
+              <span>FINRA</span>
+            </div>
+            <span class="brand-sep">·</span>
+            <div class="trust-badge">
+              <span class="material-symbols-outlined">account_balance</span>
+              <span>SIPC</span>
+            </div>
           </div>
-          <span class="brand-sep">·</span>
-          <div class="trust-badge">
-            <span class="material-symbols-outlined">account_balance</span>
-            <span>SIPC</span>
-          </div>
+          <span class="trust-headline">Powered by a licensed ria & broker-dealer</span>
         </div>
-        <span class="trust-headline">Powered by a licensed broker-dealer</span>
+        <p class="trust-body">
+          FRED automates your investment schedule and execution logic.
+          <strong>Alpaca</strong>, a FINRA-registered broker-dealer, handles trade execution and
+          holds your account in custody. You stay in full control of your portfolio and schedule —
+          pause or cancel anytime.
+        </p>
       </div>
-      <p class="trust-body">
-        FRED automates your investment schedule and execution logic.
-        <strong>Alpaca</strong>, a FINRA-registered broker-dealer, handles trade execution and
-        holds your account in custody. You stay in full control of your portfolio and schedule —
-        pause or cancel anytime.
-      </p>
-      <!-- <div class="trust-badges">
-        <div class="trust-badge">
-          <span class="material-symbols-outlined">verified_user</span>
-          <span>FINRA Member</span>
-        </div>
-        <div class="trust-badge">
-          <span class="material-symbols-outlined">account_balance</span>
-          <span>SIPC Protected</span>
-        </div>
-        <div class="trust-badge">
-          <span class="material-symbols-outlined">tune</span>
-          <span>Cancel Anytime</span>
-        </div>
-      </div> -->
+
+      <!-- Terms of Service Checkbox -->
+      <div class="tos-section">
+        <label class="tos-label">
+          <div class="tos-checkbox-wrap">
+            <input type="checkbox" [(ngModel)]="agreedToTerms" class="tos-checkbox-native" />
+            <div class="custom-checkbox" [class.checked]="agreedToTerms">
+              <span *ngIf="agreedToTerms" class="material-symbols-outlined">check</span>
+            </div>
+          </div>
+          <span class="tos-text">
+            I agree to FRED's
+            <a href="#" class="tos-link" (click)="$event.preventDefault()">Terms of Service</a>
+            and
+            <a href="#" class="tos-link" (click)="$event.preventDefault()">Privacy Policy</a>.
+          </span>
+        </label>
+        <label class="tos-label">
+          <div class="tos-checkbox-wrap">
+            <input type="checkbox" [(ngModel)]="agreedToMarketing" (ngModelChange)="onMarketingPreferenceChange($event)" class="tos-checkbox-native" />
+            <div class="custom-checkbox" [class.checked]="agreedToMarketing">
+              <span *ngIf="agreedToMarketing" class="material-symbols-outlined">check</span>
+            </div>
+          </div>
+          <span class="tos-text">Keep me updated with FRED tips and news.</span>
+        </label>
+      </div>
+
     </div>
 
-    <!-- Terms of Service Checkbox -->
-    <div class="tos-section">
-      <label class="tos-label">
-        <div class="tos-checkbox-wrap">
-          <input type="checkbox" [(ngModel)]="agreedToTerms" class="tos-checkbox-native" />
-          <div class="custom-checkbox" [class.checked]="agreedToTerms">
-            <span *ngIf="agreedToTerms" class="material-symbols-outlined">check</span>
+    <!-- Step 2: Pricing -->
+    <div class="step-panel step-panel--enter" *ngIf="currentStep === 2">
+      <section class="pricing-section">
+        <div class="pricing-carousel-wrap">
+          <swiper-container
+            #pricingSwiper
+            class="pricing-carousel"
+            slides-per-view="auto"
+            centered-slides="true"
+            initial-slide="1"
+            space-between="24"
+            css-mode="true"
+            [pagination]="false"
+            (swiperslidechange)="onSlideChange($event)">
+
+            <swiper-slide *ngFor="let tier of tiers" class="pricing-slide">
+              <div class="popular-badge-outer" *ngIf="tier.popular">
+                <span class="tier-card__popular-badge">Most Popular</span>
+              </div>
+              <article class="tier-card"
+                       [class.tier-card--popular]="tier.popular"
+                       [attr.data-tier]="tier.id"
+                       [style.--tier-accent]="tier.accent">
+
+                <header class="tier-card__head">
+                  <span class="tier-card__dot" aria-hidden="true"></span>
+                  <span class="tier-card__label">{{ tier.name }}</span>
+                </header>
+
+                <div class="tier-card__price-row">
+                  <span class="tier-card__price">${{ tier.price }}</span>
+                  <span class="tier-card__price-suffix">/mo</span>
+                </div>
+
+                <p class="tier-card__lifetime">{{ tier.lifetimeLine }}</p>
+                <p class="tier-card__pitch" [innerHTML]="pitchHtml(tier.pitch)"></p>
+                <hr class="tier-card__divider" />
+
+                <ul class="tier-card__features" role="list">
+                  <li *ngFor="let f of tier.features"
+                      class="feature-row"
+                      [class.feature-row--open]="isExpanded(tier.id, f.id)">
+                    <button type="button"
+                            class="feature-row__toggle"
+                            [attr.aria-expanded]="isExpanded(tier.id, f.id)"
+                            (click)="toggleFeature(tier.id, f.id)">
+                      <span class="feature-row__icon-wrap" [attr.data-state]="f.lockState">
+                        <span class="material-symbols-outlined feature-row__icon">{{ iconForState(f.lockState) }}</span>
+                      </span>
+                      <span class="feature-row__label">{{ f.label }}</span>
+                      <span *ngIf="f.threshold"
+                            class="feature-row__threshold"
+                            [attr.data-state]="f.lockState">{{ f.threshold }}</span>
+                      <span class="material-symbols-outlined feature-row__chevron">expand_more</span>
+                    </button>
+                    <div class="feature-row__detail">
+                      <p>{{ f.description }}</p>
+                    </div>
+                  </li>
+                </ul>
+
+                <button type="button"
+                        class="tier-cta"
+                        [disabled]="isAuthorizing"
+                        (click)="selectTier(tier.id)">
+                  <span *ngIf="!isAuthorizing">{{ tier.ctaLabel }}</span>
+                  <span *ngIf="isAuthorizing">Starting investment...</span>
+                  <span class="material-symbols-outlined" *ngIf="!isAuthorizing">arrow_forward</span>
+                  <ion-spinner name="crescent" *ngIf="isAuthorizing"></ion-spinner>
+                </button>
+
+                <div class="tier-trial">
+                  <span class="material-symbols-outlined">schedule</span>
+                  <span class="tier-trial__copy">
+                    <strong>Try FRED free for 60 days.</strong>
+                    <span class="tier-trial__sub">No charges, cancel anytime.</span>
+                  </span>
+                </div>
+              </article>
+            </swiper-slide>
+          </swiper-container>
+
+          <div class="pricing-pagination" role="tablist" aria-label="Pricing tier">
+            <button *ngFor="let tier of tiers; let i = index"
+                    type="button"
+                    role="tab"
+                    class="pricing-pagination__dot"
+                    [class.pricing-pagination__dot--active]="currentTierIndex === i"
+                    [style.--tier-accent]="tier.accent"
+                    [attr.aria-label]="'Show ' + tier.name"
+                    [attr.aria-selected]="currentTierIndex === i"
+                    (click)="goToSlide(i)">
+            </button>
           </div>
         </div>
-        <span class="tos-text">
-          I agree to the
-          <a href="#" class="tos-link" (click)="$event.preventDefault()">Terms of Service</a>
-          and
-          <a href="#" class="tos-link" (click)="$event.preventDefault()">Privacy Policy</a>.
-        </span>
-      </label>
+      </section>
     </div>
 
   </div>
 </ion-content>
 
-<ion-footer class="ion-no-border">
+<ion-footer class="ion-no-border"
+  *ngIf="currentStep === 1 || exitingStep1"
+  [class.step-hidden]="exitingStep1">
   <div class="cta-footer">
     <button
       class="cta-btn"
       type="button"
-      (click)="authorizeRecurringInvestment()"
-      [disabled]="isAuthorizing || isCreatingAccount || !agreedToTerms"
-      [class.btn-visible]="agreedToTerms && !isAuthorizing && !isCreatingAccount">
-      <ng-container *ngIf="!isAuthorizing && !isCreatingAccount">
-        <span>Confirm & Start Investing</span>
+      (click)="proceedToTrustStep()"
+      [disabled]="!agreedToTerms || exitingStep1"
+      [class.btn-visible]="agreedToTerms && !exitingStep1">
+      <ng-container *ngIf="!exitingStep1">
+        <span>Confirm</span>
         <span class="material-symbols-outlined">arrow_forward</span>
       </ng-container>
-      <ng-container *ngIf="isAuthorizing || isCreatingAccount">
-        <ion-spinner name="crescent"></ion-spinner>
-        <span>{{ isCreatingAccount ? 'Setting up account...' : 'Authorizing...' }}</span>
+      <ng-container *ngIf="exitingStep1">
+        <span>Confirming...</span>
       </ng-container>
     </button>
-    <p class="pricing-disclosure">$7.99/month, billed through Apple. Cancel anytime.</p>
   </div>
 </ion-footer>
 

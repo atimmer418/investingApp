@@ -158,7 +158,7 @@ export class InvestmentScheduleComponent implements OnInit, OnDestroy {
     if (!this.keyboardHeight) return;
     const fieldEl = (el.closest('.field-row') as HTMLElement) ?? el;
     const rect = fieldEl.getBoundingClientRect();
-    const visibleBottom = window.innerHeight - this.keyboardHeight - 8;
+    const visibleBottom = window.innerHeight - this.keyboardHeight - 32;
     const overshoot = rect.bottom - visibleBottom;
     if (overshoot > 0) {
       (this.content as any).scrollByPoint(0, overshoot, 150);
@@ -609,8 +609,7 @@ export class InvestmentScheduleComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           console.log('[InvestmentScheduleComponent] ✅ Investment schedule saved successfully:', response);
-          this.isSubmitting = false;
-          
+
           // Complete the investmentSchedule step using the unified method
           this.authService.completeStep('investmentSchedule').subscribe({
             next: () => {

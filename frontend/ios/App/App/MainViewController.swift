@@ -20,29 +20,30 @@ class MainViewController: CAPBridgeViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let overlay = UIView()
+        // Backup: ensures the bridge VC view paints white even before subviews lay out.
+        view.backgroundColor = .white
+
+        // Frame-based (not constraint-based) so it has correct geometry on first paint
+        // without waiting for a layout pass.
+        let screen = UIScreen.main.bounds
+        let overlay = UIView(frame: screen)
+        overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         overlay.backgroundColor = .white
-        overlay.translatesAutoresizingMaskIntoConstraints = false
         overlay.isUserInteractionEnabled = false
 
+        let imgSize: CGFloat = 200
         let imageView = UIImageView(image: UIImage(named: "FREDLogo"))
         imageView.contentMode = .scaleAspectFit
-        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.frame = CGRect(
+            x: (screen.width - imgSize) / 2,
+            y: (screen.height - imgSize) / 2,
+            width: imgSize,
+            height: imgSize
+        )
+        imageView.autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin]
         overlay.addSubview(imageView)
 
         view.addSubview(overlay)
-
-        NSLayoutConstraint.activate([
-            overlay.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            overlay.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            overlay.topAnchor.constraint(equalTo: view.topAnchor),
-            overlay.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            imageView.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
-            imageView.centerYAnchor.constraint(equalTo: overlay.centerYAnchor),
-            imageView.widthAnchor.constraint(equalToConstant: 200),
-            imageView.heightAnchor.constraint(equalToConstant: 200)
-        ])
-
         bridgeLoadingOverlay = overlay
     }
 

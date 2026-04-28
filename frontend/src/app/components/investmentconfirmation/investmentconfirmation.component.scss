@@ -5,7 +5,6 @@
   --confirm-text: #0f172a;
   --confirm-gray: #6b7280;
   --confirm-border: #e5e7eb;
-
   --ion-background-color: #f8fafc;
   --ion-toolbar-background: #f8fafc;
   --ion-toolbar-color: #0f172a;
@@ -39,7 +38,7 @@ ion-toolbar {
   border: none;
   cursor: pointer;
   color: var(--confirm-text);
-  transition: background 0.2s ease;
+  transition: background 1s ease;
   flex-shrink: 0;
 
   &:active {
@@ -101,6 +100,7 @@ ion-content::part(scroll) {
   text-align: center;
   margin: 0;
   color: var(--confirm-text);
+  transition: opacity 1s ease;
 }
 
 .hero-subtitle {
@@ -110,6 +110,7 @@ ion-content::part(scroll) {
   line-height: 1.4;
   text-align: center;
   padding: 0 40px;
+  transition: opacity 1s ease;
 }
 
 // --- Section Cards (schedule + portfolio) ---
@@ -474,6 +475,9 @@ ion-content::part(scroll) {
 // --- Terms of Service ---
 .tos-section {
   padding: 2px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .tos-label {
@@ -493,6 +497,8 @@ ion-content::part(scroll) {
 
 .tos-checkbox-native {
   position: absolute;
+  top: 0;
+  left: 0;
   opacity: 0;
   width: 22px;
   height: 22px;
@@ -542,6 +548,7 @@ ion-footer {
   --background: transparent;
   --border-width: 0;
   height: 80px;
+  transition: opacity 1s ease;
 }
 
 .cta-footer {
@@ -568,12 +575,11 @@ ion-footer {
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 1s ease;
   background: #e5e7eb;
   color: #9ca3af;
   box-shadow: none;
   opacity: 0.7;
-  transform: translateY(4px);
 
   &.btn-visible {
     background: #111827;
@@ -584,7 +590,6 @@ ion-footer {
   }
 
   &:not(:disabled).btn-visible:active {
-    transform: scale(0.99);
     background: #1f2937;
   }
 
@@ -619,10 +624,455 @@ ion-footer {
   background: var(--confirm-bg);
   z-index: 9999;
   opacity: 1;
-  transition: opacity 0.25s ease;
+  transition: opacity 1s ease;
   pointer-events: none;
 
   &.veil-hidden {
     opacity: 0;
+  }
+}
+
+// --- Step panels ---
+.step-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  opacity: 1;
+  transition: opacity 1s ease;
+}
+
+.step-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes panelEnter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.step-panel--enter {
+  animation: panelEnter 1s ease both;
+}
+
+// =============================================================================
+// Pricing Tier Carousel
+// =============================================================================
+
+.pricing-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .pricing-section__header {
+    padding: 0 2px;
+    margin-bottom: 0;
+  }
+}
+
+.pricing-carousel-wrap {
+  position: relative;
+  margin-left: -18px;
+  margin-right: -18px;
+}
+
+// Allow swiper overflow so popular badge can render above card top edge
+swiper-container.pricing-carousel {
+  display: block;
+  overflow: visible;
+  padding-top: 4px;
+}
+
+
+.pricing-slide {
+  width: 84vw;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+  // In css-mode the scroll container can't go negative, so the first/last slides
+  // would flush against the screen edge. Margin on the slides (not the container)
+  // creates the scroll space they need to reach center without shrinking the peek.
+  &:first-child { margin-left: calc((100vw - min(84vw, 320px)) / 2); }
+  &:last-child  { margin-right: calc((100vw - min(84vw, 320px)) / 2); }
+}
+
+// Badge outer wrapper — lives ABOVE .tier-card inside the slide
+.popular-badge-outer {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 0;
+  height: 0; // No height — badge overlaps card top edge via negative margin on card
+}
+
+.tier-card__popular-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #2563EB; // Plus accent — hardcoded since badge is Plus-only
+  color: white;
+  font-family: 'Manrope', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px -4px rgba(37, 99, 235, 0.5);
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+  // Badge center-aligned via flex parent, sits at the top of the slide space
+  // The card below has margin-top that positions it UNDER the badge visually
+  transform: translateY(14px); // Push badge down so it overlaps the card top edge
+}
+
+.tier-card {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  background: white;
+  border: 2px solid var(--tier-accent);
+  border-radius: 16px;
+  padding: 22px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--tier-accent) 20%, transparent);
+  font-family: 'Manrope', sans-serif;
+  overflow: visible;
+
+  &.tier-card--popular {
+    padding-top: 26px; // extra top padding to accommodate the floating badge above
+  }
+}
+
+.tier-card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tier-card__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tier-accent, #2563EB);
+  flex-shrink: 0;
+}
+
+.tier-card__label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tier-accent, #2563EB);
+}
+
+.tier-card__price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.tier-card__price {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--confirm-text);
+}
+
+.tier-card__price-suffix {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--confirm-gray);
+  align-self: flex-end;
+  padding-bottom: 6px;
+}
+
+.tier-card__lifetime {
+  font-size: 12px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--tier-accent, #2563EB);
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
+
+.tier-card__pitch {
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--confirm-gray);
+  margin: 0 0 12px;
+}
+
+.tier-card__divider {
+  border: none;
+  border-top: 1px solid var(--confirm-border);
+  margin: 0 0 10px;
+}
+
+// --- Feature list ---
+.tier-card__features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.feature-row {
+  border-radius: 10px;
+  overflow: hidden;
+  transition: background 0.15s ease;
+
+  &.feature-row--open {
+    background: color-mix(in srgb, var(--tier-accent, #2563EB) 6%, white);
+  }
+}
+
+.feature-row__toggle {
+  width: 100%;
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  padding: 8px 6px;
+  font-family: 'Manrope', sans-serif;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+.feature-row__icon-wrap {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &[data-state="unlocked"],
+  &[data-state="unlocks-sooner"] {
+    background: color-mix(in srgb, var(--tier-accent, #2563EB) 15%, white);
+    color: var(--tier-accent, #2563EB);
+  }
+
+  &[data-state="locked"],
+  &[data-state="coming-soon"] {
+    background: #f1f5f9;
+    color: #6b7280;
+  }
+}
+
+.feature-row__icon {
+  font-size: 13px;
+  font-variation-settings: 'FILL' 1;
+}
+
+.feature-row__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--confirm-text);
+  line-height: 1.3;
+}
+
+.feature-row__threshold {
+  font-size: 9px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &[data-state="locked"] {
+    background: #f1f5f9;
+    color: #475569;
+  }
+
+  &[data-state="unlocks-sooner"] {
+    background: color-mix(in srgb, var(--tier-accent, #2563EB) 12%, white);
+    color: var(--tier-accent, #2563EB);
+  }
+
+  &[data-state="coming-soon"] {
+    background: #fef3c7;
+    color: #92400e;
+  }
+}
+
+.feature-row__chevron {
+  grid-column: 4;
+  font-size: 18px;
+  color: var(--confirm-gray);
+  transition: transform 1s ease;
+  flex-shrink: 0;
+}
+
+.feature-row--open .feature-row__chevron {
+  transform: rotate(180deg);
+}
+
+// Expandable feature detail — CSS-only, max-height transition
+.feature-row__detail {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  padding: 0 8px 0 42px;
+  transition: max-height 1s ease-out, opacity 1s ease-out, padding-bottom 1s ease-out;
+
+  p {
+    margin: 0;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--confirm-gray);
+  }
+}
+
+.feature-row--open .feature-row__detail {
+  max-height: 240px;
+  opacity: 1;
+  padding: 0 8px 12px 42px;
+}
+
+// Reduced motion — disable transitions
+@media (prefers-reduced-motion: reduce) {
+  .feature-row__chevron,
+  .feature-row__detail,
+  .feature-row,
+  .tier-card {
+    transition: none !important;
+  }
+}
+
+// --- Trial risk reversal ---
+.tier-trial {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-top: 10px;
+  font-family: 'Manrope', sans-serif;
+
+  .material-symbols-outlined {
+    font-size: 18px;
+    color: #15803d;
+    flex-shrink: 0;
+  }
+}
+
+.tier-trial__copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+
+  strong {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #14532d;
+  }
+}
+
+.tier-trial__sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: #166534;
+}
+
+// --- Tier CTA ---
+.tier-cta {
+  width: 100%;
+  height: 48px;
+  border-radius: 12px;
+  border: 0;
+  background: var(--tier-accent, #2563EB);
+  color: white;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  margin-top: auto;
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):active {
+    transform: scale(0.99);
+    opacity: 0.9;
+  }
+
+  .material-symbols-outlined {
+    font-size: 18px;
+  }
+
+  ion-spinner {
+    width: 16px;
+    height: 16px;
+    color: white;
+  }
+}
+
+// --- Pagination dots ---
+.pricing-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 0 6px;
+}
+
+.pricing-pagination__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  border: 0;
+  padding: 0;
+  background: #d1d5db;
+  cursor: pointer;
+  transition: width 1s ease, background 1s ease;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+
+  // Extend tap area invisibly without growing the dot
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -14px;
+  }
+
+  &.pricing-pagination__dot--active {
+    width: 22px;
+    height: 6px;
+    border-radius: 6px;
+    background: var(--tier-accent, #2563EB);
   }
 }

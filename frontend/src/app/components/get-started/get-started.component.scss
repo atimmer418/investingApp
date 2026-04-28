@@ -15,6 +15,19 @@
   --background: var(--gs-bg);
 }
 
+// Hidden image used solely to force the browser to fetch + decode the
+// survey-initial timeline image while get-started is on screen.
+.hidden-preload {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
 .page-wrapper {
   height: 100%;
 }

@@ -75,10 +75,17 @@
   <div class="cta-footer">
     <button
       class="cta-btn"
-      [disabled]="!selectedStrategyId"
+      type="button"
+      [disabled]="!selectedStrategyId || isLoading"
       (click)="confirmSelection()">
-      Continue
-      <span class="material-symbols-outlined" *ngIf="selectedStrategyId">arrow_forward</span>
+      <ng-container *ngIf="!isLoading">
+        <span>Continue</span>
+        <span class="material-symbols-outlined" *ngIf="selectedStrategyId">arrow_forward</span>
+      </ng-container>
+      <ng-container *ngIf="isLoading">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>Continuing...</span>
+      </ng-container>
     </button>
   </div>
 </ion-footer>

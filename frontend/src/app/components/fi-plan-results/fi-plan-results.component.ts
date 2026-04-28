@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IonHeader, IonToolbar, IonContent, IonFooter, NavController } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, IonFooter, IonSpinner, NavController } from '@ionic/angular/standalone';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 
@@ -24,7 +24,7 @@ export interface Strategy {
   templateUrl: './fi-plan-results.component.html',
   styleUrls: ['./fi-plan-results.component.scss'],
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonContent, IonFooter],
+  imports: [CommonModule, IonHeader, IonToolbar, IonContent, IonFooter, IonSpinner],
 })
 export class FiPlanResultsComponent implements OnInit, OnDestroy {
 
@@ -43,11 +43,11 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
     {
       id: 'guardrails',
       title: 'Dynamic Guardrails',
-      description: 'No debt accumulated, ever. Spend more in good years, pull back in bad ones.',
+      description: 'Spend what your portfolio can afford. More in strong markets, less in weak ones.',
       icon: 'tune',
       tags: [
         { label: 'High Growth', type: 'green' },
-        { label: 'Debt-Free', type: 'green' },
+        { label: 'Sustainable', type: 'green' },
         { label: 'Flex Spending', type: 'blue' },
       ]
     },
@@ -81,7 +81,8 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
   monthlyInvestment: number = 0;
   @HostBinding('class.page-ready') isReady = false;
   selectedStrategyId: string = '';
-  
+  isLoading: boolean = false;
+
   private routeSub: Subscription | undefined;
   
   constructor(
@@ -287,8 +288,9 @@ export class FiPlanResultsComponent implements OnInit, OnDestroy {
   }
   
   confirmSelection() {
+    this.isLoading = true;
     console.log(`User selected the ${this.getSelectedStrategyName()} plan.`);
-    
+
     // Complete the fiPlanResults step
     this.authService.completeStep('fiPlanResults').subscribe({
       next: () => {

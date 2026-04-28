@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -32,11 +32,179 @@ interface DefaultStock {
   description: string;
 }
 
+// Pricing tier types
+type FeatureLockState = 'unlocked' | 'unlocks-sooner' | 'locked' | 'coming-soon';
+
+interface PricingFeature {
+  id: string;
+  label: string;
+  description: string;
+  lockState: FeatureLockState;
+  threshold?: string;
+}
+
+interface PricingTier {
+  id: 'core' | 'plus' | 'pro';
+  name: string;
+  accent: string;
+  price: number;
+  lifetimeLine: string;
+  pitch: string;
+  ctaLabel: string;
+  popular?: boolean;
+  features: PricingFeature[];
+}
+
+const PRICING_TIERS: PricingTier[] = [
+  {
+    id: 'core',
+    name: 'FRED Core',
+    accent: '#0F766E',
+    price: 8,
+    lifetimeLine: '$5/mo lifetime with 3 referrals',
+    pitch: 'Automated investing. Works while you work.',
+    ctaLabel: 'Invest with FRED Core',
+    features: [
+      {
+        id: 'auto-invest',
+        label: 'Paycheck-based automated investing',
+        description: 'FRED automatically invests a portion of every paycheck so you never have to think about it.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'portfolio',
+        label: 'FRED default portfolio or build your own',
+        description: "Start with FRED's proven default (75% VTI, 20% VXUS, 5% VBR) or customize your own allocation.",
+        lockState: 'unlocked'
+      },
+      {
+        id: 'rebalance',
+        label: 'Automatic portfolio rebalancing',
+        description: 'FRED periodically realigns your portfolio back to your target allocation — no action needed from you.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'montecarlo',
+        label: 'Monte Carlo modeling',
+        description: 'See thousands of possible retirement outcomes based on your actual numbers.',
+        lockState: 'locked',
+        threshold: '$100k equity'
+      },
+      {
+        id: 'education',
+        label: 'Retirement strategy education',
+        description: 'In-depth guides and lessons on building long-term wealth.',
+        lockState: 'locked',
+        threshold: '$250k equity'
+      }
+    ]
+  },
+  {
+    id: 'plus',
+    name: 'FRED Plus',
+    accent: '#2563EB',
+    price: 15,
+    lifetimeLine: '$10/mo lifetime with 2 referrals',
+    pitch: 'Every tool, unlocked sooner. Your schedule, your rules.',
+    ctaLabel: 'Invest with FRED Plus',
+    popular: true,
+    features: [
+      {
+        id: 'everything-core',
+        label: 'Everything in Core',
+        description: 'All Core features included.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'montecarlo',
+        label: 'Monte Carlo modeling',
+        description: 'See thousands of possible retirement outcomes based on your actual numbers. Half the wait.',
+        lockState: 'unlocks-sooner',
+        threshold: '$50k equity'
+      },
+      {
+        id: 'education',
+        label: 'Retirement strategy education',
+        description: 'In-depth guides and lessons on building long-term wealth. Half the wait.',
+        lockState: 'unlocks-sooner',
+        threshold: '$125k equity'
+      },
+      {
+        id: 'custom-rebalance',
+        label: 'Custom rebalancing schedule',
+        description: 'Choose how often FRED realigns your portfolio back to your target allocation — quarterly, semi-annual, or annual — based on your tax situation and preference.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'ria-session',
+        label: 'One free 1:1 strategy session with a FRED RIA',
+        description: 'Sit down once with a FRED RIA to review your portfolio, your Freedom Date, and your plan.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'priority-support',
+        label: 'Priority support',
+        description: 'A real human responds to your questions within 24 hours.',
+        lockState: 'unlocked'
+      }
+    ]
+  },
+  {
+    id: 'pro',
+    name: 'FRED Pro',
+    accent: '#111827',
+    price: 40,
+    lifetimeLine: '$20/mo lifetime with 1 referral',
+    pitch: 'Your money on autopilot. A real expert in your corner.',
+    ctaLabel: 'Invest with FRED Pro',
+    features: [
+      {
+        id: 'everything-plus',
+        label: 'Everything in Plus',
+        description: 'All Plus features included.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'montecarlo',
+        label: 'Monte Carlo modeling',
+        description: 'See thousands of possible retirement outcomes based on your actual numbers. Available immediately on Pro.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'education',
+        label: 'Retirement strategy education',
+        description: 'In-depth guides and lessons on building long-term wealth. Available immediately on Pro.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'annual-ria',
+        label: 'Annual 1:1 strategy sessions with a FRED RIA',
+        description: 'Once a year, sit down with a FRED RIA to review your portfolio, your Freedom Date, and your plan.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'early-access',
+        label: 'Early access to new FRED features',
+        description: 'Be the first to test new portfolio models, tools, and features before they roll out to everyone else.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'household',
+        label: 'Household & partner account linking',
+        description: "Link a partner's account under one subscription. See your combined portfolio and Freedom Date on a shared dashboard.",
+        lockState: 'coming-soon',
+        threshold: 'Coming Soon'
+      }
+    ]
+  }
+];
+
 @Component({
   selector: 'app-investmentconfirmation',
   templateUrl: './investmentconfirmation.component.html',
   styleUrls: ['./investmentconfirmation.component.scss'],
   standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [
     CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
     IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
@@ -45,7 +213,11 @@ interface DefaultStock {
 })
 
 export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
+  currentStep: 1 | 2 = 1;
+  exitingStep1 = false;
+
   agreedToTerms: boolean = false;
+  agreedToMarketing: boolean = false;
 
   // Investment schedule data
   investmentSchedule: InvestmentSchedule = {
@@ -74,6 +246,13 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
   isLoadingPortfolio: boolean = false;
   portfolioError: string | null = null;
 
+  // Pricing tier carousel
+  @ViewChild('pricingSwiper', { read: ElementRef }) pricingSwiperRef?: ElementRef;
+  readonly tiers = PRICING_TIERS;
+  currentTierIndex = 1;
+  selectedTier: 'core' | 'plus' | 'pro' | null = null;
+  private expandedFeatures = new Set<string>();
+
   // Frequency options for display
   frequencyOptions = [
     { value: 'WEEKLY', label: 'Weekly', paychecksPerMonth: 4.33 },
@@ -88,11 +267,35 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
     private investmentService: InvestmentService,
     private navCtrl: NavController,
     private http: HttpClient,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   goBack(): void {
+    if (this.currentStep === 2) {
+      this.currentStep = 1;
+      try { localStorage.setItem('fred.investmentConfirmation.step', '1'); } catch { /* noop */ }
+      return;
+    }
+    try { localStorage.removeItem('fred.investmentConfirmation.step'); } catch { /* noop */ }
     this.navCtrl.navigateBack('/investment-schedule', { replaceUrl: true });
+  }
+
+  async proceedToTrustStep() {
+    if (!this.agreedToTerms) return;
+    await this.animateStep(2);
+  }
+
+  private async animateStep(target: 1 | 2) {
+    if (target === 2) {
+      this.exitingStep1 = true;
+      this.cdr.detectChanges();
+      await new Promise(r => setTimeout(r, 270));
+      this.exitingStep1 = false;
+      this.currentStep = 2;
+      try { localStorage.setItem('fred.investmentConfirmation.step', '2'); } catch { /* noop */ }
+      this.cdr.detectChanges();
+    }
   }
 
   ngOnInit() {
@@ -114,6 +317,12 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
   ionViewWillEnter() {
     console.log('[InvestmentConfirmationComponent] View will enter - reloading portfolio');
     this.loadUserPortfolio();
+    try {
+      if (localStorage.getItem('fred.investmentConfirmation.step') === '2') {
+        this.currentStep = 2;
+        this.agreedToTerms = true;
+      }
+    } catch { /* noop */ }
   }
 
   loadUserFinancialData(): void {
@@ -237,7 +446,7 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
             name: item.name,
             allocation: item.percentage,
             description: `${item.assetType || 'Investment'}`
-          }));
+          })).sort((a: DefaultStock, b: DefaultStock) => b.allocation - a.allocation);
 
           this.portfolioType = portfolioResponse.isDefault ? 'auto' : 'custom';
         }
@@ -280,14 +489,14 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
 
     switch (frequency.value) {
       case 'WEEKLY':
-        return `${dayName}, ${monthDay} — recurring every week on ${dayName}`;
+        return `${monthDay} — recurring every week on ${dayName}`;
       case 'BIWEEKLY':
-        return `${dayName}, ${monthDay} — recurring every 2 weeks on ${dayName}`;
+        return `${monthDay} — recurring every 2 weeks on ${dayName}`;
       case 'SEMI_MONTHLY':
         return `${monthDay} — recurring every month on the 1st and 15th`;
       case 'MONTHLY':
         const monthlyDay = startDate.getDate();
-        return `${dayName}, ${monthDay} — recurring every month on the ${monthlyDay}${this.getOrdinalSuffix(monthlyDay)}`;
+        return `${monthDay} — recurring every month on the ${monthlyDay}${this.getOrdinalSuffix(monthlyDay)}`;
       default:
         return '';
     }
@@ -328,6 +537,11 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
     return this.getMonthlyProjection() * 12;
   }
 
+  onMarketingPreferenceChange(opted: boolean): void {
+    // TODO: persist marketing preference to backend
+    console.log('[InvestmentConfirmation] Marketing emails opted:', opted);
+  }
+
   // Navigation methods
   editPortfolio(): void {
     console.log('[InvestmentConfirmationComponent] Navigating to portfolio customization');
@@ -363,5 +577,47 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
     return headers;
+  }
+
+  isExpanded(tierId: string, featureId: string): boolean {
+    return this.expandedFeatures.has(`${tierId}:${featureId}`);
+  }
+
+  toggleFeature(tierId: string, featureId: string): void {
+    const k = `${tierId}:${featureId}`;
+    if (this.expandedFeatures.has(k)) {
+      this.expandedFeatures.delete(k);
+    } else {
+      this.expandedFeatures.clear();
+      this.expandedFeatures.add(k);
+    }
+  }
+
+  pitchHtml(pitch: string): string {
+    return pitch.replace(/\. /g, '.<br>');
+  }
+
+  onSlideChange(event: any): void {
+    this.currentTierIndex = (event.target as any).swiper?.activeIndex ?? this.currentTierIndex;
+  }
+
+  goToSlide(index: number): void {
+    (this.pricingSwiperRef?.nativeElement as any)?.swiper?.slideTo(index);
+  }
+
+  iconForState(state: FeatureLockState): string {
+    switch (state) {
+      case 'unlocked':       return 'check';
+      case 'unlocks-sooner': return 'arrow_upward';
+      case 'locked':         return 'lock';
+      case 'coming-soon':    return 'schedule';
+    }
+  }
+
+  selectTier(tierId: 'core' | 'plus' | 'pro'): void {
+    if (this.isAuthorizing) return;
+    this.selectedTier = tierId;
+    try { localStorage.setItem('fred.selectedTier', tierId); } catch { /* noop */ }
+    this.authorizeRecurringInvestment();
   }
 }

@@ -1,5 +1,9 @@
 <ion-content [fullscreen]="true" [scroll]="false" class="get-started-content">
 
+  <!-- Hidden preload: forces the survey-initial timeline image to be fetched + decoded
+       as soon as get-started mounts, so the cross-fade shows it instantly. -->
+  <img class="hidden-preload" src="/assets/images/whenPiggybanksFly-3.jpg" alt="" aria-hidden="true" />
+
   <div class="page-wrapper">
 
     <!-- SWIPER NEEDS css-mode="true" in prod -->

@@ -135,6 +135,12 @@ ion-content::part(scroll) {
 
   .form-section {
     margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+
+    .field-row {
+      margin-top: auto;
+    }
   }
 }
 

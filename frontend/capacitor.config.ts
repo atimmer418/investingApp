@@ -12,8 +12,8 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 3000, // auto-hide ceiling if JS hide call is late
-      launchAutoHide: true,  // safety net — auto-hides at 3s if platform.ready() is slow
+      launchShowDuration: 3000, // ignored when launchAutoHide is false
+      launchAutoHide: false,  // splash stays until Angular calls SplashScreen.hide() — prevents premature fade on slow server loads
       // backgroundColor: "#ffffff", // Optional
       // androidSplashResourceName: "splash", // Optional
       // androidScaleType: "CENTER_CROP", // Optional

@@ -106,9 +106,19 @@
 
 <ion-footer class="ion-no-border">
   <div class="cta-footer">
-    <button class="cta-btn" (click)="viewMyPlan()">
-      See My Plan
-      <span class="material-symbols-outlined">arrow_forward</span>
+    <button
+      class="cta-btn"
+      type="button"
+      [disabled]="isLoading"
+      (click)="viewMyPlan()">
+      <ng-container *ngIf="!isLoading">
+        <span>See My Plan</span>
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </ng-container>
+      <ng-container *ngIf="isLoading">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>Building your plan...</span>
+      </ng-container>
     </button>
   </div>
 </ion-footer>

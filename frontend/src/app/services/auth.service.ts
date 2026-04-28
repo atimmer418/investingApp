@@ -372,46 +372,61 @@ export class AuthService {
   }
 
   /**
-   * Prompt user for passkey re-authentication
+   * Prompt user for passkey re-authentication.
+   * Only runs on fresh install / phone upgrade (no localStorage email).
+   * Uses iCloud Keychain to identify the account, then checks the backend for
+   * registered passkeys before invoking iOS — so iOS is never called if the
+   * list is empty, preventing the "Scan QR Code" sheet from appearing.
    */
   async promptForPasskeyReauth(): Promise<boolean> {
-    // Guard: only run on fresh install / phone upgrade (no email stored yet).
-    // Returning users with a stored email are handled by the AppLock modal instead.
-    if (localStorage.getItem('userEmail')) {
+    if (localStorage.getItem('userEmail')) return false;
+
+    // Identify the account via iCloud Keychain (survives reinstalls/upgrades).
+    // If nothing is in the Keychain this is a genuinely first-time user — skip.
+    const keychainEmail = await this.keychainSyncService.getAccountEmail();
+    if (!keychainEmail) {
       return false;
     }
 
     try {
       this.reAuthInProgressSubject.next(true);
-      console.log('[AuthService] Starting discoverable passkey re-authentication');
 
-      // 1. Start with no email — discoverable credential mode.
-      //    The backend returns an empty allowedCredentials list, which tells iOS to
-      //    look in its own Keychain and present any passkeys registered for this RP.
-      const startResponse = await lastValueFrom(
-        this.http.post<{ requestOptions: string, sessionId: string }>(
-          `${BACKEND_API_URL}/passkey/authenticate/start`, {},
-          { headers: this.getAuthHeaders() }
-        )
-      );
-
-      if (!startResponse) {
-        throw new Error('Failed to start authentication');
+      // Ask the backend for this account's passkeys.
+      let startResponse: { requestOptions: string, sessionId: string };
+      try {
+        startResponse = await lastValueFrom(
+          this.http.post<{ requestOptions: string, sessionId: string }>(
+            `${BACKEND_API_URL}/passkey/authenticate/start`,
+            { email: keychainEmail },
+            { headers: this.getAuthHeaders() }
+          )
+        );
+      } catch {
+        // Account deleted or backend error — clear the stale Keychain entry.
+        this.keychainSyncService.clearAccountEmail();
+        this.reAuthInProgressSubject.next(false);
+        return false;
       }
 
       const credentialRequestOptions = JSON.parse(startResponse.requestOptions);
+      const publicKey = credentialRequestOptions.publicKey ?? credentialRequestOptions;
+      const allowedCreds = publicKey.allowCredentials ?? [];
+
+      // Only invoke iOS if there is at least one passkey to offer.
+      // An empty list means no passkeys are registered — go straight to onboarding.
+      if (allowedCreds.length === 0) {
+        this.reAuthInProgressSubject.next(false);
+        return false;
+      }
+
+      const challenge = credentialRequestOptions.challenge || publicKey.challenge;
+      const rpId = publicKey.rpId ?? publicKey.rp?.id;
+      const userVerification = publicKey.userVerification;
+      const allowedCredentials = allowedCreds.map((c: any) => ({ id: c.id }));
 
       let credentialForFinish: any;
 
       if (this.nativePasskeyService.isAvailable) {
-        // iOS native: use ASAuthorizationController via the native bridge.
-        // navigator.credentials.get() is unreliable in WKWebView.
-        const publicKey = credentialRequestOptions.publicKey ?? credentialRequestOptions;
-        const challenge = credentialRequestOptions.challenge || publicKey.challenge;
-        const rpId = publicKey.rpId ?? publicKey.rp?.id;
-        const userVerification = publicKey.userVerification;
-        const allowedCredentials = (publicKey.allowCredentials ?? []).map((c: any) => ({ id: c.id }));
-
         credentialForFinish = await this.nativePasskeyService.authenticate({
           challenge,
           rpId,
@@ -419,46 +434,33 @@ export class AuthService {
           allowedCredentials
         });
       } else {
-        // Web path: convert base64url strings to ArrayBuffers for WebAuthn API
-        if (credentialRequestOptions.publicKey) {
-          if (credentialRequestOptions.publicKey.challenge) {
-            credentialRequestOptions.publicKey.challenge = this.base64urlToArrayBuffer(credentialRequestOptions.publicKey.challenge);
-          }
-          if (credentialRequestOptions.publicKey.allowCredentials) {
-            credentialRequestOptions.publicKey.allowCredentials.forEach((cred: any) => {
-              if (cred.id) {
-                cred.id = this.base64urlToArrayBuffer(cred.id);
-              }
-            });
-          }
+        if (publicKey.challenge) {
+          publicKey.challenge = this.base64urlToArrayBuffer(publicKey.challenge);
         }
-
-        const credential = await navigator.credentials.get(credentialRequestOptions);
-        if (!credential) {
-          throw new Error('User cancelled passkey authentication');
-        }
+        allowedCreds.forEach((cred: any) => {
+          if (cred.id) cred.id = this.base64urlToArrayBuffer(cred.id);
+        });
+        const credential = await navigator.credentials.get(
+          credentialRequestOptions.publicKey ? credentialRequestOptions : { publicKey: credentialRequestOptions }
+        );
+        if (!credential) throw new Error('User cancelled passkey authentication');
         credentialForFinish = this.credentialToJson(credential as PublicKeyCredential);
       }
 
-      // 3. Finish authentication
-      const authResponse = await lastValueFrom(this.http.post<any>(`${BACKEND_API_URL}/passkey/authenticate/finish`, {
-        credential: credentialForFinish,
-        sessionId: startResponse.sessionId
-      }, { headers: this.getAuthHeaders() }));
+      const authResponse = await lastValueFrom(
+        this.http.post<any>(`${BACKEND_API_URL}/passkey/authenticate/finish`, {
+          credential: credentialForFinish,
+          sessionId: startResponse.sessionId
+        }, { headers: this.getAuthHeaders() })
+      );
 
       if (authResponse?.success) {
-        // User re-authenticated! Update auth state
-        this.handleSuccessfulAuthentication(
-          authResponse.jwtToken,
-          authResponse.userId,
-          authResponse.email
-        );
-        console.log('[AuthService] Passkey re-authentication successful');
+        this.handleSuccessfulAuthentication(authResponse.jwtToken, authResponse.userId, authResponse.email);
         this.reAuthInProgressSubject.next(false);
         return true;
       } else {
         this.reAuthInProgressSubject.next(false);
-        throw new Error(authResponse?.message || 'Authentication failed');
+        return false;
       }
 
     } catch (error) {

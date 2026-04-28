@@ -8,6 +8,7 @@ import {
   IonHeader,
   IonToolbar,
   IonFooter,
+  IonSpinner,
   NavController,
 } from '@ionic/angular/standalone';
 
@@ -23,6 +24,7 @@ import {
     IonHeader,
     IonToolbar,
     IonFooter,
+    IonSpinner,
   ],
 })
 export class SurveyInitialComponent implements OnInit {
@@ -38,6 +40,7 @@ export class SurveyInitialComponent implements OnInit {
   // --- Display Properties ---
   timeToFI: string = '';
   isCalculationExpanded: boolean = false;
+  isLoading: boolean = false;
 
   // --- Economic Assumptions for the SWR/FIRE calculation ---
   private readonly AVG_MARKET_YIELD = 0.10;     // ~10% average annual return
@@ -61,24 +64,34 @@ export class SurveyInitialComponent implements OnInit {
   }
 
   private preloadAssets() {
-    const imageReady = new Promise<void>(resolve => {
-      const img = new Image();
-      img.onload = () => resolve();
-      img.onerror = () => resolve();
-      img.src = '/assets/images/whenPigsFly-2.png';
-    });
+    const img = new Image();
+    img.src = '/assets/images/whenPiggybanksFly-3.jpg';
 
-    // Explicitly wait for the two fonts used on this page
+    const imageAlreadyCached = img.complete;
+    const fontsAlreadyLoaded =
+      document.fonts.check('700 16px "Manrope"') &&
+      document.fonts.check('400 24px "Material Symbols Outlined"');
+
+    if (imageAlreadyCached && fontsAlreadyLoaded) {
+      this.isReady = true;
+      return;
+    }
+
+    const imageReady = imageAlreadyCached
+      ? Promise.resolve()
+      : new Promise<void>(resolve => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+        });
+
     const fontsReady = Promise.all([
       document.fonts.load('700 16px "Manrope"').catch(() => []),
       document.fonts.load('400 24px "Material Symbols Outlined"').catch(() => []),
     ]);
 
-    const allReady = Promise.all([fontsReady, imageReady]);
     const timeout = new Promise<void>(resolve => setTimeout(resolve, 2000));
 
-    // Lift the veil as soon as everything is ready, but never wait longer than 2s
-    Promise.race([allReady, timeout]).then(() => {
+    Promise.race([Promise.all([fontsReady, imageReady]), timeout]).then(() => {
       this.isReady = true;
     });
   }
@@ -214,6 +227,7 @@ export class SurveyInitialComponent implements OnInit {
    * Navigates to the results page where the SWR, SBLOC, and Annuity options will be shown.
    */
   viewMyPlan() {
+    this.isLoading = true;
     console.log('Navigating to results with:', {
       monthly: this.monthlyInvestment,
       annual: this.retirementIncome,
