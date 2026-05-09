@@ -1,6 +1,7 @@
 import Foundation
 import Capacitor
 import UIKit
+import Lottie
 
 class MainViewController: CAPBridgeViewController {
 
@@ -31,17 +32,13 @@ class MainViewController: CAPBridgeViewController {
         overlay.backgroundColor = .white
         overlay.isUserInteractionEnabled = false
 
-        let imgSize: CGFloat = 200
-        let imageView = UIImageView(image: UIImage(named: "FREDLogo"))
-        imageView.contentMode = .scaleAspectFit
-        imageView.frame = CGRect(
-            x: (screen.width - imgSize) / 2,
-            y: (screen.height - imgSize) / 2,
-            width: imgSize,
-            height: imgSize
-        )
-        imageView.autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin]
-        overlay.addSubview(imageView)
+        let animationView = LottieAnimationView(name: "coin-drop")
+        animationView.contentMode = .scaleAspectFill
+        animationView.frame = screen
+        animationView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        animationView.loopMode = .loop
+        animationView.play()
+        overlay.addSubview(animationView)
 
         view.addSubview(overlay)
         bridgeLoadingOverlay = overlay

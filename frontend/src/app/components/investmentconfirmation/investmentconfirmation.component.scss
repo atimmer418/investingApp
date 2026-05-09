@@ -575,7 +575,7 @@ ion-footer {
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  transition: all 1s ease;
+  transition: all 0.25s ease;
   background: #e5e7eb;
   color: #9ca3af;
   box-shadow: none;
@@ -606,6 +606,10 @@ ion-footer {
     height: 18px;
     color: white;
   }
+}
+
+ion-footer.step-hidden .cta-btn {
+  transition: all 1s ease;
 }
 
 .pricing-disclosure {
@@ -709,8 +713,6 @@ swiper-container.pricing-carousel {
 .tier-card__popular-badge {
   display: inline-flex;
   align-items: center;
-  background: #2563EB; // Plus accent — hardcoded since badge is Plus-only
-  color: white;
   font-family: 'Manrope', sans-serif;
   font-size: 10px;
   font-weight: 800;
@@ -718,13 +720,10 @@ swiper-container.pricing-carousel {
   text-transform: uppercase;
   padding: 6px 14px;
   border-radius: 999px;
-  box-shadow: 0 4px 12px -4px rgba(37, 99, 235, 0.5);
   white-space: nowrap;
   position: relative;
   z-index: 1;
-  // Badge center-aligned via flex parent, sits at the top of the slide space
-  // The card below has margin-top that positions it UNDER the badge visually
-  transform: translateY(14px); // Push badge down so it overlaps the card top edge
+  transform: translateY(14px);
 }
 
 .tier-card {
@@ -734,16 +733,12 @@ swiper-container.pricing-carousel {
   background: white;
   border: 2px solid var(--tier-accent);
   border-radius: 16px;
-  padding: 22px 18px 18px;
+  padding: 26px 18px 18px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--tier-accent) 20%, transparent);
   font-family: 'Manrope', sans-serif;
   overflow: visible;
-
-  &.tier-card--popular {
-    padding-top: 26px; // extra top padding to accommodate the floating badge above
-  }
 }
 
 .tier-card__head {
@@ -921,7 +916,7 @@ swiper-container.pricing-carousel {
   grid-column: 4;
   font-size: 18px;
   color: var(--confirm-gray);
-  transition: transform 1s ease;
+  transition: transform 0.25s ease;
   flex-shrink: 0;
 }
 
@@ -935,7 +930,7 @@ swiper-container.pricing-carousel {
   overflow: hidden;
   opacity: 0;
   padding: 0 8px 0 42px;
-  transition: max-height 1s ease-out, opacity 1s ease-out, padding-bottom 1s ease-out;
+  transition: max-height 0.25s ease-out, opacity 0.25s ease-out, padding-bottom 0.25s ease-out;
 
   p {
     margin: 0;

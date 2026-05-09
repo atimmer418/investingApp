@@ -51,19 +51,22 @@ interface PricingTier {
   lifetimeLine: string;
   pitch: string;
   ctaLabel: string;
-  popular?: boolean;
+  badgeLabel: string;
+  badgeTextColor: string;
   features: PricingFeature[];
 }
 
 const PRICING_TIERS: PricingTier[] = [
   {
     id: 'core',
-    name: 'FRED Core',
-    accent: '#0F766E',
+    name: 'Piggy Plan',
+    accent: '#FFA1B5',
     price: 8,
     lifetimeLine: '$5/mo lifetime with 3 referrals',
     pitch: 'Automated investing. Works while you work.',
-    ctaLabel: 'Invest with FRED Core',
+    ctaLabel: 'Join The Pig Leagues',
+    badgeLabel: 'Most Reasonable',
+    badgeTextColor: '#FFFFFF',
     features: [
       {
         id: 'auto-invest',
@@ -101,13 +104,14 @@ const PRICING_TIERS: PricingTier[] = [
   },
   {
     id: 'plus',
-    name: 'FRED Plus',
-    accent: '#2563EB',
+    name: 'Piggy Plus Plan',
+    accent: '#FF6B8A',
     price: 15,
     lifetimeLine: '$10/mo lifetime with 2 referrals',
     pitch: 'Every tool, unlocked sooner. Your schedule, your rules.',
-    ctaLabel: 'Invest with FRED Plus',
-    popular: true,
+    ctaLabel: 'Join The Pig Leagues',
+    badgeLabel: 'Most Popular',
+    badgeTextColor: '#FFFFFF',
     features: [
       {
         id: 'everything-core',
@@ -130,6 +134,18 @@ const PRICING_TIERS: PricingTier[] = [
         threshold: '$125k equity'
       },
       {
+        id: 'deeper-projections',
+        label: 'Deeper projections & income simulation',
+        description: 'Run conservative, expected, and aggressive scenarios. Adjust contributions and retirement age on the fly, and see monthly withdrawal estimates in retirement.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'market-breakdown',
+        label: 'Monthly market breakdown',
+        description: 'Plain-English explanation each month of what happened in the markets and why your portfolio went up or down.',
+        lockState: 'unlocked'
+      },
+      {
         id: 'custom-rebalance',
         label: 'Custom rebalancing schedule',
         description: 'Choose how often FRED realigns your portfolio back to your target allocation — quarterly, semi-annual, or annual — based on your tax situation and preference.',
@@ -140,23 +156,19 @@ const PRICING_TIERS: PricingTier[] = [
         label: 'One free 1:1 strategy session with a FRED RIA',
         description: 'Sit down once with a FRED RIA to review your portfolio, your Freedom Date, and your plan.',
         lockState: 'unlocked'
-      },
-      {
-        id: 'priority-support',
-        label: 'Priority support',
-        description: 'A real human responds to your questions within 24 hours.',
-        lockState: 'unlocked'
       }
     ]
   },
   {
     id: 'pro',
-    name: 'FRED Pro',
-    accent: '#111827',
+    name: 'Piggy Pro Plan',
+    accent: '#FBC926',
     price: 40,
     lifetimeLine: '$20/mo lifetime with 1 referral',
     pitch: 'Your money on autopilot. A real expert in your corner.',
-    ctaLabel: 'Invest with FRED Pro',
+    ctaLabel: 'Join The Pig Leagues',
+    badgeLabel: 'Most Value',
+    badgeTextColor: '#111827',
     features: [
       {
         id: 'everything-plus',
@@ -177,9 +189,27 @@ const PRICING_TIERS: PricingTier[] = [
         lockState: 'unlocked'
       },
       {
+        id: 'ai-coach',
+        label: 'AI portfolio coach',
+        description: 'Ask questions about your portfolio, your plan, or the market — and get personalized answers any time.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'external-accounts',
+        label: 'Add 401(k), Roth IRA & outside accounts',
+        description: 'Include balances from 401(k)s, Roth IRAs, and other accounts in your projections for a full picture of your Freedom Date.',
+        lockState: 'unlocked'
+      },
+      {
         id: 'annual-ria',
         label: 'Annual 1:1 strategy sessions with a FRED RIA',
         description: 'Once a year, sit down with a FRED RIA to review your portfolio, your Freedom Date, and your plan.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'priority-support',
+        label: 'Priority support',
+        description: 'A real human responds to your questions within 24 hours.',
         lockState: 'unlocked'
       },
       {
@@ -559,13 +589,12 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
     this.authService.completeStep('investmentConfirmation').subscribe({
       next: () => {
         console.log('InvestmentConfirmation step completed successfully');
-        this.isAuthorizing = false;
         this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
       },
       error: (err) => {
         console.error('Failed to complete InvestmentConfirmation step:', err);
         this.isAuthorizing = false;
-        this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
+        this.toastService.showToast('Something went wrong. Please try again.', 'danger');
       }
     });
   }

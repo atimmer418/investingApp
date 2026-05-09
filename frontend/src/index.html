@@ -29,9 +29,32 @@
 </head>
 
 <body>
-  <div id="app-resume-cover" style="position:fixed;inset:0;background:#ffffff;z-index:99999;pointer-events:none;display:flex;align-items:center;justify-content:center;">
-    <img src="assets/images/fred-logo.svg" style="width:200px;height:200px;object-fit:contain;" alt="" />
+  <div id="app-resume-cover" style="position:fixed;inset:0;background:#ffffff;z-index:99999;pointer-events:none;">
+    <div id="app-resume-cover-lottie" style="position:absolute;inset:0;"></div>
+    <img id="app-resume-cover-fallback" src="assets/images/fred-logo.svg" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;object-fit:contain;" alt="" />
   </div>
+  <script>
+    (function() {
+      var s = document.createElement('script');
+      s.src = 'assets/lottie/lottie-web.min.js';
+      s.onload = function() {
+        if (!window.lottie) return;
+        var container = document.getElementById('app-resume-cover-lottie');
+        var fallback = document.getElementById('app-resume-cover-fallback');
+        if (!container) return;
+        window.lottie.loadAnimation({
+          container: container,
+          path: 'assets/lottie/coin-drop.json',
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
+        });
+        if (fallback) fallback.style.display = 'none';
+      };
+      document.head.appendChild(s);
+    })();
+  </script>
   <app-root></app-root>
 
   <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>

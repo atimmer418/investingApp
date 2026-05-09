@@ -247,3 +247,12 @@ We don't:
 * Encourage leverage
 * Push trading
 Signals integrity.
+
+## FRED-167 — Redesign Ask Fred UI like Cloudflare Ask AI
+make ask fred look like cloudflare's ask AI
+
+## FRED-168 — Referral-discounted tier upgrade on profile page
+Add ability to upgrade tiers in my profile page. if they already have had 1 referral, they can go to $20/mo instead of $40/mo. if they already have had 2 referrals, they can go to $10/mo instead of $15/mo
+
+## FRED-169 — Extend free trial to 90 days
+make the fred free trial 90 days (because most churn happens in first 3 months)

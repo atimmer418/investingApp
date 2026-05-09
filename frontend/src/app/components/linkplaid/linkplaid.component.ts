@@ -153,8 +153,6 @@ export class LinkPlaidComponent implements OnInit, OnDestroy {
         tap(response => {
           console.log('Authenticated public token exchanged successfully:', response);
           this.statusMessage = 'Bank account linked successfully!';
-          this.isLoading = false;
-          
           // Complete the linkPlaid step using the unified method
           this.authService.completeStep('linkPlaid').subscribe({
             next: () => {

@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import Lottie
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -76,17 +77,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         overlay.backgroundColor = .white
         overlay.isUserInteractionEnabled = false
 
-        let imgSize: CGFloat = 200
-        let imageView = UIImageView(image: UIImage(named: "FREDLogo"))
-        imageView.contentMode = .scaleAspectFit
-        imageView.frame = CGRect(
-            x: (window.bounds.width - imgSize) / 2,
-            y: (window.bounds.height - imgSize) / 2,
-            width: imgSize,
-            height: imgSize
-        )
-        imageView.autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin]
-        overlay.addSubview(imageView)
+        let animationView = LottieAnimationView(name: "coin-drop")
+        animationView.contentMode = .scaleAspectFill
+        animationView.frame = window.bounds
+        animationView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        animationView.loopMode = .loop
+        animationView.play()
+        overlay.addSubview(animationView)
 
         window.addSubview(overlay)
         window.bringSubviewToFront(overlay)

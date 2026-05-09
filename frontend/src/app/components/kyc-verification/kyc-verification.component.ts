@@ -373,7 +373,6 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.clearStep1Draft();
-          this.isLoading = false;
           this.authService.completeStep('kycVerification').subscribe({
             next: () => this.navCtrl.navigateForward('/link-bank', { replaceUrl: true }),
             error: () => this.navCtrl.navigateForward('/link-bank', { replaceUrl: true })

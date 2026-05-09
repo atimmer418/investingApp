@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "FRED_icon_cream.png",
+      "filename" : "icon_nose_blue.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -13,7 +13,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "FRED_icon_dark.png",
+      "filename" : "icon_nose_dark_v2.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -25,7 +25,7 @@
           "value" : "tinted"
         }
       ],
-      "filename" : "FRED_icon_tinted.png",
+      "filename" : "icon_nose_tinted.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"

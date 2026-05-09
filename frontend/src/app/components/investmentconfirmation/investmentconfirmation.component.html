@@ -166,11 +166,15 @@
             (swiperslidechange)="onSlideChange($event)">
 
             <swiper-slide *ngFor="let tier of tiers" class="pricing-slide">
-              <div class="popular-badge-outer" *ngIf="tier.popular">
-                <span class="tier-card__popular-badge">Most Popular</span>
+              <div class="popular-badge-outer">
+                <span class="tier-card__popular-badge"
+                      [style.background]="tier.accent"
+                      [style.color]="tier.badgeTextColor"
+                      [style.box-shadow]="'0 4px 12px -4px ' + tier.accent + '80'">
+                  {{ tier.badgeLabel }}
+                </span>
               </div>
               <article class="tier-card"
-                       [class.tier-card--popular]="tier.popular"
                        [attr.data-tier]="tier.id"
                        [style.--tier-accent]="tier.accent">
 

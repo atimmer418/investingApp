@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { margin: 0; background: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; }
+    #container { width: 390px; height: 844px; position: relative; background: #fff; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <script src="frontend/src/assets/lottie/lottie-web.min.js"></script>
+  <script>
+    lottie.loadAnimation({
+      container: document.getElementById('container'),
+      path: 'frontend/src/assets/lottie/coin-drop.json',
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      rendererSettings: { preserveAspectRatio: 'xMidYMid meet' }
+    });
+  </script>
+</body>
+</html>
