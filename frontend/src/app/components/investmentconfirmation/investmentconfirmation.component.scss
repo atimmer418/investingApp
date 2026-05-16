@@ -81,9 +81,9 @@ ion-content::part(scroll) {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px 18px 32px;
+  padding: 16px 18px 0px;
   font-family: 'Manrope', sans-serif;
-  gap: 14px;
+  gap: 0px;
 }
 
 // --- Hero ---
@@ -739,6 +739,98 @@ swiper-container.pricing-carousel {
   box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--tier-accent) 20%, transparent);
   font-family: 'Manrope', sans-serif;
   overflow: visible;
+  --tier-lottie-size: 56px; // size knob — 40px small, 56px medium, 72px large
+}
+
+.tier-card__lottie {
+  position: absolute;
+  top: calc(70px - var(--tier-lottie-size) / 2);
+  right: 16px;
+  width: var(--tier-lottie-size);
+  height: var(--tier-lottie-size);
+  pointer-events: none;
+  z-index: 2;
+  isolation: isolate;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.billing-toggle {
+  display: flex;
+  position: relative;
+  background: #f3f4f6;
+  border-radius: 999px;
+  padding: 3px;
+  margin: 0 auto 10px;
+  width: 172px;
+  font-family: 'Manrope', sans-serif;
+}
+
+.billing-toggle__slider {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  bottom: 3px;
+  width: calc(50% - 3px);
+  border-radius: 999px;
+  background: var(--toggle-accent, #2563eb);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+
+  &.is-yearly {
+    transform: translateX(100%);
+  }
+}
+
+.billing-toggle__white-labels {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 200%;
+  display: flex;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+
+  &.is-yearly {
+    transform: translateX(-50%);
+  }
+
+  span {
+    flex: 0 0 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+}
+
+.billing-toggle__option {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-align: center;
+
+  &:focus-visible {
+    outline: 2px solid var(--toggle-accent, #2563eb);
+    outline-offset: 2px;
+  }
 }
 
 .tier-card__head {

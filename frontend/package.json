@@ -5,6 +5,7 @@
   "homepage": "https://ionicframework.com/",
   "scripts": {
     "ng": "ng",
+    "subset-icons": "node scripts/subset-icons.mjs",
     "build": "ng build",
     "start": "serve www",
     "watch": "ng build --watch --configuration development",

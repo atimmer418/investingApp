@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ChangeDetectorRef, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList } from '@angular/core';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -49,6 +50,8 @@ interface PricingTier {
   accent: string;
   price: number;
   lifetimeLine: string;
+  yearlyPrice: number;
+  yearlyLifetimeLine: string;
   pitch: string;
   ctaLabel: string;
   badgeLabel: string;
@@ -63,54 +66,50 @@ const PRICING_TIERS: PricingTier[] = [
     accent: '#FFA1B5',
     price: 8,
     lifetimeLine: '$5/mo lifetime with 3 referrals',
+    yearlyPrice: 75,
+    yearlyLifetimeLine: '$50/yr lifetime with 3 referrals',
     pitch: 'Automated investing. Works while you work.',
     ctaLabel: 'Join The Pig Leagues',
-    badgeLabel: 'Most Reasonable',
+    badgeLabel: 'The Basics',
     badgeTextColor: '#FFFFFF',
     features: [
       {
         id: 'auto-invest',
         label: 'Paycheck-based automated investing',
-        description: 'FRED automatically invests a portion of every paycheck so you never have to think about it.',
+        description: 'FRED automatically invests your set portion of every paycheck so you never have to think about it.',
         lockState: 'unlocked'
       },
       {
         id: 'portfolio',
-        label: 'FRED default portfolio or build your own',
-        description: "Start with FRED's proven default (75% VTI, 20% VXUS, 5% VBR) or customize your own allocation.",
+        label: 'FRED default portfolio or BYO',
+        description: "Invest with FRED's proven default portfolio (75% VTI, 20% VXUS, 5% VBR) or customize your own allocation.",
         lockState: 'unlocked'
       },
       {
         id: 'rebalance',
         label: 'Automatic portfolio rebalancing',
-        description: 'FRED periodically realigns your portfolio back to your target allocation — no action needed from you.',
+        description: 'FRED periodically realigns your portfolio back to your target allocation; no action needed from you.',
         lockState: 'unlocked'
       },
       {
-        id: 'montecarlo',
-        label: 'Monte Carlo modeling',
-        description: 'See thousands of possible retirement outcomes based on your actual numbers.',
-        lockState: 'locked',
-        threshold: '$100k equity'
-      },
-      {
         id: 'education',
-        label: 'Retirement strategy education',
-        description: 'In-depth guides and lessons on building long-term wealth.',
-        lockState: 'locked',
-        threshold: '$250k equity'
+        label: 'Portfolio withdrawal education',
+        description: 'Learn the four ways to live off your portfolio: dividends, dynamic spending, borrowing against your portfolio, and converting a portion to guaranteed income.',
+        lockState: 'unlocked',
       }
     ]
   },
   {
     id: 'plus',
     name: 'Piggy Plus Plan',
-    accent: '#FF6B8A',
+    accent: '#FBC926', // previous color: #FF6B8A
     price: 15,
     lifetimeLine: '$10/mo lifetime with 2 referrals',
-    pitch: 'Every tool, unlocked sooner. Your schedule, your rules.',
+    yearlyPrice: 150,
+    yearlyLifetimeLine: '$100/yr lifetime with 2 referrals',
+    pitch: 'Your complete financial picture. Every account, every goal, one plan.',
     ctaLabel: 'Join The Pig Leagues',
-    badgeLabel: 'Most Popular',
+    badgeLabel: 'The Full Picture',
     badgeTextColor: '#FFFFFF',
     features: [
       {
@@ -122,21 +121,25 @@ const PRICING_TIERS: PricingTier[] = [
       {
         id: 'montecarlo',
         label: 'Monte Carlo modeling',
-        description: 'See thousands of possible retirement outcomes based on your actual numbers. Half the wait.',
-        lockState: 'unlocks-sooner',
-        threshold: '$50k equity'
+        description: 'Runs thousands of market simulations against your numbers to show the real probability of hitting your Freedom Date.',
+        lockState: 'unlocked',
       },
       {
-        id: 'education',
-        label: 'Retirement strategy education',
-        description: 'In-depth guides and lessons on building long-term wealth. Half the wait.',
-        lockState: 'unlocks-sooner',
-        threshold: '$125k equity'
+        id: 'multi-goal',
+        label: 'Multi-goal tracking',
+        description: 'Track multiple financial goals (house down payment, college fund, emergency fund, Freedom Date) each with its own target and timeline. FRED actively invests for your Freedom Date and shows projection timelines for other goals you fund outside of FRED, so you see your full financial picture in one place.',
+        lockState: 'unlocked'
       },
       {
-        id: 'deeper-projections',
-        label: 'Deeper projections & income simulation',
-        description: 'Run conservative, expected, and aggressive scenarios. Adjust contributions and retirement age on the fly, and see monthly withdrawal estimates in retirement.',
+        id: 'external-accounts',
+        label: 'Add 401(k) & Roth IRA',
+        description: 'Include balances from 401(k)s, Roth IRAs, and any other accounts in your projections for a full picture of your Freedom Date.',
+        lockState: 'unlocked'
+      },
+      {
+        id: 'custom-rebalance',
+        label: 'Custom rebalancing schedule',
+        description: 'Choose how often FRED realigns your portfolio back to your target allocation (quarterly, semi-annual, or annual) based on your tax situation and preference.',
         lockState: 'unlocked'
       },
       {
@@ -144,31 +147,21 @@ const PRICING_TIERS: PricingTier[] = [
         label: 'Monthly market breakdown',
         description: 'Plain-English explanation each month of what happened in the markets and why your portfolio went up or down.',
         lockState: 'unlocked'
-      },
-      {
-        id: 'custom-rebalance',
-        label: 'Custom rebalancing schedule',
-        description: 'Choose how often FRED realigns your portfolio back to your target allocation — quarterly, semi-annual, or annual — based on your tax situation and preference.',
-        lockState: 'unlocked'
-      },
-      {
-        id: 'ria-session',
-        label: 'One free 1:1 strategy session with a FRED RIA',
-        description: 'Sit down once with a FRED RIA to review your portfolio, your Freedom Date, and your plan.',
-        lockState: 'unlocked'
       }
     ]
   },
   {
     id: 'pro',
     name: 'Piggy Pro Plan',
-    accent: '#FBC926',
+    accent: '#000000',
     price: 40,
     lifetimeLine: '$20/mo lifetime with 1 referral',
-    pitch: 'Your money on autopilot. A real expert in your corner.',
+    yearlyPrice: 400,
+    yearlyLifetimeLine: '$200/yr lifetime with 1 referral',
+    pitch: 'Built for your endgame. Tax-optimized and ready.',
     ctaLabel: 'Join The Pig Leagues',
-    badgeLabel: 'Most Value',
-    badgeTextColor: '#111827',
+    badgeLabel: 'The Endgame',
+    badgeTextColor: '#FFFFFF',
     features: [
       {
         id: 'everything-plus',
@@ -177,34 +170,23 @@ const PRICING_TIERS: PricingTier[] = [
         lockState: 'unlocked'
       },
       {
-        id: 'montecarlo',
-        label: 'Monte Carlo modeling',
-        description: 'See thousands of possible retirement outcomes based on your actual numbers. Available immediately on Pro.',
+        id: 'drawdown',
+        label: 'Optimal drawdown walkthrough',
+        description: 'A year-by-year withdrawal strategy education once you\'re within range of Freedom Date. FRED sequences your accounts in the tax-optimal order (taxable first, tax-deferred second, Roth last) and updates the plan dynamically as your portfolio grows.',
         lockState: 'unlocked'
       },
       {
-        id: 'education',
-        label: 'Retirement strategy education',
-        description: 'In-depth guides and lessons on building long-term wealth. Available immediately on Pro.',
+        id: 'deeper-projections',
+        label: 'Deeper projections & income simulation',
+        description: 'Run conservative, expected, and aggressive scenarios. Adjust contributions and retirement age on the fly, and see monthly withdrawal estimates in retirement.',
         lockState: 'unlocked'
       },
       {
-        id: 'ai-coach',
-        label: 'AI portfolio coach',
-        description: 'Ask questions about your portfolio, your plan, or the market — and get personalized answers any time.',
-        lockState: 'unlocked'
-      },
-      {
-        id: 'external-accounts',
-        label: 'Add 401(k), Roth IRA & outside accounts',
-        description: 'Include balances from 401(k)s, Roth IRAs, and other accounts in your projections for a full picture of your Freedom Date.',
-        lockState: 'unlocked'
-      },
-      {
-        id: 'annual-ria',
-        label: 'Annual 1:1 strategy sessions with a FRED RIA',
-        description: 'Once a year, sit down with a FRED RIA to review your portfolio, your Freedom Date, and your plan.',
-        lockState: 'unlocked'
+        id: 'household',
+        label: 'Tax loss harvesting',
+        description: "Algorithmic tax loss harvesting that turns market dips into tax savings.",
+        lockState: 'coming-soon',
+        threshold: 'Coming Soon'
       },
       {
         id: 'priority-support',
@@ -217,13 +199,6 @@ const PRICING_TIERS: PricingTier[] = [
         label: 'Early access to new FRED features',
         description: 'Be the first to test new portfolio models, tools, and features before they roll out to everyone else.',
         lockState: 'unlocked'
-      },
-      {
-        id: 'household',
-        label: 'Household & partner account linking',
-        description: "Link a partner's account under one subscription. See your combined portfolio and Freedom Date on a shared dashboard.",
-        lockState: 'coming-soon',
-        threshold: 'Coming Soon'
       }
     ]
   }
@@ -235,6 +210,14 @@ const PRICING_TIERS: PricingTier[] = [
   styleUrls: ['./investmentconfirmation.component.scss'],
   standalone: true,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  animations: [
+    trigger('crossfade', [
+      transition('* => *', [
+        style({ opacity: 0, transform: 'translateY(-3px)' }),
+        animate('180ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ])
+    ])
+  ],
   imports: [
     CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
     IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
@@ -242,7 +225,7 @@ const PRICING_TIERS: PricingTier[] = [
   ]
 })
 
-export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
+export class InvestmentConfirmationComponent implements OnInit, AfterViewInit, OnDestroy, ViewWillEnter {
   currentStep: 1 | 2 = 1;
   exitingStep1 = false;
 
@@ -278,9 +261,12 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
 
   // Pricing tier carousel
   @ViewChild('pricingSwiper', { read: ElementRef }) pricingSwiperRef?: ElementRef;
+  @ViewChildren('tierLottie') tierLottieRefs!: QueryList<ElementRef<HTMLElement>>;
+  private tierLottieInstances: any[] = [];
   readonly tiers = PRICING_TIERS;
   currentTierIndex = 1;
   selectedTier: 'core' | 'plus' | 'pro' | null = null;
+  billingPeriod: 'monthly' | 'yearly' = 'monthly';
   private expandedFeatures = new Set<string>();
 
   // Frequency options for display
@@ -344,6 +330,68 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
     }
   }
 
+  ngAfterViewInit(): void {
+    if (this.tierLottieRefs.length > 0) {
+      this.initTierLottieAnimations();
+    }
+    this.tierLottieRefs.changes.subscribe((list: QueryList<ElementRef<HTMLElement>>) => {
+      if (list.length === 0) {
+        this.destroyTierLottieAnimations();
+      } else if (this.tierLottieInstances.length === 0) {
+        this.initTierLottieAnimations();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroyTierLottieAnimations();
+  }
+
+  private initTierLottieAnimations(retries = 30): void {
+    const lottie = (window as any).lottie;
+    if (!lottie) {
+      if (retries > 0) setTimeout(() => this.initTierLottieAnimations(retries - 1), 50);
+      return;
+    }
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    this.tierLottieRefs.forEach((ref) => {
+      const anim = lottie.loadAnimation({
+        container: ref.nativeElement,
+        path: 'assets/lottie/coin-tier.json',
+        renderer: 'svg',
+        loop: false,
+        autoplay: false,
+        rendererSettings: { preserveAspectRatio: 'xMidYMid meet' },
+      });
+      this.tierLottieInstances.push(anim);
+    });
+    if (reduced) return;
+    const active = this.tierLottieInstances[this.currentTierIndex];
+    if (!active) return;
+    const fire = () => requestAnimationFrame(() => active.goToAndPlay(0, true));
+    if ((active as any).isLoaded) fire();
+    else active.addEventListener('DOMLoaded', fire);
+  }
+
+  private playTierAnimation(index: number): void {
+    const anim = this.tierLottieInstances[index];
+    if (!anim) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    anim.goToAndPlay(0, true);
+  }
+
+  private destroyTierLottieAnimations(): void {
+    this.tierLottieInstances.forEach((a) => { try { a.destroy(); } catch { /* noop */ } });
+    this.tierLottieInstances = [];
+  }
+
+  setBillingPeriod(period: 'monthly' | 'yearly'): void {
+    if (this.billingPeriod === period) return;
+    this.billingPeriod = period;
+    try { localStorage.setItem('fred.billingPeriod', period); } catch { /* noop */ }
+    this.tierLottieInstances.forEach((_, i) => this.playTierAnimation(i));
+  }
+
   ionViewWillEnter() {
     console.log('[InvestmentConfirmationComponent] View will enter - reloading portfolio');
     this.loadUserPortfolio();
@@ -351,6 +399,10 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
       if (localStorage.getItem('fred.investmentConfirmation.step') === '2') {
         this.currentStep = 2;
         this.agreedToTerms = true;
+      }
+      const savedPeriod = localStorage.getItem('fred.billingPeriod');
+      if (savedPeriod === 'monthly' || savedPeriod === 'yearly') {
+        this.billingPeriod = savedPeriod;
       }
     } catch { /* noop */ }
   }
@@ -627,7 +679,9 @@ export class InvestmentConfirmationComponent implements OnInit, ViewWillEnter {
   }
 
   onSlideChange(event: any): void {
-    this.currentTierIndex = (event.target as any).swiper?.activeIndex ?? this.currentTierIndex;
+    const newIndex = (event.target as any).swiper?.activeIndex ?? this.currentTierIndex;
+    this.currentTierIndex = newIndex;
+    this.playTierAnimation(newIndex);
   }
 
   goToSlide(index: number): void {

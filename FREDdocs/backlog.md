@@ -1,5 +1,8 @@
 # BIG ONES
 
+## FRED-99 — Implement all features from tiered pricing
+implement all features from tiered pricing
+
 ## FRED-100 — RAG chunks for app knowledge and philosophy
 we want RAG/canonical chunks for knowing the application itself (to answer questions with exact directions on where to find things or an overview of just about every how process in the app works that there needs to be known about such as the calculations for the MonthlyFreedomUpdate and also a chunk on the boglehead philosophy) and its context as to how this helps the user achieve a good retirement. also, are there any good RAG/canonical chunks that would be valuable for the user to have FRED know in the FREDdocs .md files?
 
@@ -254,5 +257,33 @@ make ask fred look like cloudflare's ask AI
 ## FRED-168 — Referral-discounted tier upgrade on profile page
 Add ability to upgrade tiers in my profile page. if they already have had 1 referral, they can go to $20/mo instead of $40/mo. if they already have had 2 referrals, they can go to $10/mo instead of $15/mo
 
-## FRED-169 — Extend free trial to 90 days
+## FRED-169 — Reduce free trial to 14 days
 make the fred free trial 90 days (because most churn happens in first 3 months)
+
+## FRED-170 — Optimize loading screen timings
+Optimize loading screen timings.
+
+## FRED-171 — Payday lifecycle emails and push notifications
+lifecycle emails regarding investing in FRED. Then time your lifecycle emails and push notifications around it:
+
+Day before payday: "Your paycheck hits tomorrow. FRED will auto-invest $X — your Freedom Date moves up 6 days."
+Day of payday: "💰 $X invested. New Freedom Date: [date]."
+Day after payday: "You just got 6 days closer to freedom without lifting a finger."
+
+## LPFRED-172 — Build calculator page for email collection
+make calculator page for optimal email collection
+
+## FRED-173 — Lock referral entry until 30 days post-trial
+A new subscriber must be a subscriber for at least 30 days after their 14-day free trial ends before they can access the referral entry point. Lock the referral UI until that condition is met.
+
+## FRED-174 — Wire up Apple subscription to pricing tiers (ONBOARDING)
+Apple subscription needs to be set up with the pricing tiers section on investmentconfirmation.
+
+## FRED-175 — Initiate ACATS API transfer during onboarding (ONBOARDING)
+ACATS API transfer needs to be initiated as part of the onboarding flow.
+
+## FRED-176 — Connect email list opt-in checkbox to emailer (ONBOARDING)
+The "Keep me updated" marketing checkbox needs to be wired up to the FRED email list.
+
+## FRED-177 — Remove back button from two onboarding pages (ONBOARDING)
+Remove the back button from 2 pages in the onboarding flow.

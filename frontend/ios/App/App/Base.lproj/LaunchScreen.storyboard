@@ -15,16 +15,16 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <imageView contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" image="FREDLogo" id="BYY-3Y-IaF">
-                                <rect key="frame" x="87.5" y="233.5" width="200" height="200"/>
+                            <imageView contentMode="scaleAspectFill" clipsSubviews="YES" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" image="FREDLogo" id="BYY-3Y-IaF">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                             </imageView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
-                            <constraint firstItem="BYY-3Y-IaF" firstAttribute="centerX" secondItem="snD-IY-ifK" secondAttribute="centerX" id="cX1-5D-v9B"/>
-                            <constraint firstItem="BYY-3Y-IaF" firstAttribute="centerY" secondItem="snD-IY-ifK" secondAttribute="centerY" id="cY2-6E-w0C"/>
-                            <constraint firstItem="BYY-3Y-IaF" firstAttribute="width" constant="200" id="wW3-7F-x1D"/>
-                            <constraint firstItem="BYY-3Y-IaF" firstAttribute="height" constant="200" id="hH4-8G-y2E"/>
+                            <constraint firstItem="BYY-3Y-IaF" firstAttribute="leading" secondItem="snD-IY-ifK" secondAttribute="leading" id="cX1-5D-v9B"/>
+                            <constraint firstItem="BYY-3Y-IaF" firstAttribute="trailing" secondItem="snD-IY-ifK" secondAttribute="trailing" id="cY2-6E-w0C"/>
+                            <constraint firstItem="BYY-3Y-IaF" firstAttribute="top" secondItem="snD-IY-ifK" secondAttribute="top" id="wW3-7F-x1D"/>
+                            <constraint firstItem="BYY-3Y-IaF" firstAttribute="bottom" secondItem="snD-IY-ifK" secondAttribute="bottom" id="hH4-8G-y2E"/>
                         </constraints>
                     </view>
                 </viewController>

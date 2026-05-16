@@ -181,10 +181,11 @@ export class AppLockService {
     if (!cover) {
       cover = document.createElement('div');
       cover.id = 'app-resume-cover';
-      cover.style.cssText = 'position:fixed;inset:0;background:#ffffff;z-index:99999;pointer-events:none;display:flex;align-items:center;justify-content:center;';
+      cover.style.cssText = 'position:fixed;inset:0;background:#ffffff;z-index:99999;pointer-events:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;';
       const img = document.createElement('img');
       img.src = 'assets/images/fred-logo.svg';
-      img.style.cssText = 'width:200px;height:200px;object-fit:contain;';
+      img.draggable = false;
+      img.style.cssText = 'width:200px;height:200px;object-fit:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none;pointer-events:none;';
       cover.appendChild(img);
       document.body.appendChild(cover);
     }
@@ -252,19 +253,30 @@ export class AppLockService {
     this.isLockedSubject.next(true);
     this.isModalOpen = true;
 
+    // Safety net: if the modal's Lottie never fires its ready callback (asset 404,
+    // lottie-web unavailable), remove the native overlay after 1500ms so the
+    // app isn't permanently blocked behind it.
+    const overlayFallback = setTimeout(() => this.hideNativeOverlay(), 1500);
+
     const modal = await this.modalController.create({
       component: PasskeyPromptComponent,
       componentProps: {
         jwtExpired,
-        userEmail: localStorage.getItem('userEmail') ?? undefined
+        userEmail: localStorage.getItem('userEmail') ?? undefined,
+        onLottieReady: () => {
+          clearTimeout(overlayFallback);
+          this.hideNativeOverlay();
+        }
       },
       backdropDismiss: false,
       keyboardClose: false,
+      animated: false,
       cssClass: 'full-screen-modal'
     });
 
     await modal.present();
-    this.hideNativeOverlay(); // Native overlay removed once lock modal is fully visible
+    // Native overlay is now hidden by the onLottieReady callback once the modal's
+    // Lottie has visibly rendered, guaranteeing a seamless native → web handoff.
 
     const { data } = await modal.onDidDismiss();
 

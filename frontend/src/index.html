@@ -15,7 +15,9 @@
   <link rel="icon" type="image/png" href="assets/icon/favicon.png" />
 
   <!-- Fonts are self-hosted in assets/fonts — no CDN fetch needed -->
-  <link rel="preload" href="assets/fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin />
+  <!-- For adding a new icon, run the command 'npm run subset-icons' -->
+  <!-- If the icon is returned through a TS function (not in the HTML), add it to DYNAMIC_ICONS at the top of scripts/subset-icons.mjs -->
+  <link rel="preload" href="assets/fonts/material-symbols-outlined.woff2?v=2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="assets/fonts/manrope.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="assets/fonts/Montserrat-BlackItalic.ttf" as="font" type="font/ttf" crossorigin />
 
@@ -29,9 +31,9 @@
 </head>
 
 <body>
-  <div id="app-resume-cover" style="position:fixed;inset:0;background:#ffffff;z-index:99999;pointer-events:none;">
+  <div id="app-resume-cover" style="position:fixed;inset:0;background:#ffffff;z-index:99999;pointer-events:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none;-webkit-tap-highlight-color:transparent;">
     <div id="app-resume-cover-lottie" style="position:absolute;inset:0;"></div>
-    <img id="app-resume-cover-fallback" src="assets/images/fred-logo.svg" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;object-fit:contain;" alt="" />
+    <img id="app-resume-cover-fallback" src="assets/images/fred-logo.svg" draggable="false" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none;pointer-events:none;" alt="" />
   </div>
   <script>
     (function() {

@@ -10,7 +10,7 @@
 </ion-header>
 
 <ion-content class="confirm-content">
-  <div class="content-inner">
+  <div class="content-inner" [style.padding-bottom]="currentStep === 1 ? '18px' : '0'">
 
     <!-- Hero — shared across both steps -->
     <div class="hero-section">
@@ -166,6 +166,31 @@
             (swiperslidechange)="onSlideChange($event)">
 
             <swiper-slide *ngFor="let tier of tiers" class="pricing-slide">
+              <div class="billing-toggle" role="tablist" aria-label="Billing period" [style.--toggle-accent]="tier.accent">
+                <div class="billing-toggle__slider" [class.is-yearly]="billingPeriod === 'yearly'">
+                  <div class="billing-toggle__white-labels" [class.is-yearly]="billingPeriod === 'yearly'">
+                    <span>Monthly</span>
+                    <span>Yearly</span>
+                  </div>
+                </div>
+                <button type="button"
+                        class="billing-toggle__option"
+                        role="tab"
+                        [class.is-active]="billingPeriod === 'monthly'"
+                        [attr.aria-selected]="billingPeriod === 'monthly'"
+                        (click)="setBillingPeriod('monthly')">
+                  Monthly
+                </button>
+                <button type="button"
+                        class="billing-toggle__option"
+                        role="tab"
+                        [class.is-active]="billingPeriod === 'yearly'"
+                        [attr.aria-selected]="billingPeriod === 'yearly'"
+                        (click)="setBillingPeriod('yearly')">
+                  Yearly
+                </button>
+              </div>
+
               <div class="popular-badge-outer">
                 <span class="tier-card__popular-badge"
                       [style.background]="tier.accent"
@@ -178,17 +203,19 @@
                        [attr.data-tier]="tier.id"
                        [style.--tier-accent]="tier.accent">
 
+                <div #tierLottie class="tier-card__lottie" aria-hidden="true"></div>
+
                 <header class="tier-card__head">
                   <span class="tier-card__dot" aria-hidden="true"></span>
                   <span class="tier-card__label">{{ tier.name }}</span>
                 </header>
 
-                <div class="tier-card__price-row">
-                  <span class="tier-card__price">${{ tier.price }}</span>
-                  <span class="tier-card__price-suffix">/mo</span>
+                <div class="tier-card__price-row" [@crossfade]="billingPeriod">
+                  <span class="tier-card__price">${{ billingPeriod === 'yearly' ? tier.yearlyPrice : tier.price }}</span>
+                  <span class="tier-card__price-suffix">{{ billingPeriod === 'yearly' ? '/yr' : '/mo' }}</span>
                 </div>
 
-                <p class="tier-card__lifetime">{{ tier.lifetimeLine }}</p>
+                <p class="tier-card__lifetime" [@crossfade]="billingPeriod">{{ billingPeriod === 'yearly' ? tier.yearlyLifetimeLine : tier.lifetimeLine }}</p>
                 <p class="tier-card__pitch" [innerHTML]="pitchHtml(tier.pitch)"></p>
                 <hr class="tier-card__divider" />
 
@@ -228,7 +255,7 @@
                 <div class="tier-trial">
                   <span class="material-symbols-outlined">schedule</span>
                   <span class="tier-trial__copy">
-                    <strong>Try FRED free for 60 days.</strong>
+                    <strong>Try FRED free for 14 days.</strong>
                     <span class="tier-trial__sub">No charges, cancel anytime.</span>
                   </span>
                 </div>

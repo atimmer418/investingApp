@@ -65,6 +65,9 @@ yarn-error.log
 testem.log
 /typings
 
+# Font subsetting venv (auto-created by npm run subset-icons)
+/scripts/.venv
+
 # System files
 .DS_Store
 Thumbs.db

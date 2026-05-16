@@ -12,6 +12,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // True until the first time the app becomes active — used to distinguish cold start.
     private var isColdStart = true
     private let loadingOverlayTag = 9001
+    // Single LottieAnimationView reused across show/hide cycles. Instantiating per-show
+    // caused white snapshots on first background — the new view's CALayer had no
+    // contents before iOS captured the App Switcher snapshot. Reusing keeps the layer
+    // warm with the last-rendered frame.
+    private lazy var sharedLottieView: LottieAnimationView = {
+        let v = LottieAnimationView(name: "coin-drop")
+        v.contentMode = .scaleAspectFill
+        v.loopMode = .loop
+        v.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        v.play()
+        return v
+    }()
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Force light background on the native window so it shows through
@@ -77,16 +89,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         overlay.backgroundColor = .white
         overlay.isUserInteractionEnabled = false
 
-        let animationView = LottieAnimationView(name: "coin-drop")
-        animationView.contentMode = .scaleAspectFill
-        animationView.frame = window.bounds
-        animationView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        animationView.loopMode = .loop
-        animationView.play()
-        overlay.addSubview(animationView)
+        // Reuse the shared LottieAnimationView so its CALayer stays warm across resigns.
+        let anim = sharedLottieView
+        anim.removeFromSuperview()
+        anim.frame = window.bounds
+        if !anim.isAnimationPlaying { anim.play() }
+        overlay.addSubview(anim)
 
         window.addSubview(overlay)
         window.bringSubviewToFront(overlay)
+
+        // Commit pending CA transactions before the runloop yields to iOS for snapshotting.
+        overlay.layoutIfNeeded()
+        CATransaction.flush()
     }
 
     func removeLoadingOverlay() {
