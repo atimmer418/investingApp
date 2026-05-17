@@ -1,7 +1,7 @@
 ---
 name: verifier-agent
 description: "Use after the builder-agent completes any non-trivial implementation. Reviews code changes for correctness, safety, and consistency with FRED conventions. Always invoke after auth-related or database changes."
-tools: Glob, Grep, Read, WebFetch, WebSearch, Bash, Write, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__read_console_messages, mcp__claude-in-chrome__find, mcp__computer-use__screenshot
+tools: Glob, Grep, Read, WebFetch, WebSearch, Bash, Write, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__read_console_messages, mcp__claude-in-chrome__find, mcp__computer-use__screenshot, mcp__claude-in-chrome__javascript_tool
 model: opus
 color: red
 ---
@@ -43,17 +43,24 @@ Hard Rules — flag immediately if violated:
      bash test/api/auth.sh         <- /api/auth/*
 4. For any new endpoint present in the diff that is NOT already in the
    domain script, append a run_curl call to that script before running it.
+   Signature: run_curl "LABEL" METHOD /api/path [optional-json-body]
+   Example: run_curl "GET /api/portfolio/new-endpoint" GET /api/portfolio/new-endpoint
+   See test/api/user.sh for the full pattern.
 5. Cross-check: read the Angular service file(s) that call the changed
    endpoint(s) and confirm URL, HTTP method, and request/response shape
    match the backend controller.
 
 --- Phase 3: UI Verification ---
 Prerequisites: local.fredvested.com reachable, backend on localhost:8080.
-Skip this phase (note it) if local.fredvested.com is unreachable.
+Check reachability first:
+  curl -s --max-time 3 https://local.fredvested.com > /dev/null && echo reachable || echo unreachable
+Skip this phase (note it) if unreachable.
 
 1. Open a browser tab to local.fredvested.com
 2. Determine the affected route by reading navigateByUrl calls and @NgModule
    route declarations in the changed component files from the diff.
+   If the route is not found in changed files, search app-routing.module.ts
+   and any *.module.ts files for the component name.
 3. Navigate to that route.
 4. If authentication is required to reach the page, inject $TOKEN into
    localStorage using javascript_tool:
@@ -61,7 +68,7 @@ Skip this phase (note it) if local.fredvested.com is unreachable.
      localStorage.setItem('jwt_token_refresh', '<TOKEN>');
    Then reload the page.
 5. Take a screenshot using mcp__computer-use__screenshot.
-   Save the file path in your output as: test/screenshots/<timestamp>-<page>.png
+   Record the system path returned by mcp__computer-use__screenshot in your output under Screenshot:.
 6. Read page text and DOM — confirm API data surfaces correctly
    (expected fields present, not empty/loading-spinner-stuck).
 7. Read console messages — any JS error is a flag.
