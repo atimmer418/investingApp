@@ -25,7 +25,7 @@ RESPONSE=$(curl -s -X POST "$BASE_URL/api/dev/authenticate-as-user" \
   -H "Content-Type: application/json" \
   -d "{\"email\": \"$TEST_USER_EMAIL\"}")
 
-TOKEN=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('jwtToken',''))" 2>/dev/null)
+TOKEN=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('jwtToken') or '')" 2>/dev/null)
 
 if [ -z "$TOKEN" ]; then
   echo "ERROR: Failed to acquire JWT token."
