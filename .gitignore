@@ -71,3 +71,7 @@ gradle-wrapper.jar # Some commit this, some don't. If you do, ensure it's the ve
 
 .DS_Store
 .superpowers/
+
+# Test infrastructure — runtime files, never commit
+test/api/config.local.sh
+test/screenshots/
