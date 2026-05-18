@@ -208,6 +208,12 @@ public class User {
     @Column(length = 50)
     private String selectedStrategy; // "optimal", "balanced", "adaptive", "safety"
 
+    @Column(name = "selected_tier", nullable = true, length = 10)
+    private String selectedTier; // "core", "plus", "pro"
+
+    @Column(name = "billing_period", nullable = true, length = 10)
+    private String billingPeriod; // "monthly", "yearly"
+
     // Helper method to get Plaid relationship ID (using existing ACH relationship
     // field)
     public String getPlaidRelationshipId() {

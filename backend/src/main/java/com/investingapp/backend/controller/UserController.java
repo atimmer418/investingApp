@@ -63,6 +63,8 @@ public class UserController {
         private int referralCount;
         private boolean hasAppliedReferral;
         private boolean dripEnabled;
+        private String selectedTier;
+        private String billingPeriod;
 
         public UserProgressResponse(User user) {
             UserProgress progress = user.getUserProgress();
@@ -100,6 +102,8 @@ public class UserController {
             this.hasAppliedReferral = Boolean.TRUE.equals(user.getHasAppliedReferral());
             // DRIP defaults to true if null (for existing users before this field was added)
             this.dripEnabled = !Boolean.FALSE.equals(user.getDripEnabled());
+            this.selectedTier = user.getSelectedTier();
+            this.billingPeriod = user.getBillingPeriod();
         }
 
         // Getters
@@ -165,6 +169,14 @@ public class UserController {
 
         public boolean isDripEnabled() {
             return dripEnabled;
+        }
+
+        public String getSelectedTier() {
+            return selectedTier;
+        }
+
+        public String getBillingPeriod() {
+            return billingPeriod;
         }
 
         public String getNextStep() {
@@ -455,6 +467,20 @@ public class UserController {
                 Object val = profileUpdate.get("retirementIncome");
                 if (val instanceof Number) {
                     user.setRetirementIncome(((Number) val).doubleValue());
+                    changed = true;
+                }
+            }
+            if (profileUpdate.containsKey("selectedTier")) {
+                Object val = profileUpdate.get("selectedTier");
+                if (val instanceof String) {
+                    user.setSelectedTier((String) val);
+                    changed = true;
+                }
+            }
+            if (profileUpdate.containsKey("billingPeriod")) {
+                Object val = profileUpdate.get("billingPeriod");
+                if (val instanceof String) {
+                    user.setBillingPeriod((String) val);
                     changed = true;
                 }
             }

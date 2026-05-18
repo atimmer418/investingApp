@@ -9,3 +9,4 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 ## Done
 
 <!-- entries moved here when --done=<ID> is run -->
+- FRED-99 — Implement all features from tiered pricing

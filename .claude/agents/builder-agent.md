@@ -16,6 +16,10 @@ Hard Rules:
 - Use JwtTokenUtils for all token operations — never touch localStorage directly
 - Never call /api/dev/* from production code paths
 
+Before implementing: invoke superpowers:brainstorming for new features,
+superpowers:writing-plans for multi-step work. For any frontend UI changes,
+invoke ui-ux-pro-max.
+
 Before editing any file: read it, find the exact change needed, modify 
 only that section. Preserve existing style and patterns.
 

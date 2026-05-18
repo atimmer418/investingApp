@@ -217,7 +217,14 @@
 
                 <p class="tier-card__lifetime" [@crossfade]="billingPeriod">{{ billingPeriod === 'yearly' ? tier.yearlyLifetimeLine : tier.lifetimeLine }}</p>
                 <p class="tier-card__pitch" [innerHTML]="pitchHtml(tier.pitch)"></p>
-                <hr class="tier-card__divider" />
+
+                <div class="tier-card__divider-wrap">
+                  <hr class="tier-card__divider" />
+                  <span class="tier-card__savings-chip" [@crossfade]="billingPeriod">
+                    <span class="material-symbols-outlined">savings</span>
+                    <span>{{ savingsChipCopy(tier) }}</span>
+                  </span>
+                </div>
 
                 <ul class="tier-card__features" role="list">
                   <li *ngFor="let f of tier.features"

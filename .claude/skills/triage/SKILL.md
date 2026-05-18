@@ -60,8 +60,14 @@ Check the actual current date — do not ask.
 5. Read `.claude/CONTEXT.md` to orient yourself on the tech stack, conventions, and code layout before building the ticket.
 6. Build a structured ticket using the **Ticket Format** below (before/after pair, file paths, doc references, acceptance criteria, time estimate, label).
 7. Write the ticket to `FREDdocs/.stories/<ID>.md`. Create `.stories/` if it does not exist. Overwrite if `<ID>.md` already exists (re-triaging refreshes the ticket).
-8. Append to `FREDdocs/stories_in_progress.md` under **In Progress** if `<ID>` is not already listed anywhere in that file. Format: `- <ID> — <title>`. Do not duplicate if already present in In Progress or Done.
-9. Do **not** touch `FREDdocs/today.md`. Do **not** produce Punted or Flags sections.
+8. **A/C approval gate.** Present the Acceptance Criteria section of the generated ticket to Andrew via `AskUserQuestion` with four options:
+   - **Approve** — proceed to step 9.
+   - **Edit** — the ticket is already written to `.stories/<ID>.md`; tell Andrew to open and edit it directly, wait for a "done" or "ready" signal, then re-read the file to capture the edited A/C. Proceed to step 9.
+   - **Skip** — insert `💤 ` before the title in the heading (e.g. `## FRED-119 — Short Title` → `## FRED-119 — 💤 Short Title`) in `FREDdocs/backlog.md`. Stop. Do not append to `stories_in_progress.md`.
+   - **Block** — insert `🚫 ` before the title in the heading (e.g. `## FRED-119 — Short Title` → `## FRED-119 — 🚫 Short Title`) in `FREDdocs/backlog.md`. Stop. Do not append to `stories_in_progress.md`.
+9. On Approve or edit-then-approved: append the final Acceptance Criteria as a `### Acceptance Criteria` block directly under the `## <ID> — ...` heading in `FREDdocs/backlog.md`, below the original description text and above the next `##` heading.
+10. Append to `FREDdocs/stories_in_progress.md` under **In Progress** if `<ID>` is not already listed anywhere in that file. Format: `- <ID> — <title>`. Do not duplicate if already present in In Progress or Done.
+11. Do **not** touch `FREDdocs/today.md`. Do **not** produce Punted or Flags sections.
 
 ## Done Flag Flow (`--done=<ID>`)
 
@@ -126,7 +132,7 @@ When `FREDdocs/backlog.md` does not exist:
 - Don't pick content that requires public posting until legal review is cleared.
 - Don't invent file paths — use `.claude/REFERENCES.md`; surface unknowns as open questions in the ticket.
 - Don't pad picks. If Sunday only has one good quick win, pick one and explain.
-- Don't reformat or rewrite items in `backlog.md` after first-run setup — except adding `✓` via `--done`.
+- Don't reformat or rewrite items in `backlog.md` after first-run setup — except adding `✓` via `--done`, inserting `💤` or `🚫` markers via the `--story` A/C gate, or appending `### Acceptance Criteria` blocks via the `--story` A/C gate.
 - Don't use `.claude/CONTEXT.md` for prioritization — it's for code conventions only.
 - Don't ask Andrew what day it is — check the current date programmatically.
 - Don't write to `today.md` when `--story=<ID>` or `--done=<ID>` is used.

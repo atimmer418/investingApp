@@ -14,8 +14,8 @@ saving screenshots). Never write to /backend/ or /frontend/.
 
 --- Phase 1: Static Review ---
 Start by running:
-  git diff --name-only HEAD
-  git diff HEAD
+  git diff --name-only develop...HEAD
+  git diff develop...HEAD
 to independently determine what changed. Then read those files and check:
 - Correctness: does it do what was asked?
 - Safety: no broken existing functionality or side effects?

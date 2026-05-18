@@ -1,4 +1,5 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ChangeDetectorRef, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList } from '@angular/core';
+import { catchError, of } from 'rxjs';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -52,6 +53,10 @@ interface PricingTier {
   lifetimeLine: string;
   yearlyPrice: number;
   yearlyLifetimeLine: string;
+  monthlySavings: number;
+  yearlySavings: number;
+  maxYearlySavings: number;
+  referralsRequired: number;
   pitch: string;
   ctaLabel: string;
   badgeLabel: string;
@@ -68,6 +73,10 @@ const PRICING_TIERS: PricingTier[] = [
     lifetimeLine: '$5/mo lifetime with 3 referrals',
     yearlyPrice: 75,
     yearlyLifetimeLine: '$50/yr lifetime with 3 referrals',
+    monthlySavings: 35,
+    yearlySavings: 20,
+    maxYearlySavings: 45,
+    referralsRequired: 3,
     pitch: 'Automated investing. Works while you work.',
     ctaLabel: 'Join The Pig Leagues',
     badgeLabel: 'The Basics',
@@ -107,6 +116,10 @@ const PRICING_TIERS: PricingTier[] = [
     lifetimeLine: '$10/mo lifetime with 2 referrals',
     yearlyPrice: 150,
     yearlyLifetimeLine: '$100/yr lifetime with 2 referrals',
+    monthlySavings: 60,
+    yearlySavings: 30,
+    maxYearlySavings: 80,
+    referralsRequired: 2,
     pitch: 'Your complete financial picture. Every account, every goal, one plan.',
     ctaLabel: 'Join The Pig Leagues',
     badgeLabel: 'The Full Picture',
@@ -158,6 +171,10 @@ const PRICING_TIERS: PricingTier[] = [
     lifetimeLine: '$20/mo lifetime with 1 referral',
     yearlyPrice: 400,
     yearlyLifetimeLine: '$200/yr lifetime with 1 referral',
+    monthlySavings: 240,
+    yearlySavings: 80,
+    maxYearlySavings: 280,
+    referralsRequired: 1,
     pitch: 'Built for your endgame. Tax-optimized and ready.',
     ctaLabel: 'Join The Pig Leagues',
     badgeLabel: 'The Endgame',
@@ -678,6 +695,14 @@ export class InvestmentConfirmationComponent implements OnInit, AfterViewInit, O
     return pitch.replace(/\. /g, '.<br>');
   }
 
+  savingsChipCopy(tier: PricingTier): string {
+    const refs = tier.referralsRequired === 1 ? '1 referral' : `${tier.referralsRequired} referrals`;
+    if (this.billingPeriod === 'yearly') {
+      return `Save $${tier.yearlySavings}/yr or $${tier.maxYearlySavings}/yr with ${refs}`;
+    }
+    return `Save $${tier.monthlySavings}/yr with ${refs}`;
+  }
+
   onSlideChange(event: any): void {
     const newIndex = (event.target as any).swiper?.activeIndex ?? this.currentTierIndex;
     this.currentTierIndex = newIndex;
@@ -701,6 +726,13 @@ export class InvestmentConfirmationComponent implements OnInit, AfterViewInit, O
     if (this.isAuthorizing) return;
     this.selectedTier = tierId;
     try { localStorage.setItem('fred.selectedTier', tierId); } catch { /* noop */ }
-    this.authorizeRecurringInvestment();
+    this.authService.updateUserProfile({ selectedTier: tierId, billingPeriod: this.billingPeriod })
+      .pipe(catchError(err => {
+        console.error('[InvestmentConfirmation] Failed to persist tier selection:', err);
+        return of(null);
+      }))
+      .subscribe(() => {
+        this.authorizeRecurringInvestment();
+      });
   }
 }

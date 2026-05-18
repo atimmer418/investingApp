@@ -1,7 +1,16 @@
 # BIG ONES
 
-## FRED-99 — Implement all features from tiered pricing
+## FRED-99 — ✓ Implement all features from tiered pricing
 implement all features from tiered pricing
+
+### Acceptance Criteria
+1. `User.java` gets `selectedTier` (nullable VARCHAR(10)) and `billingPeriod` (nullable VARCHAR(10)); Flyway migration adds both columns to the `user` table
+2. `PUT /user/profile` accepts and persists `selectedTier` + `billingPeriod`
+3. `GET /user/me` (or equivalent) returns `selectedTier` and `billingPeriod` in its response
+4. `selectTier()` in the component calls `authService.updateUserProfile({ selectedTier, billingPeriod })`, waits for resolve, then calls `authorizeRecurringInvestment()` — errors logged but don't block
+5. `authService.updateUserProfile()` TypeScript interface widened to include `selectedTier?` and `billingPeriod?`
+6. `npx tsc --noEmit` exits 0; `./gradlew build -x test` exits 0
+7. Smoke: select Pro (yearly) → tap CTA → profile API returns `selectedTier: "pro"`, `billingPeriod: "yearly"`
 
 ## FRED-100 — RAG chunks for app knowledge and philosophy
 we want RAG/canonical chunks for knowing the application itself (to answer questions with exact directions on where to find things or an overview of just about every how process in the app works that there needs to be known about such as the calculations for the MonthlyFreedomUpdate and also a chunk on the boglehead philosophy) and its context as to how this helps the user achieve a good retirement. also, are there any good RAG/canonical chunks that would be valuable for the user to have FRED know in the FREDdocs .md files?
