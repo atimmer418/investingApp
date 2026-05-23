@@ -1,19 +1,19 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
 
-import { SurveyinitialComponent } from './surveyinitial.component';
+import { SurveyInitialComponent } from './surveyinitial.component';
 
-describe('SurveyinitialComponent', () => {
-  let component: SurveyinitialComponent;
-  let fixture: ComponentFixture<SurveyinitialComponent>;
+describe('SurveyInitialComponent', () => {
+  let component: SurveyInitialComponent;
+  let fixture: ComponentFixture<SurveyInitialComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ SurveyinitialComponent ],
+      declarations: [ SurveyInitialComponent ],
       imports: [IonicModule.forRoot()]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(SurveyinitialComponent);
+    fixture = TestBed.createComponent(SurveyInitialComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   }));

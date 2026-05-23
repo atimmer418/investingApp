@@ -177,7 +177,7 @@ make a first time tour that ends with what's your story fred
 8. Dark semi-transparent backdrop with cutout highlight around target element. iOS-native fade motion.
 9. `npx tsc --noEmit` exits 0.
 
-## FRED-120 — Audit npm vulnerabilities and all warnings
+## FRED-120 — ✓ Audit npm vulnerabilities and all warnings
 go thru npm audit vulnerabilities, frontend warnings, backend warnings
 
 ### Acceptance Criteria
@@ -186,6 +186,48 @@ go thru npm audit vulnerabilities, frontend warnings, backend warnings
 3. `./gradlew build` in `/backend`: zero warnings from application code.
 4. `npx tsc --noEmit` exits 0.
 5. `./gradlew build -x test` exits 0.
+
+### Audit Summary (2026-05-23)
+
+**Frontend — npm audit**
+
+Fixed (CRITICAL):
+- `swiper` upgraded from `^11.2.8` to `^12.1.4` — prototype pollution (GHSA-hmx5-qpq5-p643).
+
+Fixed (HIGH — direct deps):
+- All `@angular/*` runtime packages upgraded from `^19.0.0` to `^19.2.22` — patched XSS in compiler/i18n (GHSA-v4hv-rgfq-gp49, GHSA-jrmj-c5cx-3cw6, GHSA-g93w-mfhg-p222), XSS in core i18n (GHSA-prjf-86w9-mfqv, GHSA-g93w-mfhg-p222), XSRF token leakage in common (GHSA-58c5-g7wp-6w37).
+- `@angular/cli` + `@angular-devkit/build-angular` upgraded to `19.2.26`.
+- `vite` upgraded from `^6.3.5` to `^6.4.2` — path traversal issues (GHSA-g4jq-h2w9-997c, GHSA-jqfw-vq24-v9c3, GHSA-4w7w-66w2-5vf9, GHSA-p9ff-h696-f583).
+- `serve` upgraded from `^14.2.4` to `^14.2.6`.
+- `@capacitor/cli` upgraded from `7.2.0` to `^7.6.5` — resolves transitive `tar` vulnerability chain.
+
+Fixed (HIGH — transitive, via `overrides` in package.json):
+- `pacote` forced to `>=21.5.0` (was 20.0.0 — vulnerable range).
+- `tar` forced to `>=7.5.15`.
+- `glob` forced to `>=11.1.0`.
+- `minimatch` forced to `>=10.2.5`.
+- `lodash` forced to `>=4.18.1`.
+- `fast-uri` forced to `>=3.1.2`.
+- `flatted` forced to `>=3.4.2`.
+- `socket.io-parser` forced to `>=4.2.6`.
+- `picomatch` forced to `>=4.0.4`.
+- `@babel/plugin-transform-modules-systemjs` forced to `>=7.29.4`.
+- `serialize-javascript` forced to `>=7.0.5`.
+
+Fixed (TypeScript errors — spec files):
+- 4 spec files had wrong casing in imported class names (`InvestmentconfirmationComponent` → `InvestmentConfirmationComponent`, `LinkplaidComponent` → `LinkPlaidComponent`, `StockselectionComponent` → `StockSelectionComponent`, `SurveyinitialComponent` → `SurveyInitialComponent`). Fixed to match actual exported class names.
+
+Accepted with reason (MODERATE — 4 remaining):
+- `uuid < 11.1.1` → `sockjs` → `webpack-dev-server` → `@angular-devkit/build-angular`: No fix available without upgrading to Angular CLI v21 (major version break). `sockjs` requires `uuid@^8.3.2` API; forcing `uuid >= 11.1.1` would break `sockjs` at runtime. This chain is dev-only (webpack-dev-server is not included in production builds). Acceptable risk.
+
+**Backend — Gradle**
+
+Fixed (application code deprecation warnings):
+- `SecurityConfig.java`: replaced deprecated `new DaoAuthenticationProvider()` no-arg constructor + `setUserDetailsService()` setter with `new DaoAuthenticationProvider(userDetailsService)` (Spring Security 6 constructor-injection API).
+- `WebAuthnService.java:290`: replaced deprecated `result.getUserHandle()` with `result.getCredential().getUserHandle()` (Yubico webauthn-server-core 2.7.0 API).
+- Added `-Xlint:deprecation` to `compileJava` tasks in `build.gradle` so future deprecations surface immediately.
+
+Result: `./gradlew clean build -x test` exits 0 with zero application-code warnings.
 
 # CALENDAR
 

@@ -287,7 +287,7 @@ public class WebAuthnService {
             
             if (result.isSuccess()) {
                 // Get user handle from the assertion to identify the user
-                ByteArray userHandle = result.getUserHandle();
+                ByteArray userHandle = result.getCredential().getUserHandle();
                 String userHandleStr = userHandle.getBase64Url();
                 
                 logger.info("Passkey authentication successful for user handle: {}", userHandleStr);

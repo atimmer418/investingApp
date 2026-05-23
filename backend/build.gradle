@@ -48,6 +48,10 @@ dependencies {
 	implementation 'io.pinecone:pinecone-client:3.0.0' // Pinecone Client
 }
 
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs += ['-Xlint:deprecation']
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 }
