@@ -510,7 +510,7 @@ The "Keep me updated" marketing checkbox needs to be wired up to the FRED email 
 ## FRED-177 — 💤 Remove back button from two onboarding pages (ONBOARDING)
 Remove the back button from 2 pages in the onboarding flow.
 
-## FRED-178 — Rebrand passkey auth to Face ID variant
+## FRED-178 — ✓ Rebrand passkey auth to Face ID variant
 Change passkey to face-ID passkey variant
 
 ### Acceptance Criteria
