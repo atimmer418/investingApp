@@ -5,39 +5,35 @@
     </ion-buttons>
     <ion-title>My Profile</ion-title>
     <ion-buttons slot="end">
-      <ion-button *ngIf="isDirty" (click)="saveChanges()" class="save-button">
-        Save
-      </ion-button>
+      <button *ngIf="isDirty" (click)="saveChanges()" class="save-btn">Save</button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [scrollY]="false" class="ion-padding profile-content">
+<ion-content class="profile-content">
+  <div class="content-inner">
 
-  <!-- Action-required banner — persists until documents are uploaded -->
-  <div *ngIf="(actionRequired$ | async)" class="action-required-banner" (click)="goToDocumentUpload()">
-    <span class="material-symbols-outlined ar-icon">warning</span>
-    <span class="ar-text">Action required: Upload verification documents</span>
-    <span class="material-symbols-outlined ar-chevron">chevron_right</span>
-  </div>
+    <div *ngIf="(actionRequired$ | async)" class="action-required-banner" (click)="goToDocumentUpload()">
+      <span class="material-symbols-outlined ar-icon">warning</span>
+      <span class="ar-text">Action required: Upload verification documents</span>
+      <span class="material-symbols-outlined ar-chevron">chevron_right</span>
+    </div>
 
-  <div class="profile-header">
-    <div class="avatar-container">
-      <ion-avatar>
+    <div class="hero-section">
+      <ion-avatar class="user-avatar">
         <img src="https://ionicframework.com/docs/img/demos/avatar.svg" alt="User Avatar" />
       </ion-avatar>
       <div class="camera-icon">
         <ion-icon name="camera"></ion-icon>
       </div>
+      <h2 class="user-name">{{ userName }}</h2>
     </div>
-    <h2 class="user-name">Firstname Lastname</h2>
-  </div>
 
-  <ion-card class="plan-card">
-    <ion-card-content>
-      <div class="card-header">
-        <span class="header-title">FREEDOM PLAN</span>
-        <ion-icon name="wallet-outline" class="header-icon"></ion-icon>
+    <!-- Freedom Plan Card -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">trending_up</span>
+        <h3 class="card-title">Freedom Plan</h3>
       </div>
 
       <div class="plan-sentence">
@@ -49,7 +45,7 @@
           <span class="suffix">/mo</span>
         </div>, you need a portfolio worth <strong>{{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</strong>.
       </div>
-      
+
       <div class="plan-sentence">
         By investing
         <div class="inline-input-wrapper">
@@ -61,72 +57,69 @@
       </div>
 
       <div class="insight-box">
-        <div class="insight-icon">
-          <ion-icon name="time-outline"></ion-icon>
+        <div class="insight-icon-wrap">
+          <span class="material-symbols-outlined">schedule</span>
         </div>
         <div class="insight-text">
           At your current investment rate of <strong>{{ currentScheduledInvestment | currency }} {{
             investmentFrequencyText }}</strong>
-          <span *ngIf="currentMonthlyEquivalent > 0 && currentFrequency !== 'monthly'" style="color: var(--text-secondary); font-weight: normal;">
+          <span *ngIf="currentMonthlyEquivalent > 0 && currentFrequency !== 'monthly'" class="secondary-text">
             ({{ currentMonthlyEquivalent | currency:'USD':'symbol':'1.0-0' }}/mo)</span>,
           you'd reach <strong>{{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</strong> in roughly <strong>{{
             yearsToReachRemaining }} more years</strong>.
         </div>
-
         <div class="progress-bar-container">
           <div class="progress-bar" [style.width.%]="progressPercentage * 100"></div>
         </div>
-        <div class="progress-labels" style="display: flex; justify-content: space-between; width: 100%; font-size: 10px; color: #8E8E93; margin-top: 4px;">
+        <div class="progress-labels">
           <span>Current: {{ currentPortfolioValue | currency:'USD':'symbol':'1.0-0' }}</span>
           <span>Goal: {{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</span>
         </div>
       </div>
 
-      <div class="disclaimer-text">
-        Our calculations assume a 10% average annual return.<br>Past performance is not indicative of future results.
+      <p class="disclaimer-text">
+        Assumes 10% avg annual return. Past performance is not indicative of future results.
+      </p>
+    </div>
+
+    <!-- Referrals Card -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">card_giftcard</span>
+        <h3 class="card-title">Referrals</h3>
       </div>
 
-    </ion-card-content>
-  </ion-card>
-
-  <div class="section-title">Referrals</div>
-
-  <ion-card class="referral-card">
-    <ion-card-content>
-
-      <div class="referral-section">
-        <div class="sub-label">SHARE THE WEALTH (<span style="color: var(--ion-color-primary); font-weight: bold;">{{ referralCount }} / 3 Redeemed</span>)</div>
+      <div class="referral-share">
+        <div class="field-label">SHARE THE WEALTH (<span class="referral-count">{{ referralCount }} / 3 Redeemed</span>)</div>
         <div class="code-box">
           <div class="code-text">{{ referralCode }}</div>
           <div class="share-btn" (click)="copyReferral()">
             <ion-icon name="share-outline"></ion-icon>
           </div>
         </div>
-        <div class="helper-text">Lock in a $5/mo subscription for life when 3 users redeem your code. Users can redeem only one code.</div>
+        <p class="helper-text">Lock in a $5/mo subscription for life when 3 users redeem your code. Users can redeem only one code.</p>
       </div>
 
-      <div class="divider"></div>
+      <div class="section-divider"></div>
 
       <div class="redeem-section">
-        <div class="sub-label">REDEEM CODE</div>
-        
+        <div class="field-label">REDEEM CODE</div>
         <div class="redeem-row">
           <div class="input-container">
-            <ion-icon name="ticket-outline" class="input-icon"></ion-icon>
-            <input type="text" [placeholder]="hasAppliedReferral ? 'Code applied' : 'Enter referral code'" [(ngModel)]="redeemCodeInput" [disabled]="isLoadingReferral || hasAppliedReferral" />
+            <span class="material-symbols-outlined input-icon">confirmation_number</span>
+            <input type="text" [placeholder]="hasAppliedReferral ? 'Code applied' : 'Enter referral code'"
+              [(ngModel)]="redeemCodeInput" [disabled]="isLoadingReferral || hasAppliedReferral" />
           </div>
           <button class="apply-btn" (click)="redeemCode()" [disabled]="isLoadingReferral || hasAppliedReferral">
             {{ isLoadingReferral ? '...' : (hasAppliedReferral ? 'Applied' : 'Apply') }}
           </button>
         </div>
-
         <div class="redeem-success" *ngIf="hasAppliedReferral">
-             <ion-icon name="checkmark-circle-outline" style="font-size: 20px; color: var(--ion-color-success); margin-right: 8px;"></ion-icon>
-             <span>Referral code applied</span>
+          <span class="material-symbols-outlined success-icon">check_circle</span>
+          <span>Referral code applied</span>
         </div>
       </div>
+    </div>
 
-    </ion-card-content>
-  </ion-card>
-
+  </div>
 </ion-content>
