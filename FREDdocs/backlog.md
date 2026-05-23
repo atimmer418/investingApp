@@ -292,7 +292,7 @@ tax documents page is ALMOST DONE; need to verify how it pdfs look and work on p
 
 # CONTENT / DESIGN
 
-## FRED-129 — Add pig art to MFU equity milestones
+## FRED-129 — ✓ Add pig art to MFU equity milestones
 add pig for certain equity milestones on MFU and also unlocking of monte carlo at $100k and unlocking of retirement strategies at $250k
 
 ### Acceptance Criteria

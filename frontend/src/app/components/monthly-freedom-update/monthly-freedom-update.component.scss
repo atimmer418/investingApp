@@ -400,6 +400,13 @@ $indigo-50: #eef2ff;
       font-size: 20px;
     }
   }
+
+  &__pig-img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
 }
 
 // --------------------------------------------------------------------------

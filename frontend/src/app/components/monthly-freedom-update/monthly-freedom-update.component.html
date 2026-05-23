@@ -40,9 +40,10 @@
       <!-- Milestone Card (single combined) -->
       <div class="mfu-milestone" *ngIf="data.milestones && data.milestones.length > 0">
         <div class="mfu-milestone__card">
-          <div class="mfu-milestone__icon-wrapper">
+          <div class="mfu-milestone__icon-wrapper" *ngIf="data.milestones[0].type === 'DEFAULT'">
             <span class="material-symbols-outlined">{{ milestoneIcon }}</span>
           </div>
+          <img *ngIf="data.milestones[0].type !== 'DEFAULT'" [src]="milestoneEquityPigSrc" class="mfu-milestone__pig-img" alt="">
           <div class="mfu-milestone__text">
             <p class="mfu-milestone__title">{{ data.milestones[0].label }}</p>
             <p class="mfu-milestone__subtitle">{{ data.milestones[0].subtitle }}</p>

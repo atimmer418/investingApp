@@ -192,6 +192,9 @@ public class MonthlyFreedomUpdateService {
         dto.setEndEquityValue(endEquity);
         dto.setCurrentEquityValue(currentEquity);
 
+        // --- Equity Level (1-6) based on endEquity ---
+        dto.setEquityLevel(calculateEquityLevel(endEquity));
+
         BigDecimal periodDelta = endEquity.subtract(startEquity);
         dto.setPeriodProgressDelta(periodDelta);
         dto.setPositive(periodDelta.compareTo(BigDecimal.ZERO) > 0);
@@ -757,6 +760,24 @@ public class MonthlyFreedomUpdateService {
             default:
                 return amount;
         }
+    }
+
+    /**
+     * Map endEquity to a pig level (1–6).
+     * Level 1: < $1,000
+     * Level 2: $1,000 – $9,999.99
+     * Level 3: $10,000 – $99,999.99
+     * Level 4: $100,000 – $999,999.99
+     * Level 5: $1,000,000 – $4,999,999.99
+     * Level 6: >= $5,000,000
+     */
+    private int calculateEquityLevel(BigDecimal equity) {
+        if (equity == null || equity.compareTo(new BigDecimal("1000")) < 0) return 1;
+        if (equity.compareTo(new BigDecimal("10000")) < 0) return 2;
+        if (equity.compareTo(new BigDecimal("100000")) < 0) return 3;
+        if (equity.compareTo(new BigDecimal("1000000")) < 0) return 4;
+        if (equity.compareTo(new BigDecimal("5000000")) < 0) return 5;
+        return 6;
     }
 
     /**

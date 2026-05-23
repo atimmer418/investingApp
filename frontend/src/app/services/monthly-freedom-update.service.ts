@@ -67,6 +67,9 @@ export interface MonthlyFreedomUpdateData {
 
   // Whether the user has any MFU history available to reopen
   hasMfuHistory: boolean;
+
+  // Pig level (1-6) based on end equity
+  equityLevel: number;
 }
 
 @Injectable({

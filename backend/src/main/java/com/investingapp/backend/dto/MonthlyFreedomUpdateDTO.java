@@ -70,6 +70,9 @@ public class MonthlyFreedomUpdateDTO {
     // Whether the user has any MFU history (has had at least one MFU period generated)
     private boolean hasMfuHistory;
 
+    // Equity level (1-6) based on endEquity ranges
+    private int equityLevel;
+
     // Getters and Setters
     public boolean isShouldShow() { return shouldShow; }
     public void setShouldShow(boolean shouldShow) { this.shouldShow = shouldShow; }
@@ -169,6 +172,9 @@ public class MonthlyFreedomUpdateDTO {
 
     public boolean isHasMfuHistory() { return hasMfuHistory; }
     public void setHasMfuHistory(boolean hasMfuHistory) { this.hasMfuHistory = hasMfuHistory; }
+
+    public int getEquityLevel() { return equityLevel; }
+    public void setEquityLevel(int equityLevel) { this.equityLevel = equityLevel; }
 
     /**
      * Nested DTO for milestones
