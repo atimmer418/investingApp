@@ -24,13 +24,14 @@
   <div class="profile-header">
     <div class="avatar-container">
       <ion-avatar>
-        <img src="https://ionicframework.com/docs/img/demos/avatar.svg" alt="User Avatar" />
+        <img src="assets/images/whenPiggybanksFly.png" alt="FRED pig avatar" />
       </ion-avatar>
-      <div class="camera-icon">
-        <ion-icon name="camera"></ion-icon>
-      </div>
     </div>
-    <h2 class="user-name">Firstname Lastname</h2>
+    <h2 class="user-name">{{ userName }}</h2>
+    <div class="percentile-badge" *ngIf="statusPercentile !== null">
+      <span class="material-symbols-outlined percentile-icon">trending_up</span>
+      <span class="percentile-text">Ahead of {{ statusPercentile }}% of investors</span>
+    </div>
   </div>
 
   <ion-card class="plan-card">

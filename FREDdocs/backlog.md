@@ -236,7 +236,7 @@ check for tax documents in feb/march 2026
 
 # ALMOST DONE
 
-## FRED-122 — My profile final polish and compliance language check
+## FRED-122 — ✓ My profile final polish and compliance language check
 my profile page ALMOST DONE needs badge of ahead of 85%, fred pfps, and fixing ui spacing. also, update my profile language to be complaint? maybe wait till after securities attorney review
 
 ### Acceptance Criteria

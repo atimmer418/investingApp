@@ -12,6 +12,7 @@ import { SettingsService } from '../../services/settings.service';
 import { ToastService } from '../../services/toast.service';
 import { PortfolioService } from '../../services/portfolio.service';
 import { AccountStatusService } from '../../services/account-status.service';
+import { MonthlyFreedomUpdateService } from '../../services/monthly-freedom-update.service';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 
@@ -56,6 +57,9 @@ export class MyProfilePage implements OnInit {
   hasAppliedReferral: boolean = false;
   isLoadingReferral: boolean = false;
 
+  // Percentile badge from MFU
+  statusPercentile: number | null = null;
+
   // State
   isDirty: boolean = false;
   originalValues: { monthly: number, income: number } = { monthly: 0, income: 0 };
@@ -74,6 +78,7 @@ export class MyProfilePage implements OnInit {
     private toastService: ToastService,
     private portfolioService: PortfolioService,
     private accountStatusService: AccountStatusService,
+    private mfuService: MonthlyFreedomUpdateService,
     private router: Router
   ) {
     addIcons({camera,walletOutline,timeOutline,shareOutline,ticketOutline,checkmarkCircleOutline,saveOutline});
@@ -170,6 +175,20 @@ export class MyProfilePage implements OnInit {
         // Use 0 as default if fails
         this.currentPortfolioValue = 0;
         this.calculateProgress();
+      }
+    });
+
+    // Load statusPercentile from most recent MFU data
+    this.mfuService.checkShouldShow().subscribe({
+      next: (data) => {
+        if (data && data.hasMfuHistory && data.statusPercentile > 0) {
+          this.statusPercentile = data.statusPercentile;
+        } else {
+          this.statusPercentile = null;
+        }
+      },
+      error: () => {
+        this.statusPercentile = null;
       }
     });
 
