@@ -70,7 +70,7 @@ make it so that when a user signs up, check the localStorage to see if they had 
 ## FRED-109 — 💤 Change investment question to work-optional framing
 Instead of: "How much do you want to invest?", Ask: "When do you want work to be optional?"
 
-## FRED-110 — Overhaul tab 2 education with four strategies
+## FRED-110 — ✓ Overhaul tab 2 education with four strategies
 go fix and clean up tab 2 and its content so that it matches the 4 strategies we are educating on (yield-based income, dynamic guardrails, annuity, sbloc 4% borrowing in downturn combined with traditional 4% selling when market is up), also make the cards on the education page smaller so that all 4 can appear on one page (2 on top half, 2 on bottom half). add a slide on brief instructions for how to do each strategy
 
 ### Acceptance Criteria
