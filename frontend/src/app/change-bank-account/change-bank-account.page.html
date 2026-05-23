@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/tab3" text="" icon="chevron-back-outline"></ion-back-button>
@@ -8,74 +8,72 @@
 </ion-header>
 
 <ion-content class="change-bank-content">
-  <div class="mobile-container">
-    
-    <!-- Page Introduction -->
-    <div class="page-intro">
-      <h2>Update Your Bank Account</h2>
-      <p class="helper-text">Change the checking account used for your automatic investments. Your current investment schedule will continue with the new account.</p>
-    </div>
+  <div class="content-inner">
 
-    <!-- Current Account Section -->
-    <div class="mobile-card" *ngIf="currentBankAccount">
-      <div class="section-header">
-        <h3 class="section-title">Current Account</h3>
+    <!-- Current Account -->
+    <div class="section-card" *ngIf="currentBankAccount">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">account_balance</span>
+        <h3 class="card-title">Current Account</h3>
       </div>
-      
-      <div class="current-account-header">
-        <div class="account-icon">
-          <ion-icon name="card-outline"></ion-icon>
+      <div class="account-row">
+        <div class="account-circle">
+          <span class="material-symbols-outlined">credit_card</span>
         </div>
         <div class="account-details">
-          <h3>Current Account</h3>
-          <p>{{ formatAccountDisplay() }}</p>
+          <span class="account-label">Linked Bank</span>
+          <span class="account-val">{{ formatAccountDisplay() }}</span>
         </div>
       </div>
     </div>
 
-    <!-- Benefits Section -->
-    <div class="benefits-section">
-      <div class="benefit-features">
+    <!-- What to Know -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">info</span>
+        <h3 class="card-title">What to Know</h3>
+      </div>
+
+      <div class="feature-list">
         <div class="feature-item">
-          <ion-icon name="sync" class="feature-icon"></ion-icon>
-          <span>Seamless transition - no interruption to your investment schedule</span>
+          <span class="material-symbols-outlined feature-icon">sync</span>
+          <span class="feature-text">Seamless transition — no interruption to your investment schedule</span>
         </div>
         <div class="feature-item">
-          <ion-icon name="shield-checkmark" class="feature-icon"></ion-icon>
-          <span>Bank-level security with Plaid encryption</span>
+          <span class="material-symbols-outlined feature-icon">shield</span>
+          <span class="feature-text">Bank-level security with Plaid encryption</span>
         </div>
         <div class="feature-item">
-          <ion-icon name="time" class="feature-icon"></ion-icon>
-          <span>Changes take effect with your next scheduled investment</span>
+          <span class="material-symbols-outlined feature-icon">schedule</span>
+          <span class="feature-text">Changes take effect with your next scheduled investment</span>
         </div>
       </div>
     </div>
 
-    <!-- Connection Button Section -->
-    <div class="connection-button-section">
-      <ion-button 
-        expand="block" 
-        class="connection-button" 
-        type="button"  
-        (click)="openPlaid()" 
+    <!-- Connect Button -->
+    <div class="cta-section">
+      <button
+        class="cta-btn"
+        type="button"
+        (click)="openPlaid()"
         [disabled]="isLoading || !isPlaidReady">
-        <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+        <ion-spinner *ngIf="isLoading" name="crescent" class="btn-spinner-sm"></ion-spinner>
         <span *ngIf="!isLoading && isPlaidReady">Select New Bank Account</span>
         <span *ngIf="!isLoading && !isPlaidReady">Preparing secure connection...</span>
         <span *ngIf="isLoading">{{ statusMessage || 'Processing...' }}</span>
-      </ion-button>
-      
-      <p class="connection-note">
-        Your banking credentials are never stored. Powered by Plaid's trusted, encrypted connection.
-      </p>
+        <span class="material-symbols-outlined" *ngIf="!isLoading && isPlaidReady">open_in_new</span>
+      </button>
+      <p class="connection-note">Your banking credentials are never stored. Powered by Plaid's trusted, encrypted connection.</p>
     </div>
 
-    <!-- Feedback Messages -->
+    <!-- Status Message -->
     <div *ngIf="statusMessage && !isLoading" class="status-message">
-      <ion-text [color]="statusMessage && (statusMessage.includes('error') || statusMessage.includes('Could not') || statusMessage.includes('Failed')) ? 'danger' : 'success'">
+      <span class="status-text"
+        [class.status-danger]="statusMessage.includes('error') || statusMessage.includes('Could not') || statusMessage.includes('Failed')"
+        [class.status-success]="!(statusMessage.includes('error') || statusMessage.includes('Could not') || statusMessage.includes('Failed'))">
         {{ statusMessage }}
-      </ion-text>
+      </span>
     </div>
-    
+
   </div>
 </ion-content>
