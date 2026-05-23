@@ -603,4 +603,74 @@ public class AlpacaApiService {
         }
         return null;
     }
+
+    /**
+     * Fetch full KYC/account data for a given Alpaca account ID.
+     * Returns the raw JSON from Alpaca's GET /v1/accounts/{account_id}.
+     */
+    public String getAccountKyc(String accountId) {
+        HttpEntity<String> entity = new HttpEntity<>(createHeaders());
+        ResponseEntity<String> response = restTemplate.exchange(
+                brokerBaseUrl + "/accounts/" + accountId,
+                HttpMethod.GET,
+                entity,
+                String.class);
+        return response.getBody();
+    }
+
+    /**
+     * Update KYC fields for a given Alpaca account using PATCH /v1/accounts/{account_id}.
+     * Only fields present in the request map are included.
+     * Returns the raw JSON response from Alpaca.
+     */
+    public String patchAccountKyc(String accountId, com.investingapp.backend.dto.UpdateKycRequest request) {
+        try {
+            // Build partial update — only include non-null fields
+            Map<String, Object> contact = new HashMap<>();
+            if (request.getEmailAddress() != null) contact.put("email_address", request.getEmailAddress());
+            if (request.getPhoneNumber() != null)   contact.put("phone_number", request.getPhoneNumber());
+            if (request.getStreetAddress() != null) contact.put("street_address", List.of(request.getStreetAddress()));
+            if (request.getCity() != null)           contact.put("city", request.getCity());
+            if (request.getState() != null)          contact.put("state", request.getState());
+            if (request.getPostalCode() != null)     contact.put("postal_code", request.getPostalCode());
+
+            Map<String, Object> identity = new HashMap<>();
+            if (request.getGivenName() != null)     identity.put("given_name", request.getGivenName());
+            if (request.getFamilyName() != null)    identity.put("family_name", request.getFamilyName());
+            if (request.getDateOfBirth() != null)   identity.put("date_of_birth", request.getDateOfBirth());
+            if (request.getFundingSource() != null) identity.put("funding_source", request.getFundingSource());
+
+            Map<String, Object> disclosures = new HashMap<>();
+            if (request.getIsControlPerson() != null)
+                disclosures.put("is_control_person", request.getIsControlPerson());
+            if (request.getIsAffiliatedExchangeOrFinra() != null)
+                disclosures.put("is_affiliated_exchange_or_finra", request.getIsAffiliatedExchangeOrFinra());
+            if (request.getIsPoliticallyExposed() != null)
+                disclosures.put("is_politically_exposed", request.getIsPoliticallyExposed());
+            if (request.getImmediateFamilyExposed() != null)
+                disclosures.put("immediate_family_exposed", request.getImmediateFamilyExposed());
+
+            Map<String, Object> body = new HashMap<>();
+            if (!contact.isEmpty())     body.put("contact", contact);
+            if (!identity.isEmpty())    body.put("identity", identity);
+            if (!disclosures.isEmpty()) body.put("disclosures", disclosures);
+
+            String jsonBody = objectMapper.writeValueAsString(body);
+            logger.info("Patching KYC for account {}: {} top-level keys", accountId, body.size());
+
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, createHeaders());
+            ResponseEntity<String> response = restTemplate.exchange(
+                    brokerBaseUrl + "/accounts/" + accountId,
+                    HttpMethod.PATCH,
+                    entity,
+                    String.class);
+
+            logger.info("KYC patch response status for account {}: {}", accountId, response.getStatusCode());
+            return response.getBody();
+
+        } catch (JsonProcessingException e) {
+            logger.error("JSON error patching KYC for account {}", accountId, e);
+            throw new RuntimeException("Failed to serialize KYC update: " + e.getMessage(), e);
+        }
+    }
 }

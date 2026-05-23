@@ -1,7 +1,10 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
     <div class="header-inner">
-      <h2 class="header-title">Identity Verification</h2>
+      <button *ngIf="editMode" class="back-btn" type="button" (click)="goBack()">
+        <span class="material-symbols-outlined">arrow_back_ios</span>
+      </button>
+      <h2 class="header-title">{{ editMode ? 'Edit Identity' : 'Identity Verification' }}</h2>
     </div>
   </ion-toolbar>
 </ion-header>
@@ -11,8 +14,8 @@
 
     <!-- Hero — top-pinned -->
     <div class="hero-section">
-      <h1 class="hero-title">A few more details.</h1>
-      <p class="hero-subtitle">Alpaca requires us to verify that you are who you say you are.</p>
+      <h1 class="hero-title">{{ editMode ? 'Update your info.' : 'A few more details.' }}</h1>
+      <p class="hero-subtitle">{{ editMode ? 'Update your identity and contact information on file.' : 'Alpaca requires us to verify that you are who you say you are.' }}</p>
 
       <!-- Step indicators -->
       <div class="step-indicators">
@@ -98,7 +101,7 @@
 
           <!-- SSN + Funding Source row -->
           <div class="form-row two-col">
-            <div class="form-field" [class.field-error]="step1Form.get('taxId')?.invalid && step1Form.get('taxId')?.touched">
+            <div *ngIf="!editMode" class="form-field" [class.field-error]="step1Form.get('taxId')?.invalid && step1Form.get('taxId')?.touched">
               <span class="field-label">SOCIAL SECURITY NUMBER</span>
               <input id="taxIdInput" class="field-input" type="text" formControlName="taxId" placeholder="XXX-XX-XXXX" inputmode="numeric" maxlength="11" (input)="onTaxIdInput($event)" autocomplete="off" />
               <div class="field-hint">Encrypted and stored securely.</div>
@@ -220,12 +223,12 @@
   <div class="cta-footer">
     <button class="cta-btn" type="button" (click)="submitKyc()" [disabled]="!step2Valid || isLoading" [class.btn-visible]="step2Valid">
       <ng-container *ngIf="!isLoading">
-        <span>Create My Account</span>
+        <span>{{ editMode ? 'Update' : 'Create My Account' }}</span>
         <span class="material-symbols-outlined">arrow_forward</span>
       </ng-container>
       <ng-container *ngIf="isLoading">
         <ion-spinner name="crescent"></ion-spinner>
-        <span>Creating account...</span>
+        <span>{{ editMode ? 'Updating...' : 'Creating account...' }}</span>
       </ng-container>
     </button>
   </div>

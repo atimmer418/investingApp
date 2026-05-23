@@ -211,4 +211,8 @@ export class SecuritySettingsPage implements OnInit {
   changeEmail() {
     this.router.navigate(['/change-email']);
   }
+
+  editKyc() {
+    this.router.navigate(['/kyc-verification'], { queryParams: { edit: 'true' } });
+  }
 }

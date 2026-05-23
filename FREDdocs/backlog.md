@@ -246,7 +246,7 @@ my profile page ALMOST DONE needs badge of ahead of 85%, fred pfps, and fixing u
 4. Compliance language update deferred — do not implement until FRED-139 (securities attorney review) clears.
 5. `npx tsc --noEmit` exits 0.
 
-## FRED-123 — Account security add KYC form editing
+## FRED-123 — ✓ Account security add KYC form editing
 account security ALMOST DONE needs ability to update kyc form
 [merged from FRED-107: allow kyc to be changed in account security setting page]
 

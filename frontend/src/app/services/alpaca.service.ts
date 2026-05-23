@@ -51,6 +51,23 @@ export interface AccountStatusResponse {
   hasActionRequired: boolean;
 }
 
+export interface UpdateKycRequest {
+  emailAddress?: string;
+  phoneNumber?: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  givenName?: string;
+  familyName?: string;
+  dateOfBirth?: string; // YYYY-MM-DD
+  fundingSource?: string[];
+  isControlPerson?: boolean;
+  isAffiliatedExchangeOrFinra?: boolean;
+  isPoliticallyExposed?: boolean;
+  immediateFamilyExposed?: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -139,6 +156,27 @@ export class AlpacaService {
   getAchRelationships(accountId: string): Observable<any> {
     return this.http.get(
       `${this.baseUrl}/alpaca/accounts/${accountId}/ach-relationships`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  /**
+   * Fetch current user's KYC data from Alpaca (for pre-filling the edit form)
+   */
+  getKycData(): Observable<any> {
+    return this.http.get(
+      `${this.baseUrl}/alpaca/account/kyc`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  /**
+   * Update current user's KYC data via Alpaca PATCH API
+   */
+  updateKyc(request: UpdateKycRequest): Observable<any> {
+    return this.http.patch(
+      `${this.baseUrl}/alpaca/account/kyc`,
+      request,
       { headers: this.getAuthHeaders() }
     );
   }
