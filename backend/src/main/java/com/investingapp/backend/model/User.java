@@ -214,6 +214,9 @@ public class User {
     @Column(name = "billing_period", nullable = true, length = 10)
     private String billingPeriod; // "monthly", "yearly"
 
+    @Column(name = "private_beta", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean privateBeta = false;
+
     // Helper method to get Plaid relationship ID (using existing ACH relationship
     // field)
     public String getPlaidRelationshipId() {

@@ -31,8 +31,9 @@ export class TabsPage implements OnInit {
     this.authService.userProgress$.subscribe(progress => {
       const fullyOnboarded = progress?.investmentConfirmationCompleted === true;
       const hasActiveSub = progress?.selectedTier != null;
-      // TODO FRED-113: bypass expired gate for private beta users
-      this.isSubExpired = fullyOnboarded && !hasActiveSub;
+      const isPrivateBeta = progress?.privateBeta === true;
+      // Private beta users bypass the subscription gate
+      this.isSubExpired = fullyOnboarded && !hasActiveSub && !isPrivateBeta;
     });
   }
 }

@@ -98,7 +98,7 @@ add $100k Total Equity lock for monte carlo, add $250k lock for retirement strat
 8. Education section lock dropped — only Monte Carlo is gated by tier.
 9. `npx tsc --noEmit` exits 0; `./gradlew build -x test` exits 0.
 
-## FRED-112 — Subscription prompt, risk reversal, expired sub handling
+## FRED-112 — ✓ Subscription prompt, risk reversal, expired sub handling
 we want to prompt our apple subscription on the selection of the user's tier aka when they click the "Join The Pig Leagues" button. there should be a placeholder already for this function. we need to find out how we can prompt for the apple subscription. also, make it so that a user with an expired apple subscription can only access the tab 3 and provide a way for them to be able to reactivate their subscription.
 
 ### Acceptance Criteria

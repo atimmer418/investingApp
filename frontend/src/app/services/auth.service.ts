@@ -26,6 +26,7 @@ export interface UserProgress {
   referralCount?: number;
   hasAppliedReferral?: boolean;
   selectedTier?: 'core' | 'plus' | 'pro';
+  privateBeta?: boolean;
 }
 
 export interface PasskeyAuthRequest {
@@ -215,7 +216,8 @@ export class AuthService {
       investmentConfirmationCompleted: ordinal >= 8,
       monthlyInvestment: monthlyInvestment ? parseInt(monthlyInvestment, 10) : undefined,
       retirementIncome: retirementIncome ? parseInt(retirementIncome, 10) : undefined,
-      selectedTier: tier ?? undefined
+      selectedTier: tier ?? undefined,
+      privateBeta: false
     };
   }
 

@@ -65,6 +65,7 @@ public class UserController {
         private boolean dripEnabled;
         private String selectedTier;
         private String billingPeriod;
+        private boolean privateBeta;
 
         public UserProgressResponse(User user) {
             UserProgress progress = user.getUserProgress();
@@ -104,6 +105,7 @@ public class UserController {
             this.dripEnabled = !Boolean.FALSE.equals(user.getDripEnabled());
             this.selectedTier = user.getSelectedTier();
             this.billingPeriod = user.getBillingPeriod();
+            this.privateBeta = Boolean.TRUE.equals(user.getPrivateBeta());
         }
 
         // Getters
@@ -177,6 +179,10 @@ public class UserController {
 
         public String getBillingPeriod() {
             return billingPeriod;
+        }
+
+        public boolean isPrivateBeta() {
+            return privateBeta;
         }
 
         public String getNextStep() {

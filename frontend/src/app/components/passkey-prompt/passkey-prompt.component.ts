@@ -1,4 +1,5 @@
 import { Component, Input, AfterViewInit, OnDestroy, ViewChild, ElementRef, NgZone } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { ModalController } from '@ionic/angular/standalone';
 import { PasskeyService } from '../../services/passkey.service';
 import { get } from '@github/webauthn-json';
@@ -11,7 +12,7 @@ import { NativePasskeyService } from '../../services/native-passkey.service';
   templateUrl: './passkey-prompt.component.html',
   styleUrls: ['./passkey-prompt.component.scss'],
   standalone: true,
-  imports: []
+  imports: [CommonModule]
 })
 export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
 
@@ -22,6 +23,7 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
   @ViewChild('lottieContainer') lottieContainer!: ElementRef<HTMLElement>;
 
   isUnlocking = false;
+  isFounder = false;
   private unlockButton: HTMLButtonElement | null = null;
 
   constructor(
@@ -31,7 +33,11 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
     private toastService: ToastService,
     private nativePasskeyService: NativePasskeyService,
     private zone: NgZone
-  ) {}
+  ) {
+    this.authService.userProgress$.subscribe(progress => {
+      this.isFounder = progress?.privateBeta === true;
+    });
+  }
 
   ngOnDestroy() {
     this.destroyUnlockButton();
