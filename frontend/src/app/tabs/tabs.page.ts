@@ -4,6 +4,7 @@ import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonBadge } from '@ionic/angu
 import { addIcons } from 'ionicons';
 import { triangle, ellipse, square, pieChartOutline, trendingUpOutline, personOutline, chatbubblesOutline } from 'ionicons/icons';
 import { AccountStatusService } from '../services/account-status.service';
+import { AuthService } from '../services/auth.service';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -15,13 +16,23 @@ import { Observable } from 'rxjs';
 })
 export class TabsPage implements OnInit {
   settingsTabBadge$: Observable<string | null>;
+  isSubExpired = false;
 
-  constructor(private accountStatusService: AccountStatusService) {
+  constructor(
+    private accountStatusService: AccountStatusService,
+    private authService: AuthService
+  ) {
     addIcons({ pieChartOutline, trendingUpOutline, personOutline, chatbubblesOutline, triangle, ellipse, square });
     this.settingsTabBadge$ = this.accountStatusService.settingsTabBadge$;
   }
 
   ngOnInit() {
     this.accountStatusService.refreshStatus();
+    this.authService.userProgress$.subscribe(progress => {
+      const fullyOnboarded = progress?.investmentConfirmationCompleted === true;
+      const hasActiveSub = progress?.selectedTier != null;
+      // TODO FRED-113: bypass expired gate for private beta users
+      this.isSubExpired = fullyOnboarded && !hasActiveSub;
+    });
   }
 }

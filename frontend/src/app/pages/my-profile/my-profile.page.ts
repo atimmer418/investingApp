@@ -58,6 +58,7 @@ export class MyProfilePage implements OnInit {
 
   // State
   isDirty: boolean = false;
+  isSubExpired: boolean = false;
   originalValues: { monthly: number, income: number } = { monthly: 0, income: 0 };
 
   // Constants
@@ -84,6 +85,10 @@ export class MyProfilePage implements OnInit {
     this.router.navigateByUrl('/document-upload');
   }
 
+  reactivateSubscription(): void {
+    // TODO: trigger Apple IAP resubscription
+    console.log('[MyProfile] Reactivate subscription requested');
+  }
 
   ngOnInit() {
     this.loadUserData();
@@ -129,6 +134,11 @@ export class MyProfilePage implements OnInit {
         };
 
         this.calculatePlan();
+
+        const fullyOnboarded = progress.investmentConfirmationCompleted === true;
+        const hasActiveSub = progress.selectedTier != null;
+        // TODO FRED-113: bypass expired gate for private beta users
+        this.isSubExpired = fullyOnboarded && !hasActiveSub;
       }
     });
 

@@ -14,6 +14,15 @@
 
 <ion-content [scrollY]="false" class="ion-padding profile-content">
 
+  <div *ngIf="isSubExpired" class="reactivation-banner">
+    <span class="material-symbols-outlined">lock</span>
+    <div class="reactivation-text">
+      <strong>Subscription Inactive</strong>
+      <p>Reactivate to access your portfolio and retirement tools.</p>
+    </div>
+    <button class="reactivation-btn" (click)="reactivateSubscription()">Reactivate</button>
+  </div>
+
   <!-- Action-required banner — persists until documents are uploaded -->
   <div *ngIf="(actionRequired$ | async)" class="action-required-banner" (click)="goToDocumentUpload()">
     <span class="material-symbols-outlined ar-icon">warning</span>

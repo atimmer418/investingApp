@@ -36,6 +36,42 @@
   }
 }
 
+// --- Reactivation banner ---
+.reactivation-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--ion-color-danger-tint, #ffd0d0);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 16px 0;
+
+  .material-symbols-outlined {
+    font-size: 28px;
+    color: var(--ion-color-danger, #eb445a);
+    flex-shrink: 0;
+  }
+
+  .reactivation-text {
+    flex: 1;
+    strong { font-size: 15px; display: block; }
+    p { font-size: 13px; margin: 2px 0 0; }
+  }
+}
+
+.reactivation-btn {
+  background: var(--ion-color-danger, #eb445a);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 // Custom properties
 :host {
     --page-background: #F2F2F7; // iOS gray background

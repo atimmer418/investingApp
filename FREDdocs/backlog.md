@@ -84,7 +84,7 @@ go fix and clean up tab 2 and its content so that it matches the 4 strategies we
 8. Builder must study the onboarding component series (surveyinitial, investment-schedule, kyc-verification, investmentconfirmation) before writing new UI — new components must feel native to that visual system.
 9. `npx tsc --noEmit` exits 0. Layout verified on 430×932.
 
-## FRED-111 — Equity milestone locks with blur and unlock animation
+## FRED-111 — ✓ Equity milestone locks with blur and unlock animation
 add $100k Total Equity lock for monte carlo, add $250k lock for retirement strategy education (frame it as a milestone and not to overwhelm the users) and also add a locked RETIRE button somewhere; we want the lock button to have the content locked (not the title such as monte carlo or retirement strategies...) and we want a big lock to display over the content with a big amount of blur on the content that is behind the lock. we want to make it so that when the user's equity is $100k/$250k, a button to unlock appears and it has a satisfying unlock animation and then the whole blurred background and the lock fades to reveal the page details
 
 ### Acceptance Criteria

@@ -743,6 +743,14 @@ export class InvestmentConfirmationComponent implements OnInit, AfterViewInit, O
     if (this.isAuthorizing) return;
     this.selectedTier = tierId;
     try { localStorage.setItem('fred.selectedTier', tierId); } catch { /* noop */ }
+
+    // TODO: trigger Apple IAP purchase sheet for matching product ID
+    // Recommended plugin: @revenuecat/purchases-capacitor
+    // On IAP purchase success → proceed to updateUserProfile + authorizeRecurringInvestment
+    // On IAP cancel/fail → return early (abort, do nothing)
+    // When IAP is wired, this block should call Purchases.purchasePackage(packageForTier(tierId))
+    // and only continue to updateUserProfile on successful receipt validation.
+
     this.authService.updateUserProfile({ selectedTier: tierId, billingPeriod: this.billingPeriod })
       .pipe(catchError(err => {
         console.error('[InvestmentConfirmation] Failed to persist tier selection:', err);
