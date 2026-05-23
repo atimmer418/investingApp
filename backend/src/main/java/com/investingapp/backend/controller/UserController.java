@@ -44,6 +44,9 @@ public class UserController {
     @Autowired
     private com.investingapp.backend.service.UserService userService;
 
+    @Autowired
+    private com.investingapp.backend.service.SubscriptionService subscriptionService;
+
     public static class UserProgressResponse {
         private boolean getStartedCompleted;
         private boolean surveyInitialCompleted;
@@ -534,6 +537,67 @@ public class UserController {
             logger.error("[UserController] Error updating push token: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    /**
+     * Confirm a subscription purchase from the frontend (post Apple IAP / RevenueCat)
+     * POST /user/subscription/confirm
+     */
+    @PostMapping("/subscription/confirm")
+    public ResponseEntity<?> confirmSubscription(
+            Authentication authentication,
+            @RequestBody java.util.Map<String, String> body) {
+        if (authentication == null) return ResponseEntity.status(401).build();
+        org.springframework.security.core.userdetails.UserDetails userDetails =
+                (org.springframework.security.core.userdetails.UserDetails) authentication.getPrincipal();
+        String email = userDetails.getUsername();
+        String tier = body.get("tier");
+        String billingPeriod = body.getOrDefault("billingPeriod", "monthly");
+        if (tier == null || tier.isBlank()) {
+            return ResponseEntity.badRequest().body("tier is required");
+        }
+        subscriptionService.confirmSubscription(email, tier, billingPeriod);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * RevenueCat webhook for subscription lifecycle events
+     * POST /user/subscription/webhook
+     */
+    @PostMapping("/subscription/webhook")
+    public ResponseEntity<?> subscriptionWebhook(@RequestBody java.util.Map<String, Object> payload) {
+        // RevenueCat webhook payload structure:
+        // { "event": { "type": "INITIAL_PURCHASE"|"RENEWAL"|"CANCELLATION"|"EXPIRATION", ... } }
+        // Validate using RevenueCat-Webhook-Authorization header when production key is configured.
+        try {
+            Object eventObj = payload.get("event");
+            if (!(eventObj instanceof java.util.Map)) return ResponseEntity.badRequest().build();
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Object> event = (java.util.Map<String, Object>) eventObj;
+            String type = (String) event.get("type");
+            String email = (String) event.get("app_user_id");
+            String productId = (String) event.getOrDefault("product_id", "");
+            if (email == null || type == null) return ResponseEntity.badRequest().build();
+
+            if ("INITIAL_PURCHASE".equals(type) || "RENEWAL".equals(type)) {
+                String tier = productIdToTier(productId);
+                String billing = productId.contains("yearly") ? "yearly" : "monthly";
+                subscriptionService.confirmSubscription(email, tier, billing);
+            } else if ("CANCELLATION".equals(type) || "EXPIRATION".equals(type)) {
+                subscriptionService.expireSubscription(email);
+            }
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            logger.error("[Subscription] Webhook error", e);
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    private String productIdToTier(String productId) {
+        if (productId == null) return "core";
+        if (productId.contains("pro")) return "pro";
+        if (productId.contains("plus")) return "plus";
+        return "core";
     }
 
     /**

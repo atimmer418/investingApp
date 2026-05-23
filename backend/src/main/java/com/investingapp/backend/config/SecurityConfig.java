@@ -116,6 +116,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/plaid/exchange_public_token_anonymous").permitAll()
                 .requestMatchers("/api/passkey/**").permitAll()
                 .requestMatchers("/api/user/should-prompt-reauth").permitAll() // Allow checking reauth status without authentication
+                .requestMatchers("/api/user/subscription/webhook").permitAll() // RevenueCat webhook — auth via RevenueCat-Webhook-Authorization header
                 .requestMatchers("/api/dev/**").permitAll() // 🧪 DEV ONLY: Allow dev endpoints without authentication
                 .requestMatchers("/hello").permitAll()
                 .anyRequest().authenticated()

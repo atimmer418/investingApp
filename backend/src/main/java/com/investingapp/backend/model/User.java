@@ -214,6 +214,12 @@ public class User {
     @Column(name = "billing_period", nullable = true, length = 10)
     private String billingPeriod; // "monthly", "yearly"
 
+    @Column(name = "subscription_start_date", nullable = true)
+    private java.time.LocalDate subscriptionStartDate;
+
+    public java.time.LocalDate getSubscriptionStartDate() { return subscriptionStartDate; }
+    public void setSubscriptionStartDate(java.time.LocalDate subscriptionStartDate) { this.subscriptionStartDate = subscriptionStartDate; }
+
     @Column(name = "device_push_token", length = 512, nullable = true)
     private String devicePushToken;
 

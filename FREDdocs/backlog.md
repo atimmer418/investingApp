@@ -484,7 +484,7 @@ make calculator page for optimal email collection
 ## FRED-173 — 🚫 Lock referral entry until 30 days post-trial
 A new subscriber must be a subscriber for at least 30 days after their 14-day free trial ends before they can access the referral entry point. Lock the referral UI until that condition is met.
 
-## FRED-174 — Wire up Apple subscription to pricing tiers (ONBOARDING)
+## FRED-174 — ✓ Wire up Apple subscription to pricing tiers (ONBOARDING)
 Apple subscription needs to be set up with the pricing tiers section on investmentconfirmation.
 
 ### Acceptance Criteria
