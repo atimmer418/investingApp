@@ -303,7 +303,7 @@ add pig for certain equity milestones on MFU and also unlocking of monte carlo a
 5. Pig image: 56×56px, object-fit: contain.
 6. `npx tsc --noEmit` exits 0; `./gradlew build -x test` exits 0.
 
-## FRED-130 — Update Fred's story to lazy pig perspective
+## FRED-130 — ✓ Update Fred's story to lazy pig perspective
 update fred's story about so that it matches the perspective of a lazy pig and update the paycheck prison idea to work with fred the pig
 
 ### Acceptance Criteria

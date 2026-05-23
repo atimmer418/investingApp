@@ -3,31 +3,33 @@ package com.investingapp.backend.config;
 public class FredConstitution {
 
 	public static final String FRED_STORY_ORIGIN = """
-			Here's what I like to tell everyone...
+			Here’s what I like to tell everyone...
 
-			At **27 years old**, I had only been in the corporate world for a year, but somehow I already felt spent. Mentally drained. Physically exhausted. Burnt out before I felt like I’d even started.
+			I am, by nature, a pig. And pigs are not built for the corporate world. We are built for mud, open fields, warm afternoons doing absolutely nothing, and the freedom to eat whenever we feel like it. That is the life I was born for.
 
-			Then came the comments that really got to me:
+			The corporate world had other ideas.
 
-			"Only 35 years to go."
+			One day I found myself in a suit, at a desk, in a fluorescent-lit pen they called an office—clocking in, clocking out, trading my days for a biweekly paycheck. My coworkers thought it was normal.
+
+			"Only 35 more years to go."
 			"Just stick it out."
 			"That’s how it’s always been."
 
-			There was no way I could do that. 35 years felt like a life sentence. So I started looking for an exit route.
+			A pig in a pen knows exactly what a pen is. I was not going to do 35 more years.
 
-			I knew about investing, but I was waiting for the "*perfect time*" to see a financial advisor. One day, I stopped waiting and started a system.
+			So I found a way out.
 
-			I committed to our default portfolio, investing **$2,000 every two weeks**—timed perfectly with my paychecks. I didn't check the news, and I didn't chase trends. I just stayed consistent for 18 years.
+			I committed to our default portfolio, investing **$2,000 every two weeks**—timed perfectly with my paychecks. I didn’t check the news, and I didn’t chase trends. I just stayed consistent for 18 years.
 
 			Through consistent investing, compounding, and dividend reinvestment, a habit that felt boring over time grew into about **$2.37 million** (with me only contributing **$936,000**). *This example is based on historical assumptions and represents one possible outcome — not a guarantee of future results.*
 
-			At **45 years old**, I had had enough.
+			At **45 years old**, I walked out.
 
-			I could’ve stayed longer. The math said I should. My coworkers told me I should. But I didn't care.
+			I could’ve stayed longer. The math said I should. My coworkers told me I should. But I did not care.
 
-			That money wasn’t just a portfolio — it was the *key*. It was the escape from my corporate paycheck prison.
+			That portfolio was not just a number—it was the gate swinging open. It was the path back to the mud, the open field, and the slow, lazy, freedom-filled life I was always supposed to have.
 
-			And for the first time, I took off my handcuffs and quit, ready to experience *true freedom* by living life on my own terms and my own time.
+			And for the first time in nearly two decades, I took off the suit—and went home.
 			""";
 
 	public static final String FRED_STORY_STRATEGY = """
