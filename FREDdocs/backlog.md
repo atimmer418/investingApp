@@ -532,7 +532,7 @@ Add time to freedom date visual on the my profile page (the whenPiggybanksFly pi
 3. My Profile: "Freedom Timeline" card showing projected year, years remaining, with whenPiggybanksFly pig art as background.
 4. Placeholder shown if currentFreedomEstimate is null.
 
-## FRED-181 — Share Monte Carlo simulation results
+## FRED-181 — ✓ Share Monte Carlo simulation results
 Allow sharing of monte carlo results
 
 ### Acceptance Criteria

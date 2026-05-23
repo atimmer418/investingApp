@@ -29,12 +29,12 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 - FRED-176 — Connect email list opt-in checkbox to emailer (ONBOARDING)
 - FRED-178 — Research: Face ID-only app lock without passkey sheet
 - FRED-180 — Add time-to-freedom visual on profile page
-- FRED-181 — Share Monte Carlo simulation results
 - FRED-183 — Change AI chat to use token streaming via SSE
 
 ## Done
 
 <!-- entries moved here when --done=<ID> is run -->
+- FRED-181 — Share Monte Carlo simulation results
 - FRED-99 — Implement all features from tiered pricing
 - FRED-131 — Design five Fred faces for equity level ranges
 - FRED-133 — Design piggy bank Fred loading screen
