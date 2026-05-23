@@ -1,192 +1,285 @@
-// Header Styling
-ion-header {
-  ion-toolbar {
-    --background: linear-gradient(0deg, var(--ion-color-primary) 0%, var(--ion-color-primary-tint) 100%);
-    --color: white;
+:host {
+  --ion-background-color: #f8fafc;
+  --ion-toolbar-background: #f8fafc;
+  --ion-toolbar-color: #0f172a;
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
+}
 
-    ion-title {
-      font-weight: 600;
-    }
+ion-content { --background: #f8fafc; }
 
-    ion-back-button {
-      --color: white;
-    }
-    --border-width: 0;
+ion-toolbar {
+  --background: #f8fafc;
+  --border-width: 0;
+  --min-height: 52px;
+}
+
+ion-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #0f172a;
+}
+
+ion-back-button { --color: #0f172a; }
+
+.content-inner {
+  padding: 12px 18px 40px;
+  font-family: 'Manrope', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+// Loading
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 0;
+
+  .loading-spinner {
+    width: 18px;
+    height: 18px;
+    color: #2563EB;
+  }
+
+  .loading-text {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    color: #6b7280;
   }
 }
 
-.info-card {
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-
-  h3 {
-    margin-top: 0;
-    font-size: 16px;
-    font-weight: 600;
-  }
-
-  p {
-    margin-bottom: 0;
-    font-size: 14px;
-    color: var(--ion-color-medium-shade);
-  }
-}
-
+// Full empty state
 .empty-state {
   text-align: center;
-  padding: 40px 20px;
-  color: var(--ion-color-medium);
+  padding: 48px 20px;
 
-  ion-icon {
+  .empty-icon {
     font-size: 48px;
-    margin-bottom: 16px;
+    color: #d1d5db;
+    font-variation-settings: 'FILL' 0;
+    display: block;
+    margin-bottom: 12px;
   }
 
-  h3 {
-    margin: 0 0 8px;
-    font-size: 18px;
+  .empty-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 6px 0;
   }
 
-  p {
-    margin: 0;
-  }
-}
-
-// ── Section containers ──────────────────────────
-
-.section {
-  margin-bottom: 28px;
-}
-
-// ── Tax form year buttons ───────────────────────
-
-.card-list {
-  background: var(--ion-item-background, #fff);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  max-width: 360px;
-  margin: 0 auto;
-}
-
-.tax-forms-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.year-button {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 14px 16px;
-  background: var(--ion-item-background, #fff);
-  border: none;
-  border-bottom: 1px solid var(--ion-color-light-shade, #e0e0e0);
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s;
-
-  &:active {
-    background: var(--ion-color-light);
-  }
-
-  .year-label {
-    flex: 1;
-    font-size: 16px;
-    font-weight: 500;
-  }
-
-  .year-sublabel {
+  .empty-desc {
+    font-family: 'Manrope', sans-serif;
     font-size: 13px;
-    color: var(--ion-color-medium);
-    margin-right: 8px;
-  }
-
-  .chevron {
-    font-size: 18px;
-    color: var(--ion-color-medium);
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.45;
   }
 }
 
-// ── Account statements accordion ────────────────
-
-.statements-list {
-  display: flex;
-  flex-direction: column;
+// Section cards
+.section-card {
+  background: white;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
+  padding: 16px;
+  overflow: hidden;
 }
 
-.statement-year-group {
-  border-bottom: 1px solid var(--ion-color-light-shade, #e0e0e0);
-
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.year-accordion-header {
+.card-header-row {
   display: flex;
   align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+
+  .card-icon {
+    font-size: 18px;
+    color: #2563EB;
+    font-variation-settings: 'FILL' 1;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+    margin: 0;
+    flex: 1;
+  }
+}
+
+.card-subtitle {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0 0 14px 0;
+  padding-left: 28px;
+  line-height: 1.45;
+}
+
+// Document list container
+.doc-list {
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #f1f5f9;
+  margin: 0 -4px;
+}
+
+// Tax form row
+.doc-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  background: white;
+  border: none;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+
+  &:last-child { border-bottom: none; }
+  &:active { background: #f8fafc; }
+
+  .doc-icon {
+    font-size: 22px;
+    color: #2563EB;
+    font-variation-settings: 'FILL' 0;
+    flex-shrink: 0;
+  }
+
+  .doc-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    .doc-label {
+      font-family: 'Manrope', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .doc-sub {
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      color: #6b7280;
+    }
+  }
+
+  .doc-chevron {
+    font-size: 18px;
+    color: #9ca3af;
+  }
+}
+
+// Year accordion group
+.year-group {
+  border-bottom: 1px solid #f1f5f9;
+
+  &:last-child { border-bottom: none; }
+}
+
+.year-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  padding: 14px 16px;
-  background: var(--ion-item-background, #fff);
+  padding: 14px 12px;
+  background: white;
   border: none;
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s;
+  transition: background 0.12s;
 
-  &:active {
-    background: var(--ion-color-light);
+  &:active { background: #f8fafc; }
+
+  .year-icon {
+    font-size: 18px;
+    color: #6b7280;
+    font-variation-settings: 'FILL' 0;
+    flex-shrink: 0;
   }
 
   .year-label {
     flex: 1;
-    font-size: 16px;
-    font-weight: 500;
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
   }
 
   .chevron {
-    font-size: 18px;
-    color: var(--ion-color-medium);
-    transition: transform 0.2s;
+    font-size: 20px;
+    color: #9ca3af;
   }
 }
 
-// Animated expand / collapse
+// Expand / collapse animation
 .months-container {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease;
 
-  &.expanded {
-    max-height: 800px; // Large enough to show all months
-  }
+  &.expanded { max-height: 800px; }
 }
 
-.month-button {
+// Month row
+.month-row {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 13px 16px 13px 32px; // indented
-  background: var(--ion-item-background, #fff);
+  padding: 12px 12px 12px 28px;
+  background: #f8fafc;
   border: none;
-  border-top: 1px solid var(--ion-color-light-shade, #e0e0e0);
+  border-top: 1px solid #f1f5f9;
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s;
+  transition: background 0.12s;
 
-  &:active {
-    background: var(--ion-color-light);
-  }
+  &:active { background: #eff6ff; }
 
-  span {
+  .month-label {
     flex: 1;
-    font-size: 15px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
   }
 
-  .chevron {
+  .month-chevron {
     font-size: 16px;
-    color: var(--ion-color-medium);
+    color: #9ca3af;
+  }
+}
+
+// Inline empty state
+.empty-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 4px;
+
+  .empty-inline-icon {
+    font-size: 20px;
+    color: #d1d5db;
+    flex-shrink: 0;
+  }
+
+  .empty-inline-text {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
   }
 }

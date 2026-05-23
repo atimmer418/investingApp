@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/tab3" text="" icon="chevron-back-outline"></ion-back-button>
@@ -7,77 +7,78 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <div class="info-card">
-    <h3>Tax Documents</h3>
-    <p>
-      Tax documents (Form 1099) for the previous year are typically available by mid-February.
-      These documents report your capital gains, dividends, and other investment income.
-    </p>
-  </div>
+<ion-content>
+  <div class="content-inner">
 
-  <div *ngIf="loading" class="ion-text-center ion-padding">
-    <ion-spinner></ion-spinner>
-    <p>Loading documents...</p>
-  </div>
-
-  <!-- Empty state -->
-  <div *ngIf="!loading && taxFormsByYear.length === 0 && statementYears.length === 0" class="empty-state">
-    <ion-icon name="document-text-outline"></ion-icon>
-    <h3>No Documents Yet</h3>
-    <p>Tax forms and account statements will appear here when available.</p>
-  </div>
-
-  <!-- ======== TAX DOCUMENTS SECTION ======== -->
-  <div *ngIf="!loading" class="section">
-    <div *ngIf="taxFormsByYear.length > 0" class="tax-forms-list card-list">
-      <button *ngFor="let tf of taxFormsByYear" class="year-button" (click)="openDocument(tf.doc)">
-        <span class="year-label">{{ tf.year }}</span>
-        <span class="year-sublabel">Form 1099</span>
-        <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
-      </button>
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-state">
+      <ion-spinner name="crescent" class="loading-spinner"></ion-spinner>
+      <span class="loading-text">Loading documents...</span>
     </div>
 
-    <div *ngIf="taxFormsByYear.length === 0" class="empty-state">
-      <ion-icon name="document-text-outline"></ion-icon>
-      <h3>No Tax Documents Yet</h3>
-      <p>Check back later!</p>
-    </div>
-  </div>
-
-  <!-- ======== ACCOUNT STATEMENTS SECTION ======== -->
-  <div *ngIf="!loading" class="section">
-    <div class="info-card">
-      <h3>Account Statements</h3>
-      <p>
-        Monthly account statements are available for each month after the month closes.
-        These statements provide a detailed record of your account activity, transactions, and holdings.
-      </p>
+    <!-- Empty (no documents at all) -->
+    <div *ngIf="!loading && taxFormsByYear.length === 0 && statementYears.length === 0" class="empty-state">
+      <span class="material-symbols-outlined empty-icon">description</span>
+      <h3 class="empty-title">No Documents Yet</h3>
+      <p class="empty-desc">Tax forms and account statements will appear here when available.</p>
     </div>
 
-    <div *ngIf="statementYears.length > 0" class="statements-list card-list">
-      <div *ngFor="let sy of statementYears" class="statement-year-group">
-        <!-- Year accordion header -->
-        <button class="year-accordion-header" (click)="toggleYear(sy)">
-          <span class="year-label">{{ sy.year }}</span>
-          <ion-icon [name]="sy.expanded ? 'chevron-down-outline' : 'chevron-forward-outline'" class="chevron"></ion-icon>
+    <!-- Tax Documents -->
+    <div *ngIf="!loading" class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">receipt_long</span>
+        <h3 class="card-title">Tax Documents</h3>
+      </div>
+      <p class="card-subtitle">Form 1099 for the previous year is typically available by mid-February. Reports capital gains, dividends, and investment income.</p>
+
+      <div *ngIf="taxFormsByYear.length > 0" class="doc-list">
+        <button *ngFor="let tf of taxFormsByYear" class="doc-row" (click)="openDocument(tf.doc)">
+          <span class="material-symbols-outlined doc-icon">article</span>
+          <div class="doc-text">
+            <span class="doc-label">{{ tf.year }}</span>
+            <span class="doc-sub">Form 1099</span>
+          </div>
+          <span class="material-symbols-outlined doc-chevron">chevron_right</span>
         </button>
+      </div>
 
-        <!-- Expanded months list -->
-        <div class="months-container" [class.expanded]="sy.expanded">
-          <button *ngFor="let m of sy.months" class="month-button" (click)="openDocument(m.doc)">
-            <span>{{ m.label }}</span>
-            <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
-          </button>
-        </div>
+      <div *ngIf="taxFormsByYear.length === 0" class="empty-inline">
+        <span class="material-symbols-outlined empty-inline-icon">hourglass_empty</span>
+        <p class="empty-inline-text">No tax documents yet — check back later.</p>
       </div>
     </div>
 
-    <div *ngIf="statementYears.length === 0" class="empty-state">
-      <ion-icon name="document-text-outline"></ion-icon>
-      <h3>No Account Statements Yet</h3>
-      <p>Check back later!</p>
-    </div>
-  </div>
+    <!-- Account Statements -->
+    <div *ngIf="!loading" class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">folder_open</span>
+        <h3 class="card-title">Account Statements</h3>
+      </div>
+      <p class="card-subtitle">Monthly statements are available after each month closes. Includes account activity, transactions, and holdings.</p>
 
+      <div *ngIf="statementYears.length > 0" class="doc-list">
+        <div *ngFor="let sy of statementYears" class="year-group">
+          <button class="year-header" (click)="toggleYear(sy)">
+            <span class="material-symbols-outlined year-icon">calendar_today</span>
+            <span class="year-label">{{ sy.year }}</span>
+            <span class="material-symbols-outlined chevron" *ngIf="sy.expanded">expand_more</span>
+            <span class="material-symbols-outlined chevron" *ngIf="!sy.expanded">chevron_right</span>
+          </button>
+
+          <div class="months-container" [class.expanded]="sy.expanded">
+            <button *ngFor="let m of sy.months" class="month-row" (click)="openDocument(m.doc)">
+              <span class="month-label">{{ m.label }}</span>
+              <span class="material-symbols-outlined month-chevron">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="statementYears.length === 0" class="empty-inline">
+        <span class="material-symbols-outlined empty-inline-icon">hourglass_empty</span>
+        <p class="empty-inline-text">No account statements yet — check back later.</p>
+      </div>
+    </div>
+
+  </div>
 </ion-content>
