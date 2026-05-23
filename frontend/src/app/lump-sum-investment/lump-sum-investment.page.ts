@@ -47,6 +47,11 @@ import { PasskeyService } from '../services/passkey.service';
 import { PinService } from '../services/pin.service';
 import { ToastService } from '../services/toast.service';
 
+interface AcatsTransferResponse {
+  transferId: string;
+  message: string;
+}
+
 interface AlpacaAsset {
   id: string;
   class: string;
@@ -356,9 +361,9 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
         };
         
         console.log('Initiating ACATS transfer:', transferData);
-        await this.investmentService.initiateAcatsTransfer(transferData).toPromise();
-        
-        this.toastService.showToast('Asset transfer request submitted successfully!', 'success', 3000);
+        const transferResponse = await this.investmentService.initiateAcatsTransfer(transferData).toPromise() as AcatsTransferResponse;
+
+        this.toastService.showToast(`Transfer submitted — ref: ${transferResponse.transferId}`, 'success', 3000);
         
         // Reset form after successful transfer initiation
         setTimeout(() => {
@@ -368,7 +373,7 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
 
     } catch (error) {
         console.error('Error submitting ACATS transfer:', error);
-        this.toastService.showToast('Failed to submit transfer request. Please try again.', 'danger');
+        this.toastService.showToast('Transfer request failed. Please try again.', 'danger');
     } finally {
         this.isLoading = false;
     }

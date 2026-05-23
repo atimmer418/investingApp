@@ -276,7 +276,7 @@ recurring investments ALMOST DONE needs monthly streak badge and are you sure yo
 8. If streak === 0, skip confirmation and pause immediately.
 9. `npx tsc --noEmit` exits 0; `./gradlew build -x test` exits 0.
 
-## FRED-126 — One-time transactions needs added ACATS API functionality
+## FRED-126 — ✓ One-time transactions needs added ACATS API functionality
 one-time transactions ALMOST DONE it just needs ACATS API functionality once it has been implemented
 
 ### Acceptance Criteria
