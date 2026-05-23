@@ -279,6 +279,7 @@ public class InvestmentScheduleService {
 
         InvestmentSchedule schedule = scheduleOpt.get();
         schedule.setIsPaused(true);
+        schedule.setMonthlyStreak(0);
 
         InvestmentSchedule updatedSchedule = investmentScheduleRepository.save(schedule);
         logger.info("Successfully paused investment schedule ID: {}", scheduleId);

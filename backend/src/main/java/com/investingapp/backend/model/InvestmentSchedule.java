@@ -54,6 +54,12 @@ public class InvestmentSchedule {
     @Column(name = "ach_request_id", length = 255)
     private String achRequestId; // This will be set when ACH linking is confirmed
 
+    @Column(name = "monthly_streak", nullable = false)
+    private Integer monthlyStreak = 0;
+
+    @Column(name = "last_streak_increment_date")
+    private LocalDate lastStreakIncrementDate;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

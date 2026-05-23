@@ -262,7 +262,7 @@ account security ALMOST DONE needs ability to update kyc form
 change bank account ALMOST DONE needs entire UI lift
 [merged from FRED-108: make change bank account setting page look clean]
 
-## FRED-125 — Recurring investments streak badge and pause warning
+## FRED-125 — ✓ Recurring investments streak badge and pause warning
 recurring investments ALMOST DONE needs monthly streak badge and are you sure you want to pause your investments, this will break your investing streak and reset it to 0 and that it may be better to do less than none
 
 ### Acceptance Criteria

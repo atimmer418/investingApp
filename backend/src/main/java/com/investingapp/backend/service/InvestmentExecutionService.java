@@ -327,6 +327,20 @@ public class InvestmentExecutionService {
         schedule.setNextInvestmentDate(newNextDate);
         // Note: We don't update startDate - it remains as the original start date
 
+        // Increment monthly streak if we have not already done so this calendar month
+        LocalDate today = LocalDate.now(MARKET_TIMEZONE);
+        LocalDate lastIncrement = schedule.getLastStreakIncrementDate();
+        boolean alreadyIncrementedThisMonth = lastIncrement != null
+                && lastIncrement.getYear() == today.getYear()
+                && lastIncrement.getMonth() == today.getMonth();
+
+        if (!alreadyIncrementedThisMonth) {
+            int current = schedule.getMonthlyStreak() != null ? schedule.getMonthlyStreak() : 0;
+            schedule.setMonthlyStreak(current + 1);
+            schedule.setLastStreakIncrementDate(today);
+            logger.info("Monthly streak incremented to {} for schedule {}", current + 1, schedule.getId());
+        }
+
         // Save the updated schedule
         investmentScheduleRepository.save(schedule);
 

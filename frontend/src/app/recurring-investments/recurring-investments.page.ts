@@ -19,7 +19,8 @@ import {
   IonBackButton,
   IonDatetime,
   IonDatetimeButton,
-  IonModal
+  IonModal,
+  AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -125,7 +126,8 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     private passkeyService: PasskeyService,
     private pinService: PinService,
     private toastService: ToastService,
-    private accountStatusService: AccountStatusService
+    private accountStatusService: AccountStatusService,
+    private alertController: AlertController
   ) {
     addIcons({ cashOutline, timeOutline, calendarOutline, addOutline, checkmarkCircleOutline, pauseOutline, playOutline, alertCircleOutline, settingsOutline, informationCircleOutline });
   }
@@ -502,7 +504,38 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
   async toggleInvestmentStatus() {
     if (!this.currentInvestment) return;
 
-    const newStatus = !this.currentInvestment.isPaused;
+    const isPausing = !this.currentInvestment.isPaused;
+
+    // If pausing and streak > 0, show confirmation alert first
+    if (isPausing && this.currentInvestment.monthlyStreak > 0) {
+      const streak = this.currentInvestment.monthlyStreak;
+      const alert = await this.alertController.create({
+        header: 'Pause Investments?',
+        message: `This will reset your ${streak}-month investing streak to 0. Investing less is better than investing nothing — consider reducing your amount instead.`,
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel'
+          },
+          {
+            text: 'Pause Anyway',
+            role: 'destructive',
+            handler: () => {
+              this.executePauseOrResume(isPausing);
+            }
+          }
+        ]
+      });
+      await alert.present();
+      return;
+    }
+
+    // No streak or resuming — proceed immediately
+    this.executePauseOrResume(isPausing);
+  }
+
+  private async executePauseOrResume(isPausing: boolean) {
+    if (!this.currentInvestment) return;
 
     this.isLoading = true;
 
@@ -520,7 +553,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
       }
 
       // Gate: only check account status when resuming (unpausing)
-      if (!newStatus && !this.accountStatusService.isAccountActive()) {
+      if (!isPausing && !this.accountStatusService.isAccountActive()) {
         this.toastService.showToast(
           'Your account is not yet active. Investments will resume once your account is fully verified.',
           'warning'
@@ -529,7 +562,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
         return;
       }
 
-      const operation = newStatus ?
+      const operation = isPausing ?
         this.investmentService.pauseSchedule(this.currentInvestment.id) :
         this.investmentService.resumeSchedule(this.currentInvestment.id);
 
@@ -537,7 +570,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
         .subscribe({
           next: (updatedSchedule: InvestmentSchedule) => {
             this.currentInvestment = updatedSchedule;
-            this.toastService.showToast(newStatus ?
+            this.toastService.showToast(isPausing ?
               'Investment schedule paused successfully!' :
               'Investment schedule resumed successfully!', 'success');
             this.isLoading = false;

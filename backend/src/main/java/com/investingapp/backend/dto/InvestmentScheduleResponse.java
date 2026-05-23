@@ -27,6 +27,7 @@ public class InvestmentScheduleResponse {
     private String dayOfWeek;
     private Integer dayOfMonth;
     private String scheduleDescription; // User-friendly schedule description
+    private Integer monthlyStreak;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -44,6 +45,7 @@ public class InvestmentScheduleResponse {
         this.achRequestId = schedule.getAchRequestId();
         this.isPaused = schedule.getIsPaused();
         this.scheduleDescription = schedule.getScheduleDescription(); // Add schedule description
+        this.monthlyStreak = schedule.getMonthlyStreak() != null ? schedule.getMonthlyStreak() : 0;
         this.createdAt = schedule.getCreatedAt();
         this.updatedAt = schedule.getUpdatedAt();
     }

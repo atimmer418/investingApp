@@ -54,6 +54,14 @@
           </div>
         </div>
 
+        <!-- Monthly Streak Badge -->
+        <div class="streak-badge-row" *ngIf="currentInvestment.monthlyStreak > 0">
+          <span class="streak-badge">
+            <span class="material-symbols-outlined streak-icon">local_fire_department</span>
+            {{ currentInvestment.monthlyStreak }}-month streak
+          </span>
+        </div>
+
         <!-- Pause/Resume Button -->
         <div class="card-actions">
           <ion-button expand="block" fill="solid" [color]="!currentInvestment.isPaused ? 'warning' : 'success'"
