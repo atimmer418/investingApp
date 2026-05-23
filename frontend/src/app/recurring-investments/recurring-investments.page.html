@@ -1,5 +1,4 @@
-<!-- Recurring Investments Management Page -->
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/tab3" text="" icon="chevron-back-outline"></ion-back-button>
@@ -8,121 +7,76 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [scrollY]="false" class="recurring-investments-content">
+<ion-content class="recurring-content">
+  <div class="content-inner">
 
-  <div class="mobile-container">
+    <div *ngIf="currentInvestment">
 
-    <!-- Current Investment Schedule Overview -->
-    <div class="current-schedule-section" *ngIf="currentInvestment">
-
-      <!-- Status Banner -->
-      <ion-card class="status-banner" [class.active]="!currentInvestment.isPaused"
-        [class.paused]="currentInvestment.isPaused">
-        <ion-card-content>
-          <div class="status-content">
-            <div class="status-info">
-              <h2>{{ !currentInvestment.isPaused ? 'Active' : 'Paused' }}</h2>
-              <p>{{ !currentInvestment.isPaused ? 'Your investments are running' : 'Your investments are currently
-                paused' }}</p>
-            </div>
-            <ion-icon [name]="!currentInvestment.isPaused ? 'checkmark-circle-outline' : 'pause-circle-outline'">
-            </ion-icon>
+      <!-- Status banner -->
+      <div class="status-banner" [class.status-active]="!currentInvestment.isPaused" [class.status-paused]="currentInvestment.isPaused">
+        <div class="status-left">
+          <span class="material-symbols-outlined status-icon" *ngIf="!currentInvestment.isPaused">check_circle</span>
+          <span class="material-symbols-outlined status-icon" *ngIf="currentInvestment.isPaused">pause_circle</span>
+          <div class="status-text">
+            <span class="status-title">{{ !currentInvestment.isPaused ? 'Active' : 'Paused' }}</span>
+            <span class="status-sub">{{ !currentInvestment.isPaused ? 'Your investments are running' : 'Your investments are currently paused' }}</span>
           </div>
-        </ion-card-content>
-      </ion-card>
-
-      <!-- Investment Details -->
-      <div class="section-card mobile-card">
-        <div class="section-header">
-          <h3 class="section-title">Investment Schedule</h3>
-        </div>
-
-        <div class="detail-row">
-          <div class="detail-col">
-            <h4>Amount</h4>
-            <p>{{ formatCurrency(currentInvestment.investmentAmount) }}</p>
-          </div>
-
-          <div class="detail-col center">
-            <h4>Frequency</h4>
-            <p>{{ getFrequencyDescription() }}</p>
-          </div>
-
-          <div class="detail-col end">
-            <h4>Next Date</h4>
-            <p>{{ formatDate(currentInvestment.nextInvestmentDate, false) }}</p>
-          </div>
-        </div>
-
-        <!-- Pause/Resume Button -->
-        <div class="card-actions">
-          <ion-button expand="block" fill="solid" [color]="!currentInvestment.isPaused ? 'warning' : 'success'"
-            class="pause-button" (click)="toggleInvestmentStatus()" [disabled]="isLoading">
-            <ion-icon [name]="!currentInvestment.isPaused ? 'pause-outline' : 'play-outline'" slot="start"></ion-icon>
-            {{ !currentInvestment.isPaused ? 'Pause Investments' : 'Resume Investments' }}
-          </ion-button>
-        </div> <!-- Pause/Resume Button -->
-        <!-- <div class="card-actions">
-        </div> -->
-
-        <!-- Projections -->
-        <!-- <div class="projections-section" style="margin-bottom: 0px; padding-top: 20px;">
-          <h4>Investment Projections</h4>
-          <div class="projection-cards">
-            <div class="projection-card">
-              <span class="projection-amount">{{ formatCurrency(getMonthlyProjection()) }}</span>
-              <span class="projection-label">Monthly</span>
-            </div>
-            <div class="projection-card">
-              <span class="projection-amount">{{ formatCurrency(getAnnualProjection()) }}</span>
-              <span class="projection-label">Annual</span>
-            </div>
-          </div>
-        </div> -->
-      </div>
-    </div>
-
-    <!-- No Investment Schedule Message -->
-    <div class="no-schedule-section" *ngIf="!currentInvestment && !isLoading">
-      <div class="section-card mobile-card">
-        <div class="empty-state">
-          <ion-icon name="calendar-outline"></ion-icon>
-          <h3>No Investment Schedule Set</h3>
-          <p>You haven't set up a recurring investment schedule yet. Set one up to start building wealth automatically.
-          </p>
-          <ion-button expand="block" color="primary" size="large" (click)="goBack()">
-            <ion-icon name="add-outline" slot="start"></ion-icon>
-            Set Up Investment Schedule
-          </ion-button>
         </div>
       </div>
-    </div>
 
-    <!-- Edit Investment Schedule -->
-    <div class="edit-section" *ngIf="currentInvestment">
-      <div class="section-card mobile-card">
-        <div class="section-header">
-          <h3 class="section-title">Modify Investment Schedule</h3>
+      <!-- Schedule details -->
+      <div class="section-card">
+        <div class="card-header-row">
+          <span class="material-symbols-outlined card-icon">calendar_month</span>
+          <h3 class="card-title">Investment Schedule</h3>
         </div>
 
-        <div class="input-row">
-          <!-- Amount Input -->
-          <div class="input-wrapper" style="flex: 1;">
-            <label class="input-label">Investment Amount</label>
-            <div class="currency-input">
-              <span class="currency-symbol">$</span>
+        <div class="schedule-stats">
+          <div class="stat-col">
+            <span class="stat-label">AMOUNT</span>
+            <span class="stat-value">{{ formatCurrency(currentInvestment.investmentAmount) }}</span>
+          </div>
+          <div class="stat-col stat-col--center">
+            <span class="stat-label">FREQUENCY</span>
+            <span class="stat-value">{{ getFrequencyDescription() }}</span>
+          </div>
+          <div class="stat-col stat-col--end">
+            <span class="stat-label">NEXT DATE</span>
+            <span class="stat-value">{{ formatDate(currentInvestment.nextInvestmentDate, false) }}</span>
+          </div>
+        </div>
+
+        <button class="pause-btn" [class.pause-btn--resume]="currentInvestment.isPaused"
+          (click)="toggleInvestmentStatus()" [disabled]="isLoading">
+          <span class="material-symbols-outlined" *ngIf="!currentInvestment.isPaused">pause</span>
+          <span class="material-symbols-outlined" *ngIf="currentInvestment.isPaused">play_arrow</span>
+          {{ !currentInvestment.isPaused ? 'Pause Investments' : 'Resume Investments' }}
+        </button>
+      </div>
+
+      <!-- Edit schedule -->
+      <div class="section-card">
+        <div class="card-header-row">
+          <span class="material-symbols-outlined card-icon">tune</span>
+          <h3 class="card-title">Modify Schedule</h3>
+        </div>
+
+        <div class="edit-row">
+          <div class="edit-field">
+            <div class="field-label">Investment Amount</div>
+            <div class="currency-input-wrap">
+              <span class="currency-sym">$</span>
               <ion-input type="number" [(ngModel)]="editedInvestment.investmentAmount" (ionBlur)="onAmountChange()"
                 placeholder="0" class="amount-input" min="1">
               </ion-input>
             </div>
           </div>
 
-          <!-- Frequency Selection -->
-          <div class="input-wrapper" style="flex: 1;">
-            <label class="input-label">Investment Frequency</label>
-            <div class="select-container">
-              <ion-select [(ngModel)]="editedInvestment.frequency" (ionChange)="onFrequencyChange()" placeholder="Select frequency" interface="popover"
-                class="frequency-select">
+          <div class="edit-field">
+            <div class="field-label">Frequency</div>
+            <div class="select-wrap">
+              <ion-select [(ngModel)]="editedInvestment.frequency" (ionChange)="onFrequencyChange()"
+                placeholder="Select frequency" interface="popover" class="freq-select">
                 <ion-select-option *ngFor="let option of frequencyOptions" [value]="option.value">
                   {{ option.label }}
                 </ion-select-option>
@@ -130,50 +84,60 @@
             </div>
           </div>
         </div>
-        <p class="input-helper" style="color: #8e8e93; text-align: left; font-size: 13.4px; font-style: italic; margin-top: 6px; margin-bottom: 20px;">Amount to invest every {{ getEditedFrequencyText() }}</p>
 
-        <!-- Next Transfer Date -->
-        <div class="input-wrapper">
-          <label class="input-label">Transfer Date</label>
-          <ion-button id="open-date-modal" fill="solid" color="primary" expand="block" [disabled]="editedInvestment.frequency === 'SEMI_MONTHLY'">
-            <ion-icon name="calendar-outline" slot="start"></ion-icon>
-            {{ formatDate((editedInvestment.nextInvestmentDate || (currentInvestment &&
-            currentInvestment.nextInvestmentDate)) || '') }}
-          </ion-button>
-          
+        <p class="helper-hint">Amount to invest every {{ getEditedFrequencyText() }}</p>
+
+        <div class="edit-field edit-field--full">
+          <div class="field-label">Transfer Date</div>
+          <button id="open-date-modal" class="date-btn" [disabled]="editedInvestment.frequency === 'SEMI_MONTHLY'">
+            <span class="material-symbols-outlined">calendar_month</span>
+            {{ formatDate((editedInvestment.nextInvestmentDate || (currentInvestment && currentInvestment.nextInvestmentDate)) || '') }}
+          </button>
+
           <ion-modal #dateModal trigger="open-date-modal" [keepContentsMounted]="true" style="--height: auto; --width: auto; --border-radius: 16px;">
             <ng-template>
-              <ion-datetime 
+              <ion-datetime
                 #datetime
                 presentation="date"
                 [value]="getDateForPicker(editedInvestment.nextInvestmentDate || (currentInvestment && currentInvestment.nextInvestmentDate) || undefined)"
                 (ionChange)="onNextInvestmentDateChange($event)"
-                [min]="todayISO" 
+                [min]="todayISO"
                 color="primary"
                 style="height: auto; max-width: 350px;">
-              <span slot="title">Select Transfer Date</span>
-              <ion-buttons slot="buttons">
-                <ion-button color="primary" (click)="datetime.confirm(); dateModal.dismiss()">Done</ion-button>
-              </ion-buttons>
+                <span slot="title">Select Transfer Date</span>
+                <ion-buttons slot="buttons">
+                  <ion-button color="primary" (click)="datetime.confirm(); dateModal.dismiss()">Done</ion-button>
+                </ion-buttons>
               </ion-datetime>
             </ng-template>
           </ion-modal>
 
-          <p class="input-helper">When the ACH transfer will initiate to fund the investment</p>
-          <p class="input-helper trade-window"
+          <p class="helper-hint">When the ACH transfer will initiate to fund the investment</p>
+          <p class="helper-hint helper-hint--primary"
             *ngIf="editedInvestment.nextInvestmentDate || currentInvestment?.nextInvestmentDate">
-            <ion-icon name="time-outline"></ion-icon>
+            <span class="material-symbols-outlined">schedule</span>
             Estimated investment execution: {{ getEstimatedTradeWindow() }}
           </p>
         </div>
 
-        <!-- Save Changes Button -->
-        <div class="save-actions">
-          <ion-button expand="block" color="primary" size="large" (click)="saveChanges()" [disabled]="isLoading || !hasChanges()">
-            <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-            Save Changes
-          </ion-button>
-        </div>
+        <button class="cta-btn" (click)="saveChanges()" [disabled]="isLoading || !hasChanges()">
+          <span>Save Changes</span>
+          <span class="material-symbols-outlined">check</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!currentInvestment && !isLoading">
+      <div class="section-card empty-card">
+        <span class="material-symbols-outlined empty-icon">calendar_month</span>
+        <h3 class="empty-title">No Schedule Set</h3>
+        <p class="empty-body">You haven't set up a recurring investment schedule yet. Set one up to start building wealth automatically.</p>
+        <button class="cta-btn" (click)="goBack()">
+          <span>Set Up Investment Schedule</span>
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
       </div>
     </div>
 
