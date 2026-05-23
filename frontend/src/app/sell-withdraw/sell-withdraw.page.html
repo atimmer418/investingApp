@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/tab3" text="" icon="chevron-back-outline"></ion-back-button>
@@ -8,240 +8,175 @@
 </ion-header>
 
 <ion-content class="sell-withdraw-content">
-  
-  <!-- Loading state -->
-  <div *ngIf="isLoading" class="loading-container mobile-container">
-    <div class="loading-card mobile-card">
-      <div class="loading-content">
-        <ion-spinner name="crescent"></ion-spinner>
-        <p class="loading-text text-gray">Loading your portfolio...</p>
-      </div>
-    </div>
-  </div>
+  <div class="content-inner">
 
-  <!-- Main content when not loading -->
-  <div *ngIf="!isLoading" class="mobile-container">
-    
-    <!-- Sell Individual Stocks Section -->
-    <div class="section-card mobile-card">
-      <div class="section-header p-b-sm border-bottom" style="margin-bottom: 0px; padding-bottom: 0px;">
-        <div class="display-flex justify-between align-center">
-          <h3 class="section-title font-semibold text-dark text-lg" style="margin-top: 0px;">Sell Holdings</h3>
-          <div class="text-right" *ngIf="balance">
-            <p class="text-xs text-gray m-0">Buying Power</p>
-            <p class="font-medium text-dark m-0">{{formatCurrency(balance.buyingPower)}}</p>
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-state">
+      <ion-spinner name="crescent" class="loading-spinner"></ion-spinner>
+      <span class="loading-text">Loading your portfolio...</span>
+    </div>
+
+    <div *ngIf="!isLoading">
+
+      <!-- Sell Holdings Card -->
+      <div class="section-card">
+        <div class="card-header-row">
+          <span class="material-symbols-outlined card-icon">trending_down</span>
+          <h3 class="card-title">Sell Holdings</h3>
+          <div class="buying-power-chip" *ngIf="balance">
+            <span class="buying-power-label">BUYING POWER</span>
+            <span class="buying-power-value">{{formatCurrency(balance.buyingPower)}}</span>
           </div>
         </div>
-        <p class="section-subtitle text-gray text-sm">Select a stock to sell. Proceeds will be added to your Buying Power immediately.</p>
-      </div>
+        <p class="card-subtitle">Select a stock to sell. Proceeds will be added to your Buying Power immediately.</p>
 
-      <!-- No positions message — show close account guidance -->
-      <div *ngIf="positions.length === 0" class="no-positions p-md">
-        <div class="empty-state text-center">
-          <ion-icon name="pie-chart-outline" class="empty-icon text-gray text-4xl m-b-sm"></ion-icon>
-          <h4 class="empty-title font-medium text-dark">No Holdings Found</h4>
-          <p class="empty-description text-gray text-sm">You don't have any stock positions to sell.</p>
-        </div>
+        <!-- Empty state -->
+        <div *ngIf="positions.length === 0" class="empty-holdings">
+          <span class="material-symbols-outlined empty-icon">pie_chart</span>
+          <h4 class="empty-title">No Holdings Found</h4>
+          <p class="empty-desc">You don't have any stock positions to sell.</p>
 
-        <!-- Close Account Guidance -->
-        <div class="close-account-section m-t-md fade-in">
-          <div class="close-account-info-box">
-            <div class="close-account-info-header display-flex align-center m-b-sm">
-              <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
-              <span class="font-semibold text-dark text-sm">Want to close your account?</span>
+          <!-- Close Account guidance -->
+          <div class="close-account-box">
+            <div class="close-box-header">
+              <span class="material-symbols-outlined close-info-icon">info</span>
+              <span class="close-box-title">Want to close your account?</span>
             </div>
-            <p class="text-xs text-gray m-0 m-b-sm">
-              To permanently close your FRED account, you must first:
-            </p>
-            <div class="close-account-checklist m-b-md">
-              <div class="checklist-item display-flex align-center m-b-xs">
-                <ion-icon 
-                  [name]="positions.length === 0 ? 'checkmark-circle-outline' : 'close-circle-outline'" 
-                  [class]="positions.length === 0 ? 'text-success m-r-xs' : 'text-danger m-r-xs'"
-                  style="font-size: 18px;">
-                </ion-icon>
-                <span class="text-sm" [class.text-dark]="positions.length === 0" [class.text-gray]="positions.length > 0">Sell all holdings</span>
+            <p class="close-box-intro">To permanently close your FRED account, you must first:</p>
+            <div class="checklist">
+              <div class="checklist-item">
+                <span class="material-symbols-outlined check-done" *ngIf="positions.length === 0">check_circle</span>
+                <span class="material-symbols-outlined check-pending" *ngIf="positions.length > 0">cancel</span>
+                <span [class.check-label--done]="positions.length === 0" [class.check-label--pending]="positions.length > 0" class="check-label">Sell all holdings</span>
               </div>
-              <div class="checklist-item display-flex align-center">
-                <ion-icon 
-                  [name]="getWithdrawableCash() <= 0 ? 'checkmark-circle-outline' : 'close-circle-outline'" 
-                  [class]="getWithdrawableCash() <= 0 ? 'text-success m-r-xs' : 'text-danger m-r-xs'"
-                  style="font-size: 18px;">
-                </ion-icon>
-                <span class="text-sm" [class.text-dark]="getWithdrawableCash() <= 0" [class.text-gray]="getWithdrawableCash() > 0">Withdraw all cash</span>
+              <div class="checklist-item">
+                <span class="material-symbols-outlined check-done" *ngIf="getWithdrawableCash() <= 0">check_circle</span>
+                <span class="material-symbols-outlined check-pending" *ngIf="getWithdrawableCash() > 0">cancel</span>
+                <span [class.check-label--done]="getWithdrawableCash() <= 0" [class.check-label--pending]="getWithdrawableCash() > 0" class="check-label">Withdraw all cash</span>
               </div>
             </div>
 
-            <!-- Close Account Button -->
-            <ion-button 
-              expand="block" 
-              fill="outline"
-              color="danger"
-              class="close-account-btn"
+            <button class="danger-btn"
               [disabled]="!canCloseAccount || isClosingAccount"
               (click)="initiateCloseAccount()">
-              <ion-icon slot="start" name="trash-outline"></ion-icon>
+              <span class="material-symbols-outlined" *ngIf="!isClosingAccount">delete</span>
               {{!canCloseAccount ? 'Complete steps above first' : 'Close My Account'}}
-            </ion-button>
+            </button>
 
-            <!-- Confirmation Panel -->
-            <div *ngIf="showCloseConfirmation" class="close-confirm-panel fade-in m-t-md">
-              <div class="close-confirm-warning">
-                <ion-icon name="alert-circle-outline" class="text-danger" style="font-size: 28px;"></ion-icon>
-                <h4 class="font-semibold text-danger m-t-xs m-b-xs">Are you sure?</h4>
-                <p class="text-sm text-gray m-0 m-b-md">
-                  This action is <strong>irreversible</strong> and will permanently destroy your account associated with FRED. 
-                  All your data, settings, and history will be deleted. If you return, you'll need to start over from scratch.
+            <div *ngIf="showCloseConfirmation" class="confirm-panel">
+              <span class="material-symbols-outlined confirm-warning-icon">warning</span>
+              <h4 class="confirm-title">Are you sure?</h4>
+              <p class="confirm-body">This action is <strong>irreversible</strong> and will permanently destroy your account. All your data, settings, and history will be deleted. If you return, you'll need to start over.</p>
+              <div class="confirm-actions">
+                <button class="cancel-btn" [disabled]="isClosingAccount" (click)="cancelCloseAccount()">Cancel</button>
+                <button class="danger-btn confirm-danger-btn" [disabled]="isClosingAccount" (click)="confirmCloseAccount()">
+                  <ion-spinner *ngIf="isClosingAccount" name="crescent" class="btn-spinner-sm"></ion-spinner>
+                  {{isClosingAccount ? 'Closing...' : 'Close Account'}}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Positions list -->
+        <div *ngIf="positions.length > 0" class="positions-list">
+          <div
+            *ngFor="let position of positions"
+            class="position-item"
+            [class.position-item--selected]="selectedPosition?.symbol === position.symbol"
+            [class.position-item--pending]="isFullyPending(position)"
+            (click)="selectPosition(position)">
+
+            <div class="position-row">
+              <div class="symbol-circle">{{position.symbol.substring(0,1)}}</div>
+              <div class="position-text">
+                <h4 class="position-symbol">{{position.symbol}}</h4>
+                <p class="position-meta">{{position.name}} &bull; {{position.quantity}} Shares</p>
+                <p *ngIf="position.quantityAvailable !== undefined && position.quantityAvailable < position.quantity"
+                   class="position-pending">
+                  <span class="material-symbols-outlined pending-clock">schedule</span>
+                  {{ isFullyPending(position) ? 'Pending Sale' : (((position.quantity - position.quantityAvailable) / position.quantity * 100) | number:'1.0-0') + '% Pending' }}
                 </p>
               </div>
-              <div class="close-confirm-actions display-flex gap-sm">
-                <ion-button 
-                  expand="block" 
-                  fill="outline"
-                  color="medium"
-                  class="flex-1"
-                  [disabled]="isClosingAccount"
-                  (click)="cancelCloseAccount()">
-                  Cancel
-                </ion-button>
-                <ion-button 
-                  expand="block" 
-                  color="danger"
-                  class="flex-1"
-                  [disabled]="isClosingAccount"
-                  (click)="confirmCloseAccount()">
-                  <ion-spinner *ngIf="isClosingAccount" name="crescent" slot="start"></ion-spinner>
-                  {{isClosingAccount ? 'Closing...' : 'Close Account'}}
-                </ion-button>
+              <div class="position-values">
+                <p class="position-value">{{formatCurrency(position.marketValue)}}</p>
+                <p class="position-sub">
+                  {{formatCurrency(position.costBasis)}}&nbsp;<span [class.gain-pos]="position.unrealizedPL >= 0" [class.gain-neg]="position.unrealizedPL < 0">{{position.unrealizedPL >= 0 ? '+' : ''}}{{formatCurrency(position.unrealizedPL)}}</span>
+                </p>
+              </div>
+              <div class="position-check">
+                <ng-container *ngIf="!isFullyPending(position)">
+                  <span class="material-symbols-outlined select-icon" [class.select-icon--on]="selectedPosition?.symbol === position.symbol">
+                    {{ selectedPosition?.symbol === position.symbol ? 'check_circle' : 'radio_button_unchecked' }}
+                  </span>
+                </ng-container>
+                <ng-container *ngIf="isFullyPending(position)">
+                  <span class="material-symbols-outlined pending-icon">schedule</span>
+                </ng-container>
               </div>
             </div>
+
           </div>
         </div>
-      </div>
 
-      <!-- Positions list -->
-      <div *ngIf="positions.length > 0" class="positions-list m-t-sm" style="margin-top: 0px;">
-        <div 
-          *ngFor="let position of positions" 
-          class="position-item p-sm border-bottom"
-          [class.selected]="selectedPosition?.symbol === position.symbol"
-          [class.opacity-50]="isFullyPending(position)"
-          (click)="selectPosition(position)">
-          
-          <div class="position-row display-flex justify-between align-center">
-            <div class="position-info">
-              <div class="position-main display-flex align-center">
-                <div class="symbol-circle m-r-sm">{{position.symbol.substring(0,1)}}</div>
-                <div class="position-text-container">
-                  <h4 class="position-symbol font-semibold text-dark m-0">{{position.symbol}}</h4>
-                  <p class="position-name text-xs text-gray m-0">{{position.name}} • {{position.quantity}} Shares</p>
-                  <p *ngIf="position.quantityAvailable !== undefined && position.quantityAvailable < position.quantity" 
-                     [class]="isFullyPending(position) ? 'position-name text-xs text-warning m-0' : 'text-xs text-warning m-0'">
-                    <ion-icon name="time-outline" class="text-xs align-text-bottom text-warning"></ion-icon>
-                    {{ isFullyPending(position) ? 'Pending Sale' : (((position.quantity - position.quantityAvailable) / position.quantity * 100) | number:'1.0-0') + '% Pending' }}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="position-values text-right">
-              <p class="position-value font-medium text-dark m-0">{{formatCurrency(position.marketValue)}}</p>
-              <p class="position-sub-values text-xs text-gray m-0">
-                {{formatCurrency(position.costBasis)}}<span [class.text-success]="position.unrealizedPL >= 0" [class.text-danger]="position.unrealizedPL < 0">{{position.unrealizedPL >= 0 ? '+' : ''}}{{formatCurrency(position.unrealizedPL)}}</span>
-              </p>
-            </div>
-
-            <div class="position-check m-l-sm">
-              <ng-container *ngIf="!isFullyPending(position)">
-                <ion-icon 
-                  [name]="selectedPosition?.symbol === position.symbol ? 'checkmark-circle' : 'radio-button-off'" 
-                  class="select-icon text-xl"
-                  [class.text-primary]="selectedPosition?.symbol === position.symbol"
-                  [class.text-gray]="selectedPosition?.symbol !== position.symbol">
-                </ion-icon>
-              </ng-container>
-              <ng-container *ngIf="isFullyPending(position)">
-                <ion-icon name="time-outline" class="select-icon text-xl text-warning"></ion-icon>
-              </ng-container>
-            </div>
+        <!-- Sell controls -->
+        <div *ngIf="selectedPosition" class="sell-controls">
+          <div class="range-header">
+            <span class="range-label">Amount to Sell</span>
+            <span class="range-value">{{sellPercentage}}%</span>
           </div>
-        </div>
-      </div>
 
-      <!-- Sell percentage controls -->
-      <div *ngIf="selectedPosition" class="sell-controls p-t-md fade-in" style="margin-top: 0px;">
-        
-        <div class="percentage-selector m-b-md">
-          <div class="display-flex justify-between align-center m-b-xs">
-            <label class="percentage-label font-medium text-dark">Amount to Sell</label>
-            <span class="percentage-value font-bold text-primary">{{sellPercentage}}%</span>
-          </div>
-          
-          <ion-range 
+          <ion-range
             [(ngModel)]="sellPercentage"
             [min]="1"
             [max]="maxSellPercentage"
             [step]="1"
-            class="percentage-range">
+            class="sell-range">
           </ion-range>
-          
-          <div class="estimated-value text-center m-t-xs">
-            <span class="text-gray text-sm">Estimated Proceeds: </span>
-            <span class="font-semibold text-dark">{{formatCurrency(calculateSellAmount())}}</span>
+
+          <p class="estimated-proceeds">Estimated Proceeds: <strong>{{formatCurrency(calculateSellAmount())}}</strong></p>
+
+          <div class="quick-percents">
+            <button
+              *ngFor="let percent of quickPercentages"
+              class="quick-btn"
+              [class.quick-btn--active]="sellPercentage === percent"
+              [disabled]="percent > maxSellPercentage"
+              (click)="setSellPercentage(percent)">
+              {{percent}}%
+            </button>
           </div>
-        </div>
 
-        <div class="quick-percentages display-flex justify-between m-b-md">
-          <button 
-            *ngFor="let percent of quickPercentages" 
-            class="quick-percent-btn"
-            [class.active]="sellPercentage === percent"
-            [disabled]="percent > maxSellPercentage"
-            (click)="setSellPercentage(percent)">
-            {{percent}}%
+          <button class="cta-btn" [disabled]="isSelling" (click)="sellPosition()">
+            <ion-spinner *ngIf="isSelling" name="crescent" class="btn-spinner-sm"></ion-spinner>
+            <span>{{isSelling ? 'Processing...' : 'Sell ' + selectedPosition.symbol}}</span>
+            <span class="material-symbols-outlined" *ngIf="!isSelling">sell</span>
           </button>
-        </div>
 
-        <ion-button 
-          expand="block" 
-          class="sell-btn"
-          [disabled]="isSelling"
-          (click)="sellPosition()">
-          <ion-spinner *ngIf="isSelling" name="crescent" slot="start"></ion-spinner>
-          <ion-icon *ngIf="!isSelling" slot="start" name="pricetag-outline"></ion-icon>
-          {{isSelling ? 'Processing...' : 'Sell ' + selectedPosition.symbol}}
-        </ion-button>
-
-        <div class="info-box bg-gray-50 p-sm rounded m-t-md">
-          <div class="display-flex align-start">
-            <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
-            <p class="text-xs text-gray m-0">
-              Selling a portion of your position converts the stock value into Buying Power and Settled Cash after 1 business day.
-            </p>
+          <div class="info-tip">
+            <span class="material-symbols-outlined tip-icon">info</span>
+            <p class="tip-text">Selling converts stock value into Buying Power and Settled Cash after 1 business day.</p>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Withdraw Cash Section -->
-    <div class="section-card mobile-card">
-      <div class="section-header p-b-sm border-bottom" style="padding-bottom: 0px;">
-        <div class="display-flex justify-between align-center">
-          <h3 class="section-title font-semibold text-dark text-lg" style="margin-top: 4px; margin-bottom: 6px;">Withdraw Cash</h3>
-          <div class="drip-controls display-flex align-center">
-            <div class="drip-label-group display-flex align-center">
-              <span class="drip-label">DRIP</span>
-              <ion-button fill="clear" size="small" id="drip-tooltip" class="tooltip-icon-button">
-                <ion-icon name="information-circle-outline"></ion-icon>
-              </ion-button>
-              <ion-popover trigger="drip-tooltip" triggerAction="click" side="bottom" alignment="center">
-                <ng-template>
-                  <ion-content [scrollY]="false" class="ion-padding">
-                    <p style="font-size: 13px; margin-top: 0px; margin-bottom: 0px;"><strong>DRIP</strong> (Dividend Reinvestment Plan) automatically reinvests your cash dividends back into the stock that paid them. Over time, this compounds your returns significantly.</p>
-                  </ion-content>
-                </ng-template>
-              </ion-popover>
-            </div>
+      <!-- Withdraw Cash Card -->
+      <div class="section-card">
+        <div class="card-header-row">
+          <span class="material-symbols-outlined card-icon">account_balance</span>
+          <h3 class="card-title">Withdraw Cash</h3>
+          <div class="drip-controls">
+            <span class="drip-label">DRIP</span>
+            <button id="drip-tooltip" class="tooltip-btn">
+              <span class="material-symbols-outlined">info</span>
+            </button>
+            <ion-popover trigger="drip-tooltip" triggerAction="click" side="bottom" alignment="center">
+              <ng-template>
+                <ion-content [scrollY]="false" class="ion-padding">
+                  <p style="font-size: 13px; margin: 0;"><strong>DRIP</strong> (Dividend Reinvestment Plan) automatically reinvests your cash dividends back into the stock that paid them. Over time, this compounds your returns significantly.</p>
+                </ion-content>
+              </ng-template>
+            </ion-popover>
             <ion-toggle
               [checked]="dripEnabled"
               [disabled]="dripLoading || dripToggling"
@@ -250,77 +185,56 @@
             </ion-toggle>
           </div>
         </div>
-        <p class="section-subtitle text-gray text-sm">Transfer settled cash to your linked bank account.</p>
-      </div>
+        <p class="card-subtitle">Transfer settled cash to your linked bank account.</p>
 
-      <div class="withdraw-controls p-t-md" style="padding-top: 0px;">
-        
-        <div class="withdraw-amount m-b-md">
-          <div class="display-flex justify-between align-center m-b-xs">
-            <label class="amount-label font-medium text-dark">Amount</label>
-            <span class="available-text text-xs text-gray">
-              Available: {{formatCurrency(getWithdrawableCash())}}
-            </span>
+        <div class="withdraw-controls">
+          <div class="amount-header">
+            <span class="amount-label">Amount</span>
+            <span class="available-text">Available: {{formatCurrency(getWithdrawableCash())}}</span>
           </div>
-          <div class="amount-input-wrapper display-flex align-center border rounded p-xs">
-            <span class="currency-symbol text-dark font-semibold p-l-sm">$</span>
+          <div class="currency-input-wrap">
+            <span class="currency-sym">$</span>
             <ion-input
               type="number"
               [(ngModel)]="withdrawAmount"
               [min]="1"
               [max]="maxWithdrawAmount"
               placeholder="0.00"
-              class="amount-input no-border">
+              class="amount-input">
             </ion-input>
           </div>
-        </div>
 
-        <div class="quick-amounts display-flex justify-between flex-wrap m-b-md gap-xs">
-          <button 
-            *ngFor="let amount of quickWithdrawAmounts" 
-            class="quick-amount-btn"
-            [class.active]="withdrawAmount === amount"
-            (click)="setWithdrawAmount(amount)"
-            [disabled]="amount > maxWithdrawAmount">
-            {{formatCurrency(amount)}}
+          <div class="quick-amounts">
+            <button
+              *ngFor="let amount of quickWithdrawAmounts"
+              class="quick-btn"
+              [class.quick-btn--active]="withdrawAmount === amount"
+              (click)="setWithdrawAmount(amount)"
+              [disabled]="amount > maxWithdrawAmount">
+              {{formatCurrency(amount)}}
+            </button>
+          </div>
+
+          <button class="cta-btn" [disabled]="isWithdrawing || !withdrawAmount || withdrawAmount > maxWithdrawAmount" (click)="withdrawCash()">
+            <ion-spinner *ngIf="isWithdrawing" name="crescent" class="btn-spinner-sm"></ion-spinner>
+            <span>{{isWithdrawing ? 'Processing...' : 'Initiate Transfer'}}</span>
+            <span class="material-symbols-outlined" *ngIf="!isWithdrawing">arrow_forward</span>
           </button>
-        </div>
 
-        <ion-button 
-          expand="block" 
-          class="withdraw-btn"
-          [disabled]="isWithdrawing || !withdrawAmount || withdrawAmount > maxWithdrawAmount"
-          (click)="withdrawCash()">
-          <ion-spinner *ngIf="isWithdrawing" name="crescent" slot="start"></ion-spinner>
-          <ion-icon *ngIf="!isWithdrawing" slot="start" name="arrow-forward-outline"></ion-icon>
-          {{isWithdrawing ? 'Processing...' : 'Initiate Transfer'}}
-        </ion-button>
-
-        <div class="info-box bg-gray-50 p-sm rounded m-t-md">
-          <div class="display-flex align-start">
-            <ion-icon name="information-circle-outline" class="text-primary m-r-xs text-lg"></ion-icon>
-            <div class="text-xs text-gray m-0">
+          <div class="info-tip">
+            <span class="material-symbols-outlined tip-icon">info</span>
+            <div class="tip-text">
               <ng-container *ngIf="getSettledCash() > getWithdrawableCash() && getEstimatedHoldReleaseDate(); else defaultMsg">
-                <p class="m-0">
-                  New deposits take 4-6 days to clear before you can withdraw that amount.
-                  Your recently deposited amount should be available for withdrawal by <strong>{{getEstimatedHoldReleaseDate()}}</strong>.
-                </p>
+                <p class="m-0">New deposits take 4-6 days to clear. Your recently deposited amount should be available by <strong>{{getEstimatedHoldReleaseDate()}}</strong>.</p>
               </ng-container>
               <ng-template #defaultMsg>
-                <p class="m-0">
-                  Funds from sales take 1 business day to settle. New deposits take 4-6 days to clear. You cannot withdraw a value of funds that is less than the deposit amount.
-                </p>
+                <p class="m-0">Funds from sales take 1 business day to settle. New deposits take 4-6 days to clear. You cannot withdraw a value of funds less than the deposit amount.</p>
               </ng-template>
             </div>
           </div>
         </div>
       </div>
+
     </div>
-
-
-
   </div>
-
-
-
 </ion-content>
