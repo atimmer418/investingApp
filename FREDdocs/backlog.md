@@ -453,7 +453,7 @@ make the fred free trial 14 days to allow for one automated paycheck investing a
 2. Test on sandbox account: new user gets 14-day trial before billing.
 3. Confirm frontend subscription gate correctly reflects 14-day window.
 
-## FRED-170 — Optimize loading screen timings
+## FRED-170 — ✓ Optimize loading screen timings
 Optimize loading screen timings.
 
 ### Acceptance Criteria

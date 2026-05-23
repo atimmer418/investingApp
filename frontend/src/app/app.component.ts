@@ -89,7 +89,7 @@ export class AppComponent implements OnInit {
 
       img.addEventListener('load', finish, { once: true });
       img.addEventListener('error', finish, { once: true });
-      setTimeout(finish, 1500);
+      setTimeout(finish, 300);
     });
   }
 
@@ -275,7 +275,7 @@ export class AppComponent implements OnInit {
     );
 
     const allReady = Promise.all([...fontPromises, ...imagePromises]).then(() => {});
-    const safetyTimeout = new Promise<void>(r => setTimeout(r, 3000));
+    const safetyTimeout = new Promise<void>(r => setTimeout(r, 1500));
     return Promise.race([allReady, safetyTimeout]);
   }
 
