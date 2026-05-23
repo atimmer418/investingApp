@@ -129,4 +129,25 @@
     </ion-card-content>
   </ion-card>
 
+  <ng-container *ngIf="referralUpgradeOffers.length > 0">
+    <div class="section-title">Upgrade Your Plan</div>
+    <ion-card class="upgrade-card" *ngFor="let offer of referralUpgradeOffers">
+      <ion-card-content>
+        <div class="upgrade-inner">
+          <div class="upgrade-info">
+            <div class="upgrade-label">{{ offer.label }}</div>
+            <div class="upgrade-price">
+              <span class="price-discounted">${{ offer.discountedPrice }}/mo</span>
+              <span class="price-original">normally ${{ offer.regularPrice }}/mo</span>
+            </div>
+            <div class="upgrade-unlock">{{ referralCount }} referral{{ referralCount === 1 ? '' : 's' }} unlocked this discount</div>
+          </div>
+          <button class="upgrade-btn" (click)="confirmTierUpgrade(offer.tier, offer.label, offer.discountedPrice)">
+            Upgrade
+          </button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </ng-container>
+
 </ion-content>

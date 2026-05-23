@@ -395,3 +395,74 @@ ion-card.referral-card {
         }
     }
 }
+
+ion-card.upgrade-card {
+  margin: 0 0 12px 0;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  background: var(--card-background);
+
+  ion-card-content {
+    padding: 16px;
+  }
+
+  .upgrade-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .upgrade-info {
+    flex: 1;
+  }
+
+  .upgrade-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .upgrade-price {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 2px;
+  }
+
+  .price-discounted {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ion-color-primary);
+  }
+
+  .price-original {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-decoration: line-through;
+  }
+
+  .upgrade-unlock {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .upgrade-btn {
+    background: var(--ion-color-primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:active {
+      opacity: 0.85;
+    }
+  }
+}

@@ -434,7 +434,7 @@ Signals integrity.
 ## FRED-167 — 💤 Redesign Ask Fred UI like Cloudflare Ask AI
 make ask fred look like cloudflare's ask AI
 
-## FRED-168 — Referral-discounted tier upgrade on profile page
+## FRED-168 — ✓ Referral-discounted tier upgrade on profile page
 Add ability to upgrade tiers in my profile page. if they already have had 1 referral, they can go to $20/mo instead of $40/mo. if they already have had 2 referrals, they can go to $10/mo instead of $15/mo
 
 ### Acceptance Criteria

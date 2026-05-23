@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonBackButton,
-  IonCard, IonCardContent, IonInput, IonButton, IonIcon, IonAvatar, IonItem, IonLabel
+  IonCard, IonCardContent, IonInput, IonButton, IonIcon, IonAvatar, IonItem, IonLabel,
+  AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { shareOutline, checkmarkCircleOutline, saveOutline, camera, walletOutline, timeOutline, ticketOutline } from 'ionicons/icons';
@@ -50,11 +51,12 @@ export class MyProfilePage implements OnInit {
   progressPercentage: number = 0; // currentPortfolioValue / portfolioGoal
 
   // Referral
-  referralCode: string = ''; 
+  referralCode: string = '';
   redeemCodeInput: string = '';
   referralCount: number = 0;
   hasAppliedReferral: boolean = false;
   isLoadingReferral: boolean = false;
+  selectedTier: string = '';
 
   // State
   isDirty: boolean = false;
@@ -68,13 +70,26 @@ export class MyProfilePage implements OnInit {
   private exactAnnualIncome: number | null = null;
   currentFrequency: string = '';
 
+  get referralUpgradeOffers(): Array<{tier: string, label: string, discountedPrice: number, regularPrice: number}> {
+    const offers: Array<{tier: string, label: string, discountedPrice: number, regularPrice: number}> = [];
+    if (this.referralCount < 1) return offers;
+    if (this.selectedTier !== 'pro') {
+      offers.push({ tier: 'pro', label: 'Premium', discountedPrice: 20, regularPrice: 40 });
+    }
+    if (this.referralCount >= 2 && this.selectedTier === 'core') {
+      offers.push({ tier: 'plus', label: 'Standard', discountedPrice: 10, regularPrice: 15 });
+    }
+    return offers;
+  }
+
   constructor(
     private authService: AuthService,
     private settingsService: SettingsService,
     private toastService: ToastService,
     private portfolioService: PortfolioService,
     private accountStatusService: AccountStatusService,
-    private router: Router
+    private router: Router,
+    private alertController: AlertController
   ) {
     addIcons({camera,walletOutline,timeOutline,shareOutline,ticketOutline,checkmarkCircleOutline,saveOutline});
     this.actionRequired$ = this.accountStatusService.actionRequired$;
@@ -120,6 +135,9 @@ export class MyProfilePage implements OnInit {
         }
         if (progress.hasAppliedReferral !== undefined) {
            this.hasAppliedReferral = progress.hasAppliedReferral;
+        }
+        if (progress.selectedTier) {
+          this.selectedTier = progress.selectedTier;
         }
 
         // Store originals for dirty check
@@ -440,5 +458,30 @@ export class MyProfilePage implements OnInit {
         this.toastService.showToast(msg, 'danger');
       }
     });
+  }
+
+  async confirmTierUpgrade(tier: string, label: string, price: number) {
+    const alert = await this.alertController.create({
+      header: `Upgrade to ${label}`,
+      message: `Upgrade to ${label} for $${price}/mo using your referral discount?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Confirm',
+          handler: () => {
+            this.authService.updateUserProfile({ selectedTier: tier, billingPeriod: 'monthly' }).subscribe({
+              next: () => {
+                this.selectedTier = tier;
+                this.toastService.showToast(`Upgraded to ${label}!`, 'success');
+              },
+              error: () => {
+                this.toastService.showToast('Upgrade failed. Please try again.', 'danger');
+              }
+            });
+          }
+        }
+      ]
+    });
+    await alert.present();
   }
 }

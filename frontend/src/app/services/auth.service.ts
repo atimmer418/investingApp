@@ -25,6 +25,8 @@ export interface UserProgress {
   referralCode?: string;
   referralCount?: number;
   hasAppliedReferral?: boolean;
+  selectedTier?: string;
+  billingPeriod?: string;
 }
 
 export interface PasskeyAuthRequest {
