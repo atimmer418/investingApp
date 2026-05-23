@@ -262,7 +262,7 @@ export class AuthService {
    * Update user profile data directly (User object), bypassing UserProgress logic.
    * Use this for profile page updates like name, retirement income, etc.
    */
-  updateUserProfile(profileUpdate: { monthlyInvestment?: number, retirementIncome?: number, firstName?: string, lastName?: string, selectedTier?: string, billingPeriod?: string }): Observable<any> {
+  updateUserProfile(profileUpdate: { monthlyInvestment?: number, retirementIncome?: number, firstName?: string, lastName?: string, selectedTier?: string, billingPeriod?: string, agreedToMarketing?: boolean }): Observable<any> {
     return this.http.put(`${BACKEND_API_URL}/user/profile`, profileUpdate,
       { headers: this.getAuthHeaders() });
   }

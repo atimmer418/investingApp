@@ -658,6 +658,7 @@ export class InvestmentConfirmationComponent implements OnInit, AfterViewInit, O
     this.authService.completeStep('investmentConfirmation').subscribe({
       next: () => {
         console.log('InvestmentConfirmation step completed successfully');
+        this.authService.updateUserProfile({ agreedToMarketing: this.agreedToMarketing }).subscribe();
         this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
       },
       error: (err) => {

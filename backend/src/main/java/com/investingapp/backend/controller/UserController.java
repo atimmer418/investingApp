@@ -487,6 +487,18 @@ public class UserController {
                     changed = true;
                 }
             }
+            if (profileUpdate.containsKey("agreedToMarketing")) {
+                Object val = profileUpdate.get("agreedToMarketing");
+                if (val instanceof Boolean) {
+                    user.setAgreedToMarketing((Boolean) val);
+                    changed = true;
+                    if (Boolean.TRUE.equals(val)) {
+                        // TODO: call marketing email provider API to add user to list
+                        // e.g. Resend Audiences or Mailchimp — integrate once provider is chosen
+                        logger.info("[Marketing] User opted in to marketing emails: {}", email);
+                    }
+                }
+            }
 
             if (changed) {
                 userRepository.save(user);

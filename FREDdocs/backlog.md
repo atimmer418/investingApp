@@ -497,7 +497,7 @@ Apple subscription needs to be set up with the pricing tiers section on investme
 ## FRED-175 — 🚫 Initiate ACATS API transfer during onboarding (ONBOARDING)
 ACATS API transfer needs to be initiated as part of the onboarding flow.
 
-## FRED-176 — Connect email list opt-in checkbox to emailer (ONBOARDING)
+## FRED-176 — ✓ Connect email list opt-in checkbox to emailer (ONBOARDING)
 The "Keep me updated" marketing checkbox needs to be wired up to the FRED email list.
 
 ### Acceptance Criteria
