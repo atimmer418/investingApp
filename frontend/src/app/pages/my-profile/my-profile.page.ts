@@ -58,6 +58,9 @@ export class MyProfilePage implements OnInit {
   isLoadingReferral: boolean = false;
   selectedTier: string = '';
 
+  // Freedom Timeline
+  freedomYear: number | null = null;
+
   // State
   isDirty: boolean = false;
   originalValues: { monthly: number, income: number } = { monthly: 0, income: 0 };
@@ -80,6 +83,11 @@ export class MyProfilePage implements OnInit {
       offers.push({ tier: 'plus', label: 'Standard', discountedPrice: 10, regularPrice: 15 });
     }
     return offers;
+  }
+
+  get yearsToFreedom(): number | null {
+    if (!this.freedomYear) return null;
+    return this.freedomYear - new Date().getFullYear();
   }
 
   constructor(
@@ -138,6 +146,11 @@ export class MyProfilePage implements OnInit {
         }
         if (progress.selectedTier) {
           this.selectedTier = progress.selectedTier;
+        }
+
+        // Freedom Timeline
+        if (progress.currentFreedomEstimate) {
+          this.freedomYear = progress.currentFreedomEstimate;
         }
 
         // Store originals for dirty check

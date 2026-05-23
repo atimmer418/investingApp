@@ -68,6 +68,8 @@ public class UserController {
         private boolean dripEnabled;
         private String selectedTier;
         private String billingPeriod;
+        private Integer currentFreedomEstimate;
+        private String timeToFI;
 
         public UserProgressResponse(User user) {
             UserProgress progress = user.getUserProgress();
@@ -107,6 +109,8 @@ public class UserController {
             this.dripEnabled = !Boolean.FALSE.equals(user.getDripEnabled());
             this.selectedTier = user.getSelectedTier();
             this.billingPeriod = user.getBillingPeriod();
+            this.currentFreedomEstimate = user.getCurrentFreedomEstimate();
+            this.timeToFI = user.getTimeToFI();
         }
 
         // Getters
@@ -188,6 +192,14 @@ public class UserController {
 
         public double getCompletionPercentage() {
             return completionPercentage;
+        }
+
+        public Integer getCurrentFreedomEstimate() {
+            return currentFreedomEstimate;
+        }
+
+        public String getTimeToFI() {
+            return timeToFI;
         }
     }
 

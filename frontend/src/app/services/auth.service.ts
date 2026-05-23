@@ -27,6 +27,8 @@ export interface UserProgress {
   hasAppliedReferral?: boolean;
   selectedTier?: string;
   billingPeriod?: string;
+  currentFreedomEstimate?: number;
+  timeToFI?: string;
 }
 
 export interface PasskeyAuthRequest {

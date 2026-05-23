@@ -523,7 +523,7 @@ Change passkey to face-ID passkey variant
 ## FRED-179 — 🚫 Export monthly freedom update as shareable image
 Add export ability for monthly freedom update (export to insta story and what not)
 
-## FRED-180 — Add time-to-freedom visual on profile page
+## FRED-180 — ✓ Add time-to-freedom visual on profile page
 Add time to freedom date visual on the my profile page (the whenPiggybanksFly picture that lives in surveyinitial)
 
 ### Acceptance Criteria
