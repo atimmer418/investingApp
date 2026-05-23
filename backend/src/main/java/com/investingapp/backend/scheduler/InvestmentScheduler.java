@@ -2,11 +2,14 @@ package com.investingapp.backend.scheduler;
 
 import com.investingapp.backend.service.DripService;
 import com.investingapp.backend.service.InvestmentExecutionService;
+import com.investingapp.backend.service.PaydayNotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
 
 @Component
 public class InvestmentScheduler {
@@ -18,6 +21,9 @@ public class InvestmentScheduler {
 
     @Autowired
     private DripService dripService;
+
+    @Autowired
+    private PaydayNotificationService paydayNotificationService;
 
     /**
      * Process scheduled investments every day at 11:55 PM ET
@@ -113,4 +119,34 @@ public class InvestmentScheduler {
     //         logger.error("Error in test investment processing", e);
     //     }
     // }
+
+    @Scheduled(cron = "0 0 7 * * *", zone = "America/New_York")
+    public void sendDayBeforePaydayNotifications() {
+        logger.info("Sending D-1 payday notifications");
+        try {
+            paydayNotificationService.sendDayBeforeNotifications(LocalDate.now());
+        } catch (Exception e) {
+            logger.error("Error sending D-1 payday notifications", e);
+        }
+    }
+
+    @Scheduled(cron = "0 0 0 * * *", zone = "America/New_York")
+    public void sendPaydayNotifications() {
+        logger.info("Sending D+0 payday notifications");
+        try {
+            paydayNotificationService.sendPaydayNotifications(LocalDate.now().minusDays(1));
+        } catch (Exception e) {
+            logger.error("Error sending D+0 payday notifications", e);
+        }
+    }
+
+    @Scheduled(cron = "0 0 8 * * *", zone = "America/New_York")
+    public void sendDayAfterPaydayNotifications() {
+        logger.info("Sending D+1 payday notifications");
+        try {
+            paydayNotificationService.sendDayAfterNotifications(LocalDate.now());
+        } catch (Exception e) {
+            logger.error("Error sending D+1 payday notifications", e);
+        }
+    }
 }

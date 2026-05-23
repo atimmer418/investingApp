@@ -214,6 +214,12 @@ public class User {
     @Column(name = "billing_period", nullable = true, length = 10)
     private String billingPeriod; // "monthly", "yearly"
 
+    @Column(name = "device_push_token", length = 512, nullable = true)
+    private String devicePushToken;
+
+    public String getDevicePushToken() { return devicePushToken; }
+    public void setDevicePushToken(String devicePushToken) { this.devicePushToken = devicePushToken; }
+
     // Helper method to get Plaid relationship ID (using existing ACH relationship
     // field)
     public String getPlaidRelationshipId() {

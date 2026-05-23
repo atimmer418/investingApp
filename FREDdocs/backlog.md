@@ -463,7 +463,7 @@ Optimize loading screen timings.
 4. No visual regression: cover hides only once route content is painted.
 5. Test on real iPhone.
 
-## FRED-171 — Payday lifecycle emails and push notifications
+## FRED-171 — ✓ Payday lifecycle emails and push notifications
 lifecycle emails regarding investing in FRED. Then time your lifecycle emails and push notifications around it:
 
 Day before payday: "Your paycheck hits tomorrow. FRED will auto-invest $X — your Freedom Date moves up 6 days."

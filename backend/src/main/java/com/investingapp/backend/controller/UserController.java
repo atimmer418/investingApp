@@ -500,6 +500,43 @@ public class UserController {
     }
 
     /**
+     * Store or update the device push notification token for the current user
+     * PATCH /user/push-token
+     */
+    @PatchMapping("/push-token")
+    public ResponseEntity<?> updatePushToken(@RequestBody Map<String, String> payload,
+            Authentication authentication) {
+        try {
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(401).build();
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String email = userDetails.getUsername();
+
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            String token = payload.get("pushToken");
+            if (token == null || token.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "'pushToken' field is required"));
+            }
+
+            user.setDevicePushToken(token);
+            userRepository.save(user);
+
+            logger.info("[UserController] Updated push token for user: {}", email);
+
+            return ResponseEntity.ok(Map.of("message", "Push token updated successfully"));
+        } catch (Exception e) {
+            logger.error("[UserController] Error updating push token: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
      * Extract the client's IP address from the HTTP request, handling proxies and
      * load balancers
      */
