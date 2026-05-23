@@ -1,203 +1,195 @@
-// Variables matching FRED theme
-$primary-color: #0054e9;
-$text-dark: #111827;
-$text-gray: #6b7280;
-$bg-light: #f3f4f6;
-$card-bg: #ffffff;
-$border-color: #e5e7eb;
-
-ion-content {
-  --background: #{$bg-light};
+:host {
+  --ion-background-color: #f8fafc;
+  --ion-toolbar-background: #f8fafc;
+  --ion-toolbar-color: #0f172a;
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
 }
 
-.safe-area-top {
-  padding-top: env(safe-area-inset-top);
-  background: $bg-light;
+ion-content { --background: #f8fafc; }
+
+ion-toolbar {
+  --background: #f8fafc;
+  --border-width: 0;
+  --min-height: 52px;
 }
 
-ion-header {
-  ion-toolbar {
-    --background: linear-gradient(0deg, var(--ion-color-primary) 0%, var(--ion-color-primary-tint) 100%);
-    --color: white;
-    
-    ion-title {
-      font-weight: 600;
-    }
-    
-    ion-back-button, ion-button {
-      --color: white;
-      color: white;
-    }
-    --border-width: 0;
-  }
+ion-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #0f172a;
 }
 
-.mobile-container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 16px;
+ion-back-button { --color: #0f172a; }
+
+.content-inner {
+  padding: 12px 18px 40px;
+  font-family: 'Manrope', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-// Hero Section
+// Hero
 .faq-hero {
   text-align: center;
-  margin-bottom: 16px;
-  padding: 10px 0;
+  padding: 20px 0 8px;
 
-  .hero-icon {
-    font-size: 48px;
-    color: $primary-color;
-    margin-bottom: 16px;
+  .hero-icon-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    background: #eff6ff;
+    border-radius: 50%;
+    margin-bottom: 14px;
 
-    ion-icon {
-      background: rgba($primary-color, 0.1);
-      padding: 16px;
-      border-radius: 50%;
+    .hero-icon {
+      font-size: 36px;
+      color: #2563EB;
+      font-variation-settings: 'FILL' 1;
     }
   }
 
-  h2 {
-    font-size: 24px;
-    font-weight: 700;
-    color: $text-dark;
+  .hero-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
     margin: 0 0 8px 0;
+    letter-spacing: -0.02em;
   }
 
-  p {
-    font-size: 16px;
-    color: $text-gray;
+  .hero-desc {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    color: #6b7280;
     margin: 0;
     line-height: 1.5;
   }
 }
 
-// FAQ List
+// FAQ list
 .faq-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
+// FAQ card
 .faq-card {
-  background: $card-bg;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  background: white;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
   overflow: hidden;
-  // iOS-style transition for card state changes
-  transition: all 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
-  border: 1px solid transparent;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 
   &.active {
-    border-color: rgba($primary-color, 0.3);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    border-color: rgba(37, 99, 235, 0.35);
+    box-shadow: 0 4px 16px -4px rgba(37, 99, 235, 0.15);
   }
 }
 
 .faq-header {
-  padding: 10px;
+  padding: 14px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  background: $card-bg;
+  background: white;
+  transition: background 0.12s;
 
-  // Ripple effect could be added here if using ion-item, but div is fine for custom styling
-  &:active {
-    background-color: #f9fafb;
-  }
+  &:active { background: #f8fafc; }
 
   .question-container {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     flex: 1;
-    padding-right: 16px;
+    padding-right: 10px;
 
     .icon-box {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
-      background: #eff6ff; // Light blue
-      border-radius: 12px;
-      color: $primary-color;
-      font-size: 20px;
+      width: 38px;
+      height: 38px;
+      background: #eff6ff;
+      border-radius: 10px;
+      color: #2563EB;
+      font-size: 18px;
       flex-shrink: 0;
     }
 
     .question-text {
-      font-size: 16px;
-      font-weight: 600;
-      color: $text-dark;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
       margin: 0;
       line-height: 1.4;
     }
   }
 
   .toggle-icon {
-    color: $text-gray;
-    font-size: 20px;
-    // iOS-style spring animation for icon rotation
-    transition: transform 0.45s cubic-bezier(0.25, 0.8, 0.25, 1),
-      color 0.2s ease;
+    color: #9ca3af;
+    flex-shrink: 0;
+    transition: color 0.2s;
 
-    ion-icon {
-      display: block;
-    }
-  }
-
-  &:hover .toggle-icon {
-    color: $primary-color;
+    .material-symbols-outlined { font-size: 22px; }
   }
 }
 
+// Answer expand / collapse
 .faq-body {
   max-height: 0;
   overflow: hidden;
-  // iOS-style spring animation - smoother and more natural
-  transition: max-height 0.45s cubic-bezier(0.25, 0.8, 0.25, 1),
-    opacity 0.35s ease-out,
-    padding 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
-  background-color: #fafafa; // Slightly different bg for answer
   opacity: 0;
-  padding-top: 0;
-  padding-bottom: 0;
+  transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+              opacity 0.3s ease-out;
+  background: #f8fafc;
 
   &.expanded {
-    max-height: 500px; // Arbitrary large height
+    max-height: 600px;
     opacity: 1;
-    border-top: 1px solid $border-color;
+    border-top: 1px solid #e5e7eb;
   }
 
   .answer-content {
-    padding: 20px;
+    padding: 16px;
 
     p {
+      font-family: 'Manrope', sans-serif;
       margin: 0;
-      color: #4b5563; // Slightly darker gray for readability
-      line-height: 1.6;
-      font-size: 15px;
+      color: #374151;
+      line-height: 1.65;
+      font-size: 14px;
       white-space: pre-wrap;
     }
   }
 }
 
-// Support Section
+// Support section
 .support-section {
-  margin-top: 40px;
   text-align: center;
-  padding-bottom: 0px;
+  padding: 20px 0 0;
 
-  p {
-    color: $text-gray;
-    margin-bottom: 16px;
-    font-size: 14px;
+  .support-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 6px 0;
   }
 
-  .contact-btn {
-    --border-radius: 12px;
-    font-weight: 600;
-    height: 48px;
+  .support-desc {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.5;
   }
 }
