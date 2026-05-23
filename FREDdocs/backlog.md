@@ -123,7 +123,7 @@ we want different code if the user is from the private beta. such as not prompti
 7. `privateBeta` is set manually in DB for all private beta signups (SQL update after beta period).
 8. `npx tsc --noEmit` exits 0; `./gradlew build -x test` exits 0.
 
-## FRED-114 — Referral reward for three uses, founders vs non-founders
+## FRED-114 — ✓ Referral reward for three uses, founders vs non-founders
 add referral code for users who have had 3 people use their code. for founders we want it to send them an email about asking them what kinda clothing piece they want the limited edition design on and then for non-founders, is it possible to update a user current apple subscription from being $8/mo to being $5/mo without them having to do anything special?
 
 ### Acceptance Criteria
@@ -142,7 +142,7 @@ add referral code for users who have had 3 people use their code. for founders w
 9. My Profile shows X/Y referral progress toward reward.
 10. `./gradlew build -x test` exits 0; `npx tsc --noEmit` exits 0.
 
-## FRED-115 — Add eye-catching referral progress bar
+## FRED-115 — ✓ Add eye-catching referral progress bar
 add referral progress bar, make it eye catching
 
 ### Acceptance Criteria

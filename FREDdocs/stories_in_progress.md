@@ -5,9 +5,6 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 ## In Progress
 
 <!-- entries appended here -->
-- FRED-113 — Private beta code, founder status, app store reauth
-- FRED-114 — Referral reward for three uses, founders vs non-founders
-- FRED-115 — Add eye-catching referral progress bar
 - FRED-116 — Prompt users for review after first MFU
 - FRED-117 — First-time tour ending with what's your story
 - FRED-120 — Audit npm vulnerabilities and all warnings
@@ -40,3 +37,5 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 - FRED-111 — Equity milestone locks with blur and unlock animation
 - FRED-112 — Subscription prompt, risk reversal, expired sub handling
 - FRED-113 — Private beta code, founder status, app store reauth
+- FRED-114 — Referral reward for three uses, founders vs non-founders
+- FRED-115 — Add eye-catching referral progress bar
