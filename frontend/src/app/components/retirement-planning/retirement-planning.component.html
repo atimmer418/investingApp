@@ -30,6 +30,8 @@
       <p>Test if your money will last through retirement using real market scenarios</p>
     </div>
 
+    <div class="mc-gate-wrapper">
+      <div class="mc-content-wrapper" [class.mc-blurred]="isMonteCarloLocked">
 
     <!-- Monte Carlo Explanation (Collapsible) -->
     <ion-card class="quick-guide-card">
@@ -452,6 +454,18 @@
         </div>
       </ion-card-content>
     </ion-card>
+
+      </div><!-- end mc-content-wrapper -->
+
+      <!-- Lock overlay (only shown when locked) -->
+      <div *ngIf="isMonteCarloLocked" class="mc-lock-overlay">
+        <span class="material-symbols-outlined mc-lock-icon">lock</span>
+        <p class="mc-lock-text">Available on Plus and Pro</p>
+        <button class="mc-upgrade-btn" (click)="upgradeToPlusClicked()">
+          Upgrade
+        </button>
+      </div>
+    </div><!-- end mc-gate-wrapper -->
   </div>
 
   <!-- Strategy Education Section -->

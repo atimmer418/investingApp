@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -32,6 +32,7 @@ import {
 } from '@ionic/angular/standalone';
 import { MonteCarloService, SimulationParams, SimulationResult, StrategyType } from '../../services/monte-carlo.service';
 import { PortfolioService } from '../../services/portfolio.service';
+import { AuthService } from '../../services/auth.service';
 import Chart from 'chart.js/auto';
 import { addIcons } from 'ionicons';
 import { diceOutline, schoolOutline, calculatorOutline } from 'ionicons/icons';
@@ -76,8 +77,15 @@ import { diceOutline, schoolOutline, calculatorOutline } from 'ionicons/icons';
     IonRange
   ]
 })
-export class RetirementPlanningComponent {
+export class RetirementPlanningComponent implements OnInit {
   selectedSection: 'simulator' | 'education' = 'simulator';
+
+  // Tier gate
+  private currentTier: string | null = null;
+
+  get isMonteCarloLocked(): boolean {
+    return this.currentTier !== 'plus' && this.currentTier !== 'pro';
+  }
 
   // Helper method for template type checking
   isEducationSection(): boolean {
@@ -182,9 +190,21 @@ export class RetirementPlanningComponent {
 
   constructor(
     private monteCarloService: MonteCarloService,
-    private portfolioService: PortfolioService
+    private portfolioService: PortfolioService,
+    private authService: AuthService
   ) {
     addIcons({ diceOutline, schoolOutline, calculatorOutline });
+  }
+
+  ngOnInit(): void {
+    this.authService.userProgress$.subscribe(progress => {
+      this.currentTier = progress?.selectedTier ?? null;
+    });
+  }
+
+  upgradeToPlusClicked(): void {
+    // TODO: trigger Plus subscription IAP
+    console.log('[RetirementPlanning] Plus upgrade requested');
   }
 
   // Fetch real portfolio value from Tab 1

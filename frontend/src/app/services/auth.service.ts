@@ -25,6 +25,7 @@ export interface UserProgress {
   referralCode?: string;
   referralCount?: number;
   hasAppliedReferral?: boolean;
+  selectedTier?: 'core' | 'plus' | 'pro';
 }
 
 export interface PasskeyAuthRequest {
@@ -202,6 +203,7 @@ export class AuthService {
     const ordinal = parseInt(localStorage.getItem('onboardingStep') || '0', 10);
     const monthlyInvestment = localStorage.getItem('surveyMonthlyInvestment');
     const retirementIncome = localStorage.getItem('surveyRetirementIncome');
+    const tier = localStorage.getItem('fred.selectedTier') as 'core' | 'plus' | 'pro' | null;
     return {
       getStartedCompleted: ordinal >= 1,
       surveyInitialCompleted: ordinal >= 2,
@@ -212,7 +214,8 @@ export class AuthService {
       investmentScheduleCompleted: ordinal >= 7,
       investmentConfirmationCompleted: ordinal >= 8,
       monthlyInvestment: monthlyInvestment ? parseInt(monthlyInvestment, 10) : undefined,
-      retirementIncome: retirementIncome ? parseInt(retirementIncome, 10) : undefined
+      retirementIncome: retirementIncome ? parseInt(retirementIncome, 10) : undefined,
+      selectedTier: tier ?? undefined
     };
   }
 
