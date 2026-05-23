@@ -3,11 +3,13 @@ package com.investingapp.backend.controller;
 import com.investingapp.backend.dto.ChatRequest;
 import com.investingapp.backend.dto.ChatResponse;
 import com.investingapp.backend.service.ChatService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.investingapp.backend.model.ChatMessage;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,10 +30,21 @@ public class ChatController {
         this.dailyQuestionService = dailyQuestionService;
     }
 
+    // Preserved for fallback — prefer GET /stream for new clients
     @PostMapping
     public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
         ChatResponse response = chatService.processChat(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamChat(
+            @RequestParam String message,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String sessionId,
+            @RequestParam(defaultValue = "false") boolean generateTitle) {
+        ChatRequest request = new ChatRequest(message, userId, sessionId != null ? sessionId : "default-session", generateTitle);
+        return chatService.streamChat(request);
     }
 
     @GetMapping("/history")

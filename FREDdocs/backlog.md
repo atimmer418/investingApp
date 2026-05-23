@@ -545,7 +545,7 @@ Allow sharing of monte carlo results
 ## FRED-182 — 💤 Add 3 Monte Carlo piggy bank visual states
 add 3 forms of piggy banks based on monte carlo simulation results (mint condition, cracked condition, exploded into pieces condition)
 
-## FRED-183 — Change request/response for ai chat page to use token streaming via SSE
+## FRED-183 — ✓ Change request/response for ai chat page to use token streaming via SSE
 update the ai chat response endpoint to send token's via SSE and spring boot's flux streaming
 
 ### Acceptance Criteria
