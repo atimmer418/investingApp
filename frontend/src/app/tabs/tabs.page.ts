@@ -6,13 +6,14 @@ import { triangle, ellipse, square, pieChartOutline, trendingUpOutline, personOu
 import { AccountStatusService } from '../services/account-status.service';
 import { AuthService } from '../services/auth.service';
 import { Observable } from 'rxjs';
+import { FirstTimeTourComponent } from '../components/first-time-tour/first-time-tour.component';
 
 @Component({
   selector: 'app-tabs',
   templateUrl: 'tabs.page.html',
   styleUrls: ['tabs.page.scss'],
   standalone: true,
-  imports: [CommonModule, AsyncPipe, IonTabs, IonTabBar, IonTabButton, IonIcon, IonBadge],
+  imports: [CommonModule, AsyncPipe, IonTabs, IonTabBar, IonTabButton, IonIcon, IonBadge, FirstTimeTourComponent],
 })
 export class TabsPage implements OnInit {
   settingsTabBadge$: Observable<string | null>;

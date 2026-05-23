@@ -1,0 +1,40 @@
+<div class="ftt-overlay" *ngIf="isVisible" [class.ftt-visible]="isVisible" [class.ftt-step4]="currentStep === 4">
+
+  <!-- Full backdrop — hidden on step 3 where ftt-highlight provides the dimming -->
+  <div
+    *ngIf="currentStep !== 3"
+    class="ftt-backdrop"
+    [class.ftt-backdrop-permeable]="currentStep === 4"
+  ></div>
+
+  <!-- Highlight cutout box (step 3 tab button) -->
+  <div
+    *ngIf="highlightRect"
+    class="ftt-highlight"
+    [style.top.px]="highlightRect.top - 8"
+    [style.left.px]="highlightRect.left - 8"
+    [style.width.px]="highlightRect.width + 16"
+    [style.height.px]="highlightRect.height + 16"
+  ></div>
+
+  <!-- Tooltip card -->
+  <div class="ftt-card" [class.ftt-card-bottom]="currentStep === 3">
+    <div class="ftt-step-indicator">
+      <span
+        *ngFor="let dot of [1,2,3,4]"
+        class="ftt-dot"
+        [class.ftt-dot-active]="dot === currentStep"
+      ></span>
+    </div>
+
+    <p class="ftt-label">{{ stepLabel }}</p>
+
+    <div class="ftt-actions">
+      <button class="ftt-next" (click)="onNext()" *ngIf="!isLastStep">
+        Next
+      </button>
+      <button class="ftt-skip" (click)="onSkip()">Skip tour</button>
+    </div>
+  </div>
+
+</div>

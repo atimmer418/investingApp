@@ -64,8 +64,12 @@
       <div *ngIf="messages.length <= 1 && dailySuggestions.length > 0" class="suggestions-container">
         <p class="suggestion-header">Try asking about...</p>
         <div class="suggestion-chips">
-          <ion-chip *ngFor="let question of dailySuggestions" (click)="selectSuggestion(question)" outline
-            color="primary">
+          <ion-chip
+            *ngFor="let question of dailySuggestions"
+            (click)="selectSuggestion(question)"
+            outline
+            color="primary"
+            [class.tour-story-chip]="isTourOnStep4 && question === FRED_STORY_TRIGGER">
             <ion-label>{{ question }}</ion-label>
           </ion-chip>
         </div>
