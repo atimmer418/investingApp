@@ -27,6 +27,7 @@ export interface UserProgress {
   hasAppliedReferral?: boolean;
   selectedTier?: 'core' | 'plus' | 'pro';
   privateBeta?: boolean;
+  referralRewardTriggered?: boolean;
 }
 
 export interface PasskeyAuthRequest {
@@ -668,5 +669,10 @@ export class AuthService {
   applyReferralCode(code: string): Observable<any> {
     const url = `${BACKEND_API_URL}/user/referral/apply`;
     return this.http.post(url, { code }, { headers: this.getAuthHeaders() });
+  }
+
+  validateReferralCode(code: string): Observable<{ valid: boolean }> {
+    const url = `${BACKEND_API_URL}/user/referral/validate?code=${encodeURIComponent(code)}`;
+    return this.http.get<{ valid: boolean }>(url, { headers: this.getAuthHeaders() });
   }
 }

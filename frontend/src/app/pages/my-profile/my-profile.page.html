@@ -104,7 +104,16 @@
     <ion-card-content>
 
       <div class="referral-section">
-        <div class="sub-label">SHARE THE WEALTH (<span style="color: var(--ion-color-primary); font-weight: bold;">{{ referralCount }} / 3 Redeemed</span>)</div>
+        <div class="sub-label">SHARE THE WEALTH</div>
+
+        <div class="referral-progress-bar">
+          <div *ngFor="let seg of referralSegments; let i = index"
+               class="referral-segment"
+               [class.filled]="i < referralCount"
+               [class.complete]="referralCount >= referralThreshold">
+          </div>
+        </div>
+        <div class="referral-progress-label">{{ referralCount }} / {{ referralThreshold }} redeemed</div>
         <div class="code-box">
           <div class="code-text">{{ referralCode }}</div>
           <div class="share-btn" (click)="copyReferral()">
@@ -112,6 +121,9 @@
           </div>
         </div>
         <div class="helper-text">Claim limited edition FRED merch when 3 users redeem your code. Users can redeem only one code.</div>
+        <div *ngIf="referralCount >= referralThreshold" class="reward-unlocked-banner">
+          Reward unlocked!
+        </div>
       </div>
 
       <div class="divider"></div>
@@ -122,9 +134,9 @@
         <div class="redeem-row">
           <div class="input-container">
             <ion-icon name="ticket-outline" class="input-icon"></ion-icon>
-            <input type="text" [placeholder]="hasAppliedReferral ? 'Code applied' : 'Enter referral code'" [(ngModel)]="redeemCodeInput" [disabled]="isLoadingReferral || hasAppliedReferral" />
+            <input type="text" [placeholder]="hasAppliedReferral ? 'Code applied' : 'Enter referral code'" [(ngModel)]="redeemCodeInput" (input)="onReferralCodeInput(redeemCodeInput)" [disabled]="isLoadingReferral || hasAppliedReferral" />
           </div>
-          <button class="apply-btn" (click)="redeemCode()" [disabled]="isLoadingReferral || hasAppliedReferral">
+          <button class="apply-btn" (click)="redeemCode()" [disabled]="isLoadingReferral || hasAppliedReferral || (!hasAppliedReferral && !isCodeValid)">
             {{ isLoadingReferral ? '...' : (hasAppliedReferral ? 'Applied' : 'Apply') }}
           </button>
         </div>

@@ -110,7 +110,7 @@ we want to prompt our apple subscription on the selection of the user's tier aka
 6. If IAP plugin not yet available, skip item 2 and focus on expired gate (items 3–5) only.
 7. `npx tsc --noEmit` exits 0.
 
-## FRED-113 — Private beta code, founder status, app store reauth
+## FRED-113 — ✓ Private beta code, founder status, app store reauth
 we want different code if the user is from the private beta. such as not prompting them for the subscription and also changing the referral reward text to say that you can claim a limited edition FRED outfit by having 3 people use your code (beta or non beta users). also showing FOUNDER STATUS somewhere such as like the loading screen in gold color. we also want to make sure their deviceId/iCloudKeychain is used to prompt them to login when they have downloaded the non-private beta version. i was thinking something along the lines of adding a privateBeta variable to the user model and setting it to value 1 for all people that sign up during that build but how will the prompting for reauth work if they are downloading the app off the app store for the first time?
 
 ### Acceptance Criteria

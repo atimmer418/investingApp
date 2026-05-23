@@ -374,6 +374,44 @@ ion-card.referral-card {
         margin-bottom: 12px;
     }
 
+    .reward-unlocked-banner {
+        margin-top: 8px;
+        font-family: 'Manrope', sans-serif;
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--ion-color-success);
+    }
+
+    .referral-progress-bar {
+        display: flex;
+        gap: 8px;
+        margin: 12px 0 6px;
+    }
+
+    .referral-segment {
+        flex: 1;
+        height: 10px;
+        border-radius: 5px;
+        background: var(--app-gray-200, #e5e7eb);
+        transition: background 0.3s ease;
+
+        &.filled {
+            background: #2563EB;
+        }
+
+        &.complete {
+            background: #2563EB;
+            animation: shimmer-pulse 1.5s ease-in-out;
+        }
+    }
+
+    .referral-progress-label {
+        font-family: 'Manrope', sans-serif;
+        font-size: 12px;
+        color: var(--app-text-secondary);
+        margin-bottom: 8px;
+    }
+
     .divider {
         height: 1px;
         background: #E5E5EA;
@@ -430,4 +468,9 @@ ion-card.referral-card {
             }
         }
     }
+}
+
+@keyframes shimmer-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
 }

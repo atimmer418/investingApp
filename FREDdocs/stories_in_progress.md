@@ -39,3 +39,4 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 - FRED-110 — Overhaul tab 2 education with four strategies
 - FRED-111 — Equity milestone locks with blur and unlock animation
 - FRED-112 — Subscription prompt, risk reversal, expired sub handling
+- FRED-113 — Private beta code, founder status, app store reauth
