@@ -1,107 +1,95 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/tabs/tab3" color="light" text="" icon="chevron-back-outline"></ion-back-button>
+      <ion-back-button defaultHref="/tabs/tab3" text="" icon="chevron-back-outline"></ion-back-button>
     </ion-buttons>
     <ion-title>Customize Portfolio</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="gray-background">
-  <div class="mobile-container">
-    
-    <!-- Use Case 1: Explanation (Moved to top) -->
-    <div class="section-card mobile-card">
-      <div class="section-header" style="margin-bottom: 0px;">
-        <h3 class="section-title">Our Philosophy</h3>
-        <p class="section-subtitle">Why This Is Our Default Portfolio</p>
+<ion-content class="portfolio-content">
+  <div class="content-inner">
+
+    <!-- Philosophy Card -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">auto_awesome</span>
+        <h3 class="card-title">Our Philosophy</h3>
       </div>
+      <p class="card-subtitle">Why This Is Our Default Portfolio</p>
 
-      <ion-list class="ios-list info-list">
-        <ion-item lines="none">
-          <ion-label class="ion-text-wrap">
-            <h2 class="info-title">
-              <ion-icon name="star" color="warning" class="info-icon"></ion-icon>
-              The Long-Term Growth Portfolio
-            </h2>
-            
-            <p class="info-text">
-              We provide this default portfolio because guessing the next "big boom" stock is a headache that fights for marginal gains. 
-              This strategy is designed to <strong>pursue strong long-term growth</strong> while remaining broadly diversified without the complexity.
-            </p>
+      <div class="info-body">
+        <h4 class="info-title">The Long-Term Growth Portfolio</h4>
+        <p class="info-text">
+          We provide this default portfolio because guessing the next "big boom" stock is a headache that fights for marginal gains.
+          This strategy is designed to <strong>pursue strong long-term growth</strong> while remaining broadly diversified without the complexity.
+        </p>
 
-            <div class="portfolio-breakdown">
-              <div class="breakdown-item"><strong>75% VTI</strong> &ndash; U.S. Total Stock Market</div>
-              <div class="breakdown-item"><strong>20% VXUS</strong> &ndash; International Stocks</div>
-              <div class="breakdown-item"><strong>5% VBR</strong> &ndash; Small-Cap Value Tilt</div>
-            </div>
+        <div class="breakdown-list">
+          <div class="breakdown-item"><strong>75% VTI</strong> &ndash; U.S. Total Stock Market</div>
+          <div class="breakdown-item"><strong>20% VXUS</strong> &ndash; International Stocks</div>
+          <div class="breakdown-item"><strong>5% VBR</strong> &ndash; Small-Cap Value Tilt</div>
+        </div>
 
-            <h3 class="sub-title"><u>Why This Works</u></h3>
-            <ul class="benefit-list">
-              <li><strong>Max Growth:</strong><span class="li-detail"> ~95% stocks with a history of outperforming over decades.</span></li>
-              <li><strong>Diversification:</strong><span class="li-detail"> Reduces risk by owning more of the market instead of individual stocks.</span></li>
-              <li><strong>Global Exposure:</strong><span class="li-detail"> 20% international avoids US-only risk without dragging returns.</span></li>
-              <li><strong>Factor Tilt:</strong><span class="li-detail"> 5% VBR captures the academically recognized "small-cap value" premium.</span></li>
-              <li><strong>Simplicity:</strong><span class="li-detail"> Reduces behavioral errors (no tinkering or timing).</span></li>
-            </ul>
+        <h5 class="sub-title">Why This Works</h5>
+        <ul class="benefit-list">
+          <li><strong>Max Growth:</strong><span class="li-detail"> ~95% stocks with a history of outperforming over decades.</span></li>
+          <li><strong>Diversification:</strong><span class="li-detail"> Reduces risk by owning more of the market instead of individual stocks.</span></li>
+          <li><strong>Global Exposure:</strong><span class="li-detail"> 20% international avoids US-only risk without dragging returns.</span></li>
+          <li><strong>Factor Tilt:</strong><span class="li-detail"> 5% VBR captures the academically recognized "small-cap value" premium.</span></li>
+          <li><strong>Simplicity:</strong><span class="li-detail"> Reduces behavioral errors (no tinkering or timing).</span></li>
+        </ul>
 
-            <p class="info-note">
-              <em>This portfolio is provided as a default starting allocation. Users may customize their investments at any time. FRED does not provide personalized investment advice — we provide automated tools and educational projections based on user inputs and market assumptions. Historically, a portfolio with this allocation has produced a nominal average annual return of approximately 11.5% based on long-term market index performance. Future returns will vary. FRED projections use a conservative assumption of 10%.</em>
-            </p>
+        <p class="info-note">
+          <em>This portfolio is provided as a default starting allocation. Users may customize their investments at any time. FRED does not provide personalized investment advice. Historically, this allocation has produced a nominal average annual return of ~11.5%. Future returns will vary. FRED projections use a conservative assumption of 10%.</em>
+        </p>
 
-            <div class="ion-margin-top" *ngIf="isPortfolioDifferentFromDefault()">
-              <ion-button 
-                fill="clear" 
-                size="small" 
-                color="warning"
-                (click)="resetToDefault()"
-                [disabled]="isLoading || isSaving">
-                <ion-icon name="refresh-outline" slot="start"></ion-icon>
-                Reset to Default
-              </ion-button>
-            </div>
-          </ion-label>
-        </ion-item>
-      </ion-list>
+        <div *ngIf="isPortfolioDifferentFromDefault()">
+          <button class="reset-btn" (click)="resetToDefault()" [disabled]="isLoading || isSaving">
+            <span class="material-symbols-outlined">refresh</span>
+            Reset to Default
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- Main Portfolio List -->
-    <div class="section-card mobile-card">
-      <div class="section-header" style="margin-bottom: 0px;">
-        <h3 class="section-title">Your Allocation</h3>
-        <p class="section-subtitle">{{ getTotalAllocation() }}% Allocated</p>
+    <!-- Your Allocation Card -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">pie_chart</span>
+        <h3 class="card-title">Your Allocation</h3>
+        <span class="alloc-total">{{ getTotalAllocation() }}%</span>
       </div>
-      
-      <div *ngIf="isLoading" class="loading-container">
-        <ion-spinner name="crescent"></ion-spinner>
-        <p>Loading portfolio...</p>
+
+      <div *ngIf="isLoading" class="loading-state">
+        <ion-spinner name="crescent" class="loading-spinner"></ion-spinner>
+        <span class="loading-text">Loading portfolio...</span>
       </div>
-      
-      <ion-list class="ios-list portfolio-list" *ngIf="!isLoading">
+
+      <ion-list class="portfolio-list" *ngIf="!isLoading">
         <ion-reorder-group [disabled]="false" (ionItemReorder)="reorderStocks($event)">
-          <ion-item-sliding *ngFor="let stock of portfolio" class="ios-item-sliding" @deleteAnimation>
+          <ion-item-sliding *ngFor="let stock of portfolio" class="portfolio-sliding" @deleteAnimation>
             <ion-item lines="full" class="portfolio-item">
               <div class="stock-info">
-                <div class="stock-header">
+                <div class="stock-header-row">
                   <span class="stock-symbol">{{ stock.symbol }}</span>
                   <ion-badge [color]="stock.assetType === 'ETF' ? 'light' : 'light'" class="stock-badge">{{ stock.assetType }}</ion-badge>
                 </div>
                 <div class="stock-name">{{ stock.name }}</div>
               </div>
-              
-              <div class="allocation-input-wrapper" slot="end">
+              <div class="alloc-input-wrap" slot="end">
                 <ion-input
                   type="number"
                   [value]="stock.percentage"
                   (ionInput)="updateAllocation(stock, $event)"
-                  class="allocation-input"
+                  class="alloc-input"
                   min="0"
                   max="100">
                 </ion-input>
                 <span class="percent-sign">%</span>
               </div>
             </ion-item>
-            
+
             <ion-item-options side="end" (ionSwipe)="removeStock(stock)">
               <ion-item-option color="danger" expandable="true" (click)="removeStock(stock)">
                 <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
@@ -112,11 +100,11 @@
       </ion-list>
     </div>
 
-    <!-- Search Section -->
-    <div class="section-card mobile-card">
-      <div class="section-header">
-        <h3 class="section-title">Add Assets</h3>
-        <p class="section-subtitle">Search for stocks & ETFs</p>
+    <!-- Add Assets Card -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">search</span>
+        <h3 class="card-title">Add Assets</h3>
       </div>
 
       <ion-searchbar
@@ -127,56 +115,51 @@
         animated="true"
         debounce="300"
         maxlength="80"
-        class="ios-searchbar"
-        style="padding-top: 0; padding-bottom: 0;">
+        class="fred-searchbar">
       </ion-searchbar>
 
-      <!-- Search Results (Virtual Scroll Area) -->
       <div class="search-results-container scrollable-results" *ngIf="searchTerm.length > 0 || isSearching">
-        <div *ngIf="isSearching" class="loading-container">
-          <ion-spinner name="crescent"></ion-spinner>
+        <div *ngIf="isSearching" class="loading-state">
+          <ion-spinner name="crescent" class="loading-spinner"></ion-spinner>
         </div>
-        
-        <ion-list *ngIf="searchResults.length > 0 && !isSearching" class="ios-list search-results-list" lines="full">
-          <ion-item 
+
+        <ion-list *ngIf="searchResults.length > 0 && !isSearching" class="results-list" lines="full">
+          <ion-item
             *ngFor="let asset of searchResults"
             (click)="addAssetToPortfolio(asset)"
             [button]="true"
             [disabled]="isStockInPortfolio(asset)"
             detail="false">
-            <div class="stock-icon-wrapper" slot="start">
+            <div class="stock-initials-wrap" slot="start">
               <div class="stock-initials">{{ asset.symbol.substring(0, 2) }}</div>
             </div>
             <ion-label>
               <h3 class="font-bold">{{ asset.symbol }}</h3>
               <p class="text-gray">{{ asset.name }}</p>
             </ion-label>
-            <ion-button 
-              slot="end" 
-              fill="clear" 
+            <ion-button
+              slot="end"
+              fill="clear"
               [color]="isStockInPortfolio(asset) ? 'success' : 'primary'">
               <ion-icon [name]="isStockInPortfolio(asset) ? 'checkmark-circle' : 'add-circle'"></ion-icon>
             </ion-button>
           </ion-item>
         </ion-list>
-        
+
         <div *ngIf="searchTerm.length > 0 && searchResults.length === 0 && !isSearching" class="no-results">
           <p>No results found for "{{ searchTerm }}"</p>
         </div>
       </div>
     </div>
 
-    <!-- Save Portfolio Button -->
-    <div class="ion-padding-vertical">
-      <ion-button 
-        expand="block" 
-        shape="round"
-        color="primary"
-        (click)="savePortfolio()"
-        [disabled]="!isValidAllocation() || !hasPortfolioChanged() || isSaving">
-        <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-        <span>{{ isSaving ? 'Saving...' : 'Save Portfolio' }}</span>
-      </ion-button>
-    </div>
+    <!-- Save Button -->
+    <button class="cta-btn"
+      (click)="savePortfolio()"
+      [disabled]="!isValidAllocation() || !hasPortfolioChanged() || isSaving">
+      <span>{{ isSaving ? 'Saving...' : 'Save Portfolio' }}</span>
+      <span class="material-symbols-outlined" *ngIf="!isSaving">check</span>
+      <ion-spinner name="crescent" *ngIf="isSaving" class="btn-spinner"></ion-spinner>
+    </button>
+
   </div>
 </ion-content>

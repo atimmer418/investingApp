@@ -1,399 +1,381 @@
-// iOS-style Portfolio Customization
-
-ion-content {
-  --keyboard-offset: 0px !important;
+:host {
+  --ion-background-color: #f8fafc;
+  --ion-toolbar-background: #f8fafc;
+  --ion-toolbar-color: #0f172a;
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
 }
 
 ion-content {
+  --background: #f8fafc;
+  --keyboard-offset: 0px !important;
+
   &::part(scroll) {
     scrollbar-gutter: stable;
     overflow-y: scroll !important;
   }
 }
 
-ion-header {
-  ion-toolbar {
-    --background: linear-gradient(0deg, var(--ion-color-primary) 0%, var(--ion-color-primary-tint) 100%);
-    --color: white;
-    
-    ion-title {
-      font-weight: 600;
-      font-size: 17px;
-    }
-    
-    ion-back-button {
-      --color: white;
-    }
-    --border-width: 0;
+ion-toolbar {
+  --background: #f8fafc;
+  --border-width: 0;
+  --min-height: 52px;
+}
+
+ion-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #0f172a;
+}
+
+ion-back-button { --color: #0f172a; }
+
+.content-inner {
+  padding: 12px 18px 40px;
+  font-family: 'Manrope', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.section-card {
+  background: white;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
+  padding: 16px;
+}
+
+.card-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+
+  .card-icon {
+    font-size: 18px;
+    color: #2563EB;
+    font-variation-settings: 'FILL' 1;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+    margin: 0;
+    flex: 1;
+  }
+
+  .alloc-total {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    color: #2563EB;
   }
 }
 
-.ion-text-wrap {
-  margin-bottom: 0;
+.card-subtitle {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0 0 14px 0;
+  padding-left: 28px;
 }
 
-.ion-padding-vertical {
-  padding-top: 0;
-  padding-bottom: 0;
+// Philosophy content
+.info-body {
+  .info-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+  }
+
+  .info-text {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.5;
+    margin: 0 0 12px 0;
+  }
+
+  .breakdown-list {
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+
+    .breakdown-item {
+      font-family: 'Manrope', sans-serif;
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.8;
+
+      strong { color: #2563EB; }
+    }
+  }
+
+  .sub-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .benefit-list {
+    padding-left: 16px;
+    margin: 0 0 12px 0;
+
+    li {
+      font-family: 'Manrope', sans-serif;
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.6;
+      margin-bottom: 4px;
+
+      strong { color: #0f172a; }
+      .li-detail { color: #6b7280; }
+    }
+  }
+
+  .info-note {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    color: #6b7280;
+    line-height: 1.45;
+    margin: 0 0 12px 0;
+  }
+
+  .reset-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fef3c7;
+    border: 1.5px solid #fcd34d;
+    border-radius: 8px;
+    color: #92400e;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    .material-symbols-outlined { font-size: 16px; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:active:not(:disabled) { transform: scale(0.97); }
+  }
 }
 
-.gray-background {
-  --background: var(--app-background-alt, #f2f2f7);
-}
-
-.container {
-  padding-bottom: 80px; // Space for footer
-}
-
-// New Card Styles (Matching Recurring Investments)
-.mobile-container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 16px;
-  padding-bottom: 8px;
-}
-
-.mobile-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  margin-bottom: 20px;
-  padding: 16px;
-  overflow: hidden;
-}
-
-.section-header {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f0f0f0;
+// Portfolio list
+.loading-state {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px 0;
+
+  .loading-spinner {
+    width: 18px;
+    height: 18px;
+    color: #2563EB;
+  }
+
+  .loading-text {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    color: #6b7280;
+  }
 }
 
-.section-title {
-  font-weight: 600;
-  color: #1c1c1e;
-  font-size: 18px;
+.portfolio-list {
   margin: 0;
-}
+  padding: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #f1f5f9;
 
-.section-subtitle {
-  color: #8e8e93;
-  font-size: 12px;
-  margin: 0;
-}
-
-// Search Group Specifics
-.search-group {
-  padding: 0; 
-}
-
-.search-list {
-  ion-item {
+  .portfolio-item {
+    --background: white;
+    --color: #0f172a;
+    --border-color: #f1f5f9;
     --padding-start: 0;
     --padding-end: 0;
     --inner-padding-end: 0;
-    --background: white;
-    --max-height: 50px;
-    --border-radius: 10px !important;
-    
-    ion-searchbar {
-      padding-top: 0px !important;
-      padding-bottom: 0px !important;
-      padding-left: 10px !important;
-      padding-right: 10px !important;
-      height: 100%;
-    }
-  }
-}
+    padding: 0;
 
-.benefit-list {
-  padding-left: 20px;
-  line-height: 1.2;
-  margin-top: 5px;
-}
+    .stock-info {
+      flex: 1;
+      padding: 10px 0 10px 12px;
 
-.li-detail {
-  font-size: 11px;
-}
-
-.info-note {
-  font-size: 11.2px;
-}
-
-.ios-searchbar {
-  --background: #e3e3e8;
-  --placeholder-color: #8e8e93;
-  --icon-color: #8e8e93;
-  --border-radius: 10px;
-  --box-shadow: none;
-  height: auto; 
-  
-  &.searchbar-has-focus {
-    --cancel-button-color: var(--app-primary);
-  }
-}
-
-// iOS Inset List Styles
-.ios-list {
-  background: transparent;
-  margin: 0;
-  --ion-item-background: white;
-  
-  ion-item {
-    --background: white !important;
-    --border-radius: 0 !important;
-  }
-  
-  &.info-list {
-    ion-item {
-      --padding-start: 16px;
-      --inner-padding-end: 16px;
-      --padding-top: 8px;
-      --padding-bottom: 8px;
-    }
-  }
-}
-
-// Portfolio Item Styling
-.portfolio-item {
-  --padding-start: 0;
-  --inner-padding-end: 0;
-  --padding-end: 0;
-  --min-height: 60px;
-  
-  .stock-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    width: 100%;
-    padding-right: 12px;
-    
-    .stock-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      
-      .stock-symbol {
-        font-weight: 600;
-        font-size: 17px;
-        color: #000;
-      }
-      
-      .stock-badge {
-        font-size: 11px;
-        font-weight: 500;
-        padding: 2px 6px;
-        border-radius: 4px;
-        --color: #666;
-        --background: #f2f2f7;
-      }
-    }
-    
-    .stock-name {
-      font-size: 13px;
-      color: #8e8e93;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  }
-  
-  .allocation-input-wrapper {
-    display: flex;
-    align-items: center;
-    background: transparent;
-    border-radius: 8px;
-    padding: 4px 8px;
-    width: 70px;
-    justify-content: flex-end;
-    
-    .allocation-input {
-      --padding-start: 0;
-      --padding-end: 0;
-      --padding-top: 0;
-      --padding-bottom: 0;
-      font-size: 16px;
-      font-weight: 600;
-      text-align: center;
-      --color: #000;
-    }
-    
-    .percent-sign {
-      font-size: 14px;
-      font-weight: 500;
-      color: #8e8e93;
-      margin-left: 2px;
-    }
-  }
-}
-
-// Search Results
-.search-results-container {
-  margin-top: 16px;
-  
-  &.scrollable-results {
-    max-height: 300px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .search-results-list {
-    border-radius: 10px;
-    overflow: hidden;
-    
-    ion-item {
-      --padding-start: 16px;
-      --inner-padding-end: 16px;
-      
-      .stock-icon-wrapper {
-        width: 36px;
-        height: 36px;
-        background: #f2f2f7;
-        border-radius: 50%;
+      .stock-header-row {
         display: flex;
         align-items: center;
-        justify-content: center;
-        margin-right: 12px;
-        
-        .stock-initials {
-          font-size: 14px;
-          font-weight: 600;
-          color: #666;
-        }
-      }
-      
-      h3 {
-        font-size: 16px;
-        font-weight: 600;
+        gap: 6px;
         margin-bottom: 2px;
-      }
-      
-      p {
-        font-size: 13px;
-      }
-    }
-  }
-}
 
-// Footer
-ion-footer {
-  ion-toolbar {
-    --background: white;
-    --border-color: #e5e5ea;
-    padding: 8px 16px;
-    
-    .footer-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      
-      .total-allocation {
-        display: flex;
-        flex-direction: column;
-        
-        .label {
-          font-size: 12px;
-          color: #8e8e93;
-          text-transform: uppercase;
+        .stock-symbol {
+          font-family: 'Manrope', sans-serif;
+          font-size: 14px;
+          font-weight: 800;
+          color: #0f172a;
+          letter-spacing: -0.01em;
         }
-        
-        .value {
-          font-size: 20px;
+
+        .stock-badge {
+          font-family: 'Manrope', sans-serif;
+          font-size: 10px;
           font-weight: 700;
-          
-          &.valid { color: var(--ion-color-success); }
-          &.invalid { color: var(--ion-color-danger); }
+          --background: #f1f5f9;
+          --color: #6b7280;
+          letter-spacing: 0.04em;
         }
       }
-      
-      .action-buttons {
-        display: flex;
-        gap: 12px;
-        
-        ion-button {
-          margin: 0;
-          font-weight: 600;
-          --border-radius: 20px;
-          height: 40px;
-        }
+
+      .stock-name {
+        font-family: 'Manrope', sans-serif;
+        font-size: 12px;
+        color: #6b7280;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 180px;
+      }
+    }
+
+    .alloc-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding-right: 8px;
+
+      ion-input.alloc-input {
+        --background: transparent;
+        --color: #2563EB;
+        --padding-start: 4px;
+        --padding-end: 0;
+        --padding-top: 0;
+        --padding-bottom: 0;
+        --border-width: 0;
+        --box-shadow: none;
+        font-family: 'Manrope', sans-serif;
+        font-size: 17px;
+        font-weight: 700;
+        text-align: right;
+        width: 52px;
+      }
+
+      .percent-sign {
+        font-family: 'Manrope', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: #2563EB;
       }
     }
   }
 }
 
-// Loading
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 0;
-  color: #8e8e93;
-  
-  ion-spinner {
-    margin-bottom: 12px;
-  }
-  
-  p {
-    font-size: 14px;
+// Search
+ion-searchbar.fred-searchbar {
+  --background: #f8fafc;
+  --border-radius: 10px;
+  --box-shadow: none;
+  --color: #0f172a;
+  --placeholder-color: #6b7280;
+  --icon-color: #6b7280;
+  --clear-button-color: #6b7280;
+  --cancel-button-color: #2563EB;
+  padding: 0;
+  margin-bottom: 8px;
+  font-family: 'Manrope', sans-serif;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.results-list {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+
+  ion-item {
+    --background: white;
+    --color: #0f172a;
+    --border-color: #f1f5f9;
+    font-family: 'Manrope', sans-serif;
   }
 }
 
-// Recommendation Card
-.recommendation-card {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 12px;
-  padding: 16px;
-  margin-top: 24px;
-  border: 1px solid rgba(0,0,0,0.05);
-  
-  .card-header {
+.stock-initials-wrap {
+  .stock-initials {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #2563EB;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    
-    ion-icon {
-      font-size: 20px;
-      color: var(--ion-color-primary);
-    }
-    
-    h3 {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 600;
-      color: #1c1c1e;
-    }
-  }
-  
-  p {
-    margin: 0;
-    font-size: 14px;
-    line-height: 1.5;
-    color: #48484a;
+    justify-content: center;
+    text-transform: uppercase;
   }
 }
-.portfolio-breakdown {
-  background-color: #f2f2f7;
-  border-radius: 8px;
+
+.no-results {
+  text-align: center;
   padding: 12px;
-  margin: 12px 0;
-  
-  .breakdown-item {
-    font-size: 14px;
-    color: #1c1c1e;
-    margin-bottom: 4px;
-    
-    &:last-child {
-      margin-bottom: 0;
-    }
-    
-    strong {
-      font-weight: 600;
-    }
+
+  p {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
   }
+}
+
+// Save CTA
+.cta-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: none;
+  background: #2563EB;
+  color: white;
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
+  transition: all 0.15s ease;
+
+  .material-symbols-outlined { font-size: 20px; }
+
+  .btn-spinner {
+    width: 18px;
+    height: 18px;
+    color: white;
+  }
+
+  &:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  &:active:not(:disabled) { transform: scale(0.99); }
 }
