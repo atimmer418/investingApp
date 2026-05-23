@@ -1380,6 +1380,147 @@ ion-item {
   }
 }
 
+/* =============================================================================
+   EDUCATION SECTION — 2x2 GRID + BOTTOM-SHEET
+   ============================================================================= */
+
+.edu-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+}
+
+.edu-card {
+  background: var(--app-card-background);
+  border: 1px solid var(--app-card-border);
+  border-radius: 16px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.edu-card-icon {
+  font-size: 28px;
+  color: var(--app-blue);
+  margin-bottom: 4px;
+}
+
+.edu-card-name {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--app-text-primary);
+  line-height: 1.2;
+}
+
+.edu-card-tagline {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  color: var(--app-text-secondary);
+  line-height: 1.3;
+}
+
+/* Bottom-sheet */
+.edu-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 1000;
+
+  &.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+}
+
+.edu-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--app-card-background);
+  border-radius: 20px 20px 0 0;
+  padding: 12px 24px calc(env(safe-area-inset-bottom) + 24px);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 1001;
+  max-height: 60vh;
+  overflow-y: auto;
+
+  &.visible {
+    transform: translateY(0);
+  }
+}
+
+.edu-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--app-gray-300);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+.edu-sheet-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--app-text-primary);
+  margin: 0 0 16px;
+}
+
+.edu-sheet-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  li {
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    color: var(--app-text-secondary);
+    line-height: 1.5;
+    padding-left: 20px;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      background: var(--app-blue);
+      border-radius: 50%;
+    }
+  }
+}
+
+.edu-sheet-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--app-text-secondary);
+}
+
 // Media print for PDF export
 @media print {
   // Hide everything by default

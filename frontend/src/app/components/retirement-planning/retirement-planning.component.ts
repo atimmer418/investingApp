@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import {
   IonHeader,
   IonToolbar,
@@ -39,18 +38,6 @@ import { diceOutline, schoolOutline, calculatorOutline } from 'ionicons/icons';
 
 
 
-interface StrategyCard {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: string;
-  color: string;
-  description: string;
-  benefits: string[];
-  considerations: string[];
-  portfolioRecommendation: string;
-  bestFor: string;
-}
 
 @Component({
   selector: 'app-retirement-planning',
@@ -105,6 +92,66 @@ export class RetirementPlanningComponent {
     this.selectedSection = section;
   }
 
+  // Education section state
+  openedStrategy: string | null = null;
+  openedStrategyTitle: string = '';
+  openedStrategyBullets: string[] = [];
+
+  private readonly strategyData: Record<string, { title: string; bullets: string[] }> = {
+    yield: {
+      title: 'Yield-Based Income',
+      bullets: [
+        'Build a portfolio of high-yield dividend stocks and bonds (target 4–5% yield).',
+        'Spend only the natural income — dividends, interest, REITs — never selling principal.',
+        'Reinvest excess income in good years to compound the base.',
+        'Rebalance annually to maintain target yield mix.',
+        'Keep a 6-month cash buffer to avoid selling during dividend cuts.'
+      ]
+    },
+    guardrails: {
+      title: 'Dynamic Guardrails',
+      bullets: [
+        'Set a base withdrawal rate of 5% at retirement.',
+        'If withdrawals exceed 6% of current portfolio, cut spending by 10%.',
+        'If withdrawals drop below 4% of current portfolio, increase spending by 10%.',
+        'Review and adjust once per year after rebalancing.',
+        'Keep 2 years of spending in cash to avoid forced sales in down markets.'
+      ]
+    },
+    annuity: {
+      title: 'Annuity',
+      bullets: [
+        'Use 40–60% of your portfolio to purchase a fixed immediate annuity at retirement.',
+        'The annuity covers all essential expenses — housing, food, healthcare.',
+        'Invest the remaining portfolio in stocks for growth and discretionary spending.',
+        'Never touch the annuity principal — treat it as a pension.',
+        'Review the growth portfolio annually and adjust spending for lifestyle goals.'
+      ]
+    },
+    sbloc: {
+      title: 'SBLOC + 4% Rule',
+      bullets: [
+        'In up-market years: sell 4% of portfolio for living expenses as usual.',
+        'In down-market years (portfolio drops >10%): borrow from a Securities-Based Line of Credit instead of selling.',
+        'When the market recovers, sell enough to repay the SBLOC loan first, then resume normal 4% withdrawals.',
+        'Keep SBLOC balance below 20% of portfolio value to avoid margin calls.',
+        'Set up the SBLOC before retirement — approval requires a qualifying portfolio.'
+      ]
+    }
+  };
+
+  openStrategy(id: string): void {
+    const data = this.strategyData[id];
+    if (!data) return;
+    this.openedStrategy = id;
+    this.openedStrategyTitle = data.title;
+    this.openedStrategyBullets = data.bullets;
+  }
+
+  closeStrategy(): void {
+    this.openedStrategy = null;
+  }
+
   // Monte Carlo simulation inputs
   portfolioValue: number = 1000000;
   annualWithdrawal: number = 40000;
@@ -132,255 +179,11 @@ export class RetirementPlanningComponent {
   guideExpanded: boolean = false;
   showAdvancedOptions: boolean = false;
 
-  // Strategy education
-  selectedCard: StrategyCard | null = null;
-
-  strategyCards: StrategyCard[] = [
-    {
-      id: 'fixed-percentage',
-      title: '4% Rule (Fixed Percentage)',
-      subtitle: 'The classic retirement withdrawal strategy',
-      icon: 'calculator-outline',
-      color: 'primary',
-      description: 'Withdraw 4% of your initial portfolio value each year, adjusted for inflation. This is the foundation of modern retirement planning.',
-      benefits: [
-        'Simple and predictable income',
-        'Historically safe withdrawal rate',
-        'Easy to implement and track',
-        'Protects against sequence of returns risk',
-        'Backed by extensive research (Trinity Study)'
-      ],
-      considerations: [
-        'Inflexible during market downturns',
-        'May leave significant money on the table',
-        'Does not adapt to market conditions',
-        'Conservative approach may limit lifestyle'
-      ],
-      portfolioRecommendation: 'Balanced portfolio: 60% stocks, 40% bonds for moderate growth with stability',
-      bestFor: 'This strategy is for the person who values predictability and simplicity over optimization, and wants peace of mind knowing their plan is historically safe.'
-    },
-    {
-      id: 'dynamic-spending',
-      title: 'Dynamic Spending (Guardrails)',
-      subtitle: 'Flexible withdrawals based on portfolio performance',
-      icon: 'speedometer-outline',
-      color: 'secondary',
-      description: 'Adjust your spending up or down based on portfolio performance, using "guardrails" to trigger spending changes.',
-      benefits: [
-        'Adapts to market performance',
-        'Higher initial withdrawal rates possible',
-        'Reduces portfolio failure risk',
-        'Potentially higher lifetime spending',
-        'Responds to both good and bad markets'
-      ],
-      considerations: [
-        'Variable income year to year',
-        'Requires spending flexibility',
-        'More complex to implement',
-        'May reduce spending during recessions'
-      ],
-      portfolioRecommendation: 'Aggressive growth: 80% stocks, 20% bonds to maximize upside potential for spending increases',
-      bestFor: 'This strategy is for the person who can adjust their lifestyle based on market performance and prioritizes maximizing total lifetime spending over predictable income.'
-    },
-    {
-      id: 'bond-tent',
-      title: 'Bond Tent (Glidepath)',
-      subtitle: 'Gradually increase bonds as you age',
-      icon: 'triangle-outline',
-      color: 'tertiary',
-      description: 'Start retirement with higher stock allocation, then gradually shift to bonds over time to reduce risk as you age.',
-      benefits: [
-        'Higher growth potential early in retirement',
-        'Reduces sequence of returns risk',
-        'Adapts risk to remaining time horizon',
-        'Potential for higher withdrawal rates',
-        'Automatic risk management'
-      ],
-      considerations: [
-        'Complex rebalancing requirements',
-        'May miss late-career market gains',
-        'Requires discipline to follow plan',
-        'Timing of shifts can impact results'
-      ],
-      portfolioRecommendation: 'Start at 90% stocks, 10% bonds, gradually move to 50% stocks, 50% bonds by age 80',
-      bestFor: 'This strategy is for the person who wants to maximize early retirement growth while automatically becoming more conservative over time.'
-    },
-    {
-      id: 'bucket-strategy',
-      title: 'Bucket Strategy',
-      subtitle: 'Time-based asset allocation for peace of mind',
-      icon: 'layers-outline',
-      color: 'warning',
-      description: 'Divide your portfolio into three buckets: short-term cash, medium-term bonds, and long-term stocks based on when you need the money.',
-      benefits: [
-        'Provides psychological comfort',
-        'Clear spending roadmap',
-        'Protects against sequence risk',
-        'Maintains long-term growth',
-        'Easy to understand and visualize'
-      ],
-      considerations: [
-        'May result in cash drag',
-        'Complex rebalancing between buckets',
-        'Opportunity cost of holding cash',
-        'Requires ongoing bucket management'
-      ],
-      portfolioRecommendation: 'Bucket 1 (Years 1-5): 100% cash/CDs, Bucket 2 (Years 6-15): 100% bonds, Bucket 3 (Years 16+): 100% stocks',
-      bestFor: 'This strategy is for the person who worries about market volatility and wants the security of knowing their next 5-10 years of expenses are safely set aside.'
-    },
-    {
-      id: 'total-return',
-      title: 'Total Return (Modern Portfolio)',
-      subtitle: 'Harvest gains and rebalance for income',
-      icon: 'refresh-outline',
-      color: 'success',
-      description: 'Maintain a diversified portfolio and harvest gains through rebalancing, selling high-performing assets to fund spending.',
-      benefits: [
-        'Tax-efficient through loss harvesting',
-        'Maintains optimal asset allocation',
-        'Flexible withdrawal timing',
-        'Takes advantage of market volatility',
-        'Modern institutional approach'
-      ],
-      considerations: [
-        'Requires active portfolio management',
-        'Complex tax considerations',
-        'Need discipline to sell winners',
-        'May have years with no natural income'
-      ],
-      portfolioRecommendation: 'Diversified portfolio: 70% total stock market, 30% total bond market with annual rebalancing',
-      bestFor: 'This strategy is for the person who understands investing and wants to optimize their portfolio like an endowment fund, prioritizing long-term growth and tax efficiency.'
-    },
-    {
-      id: 'floor-ceiling',
-      title: 'Floor and Ceiling',
-      subtitle: 'Essential needs covered, upside for wants',
-      icon: 'bar-chart-outline',
-      color: 'danger',
-      description: 'Cover essential expenses with guaranteed income (Social Security, pensions, bonds), invest the rest aggressively for lifestyle expenses.',
-      benefits: [
-        'Guarantees essential needs are met',
-        'Unlimited upside for lifestyle expenses',
-        'Reduces anxiety about basic needs',
-        'Allows aggressive investing for extras',
-        'Clear priority-based spending'
-      ],
-      considerations: [
-        'Requires careful expense categorization',
-        'May limit early retirement lifestyle',
-        'Complex to set up initially',
-        'Lifestyle spending can be volatile'
-      ],
-      portfolioRecommendation: 'Floor: 100% bonds/annuities for essentials, Ceiling: 100% stocks for lifestyle spending',
-      bestFor: 'This strategy is for the person who wants to guarantee their basic needs are covered no matter what, while still participating in market growth for discretionary spending.'
-    },
-    {
-      id: 'sbloc-4percent',
-      title: 'SBLOC-Enhanced 4% Rule',
-      subtitle: 'Smart borrowing during market downturns',
-      icon: 'card-outline',
-      color: 'success',
-      description: 'Follow the 4% rule but use a Securities-Based Line of Credit (SBLOC) to borrow during market downturns instead of selling assets, then pay off the loan when markets recover.',
-      benefits: [
-        'Avoid selling during market crashes',
-        'Maintain full market exposure during downturns',
-        'Potentially higher long-term returns',
-        'Tax-efficient cash access',
-        'Combines safety of 4% rule with flexibility',
-        'Reduces sequence of returns risk'
-      ],
-      considerations: [
-        'Interest costs on borrowed funds',
-        'Margin call risk during severe downturns',
-        'Requires credit approval and maintenance',
-        'Complex to manage and monitor',
-        'Not available to all investors'
-      ],
-      portfolioRecommendation: 'Balanced growth: 70% stocks, 30% bonds to maximize collateral value while maintaining stability for lending requirements',
-      bestFor: 'This strategy is for the sophisticated investor who qualifies for SBLOC lending and wants to optimize the 4% rule by avoiding forced sales during market stress.'
-    },
-    {
-      id: 'vanguard-dynamic',
-      title: 'Vanguard Dynamic Spending',
-      subtitle: 'Research-backed flexible withdrawal approach',
-      icon: 'trending-up-outline',
-      color: 'primary',
-      description: 'Adjust your spending based on portfolio performance using Vanguard\'s research: spend more when your portfolio is up, cut back when it\'s down, within guardrails.',
-      benefits: [
-        'Backed by extensive research',
-        'Higher average lifetime spending',
-        'Reduces portfolio failure risk',
-        'Adapts to market conditions automatically',
-        'Can start with higher initial withdrawal rate',
-        'Built-in downside protection'
-      ],
-      considerations: [
-        'Income varies significantly year to year',
-        'Requires lifestyle flexibility',
-        'May cut spending during recessions',
-        'Complex rules to follow',
-        'Emotional difficulty cutting spending'
-      ],
-      portfolioRecommendation: 'Aggressive allocation: 80-90% stocks, 10-20% bonds to maximize upside potential for spending increases',
-      bestFor: 'This strategy is for the flexible retiree who prioritizes maximizing lifetime spending over income predictability and can handle variable annual income.'
-    },
-    {
-      id: 'bond-ladder',
-      title: 'Bond Ladder Strategy',
-      subtitle: 'Predictable income with maturity matching',
-      icon: 'bar-chart-outline',
-      color: 'secondary',
-      description: 'Create a ladder of individual bonds or CDs that mature each year to provide predictable income, with remaining funds invested for growth.',
-      benefits: [
-        'Predictable annual income stream',
-        'Protection from interest rate changes',
-        'No reinvestment risk for laddered portion',
-        'Clear spending roadmap',
-        'Reduces sequence of returns risk',
-        'Peace of mind with guaranteed income'
-      ],
-      considerations: [
-        'Lower expected returns than stocks',
-        'Inflation risk over long periods',
-        'Opportunity cost of conservative allocation',
-        'Complex to construct and manage',
-        'May not keep up with rising costs'
-      ],
-      portfolioRecommendation: 'Hybrid approach: 40-50% bond ladder for 10-15 years of expenses, 50-60% growth investments for long-term needs',
-      bestFor: 'This strategy is for the conservative retiree who prioritizes income certainty and wants to eliminate market risk for their near-term expenses.'
-    },
-    {
-      id: 'retirement-income-optimizer',
-      title: 'Retirement Income Optimizer',
-      subtitle: 'Tax-efficient withdrawal sequencing',
-      icon: 'calculator-outline',
-      color: 'tertiary',
-      description: 'Optimize withdrawal order from different account types (taxable, traditional IRA, Roth IRA) based on tax efficiency and required minimum distributions.',
-      benefits: [
-        'Minimizes lifetime tax burden',
-        'Maximizes after-tax income',
-        'Coordinates with Social Security strategy',
-        'Accounts for RMD requirements',
-        'Optimizes Roth conversion opportunities',
-        'Professional-level tax planning'
-      ],
-      considerations: [
-        'Complex tax calculations required',
-        'Requires multiple account types',
-        'Tax laws may change',
-        'Needs annual review and adjustment',
-        'May require professional guidance'
-      ],
-      portfolioRecommendation: 'Diversified across account types: Growth investments in Roth, balanced in traditional IRAs, tax-efficient funds in taxable accounts',
-      bestFor: 'This strategy is for the tax-conscious retiree with significant assets across multiple account types who wants to minimize their lifetime tax burden.'
-    }
-  ];
 
   constructor(
-    private router: Router,
     private monteCarloService: MonteCarloService,
     private portfolioService: PortfolioService
-  ) { 
+  ) {
     addIcons({ diceOutline, schoolOutline, calculatorOutline });
   }
 
@@ -396,12 +199,6 @@ export class RetirementPlanningComponent {
         console.error('Failed to fetch portfolio', err);
       }
     });
-  }
-
-  // Navigate to strategy detail pages
-  navigateToStrategy(strategyId: string): void {
-    console.log('Navigating to strategy:', strategyId);
-    this.router.navigate(['/tabs/tab2/strategy', strategyId]);
   }
 
   runSimulation() {
@@ -618,10 +415,6 @@ export class RetirementPlanningComponent {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1
     }).format(value / 100);
-  }
-
-  selectCard(card: StrategyCard) {
-    this.selectedCard = this.selectedCard?.id === card.id ? null : card;
   }
 
   getTotalWithdrawal(): number {
