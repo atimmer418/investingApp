@@ -1,5 +1,4 @@
-<!-- Lump Sum Investment Page -->
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/tab3" text="" icon="chevron-back-outline"></ion-back-button>
@@ -9,66 +8,53 @@
 </ion-header>
 
 <ion-content class="lump-sum-content">
-  
-  <div class="mobile-container">
-    
-    <!-- Investment Form Card -->
-    <div class="section-card mobile-card">
-      <div class="section-header">
-        <div>
-          <h3 class="section-title">Lump Sum Investment</h3>
-          <p class="section-subtitle">Make a one-time lump sum investment from your linked bank account or buying power into your current portfolio or an individual stock/ETF of your choosing.</p>
-        </div>
+  <div class="content-inner">
+
+    <!-- Lump Sum Card -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">payments</span>
+        <h3 class="card-title">Lump Sum Investment</h3>
       </div>
-        
-      <!-- Investment Type Selection -->
-      <div class="input-wrapper">
-        <label class="input-label">Investment Type</label>
-        
-        <div class="ios-tab-switcher">
-          <button class="ios-tab-button" [class.active]="investmentType === 'portfolio'"
+      <p class="card-subtitle">Make a one-time investment from your linked bank or buying power into your portfolio or a specific stock.</p>
+
+      <!-- Investment Type -->
+      <div class="form-group">
+        <div class="field-label">Investment Type</div>
+        <div class="tab-switcher">
+          <button class="tab-btn" [class.tab-btn--active]="investmentType === 'portfolio'"
             (click)="investmentType = 'portfolio'; onInvestmentTypeChange()">
             Portfolio
           </button>
-          <button class="ios-tab-button" [class.active]="investmentType === 'stock'"
+          <button class="tab-btn" [class.tab-btn--active]="investmentType === 'stock'"
             (click)="investmentType = 'stock'; onInvestmentTypeChange()">
             Individual
           </button>
         </div>
-
-        <p class="input-helper">
-          {{ investmentType === 'portfolio' ? 'Invest according to your current portfolio allocation' : 'Choose a specific stock to invest in' }}
-        </p>
+        <p class="helper-hint">{{ investmentType === 'portfolio' ? 'Invest according to your current portfolio allocation' : 'Choose a specific stock to invest in' }}</p>
       </div>
 
-      <!-- Funding Source Selection -->
-      <div class="input-wrapper">
-        <label class="input-label">Funding Source</label>
-        
-        <div class="ios-tab-switcher">
-          <button class="ios-tab-button" [class.active]="fundingSource === 'bank'"
+      <!-- Funding Source -->
+      <div class="form-group">
+        <div class="field-label">Funding Source</div>
+        <div class="tab-switcher">
+          <button class="tab-btn" [class.tab-btn--active]="fundingSource === 'bank'"
             (click)="fundingSource = 'bank'">
             Linked Bank
           </button>
-          <button class="ios-tab-button" [class.active]="fundingSource === 'buying_power'"
+          <button class="tab-btn" [class.tab-btn--active]="fundingSource === 'buying_power'"
             (click)="fundingSource = 'buying_power'">
             Buying Power
           </button>
         </div>
-
-        <p class="input-helper" *ngIf="fundingSource === 'buying_power'">
-          Available: {{ formatCurrency(buyingPower) }}
-        </p>
-        <p class="input-helper" *ngIf="fundingSource === 'bank'">
-          Transfer from your linked bank account
-        </p>
+        <p class="helper-hint" *ngIf="fundingSource === 'buying_power'">Available: {{ formatCurrency(buyingPower) }}</p>
+        <p class="helper-hint" *ngIf="fundingSource === 'bank'">Transfer from your linked bank account</p>
       </div>
 
-      <!-- Stock Selection (only shown when stock type is selected) -->
-      <div class="input-wrapper" *ngIf="investmentType === 'stock'">
-        <label class="input-label">Select Stock</label>
-        
-        <!-- Search Bar -->
+      <!-- Stock Selection -->
+      <div class="form-group" *ngIf="investmentType === 'stock'">
+        <div class="field-label">Select Stock</div>
+
         <ion-searchbar
           [(ngModel)]="searchTerm"
           (ionInput)="searchStocks()"
@@ -77,23 +63,21 @@
           animated="true"
           debounce="300"
           maxlength="80"
-          class="ios-searchbar">
+          class="fred-searchbar">
         </ion-searchbar>
 
-        <!-- Loading indicator -->
-        <div *ngIf="isSearching" class="loading-container">
-          <ion-spinner name="crescent"></ion-spinner>
+        <div *ngIf="isSearching" class="searching-state">
+          <ion-spinner name="crescent" class="search-spinner"></ion-spinner>
         </div>
 
-        <!-- Search Results -->
         <div class="search-results-container scrollable-results" *ngIf="searchResults.length > 0 && !isSearching">
-          <ion-list class="ios-list search-results-list" lines="full">
-            <ion-item 
+          <ion-list class="results-list" lines="full">
+            <ion-item
               *ngFor="let asset of searchResults"
               (click)="selectStock(asset)"
               [button]="true"
               detail="false">
-              <div class="stock-icon-wrapper" slot="start">
+              <div class="stock-initials-wrap" slot="start">
                 <div class="stock-initials">{{ asset.symbol.substring(0, 2) }}</div>
               </div>
               <ion-label>
@@ -107,35 +91,27 @@
           </ion-list>
         </div>
 
-        <!-- No Results -->
         <div *ngIf="searchTerm.length > 0 && searchResults.length === 0 && !isSearching" class="no-results">
           <p>No investments found for "{{ searchTerm }}"</p>
         </div>
 
-        <!-- Selected Stock Display -->
         <div *ngIf="selectedStock" class="selected-stock">
           <div class="selected-stock-info">
             <h4>{{ selectedStockInfo?.symbol }}</h4>
             <p>{{ selectedStockInfo?.name }}</p>
           </div>
-          <ion-button fill="clear" size="small" (click)="selectedStock = ''; selectedStockInfo = null; searchTerm = ''">
-            Remove
-          </ion-button>
+          <button class="remove-btn" (click)="selectedStock = ''; selectedStockInfo = null; searchTerm = ''">Remove</button>
         </div>
-        
-        <p class="input-helper" *ngIf="selectedStock">
-          Selected: {{ selectedStockInfo?.name }}
-        </p>
-        <p class="input-helper" *ngIf="!selectedStock">
-          Search for stocks and ETFs by typing a symbol or company name
-        </p>
+
+        <p class="helper-hint" *ngIf="selectedStock">Selected: {{ selectedStockInfo?.name }}</p>
+        <p class="helper-hint" *ngIf="!selectedStock">Search for stocks and ETFs by typing a symbol or company name</p>
       </div>
-      
+
       <!-- Amount Input -->
-      <div class="input-wrapper investment-amount-wrapper">
-        <label class="input-label">Investment Amount</label>
-        <div class="currency-input">
-          <span class="currency-symbol">$</span>
+      <div class="form-group">
+        <div class="field-label">Investment Amount</div>
+        <div class="currency-input-wrap">
+          <span class="currency-sym">$</span>
           <ion-input
             type="number"
             [(ngModel)]="investmentAmount"
@@ -146,114 +122,93 @@
             min="1">
           </ion-input>
         </div>
-        <p class="input-helper">Enter the amount you want to invest in {{ getInvestmentTarget() }}</p>
+        <p class="helper-hint">Enter the amount you want to invest in {{ getInvestmentTarget() }}</p>
       </div>
 
-      <!-- Investment Projection -->
-      <div class="projection-section" *ngIf="(investmentAmount || 0) > 0">
-        <h4>Investment Projection</h4>
-        <div class="projection-card">
-          <div class="projection-item">
-            <span class="projection-label">Investment Amount</span>
-            <span class="projection-amount">{{ formatCurrency(investmentAmount || 0) }}</span>
-          </div>
-          <div class="projection-item">
-            <span class="projection-label">Investment Target</span>
-            <span class="projection-amount target">{{ getInvestmentTarget() }}</span>
-          </div>
-          <div class="projection-item projected-value" *ngIf="investmentType === 'portfolio'">
-            <span class="projection-label">Projected Value (10 Yrs)</span>
-            <span class="projection-amount projected">{{ formatCurrency(getProjectedGrowth()) }}</span>
-          </div>
-          <div class="projection-item gain" *ngIf="investmentType === 'portfolio'">
-            <span class="projection-label">Potential Gain</span>
-            <span class="projection-amount gain-amount">+{{ formatCurrency(getProjectedGrowth() - (investmentAmount || 0)) }}</span>
-          </div>
+      <!-- Projection -->
+      <div class="projection-card" *ngIf="(investmentAmount || 0) > 0">
+        <div class="proj-row">
+          <span class="proj-label">INVESTMENT AMOUNT</span>
+          <span class="proj-value">{{ formatCurrency(investmentAmount || 0) }}</span>
         </div>
-        <p class="disclaimer" *ngIf="investmentType === 'portfolio'">
-          Our projections assume a 10% average annual return. Actual returns may vary based on market conditions and your portfolio allocation.
-        </p>
-        <p class="disclaimer" *ngIf="investmentType === 'stock'">
-          Individual stock investments carry higher risk.<br>Past performance does not guarantee future results.
-        </p>
+        <div class="proj-row">
+          <span class="proj-label">TARGET</span>
+          <span class="proj-value">{{ getInvestmentTarget() }}</span>
+        </div>
+        <div class="proj-row" *ngIf="investmentType === 'portfolio'">
+          <span class="proj-label">PROJECTED VALUE (10 YRS)</span>
+          <span class="proj-value proj-value--blue">{{ formatCurrency(getProjectedGrowth()) }}</span>
+        </div>
+        <div class="proj-row" *ngIf="investmentType === 'portfolio'">
+          <span class="proj-label">POTENTIAL GAIN</span>
+          <span class="proj-value proj-value--green">+{{ formatCurrency(getProjectedGrowth() - (investmentAmount || 0)) }}</span>
+        </div>
+        <p class="disclaimer" *ngIf="investmentType === 'portfolio'">Assumes 10% avg annual return. Actual returns may vary.</p>
+        <p class="disclaimer" *ngIf="investmentType === 'stock'">Individual stock investments carry higher risk. Past performance does not guarantee future results.</p>
       </div>
-      
-      <!-- Investment Button -->
-      <div class="investment-actions" style="margin-top: 20px;">
-        <ion-button 
-            expand="block" 
-            color="primary"
-            size="large"
-            (click)="makeInvestment()"
-            [disabled]="isLoading || !investmentAmount || investmentAmount <= 0 || (investmentType === 'stock' && !selectedStock)">
-            <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-            {{ isLoading ? 'Processing...' : 'Make Investment' }}
-        </ion-button>
-      </div>
-    
-    <!-- Close One-Time Investment Card -->
+
+      <button class="cta-btn" (click)="makeInvestment()"
+        [disabled]="isLoading || !investmentAmount || investmentAmount <= 0 || (investmentType === 'stock' && !selectedStock)">
+        <span>{{ isLoading ? 'Processing...' : 'Make Investment' }}</span>
+        <span class="material-symbols-outlined" *ngIf="!isLoading">arrow_forward</span>
+      </button>
     </div>
 
     <!-- ACATS Transfer Card -->
-    <div class="section-card mobile-card" 
-         style="margin-top: 24px; overflow: hidden; transition: height 0.3s ease;"
+    <div class="section-card acats-card"
+         style="overflow: hidden; transition: height 0.3s ease;"
          [style.height]="showTransferOptions ? '414px' : '104px'">
-      <div class="input-wrapper">
-        <div class="transfer-header" 
-             (click)="showTransferOptions = !showTransferOptions" 
-             style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; cursor: pointer;">
-           <div style="padding-right: 16px;">
-              <label class="input-label" style="margin-bottom: 4px; display: block; font-size: 16px; font-weight: 600;">Transfer Existing Assets</label>
-              <p class="input-helper" style="margin-top: 0; font-size: 14px; line-height: 1.4;">Want to move your assets from another brokerage into FRED?</p>
-           </div>
-           <ion-icon [name]="showTransferOptions ? 'chevron-up-outline' : 'chevron-down-outline'" style="font-size: 20px; color: var(--ion-color-medium); min-width: 20px;"></ion-icon>
+
+      <div class="acats-header" (click)="showTransferOptions = !showTransferOptions">
+        <div class="card-header-row" style="margin-bottom: 2px;">
+          <span class="material-symbols-outlined card-icon">swap_horiz</span>
+          <h3 class="card-title">Transfer Existing Assets</h3>
+          <span class="material-symbols-outlined acats-chevron" *ngIf="!showTransferOptions">expand_more</span>
+          <span class="material-symbols-outlined acats-chevron" *ngIf="showTransferOptions">expand_less</span>
         </div>
-
-        <div *ngIf="showTransferOptions" class="transfer-form-container" style="margin-top: 16px;">
-            <!-- Brokerage Selection -->
-            <div class="input-wrapper">
-                <label class="input-label">Current Brokerage</label>
-                <div class="ios-select-wrapper">
-                    <ion-select [(ngModel)]="transferBrokerageDtc" placeholder="Select Brokerage" interface="action-sheet" cancelText="Cancel" style="width: 100%;">
-                        <ion-select-option *ngFor="let broker of brokerageOptions" [value]="broker.dtc">
-                            {{ broker.name }}
-                        </ion-select-option>
-                    </ion-select>
-                </div>
-            </div>
-
-            <!-- Account Number -->
-            <div class="input-wrapper">
-                <div style="display: flex; justify-content: flex-start; align-items: center; gap: 6px;">
-                    <label class="input-label acct-number">Account Number</label>
-                    <ion-button fill="clear" size="small" id="acats-tooltip-lump" class="tooltip-icon-button">
-                        <ion-icon name="information-circle-outline"></ion-icon>
-                    </ion-button>
-                    <ion-popover trigger="acats-tooltip-lump" triggerAction="click">
-                        <ng-template>
-                            <ion-content [scrollY]="false" class="ion-padding">
-                                <p style="font-size: 13px;">Found in your monthly statements or account settings.</p>
-                            </ion-content>
-                        </ng-template>
-                    </ion-popover>
-                </div>
-                <ion-input type="text" [(ngModel)]="transferAccountNumber" placeholder="Enter account number" class="account-number-input"></ion-input>
-            </div>
-
-            <!-- Transfer Submit Button -->
-            <ion-button 
-                expand="block" 
-                color="primary"
-                size="large"
-                (click)="submitAcatsTransfer()"
-                [disabled]="isLoading || !transferBrokerageDtc || !transferAccountNumber"
-                style="margin-top: 24px;">
-                <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
-                {{ isLoading ? 'Processing...' : 'Submit Transfer Request' }}
-            </ion-button>
-        </div>
+        <p class="card-subtitle" style="padding-left: 28px;">Want to move your assets from another brokerage into FRED?</p>
       </div>
+
+      <div *ngIf="showTransferOptions" class="acats-form">
+
+        <div class="form-group">
+          <div class="field-label">Current Brokerage</div>
+          <div class="select-wrap">
+            <ion-select [(ngModel)]="transferBrokerageDtc" placeholder="Select Brokerage" interface="action-sheet" cancelText="Cancel" style="width: 100%;">
+              <ion-select-option *ngFor="let broker of brokerageOptions" [value]="broker.dtc">
+                {{ broker.name }}
+              </ion-select-option>
+            </ion-select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="acct-label-row">
+            <div class="field-label" style="margin-bottom: 0;">Account Number</div>
+            <button id="acats-tooltip-lump" class="tooltip-btn">
+              <span class="material-symbols-outlined">info</span>
+            </button>
+            <ion-popover trigger="acats-tooltip-lump" triggerAction="click">
+              <ng-template>
+                <ion-content [scrollY]="false" class="ion-padding">
+                  <p style="font-size: 13px;">Found in your monthly statements or account settings.</p>
+                </ion-content>
+              </ng-template>
+            </ion-popover>
+          </div>
+          <div class="text-input-wrap">
+            <ion-input type="text" [(ngModel)]="transferAccountNumber" placeholder="Enter account number" class="account-input"></ion-input>
+          </div>
+        </div>
+
+        <button class="cta-btn cta-btn--dark" (click)="submitAcatsTransfer()"
+          [disabled]="isLoading || !transferBrokerageDtc || !transferAccountNumber">
+          <span>{{ isLoading ? 'Processing...' : 'Submit Transfer Request' }}</span>
+          <span class="material-symbols-outlined" *ngIf="!isLoading">swap_horiz</span>
+        </button>
+      </div>
+
     </div>
-    
+
   </div>
 </ion-content>
