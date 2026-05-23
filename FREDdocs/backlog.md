@@ -54,7 +54,7 @@ give claude a way to verify things like...
 
 # APP FEATURES
 
-## FRED-106 — Auto-start ACATS transfer if localStorage flag set
+## FRED-106 — ✓ Auto-start ACATS transfer if localStorage flag set
 make it so that when a user signs up, check the localStorage to see if they had set up for an ACATS transfer and if they had, start that process
 
 ### Acceptance Criteria

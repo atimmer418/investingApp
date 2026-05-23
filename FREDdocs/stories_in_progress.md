@@ -5,7 +5,6 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 ## In Progress
 
 <!-- entries appended here -->
-- FRED-106 — Auto-start ACATS transfer if localStorage flag set
 - FRED-110 — Overhaul tab 2 education with four strategies
 - FRED-111 — Equity milestone locks with blur and unlock animation
 - FRED-112 — Subscription prompt, risk reversal, expired sub handling
@@ -39,3 +38,4 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 - FRED-131 — Design five Fred faces for equity level ranges
 - FRED-133 — Design piggy bank Fred loading screen
 - FRED-136 — Test close account feature end to end
+- FRED-106 — Auto-start ACATS transfer if localStorage flag set
