@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/tab3" text="" icon="chevron-back-outline"></ion-back-button>
@@ -7,204 +7,152 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
+<ion-content>
+  <div class="content-inner">
 
-  <div class="beneficiaries-container">
-    
-    <!-- Status Overview Card -->
-    <ion-card class="status-banner" [class.complete]="isBeneficiarySetupComplete()" [class.incomplete]="!isBeneficiarySetupComplete()">
-      <ion-card-content>
-        <div class="status-content">
-          <div class="status-info">
-            <h2>{{ isBeneficiarySetupComplete() ? 'Setup Complete' : 'Setup Needed' }}</h2>
-            <p>{{ isBeneficiarySetupComplete() ? 'Your beneficiaries are properly configured' : 'Complete your beneficiary designations' }}</p>
-          </div>
-          <ion-icon 
-            [name]="isBeneficiarySetupComplete() ? 'checkmark-circle-outline' : 'shield-outline'">
-          </ion-icon>
-        </div>
-      </ion-card-content>
-    </ion-card>
-    
-    <!-- Explanation Card -->
-    <ion-card class="explanation-card">
-      <ion-card-content>
-        <div class="explanation-header">
-          <ion-icon name="people-outline" color="primary"></ion-icon>
-          <h3>Manage Your Beneficiaries</h3>
-        </div>
-        <p>Add and manage the people who will inherit your investment account assets. Each beneficiary can be assigned a percentage of your total account value.</p>
-      </ion-card-content>
-    </ion-card>
+    <!-- Status Banner -->
+    <div class="status-banner"
+      [class.banner-complete]="isBeneficiarySetupComplete()"
+      [class.banner-incomplete]="!isBeneficiarySetupComplete()">
+      <div class="banner-text">
+        <h2 class="banner-title">{{ isBeneficiarySetupComplete() ? 'Setup Complete' : 'Setup Needed' }}</h2>
+        <p class="banner-desc">{{ isBeneficiarySetupComplete() ? 'Your beneficiaries are properly configured' : 'Complete your beneficiary designations' }}</p>
+      </div>
+      <span class="material-symbols-outlined banner-icon" *ngIf="isBeneficiarySetupComplete()">check_circle</span>
+      <span class="material-symbols-outlined banner-icon" *ngIf="!isBeneficiarySetupComplete()">shield</span>
+    </div>
 
-    <!-- Pending Submission Alert Card -->
-    <ion-card class="alert-card" *ngIf="getPendingBeneficiaries().length > 0">
-      <ion-card-header class="alert-header">
-        <ion-card-title class="alert-title">
-          <ion-icon name="alert-circle-outline"></ion-icon>
-          {{ getPendingBeneficiaries().length }} Beneficiar{{ getPendingBeneficiaries().length === 1 ? 'y' : 'ies' }} Pending Submission
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content class="alert-content">
-        <p class="alert-description">These beneficiaries haven't been submitted to your brokerage account yet.</p>
-        <ion-button 
-          class="fred-button fred-button-primary"
-          [disabled]="isSubmitting"
-          (click)="onSubmitAllBeneficiaries()">
-          <ion-icon *ngIf="!isSubmitting" name="checkmark-outline" slot="start"></ion-icon>
-          <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
-          {{ isSubmitting ? 'Submitting...' : 'Submit All to Alpaca' }}
-        </ion-button>
-      </ion-card-content>
-    </ion-card>
+    <!-- Explanation -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">group</span>
+        <h3 class="card-title">Manage Your Beneficiaries</h3>
+      </div>
+      <p class="card-body">Add and manage the people who will inherit your investment account assets. Each beneficiary can be assigned a percentage of your total account value.</p>
+    </div>
+
+    <!-- Pending Alert -->
+    <div class="section-card alert-card" *ngIf="getPendingBeneficiaries().length > 0">
+      <div class="alert-header-row">
+        <span class="material-symbols-outlined alert-icon">warning</span>
+        <h3 class="alert-title">{{ getPendingBeneficiaries().length }} Beneficiar{{ getPendingBeneficiaries().length === 1 ? 'y' : 'ies' }} Pending Submission</h3>
+      </div>
+      <p class="alert-desc">These beneficiaries haven't been submitted to your brokerage account yet.</p>
+      <button class="cta-btn" [disabled]="isSubmitting" (click)="onSubmitAllBeneficiaries()">
+        <ion-spinner *ngIf="isSubmitting" name="crescent" class="btn-spinner-sm"></ion-spinner>
+        <span class="material-symbols-outlined" *ngIf="!isSubmitting">check</span>
+        {{ isSubmitting ? 'Submitting...' : 'Submit All to Alpaca' }}
+      </button>
+    </div>
 
     <!-- Allocation Overview -->
-    <ion-card class="allocation-overview" *ngIf="allocationSummary">
-      <ion-card-content>
-        <h3 class="section-header">
-          <ion-icon name="pie-chart-outline" color="primary"></ion-icon>
-          Allocation Overview
-        </h3>
-        
-        <div class="allocation-summary">
-          <div class="allocation-item">
-            <div class="allocation-info">
-              <span class="allocation-label">Primary Beneficiaries</span>
-              <span class="allocation-percentage">{{ allocationSummary.primaryTotalAllocation }}%</span>
-            </div>
-            <ion-progress-bar 
-              [value]="allocationSummary.primaryTotalAllocation / 100" 
-              [color]="allocationSummary.primaryAllocationComplete ? 'primary' : 'warning'">
-            </ion-progress-bar>
-            <p class="allocation-status">{{ allocationSummary.primaryCount }} beneficiaries</p>
+    <div class="section-card" *ngIf="allocationSummary">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">pie_chart</span>
+        <h3 class="card-title">Allocation Overview</h3>
+      </div>
+
+      <div class="alloc-summary">
+        <div class="alloc-item">
+          <div class="alloc-info-row">
+            <span class="alloc-label">Primary Beneficiaries</span>
+            <span class="alloc-pct">{{ allocationSummary.primaryTotalAllocation }}%</span>
           </div>
-          
-          <div class="allocation-item">
-            <div class="allocation-info">
-              <span class="allocation-label">Contingent Beneficiaries</span>
-              <span class="allocation-percentage secondary">{{ allocationSummary.contingentTotalAllocation }}%</span>
-            </div>
-            <ion-progress-bar 
-              [value]="allocationSummary.contingentTotalAllocation / 100" 
-              color="secondary">
-            </ion-progress-bar>
-            <p class="allocation-status">{{ allocationSummary.contingentCount }} beneficiaries</p>
-          </div>
+          <ion-progress-bar [value]="allocationSummary.primaryTotalAllocation / 100" [color]="allocationSummary.primaryAllocationComplete ? 'primary' : 'warning'"></ion-progress-bar>
+          <p class="alloc-count">{{ allocationSummary.primaryCount }} beneficiaries</p>
         </div>
 
-        <!-- Overall Status -->
-        <!-- <div class="overall-status" [class.complete]="allocationSummary.primaryAllocationComplete">
-          <ion-icon 
-            [name]="allocationSummary.primaryAllocationComplete ? 'checkmark-circle' : 'alert-circle'" 
-            [color]="allocationSummary.primaryAllocationComplete ? 'success' : 'warning'">
-          </ion-icon>
-          <span>{{ allocationSummary.primaryAllocationComplete ? 'Beneficiary setup complete' : 'Primary allocation incomplete' }}</span>
-        </div> -->
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Important Information Card -->
-    <ion-card class="info-card">
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="information-circle-outline" color="tertiary"></ion-icon>
-          Important Information
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <p>Understanding your Transfer on Death (TOD) beneficiary designations:</p>
-        <ul class="info-list">
-          <li><strong>Primary beneficiaries</strong> must total 100% allocation</li>
-          <li><strong>Contingent beneficiaries</strong> only receive assets if no primary beneficiaries can claim them</li>
-          <li><strong>Processing time:</strong> Changes may take 1-2 business days to process with Alpaca</li>
-          <li><strong>Keep updated:</strong> Review beneficiary information after major life events</li>
-        </ul>
-        <ion-note>
-          <ion-icon name="shield-checkmark-outline"></ion-icon>
-          This ensures your investments transfer quickly without going through probate.
-        </ion-note>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Primary Beneficiaries Section -->
-    <div class="beneficiary-section">
-      <div class="section-header-with-button">
-        <h3 class="section-header">
-          <ion-icon name="people-outline" color="primary"></ion-icon>
-          Primary Beneficiaries
-        </h3>
-        <ion-button fill="clear" size="small" (click)="onAddBeneficiary()">
-          <ion-icon name="add-outline" slot="icon-only"></ion-icon>
-        </ion-button>
+        <div class="alloc-item">
+          <div class="alloc-info-row">
+            <span class="alloc-label">Contingent Beneficiaries</span>
+            <span class="alloc-pct alloc-pct--secondary">{{ allocationSummary.contingentTotalAllocation }}%</span>
+          </div>
+          <ion-progress-bar [value]="allocationSummary.contingentTotalAllocation / 100" color="secondary"></ion-progress-bar>
+          <p class="alloc-count">{{ allocationSummary.contingentCount }} beneficiaries</p>
+        </div>
       </div>
-      
+    </div>
+
+    <!-- Important Information -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">info</span>
+        <h3 class="card-title">Important Information</h3>
+      </div>
+      <p class="card-body" style="margin-bottom: 10px;">Understanding your Transfer on Death (TOD) beneficiary designations:</p>
+      <ul class="info-list">
+        <li><strong>Primary beneficiaries</strong> must total 100% allocation</li>
+        <li><strong>Contingent beneficiaries</strong> only receive assets if no primary beneficiaries can claim them</li>
+        <li><strong>Processing time:</strong> Changes may take 1-2 business days to process with Alpaca</li>
+        <li><strong>Keep updated:</strong> Review beneficiary information after major life events</li>
+      </ul>
+      <div class="info-note-box">
+        <span class="material-symbols-outlined">verified_user</span>
+        <span>This ensures your investments transfer quickly without going through probate.</span>
+      </div>
+    </div>
+
+    <!-- Primary Beneficiaries -->
+    <div class="beneficiary-section">
+      <div class="beneficiary-section-header">
+        <div class="bsec-title-row">
+          <span class="material-symbols-outlined bsec-icon">group</span>
+          <h3 class="bsec-title">Primary Beneficiaries</h3>
+        </div>
+        <button class="add-btn" (click)="onAddBeneficiary()">
+          <span class="material-symbols-outlined">add</span>
+        </button>
+      </div>
+
       <div *ngIf="getPrimaryBeneficiaries().length === 0" class="empty-state">
-        <ion-icon name="person-add-outline" color="medium"></ion-icon>
-        <p>No primary beneficiaries added</p>
-        <ion-button fill="outline" (click)="onAddBeneficiary('primary')">
-          Add Primary Beneficiary
-        </ion-button>
+        <span class="material-symbols-outlined empty-icon">person_add</span>
+        <p class="empty-text">No primary beneficiaries added</p>
+        <button class="outline-btn" (click)="onAddBeneficiary('primary')">Add Primary Beneficiary</button>
       </div>
 
       <ion-item-sliding *ngFor="let beneficiary of getPrimaryBeneficiaries()" class="beneficiary-sliding-item">
         <ion-item lines="none" class="beneficiary-item-wrapper">
-          <ion-card class="beneficiary-card" (click)="onEditBeneficiary(beneficiary)">
-        <ion-card-content>
-          <div class="beneficiary-header">
-            <div class="beneficiary-info">
-              <h4>{{ beneficiary.firstName }} {{ beneficiary.lastName }}</h4>
-              <p class="relationship">{{ getRelationshipDisplayName(beneficiary.relationship) }}</p>
-            </div>
-            <div class="beneficiary-allocation">
-              <span class="allocation-badge" [style.background-color]="getStatusColor(beneficiary.status)">
-                {{ beneficiary.percentageAllocation }}%
-              </span>
-            </div>
-          </div>
-
-          <div class="beneficiary-action-middle" *ngIf="beneficiary.status === 'PENDING'">
-            <ion-button 
-              fill="outline" 
-              color="primary"
-              shape="round"
-              [disabled]="isSubmitting"
-              (click)="$event.stopPropagation(); onSubmitBeneficiary(beneficiary)">
-              <ion-icon *ngIf="!isSubmitting" name="checkmark-outline" slot="start"></ion-icon>
-              <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
-              {{ isSubmitting ? 'Submitting...' : 'Submit' }}
-            </ion-button>
-          </div>
-          
-          <div class="beneficiary-footer">
-            <div class="beneficiary-details">
-              <div class="detail-row" *ngIf="beneficiary.dateOfBirth">
-                <ion-icon name="calendar-outline" color="medium"></ion-icon>
-                <span>Born {{ formatDateForDisplay(beneficiary.dateOfBirth) }}</span>
+          <div class="beneficiary-card" (click)="onEditBeneficiary(beneficiary)">
+            <div class="beneficiary-header">
+              <div class="beneficiary-info">
+                <h4 class="bname">{{ beneficiary.firstName }} {{ beneficiary.lastName }}</h4>
+                <p class="brelation">{{ getRelationshipDisplayName(beneficiary.relationship) }}</p>
               </div>
-              <div class="detail-row" *ngIf="beneficiary.email">
-                <ion-icon name="mail-outline" color="medium"></ion-icon>
-                <span>{{ beneficiary.email }}</span>
-              </div>
+              <span class="allocation-badge" [style.background-color]="getStatusColor(beneficiary.status)">{{ beneficiary.percentageAllocation }}%</span>
             </div>
 
-            <div class="beneficiary-status">
-              <div class="status-section">
-                <!-- Individual Submit Button for Pending -->
-                
-                <!-- Last Submitted Info for Approved -->
-                <div *ngIf="beneficiary.status === 'APPROVED' && beneficiary.submittedToAlpacaAt" class="submitted-info">
-                  <span class="submitted-text">Submitted</span>
+            <div class="beneficiary-action-middle" *ngIf="beneficiary.status === 'PENDING'">
+              <button class="submit-btn" [disabled]="isSubmitting" (click)="$event.stopPropagation(); onSubmitBeneficiary(beneficiary)">
+                <ion-spinner *ngIf="isSubmitting" name="crescent" class="btn-spinner-sm"></ion-spinner>
+                <span class="material-symbols-outlined" *ngIf="!isSubmitting">check</span>
+                {{ isSubmitting ? 'Submitting...' : 'Submit' }}
+              </button>
+            </div>
+
+            <div class="beneficiary-footer">
+              <div class="beneficiary-details">
+                <div class="detail-row" *ngIf="beneficiary.dateOfBirth">
+                  <span class="material-symbols-outlined detail-icon">calendar_today</span>
+                  <span>Born {{ formatDateForDisplay(beneficiary.dateOfBirth) }}</span>
                 </div>
-
-                <ion-badge [color]="getStatusColor(beneficiary.status)">
-                  <ion-icon [name]="getStatusIcon(beneficiary.status)"></ion-icon>
-                  {{ beneficiary.status | titlecase }}
-                </ion-badge>
+                <div class="detail-row" *ngIf="beneficiary.email">
+                  <span class="material-symbols-outlined detail-icon">mail</span>
+                  <span>{{ beneficiary.email }}</span>
+                </div>
+              </div>
+              <div class="beneficiary-status">
+                <div class="status-section">
+                  <div *ngIf="beneficiary.status === 'APPROVED' && beneficiary.submittedToAlpacaAt" class="submitted-info">
+                    <span class="submitted-text">Submitted</span>
+                  </div>
+                  <ion-badge [color]="getStatusColor(beneficiary.status)">
+                    <ion-icon [name]="getStatusIcon(beneficiary.status)"></ion-icon>
+                    {{ beneficiary.status | titlecase }}
+                  </ion-badge>
+                </div>
               </div>
             </div>
           </div>
-        </ion-card-content>
-          </ion-card>
         </ion-item>
 
         <ion-item-options side="end" (ionSwipe)="onDeleteBeneficiary(beneficiary)">
@@ -215,86 +163,68 @@
       </ion-item-sliding>
     </div>
 
-    <!-- Contingent Beneficiaries Section -->
+    <!-- Contingent Beneficiaries -->
     <div class="beneficiary-section">
-      <div class="section-header-with-button">
-        <h3 class="section-header">
-          <ion-icon name="shield-outline" color="secondary"></ion-icon>
-          Contingent Beneficiaries
-        </h3>
-        <ion-button fill="clear" size="small" (click)="onAddBeneficiary()">
-          <ion-icon name="add-outline" slot="icon-only" style="color: var(--ion-color-secondary);"></ion-icon>
-        </ion-button>
+      <div class="beneficiary-section-header">
+        <div class="bsec-title-row">
+          <span class="material-symbols-outlined bsec-icon bsec-icon--secondary">shield</span>
+          <h3 class="bsec-title">Contingent Beneficiaries</h3>
+        </div>
+        <button class="add-btn add-btn--secondary" (click)="onAddBeneficiary()">
+          <span class="material-symbols-outlined">add</span>
+        </button>
       </div>
-      
+
       <div *ngIf="getContingentBeneficiaries().length === 0" class="empty-state">
-        <ion-icon name="shield-outline" color="medium"></ion-icon>
-        <p>No contingent beneficiaries added</p>
-        <p class="empty-description">Contingent beneficiaries receive assets if primary beneficiaries cannot</p>
-        <ion-button fill="outline" color="secondary" (click)="onAddBeneficiary('contingent')">
-          Add Contingent Beneficiary
-        </ion-button>
+        <span class="material-symbols-outlined empty-icon">shield</span>
+        <p class="empty-text">No contingent beneficiaries added</p>
+        <p class="empty-desc-sm">Contingent beneficiaries receive assets if primary beneficiaries cannot</p>
+        <button class="outline-btn outline-btn--secondary" (click)="onAddBeneficiary('contingent')">Add Contingent Beneficiary</button>
       </div>
 
       <ion-item-sliding *ngFor="let beneficiary of getContingentBeneficiaries()" class="beneficiary-sliding-item">
         <ion-item lines="none" class="beneficiary-item-wrapper">
-          <ion-card class="beneficiary-card contingent" (click)="onEditBeneficiary(beneficiary)">
-        <ion-card-content>
-          <div class="beneficiary-header">
-            <div class="beneficiary-info">
-              <h4>{{ beneficiary.firstName }} {{ beneficiary.lastName }}</h4>
-              <p class="relationship">{{ getRelationshipDisplayName(beneficiary.relationship) }}</p>
-            </div>
-            <div class="beneficiary-allocation">
-              <span class="allocation-badge contingent" [style.background-color]="getStatusColor(beneficiary.status)">
-                {{ beneficiary.percentageAllocation }}%
-              </span>
-            </div>
-          </div>
-
-          <div class="beneficiary-action-middle" *ngIf="beneficiary.status === 'PENDING'">
-            <ion-button 
-              fill="outline" 
-              color="primary"
-              shape="round"
-              [disabled]="isSubmitting"
-              (click)="$event.stopPropagation(); onSubmitBeneficiary(beneficiary)">
-              <ion-icon *ngIf="!isSubmitting" name="checkmark-outline" slot="start"></ion-icon>
-              <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
-              {{ isSubmitting ? 'Submitting...' : 'Submit' }}
-            </ion-button>
-          </div>
-          
-          <div class="beneficiary-footer">
-            <div class="beneficiary-details">
-              <div class="detail-row" *ngIf="beneficiary.dateOfBirth">
-                <ion-icon name="calendar-outline" color="medium"></ion-icon>
-                <span>Born {{ formatDateForDisplay(beneficiary.dateOfBirth) }}</span>
+          <div class="beneficiary-card beneficiary-card--contingent" (click)="onEditBeneficiary(beneficiary)">
+            <div class="beneficiary-header">
+              <div class="beneficiary-info">
+                <h4 class="bname">{{ beneficiary.firstName }} {{ beneficiary.lastName }}</h4>
+                <p class="brelation">{{ getRelationshipDisplayName(beneficiary.relationship) }}</p>
               </div>
-              <div class="detail-row" *ngIf="beneficiary.email">
-                <ion-icon name="mail-outline" color="medium"></ion-icon>
-                <span>{{ beneficiary.email }}</span>
-              </div>
+              <span class="allocation-badge allocation-badge--contingent" [style.background-color]="getStatusColor(beneficiary.status)">{{ beneficiary.percentageAllocation }}%</span>
             </div>
 
-            <div class="beneficiary-status">
-              <div class="status-section">
-                <!-- Individual Submit Button for Pending -->
-                
-                <!-- Last Submitted Info for Approved -->
-                <div *ngIf="beneficiary.status === 'APPROVED' && beneficiary.submittedToAlpacaAt" class="submitted-info">
-                  <span class="submitted-text">Submitted</span>
+            <div class="beneficiary-action-middle" *ngIf="beneficiary.status === 'PENDING'">
+              <button class="submit-btn" [disabled]="isSubmitting" (click)="$event.stopPropagation(); onSubmitBeneficiary(beneficiary)">
+                <ion-spinner *ngIf="isSubmitting" name="crescent" class="btn-spinner-sm"></ion-spinner>
+                <span class="material-symbols-outlined" *ngIf="!isSubmitting">check</span>
+                {{ isSubmitting ? 'Submitting...' : 'Submit' }}
+              </button>
+            </div>
+
+            <div class="beneficiary-footer">
+              <div class="beneficiary-details">
+                <div class="detail-row" *ngIf="beneficiary.dateOfBirth">
+                  <span class="material-symbols-outlined detail-icon">calendar_today</span>
+                  <span>Born {{ formatDateForDisplay(beneficiary.dateOfBirth) }}</span>
                 </div>
-
-                <ion-badge [color]="getStatusColor(beneficiary.status)">
-                  <ion-icon [name]="getStatusIcon(beneficiary.status)"></ion-icon>
-                  {{ beneficiary.status | titlecase }}
-                </ion-badge>
+                <div class="detail-row" *ngIf="beneficiary.email">
+                  <span class="material-symbols-outlined detail-icon">mail</span>
+                  <span>{{ beneficiary.email }}</span>
+                </div>
+              </div>
+              <div class="beneficiary-status">
+                <div class="status-section">
+                  <div *ngIf="beneficiary.status === 'APPROVED' && beneficiary.submittedToAlpacaAt" class="submitted-info">
+                    <span class="submitted-text">Submitted</span>
+                  </div>
+                  <ion-badge [color]="getStatusColor(beneficiary.status)">
+                    <ion-icon [name]="getStatusIcon(beneficiary.status)"></ion-icon>
+                    {{ beneficiary.status | titlecase }}
+                  </ion-badge>
+                </div>
               </div>
             </div>
           </div>
-        </ion-card-content>
-          </ion-card>
         </ion-item>
 
         <ion-item-options side="end" (ionSwipe)="onDeleteBeneficiary(beneficiary)">
@@ -306,5 +236,4 @@
     </div>
 
   </div>
-
 </ion-content>

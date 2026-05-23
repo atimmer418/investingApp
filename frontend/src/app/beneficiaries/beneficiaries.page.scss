@@ -1,738 +1,530 @@
-// Beneficiaries page styling that matches the app's design language
-
-// Header Styling (matching recurring investments page)
-ion-header {
-  ion-toolbar {
-    --background: linear-gradient(0deg, var(--ion-color-primary) 0%, var(--ion-color-primary-tint) 100%);
-    --color: white;
-    
-    ion-title {
-      font-weight: 600;
-    }
-    
-    ion-back-button {
-      --color: white;
-    }
-    --border-width: 0;
-  }
+:host {
+  --ion-background-color: #f8fafc;
+  --ion-toolbar-background: #f8fafc;
+  --ion-toolbar-color: #0f172a;
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
+  --ion-color-secondary: #7c3aed;
 }
 
 ion-content {
+  --background: #f8fafc;
   --keyboard-offset: 0px !important;
-}
 
-ion-content {
   &::part(scroll) {
     scrollbar-gutter: stable;
     overflow-y: scroll !important;
   }
 }
 
-.beneficiaries-container {
-  max-width: 800px;
-  margin: 0 auto;
+ion-toolbar {
+  --background: #f8fafc;
+  --border-width: 0;
+  --min-height: 52px;
 }
 
-// Info Card (matching portfolio customize page)
-.info-card {
-  margin-bottom: 12px;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-  ion-card-header {
-    padding-bottom: 8px;
-
-    ion-card-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--ion-color-dark);
-
-      ion-icon {
-        font-size: 1.3rem;
-      }
-    }
-  }
-
-  ion-card-content {
-    p {
-      margin: 0 0 16px 0;
-      line-height: 1.6;
-      color: var(--ion-color-medium);
-    }
-
-    .info-list {
-      margin: 0 0 16px 0;
-      padding-left: 20px;
-
-      li {
-        margin-bottom: 8px;
-        line-height: 1.5;
-        color: var(--ion-color-medium);
-        font-size: 0.9rem;
-
-        strong {
-          color: var(--ion-color-dark);
-          font-weight: 600;
-        }
-
-        &:last-child {
-          margin-bottom: 0;
-        }
-      }
-    }
-
-    ion-note {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0;
-      padding: 12px;
-      background: var(--ion-color-light);
-      border-radius: 8px;
-      font-size: 0.85rem;
-      color: var(--ion-color-medium);
-
-      ion-icon {
-        font-size: 1rem;
-        color: var(--ion-color-primary);
-      }
-    }
-  }
+ion-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #0f172a;
 }
 
-// Status Banner (matching recurring investments page)
+ion-back-button { --color: #0f172a; }
+
+.content-inner {
+  padding: 12px 18px 40px;
+  font-family: 'Manrope', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+// Status banner
 .status-banner {
-  margin-bottom: 24px;
-  border-radius: 12px;
-  overflow: hidden;
-  
-  &.complete {
-    --background: linear-gradient(135deg, var(--ion-color-success-tint), var(--ion-color-success));
-    --color: white;
-  }
-  
-  &.incomplete {
-    --background: linear-gradient(135deg, var(--ion-color-warning-tint), var(--ion-color-warning));
-    --color: white;
+  border-radius: 14px;
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &.banner-complete { background: linear-gradient(135deg, #22c55e, #16a34a); }
+  &.banner-incomplete { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+  .banner-text {
+    flex: 1;
+
+    .banner-title {
+      font-family: 'Manrope', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: white;
+      margin: 0 0 2px 0;
+    }
+
+    .banner-desc {
+      font-family: 'Manrope', sans-serif;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.9);
+      margin: 0;
+    }
   }
 
-  ion-card-content {
-    padding: 16px !important;
+  .banner-icon {
+    font-size: 36px;
+    color: rgba(255, 255, 255, 0.9);
+    font-variation-settings: 'FILL' 1;
+    flex-shrink: 0;
   }
-  
-  .status-content {
+}
+
+// Section cards
+.section-card {
+  background: white;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
+  padding: 16px;
+}
+
+.card-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+
+  .card-icon {
+    font-size: 18px;
+    color: #2563EB;
+    font-variation-settings: 'FILL' 1;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+    margin: 0;
+    flex: 1;
+  }
+}
+
+.card-body {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+  padding-left: 28px;
+}
+
+// Alert card
+.alert-card {
+  border-left: 3px solid #f59e0b;
+
+  .alert-header-row {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
     align-items: center;
-    width: 100%;
-    
-    .status-info {
-      flex: 1;
-      padding-right: 16px;
-      text-align: left;
-      
-      h2 {
-        margin: 0 0 4px 0;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: white;
-      }
-      
-      p {
-        margin: 0;
-        opacity: 0.9;
-        font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.9);
-        line-height: 1.4;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-    }
-    
-    ion-icon {
-      font-size: 3rem;
-      opacity: 0.9;
-      color: white;
+    gap: 10px;
+    margin-bottom: 8px;
+
+    .alert-icon {
+      font-size: 20px;
+      color: #f59e0b;
+      font-variation-settings: 'FILL' 1;
       flex-shrink: 0;
     }
-  }
-}
-
-// Alert Card for Pending Submissions (FRED-style)
-.alert-card {
-  margin-bottom: 24px;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border-left: 4px solid var(--ion-color-warning);
-
-  .alert-header {
-    padding: 20px 20px 8px 20px;
 
     .alert-title {
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+    }
+  }
+
+  .alert-desc {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0 0 14px 0;
+  }
+}
+
+// Allocation summary
+.alloc-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .alloc-item {
+    .alloc-info-row {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      margin-bottom: 6px;
+
+      .alloc-label {
+        font-family: 'Manrope', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+      }
+
+      .alloc-pct {
+        font-family: 'Manrope', sans-serif;
+        font-size: 15px;
+        font-weight: 800;
+        color: #2563EB;
+
+        &.alloc-pct--secondary { color: #7c3aed; }
+      }
+    }
+
+    ion-progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+
+    .alloc-count {
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      color: #6b7280;
       margin: 0;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--ion-color-dark);
-
-      ion-icon {
-        font-size: 1.3rem;
-        color: var(--ion-color-warning);
-      }
-    }
-  }
-
-  .alert-content {
-    padding: 0 20px 20px 20px;
-
-    .alert-description {
-      margin: 0 0 20px 0;
-      color: var(--ion-color-medium);
-      line-height: 1.5;
-    }
-
-    .fred-button {
-      height: 44px;
-      font-weight: 600;
-      border-radius: 12px;
-      text-transform: none;
-      letter-spacing: 0.02em;
-      transition: all 0.2s ease;
-
-      &.fred-button-primary {
-        --background: var(--ion-color-primary);
-        --background-hover: var(--ion-color-primary-shade);
-        --color: white;
-        box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.3);
-
-        &:hover {
-          --background: var(--ion-color-primary-shade);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.4);
-        }
-      }
     }
   }
 }
 
-// Explanation Card
-.explanation-card {
-  margin-bottom: 24px;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+// Info list
+.info-list {
+  margin: 0 0 12px 0;
+  padding-left: 18px;
 
-  .explanation-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
+  li {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 6px;
 
-    ion-icon {
-      font-size: 1.5rem;
-    }
-
-    h3 {
-      margin: 0;
-      font-weight: 600;
-      color: var(--ion-color-dark);
-      font-size: 1.2rem;
-    }
-  }
-
-  p {
-    margin: 0;
-    line-height: 1.6;
-    color: var(--ion-color-medium);
+    strong { color: #0f172a; }
+    &:last-child { margin-bottom: 0; }
   }
 }
 
-// Allocation Overview Card
-.allocation-overview {
-  margin-bottom: 24px;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.info-note-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #eff6ff;
+  border-radius: 8px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  color: #374151;
+  line-height: 1.4;
 
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 0 0 20px 0;
-    font-weight: 600;
-    color: var(--ion-color-dark);
-    font-size: 1.1rem;
-
-    ion-icon {
-      font-size: 1.3rem;
-    }
+  .material-symbols-outlined {
+    font-size: 16px;
+    color: #2563EB;
+    font-variation-settings: 'FILL' 1;
+    flex-shrink: 0;
   }
+}
 
-  .allocation-summary {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+// Beneficiary section
+.beneficiary-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-    .allocation-item {
-      .allocation-info {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
+.beneficiary-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-        .allocation-label {
-          font-weight: 500;
-          color: var(--ion-color-dark);
-        }
-
-        .allocation-percentage {
-          font-weight: 600;
-          color: var(--ion-color-primary);
-          font-size: 1.1rem;
-
-          &.secondary {
-            color: var(--ion-color-secondary);
-          }
-        }
-      }
-
-      ion-progress-bar {
-        height: 8px;
-        border-radius: 4px;
-        margin-bottom: 4px;
-      }
-
-      .allocation-status {
-        font-size: 0.85rem;
-        color: var(--ion-color-medium);
-        margin: 0;
-      }
-    }
-  }
-
-  .overall-status {
+  .bsec-title-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 16px;
-    padding: 12px;
-    background: var(--ion-color-light);
-    border-radius: 8px;
-    font-size: 0.9rem;
 
-    ion-icon {
-      font-size: 1.2rem;
+    .bsec-icon {
+      font-size: 18px;
+      color: #2563EB;
+      font-variation-settings: 'FILL' 0;
+
+      &.bsec-icon--secondary { color: #7c3aed; }
     }
 
-    &.complete {
-      background: rgba(var(--ion-color-success-rgb), 0.1);
-      color: var(--ion-color-success);
-    }
-  }
-}
-
-// Beneficiary Sections
-.beneficiary-section {
-  margin-bottom: 8px;
-
-  .section-header-with-button {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .bsec-title {
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
       margin: 0;
-      font-weight: 600;
-      color: var(--ion-color-dark);
-      font-size: 1.1rem;
-
-      ion-icon {
-        font-size: 1.3rem;
-      }
-    }
-
-    ion-button {
-      --border-radius: 50%;
-      --padding-start: 8px;
-      --padding-end: 8px;
     }
   }
 }
 
-// Empty State
+.add-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #eff6ff;
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  .material-symbols-outlined { font-size: 20px; }
+
+  &.add-btn--secondary {
+    background: #f5f3ff;
+    color: #7c3aed;
+  }
+}
+
+// Empty state
 .empty-state {
   text-align: center;
-  padding: 40px 20px;
-  color: var(--ion-color-medium);
+  padding: 32px 16px;
+  background: white;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
 
-  ion-icon {
-    font-size: 3rem;
-    margin-bottom: 16px;
-    opacity: 0.6;
+  .empty-icon {
+    font-size: 40px;
+    color: #d1d5db;
+    font-variation-settings: 'FILL' 0;
+    display: block;
+    margin-bottom: 10px;
   }
 
-  p {
-    margin: 0 0 8px 0;
-    font-size: 1rem;
-    font-weight: 500;
+  .empty-text {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #374151;
+    margin: 0 0 4px 0;
   }
 
-  .empty-description {
-    font-size: 0.85rem;
-    opacity: 0.8;
-    margin-bottom: 20px !important;
-  }
-
-  ion-button {
-    margin-top: 16px;
-    --border-radius: 12px;
+  .empty-desc-sm {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0 0 16px 0;
   }
 }
 
-// Beneficiary Cards
-.beneficiary-card {
-  margin-bottom: 16px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.outline-btn {
+  background: transparent;
+  border: 1.5px solid #2563EB;
+  border-radius: 10px;
+  color: #2563EB;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 18px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-left: 4px solid var(--ion-color-primary);
 
-  &:last-child {
-    margin-bottom: 0;
-  }
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  }
-
-  &.contingent {
-    border-left: 4px solid var(--ion-color-secondary);
-  }
-
-  ion-card-content {
-    padding: 20px;
-  }
-
-  .beneficiary-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 16px;
-
-    .beneficiary-info {
-      flex: 1;
-
-      h4 {
-        margin: 0 0 4px 0;
-        font-weight: 600;
-        color: var(--ion-color-dark);
-        font-size: 1.1rem;
-      }
-
-      .relationship {
-        margin: 0;
-        color: var(--ion-color-medium);
-        font-size: 0.9rem;
-        text-transform: capitalize;
-      }
-    }
-
-    .beneficiary-allocation {
-      .allocation-badge {
-        background: var(--ion-color-primary);
-        color: white;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
-
-        &.contingent {
-          background: var(--ion-color-secondary);
-        }
-      }
-    }
-  }
-
-  .beneficiary-action-middle {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 4px 0 20px 0;
-    width: 100%;
-
-    ion-button {
-      min-width: 150px;
-      font-weight: 600;
-
-      // Force outline style persistence even when disabled
-      &[fill="outline"] {
-        --background: transparent;
-        --background-hover: rgba(var(--ion-color-primary-rgb), 0.1);
-        
-        &.button-disabled,
-        &[disabled] {
-          --background: transparent !important;
-          background: transparent !important;
-          --color: var(--ion-color-primary) !important;
-          --border-color: var(--ion-color-primary) !important;
-          --opacity: 0.5;
-          opacity: 1;
-        }
-      }
-    }
-  }
-
-  .beneficiary-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-  }
-
-  .beneficiary-details {
-    margin-bottom: 0;
-
-    .detail-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-      color: var(--ion-color-medium);
-      font-size: 0.85rem;
-
-      ion-icon {
-        font-size: 1rem;
-        opacity: 0.7;
-      }
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
-
-  .beneficiary-status {
-    display: flex;
-    justify-content: flex-end;
-
-    ion-badge {
-      --background: transparent;
-      --color: var(--ion-color-medium);
-      border: 1px solid var(--ion-color-light-shade);
-      font-size: 0.75rem;
-      padding: 4px 8px;
-
-      ion-icon {
-        margin-right: 4px;
-        font-size: 0.8rem;
-      }
-    }
+  &.outline-btn--secondary {
+    border-color: #7c3aed;
+    color: #7c3aed;
   }
 }
 
-// Dark mode adjustments
-@media (prefers-color-scheme: dark) {
-  .explanation-card,
-  .allocation-overview,
-  .beneficiary-card,
-  .info-card {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-
-  .overall-status {
-    background: var(--ion-color-dark-tint);
-  }
-
-  .info-card ion-card-content ion-note {
-    background: var(--ion-color-dark-tint);
-  }
-}
-
-// Responsive design
-@media (min-width: 768px) {
-  .allocation-summary {
-    flex-direction: row !important;
-    gap: 40px !important;
-
-    .allocation-item {
-      flex: 1;
-    }
-  }
-
-  .beneficiary-card .beneficiary-header {
-    align-items: center;
-  }
-}
-
-// Enhanced Manual Flow Styles
-.beneficiary-card .beneficiary-status {
-  .status-section {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-    width: auto;
-    justify-content: flex-end;
-  }
-  
-  .submitted-info {
-    text-align: right;
-    .submitted-text {
-      font-size: 0.8rem;
-      color: var(--ion-color-medium);
-      font-style: italic;
-    }
-  }
-}
-
-// Warning Banner Styling
-.warning-banner {
-  border-left: 4px solid var(--ion-color-warning);
-  margin-bottom: 16px;
-  
-  .warning-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-  }
-  
-  .warning-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    
-    ion-icon {
-      font-size: 1.5rem;
-      flex-shrink: 0;
-    }
-    
-    .warning-text {
-      h4 {
-        margin: 0 0 4px 0;
-        color: var(--ion-color-dark);
-        font-weight: 600;
-        font-size: 1rem;
-      }
-      
-      p {
-        margin: 0;
-        color: var(--ion-color-medium);
-        font-size: 0.9rem;
-      }
-    }
-  }
-}
-
-// Quick Actions Card Styling
-.quick-actions-card {
-  margin-bottom: 20px;
-  
-  .quick-actions {
-    .actions-title {
-      margin: 0 0 16px 0;
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--ion-color-dark);
-    }
-    
-    .action-buttons-row {
-      display: flex;
-      gap: 8px;
-      
-      .action-btn {
-        flex: 1;
-        --border-radius: 8px;
-        font-size: 0.9rem;
-        
-        ion-icon {
-          font-size: 1rem;
-        }
-      }
-    }
-  }
-}
-
-// Enhanced Status Colors
-ion-badge {
-  &[color="warning"] {
-    --background: #fff3cd;
-    --color: #856404;
-    border: 1px solid #ffeaa7;
-  }
-  
-  &[color="success"] {
-    --background: #d1f2eb;
-    --color: #0e6b47;
-    border: 1px solid #a6f3d0;
-  }
-  
-  &[color="primary"] {
-    --background: #cce7ff;
-    --color: #0056b3;
-    border: 1px solid #99d6ff;
-  }
-}
-
-// Responsive Design Improvements for Enhanced Flow
-@media (max-width: 768px) {
-  .warning-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .action-buttons-row {
-    flex-direction: column;
-    
-    .action-btn {
-      flex: none;
-    }
-  }
-  
-  .status-section {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-}
-
-
-/* Swipe to delete wrapper styles */
+// Ion-item-sliding wrapper (swipe-to-delete - must keep Ionic structure)
 ion-item-sliding.beneficiary-sliding-item {
-  margin-bottom: 16px;
-  background: var(--ion-color-danger);
-  width: 100%;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); // Apply shadow to the container
+  background: #ef4444;
+  border-radius: 14px;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .beneficiary-item-wrapper {
-  --background: var(--ion-card-background, #fff); // Ensure solid white background
+  --background: white;
   --padding-start: 0;
   --padding-end: 0;
   --inner-padding-end: 0;
   --padding-top: 0;
   --padding-bottom: 0;
   --min-height: 0;
-  
-  // Ensure the card takes full width
-  ion-card {
-    width: 100%;
-    margin: 0; 
-    box-shadow: none; // Remove card shadow as container has it
-    border-radius: 0; // Let container handle corners
-    background: transparent; // Allow item background to show
+
+  .beneficiary-card { width: 100%; }
+}
+
+// Beneficiary card (replaces ion-card inside ion-item)
+.beneficiary-card {
+  padding: 16px;
+  background: white;
+  cursor: pointer;
+  border-left: 3px solid #2563EB;
+  width: 100%;
+
+  &.beneficiary-card--contingent { border-left-color: #7c3aed; }
+
+  .beneficiary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+
+    .beneficiary-info {
+      flex: 1;
+
+      .bname {
+        font-family: 'Manrope', sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 2px 0;
+      }
+
+      .brelation {
+        font-family: 'Manrope', sans-serif;
+        font-size: 12px;
+        color: #6b7280;
+        margin: 0;
+        text-transform: capitalize;
+      }
+    }
+
+    .allocation-badge {
+      background: #2563EB;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+    }
   }
+
+  .beneficiary-action-middle {
+    display: flex;
+    justify-content: center;
+    padding: 0 0 12px 0;
+  }
+
+  .beneficiary-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+
+    .beneficiary-details {
+      .detail-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: 'Manrope', sans-serif;
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 4px;
+
+        &:last-child { margin-bottom: 0; }
+
+        .detail-icon {
+          font-size: 14px;
+          font-variation-settings: 'FILL' 0;
+        }
+      }
+    }
+
+    .beneficiary-status {
+      .status-section {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+
+        .submitted-info .submitted-text {
+          font-family: 'Manrope', sans-serif;
+          font-size: 11px;
+          color: #6b7280;
+          font-style: italic;
+        }
+      }
+    }
+  }
+}
+
+// CTA button
+.cta-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: none;
+  background: #2563EB;
+  color: white;
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
+  transition: all 0.15s ease;
+
+  .material-symbols-outlined { font-size: 20px; }
+
+  .btn-spinner-sm {
+    width: 18px;
+    height: 18px;
+    color: white;
+  }
+
+  &:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  &:active:not(:disabled) { transform: scale(0.99); }
+}
+
+// Individual submit button
+.submit-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1.5px solid #2563EB;
+  border-radius: 20px;
+  color: #2563EB;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 16px;
+  cursor: pointer;
+  min-width: 130px;
+  justify-content: center;
+
+  .material-symbols-outlined { font-size: 16px; }
+
+  .btn-spinner-sm {
+    width: 14px;
+    height: 14px;
+    color: #2563EB;
+  }
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+ion-badge {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
 }
