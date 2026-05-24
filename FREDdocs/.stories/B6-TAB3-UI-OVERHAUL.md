@@ -61,13 +61,11 @@ For each page:
 4. **Update `.scss`** — replace existing styles with onboarding-consistent variables and rules. Match spacing, font sizes, colors, border-radius, shadows.
 5. **Do NOT touch `.ts`** — no changes to service calls, subscriptions, lifecycle hooks, or imports (unless adding a purely cosmetic `@ViewChild` or similar that doesn't affect behavior).
 6. **Run:** `npx tsc --noEmit` — must exit 0 before committing.
-7. **Visual verify** at `local-b6.fredvested.com` using Claude-in-Chrome MCP:
-   - Navigate to the page.
-   - Screenshot and compare to an onboarding page screenshot — confirm visual consistency.
-   - Click every interactive element (buttons, toggles, inputs) — confirm no functional regression.
-8. **Commit:** `git commit -am "ui: B6 — overhaul <route> to onboarding theme"`
-9. **Check the Done box** for this page in the section below.
-10. Move to the next page.
+7. **Commit:** `git commit -am "ui: B6 — overhaul <route> to onboarding theme"`
+8. **Check the Done box** for this page in the section below.
+9. Move to the next page.
+
+**No runtime visual verification during agent run.** Andy will run `ionic serve` in the B6 worktree after all 10 pages are done to visually inspect before merging.
 
 ---
 
