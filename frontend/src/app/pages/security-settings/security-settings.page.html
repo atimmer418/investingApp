@@ -1,5 +1,5 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar class="security-header">
+  <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/tab3" text="" icon="chevron-back-outline"></ion-back-button>
     </ion-buttons>
@@ -11,123 +11,111 @@
 
   <!-- Authentication Overlay -->
   <div class="auth-overlay" *ngIf="!isAuthenticated">
-    <div class="auth-container">
-      <div class="auth-icon">
-        <ion-icon name="shield-checkmark-outline"></ion-icon>
-      </div>
-      <h2>Security Verification</h2>
-      <p>Please verify your identity to access security settings.</p>
+    <div class="auth-card">
+      <span class="material-symbols-outlined auth-icon">shield</span>
+      <h2 class="auth-title">Security Verification</h2>
+      <p class="auth-desc">Please verify your identity to access security settings.</p>
 
-      <div class="spinner-container" *ngIf="isAuthenticating">
+      <div class="auth-spinner" *ngIf="isAuthenticating">
         <ion-spinner name="crescent"></ion-spinner>
         <span>Verifying...</span>
       </div>
 
-      <ion-button *ngIf="!isAuthenticating" (click)="authenticateUser()" expand="block" class="verify-btn">
+      <button *ngIf="!isAuthenticating" class="cta-btn" (click)="authenticateUser()">
+        <span class="material-symbols-outlined">fingerprint</span>
         Verify Identity
-      </ion-button>
+      </button>
     </div>
   </div>
 
-  <!-- Main Content (Hidden until authenticated) -->
-  <div class="mobile-container" *ngIf="isAuthenticated">
+  <div class="content-inner" *ngIf="isAuthenticated">
 
-    <!-- Security Preferences Section -->
-    <div class="section-card mobile-card">
-      <div class="section-header">
-        <div>
-          <h3 class="section-title">Security Preferences</h3>
-          <p class="section-subtitle">Manage how you access and secure the app</p>
-        </div>
+    <!-- Security Preferences -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">lock</span>
+        <h3 class="card-title">Security Preferences</h3>
       </div>
+      <p class="card-subtitle">Manage how you access and secure the app</p>
 
-      <ion-list lines="none">
-        <ion-item class="app-lock-item">
-          <ion-icon name="lock-closed-outline" slot="start" class="setting-icon"></ion-icon>
-          <ion-label>
-            <h3>App Lock</h3>
-            <p>Require passkey sign-in to unlock the app every time you open it</p>
-          </ion-label>
+      <ion-list lines="none" class="toggle-list">
+        <ion-item class="toggle-item">
+          <div class="toggle-info">
+            <span class="toggle-label">App Lock</span>
+            <span class="toggle-desc">Require passkey sign-in to unlock the app every time you open it</span>
+          </div>
           <ion-toggle slot="end" [(ngModel)]="appLockEnabled" (ionChange)="toggleAppLock()"></ion-toggle>
         </ion-item>
 
-        <ion-item class="sensitive-auth-item">
-          <ion-icon name="shield-checkmark-outline" slot="start" class="setting-icon"></ion-icon>
-          <ion-label>
-            <h3>Step-Up Authentication</h3>
-            <p>Require extra verification for high-risk actions</p>
-          </ion-label>
+        <ion-item class="toggle-item">
+          <div class="toggle-info">
+            <span class="toggle-label">Step-Up Authentication</span>
+            <span class="toggle-desc">Require extra verification for high-risk actions</span>
+          </div>
           <ion-toggle slot="end" [(ngModel)]="sensitiveAuthEnabled" (ionChange)="toggleSensitiveAuth()"></ion-toggle>
         </ion-item>
       </ion-list>
     </div>
 
-    <!-- Identity & Email Section -->
-    <div class="section-card mobile-card">
-      <div class="section-header">
-        <div>
-          <h3 class="section-title">Identity & Contact</h3>
-          <p class="section-subtitle">Your verified personal information</p>
-        </div>
+    <!-- Identity & Contact -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">badge</span>
+        <h3 class="card-title">Identity & Contact</h3>
       </div>
+      <p class="card-subtitle">Your verified personal information</p>
 
-      <div class="info-block">
+      <div class="info-rows">
         <div class="info-row">
-          <ion-icon name="person-outline" class="setting-icon"></ion-icon>
-          <div class="info-text">
-            <h4>KYC Identity Information</h4>
-            <p>Verified via Persona (SSN ending in ••••)</p>
+          <span class="material-symbols-outlined row-icon">person</span>
+          <div class="row-text">
+            <span class="row-label">KYC Identity</span>
+            <span class="row-val">Verified via Persona (SSN ending in ••••)</span>
           </div>
-          <ion-icon name="checkmark-circle" color="success" class="status-icon"></ion-icon>
+          <span class="material-symbols-outlined verified-icon">check_circle</span>
         </div>
 
         <div class="info-row">
-          <ion-icon name="mail-outline" class="setting-icon"></ion-icon>
-          <div class="info-text">
-            <h4>Email Address</h4>
-            <p>{{ userEmail }}</p>
+          <span class="material-symbols-outlined row-icon">mail</span>
+          <div class="row-text">
+            <span class="row-label">Email Address</span>
+            <span class="row-val">{{ userEmail }}</span>
           </div>
-          <ion-button fill="outline" size="small" (click)="changeEmail()">Change</ion-button>
+          <button class="change-btn" (click)="changeEmail()">Change</button>
         </div>
 
         <div class="info-row" *ngIf="alpacaAccountNumber">
-          <ion-icon name="card-outline" class="setting-icon"></ion-icon>
-          <div class="info-text">
-            <h4>Alpaca Account Number</h4>
-            <p>{{ alpacaAccountNumber }}</p>
+          <span class="material-symbols-outlined row-icon">credit_card</span>
+          <div class="row-text">
+            <span class="row-label">Alpaca Account</span>
+            <span class="row-val">{{ alpacaAccountNumber }}</span>
           </div>
-          <ion-button fill="clear" size="small" (click)="copyAccountNumber()">
-            <ion-icon name="copy-outline" slot="icon-only"></ion-icon>
-          </ion-button>
+          <button class="icon-btn" (click)="copyAccountNumber()">
+            <span class="material-symbols-outlined">content_copy</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Trusted Devices Section -->
-    <div class="section-card mobile-card">
-      <div class="section-header">
-        <div>
-          <h3 class="section-title">Trusted Devices</h3>
-          <p class="section-subtitle">Manage devices that have access to your account</p>
+    <!-- Trusted Devices -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">devices</span>
+        <h3 class="card-title">Trusted Devices</h3>
+      </div>
+      <p class="card-subtitle">Manage devices that have access to your account</p>
+
+      <div class="sessions-list">
+        <div class="session-item" *ngFor="let session of sessions">
+          <span class="material-symbols-outlined session-icon">smartphone</span>
+          <div class="session-text">
+            <span class="session-device">{{ session.deviceInfo }}</span>
+            <span class="session-meta">{{ session.location || 'Unknown Location' }} &bull; {{ session.id === currentSessionId ? 'Active Now' : (session.lastActive | date:'medium') }}</span>
+          </div>
+          <button *ngIf="session.id !== currentSessionId" class="remove-btn" (click)="revokeSession(session.id)">Remove</button>
+          <span *ngIf="session.id === currentSessionId" class="current-badge">Current</span>
         </div>
       </div>
-
-      <ion-list lines="full">
-        <ion-item *ngFor="let session of sessions">
-          <ion-icon name="phone-portrait-outline" slot="start" class="setting-icon"></ion-icon>
-          <ion-label>
-            <h3>{{ session.deviceInfo }}</h3>
-            <p>{{ session.location || 'Unknown Location' }} • {{ session.id === currentSessionId ? 'Active Now' :
-              (session.lastActive | date:'medium') }}</p>
-          </ion-label>
-          <ion-button *ngIf="session.id !== currentSessionId" slot="end" fill="clear" color="danger"
-            (click)="revokeSession(session.id)">
-            Remove
-          </ion-button>
-          <ion-note *ngIf="session.id === currentSessionId" slot="end" color="success"
-            class="current-badge">Current</ion-note>
-        </ion-item>
-      </ion-list>
     </div>
 
   </div>

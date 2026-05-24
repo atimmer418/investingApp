@@ -91,13 +91,13 @@ You may freely:
 
 ## Done
 
-- [ ] 1. `/my-profile`
-- [ ] 2. `/recurring-investments`
-- [ ] 3. `/lump-sum-investment`
-- [ ] 4. `/portfolio-customize`
-- [ ] 5. `/sell-withdraw`
-- [ ] 6. `/security-settings`
-- [ ] 7. `/change-bank-account`
-- [ ] 8. `/tax-documents`
-- [ ] 9. `/beneficiaries`
-- [ ] 10. `/faq`
+- [x] 1. `/my-profile`
+- [x] 2. `/recurring-investments`
+- [x] 3. `/lump-sum-investment`
+- [x] 4. `/portfolio-customize`
+- [x] 5. `/sell-withdraw`
+- [x] 6. `/security-settings`
+- [x] 7. `/change-bank-account`
+- [x] 8. `/tax-documents`
+- [x] 9. `/beneficiaries`
+- [x] 10. `/faq`

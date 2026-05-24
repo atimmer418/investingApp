@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/tab3" text="" icon="chevron-back-outline"></ion-back-button>
@@ -7,54 +7,49 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="faq-content">
-    <div class="mobile-container">
+<ion-content>
+  <div class="content-inner">
 
-        <!-- Hero / Intro -->
-        <div class="faq-hero">
-            <div class="hero-icon">
-                <ion-icon name="help-circle-outline"></ion-icon>
-            </div>
-            <h2>How can we help?</h2>
-            <p>Find answers to common questions about your investments, taxes, and how FRED works.</p>
-        </div>
-
-        <!-- FAQ Accordion List -->
-        <div class="faq-list">
-            <div class="faq-card" *ngFor="let faq of faqs; let i = index" [class.active]="faq.isOpen">
-
-                <!-- Question Header (Clickable) -->
-                <div class="faq-header" (click)="toggleSection(i)">
-                    <div class="question-container">
-                        <div class="icon-box">
-                            <ion-icon [name]="faq.icon"></ion-icon>
-                        </div>
-                        <h3 class="question-text">{{ faq.question }}</h3>
-                    </div>
-
-                    <div class="toggle-icon">
-                        <ion-icon [name]="faq.isOpen ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-                    </div>
-                </div>
-
-                <!-- Answer Body (Expandable) -->
-                <div class="faq-body" [class.expanded]="faq.isOpen">
-                    <div class="answer-content">
-                        <p [innerHTML]="faq.answer"></p>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- Contact Support Section -->
-        <div class="support-section">
-            <p>Still have questions?</p>
-            <p>FRED can answer questions about these FAQs!<br>If you still need help, feel free to contact us.</p>
-            <!-- <ion-button expand="block" fill="outline" color="primary" class="contact-btn">
-                Contact Support
-            </ion-button> -->
-        </div>
-
+    <!-- Hero -->
+    <div class="faq-hero">
+      <div class="hero-icon-wrap">
+        <span class="material-symbols-outlined hero-icon">help</span>
+      </div>
+      <h2 class="hero-title">How can we help?</h2>
+      <p class="hero-desc">Find answers to common questions about your investments, taxes, and how FRED works.</p>
     </div>
+
+    <!-- FAQ Accordion -->
+    <div class="faq-list">
+      <div class="faq-card" *ngFor="let faq of faqs; let i = index" [class.active]="faq.isOpen">
+
+        <div class="faq-header" (click)="toggleSection(i)">
+          <div class="question-container">
+            <div class="icon-box">
+              <ion-icon [name]="faq.icon"></ion-icon>
+            </div>
+            <h3 class="question-text">{{ faq.question }}</h3>
+          </div>
+          <div class="toggle-icon">
+            <span class="material-symbols-outlined" *ngIf="faq.isOpen">expand_less</span>
+            <span class="material-symbols-outlined" *ngIf="!faq.isOpen">expand_more</span>
+          </div>
+        </div>
+
+        <div class="faq-body" [class.expanded]="faq.isOpen">
+          <div class="answer-content">
+            <p [innerHTML]="faq.answer"></p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Support -->
+    <div class="support-section">
+      <p class="support-title">Still have questions?</p>
+      <p class="support-desc">FRED can answer questions about these FAQs!<br>If you still need help, feel free to contact us.</p>
+    </div>
+
+  </div>
 </ion-content>

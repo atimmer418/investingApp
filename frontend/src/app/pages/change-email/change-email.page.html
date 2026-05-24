@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/security-settings" text="" icon="chevron-back-outline"></ion-back-button>
@@ -8,59 +8,31 @@
 </ion-header>
 
 <ion-content [scrollY]="false" class="main-content">
-  <div class="content-container">
+  <div class="content-inner">
 
-    <!-- Update Email Address Card -->
-    <ion-card class="form-card">
-      <ion-card-header>
-        <div class="header-content">
-          <ion-card-title class="card-title">
-            <ion-icon name="mail-outline" color="primary"></ion-icon>
-            Update Email Address
-          </ion-card-title>
-          <p style="margin: 8px 0 0 0; color: #666; font-size: 0.9rem;">
-            Enter your new email address below.<br>You will be asked to verify your identity.
-          </p>
-        </div>
-      </ion-card-header>
-      
-      <ion-card-content>
-        <!-- Current Email -->
-        <div class="input-wrapper">
-          <label class="input-label">Current Email</label>
-          <ion-input 
-            class="custom-input"
-            [value]="currentEmail" 
-            readonly="true">
-          </ion-input>
-        </div>
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">mail</span>
+        <h3 class="card-title">Update Email Address</h3>
+      </div>
+      <p class="card-subtitle">Enter your new email address below. You will be asked to verify your identity.</p>
 
-        <!-- New Email -->
-        <div class="input-wrapper">
-          <label class="input-label">New Email</label>
-          <ion-input 
-            class="custom-input"
-            [(ngModel)]="newEmail" 
-            type="email"
-            placeholder="Enter new email">
-          </ion-input>
-        </div>
+      <div class="form-group">
+        <label class="field-label">Current Email</label>
+        <ion-input class="form-input form-input--readonly" [value]="currentEmail" readonly="true"></ion-input>
+      </div>
 
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Action Buttons -->
-    <div class="action-buttons">
-       <ion-button 
-        expand="block" 
-        fill="solid" 
-        color="primary" 
-        (click)="initiateEmailChange()"
-        [disabled]="!canSave() || isLoading">
-        <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
-        <span *ngIf="!isLoading">Update Email</span>
-      </ion-button>
+      <div class="form-group form-group--last">
+        <label class="field-label">New Email</label>
+        <ion-input class="form-input" [(ngModel)]="newEmail" type="email" placeholder="Enter new email"></ion-input>
+      </div>
     </div>
+
+    <button class="cta-btn" (click)="initiateEmailChange()" [disabled]="!canSave() || isLoading">
+      <ion-spinner *ngIf="isLoading" name="crescent" class="btn-spinner-sm"></ion-spinner>
+      <span class="material-symbols-outlined" *ngIf="!isLoading">send</span>
+      <span>{{ isLoading ? 'Sending...' : 'Update Email' }}</span>
+    </button>
 
   </div>
 </ion-content>

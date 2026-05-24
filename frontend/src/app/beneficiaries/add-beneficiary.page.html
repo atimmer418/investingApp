@@ -1,254 +1,144 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/beneficiaries" text="" icon="chevron-back-outline"></ion-back-button>
     </ion-buttons>
-    <ion-title>
-      {{ editMode ? 'Edit Beneficiary' : 'Add Beneficiary' }}
-    </ion-title>
+    <ion-title>{{ editMode ? 'Edit Beneficiary' : 'Add Beneficiary' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="main-content">
-  <div class="content-container">
-    
-    <!-- Personal Information Card -->
-    <ion-card class="form-card">
-      <ion-card-header>
-        <ion-card-title class="card-title">
-          <ion-icon name="person-outline" color="primary"></ion-icon>
-          Personal Information
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        
-        <!-- Beneficiary Type -->
-        <div class="input-wrapper">
-          <label class="input-label">Beneficiary Type<span class="required-star">*</span></label>
-          <ion-select class="custom-select" [(ngModel)]="beneficiary.beneficiaryType" placeholder="Select type" interface="action-sheet" cancelText="Cancel">
-            <ion-select-option value="PRIMARY">Primary</ion-select-option>
-            <ion-select-option value="CONTINGENT">Contingent</ion-select-option>
-          </ion-select>
-        </div>
+  <div class="content-inner">
 
-        <!-- Name Fields -->
-        <div class="input-wrapper">
-          <label class="input-label">First Name<span class="required-star">*</span></label>
-          <ion-input 
-            class="custom-input"
-            [(ngModel)]="beneficiary.firstName" 
-            placeholder="Enter first name"
-            type="text"
-            maxlength="100">
-          </ion-input>
-        </div>
+    <!-- Personal Information -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">person</span>
+        <h3 class="card-title">Personal Information</h3>
+      </div>
 
-        <div class="input-wrapper">
-          <label class="input-label">Last Name<span class="required-star">*</span></label>
-          <ion-input 
-            class="custom-input"
-            [(ngModel)]="beneficiary.lastName" 
-            placeholder="Enter last name"
-            type="text"
-            maxlength="100">
-          </ion-input>
-        </div>
+      <div class="form-group">
+        <label class="field-label">Beneficiary Type<span class="required-star">*</span></label>
+        <ion-select class="form-select" [(ngModel)]="beneficiary.beneficiaryType" placeholder="Select type" interface="action-sheet" cancelText="Cancel">
+          <ion-select-option value="PRIMARY">Primary</ion-select-option>
+          <ion-select-option value="CONTINGENT">Contingent</ion-select-option>
+        </ion-select>
+      </div>
 
-        <!-- Date of Birth -->
-        <div class="input-wrapper">
-          <label class="input-label">Date of Birth<span class="required-star">*</span></label>
-          <ion-input 
-            class="custom-input"
-            id="open-dob-modal"
-            [value]="beneficiary.dateOfBirth | date:'mediumDate'"
-            readonly="true"
-            placeholder="Select date">
-            <ion-icon name="calendar-outline" slot="end" color="medium"></ion-icon>
-          </ion-input>
-          
-          <ion-modal #dobModal trigger="open-dob-modal" [keepContentsMounted]="true" style="--height: auto; --width: auto; --border-radius: 16px;">
-            <ng-template>
-              <ion-datetime 
-                #datetime
-                presentation="date"
-                [(ngModel)]="beneficiary.dateOfBirth"
-                [max]="today"
-                color="primary"
-                style="height: auto; max-width: 350px;">
-                <span slot="title">Select Date of Birth</span>
-                <ion-buttons slot="buttons">
-                  <ion-button color="primary" (click)="datetime.confirm(); dobModal.dismiss()">Done</ion-button>
-                </ion-buttons>
-              </ion-datetime>
-            </ng-template>
-          </ion-modal>
-        </div>
+      <div class="form-group">
+        <label class="field-label">First Name<span class="required-star">*</span></label>
+        <ion-input class="form-input" [(ngModel)]="beneficiary.firstName" placeholder="Enter first name" type="text" maxlength="100"></ion-input>
+      </div>
 
-        <!-- Social Security Number -->
-        <div class="input-wrapper">
-          <label class="input-label">Social Security Number<span class="required-star">*</span></label>
-          <ion-input 
-            class="custom-input"
-            [(ngModel)]="beneficiary.socialSecurityNumber" 
-            placeholder="XXX-XX-XXXX"
-            type="text"
-            maxlength="11"
-            (ionInput)="formatSSN($event)">
-          </ion-input>
-        </div>
+      <div class="form-group">
+        <label class="field-label">Last Name<span class="required-star">*</span></label>
+        <ion-input class="form-input" [(ngModel)]="beneficiary.lastName" placeholder="Enter last name" type="text" maxlength="100"></ion-input>
+      </div>
 
-        <!-- Relationship -->
-        <div class="input-wrapper">
-          <label class="input-label">Relationship<span class="required-star">*</span></label>
-          <ion-select class="custom-select" [(ngModel)]="beneficiary.relationship" placeholder="Select relationship" interface="action-sheet" cancelText="Cancel">
-            <ion-select-option 
-              *ngFor="let option of relationshipOptions" 
-              [value]="option.value">
-              {{ option.label }}
-            </ion-select-option>
-          </ion-select>
-        </div>
+      <div class="form-group">
+        <label class="field-label">Date of Birth<span class="required-star">*</span></label>
+        <ion-input
+          class="form-input form-input--readonly"
+          id="open-dob-modal"
+          [value]="beneficiary.dateOfBirth | date:'mediumDate'"
+          readonly="true"
+          placeholder="Select date">
+          <ion-icon name="calendar-outline" slot="end" color="medium"></ion-icon>
+        </ion-input>
 
-        <!-- Allocation Percentage -->
-        <div class="input-wrapper">
-          <label class="input-label">Allocation Percentage<span class="required-star">*</span></label>
-          <ion-input 
-            class="custom-input"
-            [(ngModel)]="beneficiary.percentageAllocation" 
-            placeholder="0.00"
-            type="number"
-            min="0.01"
-            max="100"
-            step="0.01">
-          </ion-input>
-        </div>
-      </ion-card-content>
-    </ion-card>
+        <ion-modal #dobModal trigger="open-dob-modal" [keepContentsMounted]="true" style="--height: auto; --width: auto; --border-radius: 16px;">
+          <ng-template>
+            <ion-datetime
+              #datetime
+              presentation="date"
+              [(ngModel)]="beneficiary.dateOfBirth"
+              [max]="today"
+              color="primary"
+              style="height: auto; max-width: 350px;">
+              <span slot="title">Select Date of Birth</span>
+              <ion-buttons slot="buttons">
+                <ion-button color="primary" (click)="datetime.confirm(); dobModal.dismiss()">Done</ion-button>
+              </ion-buttons>
+            </ion-datetime>
+          </ng-template>
+        </ion-modal>
+      </div>
 
-    <!-- Contact Information Card -->
-    <ion-card class="form-card">
-      <ion-card-header>
-        <ion-card-title class="card-title">
-          <ion-icon name="mail-outline" color="primary"></ion-icon>
-          Contact Information
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        
-        <div class="input-wrapper">
-          <label class="input-label">Email</label>
-          <ion-input 
-            class="custom-input"
-            [(ngModel)]="beneficiary.email" 
-            placeholder="email@example.com"
-            type="email"
-            maxlength="255">
-          </ion-input>
-        </div>
+      <div class="form-group">
+        <label class="field-label">Social Security Number<span class="required-star">*</span></label>
+        <ion-input class="form-input" [(ngModel)]="beneficiary.socialSecurityNumber" placeholder="XXX-XX-XXXX" type="text" maxlength="11" (ionInput)="formatSSN($event)"></ion-input>
+      </div>
 
-        <div class="input-wrapper">
-          <label class="input-label">Phone Number</label>
-          <ion-input 
-            class="custom-input"
-            [(ngModel)]="beneficiary.phone" 
-            placeholder="(555) 123-4567"
-            type="tel"
-            maxlength="14"
-            (ionInput)="formatPhone($event)">
-          </ion-input>
-        </div>
-      </ion-card-content>
-    </ion-card>
+      <div class="form-group">
+        <label class="field-label">Relationship<span class="required-star">*</span></label>
+        <ion-select class="form-select" [(ngModel)]="beneficiary.relationship" placeholder="Select relationship" interface="action-sheet" cancelText="Cancel">
+          <ion-select-option *ngFor="let option of relationshipOptions" [value]="option.value">{{ option.label }}</ion-select-option>
+        </ion-select>
+      </div>
 
-    <!-- Address Information Card -->
-    <ion-card class="form-card">
-      <ion-card-header>
-        <ion-card-title class="card-title">
-          <ion-icon name="location-outline" color="primary"></ion-icon>
-          Address Information
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        
-        <div class="input-wrapper">
-          <label class="input-label">Address Line 1</label>
-          <ion-input 
-            class="custom-input"
-            [(ngModel)]="beneficiary.addressLine1"  
-            placeholder="123 Main Street"
-            type="text"
-            maxlength="255">
-          </ion-input>
-        </div>
-
-        <div class="input-wrapper">
-          <label class="input-label">Address Line 2</label>
-          <ion-input 
-            class="custom-input"
-            [(ngModel)]="beneficiary.addressLine2" 
-            placeholder="Apt 123"
-            type="text"
-            maxlength="255">
-          </ion-input>
-        </div>
-
-        <div class="input-wrapper">
-          <label class="input-label">City</label>
-          <ion-input 
-            class="custom-input"
-            [(ngModel)]="beneficiary.city" 
-            placeholder="New York"
-            type="text"
-            maxlength="100">
-          </ion-input>
-        </div>
-
-        <div class="input-wrapper">
-          <label class="input-label">State</label>
-          <ion-input 
-            class="custom-input"
-            [(ngModel)]="beneficiary.state" 
-            placeholder="NY"
-            type="text"
-            maxlength="2">
-          </ion-input>
-        </div>
-
-        <div class="input-wrapper">
-          <label class="input-label">ZIP Code</label>
-          <ion-input 
-            class="custom-input"
-            [(ngModel)]="beneficiary.postalCode" 
-            placeholder="12345"
-            type="text"
-            maxlength="10">
-          </ion-input>
-        </div>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Action Buttons -->
-    <div class="action-buttons">
-      <ion-button 
-        expand="block" 
-        fill="solid" 
-        color="primary" 
-        (click)="onSave()"
-        [disabled]="isLoading || !isFormComplete">
-        <ion-icon name="save-outline" slot="start"></ion-icon>
-        {{ editMode ? 'Update Beneficiary' : 'Add Beneficiary' }}
-      </ion-button>
-
-      <!-- <ion-button 
-        expand="block" 
-        fill="outline" 
-        color="medium" 
-        (click)="onCancel()"
-        [disabled]="isLoading">
-        Cancel
-      </ion-button> -->
+      <div class="form-group form-group--last">
+        <label class="field-label">Allocation Percentage<span class="required-star">*</span></label>
+        <ion-input class="form-input" [(ngModel)]="beneficiary.percentageAllocation" placeholder="0.00" type="number" min="0.01" max="100" step="0.01"></ion-input>
+      </div>
     </div>
 
-  </div>
+    <!-- Contact Information -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">mail</span>
+        <h3 class="card-title">Contact Information</h3>
+      </div>
 
+      <div class="form-group">
+        <label class="field-label">Email</label>
+        <ion-input class="form-input" [(ngModel)]="beneficiary.email" placeholder="email@example.com" type="email" maxlength="255"></ion-input>
+      </div>
+
+      <div class="form-group form-group--last">
+        <label class="field-label">Phone Number</label>
+        <ion-input class="form-input" [(ngModel)]="beneficiary.phone" placeholder="(555) 123-4567" type="tel" maxlength="14" (ionInput)="formatPhone($event)"></ion-input>
+      </div>
+    </div>
+
+    <!-- Address Information -->
+    <div class="section-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">location_on</span>
+        <h3 class="card-title">Address Information</h3>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">Address Line 1</label>
+        <ion-input class="form-input" [(ngModel)]="beneficiary.addressLine1" placeholder="123 Main Street" type="text" maxlength="255"></ion-input>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">Address Line 2</label>
+        <ion-input class="form-input" [(ngModel)]="beneficiary.addressLine2" placeholder="Apt 123" type="text" maxlength="255"></ion-input>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">City</label>
+        <ion-input class="form-input" [(ngModel)]="beneficiary.city" placeholder="New York" type="text" maxlength="100"></ion-input>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group form-group--last">
+          <label class="field-label">State</label>
+          <ion-input class="form-input" [(ngModel)]="beneficiary.state" placeholder="NY" type="text" maxlength="2"></ion-input>
+        </div>
+        <div class="form-group form-group--last">
+          <label class="field-label">ZIP Code</label>
+          <ion-input class="form-input" [(ngModel)]="beneficiary.postalCode" placeholder="12345" type="text" maxlength="10"></ion-input>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save -->
+    <button class="cta-btn" (click)="onSave()" [disabled]="isLoading || !isFormComplete">
+      <span class="material-symbols-outlined">save</span>
+      {{ editMode ? 'Update Beneficiary' : 'Add Beneficiary' }}
+    </button>
+
+  </div>
 </ion-content>

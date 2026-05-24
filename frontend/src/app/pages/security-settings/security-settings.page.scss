@@ -1,266 +1,337 @@
-// FRED Theme Variables (Consistent with other pages)
-$fred-bg-light: #f2f2f7; // iOS system grouped background
-$fred-card-bg: #ffffff;
-$fred-text-primary: #000000;
-$fred-text-secondary: #8e8e93;
-$fred-border-color: #c6c6c8;
-$fred-primary-blue: #007aff;
-$fred-danger-red: #ff3b30;
+:host {
+  --ion-background-color: #f8fafc;
+  --ion-toolbar-background: #f8fafc;
+  --ion-toolbar-color: #0f172a;
+  --ion-text-color: #0f172a;
+  --ion-color-primary: #2563EB;
+}
 
-// Header Styling (Consistent with Tab3)
-.security-header {
-  --background: linear-gradient(0deg, var(--ion-color-primary) 0%, var(--ion-color-primary-tint) 100%);
+ion-content { --background: #f8fafc; }
+
+ion-toolbar {
+  --background: #f8fafc;
   --border-width: 0;
-
-  ion-title {
-    font-weight: 600;
-    color: #ffffff;
-  }
-
-  ion-back-button {
-    --color: #ffffff;
-  }
+  --min-height: 52px;
 }
 
-ion-content {
-  --background: #{$fred-bg-light};
+ion-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #0f172a;
 }
 
-.security-content {
-  position: relative;
+ion-back-button { --color: #0f172a; }
+
+.security-content { position: relative; }
+
+.content-inner {
+  padding: 12px 18px 40px;
+  font-family: 'Manrope', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-// Authentication Overlay
+// Auth overlay
 .auth-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba($fred-bg-light, 0.98); // High opacity to hide content
-  backdrop-filter: blur(10px);
-  z-index: 1000;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(248, 250, 252, 0.97);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-
-  .auth-container {
-    background: $fred-card-bg;
-    padding: 40px 30px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    width: 100%;
-    max-width: 350px;
-
-    .auth-icon {
-      font-size: 64px;
-      color: $fred-primary-blue;
-      margin-bottom: 20px;
-    }
-
-    h2 {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      color: $fred-text-primary;
-    }
-
-    p {
-      font-size: 15px;
-      color: $fred-text-secondary;
-      margin-bottom: 30px;
-      line-height: 1.4;
-    }
-
-    .verify-btn {
-      --border-radius: 12px;
-      font-weight: 600;
-    }
-
-    .spinner-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      color: $fred-text-secondary;
-      font-size: 14px;
-    }
-  }
+  padding: 24px;
 }
 
-// Main Content Styling
-.mobile-container {
-  padding: 20px 16px 0px 16px;
-  max-width: 600px;
-  margin: 0 auto;
+.auth-card {
+  background: white;
+  border-radius: 20px;
+  border: 2px solid #e5e7eb;
+  padding: 36px 24px;
+  text-align: center;
+  width: 100%;
+  max-width: 340px;
+
+  .auth-icon {
+    font-size: 52px;
+    color: #2563EB;
+    font-variation-settings: 'FILL' 1;
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .auth-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+  }
+
+  .auth-desc {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.45;
+    margin: 0 0 24px 0;
+  }
+
+  .auth-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: #6b7280;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+  }
 }
 
 .section-card {
-  background: $fred-card-bg;
-  border-radius: 12px;
-  padding: 0; // List items handle padding
-  margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
+  background: white;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
+  padding: 16px;
+}
 
-  &:last-child {
-    margin-bottom: 12px;
+.card-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+
+  .card-icon {
+    font-size: 18px;
+    color: #2563EB;
+    font-variation-settings: 'FILL' 1;
+    flex-shrink: 0;
   }
 
-  .section-header {
-    padding: 16px 16px 8px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-
-    .section-title {
-      font-size: 17px;
-      font-weight: 600;
-      margin: 0 0 4px 0;
-      color: $fred-text-primary;
-    }
-
-    .section-subtitle {
-      font-size: 13px;
-      color: $fred-text-secondary;
-      margin: 0;
-    }
-  }
-
-  .section-footer {
-    padding: 8px 16px 16px 16px;
-
-    p {
-      font-size: 12px;
-      color: $fred-text-secondary;
-      margin: 0;
-      line-height: 1.3;
-    }
+  .card-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+    margin: 0;
+    flex: 1;
   }
 }
 
-// List Styling Overrides
-ion-list {
+.card-subtitle {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0 0 14px 0;
+  padding-left: 28px;
+}
+
+// Toggle list
+.toggle-list {
   background: transparent;
   padding: 0;
+  margin: 0 -4px;
 }
 
-ion-item {
-  --background: #{$fred-card-bg};
-  --padding-start: 16px;
-  --inner-padding-end: 16px;
-  --border-color: #{$fred-border-color};
+.toggle-item {
+  --background: transparent;
+  --inner-padding-end: 0;
+  --padding-start: 0;
+  --border-color: #f1f5f9;
+  padding: 4px 0;
 
-  ion-icon[slot="start"] {
-    margin-right: 12px;
-    font-size: 22px;
-  }
+  .toggle-info {
+    flex: 1;
 
-  ion-label {
-    h3 {
-      font-weight: 500;
-      font-size: 16px;
-      margin-bottom: 4px;
+    .toggle-label {
+      display: block;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 2px;
     }
 
-    p {
-      font-size: 13px;
-      color: $fred-text-secondary;
-      max-width: 85%;
-      line-height: 1.2;
+    .toggle-desc {
+      display: block;
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.4;
     }
   }
 
-  // Align button with note
-  ion-button[slot="end"] {
-    margin-inline-end: 0;
-    --padding-start: 8px;
-    --padding-end: 0;
-    min-width: auto;
-    font-size: 14px;
-    height: auto;
-  }
-
-  ion-note[slot="end"] {
-    font-size: 14px;
-    margin-inline-end: 0;
+  ion-toggle {
+    --track-background: #e5e7eb;
+    --track-background-checked: #2563EB;
   }
 }
 
-.sensitive-auth-item {
-  --inner-padding-bottom: 4px;
-}
-
-// Identity Section Specifics
-.info-block {
-  padding: 0 16px 0px 16px;
+// Identity rows
+.info-rows {
+  display: flex;
+  flex-direction: column;
 
   .info-row {
     display: flex;
     align-items: center;
+    gap: 12px;
     padding: 12px 0;
-    border-bottom: 1px solid rgba($fred-border-color, 0.5);
+    border-bottom: 1px solid #f1f5f9;
 
-    &:last-child {
-      border-bottom: none;
+    &:last-child { border-bottom: none; }
+
+    .row-icon {
+      font-size: 20px;
+      color: #2563EB;
+      font-variation-settings: 'FILL' 0;
+      flex-shrink: 0;
     }
 
-    ion-icon {
-      font-size: 24px;
-      color: $fred-text-secondary;
-      margin-right: 16px;
-
-      &.status-icon {
-        margin-right: 0;
-        margin-left: auto;
-        font-size: 20px;
-      }
-    }
-
-    .info-text {
+    .row-text {
       flex: 1;
 
-      h4 {
-        font-size: 15px;
-        font-weight: 500;
-        margin: 0 0 2px 0;
+      .row-label {
+        display: block;
+        font-family: 'Manrope', sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 1px;
       }
 
-      p {
-        font-size: 13px;
-        color: $fred-text-secondary;
-        margin: 0;
+      .row-val {
+        display: block;
+        font-family: 'Manrope', sans-serif;
+        font-size: 12px;
+        color: #6b7280;
       }
+    }
+
+    .verified-icon {
+      font-size: 20px;
+      color: #16a34a;
+      font-variation-settings: 'FILL' 1;
+      flex-shrink: 0;
+    }
+
+    .change-btn {
+      background: transparent;
+      border: 1.5px solid #2563EB;
+      border-radius: 8px;
+      color: #2563EB;
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: #6b7280;
+      padding: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+
+      .material-symbols-outlined { font-size: 20px; }
     }
   }
 }
 
-.explanation-box {
-  background-color: #f9f9f9;
-  margin: 0 16px 16px 16px;
-  padding: 12px;
-  border-radius: 8px;
+// Sessions list
+.sessions-list {
   display: flex;
-  gap: 12px;
-  align-items: flex-start;
+  flex-direction: column;
 
-  ion-icon {
-    font-size: 20px;
-    min-width: 20px;
-    margin-top: 2px;
-  }
+  .session-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
 
-  p {
-    font-size: 12px;
-    color: #666;
-    margin: 0;
-    line-height: 1.4;
+    &:last-child { border-bottom: none; }
+
+    .session-icon {
+      font-size: 22px;
+      color: #2563EB;
+      font-variation-settings: 'FILL' 0;
+      flex-shrink: 0;
+    }
+
+    .session-text {
+      flex: 1;
+
+      .session-device {
+        display: block;
+        font-family: 'Manrope', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 1px;
+      }
+
+      .session-meta {
+        display: block;
+        font-family: 'Manrope', sans-serif;
+        font-size: 12px;
+        color: #6b7280;
+      }
+    }
+
+    .remove-btn {
+      background: transparent;
+      border: 1.5px solid #ef4444;
+      border-radius: 8px;
+      color: #ef4444;
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .current-badge {
+      font-family: 'Manrope', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: #16a34a;
+      background: #dcfce7;
+      border-radius: 6px;
+      padding: 3px 8px;
+      flex-shrink: 0;
+    }
   }
 }
 
-// Applied to all main icons in the settings list
-.setting-icon {
-  color: #007aff !important;
+.cta-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: none;
+  background: #2563EB;
+  color: white;
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
+  transition: all 0.15s ease;
+
+  .material-symbols-outlined { font-size: 20px; }
+
+  &:active { transform: scale(0.99); }
 }
