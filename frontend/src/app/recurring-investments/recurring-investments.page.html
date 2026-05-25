@@ -1,9 +1,11 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/tabs/tab3" text="" icon="chevron-back-outline"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Recurring Investments</ion-title>
+    <div class="header-inner">
+      <button class="back-btn" (click)="goBack()">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      </button>
+      <h2 class="header-title">Recurring Investments</h2>
+    </div>
   </ion-toolbar>
 </ion-header>
 

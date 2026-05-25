@@ -6,7 +6,6 @@ import { Subject, takeUntil } from 'rxjs';
 import {
   IonHeader,
   IonToolbar,
-  IonTitle,
   IonContent,
   IonButton,
   IonCard,
@@ -16,7 +15,6 @@ import {
   IonSelect,
   IonSelectOption,
   IonButtons,
-  IonBackButton,
   IonDatetime,
   IonDatetimeButton,
   IonModal
@@ -54,7 +52,6 @@ interface InvestmentFrequencyOption {
     FormsModule,
     IonHeader,
     IonToolbar,
-    IonTitle,
     IonContent,
     IonButton,
     IonCard,
@@ -64,7 +61,6 @@ interface InvestmentFrequencyOption {
     IonSelect,
     IonSelectOption,
     IonButtons,
-    IonBackButton,
     IonDatetime,
     IonDatetimeButton,
     IonModal

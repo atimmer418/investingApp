@@ -1,12 +1,12 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/tabs/tab3" text="" icon="chevron-back-outline"></ion-back-button>
-    </ion-buttons>
-    <ion-title>My Profile</ion-title>
-    <ion-buttons slot="end">
+    <div class="header-inner">
+      <button class="back-btn" [routerLink]="['/tabs/tab3']">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      </button>
+      <h2 class="header-title">My Profile</h2>
       <button *ngIf="isDirty" (click)="saveChanges()" class="save-btn">Save</button>
-    </ion-buttons>
+    </div>
   </ion-toolbar>
 </ion-header>
 

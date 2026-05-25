@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonBackButton,
+  IonContent, IonHeader, IonToolbar,
   IonCard, IonCardContent, IonInput, IonButton, IonIcon, IonAvatar, IonItem, IonLabel
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -12,7 +12,7 @@ import { SettingsService } from '../../services/settings.service';
 import { ToastService } from '../../services/toast.service';
 import { PortfolioService } from '../../services/portfolio.service';
 import { AccountStatusService } from '../../services/account-status.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -21,8 +21,8 @@ import { Observable } from 'rxjs';
   styleUrls: ['./my-profile.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
-    IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonBackButton,
+    CommonModule, FormsModule, RouterLink,
+    IonContent, IonHeader, IonToolbar,
     IonCard, IonCardContent, IonInput, IonButton, IonIcon, IonAvatar, IonItem, IonLabel
   ]
 })

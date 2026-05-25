@@ -1,14 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import {
   IonHeader,
   IonToolbar,
-  IonTitle,
-  IonButtons,
-  IonBackButton,
   IonContent,
   IonButton,
   IonIcon,
@@ -54,11 +51,9 @@ import { PasskeyPromptComponent } from '../components/passkey-prompt/passkey-pro
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     IonHeader,
     IonToolbar,
-    IonTitle,
-    IonButtons,
-    IonBackButton,
     IonContent,
     IonButton,
     IonIcon,

@@ -6,10 +6,11 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
+  IonHeader, IonToolbar, IonContent,
   IonCard, IonCardContent, IonList, IonItem, IonLabel, IonToggle, IonButton,
   IonIcon, IonNote, IonSpinner
 } from '@ionic/angular/standalone';
+import { RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
 import {
   shieldCheckmarkOutline, phonePortraitOutline,
@@ -42,8 +43,8 @@ import { ToastService } from '../../services/toast.service';
   styleUrls: ['./security-settings.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
-    IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
+    CommonModule, FormsModule, RouterLink,
+    IonHeader, IonToolbar, IonContent,
     IonCard, IonCardContent, IonList, IonItem, IonLabel, IonToggle, IonButton,
     IonIcon, IonNote, IonSpinner
   ]

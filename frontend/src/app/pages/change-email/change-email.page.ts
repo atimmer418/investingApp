@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { 
-  IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
+import {
+  IonHeader, IonToolbar, IonContent,
   IonItem, IonLabel, IonInput, IonButton, IonNote, IonSpinner, IonIcon,
   IonCard, IonCardHeader, IonCardTitle, IonCardContent
 } from '@ionic/angular/standalone';
@@ -25,8 +25,8 @@ import { firstValueFrom } from 'rxjs';
   styleUrls: ['./change-email.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
-    IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
+    CommonModule, FormsModule, RouterLink,
+    IonHeader, IonToolbar, IonContent,
     IonItem, IonLabel, IonInput, IonButton, IonNote, IonSpinner, IonIcon,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent
   ]

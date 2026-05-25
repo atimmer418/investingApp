@@ -10,12 +10,13 @@ import { PasskeyService } from '../../services/passkey.service';
 import { PinService } from '../../services/pin.service';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
+  IonHeader, IonToolbar, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  IonButtons, IonBackButton, IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
+  IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
   IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge,
   IonFooter, IonListHeader
 } from '@ionic/angular/standalone';
+import { RouterLink } from '@angular/router';
 
 interface PortfolioItem {
   symbol: string;
@@ -75,10 +76,10 @@ interface Stock {
   styleUrls: ['./portfolio-customize.component.scss'],
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
-    IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
+    CommonModule, FormsModule, RouterLink,
+    IonHeader, IonToolbar, IonContent, IonButton, IonIcon,
     IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    IonButtons, IonBackButton, IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
+    IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
     IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge,
     IonFooter, IonListHeader
   ],

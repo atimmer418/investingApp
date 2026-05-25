@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { 
-  IonHeader, 
-  IonToolbar, 
-  IonTitle, 
-  IonContent, 
+  IonHeader,
+  IonToolbar,
+  IonContent,
   IonButton,
   IonCard,
   IonCardContent,
@@ -14,7 +13,6 @@ import {
   IonCardTitle,
   IonIcon,
   IonButtons,
-  IonBackButton,
   IonItem,
   IonLabel,
   IonInput,
@@ -46,9 +44,10 @@ import { ToastService } from '../services/toast.service';
   imports: [
     CommonModule,
     FormsModule,
-    IonHeader, IonToolbar, IonTitle, IonContent, IonButton,
+    RouterLink,
+    IonHeader, IonToolbar, IonContent, IonButton,
     IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIcon,
-    IonButtons, IonBackButton, IonItem, IonLabel,
+    IonButtons, IonItem, IonLabel,
     IonInput, IonSelect, IonSelectOption,
     IonModal, IonDatetime
   ]
