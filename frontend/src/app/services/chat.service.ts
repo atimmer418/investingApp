@@ -80,8 +80,8 @@ export class ChatService {
               const chunk = decoder.decode(value, { stream: true });
               const lines = chunk.split('\n');
               for (const line of lines) {
-                if (!line.startsWith('data: ')) continue;
-                const data = line.slice(6).trim();
+                if (!line.startsWith('data:')) continue;
+                const data = line.slice(5).trim();
                 try {
                   const parsed = JSON.parse(data);
                   observer.next(parsed);

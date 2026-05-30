@@ -12,6 +12,11 @@ run_curl "GET /api/user/sessions" GET /api/user/sessions
 run_curl "GET /api/user/pin/status" GET /api/user/pin/status
 run_curl "GET /api/user/pin/lockout-status" GET /api/user/pin/lockout-status
 
+# Bucket C additions
+run_curl "PATCH /api/user/push-token" PATCH /api/user/push-token '{"pushToken":"test-token-bucket-c-verifier"}'
+run_curl "PUT /api/user/profile (agreedToMarketing)" PUT /api/user/profile '{"agreedToMarketing":true}'
+run_curl "POST /api/user/subscription/confirm" POST /api/user/subscription/confirm '{"tier":"core","billingPeriod":"monthly"}'
+
 echo "---"
 echo "User tests: $PASS passed, $FAIL failed"
 exit $FAIL

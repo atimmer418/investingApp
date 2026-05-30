@@ -526,6 +526,30 @@ ion-toolbar {
 }
 
 .freedom-timeline-card {
+  overflow: hidden;
+
+  .timeline-hero {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+  }
+
+  .timeline-pig-hero {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 140px;
+    opacity: 0.85;
+    pointer-events: none;
+    object-fit: contain;
+  }
+
+  .timeline-body {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+
   .timeline-year {
     font-size: 48px;
     font-weight: 800;

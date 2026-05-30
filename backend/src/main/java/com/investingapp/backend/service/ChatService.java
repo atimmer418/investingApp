@@ -212,7 +212,7 @@ public class ChatService {
         }
 
         // 3. Load User
-        User user = userRepository.findById(request.userId()).orElse(null);
+        User user = request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null;
 
         // 4. Build prompt
         String systemPrompt = FredConstitution.SYSTEM_PROMPT;

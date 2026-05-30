@@ -97,17 +97,22 @@
 
     <!-- Freedom Timeline Card -->
     <div class="section-card freedom-timeline-card">
-      <div class="card-header-row">
-        <span class="material-symbols-outlined card-icon">event</span>
-        <h3 class="card-title">Freedom Date</h3>
+      <div class="timeline-hero">
+        <img src="assets/images/whenPiggybanksFly-3.jpg" alt="Freedom" class="timeline-pig-hero" />
+        <div class="timeline-body">
+          <div class="card-header-row">
+            <span class="material-symbols-outlined card-icon">event</span>
+            <h3 class="card-title">Freedom Date</h3>
+          </div>
+          <ng-container *ngIf="freedomYear; else noFreedomDate">
+            <div class="timeline-year">{{ freedomYear }}</div>
+            <div class="timeline-years-away">{{ yearsToFreedom }} years away</div>
+          </ng-container>
+          <ng-template #noFreedomDate>
+            <div class="timeline-placeholder">Complete your setup to see your freedom date</div>
+          </ng-template>
+        </div>
       </div>
-      <ng-container *ngIf="freedomYear; else noFreedomDate">
-        <div class="timeline-year">{{ freedomYear }}</div>
-        <div class="timeline-years-away">{{ yearsToFreedom }} years away</div>
-      </ng-container>
-      <ng-template #noFreedomDate>
-        <div class="timeline-placeholder">Complete your setup to see your freedom date</div>
-      </ng-template>
     </div>
 
     <!-- Referrals Card -->
