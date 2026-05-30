@@ -18,7 +18,7 @@ export class PushNotificationService {
     // Run: npm install @capacitor/push-notifications
     // Add GoogleService-Info.plist to the iOS Xcode target after setting up a Firebase project.
     try {
-      const { PushNotifications } = await import('@capacitor/push-notifications' as any);
+      const { PushNotifications } = await import('@capacitor/push-notifications');
       const result = await PushNotifications.requestPermissions();
       if (result.receive !== 'granted') return;
 
