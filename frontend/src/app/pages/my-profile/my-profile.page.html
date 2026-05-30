@@ -36,6 +36,10 @@
         <ion-icon name="camera"></ion-icon>
       </div>
       <h2 class="user-name">{{ userName }}</h2>
+      <div class="percentile-badge" *ngIf="statusPercentile !== null">
+        <span class="material-symbols-outlined percentile-icon">trending_up</span>
+        <span class="percentile-text">Ahead of {{ statusPercentile }}% of investors</span>
+      </div>
     </div>
 
     <!-- Freedom Plan Card -->

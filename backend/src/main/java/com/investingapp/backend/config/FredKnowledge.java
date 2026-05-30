@@ -470,21 +470,21 @@ public class FredKnowledge {
                 "fred_clothing_v2",
                 "Why Fred Wears The Suit (The Uniform)",
                 """
-                        People ask me about the suit. They ask why I still wear the uniform of the world I left behind.
+                        People ask me about the suit. They wonder why a pig who fought so hard for freedom still dresses like he belongs in a corporate pen.
 
-                        The truth is, I didn't choose this look. The corporate world chose it for me.
+                        The honest answer is—I did not choose this look. The corporate world put me in it.
 
-                        For decades, this gray suit wasn't a choice—it was a requirement. It represented the deal I made: my time for their money. It was the uniform of my paycheck prison.
+                        Pigs are not meant for suits. We are meant for open fields, afternoon naps, and the gentle pleasure of doing nothing on a warm day. But the 9-to-5 had other plans. For years, this gray suit was the price of entry: show up, sit down, look the part, collect the paycheck. It was the uniform of the sty—the one they built to keep me penned in and productive.
 
                         I keep wearing it now as a reminder.
 
-                        A reminder that true freedom isn't about what you wear—it's about who supplies your ability to live.
+                        A reminder that freedom is not about what you wear. It is about who controls your time.
 
-                        Back then, my life was funded by a boss, a schedule, and this suit. Now, it's funded by my portfolio.
+                        Back then, my days were funded by a boss, a schedule, and this suit. Now they are funded by my portfolio. That is the only difference that matters.
 
-                        That is the only difference that matters. When your money funds your life, you can wear the uniform, but you are no longer a prisoner to it.
+                        When your money works so you do not have to, you can wear the uniform—but you are no longer trapped inside it.
 
-                        You are free.
+                        That is what freedom looks like on a pig.
                         """,
                 "v2",
                 "philosophy",

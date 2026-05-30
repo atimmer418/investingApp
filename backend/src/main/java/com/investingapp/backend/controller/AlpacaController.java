@@ -2,6 +2,7 @@ package com.investingapp.backend.controller;
 
 import com.investingapp.backend.dto.AccountStatusResponse;
 import com.investingapp.backend.dto.CreateAlpacaAccountRequest;
+import com.investingapp.backend.dto.UpdateKycRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -311,6 +312,75 @@ public class AlpacaController {
         public void setDtcNumber(String dtcNumber) { this.dtcNumber = dtcNumber; }
         public String getAccountNumber() { return accountNumber; }
         public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
+    }
+
+    /**
+     * GET /api/alpaca/account/kyc
+     * Returns the current user's KYC data from Alpaca (contact, identity, disclosures).
+     * Used by the kyc-verification component to pre-fill the edit form.
+     */
+    @GetMapping("/account/kyc")
+    public ResponseEntity<?> getAccountKyc() {
+        try {
+            User user = getCurrentUser();
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            }
+            if (user.getAlpacaAccountId() == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "No Alpaca account found"));
+            }
+
+            String alpacaAccountId = encryptionService.decrypt(user.getAlpacaAccountId());
+            String kycData = alpacaApiService.getAccountKyc(alpacaAccountId);
+            return ResponseEntity.ok(kycData);
+
+        } catch (Exception e) {
+            logger.error("Error fetching KYC data for current user", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to retrieve KYC data: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * PATCH /api/alpaca/account/kyc
+     * Updates the current user's KYC data via Alpaca's PATCH /accounts/{account_id} API.
+     * Only fields included in the request body are updated.
+     */
+    @PatchMapping("/account/kyc")
+    public ResponseEntity<?> patchAccountKyc(@RequestBody UpdateKycRequest request) {
+        try {
+            User user = getCurrentUser();
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+            }
+            if (user.getAlpacaAccountId() == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "No Alpaca account found"));
+            }
+
+            String alpacaAccountId = encryptionService.decrypt(user.getAlpacaAccountId());
+            logger.info("Patching KYC for user {} (Alpaca account {})", user.getId(), alpacaAccountId);
+
+            String result = alpacaApiService.patchAccountKyc(alpacaAccountId, request);
+
+            // Update name fields locally if provided
+            if (request.getGivenName() != null) {
+                user.setFirstName(request.getGivenName());
+            }
+            if (request.getFamilyName() != null) {
+                user.setLastName(request.getFamilyName());
+            }
+            if (request.getGivenName() != null || request.getFamilyName() != null) {
+                userRepository.save(user);
+            }
+
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            logger.error("Error patching KYC for current user", e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", e.getMessage() != null ? e.getMessage() : "Failed to update KYC data");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
     // DTO for ACH relationship creation request

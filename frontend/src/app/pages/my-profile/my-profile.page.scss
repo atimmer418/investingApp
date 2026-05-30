@@ -150,7 +150,31 @@ ion-toolbar {
     font-weight: 800;
     color: #0f172a;
     letter-spacing: -0.02em;
-    margin: 0;
+    margin: 0 0 8px 0;
+  }
+
+  .percentile-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #dbeafe;
+    border: 1px solid #bfdbfe;
+    border-radius: 20px;
+    padding: 5px 12px;
+
+    .percentile-icon {
+      font-size: 14px;
+      color: #1e40af;
+      font-variation-settings: 'FILL' 1;
+    }
+
+    .percentile-text {
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1e40af;
+      letter-spacing: 0.01em;
+    }
   }
 }
 

@@ -68,6 +68,7 @@ export interface InvestmentSchedule {
   achRequestId?: string;
   isPaused: boolean;
   scheduleDescription: string;
+  monthlyStreak: number;
   createdAt: string;
   updatedAt: string;
 }

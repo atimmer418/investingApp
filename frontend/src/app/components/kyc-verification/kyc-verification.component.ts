@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import {
   IonHeader, IonToolbar, IonContent, IonSelect, IonSelectOption,
@@ -9,7 +9,7 @@ import {
 } from '@ionic/angular/standalone';
 import { Keyboard } from '@capacitor/keyboard';
 import { AuthService } from '../../services/auth.service';
-import { AlpacaService, CreateAlpacaAccountRequest } from '../../services/alpaca.service';
+import { AlpacaService, CreateAlpacaAccountRequest, UpdateKycRequest } from '../../services/alpaca.service';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 
 // US states list
@@ -84,6 +84,7 @@ function dateOfBirthValidator(control: AbstractControl): ValidationErrors | null
 })
 export class KycVerificationComponent implements OnInit, OnDestroy {
   @ViewChild(IonContent) private content!: IonContent;
+  @Input() editMode = false;
 
   private destroy$ = new Subject<void>();
   private kbShowListener: any;
@@ -92,6 +93,7 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
   currentStep: 1 | 2 = 1;
   exitingStep1 = false;
   isLoading = false;
+  isLoadingKycData = false;
   keyboardHeight = 0;
   spacerHeight = 0;
   readonly states = US_STATES;
@@ -130,6 +132,7 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private navCtrl: NavController,
     private authService: AuthService,
     private alpacaService: AlpacaService,
@@ -138,10 +141,24 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.prefillUserData();
-    if (this.loadStep1Draft()) {
-      this.currentStep = 2;
+    // Detect edit mode via query param (when navigated from security-settings)
+    const editParam = this.route.snapshot.queryParamMap.get('edit');
+    if (editParam === 'true') {
+      this.editMode = true;
     }
+
+    if (this.editMode) {
+      // SSN is not editable via KYC update — remove its validators
+      this.step1Form.get('taxId')?.clearValidators();
+      this.step1Form.get('taxId')?.updateValueAndValidity();
+      this.loadKycDataForEdit();
+    } else {
+      this.prefillUserData();
+      if (this.loadStep1Draft()) {
+        this.currentStep = 2;
+      }
+    }
+
     this.kbShowListener = Keyboard.addListener('keyboardWillShow', info => {
       this.keyboardHeight = info.keyboardHeight;
       this.spacerHeight = info.keyboardHeight + 16 - 100;
@@ -151,6 +168,76 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
       this.keyboardHeight = 0;
       this.spacerHeight = 0;
       this.cdr.detectChanges();
+    });
+  }
+
+  private loadKycDataForEdit() {
+    this.isLoadingKycData = true;
+    this.alpacaService.getKycData()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data: any) => {
+          this.isLoadingKycData = false;
+          this.prefillFromAlpacaData(data);
+          this.cdr.detectChanges();
+        },
+        error: async () => {
+          this.isLoadingKycData = false;
+          // Fall back to local data if fetch fails
+          this.prefillUserData();
+          const toast = await this.toastController.create({
+            message: 'Could not load current KYC data. Please fill in your information.',
+            duration: 3000,
+            color: 'warning',
+            position: 'bottom'
+          });
+          await toast.present();
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  private prefillFromAlpacaData(data: any) {
+    // Alpaca returns nested: contact{}, identity{}, disclosures{}
+    const contact = data.contact || {};
+    const identity = data.identity || {};
+    const disclosures = data.disclosures || {};
+
+    // Contact fields
+    if (contact.email_address) this.step1Form.patchValue({ emailAddress: contact.email_address });
+    if (contact.phone_number)   this.step1Form.patchValue({ phoneNumber: contact.phone_number });
+    // Alpaca returns street_address as array
+    if (contact.street_address) {
+      const street = Array.isArray(contact.street_address)
+        ? contact.street_address[0]
+        : contact.street_address;
+      this.step1Form.patchValue({ streetAddress: street });
+    }
+    if (contact.city)           this.step1Form.patchValue({ city: contact.city });
+    if (contact.state)          this.step1Form.patchValue({ state: contact.state });
+    if (contact.postal_code)    this.step1Form.patchValue({ postalCode: contact.postal_code });
+
+    // Identity fields
+    if (identity.given_name)    this.step1Form.patchValue({ givenName: identity.given_name });
+    if (identity.family_name)   this.step1Form.patchValue({ familyName: identity.family_name });
+    // Alpaca returns dateOfBirth as YYYY-MM-DD, form expects MM/DD/YYYY
+    if (identity.date_of_birth) {
+      const parts = identity.date_of_birth.split('-');
+      if (parts.length === 3) {
+        this.step1Form.patchValue({ dateOfBirth: `${parts[1]}/${parts[2]}/${parts[0]}` });
+      }
+    }
+    // Funding source — Alpaca returns as array, take first
+    if (identity.funding_source && identity.funding_source.length > 0) {
+      this.step1Form.patchValue({ fundingSource: identity.funding_source[0] });
+    }
+
+    // Disclosures
+    this.step2Form.patchValue({
+      isControlPerson: disclosures.is_control_person ?? false,
+      isAffiliatedExchangeOrFinra: disclosures.is_affiliated_exchange_or_finra ?? false,
+      isPoliticallyExposed: disclosures.is_politically_exposed ?? false,
+      immediateFamilyExposed: disclosures.immediate_family_exposed ?? false
     });
   }
 
@@ -315,7 +402,11 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.navCtrl.navigateBack('/auth-finalize');
+    if (this.editMode) {
+      this.navCtrl.navigateBack('/security-settings');
+    } else {
+      this.navCtrl.navigateBack('/auth-finalize');
+    }
   }
 
   async proceedToStep2() {
@@ -348,6 +439,14 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
     const s1 = this.step1Form.value;
     const s2 = this.step2Form.value;
 
+    if (this.editMode) {
+      await this.submitKycUpdate(s1, s2);
+    } else {
+      await this.submitKycCreate(s1, s2);
+    }
+  }
+
+  private async submitKycCreate(s1: any, s2: any) {
     const request: CreateAlpacaAccountRequest = {
       emailAddress: s1.emailAddress!,
       phoneNumber: this.normalizePhone(s1.phoneNumber!),
@@ -381,6 +480,54 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
         error: async (err) => {
           this.isLoading = false;
           const msg = err.error?.message || err.message || 'Account creation failed. Please try again.';
+          const toast = await this.toastController.create({
+            message: msg,
+            duration: 4000,
+            color: 'danger',
+            position: 'bottom'
+          });
+          await toast.present();
+        }
+      });
+  }
+
+  private async submitKycUpdate(s1: any, s2: any) {
+    const request: UpdateKycRequest = {
+      emailAddress: s1.emailAddress ?? undefined,
+      phoneNumber: s1.phoneNumber ? this.normalizePhone(s1.phoneNumber) : undefined,
+      streetAddress: s1.streetAddress ?? undefined,
+      city: s1.city ?? undefined,
+      state: s1.state ?? undefined,
+      postalCode: s1.postalCode ? s1.postalCode.slice(0, 5) : undefined,
+      givenName: s1.givenName ?? undefined,
+      familyName: s1.familyName ?? undefined,
+      dateOfBirth: s1.dateOfBirth
+        ? (() => { const [mm, dd, yyyy] = s1.dateOfBirth.split('/'); return `${yyyy}-${mm}-${dd}`; })()
+        : undefined,
+      fundingSource: s1.fundingSource ? [s1.fundingSource] : undefined,
+      isControlPerson: s2.isControlPerson ?? false,
+      isAffiliatedExchangeOrFinra: s2.isAffiliatedExchangeOrFinra ?? false,
+      isPoliticallyExposed: s2.isPoliticallyExposed ?? false,
+      immediateFamilyExposed: s2.immediateFamilyExposed ?? false
+    };
+
+    this.alpacaService.updateKyc(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: async () => {
+          this.isLoading = false;
+          const toast = await this.toastController.create({
+            message: 'Your identity information has been updated.',
+            duration: 3000,
+            color: 'success',
+            position: 'bottom'
+          });
+          await toast.present();
+          this.navCtrl.navigateBack('/security-settings');
+        },
+        error: async (err) => {
+          this.isLoading = false;
+          const msg = err.error?.error || err.error?.message || err.message || 'Update failed. Please try again.';
           const toast = await this.toastController.create({
             message: msg,
             duration: 4000,

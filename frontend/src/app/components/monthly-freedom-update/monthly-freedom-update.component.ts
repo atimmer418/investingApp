@@ -158,6 +158,12 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
     return this.data.milestones[0].type === 'DEFAULT' ? 'sentiment_satisfied' : 'military_tech';
   }
 
+  get milestoneEquityPigSrc(): string {
+    const level = this.data?.equityLevel;
+    const validLevel = (level && level >= 1 && level <= 6) ? level : 1;
+    return `assets/images/pig-level-${validLevel}.svg`;
+  }
+
   /**
    * Compute change from rounded start/end so the displayed values are consistent.
    * e.g. End $863 - Start $741 = exactly $122, not $123 from unrounded decimals.
