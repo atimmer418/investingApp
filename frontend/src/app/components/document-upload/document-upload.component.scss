@@ -154,32 +154,33 @@ ion-content::part(scroll) {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--upload-gray);
+  color: #6b7280;
+  margin: 0 0 10px 0;
 }
 
 .select-wrapper {
   position: relative;
   display: flex;
   align-items: center;
-  border-bottom: 2px solid var(--upload-primary);
+  border-bottom: 2px solid #2563EB;
 
   .select-arrow {
     position: absolute;
     right: 0;
     font-size: 18px;
-    color: var(--upload-gray);
+    color: #6b7280;
     pointer-events: none;
   }
 }
 
 .field-select {
   font-family: 'Manrope', sans-serif;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 500;
-  color: var(--upload-text);
+  color: #0f172a;
   background: transparent;
   border: none;
-  padding: 8px 24px 8px 0;
+  padding: 6px 24px 6px 0;
   outline: none;
   width: 100%;
   -webkit-appearance: none;

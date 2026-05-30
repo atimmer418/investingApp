@@ -12,7 +12,7 @@
 <ion-content class="recurring-content">
   <div class="content-inner">
 
-    <div *ngIf="currentInvestment">
+    <div *ngIf="currentInvestment" class="cards-wrapper">
 
       <!-- Status banner -->
       <div class="status-banner" [class.status-active]="!currentInvestment.isPaused" [class.status-paused]="currentInvestment.isPaused">
@@ -75,14 +75,13 @@
           </div>
 
           <div class="edit-field">
-            <div class="field-label">Frequency</div>
-            <div class="select-wrap">
-              <ion-select [(ngModel)]="editedInvestment.frequency" (ionChange)="onFrequencyChange()"
-                placeholder="Select frequency" interface="popover" class="freq-select">
-                <ion-select-option *ngFor="let option of frequencyOptions" [value]="option.value">
-                  {{ option.label }}
-                </ion-select-option>
-              </ion-select>
+            <p class="field-label">Frequency</p>
+            <div class="select-wrapper">
+              <select class="field-select" [(ngModel)]="editedInvestment.frequency" (change)="onFrequencyChange()">
+                <option value="" disabled>Select frequency</option>
+                <option *ngFor="let option of frequencyOptions" [value]="option.value">{{ option.label }}</option>
+              </select>
+              <span class="select-arrow material-symbols-outlined">expand_more</span>
             </div>
           </div>
         </div>

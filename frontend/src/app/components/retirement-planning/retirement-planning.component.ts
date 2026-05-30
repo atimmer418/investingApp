@@ -25,8 +25,6 @@ import {
   IonList,
   IonSegment,
   IonSegmentButton,
-  IonSelect,
-  IonSelectOption,
   IonToggle,
   IonBadge,
   IonRange
@@ -82,8 +80,6 @@ interface StrategyCard {
     IonList,
     IonSegment,
     IonSegmentButton,
-    IonSelect,
-    IonSelectOption,
     IonToggle,
     IonBadge,
     IonRange

@@ -1,3 +1,22 @@
+# Implementation Notes — Dropdown Standardization (2026-05-28)
+
+## Design Decisions
+- Part A canonical SCSS uses literal hex values (NOT CSS var references) per spec
+- add-beneficiary: existing `label.field-label` has `display: block` + letter-spacing 0.07em; normalizing to canonical values; switching to `p.field-label` per canonical pattern; keeping `.required-star` span inside the p tag
+- add-beneficiary: `IonItem` kept in imports because ion-modal/ion-datetime/ion-buttons still use it
+- recurring-investments: `IonDatetimeButton` retained; only `IonSelect`/`IonSelectOption` removed
+- lump-sum-investment: `brokerageOptions` already exists in TS — no data change needed; `IonSegment`/`IonSegmentButton` not touched (out of scope)
+- retirement-planning: `IonItem` and `IonLabel` used extensively throughout template — NOT removing from imports; only stripping the specific `ion-item` wrapping the strategy select
+- Part B (kyc, document-upload): vars resolve to same hex values — replacing var() refs with literal hex per spec
+
+## Deviations
+- None significant; all bindings/handlers preserved exactly
+
+## Open Questions
+- None
+
+---
+
 # Implementation Notes — Tab 3 Back Button Standardization
 
 ## Pattern extracted

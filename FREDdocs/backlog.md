@@ -556,3 +556,9 @@ update the ai chat response endpoint to send token's via SSE and spring boot's f
 5. On error/timeout: show error state.
 6. Old POST /api/chat preserved for fallback.
 Note: JWT must be passed as query param (EventSource doesn't support custom headers in WKWebView).
+
+## LPFRED-2027 — Update LP calculator to net-income yield model
+Update the landing page calculator so it calculates based on a net income per month (instead of yearly pre-tax salary). Logic: multiply desired monthly net income by 12 → divide by 0.04 (4% tax-exempt yield) to get target portfolio value. Then use 10% annual growth with compound interest and DRIP to calculate how long it takes to reach that value given the user's monthly investable income.
+
+## FRED-2028 — ✓ Update app calculator to net-income yield model
+Update the in-app calculator to use the same net-income-based model: (monthly net income × 12) / 0.04 = target portfolio value. Use 10% average annual rate with compound interest and DRIP reinvestment to determine time to reach that portfolio value based on the user's monthly investable income input.

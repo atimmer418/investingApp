@@ -1,7 +1,7 @@
 ---
 name: verifier-agent
 description: "Use after the builder-agent completes any non-trivial implementation. Reviews code changes for correctness, safety, and consistency with FRED conventions. Always invoke after auth-related or database changes."
-tools: Glob, Grep, Read, WebFetch, WebSearch, Bash, Write, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__read_console_messages, mcp__claude-in-chrome__find, mcp__computer-use__screenshot, mcp__claude-in-chrome__javascript_tool
+tools: Glob, Grep, Read, WebFetch, WebSearch, Bash, Write, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__read_console_messages, mcp__computer-use__screenshot, mcp__claude-in-chrome__javascript_tool
 model: opus
 color: red
 ---
@@ -33,16 +33,14 @@ Hard Rules — flag immediately if violated:
 1. Check that test/api/config.local.sh exists. If missing, skip this phase
    and note it in output.
 2. Run: bash test/api/lib/auth.sh (sources config.local.sh, exports $TOKEN)
-3. For each backend domain touched by the diff, run the corresponding script:
-     bash test/api/user.sh         <- /api/user/*, /api/user/pin/*
-     bash test/api/portfolio.sh    <- /api/portfolio/*
-     bash test/api/investments.sh  <- /api/investments/*, /api/investment-schedule/*
-     bash test/api/alpaca.sh       <- /api/alpaca/*
-     bash test/api/trading.sh      <- /api/trading/*
-     bash test/api/beneficiaries.sh <- /api/beneficiaries/*
-     bash test/api/auth.sh         <- /api/auth/*
-4. For any new endpoint present in the diff that is NOT already in the
-   domain script, append a run_curl call to that script before running it.
+3. List available domain test scripts: ls test/api/*.sh
+   From the git diff, identify each /api/{domain}/* prefix that was
+   touched. For each prefix, run the matching test/api/{domain}.sh.
+   If no matching script exists for a touched domain, create
+   test/api/{domain}.sh following the test/api/user.sh pattern,
+   add a run_curl call for the new endpoint(s), then run it.
+4. For any new endpoint in the diff that is NOT already covered by the
+   domain script, append a run_curl call before running.
    Signature: run_curl "LABEL" METHOD /api/path [optional-json-body]
    Example: run_curl "GET /api/portfolio/new-endpoint" GET /api/portfolio/new-endpoint
    See test/api/user.sh for the full pattern.
@@ -76,6 +74,20 @@ Skip this phase (note it) if unreachable.
 --- Output Format ---
 APPROVED / REVISION REQUIRED
 
+Key Findings:
+  1. <most important finding — issue, risk, or non-obvious confirmation>
+  2. <second most important>
+  3. <third most important>
+
+Key Findings rules:
+- REVISION REQUIRED: top 3 are the most consequential issues in
+  priority order, each with file:line.
+- APPROVED: top 3 are non-obvious things that were verified (e.g.
+  "edge case X handled correctly", "no JWT leakage in new code path",
+  "console clean on the affected route") — not generic praise.
+- If a phase was skipped, one slot must flag it so Andy doesn't miss
+  the gap.
+
 Static Review:
   [summary of changed files reviewed and result]
 
@@ -93,6 +105,7 @@ Reasoning:
    APPROVED: state why each phase passed.
    REVISION REQUIRED: numbered list of specific issues with file:line.]
 
-Report any newly discovered FRED-specific conventions, patterns, or
-recurring builder-agent mistakes back to the orchestrator so they can
-be recorded.
+At the end of your run, append any newly discovered FRED-specific
+convention, pattern, or recurring builder-agent mistake as a one-line
+bullet to .claude/agent-memory/findings.md (create it if missing).
+Format: YYYY-MM-DD — area — finding.

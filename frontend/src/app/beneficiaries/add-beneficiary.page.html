@@ -20,11 +20,15 @@
       </div>
 
       <div class="form-group">
-        <label class="field-label">Beneficiary Type<span class="required-star">*</span></label>
-        <ion-select class="form-select" [(ngModel)]="beneficiary.beneficiaryType" placeholder="Select type" interface="action-sheet" cancelText="Cancel">
-          <ion-select-option value="PRIMARY">Primary</ion-select-option>
-          <ion-select-option value="CONTINGENT">Contingent</ion-select-option>
-        </ion-select>
+        <p class="field-label">Beneficiary Type<span class="required-star">*</span></p>
+        <div class="select-wrapper">
+          <select class="field-select" [(ngModel)]="beneficiary.beneficiaryType">
+            <option value="" disabled>Select type</option>
+            <option value="PRIMARY">Primary</option>
+            <option value="CONTINGENT">Contingent</option>
+          </select>
+          <span class="select-arrow material-symbols-outlined">expand_more</span>
+        </div>
       </div>
 
       <div class="form-group">
@@ -72,10 +76,14 @@
       </div>
 
       <div class="form-group">
-        <label class="field-label">Relationship<span class="required-star">*</span></label>
-        <ion-select class="form-select" [(ngModel)]="beneficiary.relationship" placeholder="Select relationship" interface="action-sheet" cancelText="Cancel">
-          <ion-select-option *ngFor="let option of relationshipOptions" [value]="option.value">{{ option.label }}</ion-select-option>
-        </ion-select>
+        <p class="field-label">Relationship<span class="required-star">*</span></p>
+        <div class="select-wrapper">
+          <select class="field-select" [(ngModel)]="beneficiary.relationship">
+            <option value="" disabled>Select relationship</option>
+            <option *ngFor="let option of relationshipOptions" [value]="option.value">{{ option.label }}</option>
+          </select>
+          <span class="select-arrow material-symbols-outlined">expand_more</span>
+        </div>
       </div>
 
       <div class="form-group form-group--last">

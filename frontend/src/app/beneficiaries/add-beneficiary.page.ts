@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { 
+import {
   IonHeader,
   IonToolbar,
   IonContent,
@@ -16,8 +16,6 @@ import {
   IonItem,
   IonLabel,
   IonInput,
-  IonSelect,
-  IonSelectOption,
   IonModal,
   IonDatetime
 } from '@ionic/angular/standalone';
@@ -48,7 +46,7 @@ import { ToastService } from '../services/toast.service';
     IonHeader, IonToolbar, IonContent, IonButton,
     IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIcon,
     IonButtons, IonItem, IonLabel,
-    IonInput, IonSelect, IonSelectOption,
+    IonInput,
     IonModal, IonDatetime
   ]
 })

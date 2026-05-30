@@ -87,13 +87,13 @@
         </div>
       </div>
 
-      <div class="goal-comparison on-track" *ngIf="monthlyGoal > 0 && getMonthlyProjection() >= monthlyGoal">
+      <div class="goal-comparison on-track" *ngIf="monthlyGoal > 0 && getMonthlyShortfall() === 0">
         <span class="material-symbols-outlined">check_circle</span>
         You're on track to meet your goal!
       </div>
-      <div class="goal-comparison short" *ngIf="monthlyGoal > 0 && getMonthlyProjection() < monthlyGoal">
+      <div class="goal-comparison short" *ngIf="monthlyGoal > 0 && getMonthlyShortfall() > 0">
         <span class="material-symbols-outlined">warning</span>
-        {{ formatCurrency(monthlyGoal - getMonthlyProjection()) }} short of your monthly goal
+        {{ formatCurrency(getMonthlyShortfall()) }} short of your monthly goal
       </div>
     </div>
 

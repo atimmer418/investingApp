@@ -42,9 +42,9 @@
       <!-- Monthly Investment -->
       <div class="slider-group">
         <div class="slider-header">
-          <label class="slider-label">Monthly Investment</label>
+          <label class="slider-label">I Can Invest...</label>
           <div class="value-badge">
-            <span class="value-text">${{ formattedMonthlyInvestment }}</span>
+            <span class="value-text">${{ formattedMonthlyInvestment }}/mo</span>
           </div>
         </div>
         <div class="slider-wrapper">
@@ -65,29 +65,29 @@
         </div>
       </div>
 
-      <!-- Desired Retirement Income -->
+      <!-- I Want To Retire With -->
       <div class="slider-group">
         <div class="slider-header">
-          <label class="slider-label">Desired Retirement Income</label>
+          <label class="slider-label">I Want To Retire With...</label>
           <div class="value-badge">
-            <span class="value-text">${{ formattedRetirementIncome }}</span>
+            <span class="value-text">${{ formattedRetirementIncome }}/mo</span>
           </div>
         </div>
         <div class="slider-wrapper">
           <input
             type="range"
             class="native-slider"
-            [min]="40000"
-            [max]="200000"
-            [step]="5000"
+            [min]="3000"
+            [max]="15000"
+            [step]="250"
             [(ngModel)]="retirementIncome"
             (ngModelChange)="onSliderChange()"
-            [style.background]="getSliderGradient(retirementIncome, 40000, 200000)"
+            [style.background]="getSliderGradient(retirementIncome, 3000, 15000)"
           />
         </div>
         <div class="slider-limits">
-          <span>$40K</span>
-          <span>$200K</span>
+          <span>$3K</span>
+          <span>$15K</span>
         </div>
       </div>
 

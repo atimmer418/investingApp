@@ -58,6 +58,12 @@ ion-toolbar {
   gap: 14px;
 }
 
+.cards-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .status-banner {
   border-radius: 14px;
   padding: 14px 16px;
@@ -262,23 +268,34 @@ ion-toolbar {
   }
 }
 
-.select-wrap {
-  border-bottom: 2px solid #2563EB;
+.select-wrapper {
   position: relative;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #2563EB;
 
-  ion-select.freq-select {
-    --background: transparent;
-    --color: #0f172a;
-    --placeholder-color: #6b7280;
-    --padding-start: 0;
-    --padding-end: 0;
-    --padding-top: 4px;
-    --padding-bottom: 4px;
-    font-family: 'Manrope', sans-serif;
-    font-weight: 500;
-    font-size: 15px;
-    width: 100%;
+  .select-arrow {
+    position: absolute;
+    right: 0;
+    font-size: 18px;
+    color: #6b7280;
+    pointer-events: none;
   }
+}
+
+.field-select {
+  font-family: 'Manrope', sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: #0f172a;
+  background: transparent;
+  border: none;
+  padding: 6px 24px 6px 0;
+  outline: none;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
 }
 
 .helper-hint {

@@ -62,15 +62,20 @@
         </ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <ion-item lines="none">
-          <ion-select [(ngModel)]="selectedStrategy" interface="action-sheet" (ionChange)="onStrategyChange()">
-            <ion-select-option value="traditional">Traditional 4% Rule</ion-select-option>
-            <ion-select-option value="sbloc">SBLOC (Borrow in Downturns)</ion-select-option>
-            <ion-select-option value="annuity-growth">Annuity + Growth</ion-select-option>
-            <ion-select-option value="dynamic-guardrails">Dynamic Guardrails</ion-select-option>
-            <ion-select-option value="full-annuity">Full Annuity</ion-select-option>
-          </ion-select>
-        </ion-item>
+        <div>
+          <p class="field-label">Withdrawal Strategy</p>
+          <div class="select-wrapper">
+            <select class="field-select" [(ngModel)]="selectedStrategy" (change)="onStrategyChange()">
+              <option value="" disabled>Select a strategy</option>
+              <option value="traditional">Traditional 4% Rule</option>
+              <option value="sbloc">SBLOC (Borrow in Downturns)</option>
+              <option value="annuity-growth">Annuity + Growth</option>
+              <option value="dynamic-guardrails">Dynamic Guardrails</option>
+              <option value="full-annuity">Full Annuity</option>
+            </select>
+            <span class="select-arrow material-symbols-outlined">expand_more</span>
+          </div>
+        </div>
         <p class="strategy-hint-compact">{{ getStrategyHintCompact() }}</p>
 
         <!-- Essential Expenses Input (Annuity + Growth only) -->

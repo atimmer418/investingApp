@@ -188,3 +188,6 @@ Spawn agents automatically for non-trivial tasks:
 3. User can also orchestrate agents manually if needed
 
 For simple, targeted edits (single file, obvious change) you may implement directly without agents.
+
+### Periodic Review
+Every ~10 stories, re-read `.claude/agents/*.md` and ask: which Hard Rule has never triggered? Which tool has never been used? Which step is the model now smart enough to skip? Prune ruthlessly. Also promote any accumulated items in `.claude/agent-memory/findings.md` into the relevant sections of CONTEXT.md.

@@ -1,4 +1,5 @@
 import { Component, OnInit, HostBinding } from '@angular/core';
+import { ViewWillEnter } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -27,15 +28,15 @@ import {
     IonSpinner,
   ],
 })
-export class SurveyInitialComponent implements OnInit {
+export class SurveyInitialComponent implements OnInit, ViewWillEnter {
   @HostBinding('class.page-ready') isReady = false;
 
   // --- User Input Properties ---
-  monthlyInvestment: number = 1000;
-  retirementIncome: number = 65000;
+  monthlyInvestment: number = 2000;
+  retirementIncome: number = 7500;
 
-  formattedMonthlyInvestment: string = '1,000';
-  formattedRetirementIncome: string = '65,000';
+  formattedMonthlyInvestment: string = '2,000';
+  formattedRetirementIncome: string = '7,500';
 
   // --- Display Properties ---
   timeToFI: string = '';
@@ -55,12 +56,16 @@ export class SurveyInitialComponent implements OnInit {
     // Clamp to the new slider ranges after loading
     if (this.monthlyInvestment < 100) this.monthlyInvestment = 100;
     if (this.monthlyInvestment > 5000) this.monthlyInvestment = 5000;
-    if (this.retirementIncome < 40000) this.retirementIncome = 40000;
-    if (this.retirementIncome > 200000) this.retirementIncome = 200000;
+    if (this.retirementIncome < 3000) this.retirementIncome = 3000;
+    if (this.retirementIncome > 15000) this.retirementIncome = 15000;
 
     this.updateFormattedValues();
     this.calculateFITimeline();
     this.preloadAssets();
+  }
+
+  ionViewWillEnter() {
+    this.isLoading = false;
   }
 
   private preloadAssets() {
@@ -101,7 +106,7 @@ export class SurveyInitialComponent implements OnInit {
   }
 
   get formattedTargetPortfolio(): string {
-    const target = this.retirementIncome / this.SAFE_WITHDRAWAL_RATE;
+    const target = (this.retirementIncome * 12) / this.SAFE_WITHDRAWAL_RATE;
     const rounded = Math.round(target / 100_000) * 100_000;
     if (rounded >= 1_000_000) {
       return '$' + (rounded / 1_000_000).toFixed(1) + 'M';
@@ -122,7 +127,7 @@ export class SurveyInitialComponent implements OnInit {
         this.monthlyInvestment = progress.monthlyInvestment;
       }
       if (progress && progress.retirementIncome !== undefined) {
-        this.retirementIncome = progress.retirementIncome;
+        this.retirementIncome = progress.retirementIncome / 12;
       }
       this.updateFormattedValues();
     });
@@ -131,12 +136,12 @@ export class SurveyInitialComponent implements OnInit {
     const savedMonthlyInvestment = localStorage.getItem('surveyMonthlyInvestment');
     const savedRetirementIncome = localStorage.getItem('surveyRetirementIncome');
 
-    if (savedMonthlyInvestment && this.monthlyInvestment === 1000) {
+    if (savedMonthlyInvestment && this.monthlyInvestment === 2000) {
       this.monthlyInvestment = parseInt(savedMonthlyInvestment, 10);
     }
 
-    if (savedRetirementIncome && this.retirementIncome === 65000) {
-      this.retirementIncome = parseInt(savedRetirementIncome, 10);
+    if (savedRetirementIncome && this.retirementIncome === 7500) {
+      this.retirementIncome = parseInt(savedRetirementIncome, 10) / 12;
     }
 
     this.updateFormattedValues();
@@ -149,11 +154,11 @@ export class SurveyInitialComponent implements OnInit {
   // Save values to localStorage and update user progress
   private saveValues() {
     localStorage.setItem('surveyMonthlyInvestment', this.monthlyInvestment.toString());
-    localStorage.setItem('surveyRetirementIncome', this.retirementIncome.toString());
+    localStorage.setItem('surveyRetirementIncome', (this.retirementIncome * 12).toString());
 
     this.authService.updateProgress({
       monthlyInvestment: this.monthlyInvestment,
-      retirementIncome: this.retirementIncome
+      retirementIncome: this.retirementIncome * 12
     }).subscribe({
       next: (_) => {
         console.log('[SurveyInitial] Updated user progress with values:', {
@@ -192,7 +197,7 @@ export class SurveyInitialComponent implements OnInit {
 
   formatAndSetRetirementIncome() {
     const numericValue = parseInt(this.formattedRetirementIncome.replace(/,/g, ''), 10);
-    this.retirementIncome = isNaN(numericValue) ? 40000 : numericValue;
+    this.retirementIncome = isNaN(numericValue) ? 3000 : numericValue;
     this.updateFormattedValues();
     this.calculateFITimeline();
     this.saveValues();
@@ -207,7 +212,7 @@ export class SurveyInitialComponent implements OnInit {
    * Calculates the timeline to reach the FIRE number based on the 4% rule.
    */
   private calculateFITimeline() {
-    const targetPortfolio = this.retirementIncome / this.SAFE_WITHDRAWAL_RATE;
+    const targetPortfolio = (this.retirementIncome * 12) / this.SAFE_WITHDRAWAL_RATE;
     const monthlyRate = this.AVG_MARKET_YIELD / 12;
     if (this.monthlyInvestment <= 0) {
       this.timeToFI = '∞';
@@ -250,7 +255,7 @@ export class SurveyInitialComponent implements OnInit {
         this.router.navigate(['/fi-plan-results'], {
           queryParams: {
             mI: this.monthlyInvestment,
-            rI: this.retirementIncome,
+            rI: this.retirementIncome * 12,
             t: this.timeToFI
           }
         });
@@ -264,7 +269,7 @@ export class SurveyInitialComponent implements OnInit {
         this.router.navigate(['/fi-plan-results'], {
           queryParams: {
             mI: this.monthlyInvestment,
-            rI: this.retirementIncome,
+            rI: this.retirementIncome * 12,
             t: this.timeToFI
           }
         });

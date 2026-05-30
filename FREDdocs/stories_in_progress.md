@@ -39,3 +39,4 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 - FRED-131 — Design five Fred faces for equity level ranges
 - FRED-133 — Design piggy bank Fred loading screen
 - FRED-136 — Test close account feature end to end
+- FRED-2028 — Update app calculator to net-income yield model

@@ -106,19 +106,48 @@ ion-toolbar {
 }
 
 .field-label {
-  display: block;
   font-family: 'Manrope', sans-serif;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
   color: #6b7280;
-  margin-bottom: 6px;
+  margin: 0 0 10px 0;
 
   .required-star {
     color: #ef4444;
     margin-left: 2px;
   }
+}
+
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #2563EB;
+
+  .select-arrow {
+    position: absolute;
+    right: 0;
+    font-size: 18px;
+    color: #6b7280;
+    pointer-events: none;
+  }
+}
+
+.field-select {
+  font-family: 'Manrope', sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: #0f172a;
+  background: transparent;
+  border: none;
+  padding: 6px 24px 6px 0;
+  outline: none;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
 }
 
 // Form inputs
@@ -154,24 +183,6 @@ ion-input.form-input {
     --color: #64748b;
     cursor: pointer;
   }
-}
-
-// Form selects
-ion-select.form-select {
-  --background: #f8fafc;
-  --color: #0f172a;
-  --placeholder-color: #cbd5e1;
-  --placeholder-opacity: 1;
-  --padding-start: 12px;
-  --padding-end: 12px;
-  --padding-top: 10px;
-  --padding-bottom: 10px;
-  border-radius: 10px;
-  border: 1.5px solid #e5e7eb;
-  font-family: 'Manrope', sans-serif;
-  font-size: 15px;
-  font-weight: 500;
-  width: 100%;
 }
 
 // Save CTA

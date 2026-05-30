@@ -10,14 +10,22 @@ import { execSync, execFileSync } from 'node:child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FRONTEND_ROOT = resolve(__dirname, '..');
-const SOURCE_FONT = join(__dirname, 'material-symbols-source.woff2');
+const SOURCE_FONT = resolve(__dirname, '..', 'node_modules', 'material-symbols', 'material-symbols-outlined.woff2');
 const OUTPUT_FONT = join(FRONTEND_ROOT, 'src', 'assets', 'fonts', 'material-symbols-outlined.woff2');
 const SRC_DIR = join(FRONTEND_ROOT, 'src');
 const VENV_DIR = join(__dirname, '.venv');
 
 // Icons returned by TS functions as string literals — not detectable by HTML scanning.
 // Add new ones here when needed (e.g. from iconForState(), dynamic class bindings).
-const DYNAMIC_ICONS = ['check', 'arrow_upward', 'lock', 'schedule'];
+const DYNAMIC_ICONS = ['check', 'arrow_upward', 'lock', 'schedule', 'swap_vert'];
+
+// Material Symbols renamed some legacy icon glyphs. The ligature text (used in templates)
+// still works at render time, but --glyphs= requires the internal glyph name, not the text.
+const GLYPH_RENAMES = {
+  card_giftcard: 'redeem',
+  location_on: 'place',
+  smartphone: 'mobile',
+};
 
 async function* walkHtml(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -66,8 +74,9 @@ async function main() {
     '--flavor=woff2',
     // --text: include letter glyphs needed to form the ligature input sequences
     `--text=${icons.join(' ')}`,
-    // --glyphs: explicitly include the icon glyphs (targets of the ligature lookups)
-    `--glyphs=${icons.join(',')}`,
+    // --glyphs: explicitly include the icon glyphs (targets of the ligature lookups).
+    // Some icon names differ from their internal glyph name — apply GLYPH_RENAMES mapping.
+    `--glyphs=${icons.map(n => GLYPH_RENAMES[n] ?? n).join(',')}`,
     '--no-layout-closure',      // don't expand to ALL icons reachable via GSUB
     '--layout-features=liga,rlig,calt',
     '--no-hinting',

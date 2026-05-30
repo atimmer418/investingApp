@@ -174,13 +174,13 @@
       <div *ngIf="showTransferOptions" class="acats-form">
 
         <div class="form-group">
-          <div class="field-label">Current Brokerage</div>
-          <div class="select-wrap">
-            <ion-select [(ngModel)]="transferBrokerageDtc" placeholder="Select Brokerage" interface="action-sheet" cancelText="Cancel" style="width: 100%;">
-              <ion-select-option *ngFor="let broker of brokerageOptions" [value]="broker.dtc">
-                {{ broker.name }}
-              </ion-select-option>
-            </ion-select>
+          <p class="field-label">Current Brokerage</p>
+          <div class="select-wrapper">
+            <select class="field-select" [(ngModel)]="transferBrokerageDtc">
+              <option value="" disabled>Select your current brokerage</option>
+              <option *ngFor="let broker of brokerageOptions" [value]="broker.dtc">{{ broker.name }}</option>
+            </select>
+            <span class="select-arrow material-symbols-outlined">expand_more</span>
           </div>
         </div>
 

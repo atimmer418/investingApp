@@ -365,6 +365,10 @@ export class InvestmentScheduleComponent implements OnInit, OnDestroy {
     return this.schedule.investmentAmount * frequencyDetails.paychecksPerMonth;
   }
 
+  getMonthlyShortfall(): number {
+    return Math.max(0, Math.round(this.monthlyGoal - this.getMonthlyProjection()));
+  }
+
   getAnnualProjection(): number {
     return this.getMonthlyProjection() * 12;
   }

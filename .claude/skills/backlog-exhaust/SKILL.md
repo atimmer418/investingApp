@@ -63,3 +63,33 @@ Angular HMR is always active. `spring-boot-devtools` auto-restarts Spring on cla
 - **Loop re-picks the same story.** Marker wasn't written or committed. Check step 5a/5b ran.
 - **`/goal` stops after one turn.** Grep output wasn't surfaced in step 6 — the evaluator only reads the conversation.
 - **Verifier flags prior stories' changes.** Expected — verifier uses `develop...HEAD`. Per-story commits (step 5a/5b) keep the diff scoped.
+
+---
+
+## Parallel Bucket Mode (`--bucket=<id-list>`)
+
+Pass `--bucket=FRED-103,FRED-104,...` to scope this session to a pre-assigned slice of the backlog. Used when running multiple parallel `backlog-exhaust` sessions during a coordinated parallel exhaust (see `parallel-runbook.md` in this directory for the full procedure and per-bucket /goal conditions).
+
+**Prerequisite:** A pre-triage pass must have already been run — all stories in the bucket must either have a `FREDdocs/.stories/<ID>.md` spec file (approved) or a `💤`/`🚫` marker in `backlog.md` (skipped/blocked). The A/C approval gate is skipped in bucket mode.
+
+### Modified step 1 — Pick from bucket
+
+Find the first heading whose numeric ID is in the bucket's ID list AND has no `✓`, `🚫`, or `💤` marker. Use a targeted grep (substitute real IDs):
+```
+grep -E '^## (FRED-103|FRED-104|...) ' FREDdocs/backlog.md | grep -vE '— (✓|🚫|💤) '
+```
+Take the first match. If empty, bucket is done — skip to step 6 one last time.
+
+### Modified step 2 — Triage (skip A/C gate)
+
+Do NOT run `triage --story=<ID>`.
+- If `FREDdocs/.stories/<ID>.md` **exists**: read it and proceed to step 3.
+- If `FREDdocs/.stories/<ID>.md` is **missing**: story was not approved in the pre-triage pass. Insert `🚫 ` before the title in `FREDdocs/backlog.md`. Commit. Go to step 6.
+
+### Modified step 6 — End-of-turn summary (bucket-scoped)
+
+Run the bucket-scoped grep (exact command provided in `parallel-runbook.md` for each bucket) instead of the global one. Surface the output so the `/goal` evaluator sees remaining count within this bucket.
+
+### /goal condition
+
+Do NOT use the global /goal condition above. Use the bucket-specific condition from `parallel-runbook.md`. Each condition is a ready-to-paste block scoped to exactly the IDs in that bucket.

@@ -145,16 +145,12 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
     start$.subscribe({
       next: async (response) => {
         try {
-          console.log('🔍 [PasskeyPrompt] Start response:', response);
-
           let requestOptions;
           if (typeof response.requestOptions === 'string') {
             requestOptions = JSON.parse(response.requestOptions);
           } else {
             requestOptions = response.requestOptions;
           }
-
-          console.log('🔍 [PasskeyPrompt] Parsed options:', requestOptions);
 
           // Handle structure where challenge is inside publicKey
           const challenge = requestOptions.challenge || (requestOptions.publicKey && requestOptions.publicKey.challenge);

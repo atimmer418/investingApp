@@ -346,17 +346,45 @@ ion-item {
   ion-card-content {
     padding: var(--app-spacing-md);
 
-    ion-item {
-      --padding-start: 0;
-      --inner-padding-end: 0;
-      --background: transparent;
+    .field-label {
+      font-family: 'Manrope', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+      margin: 0 0 10px 0;
+    }
+
+    .select-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      border-bottom: 2px solid #2563EB;
       margin-bottom: var(--app-spacing-sm);
 
-      ion-select {
-        font-weight: 600;
-        color: var(--app-primary);
-        width: 100%;
+      .select-arrow {
+        position: absolute;
+        right: 0;
+        font-size: 18px;
+        color: #6b7280;
+        pointer-events: none;
       }
+    }
+
+    .field-select {
+      font-family: 'Manrope', sans-serif;
+      font-size: 17px;
+      font-weight: 500;
+      color: #0f172a;
+      background: transparent;
+      border: none;
+      padding: 6px 24px 6px 0;
+      outline: none;
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
     }
 
     .strategy-hint-compact {

@@ -232,7 +232,8 @@ ion-content::part(scroll) {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--kyc-gray);
+  color: #6b7280;
+  margin: 0 0 10px 0;
 }
 
 .field-input {
@@ -267,13 +268,13 @@ input[type="date"].field-input {
   position: relative;
   display: flex;
   align-items: center;
-  border-bottom: 2px solid var(--kyc-primary);
+  border-bottom: 2px solid #2563EB;
 
   .select-arrow {
     position: absolute;
     right: 0;
     font-size: 18px;
-    color: var(--kyc-gray);
+    color: #6b7280;
     pointer-events: none;
   }
 }
@@ -282,7 +283,7 @@ input[type="date"].field-input {
   font-family: 'Manrope', sans-serif;
   font-size: 17px;
   font-weight: 500;
-  color: var(--kyc-text);
+  color: #0f172a;
   background: transparent;
   border: none;
   padding: 6px 24px 6px 0;

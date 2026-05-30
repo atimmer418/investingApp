@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { IonicModule, ModalController } from '@ionic/angular';
 import { PortfolioService } from '../../services/portfolio.service';
@@ -26,7 +27,7 @@ interface StatementYear {
   templateUrl: './tax-documents.page.html',
   styleUrls: ['./tax-documents.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule]
+  imports: [CommonModule, IonicModule, RouterLink]
 })
 export class TaxDocumentsPage implements OnInit {
   loading = true;
