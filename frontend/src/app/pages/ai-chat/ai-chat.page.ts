@@ -22,6 +22,7 @@ import {
 } from '@ionic/angular/standalone';
 import { ChatService, ChatMessage, ChatSession } from '../../services/chat.service';
 import { FirstTimeTourService } from '../../services/first-time-tour.service';
+import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
 import { arrowUpCircle, menuOutline, addOutline, refreshOutline } from 'ionicons/icons';
@@ -56,6 +57,8 @@ export class AiChatPage implements OnInit, AfterViewInit {
   @ViewChild(IonContent) content!: IonContent;
 
   readonly FRED_STORY_TRIGGER = "What's your story FRED?";
+
+  private streamSubscription: Subscription | null = null;
 
   messages: ChatMessage[] = [];
   sessions: ChatSession[] = [];
@@ -307,45 +310,54 @@ export class AiChatPage implements OnInit, AfterViewInit {
 
     const sessionId = this.currentSession?.id || 'default-session';
 
-    this.chatService.sendMessage(userMsg, sessionId, isFirstUserMessage)
-      .pipe(finalize(() => {
-        this.isLoading = false;
-      }))
+    // Push placeholder assistant message
+    const assistantMsgIndex = this.messages.length;
+    this.addMessage({ role: 'assistant', content: '', timestamp: new Date() });
+    this.cdr.detectChanges();
+    this.scrollToBottom();
+
+    // Cancel any in-flight stream
+    if (this.streamSubscription) {
+      this.streamSubscription.unsubscribe();
+      this.streamSubscription = null;
+    }
+
+    this.streamSubscription = this.chatService.streamChat(userMsg, sessionId, isFirstUserMessage)
       .subscribe({
-        next: (response) => {
-          if (response && response.reply) {
-            this.addMessage({
-              role: 'assistant',
-              content: response.reply,
-              timestamp: new Date()
-            });
-
-            // Scroll to the top of the new assistant message
+        next: (event) => {
+          if (event.token) {
+            // Turn off loading indicator on first token
+            if (this.isLoading) {
+              this.isLoading = false;
+            }
+            this.messages[assistantMsgIndex].content += event.token;
             this.cdr.detectChanges();
-            this.scrollToMessage(this.messages.length - 1);
-
-            // Update title if provided by LLM
-            if (response.title && this.currentSession) {
-              this.currentSession.title = response.title;
+          }
+          if (event.done) {
+            this.isLoading = false;
+            if (event.title && this.currentSession) {
+              this.currentSession.title = event.title;
               this.chatService.saveSession(this.currentSession);
               this.loadSessions();
             }
+            this.cdr.detectChanges();
+            this.scrollToMessage(assistantMsgIndex);
           }
         },
-        error: (error) => {
-          console.error('Error sending message:', error);
-          // Mark the user message as failed
+        error: (err) => {
+          console.error('[Chat] Stream error:', err);
+          this.isLoading = false;
           if (this.messages[userMsgIndex]) {
             this.messages[userMsgIndex].failed = true;
-            this.cdr.detectChanges();
           }
-
-          this.addMessage({
-            role: 'assistant',
-            content: "I'm sorry, I'm having trouble connecting right now. Please try again.",
-            timestamp: new Date()
-          });
-          this.scrollToMessage(this.messages.length - 1);
+          this.messages[assistantMsgIndex].content = "I'm sorry, I'm having trouble connecting right now. Please try again.";
+          this.cdr.detectChanges();
+          this.scrollToMessage(assistantMsgIndex);
+        },
+        complete: () => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+          this.scrollToMessage(assistantMsgIndex);
         }
       });
   }

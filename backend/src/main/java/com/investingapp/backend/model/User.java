@@ -232,6 +232,24 @@ public class User {
     @Column(name = "private_beta", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean privateBeta = false;
 
+    @Column(name = "subscription_start_date", nullable = true)
+    private java.time.LocalDate subscriptionStartDate;
+
+    public java.time.LocalDate getSubscriptionStartDate() { return subscriptionStartDate; }
+    public void setSubscriptionStartDate(java.time.LocalDate subscriptionStartDate) { this.subscriptionStartDate = subscriptionStartDate; }
+
+    @Column(name = "device_push_token", length = 512, nullable = true)
+    private String devicePushToken;
+
+    public String getDevicePushToken() { return devicePushToken; }
+    public void setDevicePushToken(String devicePushToken) { this.devicePushToken = devicePushToken; }
+
+    @Column(name = "agreed_to_marketing", nullable = true)
+    private Boolean agreedToMarketing;
+
+    public Boolean getAgreedToMarketing() { return agreedToMarketing; }
+    public void setAgreedToMarketing(Boolean agreedToMarketing) { this.agreedToMarketing = agreedToMarketing; }
+
     // Helper method to get Plaid relationship ID (using existing ACH relationship
     // field)
     public String getPlaidRelationshipId() {

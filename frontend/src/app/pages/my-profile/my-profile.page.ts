@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  IonContent, IonHeader, IonToolbar, IonIcon, IonAvatar
+  IonContent, IonHeader, IonToolbar, IonIcon, IonAvatar, AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { shareOutline, checkmarkCircleOutline, saveOutline, camera, walletOutline, timeOutline, ticketOutline } from 'ionicons/icons';
@@ -71,6 +71,11 @@ export class MyProfilePage implements OnInit {
     return `assets/images/pig-level-${level}.svg`;
   }
 
+  selectedTier: string = '';
+
+  // Freedom Timeline
+  freedomYear: number | null = null;
+
   // State
   isDirty: boolean = false;
   isSubExpired: boolean = false;
@@ -84,6 +89,23 @@ export class MyProfilePage implements OnInit {
   private exactAnnualIncome: number | null = null;
   currentFrequency: string = '';
 
+  get referralUpgradeOffers(): Array<{tier: string, label: string, discountedPrice: number, regularPrice: number}> {
+    const offers: Array<{tier: string, label: string, discountedPrice: number, regularPrice: number}> = [];
+    if (this.referralCount < 1) return offers;
+    if (this.selectedTier !== 'pro') {
+      offers.push({ tier: 'pro', label: 'Premium', discountedPrice: 20, regularPrice: 40 });
+    }
+    if (this.referralCount >= 2 && this.selectedTier === 'core') {
+      offers.push({ tier: 'plus', label: 'Standard', discountedPrice: 10, regularPrice: 15 });
+    }
+    return offers;
+  }
+
+  get yearsToFreedom(): number | null {
+    if (!this.freedomYear) return null;
+    return this.freedomYear - new Date().getFullYear();
+  }
+
   constructor(
     private authService: AuthService,
     private settingsService: SettingsService,
@@ -91,7 +113,8 @@ export class MyProfilePage implements OnInit {
     private portfolioService: PortfolioService,
     private accountStatusService: AccountStatusService,
     private mfuService: MonthlyFreedomUpdateService,
-    private router: Router
+    private router: Router,
+    private alertController: AlertController
   ) {
     addIcons({camera,walletOutline,timeOutline,shareOutline,ticketOutline,checkmarkCircleOutline,saveOutline});
     this.actionRequired$ = this.accountStatusService.actionRequired$;
@@ -151,6 +174,15 @@ export class MyProfilePage implements OnInit {
         else if (progress.selectedTier === 'plus') this.referralThreshold = 2;
         else if (progress.selectedTier === 'pro') this.referralThreshold = 1;
         else this.referralThreshold = 3;
+
+        if (progress.selectedTier) {
+          this.selectedTier = progress.selectedTier;
+        }
+
+        // Freedom Timeline
+        if (progress.currentFreedomEstimate) {
+          this.freedomYear = progress.currentFreedomEstimate;
+        }
 
         // Store originals for dirty check
         this.originalValues = {
@@ -500,5 +532,30 @@ export class MyProfilePage implements OnInit {
         this.toastService.showToast(msg, 'danger');
       }
     });
+  }
+
+  async confirmTierUpgrade(tier: string, label: string, price: number) {
+    const alert = await this.alertController.create({
+      header: `Upgrade to ${label}`,
+      message: `Upgrade to ${label} for $${price}/mo using your referral discount?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Confirm',
+          handler: () => {
+            this.authService.updateUserProfile({ selectedTier: tier, billingPeriod: 'monthly' }).subscribe({
+              next: () => {
+                this.selectedTier = tier;
+                this.toastService.showToast(`Upgraded to ${label}!`, 'success');
+              },
+              error: () => {
+                this.toastService.showToast('Upgrade failed. Please try again.', 'danger');
+              }
+            });
+          }
+        }
+      ]
+    });
+    await alert.present();
   }
 }

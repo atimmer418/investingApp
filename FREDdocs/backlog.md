@@ -476,7 +476,7 @@ Signals integrity.
 ## FRED-167 — 💤 Redesign Ask Fred UI like Cloudflare Ask AI
 make ask fred look like cloudflare's ask AI
 
-## FRED-168 — Referral-discounted tier upgrade on profile page
+## FRED-168 — ✓ Referral-discounted tier upgrade on profile page
 Add ability to upgrade tiers in my profile page. if they already have had 1 referral, they can go to $20/mo instead of $40/mo. if they already have had 2 referrals, they can go to $10/mo instead of $15/mo
 
 ### Acceptance Criteria
@@ -495,7 +495,7 @@ make the fred free trial 14 days to allow for one automated paycheck investing a
 2. Test on sandbox account: new user gets 14-day trial before billing.
 3. Confirm frontend subscription gate correctly reflects 14-day window.
 
-## FRED-170 — Optimize loading screen timings
+## FRED-170 — ✓ Optimize loading screen timings
 Optimize loading screen timings.
 
 ### Acceptance Criteria
@@ -505,7 +505,7 @@ Optimize loading screen timings.
 4. No visual regression: cover hides only once route content is painted.
 5. Test on real iPhone.
 
-## FRED-171 — Payday lifecycle emails and push notifications
+## FRED-171 — ✓ Payday lifecycle emails and push notifications
 lifecycle emails regarding investing in FRED. Then time your lifecycle emails and push notifications around it:
 
 Day before payday: "Your paycheck hits tomorrow. FRED will auto-invest $X — your Freedom Date moves up 6 days."
@@ -526,7 +526,7 @@ make calculator page for optimal email collection
 ## FRED-173 — 🚫 Lock referral entry until 30 days post-trial
 A new subscriber must be a subscriber for at least 30 days after their 14-day free trial ends before they can access the referral entry point. Lock the referral UI until that condition is met.
 
-## FRED-174 — Wire up Apple subscription to pricing tiers (ONBOARDING)
+## FRED-174 — ✓ Wire up Apple subscription to pricing tiers (ONBOARDING)
 Apple subscription needs to be set up with the pricing tiers section on investmentconfirmation.
 
 ### Acceptance Criteria
@@ -539,7 +539,7 @@ Apple subscription needs to be set up with the pricing tiers section on investme
 ## FRED-175 — 🚫 Initiate ACATS API transfer during onboarding (ONBOARDING)
 ACATS API transfer needs to be initiated as part of the onboarding flow.
 
-## FRED-176 — Connect email list opt-in checkbox to emailer (ONBOARDING)
+## FRED-176 — ✓ Connect email list opt-in checkbox to emailer (ONBOARDING)
 The "Keep me updated" marketing checkbox needs to be wired up to the FRED email list.
 
 ### Acceptance Criteria
@@ -552,7 +552,7 @@ The "Keep me updated" marketing checkbox needs to be wired up to the FRED email 
 ## FRED-177 — 💤 Remove back button from two onboarding pages (ONBOARDING)
 Remove the back button from 2 pages in the onboarding flow.
 
-## FRED-178 — Rebrand passkey auth to Face ID variant
+## FRED-178 — ✓ Rebrand passkey auth to Face ID variant
 Change passkey to face-ID passkey variant
 
 ### Acceptance Criteria
@@ -565,7 +565,7 @@ Change passkey to face-ID passkey variant
 ## FRED-179 — 🚫 Export monthly freedom update as shareable image
 Add export ability for monthly freedom update (export to insta story and what not)
 
-## FRED-180 — Add time-to-freedom visual on profile page
+## FRED-180 — ✓ Add time-to-freedom visual on profile page
 Add time to freedom date visual on the my profile page (the whenPiggybanksFly picture that lives in surveyinitial)
 
 ### Acceptance Criteria
@@ -574,7 +574,7 @@ Add time to freedom date visual on the my profile page (the whenPiggybanksFly pi
 3. My Profile: "Freedom Timeline" card showing projected year, years remaining, with whenPiggybanksFly pig art as background.
 4. Placeholder shown if currentFreedomEstimate is null.
 
-## FRED-181 — Share Monte Carlo simulation results
+## FRED-181 — ✓ Share Monte Carlo simulation results
 Allow sharing of monte carlo results
 
 ### Acceptance Criteria
@@ -587,7 +587,7 @@ Allow sharing of monte carlo results
 ## FRED-182 — 💤 Add 3 Monte Carlo piggy bank visual states
 add 3 forms of piggy banks based on monte carlo simulation results (mint condition, cracked condition, exploded into pieces condition)
 
-## FRED-183 — Change request/response for ai chat page to use token streaming via SSE
+## FRED-183 — ✓ Change request/response for ai chat page to use token streaming via SSE
 update the ai chat response endpoint to send token's via SSE and spring boot's flux streaming
 
 ### Acceptance Criteria

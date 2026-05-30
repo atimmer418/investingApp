@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -25,6 +25,7 @@ import {
 import { MonteCarloService, SimulationParams, SimulationResult, StrategyType } from '../../services/monte-carlo.service';
 import { PortfolioService } from '../../services/portfolio.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 import Chart from 'chart.js/auto';
 import { addIcons } from 'ionicons';
 import { diceOutline, schoolOutline, calculatorOutline } from 'ionicons/icons';
@@ -62,6 +63,7 @@ import { diceOutline, schoolOutline, calculatorOutline } from 'ionicons/icons';
   ]
 })
 export class RetirementPlanningComponent implements OnInit {
+  @ViewChild('monteCarloResults') monteCarloResultsRef!: ElementRef<HTMLElement>;
   selectedSection: 'simulator' | 'education' = 'simulator';
 
   // Tier gate
@@ -175,7 +177,8 @@ export class RetirementPlanningComponent implements OnInit {
   constructor(
     private monteCarloService: MonteCarloService,
     private portfolioService: PortfolioService,
-    private authService: AuthService
+    private authService: AuthService,
+    private toastService: ToastService
   ) {
     addIcons({ diceOutline, schoolOutline, calculatorOutline });
   }
@@ -371,6 +374,34 @@ export class RetirementPlanningComponent implements OnInit {
     a.download = 'monte-carlo-comparison.csv';
     a.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  async shareMonteCarlo() {
+    if (!this.simulationResult || !this.monteCarloResultsRef) return;
+    try {
+      // @ts-ignore
+      const html2canvasModule = await import('html2canvas') as any;
+      const html2canvas = html2canvasModule.default ?? html2canvasModule;
+      const canvas = await html2canvas(this.monteCarloResultsRef.nativeElement, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false
+      });
+      const dataUrl: string = canvas.toDataURL('image/png');
+
+      // @ts-ignore
+      const { Share } = await import('@capacitor/share') as any;
+      await Share.share({
+        title: 'My FRED Monte Carlo Results',
+        text: `My retirement plan has a ${this.simulationResult.successProbability.toFixed(0)}% success rate.`,
+        url: dataUrl,
+        dialogTitle: 'Share your results'
+      });
+    } catch (err: any) {
+      console.error('[MonteCarlo] Share failed:', err);
+      this.toastService.showToast('Unable to share results. Please try again.', 'danger');
+    }
   }
 
   printReport() {

@@ -95,6 +95,21 @@
       </p>
     </div>
 
+    <!-- Freedom Timeline Card -->
+    <div class="section-card freedom-timeline-card">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">event</span>
+        <h3 class="card-title">Freedom Date</h3>
+      </div>
+      <ng-container *ngIf="freedomYear; else noFreedomDate">
+        <div class="timeline-year">{{ freedomYear }}</div>
+        <div class="timeline-years-away">{{ yearsToFreedom }} years away</div>
+      </ng-container>
+      <ng-template #noFreedomDate>
+        <div class="timeline-placeholder">Complete your setup to see your freedom date</div>
+      </ng-template>
+    </div>
+
     <!-- Referrals Card -->
     <div class="section-card">
       <div class="card-header-row">
@@ -144,6 +159,27 @@
           <span class="material-symbols-outlined success-icon">check_circle</span>
           <span>Referral code applied</span>
         </div>
+      </div>
+    </div>
+
+    <!-- Referral Upgrade Offers -->
+    <div class="section-card" *ngIf="referralUpgradeOffers.length > 0">
+      <div class="card-header-row">
+        <span class="material-symbols-outlined card-icon">upgrade</span>
+        <h3 class="card-title">Upgrade Your Plan</h3>
+      </div>
+      <div *ngFor="let offer of referralUpgradeOffers" class="upgrade-offer-row">
+        <div class="upgrade-info">
+          <div class="upgrade-label">{{ offer.label }}</div>
+          <div class="upgrade-price">
+            <span class="price-discounted">${{ offer.discountedPrice }}/mo</span>
+            <span class="price-original">normally ${{ offer.regularPrice }}/mo</span>
+          </div>
+          <div class="upgrade-unlock">{{ referralCount }} referral{{ referralCount === 1 ? '' : 's' }} unlocked this discount</div>
+        </div>
+        <button class="upgrade-btn" (click)="confirmTierUpgrade(offer.tier, offer.label, offer.discountedPrice)">
+          Upgrade
+        </button>
       </div>
     </div>
 

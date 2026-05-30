@@ -7,9 +7,17 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @Service
 public class LLMService {
@@ -78,6 +86,41 @@ public class LLMService {
         }
 
         return response.choices().get(0).message().content();
+    }
+
+    public void streamChatResponse(List<ChatMessage> messages, Consumer<String> tokenCallback) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        String bodyJson = mapper.writeValueAsString(Map.of(
+                "model", chatModel,
+                "messages", messages,
+                "stream", true,
+                "temperature", 0.0
+        ));
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(java.net.URI.create("https://api.openai.com/v1/chat/completions"))
+                .header("Authorization", "Bearer " + apiKey)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(bodyJson))
+                .build();
+
+        HttpResponse<java.io.InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.body()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.startsWith("data: ")) continue;
+                String data = line.substring(6).trim();
+                if ("[DONE]".equals(data)) break;
+                try {
+                    JsonNode node = mapper.readTree(data);
+                    JsonNode content = node.at("/choices/0/delta/content");
+                    if (!content.isMissingNode() && !content.isNull()) {
+                        tokenCallback.accept(content.asText());
+                    }
+                } catch (Exception ignored) { /* skip malformed lines */ }
+            }
+        }
     }
 
     // DTOs

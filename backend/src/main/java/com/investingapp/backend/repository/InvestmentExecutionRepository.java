@@ -117,4 +117,11 @@ public interface InvestmentExecutionRepository extends JpaRepository<InvestmentE
         @Param("year") int year,
         @Param("month") int month
     );
+
+    /**
+     * Find all executions whose scheduledDate falls on the given calendar date.
+     * Used for D+0 and D+1 payday notifications.
+     */
+    @Query("SELECT ie FROM InvestmentExecution ie WHERE FUNCTION('DATE', ie.scheduledDate) = :date")
+    List<InvestmentExecution> findByScheduledDate(@Param("date") java.time.LocalDate date);
 }

@@ -140,10 +140,31 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
       this.unlockButton.textContent = 'Unlocking…';
     }
 
-    // Always use the full FIDO2 ceremony (ASAuthorizationController on iOS, WebAuthn on web).
-    // This guarantees the "Use passkey" sheet always appears, avoids the LAContext biometric
-    // session cache (which can silently succeed with no visible UI), and always issues a fresh
-    // JWT from the backend regardless of whether the current token is expired or still valid.
+    // When the JWT is still valid (pure app-lock), use LAContext biometric directly — Face ID
+    // prompts immediately with no "Use passkey" sheet and no backend round-trip needed.
+    // When the JWT is expired, fall through to the full FIDO2 ceremony so a fresh JWT is issued.
+    if (!this.jwtExpired && this.nativePasskeyService.isAvailable) {
+      try {
+        const result = await this.nativePasskeyService.verifyBiometric('Unlock FRED');
+        if (result?.verified) {
+          this.destroyUnlockButton();
+          this.modalController.dismiss({ authenticated: true });
+          return;
+        }
+      } catch (e: any) {
+        if (e?.message === 'USER_CANCELLED') {
+          this.isUnlocking = false;
+          if (this.unlockButton) {
+            this.unlockButton.disabled = false;
+            this.unlockButton.style.opacity = '1';
+            this.unlockButton.textContent = 'Try Again';
+          }
+          return;
+        }
+        // Biometric unavailable — fall through to FIDO2 ceremony
+      }
+    }
+
     const start$ = this.userEmail
       ? this.passkeyService.startAuthenticationForUser(this.userEmail)
       : this.passkeyService.startAuthentication();

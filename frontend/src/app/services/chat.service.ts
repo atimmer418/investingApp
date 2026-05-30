@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Observer } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
 
@@ -49,6 +49,55 @@ export class ChatService {
     };
 
     return this.http.post<{ reply: string, title?: string }>(this.apiUrl, body, { headers });
+  }
+
+  streamChat(message: string, sessionId: string, generateTitle: boolean = false): Observable<{token?: string, done?: boolean, title?: string}> {
+    const token = JwtTokenUtils.getValidJwtToken();
+    const userId = localStorage.getItem('userId');
+
+    const params = new URLSearchParams({ message, sessionId, generateTitle: generateTitle.toString() });
+    if (userId) params.set('userId', userId);
+
+    const headers: Record<string, string> = { 'Accept': 'text/event-stream' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    return new Observable((observer: Observer<{token?: string, done?: boolean, title?: string}>) => {
+      let cancelled = false;
+
+      fetch(`${this.apiUrl}/stream?${params.toString()}`, { headers, signal: undefined })
+        .then(response => {
+          if (!response.ok || !response.body) {
+            observer.error(new Error(`HTTP ${response.status}`));
+            return;
+          }
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+
+          const pump = (): Promise<void> => {
+            if (cancelled) return Promise.resolve();
+            return reader.read().then(({ done, value }) => {
+              if (done) { observer.complete(); return; }
+              const chunk = decoder.decode(value, { stream: true });
+              const lines = chunk.split('\n');
+              for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                const data = line.slice(6).trim();
+                try {
+                  const parsed = JSON.parse(data);
+                  observer.next(parsed);
+                  if (parsed.done) { observer.complete(); return; }
+                } catch { /* skip malformed */ }
+              }
+              return pump();
+            });
+          };
+
+          pump().catch(err => { if (!cancelled) observer.error(err); });
+        })
+        .catch(err => { if (!cancelled) observer.error(err); });
+
+      return () => { cancelled = true; };
+    });
   }
 
   getHistory(sessionId?: string, userId?: string | null): Observable<any[]> {

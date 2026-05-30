@@ -1780,3 +1780,20 @@ ion-item {
     }
   }
 }
+
+.share-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+
+  .share-btn-mc {
+    --color: var(--ion-color-primary);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .share-icon-mc {
+    font-size: 18px;
+    margin-right: 4px;
+  }
+}

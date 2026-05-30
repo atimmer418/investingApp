@@ -287,7 +287,13 @@
     </div>
 
     <!-- Enhanced Simulation Results -->
-    <div *ngIf="simulationResult" class="results-section slide-up">
+    <div *ngIf="simulationResult" class="results-section slide-up" #monteCarloResults>
+      <div class="share-row">
+        <ion-button fill="clear" size="small" (click)="shareMonteCarlo()" class="share-btn-mc">
+          <span class="material-symbols-outlined share-icon-mc">ios_share</span>
+          Share Results
+        </ion-button>
+      </div>
       <!-- Main Success Rate Display -->
       <ion-card class="result-metric">
         <div class="result-icon">

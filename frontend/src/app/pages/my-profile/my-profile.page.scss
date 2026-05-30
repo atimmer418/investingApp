@@ -524,3 +524,74 @@ ion-toolbar {
     }
   }
 }
+
+.freedom-timeline-card {
+  .timeline-year {
+    font-size: 48px;
+    font-weight: 800;
+    color: #2563EB;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .timeline-years-away {
+    font-size: 15px;
+    font-weight: 500;
+    color: #6B7280;
+  }
+  .timeline-placeholder {
+    font-size: 14px;
+    color: #6B7280;
+    line-height: 1.4;
+  }
+}
+
+.upgrade-offer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #F3F4F6;
+  &:first-of-type { border-top: none; }
+  .upgrade-info { flex: 1; }
+  .upgrade-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .upgrade-price {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 2px;
+  }
+  .price-discounted {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2563EB;
+  }
+  .price-original {
+    font-size: 12px;
+    color: #6B7280;
+    text-decoration: line-through;
+  }
+  .upgrade-unlock {
+    font-size: 12px;
+    color: #6B7280;
+  }
+  .upgrade-btn {
+    background: #2563EB;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    white-space: nowrap;
+    &:active { opacity: 0.85; }
+  }
+}

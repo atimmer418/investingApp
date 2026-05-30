@@ -656,7 +656,7 @@ export class InvestmentConfirmationComponent implements OnInit, AfterViewInit, O
     this.authService.completeStep('investmentConfirmation').subscribe({
       next: () => {
         console.log('InvestmentConfirmation step completed successfully');
-
+        this.authService.updateUserProfile({ agreedToMarketing: this.agreedToMarketing }).subscribe();
         const pendingRaw = localStorage.getItem('pendingAcats');
         if (pendingRaw) {
           const pending = JSON.parse(pendingRaw) as { dtc: string; account: string };

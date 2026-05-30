@@ -54,4 +54,11 @@ public interface InvestmentScheduleRepository extends JpaRepository<InvestmentSc
      * Delete all investment schedules belonging to a user (used on account rejection)
      */
     void deleteAllByUser(User user);
+
+    /**
+     * Find active (non-paused) schedules whose next investment date matches the given date.
+     * Used for D-1 payday notifications.
+     */
+    @Query("SELECT s FROM InvestmentSchedule s WHERE s.nextInvestmentDate = :date AND s.isPaused = false")
+    List<InvestmentSchedule> findActiveByNextInvestmentDate(@Param("date") java.time.LocalDate date);
 }

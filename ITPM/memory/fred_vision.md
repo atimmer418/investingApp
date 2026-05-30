@@ -1,0 +1,88 @@
+# FRED Product Vision
+
+> Maintained by the ITPM routine. Updated after each approved run.
+
+## Mission
+
+FRED helps everyday people answer two questions:
+1. How much can I invest per month?
+2. How much monthly income do I want in retirement?
+
+FRED calculates a target retirement portfolio using the 4% rule:
+
+Target Portfolio = (Desired Monthly Retirement Income x 12) / 0.04
+
+Using monthly contributions, 10% average annual return, compound growth, and DRIP assumptions, FRED projects how long it takes to reach that target.
+
+FRED automates paycheck-based investing using Plaid and the user's pay schedule.
+
+## Who FRED Is For
+
+- People beginning their investing journey who don't know where to start
+- People who want to retire sooner than the default 65
+- People pursuing financial freedom — stopping the trade of time for money
+- People who want a simple roadmap, not a Bloomberg terminal
+- People who believe they can't afford to invest (and FRED proves them wrong)
+
+## Product Philosophy
+
+Boglehead-aligned: long-term index investing, low costs, diversification, staying the course through volatility.
+
+FRED is NOT a trading app. FRED is NOT a budget app. FRED is a retirement acceleration engine.
+
+The UX should feel like someone knowledgeable quietly handing you a clear plan — not a dashboard, not a gamification loop.
+
+## Tier Structure
+
+- Piggy Tier (free): Core investing, retirement projections, basic portfolio view, paycheck automation
+- Pro Tier (paid): Advanced analytics, priority support, premium features
+
+All Piggy Tier features must be fully implemented before launch. Production readiness = Piggy Tier complete.
+
+## UI/UX Principles
+
+1. Calm, minimal, premium — iOS-native done right, not generic SaaS
+2. One job per screen — clarity first, never crowd a screen
+3. Generous spacing — FRED doesn't cram; white space does the heavy lifting
+4. FRED palette only — #2563EB primary, #0f172a text, #6b7280 gray, #f8fafc bg, #ffffff cards, #e5e7eb borders
+5. Manrope everywhere — set it on every element Ionic touches
+6. Light mode forced — color-scheme: light on every component
+7. Mobile-first at 390x844 — iPhone 14 baseline, verify at 402x874 (iPhone 17)
+8. Motion earns its place — purposeful transitions, nothing decorative
+9. Copy is calm and direct — freedom-focused, never pushy or urgent
+
+## Strategic Direction
+
+Current phase (as of May 2026): Production Readiness
+
+Private beta target: September 2026. LEGAL and Alpaca integration blocked on external parties.
+
+Current priority order:
+1. Complete UI overhaul on all remaining pages
+2. Implement all Piggy Tier features
+3. Complete all loading/empty/error states
+4. App store submission readiness
+
+NOT current priority: Growth, marketing, dark mode, advanced analytics.
+
+## Successful Patterns
+
+- Onboarding component series: hero top-aligned, content center-aligned, CTA at bottom with transparent back button
+- Section cards with single clear header and body content — do not mix concerns in one card
+- Material Symbols Outlined icon font (subset loaded from /assets/fonts/)
+- Loading veil: full-screen semi-transparent overlay on async operations
+- Separate builder-agent + verifier-agent pattern for implementing and reviewing changes
+
+## Rejected Patterns
+
+- Dark mode (premature — do after all screens migrated)
+- Mocking the database in tests (led to prod divergence)
+- One-off HTML not committed to source control
+- Generating one-off files that cannot be reproduced from the repo
+
+## Lessons Learned
+
+- Always read the existing TS + reference components before writing new ones
+- Small TS additions are fine alongside HTML/SCSS changes — don't over-scope
+- Prerequisites must be complete before dependent work starts (UI overhaul then dark mode, not the reverse)
+- Backlog burn-down is a lagging indicator — look at production readiness score as the leading one
