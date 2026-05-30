@@ -11,10 +11,8 @@ import { PinService } from '../../services/pin.service';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import {
   IonHeader, IonToolbar, IonContent, IonButton, IonIcon,
-  IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
-  IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge,
-  IonFooter, IonListHeader
+  IonList, IonItem, IonLabel, IonReorderGroup,
+  IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge
 } from '@ionic/angular/standalone';
 import { RouterLink } from '@angular/router';
 
@@ -78,10 +76,8 @@ interface Stock {
   imports: [
     CommonModule, FormsModule, RouterLink,
     IonHeader, IonToolbar, IonContent, IonButton, IonIcon,
-    IonList, IonItem, IonLabel, IonText, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    IonNote, IonChip, IonRange, IonReorder, IonReorderGroup,
-    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge,
-    IonFooter, IonListHeader
+    IonList, IonItem, IonLabel, IonReorderGroup,
+    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge
   ],
   animations: [
     trigger('deleteAnimation', [

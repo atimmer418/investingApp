@@ -1,22 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { 
-  IonHeader, 
-  IonToolbar, 
-  IonTitle, 
-  IonContent, 
-  IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
+import {
+  IonHeader,
+  IonToolbar,
+  IonContent,
   IonIcon,
   IonBadge,
   IonProgressBar,
-  IonButtons,
-  IonBackButton,
-  IonNote,
   IonSpinner,
   IonItemSliding,
   IonItem,
@@ -55,9 +46,8 @@ import { ToastService } from '../services/toast.service';
   standalone: true,
   imports: [
     CommonModule, RouterLink,
-    IonHeader, IonToolbar, IonContent, IonButton,
-    IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIcon,
-    IonBadge, IonProgressBar, IonNote, IonSpinner,
+    IonHeader, IonToolbar, IonContent, IonIcon,
+    IonBadge, IonProgressBar, IonSpinner,
     IonItemSliding, IonItem, IonItemOptions, IonItemOption
   ]
 })

@@ -5,8 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import {
   IonHeader, IonToolbar, IonContent,
-  IonItem, IonLabel, IonInput, IonButton, IonNote, IonSpinner, IonIcon,
-  IonCard, IonCardHeader, IonCardTitle, IonCardContent
+  IonInput, IonSpinner
 } from '@ionic/angular/standalone';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
@@ -27,8 +26,7 @@ import { firstValueFrom } from 'rxjs';
   imports: [
     CommonModule, FormsModule, RouterLink,
     IonHeader, IonToolbar, IonContent,
-    IonItem, IonLabel, IonInput, IonButton, IonNote, IonSpinner, IonIcon,
-    IonCard, IonCardHeader, IonCardTitle, IonCardContent
+    IonInput, IonSpinner
   ]
 })
 export class ChangeEmailPage implements OnInit {

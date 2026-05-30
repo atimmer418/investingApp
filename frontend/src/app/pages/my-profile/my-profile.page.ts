@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  IonContent, IonHeader, IonToolbar,
-  IonCard, IonCardContent, IonInput, IonButton, IonIcon, IonAvatar, IonItem, IonLabel
+  IonContent, IonHeader, IonToolbar, IonIcon, IonAvatar
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { shareOutline, checkmarkCircleOutline, saveOutline, camera, walletOutline, timeOutline, ticketOutline } from 'ionicons/icons';
@@ -23,8 +22,7 @@ import { Observable } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule, FormsModule, RouterLink,
-    IonContent, IonHeader, IonToolbar,
-    IonCard, IonCardContent, IonInput, IonButton, IonIcon, IonAvatar, IonItem, IonLabel
+    IonContent, IonHeader, IonToolbar, IonIcon, IonAvatar
   ]
 })
 export class MyProfilePage implements OnInit {
@@ -64,8 +62,14 @@ export class MyProfilePage implements OnInit {
     return Array.from({ length: this.referralThreshold }, (_, i) => i);
   }
 
-  // Percentile badge from MFU
+  // Percentile badge and pig level from MFU
   statusPercentile: number | null = null;
+  equityLevel: number = 0;
+
+  get avatarSrc(): string {
+    const level = this.equityLevel > 0 ? Math.max(1, Math.min(6, this.equityLevel)) : 1;
+    return `assets/images/pig-level-${level}.svg`;
+  }
 
   // State
   isDirty: boolean = false;
@@ -204,13 +208,16 @@ export class MyProfilePage implements OnInit {
       }
     });
 
-    // Load statusPercentile from most recent MFU data
+    // Load statusPercentile and equityLevel from most recent MFU data
     this.mfuService.checkShouldShow().subscribe({
       next: (data) => {
         if (data && data.hasMfuHistory && data.statusPercentile > 0) {
           this.statusPercentile = data.statusPercentile;
         } else {
           this.statusPercentile = null;
+        }
+        if (data && data.equityLevel > 0) {
+          this.equityLevel = data.equityLevel;
         }
       },
       error: () => {

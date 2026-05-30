@@ -13,13 +13,7 @@ import {
   IonHeader,
   IonToolbar,
   IonContent,
-  IonButton,
-  IonCard,
-  IonCardContent,
-  IonIcon,
-  IonSpinner,
-  IonText,
-  IonProgressBar
+  IonSpinner
 } from '@ionic/angular/standalone';
 import { ToastService } from '../services/toast.service';
 
@@ -38,13 +32,7 @@ const BACKEND_API_URL = environment.backendApiUrl;
     IonHeader,
     IonToolbar,
     IonContent,
-    IonButton,
-    IonCard,
-    IonCardContent,
-    IonIcon,
-    IonSpinner,
-    IonText,
-    IonProgressBar
+    IonSpinner
   ]
 })
 export class ChangeBankAccountPage implements OnInit, OnDestroy {

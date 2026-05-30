@@ -7,8 +7,8 @@ import { environment } from '../../../environments/environment';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import {
   IonHeader, IonToolbar, IonContent,
-  IonCard, IonCardContent, IonList, IonItem, IonLabel, IonToggle, IonButton,
-  IonIcon, IonNote, IonSpinner
+  IonList, IonItem, IonToggle,
+  IonSpinner
 } from '@ionic/angular/standalone';
 import { RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
@@ -45,8 +45,8 @@ import { ToastService } from '../../services/toast.service';
   imports: [
     CommonModule, FormsModule, RouterLink,
     IonHeader, IonToolbar, IonContent,
-    IonCard, IonCardContent, IonList, IonItem, IonLabel, IonToggle, IonButton,
-    IonIcon, IonNote, IonSpinner
+    IonList, IonItem, IonToggle,
+    IonSpinner
   ]
 })
 export class SecuritySettingsPage implements OnInit {

@@ -7,9 +7,8 @@ import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ViewWillEnter } from '@ionic/angular';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
-  IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-  IonButtons, IonBackButton, IonNote, IonSpinner, IonCheckbox, IonFooter, NavController
+  IonHeader, IonToolbar, IonContent,
+  IonSpinner, IonFooter, NavController
 } from '@ionic/angular/standalone';
 import { ToastService } from '../../services/toast.service';
 import { AuthService } from '../../services/auth.service';
@@ -236,9 +235,8 @@ const PRICING_TIERS: PricingTier[] = [
     ])
   ],
   imports: [
-    CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
-    IonList, IonItem, IonLabel, IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    IonButtons, IonBackButton, IonNote, IonSpinner, IonCheckbox, IonFooter
+    CommonModule, FormsModule, IonHeader, IonToolbar, IonContent,
+    IonSpinner, IonFooter
   ]
 })
 

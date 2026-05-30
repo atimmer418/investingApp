@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormGroup, FormControl, Validators, AbstractContro
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import {
-  IonHeader, IonToolbar, IonContent, IonSelect, IonSelectOption,
+  IonHeader, IonToolbar, IonContent,
   IonFooter, IonSpinner, NavController, ToastController
 } from '@ionic/angular/standalone';
 import { Keyboard } from '@capacitor/keyboard';
@@ -78,7 +78,6 @@ function dateOfBirthValidator(control: AbstractControl): ValidationErrors | null
     CommonModule,
     ReactiveFormsModule,
     IonHeader, IonToolbar, IonContent,
-    IonSelect, IonSelectOption,
     IonFooter, IonSpinner
   ]
 })

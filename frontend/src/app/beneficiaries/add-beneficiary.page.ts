@@ -7,14 +7,8 @@ import {
   IonToolbar,
   IonContent,
   IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
   IonIcon,
   IonButtons,
-  IonItem,
-  IonLabel,
   IonInput,
   IonModal,
   IonDatetime
@@ -44,8 +38,7 @@ import { ToastService } from '../services/toast.service';
     FormsModule,
     RouterLink,
     IonHeader, IonToolbar, IonContent, IonButton,
-    IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIcon,
-    IonButtons, IonItem, IonLabel,
+    IonIcon, IonButtons,
     IonInput,
     IonModal, IonDatetime
   ]

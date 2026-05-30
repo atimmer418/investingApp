@@ -8,13 +8,9 @@ import {
   IonToolbar,
   IonContent,
   IonButton,
-  IonCard,
-  IonCardContent,
-  IonIcon,
   IonInput,
   IonButtons,
   IonDatetime,
-  IonDatetimeButton,
   IonModal,
   AlertController
 } from '@ionic/angular/standalone';
@@ -53,13 +49,9 @@ interface InvestmentFrequencyOption {
     IonToolbar,
     IonContent,
     IonButton,
-    IonCard,
-    IonCardContent,
-    IonIcon,
     IonInput,
     IonButtons,
     IonDatetime,
-    IonDatetimeButton,
     IonModal
   ],
   templateUrl: './recurring-investments.page.html',

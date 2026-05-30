@@ -1,6 +1,6 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
-import { IonApp, IonRouterOutlet, IonContent, IonButton, IonIcon, IonSpinner } from '@ionic/angular/standalone';
+import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { Platform } from '@ionic/angular/standalone';
 import { SplashScreen } from '@capacitor/splash-screen';
@@ -29,7 +29,7 @@ const CRITICAL_FONT_SPECS = [
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
   standalone: true,
-  imports: [IonApp, IonRouterOutlet, CommonModule, IonContent, IonButton, IonIcon, IonSpinner],
+  imports: [IonApp, IonRouterOutlet, CommonModule],
 })
 export class AppComponent implements OnInit {
 

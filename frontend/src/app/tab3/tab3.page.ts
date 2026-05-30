@@ -4,21 +4,10 @@ import { Router } from '@angular/router';
 import { Subject, takeUntil, filter, take } from 'rxjs';
 import {
   IonHeader,
-  IonToolbar,
-  IonTitle,
   IonContent,
-  IonItem,
-  IonList,
   IonIcon,
-  IonLabel,
-  IonCard,
-  IonCardContent,
-  IonButton,
   IonAvatar,
-  IonText,
   IonBadge,
-  IonRippleEffect,
-  IonFooter,
   ModalController,
   createAnimation
 } from '@ionic/angular/standalone';
@@ -82,21 +71,10 @@ interface SettingItem {
   imports: [
     CommonModule,
     IonHeader,
-    IonToolbar,
-    IonTitle,
     IonContent,
-    IonItem,
-    IonList,
     IonIcon,
-    IonLabel,
-    IonCard,
-    IonCardContent,
-    IonButton,
     IonAvatar,
-    IonText,
-    IonBadge,
-    IonRippleEffect,
-    IonFooter
+    IonBadge
   ],
 })
 export class Tab3Page implements OnInit, OnDestroy {

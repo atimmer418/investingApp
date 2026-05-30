@@ -12,10 +12,9 @@ import { Router } from '@angular/router';
 import { filter, take, Subject, takeUntil } from 'rxjs';
 import { PortfolioChartComponent, PortfolioDataPoint } from '../portfolio-chart/portfolio-chart.component';
 import {
-  IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent,
-  IonRefresher, IonRefresherContent, IonCard, IonCardContent, IonCardHeader,
-  IonCardTitle, IonSpinner, IonItem, IonLabel, IonBadge, IonSegment,
-  IonSegmentButton, IonGrid, IonRow, IonCol, IonList, IonChip,
+  IonHeader, IonToolbar, IonTitle, IonButton, IonIcon, IonContent,
+  IonRefresher, IonRefresherContent,
+  IonSpinner, IonSegment, IonSegmentButton,
   IonTabs, IonTabBar, IonTab, IonTabButton, IonRippleEffect
 } from "@ionic/angular/standalone";
 
@@ -28,10 +27,9 @@ import {
     CommonModule,
     FormsModule,
     PortfolioChartComponent,
-    IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent,
-    IonRefresher, IonRefresherContent, IonCard, IonCardContent, IonCardHeader,
-    IonCardTitle, IonSpinner, IonItem, IonLabel, IonBadge, IonSegment,
-    IonSegmentButton, IonGrid, IonRow, IonCol, IonList, IonChip
+    IonHeader, IonToolbar, IonTitle, IonButton, IonIcon, IonContent,
+    IonRefresher, IonRefresherContent,
+    IonSpinner, IonSegment, IonSegmentButton
   ]
 })
 export class PortfolioDashboardComponent implements OnInit, OnDestroy {

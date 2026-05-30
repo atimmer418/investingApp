@@ -3,9 +3,8 @@ import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-  IonCard, IonCardContent, IonList, IonItem, IonLabel, IonInput, IonButton,
-  IonIcon, IonNote, IonSpinner
+  IonHeader, IonToolbar, IonContent, IonInput, IonButton,
+  IonIcon, IonSpinner
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { shieldCheckmarkOutline, keyOutline, mailOutline } from 'ionicons/icons';
@@ -23,9 +22,8 @@ import { create } from '@github/webauthn-json';
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-    IonCard, IonCardContent, IonList, IonItem, IonLabel, IonInput, IonButton,
-    IonIcon, IonNote, IonSpinner
+    IonHeader, IonToolbar, IonContent, IonInput, IonButton,
+    IonIcon, IonSpinner
   ]
 })
 export class RecoveryPage implements OnInit {
