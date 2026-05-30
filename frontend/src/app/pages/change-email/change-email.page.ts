@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { NavController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
 import {
   IonHeader, IonToolbar, IonContent,
@@ -42,9 +43,14 @@ export class ChangeEmailPage implements OnInit {
     private authService: AuthService,
     private passkeyService: PasskeyService,
     private pinService: PinService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private navCtrl: NavController
   ) {
     addIcons({ mailOutline, alertCircleOutline, shieldCheckmarkOutline });
+  }
+
+  goBack() {
+    this.navCtrl.navigateBack('/security-settings');
   }
 
   ngOnInit() {

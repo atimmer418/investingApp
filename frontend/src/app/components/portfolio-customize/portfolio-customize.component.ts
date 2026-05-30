@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
+import { NavController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { trigger, style, animate, transition } from '@angular/animations';
@@ -120,7 +121,8 @@ export class PortfolioCustomizeComponent implements OnInit {
     private http: HttpClient,
     private toastService: ToastService,
     private passkeyService: PasskeyService,
-    private pinService: PinService
+    private pinService: PinService,
+    private navCtrl: NavController
   ) {}
 
   ngOnInit() {
@@ -650,6 +652,10 @@ export class PortfolioCustomizeComponent implements OnInit {
     } finally {
       this.isSaving = false;
     }
+  }
+
+  goBack() {
+    this.navCtrl.navigateBack('/tabs/tab3');
   }
 
   // Cancel and return to confirmation

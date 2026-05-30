@@ -1,3 +1,18 @@
+# Implementation Notes — FRED-180/183 Revision (2026-05-30)
+
+## Fix 1 — SSE parser space bug (FRED-183, chat.service.ts)
+- `line.startsWith('data: ')` → `line.startsWith('data:')`, `line.slice(6)` → `line.slice(5)`. Minimal 2-character fix.
+
+## Fix 2 — Backend NPE when userId is null (FRED-183, ChatService.java streamChat only)
+- Spec mentioned "fall back to JWT" but ChatService has no SecurityContext — null guard + orElse(null) is the consistent approach matching processChat's own pattern.
+- One-liner: ternary wrapping findById call. User stays null → buildUserContext returns anonymous context string.
+
+## Fix 3 — Pig hero image in Freedom Timeline card (FRED-180)
+- `whenPiggybanksFly-3.jpg` confirmed present. Restructured card to `.timeline-hero` wrapper containing absolute-positioned `.timeline-pig-hero` and `.timeline-body` for content.
+- SCSS: `.freedom-timeline-card` gets `overflow:hidden`; pig image is `position:absolute; right:0; bottom:0; width:140px; opacity:0.85; pointer-events:none`.
+
+---
+
 # Implementation Notes — ITPM Daily Dashboard (2026-05-30)
 
 ## Design Decisions

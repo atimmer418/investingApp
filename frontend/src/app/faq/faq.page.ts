@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
+import { NavController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
     chevronDownOutline,
@@ -93,7 +94,7 @@ export class FaqPage implements OnInit {
         }
     ];
 
-    constructor(private router: Router) {
+    constructor(private router: Router, private navCtrl: NavController) {
         addIcons({
             chevronDownOutline,
             chevronUpOutline,
@@ -128,6 +129,6 @@ export class FaqPage implements OnInit {
     }
 
     goBack() {
-        this.router.navigate(['/tabs/tab3']);
+        this.navCtrl.navigateBack('/tabs/tab3');
     }
 }

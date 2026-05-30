@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { NavController } from '@ionic/angular';
 import { Subject, takeUntil } from 'rxjs';
 import {
   IonHeader,
@@ -99,7 +100,8 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
     private modalController: ModalController,
     private toastService: ToastService,
     private passkeyService: PasskeyService,
-    private pinService: PinService
+    private pinService: PinService,
+    private navCtrl: NavController
   ) {
     addIcons({
       pieChartOutline,
@@ -127,6 +129,10 @@ export class SellWithdrawPage implements OnInit, OnDestroy {
 
   ionViewWillEnter() {
     this.loadData();
+  }
+
+  goBack() {
+    this.navCtrl.navigateBack('/tabs/tab3');
   }
 
   ngOnDestroy() {

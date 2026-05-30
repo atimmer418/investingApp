@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { NavController } from '@ionic/angular';
 import { Subject, takeUntil } from 'rxjs';
 import {
   IonHeader,
@@ -111,7 +112,8 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
     private pinService: PinService,
     private toastService: ToastService,
     private accountStatusService: AccountStatusService,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private navCtrl: NavController
   ) {
     addIcons({ cashOutline, timeOutline, calendarOutline, addOutline, checkmarkCircleOutline, pauseOutline, playOutline, alertCircleOutline, settingsOutline, informationCircleOutline });
   }
@@ -671,7 +673,7 @@ export class RecurringInvestmentsPage implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.router.navigate(['/tabs/tab3']);
+    this.navCtrl.navigateBack('/tabs/tab3');
   }
 
   deleteInvestmentSchedule() {

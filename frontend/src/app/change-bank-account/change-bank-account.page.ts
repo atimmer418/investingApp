@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { NavController } from '@ionic/angular';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Subject, takeUntil, catchError, tap, of } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -53,7 +54,8 @@ export class ChangeBankAccountPage implements OnInit, OnDestroy {
     private toastService: ToastService,
     private plaidService: PlaidService,
     private passkeyService: PasskeyService,
-    private pinService: PinService
+    private pinService: PinService,
+    private navCtrl: NavController
   ) {}
 
   ngOnInit() {
@@ -73,7 +75,7 @@ export class ChangeBankAccountPage implements OnInit, OnDestroy {
   goBack() {
     // Refresh the PlaidService data to ensure Tab3 gets the latest bank account info
     this.plaidService.refreshBankAccountData();
-    this.router.navigate(['/tabs/tab3']);
+    this.navCtrl.navigateBack('/tabs/tab3');
   }
 
   private async loadCurrentBankAccount() {

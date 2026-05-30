@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { NavController } from '@ionic/angular';
 import { environment } from '../../../environments/environment';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import {
@@ -68,7 +69,8 @@ export class SecuritySettingsPage implements OnInit {
     private http: HttpClient,
     private appLockService: AppLockService,
     private pinService: PinService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private navCtrl: NavController
   ) {
     addIcons({
       shieldCheckmarkOutline, phonePortraitOutline,
@@ -207,6 +209,10 @@ export class SecuritySettingsPage implements OnInit {
         console.error('Failed to revoke session', err);
       }
     });
+  }
+
+  goBack() {
+    this.navCtrl.navigateBack('/tabs/tab3');
   }
 
   changeEmail() {

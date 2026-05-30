@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonToolbar, IonIcon, IonAvatar, AlertController
 } from '@ionic/angular/standalone';
+import { NavController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { shareOutline, checkmarkCircleOutline, saveOutline, camera, walletOutline, timeOutline, ticketOutline } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
@@ -114,10 +115,15 @@ export class MyProfilePage implements OnInit {
     private accountStatusService: AccountStatusService,
     private mfuService: MonthlyFreedomUpdateService,
     private router: Router,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private navCtrl: NavController
   ) {
     addIcons({camera,walletOutline,timeOutline,shareOutline,ticketOutline,checkmarkCircleOutline,saveOutline});
     this.actionRequired$ = this.accountStatusService.actionRequired$;
+  }
+
+  goBack() {
+    this.navCtrl.navigateBack('/tabs/tab3');
   }
 
   goToDocumentUpload() {

@@ -441,6 +441,11 @@ ion-toolbar {
   color: var(--ion-color-success);
 }
 
+.referral-share {
+  display: flex;
+  flex-direction: column;
+}
+
 .section-divider {
   height: 1px;
   background: #f1f5f9;
@@ -527,9 +532,11 @@ ion-toolbar {
 
 .freedom-timeline-card {
   overflow: hidden;
+  padding: 0;
 
   .timeline-hero {
     position: relative;
+    min-height: 120px;
     display: flex;
     align-items: stretch;
   }
@@ -538,31 +545,43 @@ ion-toolbar {
     position: absolute;
     right: 0;
     bottom: 0;
-    width: 140px;
+    width: 130px;
+    height: 130px;
+    object-fit: contain;
+    object-position: bottom right;
     opacity: 0.85;
     pointer-events: none;
-    object-fit: contain;
   }
 
   .timeline-body {
     flex: 1;
+    padding: 16px;
     position: relative;
     z-index: 1;
   }
 
+  .card-header-row {
+    margin-bottom: 0;
+  }
+
   .timeline-year {
+    font-family: 'Manrope', sans-serif;
     font-size: 48px;
     font-weight: 800;
     color: #2563EB;
     line-height: 1;
     margin-bottom: 4px;
   }
+
   .timeline-years-away {
+    font-family: 'Manrope', sans-serif;
     font-size: 15px;
     font-weight: 500;
     color: #6B7280;
   }
+
   .timeline-placeholder {
+    font-family: 'Manrope', sans-serif;
     font-size: 14px;
     color: #6B7280;
     line-height: 1.4;

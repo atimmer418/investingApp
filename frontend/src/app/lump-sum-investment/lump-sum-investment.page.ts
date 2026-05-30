@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { NavController } from '@ionic/angular';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
@@ -115,7 +116,8 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
     private http: HttpClient,
     private passkeyService: PasskeyService,
     private pinService: PinService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private navCtrl: NavController
   ) {
     addIcons({
       cashOutline,
@@ -159,7 +161,7 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
   }
 
   goBack() {
-    this.router.navigate(['/tabs/tab3']);
+    this.navCtrl.navigateBack('/tabs/tab3');
   }
 
   onAmountChange() {

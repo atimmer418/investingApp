@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { NavController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { IonicModule, ModalController } from '@ionic/angular';
 import { PortfolioService } from '../../services/portfolio.service';
@@ -42,9 +43,14 @@ export class TaxDocumentsPage implements OnInit {
     private portfolioService: PortfolioService,
     private loadingController: LoadingController,
     private toastService: ToastService,
-    private modalController: ModalController
+    private modalController: ModalController,
+    private navCtrl: NavController
   ) {
     addIcons({ documentTextOutline, documentAttachOutline, downloadOutline, chevronDownOutline, chevronForwardOutline });
+  }
+
+  goBack() {
+    this.navCtrl.navigateBack('/tabs/tab3');
   }
 
   ngOnInit() {

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { NavController } from '@ionic/angular';
 import {
   IonHeader,
   IonToolbar,
@@ -62,11 +63,16 @@ export class BeneficiariesPage implements OnInit, ViewWillEnter {
     private router: Router,
     private beneficiaryService: BeneficiaryService,
     private toastService: ToastService,
-    private actionSheetCtrl: ActionSheetController
+    private actionSheetCtrl: ActionSheetController,
+    private navCtrl: NavController
   ) {
     addIcons({trashOutline, peopleOutline,informationCircleOutline,shieldCheckmarkOutline,pieChartOutline,alertCircleOutline,checkmarkOutline,personAddOutline,checkmarkCircleOutline,addOutline,calendarOutline,mailOutline,shieldOutline,personOutline,pricetagOutline,timeOutline,closeCircleOutline,arrowBackOutline,peopleCircleOutline});
   }
   
+  goBack() {
+    this.navCtrl.navigateBack('/tabs/tab3');
+  }
+
   ngOnInit() {
     this.loadBeneficiaries();
   }

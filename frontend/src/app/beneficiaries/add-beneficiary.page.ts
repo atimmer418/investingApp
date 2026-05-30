@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { NavController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import {
   IonHeader,
@@ -80,7 +81,8 @@ export class AddBeneficiaryPage implements OnInit {
     private beneficiaryService: BeneficiaryService,
     private passkeyService: PasskeyService,
     private pinService: PinService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private navCtrl: NavController
   ) {
     addIcons({
       arrowBackOutline,
@@ -91,6 +93,10 @@ export class AddBeneficiaryPage implements OnInit {
       phonePortraitOutline,
       locationOutline
     });
+  }
+
+  goBack() {
+    this.navCtrl.navigateBack('/beneficiaries');
   }
 
   ngOnInit() {
