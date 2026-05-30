@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRED ITPM Daily Brief</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --blue: #2563EB;
+      --text: #0f172a;
+      --gray: #6b7280;
+      --bg: #f8fafc;
+      --white: #ffffff;
+      --border: #e5e7eb;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: 'Manrope', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Lock Overlay ─── */
+    #lock-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .lock-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.15);
+    }
+
+    .lock-wordmark {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--blue);
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+
+    .lock-heading {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .lock-subtext {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 20px;
+    }
+
+    .date-chip {
+      display: inline-block;
+      background: #ede9fe;
+      color: #5b21b6;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 28px;
+    }
+
+    #reveal-btn {
+      display: inline-block;
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      padding: 14px 28px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      transition: opacity 0.15s ease;
+    }
+
+    #reveal-btn:hover {
+      opacity: 0.9;
+    }
+
+    #password-section {
+      display: none;
+      margin-top: 20px;
+    }
+
+    #password-section.visible {
+      display: block;
+    }
+
+    #password-input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      background: var(--bg);
+      margin-bottom: 12px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    #password-input:focus {
+      border-color: var(--blue);
+    }
+
+    #unlock-btn {
+      width: 100%;
+      background: var(--text);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      padding: 14px 28px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+
+    #unlock-btn:hover {
+      opacity: 0.85;
+    }
+
+    #error-msg {
+      display: none;
+      margin-top: 10px;
+      color: #991b1b;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    #error-msg.visible {
+      display: block;
+    }
+
+    /* ─── Dashboard ─── */
+    #dashboard {
+      padding: 24px 20px 120px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-wordmark {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--blue);
+      letter-spacing: -0.5px;
+    }
+
+    .itpm-badge {
+      background: #ede9fe;
+      color: #5b21b6;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .header-date {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray);
+    }
+
+    /* ─── Section Labels ─── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+
+    .section-group {
+      margin-bottom: 32px;
+    }
+
+    /* ─── Card base ─── */
+    .card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .card-pending {
+      color: var(--gray);
+      font-style: italic;
+      font-size: 14px;
+    }
+
+    /* ─── Scoreboard Grid ─── */
+    .scoreboard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .metric-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .metric-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -1px;
+      line-height: 1.1;
+    }
+
+    .metric-sublabel {
+      font-size: 12px;
+      color: var(--gray);
+      font-weight: 500;
+    }
+
+    .metric-bar-track {
+      margin-top: 10px;
+      background: var(--border);
+      border-radius: 100px;
+      height: 4px;
+      overflow: hidden;
+    }
+
+    .metric-bar-fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 100px;
+      width: 0%;
+      transition: width 0.6s ease;
+    }
+
+    /* ─── Priority Card ─── */
+    .priority-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .priority-badge {
+      flex-shrink: 0;
+      background: var(--blue);
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    .priority-body {
+      flex: 1;
+    }
+
+    .priority-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .priority-desc {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 12px;
+    }
+
+    .chip {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 100px;
+    }
+
+    .chip-amber { background: #fef3c7; color: #92400e; }
+    .chip-teal  { background: #ccfbf1; color: #065f46; }
+    .chip-green { background: #dcfce7; color: #14532d; }
+    .chip-purple { background: #ede9fe; color: #5b21b6; }
+    .chip-red   { background: #fee2e2; color: #991b1b; }
+
+    /* ─── Option Cards ─── */
+    .option-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-card {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .option-card:hover {
+      border-color: var(--blue);
+    }
+
+    .option-card.selected {
+      border-color: var(--blue);
+      background: #eff6ff;
+    }
+
+    /* ─── Question Inputs ─── */
+    .question-block {
+      margin-bottom: 16px;
+    }
+
+    .question-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .question-input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .question-input:focus {
+      border-color: var(--blue);
+    }
+
+    /* ─── Revision Section ─── */
+    .revision-label {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 14px;
+    }
+
+    .revision-textarea {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      resize: vertical;
+      min-height: 100px;
+      outline: none;
+      margin-bottom: 14px;
+      transition: border-color 0.15s ease;
+    }
+
+    .revision-textarea:focus {
+      border-color: var(--blue);
+    }
+
+    .btn-dark {
+      display: inline-block;
+      background: var(--text);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      padding: 13px 24px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+
+    .btn-dark:hover {
+      opacity: 0.85;
+    }
+
+    /* ─── Approve Bar ─── */
+    #approve-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: var(--white);
+      border-top: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      gap: 16px;
+    }
+
+    #approve-status {
+      font-size: 13px;
+      color: var(--gray);
+      font-weight: 500;
+    }
+
+    #approve-btn {
+      flex-shrink: 0;
+      background: var(--border);
+      color: var(--gray);
+      border: none;
+      border-radius: 12px;
+      padding: 13px 22px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: not-allowed;
+      transition: background 0.2s ease, color 0.2s ease;
+      white-space: nowrap;
+    }
+
+    #approve-btn.ready {
+      background: var(--blue);
+      color: var(--white);
+      cursor: pointer;
+    }
+
+    #approve-btn.ready:hover {
+      opacity: 0.9;
+    }
+
+    #approve-btn.approved {
+      background: #065f46;
+      color: var(--white);
+      cursor: default;
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 600px) {
+      .scoreboard {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .priority-card {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .priority-badge {
+        align-self: flex-start;
+      }
+
+      #approve-bar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 14px 16px;
+        gap: 10px;
+      }
+
+      #approve-btn {
+        width: 100%;
+        text-align: center;
+      }
+
+      #approve-status {
+        text-align: center;
+      }
+
+      .lock-card {
+        padding: 32px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Lock Overlay ─── -->
+  <div id="lock-overlay">
+    <div class="lock-card">
+      <div class="lock-wordmark">FRED</div>
+      <div class="lock-heading">FRED ITPM Daily Brief</div>
+      <div class="lock-subtext">Today's priorities, options, and approval workflow.</div>
+      <div class="date-chip" id="overlay-date">Loading...</div>
+      <button id="reveal-btn" onclick="revealPassword()">Reveal Password Field</button>
+      <div id="password-section">
+        <input
+          type="password"
+          id="password-input"
+          placeholder="Enter today's password"
+          autocomplete="off"
+        />
+        <button id="unlock-btn" onclick="attemptUnlock()">Unlock Dashboard</button>
+        <div id="error-msg">Incorrect password. Try again.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Dashboard ─── -->
+  <div id="dashboard">
+
+    <div class="dashboard-header">
+      <div class="header-left">
+        <div class="header-wordmark">FRED</div>
+        <div class="itpm-badge">ITPM</div>
+      </div>
+      <div class="header-date" id="header-date">Loading...</div>
+    </div>
+
+    <!-- Routine Success Criteria -->
+    <div class="section-group">
+      <div class="section-label">Routine Success Criteria</div>
+      <div class="scoreboard">
+        <div class="metric-card">
+          <div class="metric-label">Backlog Burn-Down</div>
+          <div class="metric-value">—</div>
+          <div class="metric-sublabel">Stories done this week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:0%"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Piggy Tier Done</div>
+          <div class="metric-value">—</div>
+          <div class="metric-sublabel">% of Piggy stories complete</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:0%"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Pages Migrated</div>
+          <div class="metric-value">—</div>
+          <div class="metric-sublabel">% of UI pages updated</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:0%"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Prod Readiness</div>
+          <div class="metric-value">—</div>
+          <div class="metric-sublabel">Score out of 100</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:0%"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Days Since Blocker</div>
+          <div class="metric-value">—</div>
+          <div class="metric-sublabel">Last production-ready blocker</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:0%"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Launch Readiness</div>
+          <div class="metric-value">—</div>
+          <div class="metric-sublabel">Composite estimate %</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Priorities -->
+    <div class="section-group">
+      <div class="section-label">Today's Priorities</div>
+      <div class="priority-card">
+        <div class="priority-badge">#1</div>
+        <div class="priority-body">
+          <div class="priority-title">Routine not yet run for today</div>
+          <div class="priority-desc">Today's top priority will appear after the ITPM routine runs and populates this dashboard.</div>
+          <span class="chip chip-amber">Medium</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Why I Picked These -->
+    <div class="section-group">
+      <div class="section-label">Why I Picked These</div>
+      <div class="card">
+        <div class="card-pending">Reasoning will appear after the first routine run.</div>
+      </div>
+    </div>
+
+    <!-- Strategic Alignment -->
+    <div class="section-group">
+      <div class="section-label">Strategic Alignment</div>
+      <div class="card">
+        <div class="card-pending">Strategic alignment will appear after the first routine run.</div>
+      </div>
+    </div>
+
+    <!-- Production Readiness Impact -->
+    <div class="section-group">
+      <div class="section-label">Production Readiness Impact</div>
+      <div class="card">
+        <div class="card-pending">Production readiness impact will appear after the first routine run.</div>
+      </div>
+    </div>
+
+    <!-- Implementation Options -->
+    <div class="section-group">
+      <div class="section-label">Implementation Options — Select Your Approach</div>
+      <div class="card">
+        <div class="card-pending">Options will appear after the first routine run.</div>
+      </div>
+    </div>
+
+    <!-- Triage Findings -->
+    <div class="section-group">
+      <div class="section-label">Triage Findings</div>
+      <div class="card">
+        <div class="card-pending">Triage findings will appear after the first routine run.</div>
+      </div>
+    </div>
+
+    <!-- Potentially Out of Scope -->
+    <div class="section-group">
+      <div class="section-label">Potentially Out of Scope</div>
+      <div class="card">
+        <div class="card-pending">Out-of-scope items will appear after the first routine run.</div>
+      </div>
+    </div>
+
+    <!-- Questions For Andrew -->
+    <div class="section-group">
+      <div class="section-label">Questions For Andrew</div>
+      <div class="card">
+        <div class="card-pending">Questions will appear after the first routine run.</div>
+      </div>
+    </div>
+
+    <!-- Suggested Execution Order -->
+    <div class="section-group">
+      <div class="section-label">Suggested Execution Order</div>
+      <div class="card">
+        <div class="card-pending">Execution order will appear after the first routine run.</div>
+      </div>
+    </div>
+
+    <!-- Tomorrow's Likely Priorities -->
+    <div class="section-group">
+      <div class="section-label">Tomorrow's Likely Priorities</div>
+      <div class="card">
+        <div class="card-pending">Tomorrow's priorities will appear after the first routine run.</div>
+      </div>
+    </div>
+
+    <!-- Request a Revision -->
+    <div class="section-group">
+      <div class="section-label">Request a Revision</div>
+      <div class="card">
+        <div class="revision-label">Need different priorities? Describe changes here. Copy to clipboard, then paste into Claude Code to re-run.</div>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="Describe what you'd like to change about today's priorities or approach..."></textarea>
+        <button class="btn-dark" id="revision-btn" onclick="copyRevision()">Copy &amp; Regenerate</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Fixed Approve Bar ─── -->
+  <div id="approve-bar">
+    <div id="approve-status">Complete all required fields to unlock approval</div>
+    <button id="approve-btn" onclick="handleApprove()">Approve / Get To Work</button>
+  </div>
+
+  <script>
+    // ─── Date Utilities ───────────────────────────────────────────────────────
+
+    function formatDate(d) {
+      var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      return days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    }
+
+    function getExpectedPassword() {
+      var d = new Date();
+      var m = String(d.getMonth() + 1).padStart(2, '0');
+      var day = String(d.getDate()).padStart(2, '0');
+      return m + 'FR3D' + String.fromCharCode(36) + 'aG00Db0y' + day;
+    }
+
+    // ─── Init ─────────────────────────────────────────────────────────────────
+
+    (function init() {
+      var formatted = formatDate(new Date());
+      var overlayDate = document.getElementById('overlay-date');
+      var headerDate = document.getElementById('header-date');
+      if (overlayDate) overlayDate.textContent = formatted;
+      if (headerDate) headerDate.textContent = formatted;
+    })();
+
+    // ─── Lock / Unlock ────────────────────────────────────────────────────────
+
+    function revealPassword() {
+      document.getElementById('reveal-btn').style.display = 'none';
+      var section = document.getElementById('password-section');
+      section.classList.add('visible');
+      document.getElementById('password-input').focus();
+    }
+
+    function attemptUnlock() {
+      var input = document.getElementById('password-input');
+      var errorMsg = document.getElementById('error-msg');
+      var value = input.value;
+
+      if (value === getExpectedPassword()) {
+        document.getElementById('lock-overlay').style.display = 'none';
+        errorMsg.classList.remove('visible');
+        checkApproveReady();
+      } else {
+        errorMsg.classList.add('visible');
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    // Allow Enter key on password input
+    document.getElementById('password-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        attemptUnlock();
+      }
+    });
+
+    // ─── Option Selection ─────────────────────────────────────────────────────
+
+    document.addEventListener('click', function(e) {
+      var card = e.target.closest('.option-card');
+      if (!card) return;
+      var group = card.closest('.option-group');
+      if (!group) return;
+      group.querySelectorAll('.option-card').forEach(function(c) {
+        c.classList.remove('selected');
+      });
+      card.classList.add('selected');
+      checkApproveReady();
+    });
+
+    // ─── Question Inputs ──────────────────────────────────────────────────────
+
+    document.addEventListener('input', function(e) {
+      if (e.target.classList.contains('question-input')) {
+        checkApproveReady();
+      }
+    });
+
+    // ─── Approve Ready Check ──────────────────────────────────────────────────
+
+    function checkApproveReady() {
+      var allQuestionsAnswered = true;
+      var requiredInputs = document.querySelectorAll('.question-input[data-required="true"]');
+      requiredInputs.forEach(function(input) {
+        if (!input.value.trim()) {
+          allQuestionsAnswered = false;
+        }
+      });
+
+      var allOptionsSelected = true;
+      var optionGroups = document.querySelectorAll('.option-group');
+      optionGroups.forEach(function(group) {
+        if (!group.querySelector('.option-card.selected')) {
+          allOptionsSelected = false;
+        }
+      });
+
+      var btn = document.getElementById('approve-btn');
+      if (allQuestionsAnswered && allOptionsSelected) {
+        btn.classList.add('ready');
+      } else {
+        btn.classList.remove('ready');
+      }
+    }
+
+    // ─── Approve ──────────────────────────────────────────────────────────────
+
+    function handleApprove() {
+      var btn = document.getElementById('approve-btn');
+      if (!btn.classList.contains('ready') || btn.classList.contains('approved')) return;
+
+      // Build approval message
+      var selectedOptions = [];
+      document.querySelectorAll('.option-card.selected').forEach(function(card) {
+        var title = card.querySelector('.option-title');
+        if (title) selectedOptions.push(title.textContent.trim());
+      });
+
+      var answers = [];
+      document.querySelectorAll('.question-input[data-required="true"]').forEach(function(input) {
+        var label = input.closest('.question-block');
+        var labelEl = label ? label.querySelector('.question-label') : null;
+        answers.push((labelEl ? labelEl.textContent.trim() : 'Question') + ': ' + input.value.trim());
+      });
+
+      var approvalMessage = 'ITPM PLAN APPROVED — ' + formatDate(new Date()) + '\n\n';
+      if (selectedOptions.length > 0) {
+        approvalMessage += 'Selected Approach:\n' + selectedOptions.map(function(o) { return '- ' + o; }).join('\n') + '\n\n';
+      }
+      if (answers.length > 0) {
+        approvalMessage += 'Andrew\'s Answers:\n' + answers.join('\n') + '\n\n';
+      }
+      approvalMessage += 'Please proceed with implementation as planned.';
+
+      navigator.clipboard.writeText(approvalMessage).catch(function() {});
+
+      btn.textContent = '✓ Approved — Building...';
+      btn.classList.add('approved');
+      btn.classList.remove('ready');
+      btn.disabled = true;
+
+      document.getElementById('approve-status').textContent = 'Plan approved. Paste the confirmation into Claude Code to begin execution.';
+    }
+
+    // ─── Revision ─────────────────────────────────────────────────────────────
+
+    function copyRevision() {
+      var textarea = document.getElementById('revision-textarea');
+      var btn = document.getElementById('revision-btn');
+      var content = textarea.value.trim();
+
+      if (!content) {
+        textarea.focus();
+        return;
+      }
+
+      var message = 'ITPM REVISION REQUEST — ' + formatDate(new Date()) + '\n\n' + content + '\n\nPlease re-run /itpm with this revision in mind.';
+
+      navigator.clipboard.writeText(message).then(function() {
+        var original = btn.textContent;
+        btn.textContent = '✓ Copied to clipboard';
+        setTimeout(function() {
+          btn.textContent = original;
+        }, 2500);
+      }).catch(function() {
+        btn.textContent = '✓ Copied to clipboard';
+        setTimeout(function() {
+          btn.textContent = 'Copy & Regenerate';
+        }, 2500);
+      });
+    }
+  </script>
+</body>
+</html>
