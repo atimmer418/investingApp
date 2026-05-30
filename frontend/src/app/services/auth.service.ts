@@ -25,6 +25,9 @@ export interface UserProgress {
   referralCode?: string;
   referralCount?: number;
   hasAppliedReferral?: boolean;
+  selectedTier?: 'core' | 'plus' | 'pro';
+  privateBeta?: boolean;
+  referralRewardTriggered?: boolean;
 }
 
 export interface PasskeyAuthRequest {
@@ -202,6 +205,7 @@ export class AuthService {
     const ordinal = parseInt(localStorage.getItem('onboardingStep') || '0', 10);
     const monthlyInvestment = localStorage.getItem('surveyMonthlyInvestment');
     const retirementIncome = localStorage.getItem('surveyRetirementIncome');
+    const tier = localStorage.getItem('fred.selectedTier') as 'core' | 'plus' | 'pro' | null;
     return {
       getStartedCompleted: ordinal >= 1,
       surveyInitialCompleted: ordinal >= 2,
@@ -212,7 +216,9 @@ export class AuthService {
       investmentScheduleCompleted: ordinal >= 7,
       investmentConfirmationCompleted: ordinal >= 8,
       monthlyInvestment: monthlyInvestment ? parseInt(monthlyInvestment, 10) : undefined,
-      retirementIncome: retirementIncome ? parseInt(retirementIncome, 10) : undefined
+      retirementIncome: retirementIncome ? parseInt(retirementIncome, 10) : undefined,
+      selectedTier: tier ?? undefined,
+      privateBeta: false
     };
   }
 
@@ -663,5 +669,10 @@ export class AuthService {
   applyReferralCode(code: string): Observable<any> {
     const url = `${BACKEND_API_URL}/user/referral/apply`;
     return this.http.post(url, { code }, { headers: this.getAuthHeaders() });
+  }
+
+  validateReferralCode(code: string): Observable<{ valid: boolean }> {
+    const url = `${BACKEND_API_URL}/user/referral/validate?code=${encodeURIComponent(code)}`;
+    return this.http.get<{ valid: boolean }>(url, { headers: this.getAuthHeaders() });
   }
 }

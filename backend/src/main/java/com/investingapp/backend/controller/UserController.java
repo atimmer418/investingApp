@@ -65,6 +65,8 @@ public class UserController {
         private boolean dripEnabled;
         private String selectedTier;
         private String billingPeriod;
+        private boolean privateBeta;
+        private boolean referralRewardTriggered;
 
         public UserProgressResponse(User user) {
             UserProgress progress = user.getUserProgress();
@@ -104,6 +106,8 @@ public class UserController {
             this.dripEnabled = !Boolean.FALSE.equals(user.getDripEnabled());
             this.selectedTier = user.getSelectedTier();
             this.billingPeriod = user.getBillingPeriod();
+            this.privateBeta = Boolean.TRUE.equals(user.getPrivateBeta());
+            this.referralRewardTriggered = Boolean.TRUE.equals(user.getReferralRewardTriggered());
         }
 
         // Getters
@@ -177,6 +181,14 @@ public class UserController {
 
         public String getBillingPeriod() {
             return billingPeriod;
+        }
+
+        public boolean isPrivateBeta() {
+            return privateBeta;
+        }
+
+        public boolean isReferralRewardTriggered() {
+            return referralRewardTriggered;
         }
 
         public String getNextStep() {
@@ -255,23 +267,35 @@ public class UserController {
         }
     }
 
+    @GetMapping("/referral/validate")
+    public ResponseEntity<?> validateReferralCode(@RequestParam("code") String code) {
+        if (code == null || code.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("valid", false));
+        }
+        boolean exists = userRepository.existsByReferralCode(code.trim().toUpperCase());
+        return ResponseEntity.ok(Map.of("valid", exists));
+    }
+
     @Transactional
     @PostMapping("/referral/apply")
     public ResponseEntity<?> applyReferralCode(Authentication authentication, @RequestBody Map<String, String> payload) {
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElse(null);
-        if (user == null) {
-            return ResponseEntity.badRequest().body(Map.of("message", "User not found"));
-        }
+        if (user == null) return ResponseEntity.badRequest().body(Map.of("message", "User not found"));
 
         String code = payload.get("code");
-        if (code == null || code.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Referral code is required"));
-        }
+        if (code == null || code.isBlank()) return ResponseEntity.badRequest().body(Map.of("message", "Referral code is required"));
+        code = code.trim().toUpperCase();
 
         try {
-            userService.applyReferralCode(user.getId(), code);
-            return ResponseEntity.ok(Map.of("message", "Referral code applied successfully."));
+            String status = userService.applyReferralCode(user.getId(), code);
+            String message = switch (status) {
+                case "APPLIED_IMMEDIATELY" -> "Referral applied!";
+                case "PENDING_TRIAL" -> "Code saved! Complete the 14-day free trial and stay a paying subscriber for at least 1 month to apply this referral.";
+                case "PENDING_30_DAYS" -> "Code saved! Stay a paying subscriber for 1 month after your trial ends to apply this referral.";
+                default -> "Referral code applied successfully.";
+            };
+            return ResponseEntity.ok(Map.of("message", message, "status", status));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
@@ -473,7 +497,11 @@ public class UserController {
             if (profileUpdate.containsKey("selectedTier")) {
                 Object val = profileUpdate.get("selectedTier");
                 if (val instanceof String) {
-                    user.setSelectedTier((String) val);
+                    String tier = (String) val;
+                    user.setSelectedTier(tier);
+                    if (tier != null && user.getSubscriptionStartedAt() == null) {
+                        user.setSubscriptionStartedAt(LocalDateTime.now());
+                    }
                     changed = true;
                 }
             }

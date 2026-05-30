@@ -6,6 +6,7 @@ import com.investingapp.backend.model.User;
 import com.investingapp.backend.repository.UserRepository;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -28,6 +29,9 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final PlaidService plaidService;
     private final EncryptionService encryptionService;
+
+    @Autowired
+    private ReferralService referralService;
 
     @Autowired
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, PlaidService plaidService, EncryptionService encryptionService) {
@@ -115,36 +119,46 @@ public class UserService {
     }
 
     @Transactional
-    public boolean applyReferralCode(Long userId, String code) {
+    public String applyReferralCode(Long userId, String code) {
         User user = getUserById(userId);
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-        
-        if (Boolean.TRUE.equals(user.getHasAppliedReferral())) {
-            throw new RuntimeException("User has already applied a referral code.");
-        }
-
-        if (user.getReferralCode() != null && user.getReferralCode().equalsIgnoreCase(code)) {
-             throw new RuntimeException("User cannot apply their own referral code.");
-        }
+        if (user == null) throw new RuntimeException("User not found");
+        if (Boolean.TRUE.equals(user.getHasAppliedReferral())) throw new RuntimeException("You've already applied a referral code.");
+        if (user.getReferralCode() != null && user.getReferralCode().equalsIgnoreCase(code))
+            throw new RuntimeException("You cannot apply your own referral code.");
 
         Optional<User> referrerOpt = userRepository.findByReferralCode(code);
-        if (referrerOpt.isEmpty()) {
-            throw new RuntimeException("Invalid referral code.");
+        if (referrerOpt.isEmpty()) throw new RuntimeException("Invalid referral code.");
+        User referrer = referrerOpt.get();
+        if (referrer.getId().equals(user.getId())) throw new RuntimeException("You cannot apply your own referral code.");
+
+        user.setHasAppliedReferral(true);
+        user.setReferralAppliedAt(LocalDateTime.now());
+        user.setReferredByUserId(referrer.getId());
+        userRepository.save(user);
+
+        // Founders: apply immediately
+        if (Boolean.TRUE.equals(user.getPrivateBeta())) {
+            int count = referrer.getReferralCount() != null ? referrer.getReferralCount() : 0;
+            referrer.setReferralCount(count + 1);
+            referrer.setReferralCounted(true);
+            userRepository.save(referrer);
+            referralService.checkAndTriggerReward(referrer);
+            return "APPLIED_IMMEDIATELY";
         }
 
-        User referrer = referrerOpt.get();
-        if (referrer.getId().equals(user.getId())) {
-             throw new RuntimeException("User cannot apply their own referral code.");
+        // Check subscription state
+        if (user.getSubscriptionStartedAt() == null) {
+            return "PENDING_TRIAL";
         }
-        
-        user.setHasAppliedReferral(true);
-        int currentCount = referrer.getReferralCount() != null ? referrer.getReferralCount() : 0;
-        referrer.setReferralCount(currentCount + 1);
-        
-        userRepository.save(user);
-        userRepository.save(referrer);
-        return true;
+        long daysSinceStart = java.time.temporal.ChronoUnit.DAYS.between(user.getSubscriptionStartedAt(), LocalDateTime.now());
+        if (daysSinceStart >= 30) {
+            int count = referrer.getReferralCount() != null ? referrer.getReferralCount() : 0;
+            referrer.setReferralCount(count + 1);
+            referrer.setReferralCounted(true);
+            userRepository.save(referrer);
+            referralService.checkAndTriggerReward(referrer);
+            return "APPLIED_IMMEDIATELY";
+        }
+        return "PENDING_30_DAYS";
     }
 }

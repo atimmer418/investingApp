@@ -21,6 +21,7 @@ import {
   IonChip
 } from '@ionic/angular/standalone';
 import { ChatService, ChatMessage, ChatSession } from '../../services/chat.service';
+import { FirstTimeTourService } from '../../services/first-time-tour.service';
 import { finalize } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
 import { arrowUpCircle, menuOutline, addOutline, refreshOutline } from 'ionicons/icons';
@@ -67,9 +68,14 @@ export class AiChatPage implements OnInit, AfterViewInit {
   constructor(
     private chatService: ChatService,
     private cdr: ChangeDetectorRef,
-    private menuCtrl: MenuController
+    private menuCtrl: MenuController,
+    private tourService: FirstTimeTourService
   ) {
     addIcons({ arrowUpCircle, menuOutline, addOutline, refreshOutline });
+  }
+
+  get isTourOnStep4(): boolean {
+    return this.tourService.currentStep === 4;
   }
 
   ngOnInit() {
@@ -122,6 +128,11 @@ export class AiChatPage implements OnInit, AfterViewInit {
   }
 
   selectSuggestion(question: string) {
+    // If tour is on step 4 and this is the story chip, complete the tour
+    if (this.isTourOnStep4 && question === this.FRED_STORY_TRIGGER) {
+      this.tourService.completeTour();
+    }
+
     this.newMessage = question;
 
     // Mark as used to hide static questions on next load

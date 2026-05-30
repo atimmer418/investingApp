@@ -981,41 +981,37 @@ public class AlpacaService {
      */
     public String initiateAcatsTransfer(String accountId, String transferAccountId, String transferAccountType, String dtcNumber) {
         try {
-            logger.info("Initiating ACATS transfer for account {} from external account {} (Type: {}, DTC: {})", 
-                accountId, transferAccountId, transferAccountType, dtcNumber);
-            
-            // NOTE: Alpaca currently requires manual intervention for incoming ACATS transfers.
-            // There is no automated API for this yet, so we must email their operations team.
-            
-            /* PSEUDOCODE FOR EMAIL NOTIFICATION (Pending EmailService implementation)
-            
-            // Construct the email details
-            String subject = "Incoming ACATS Request - Alpaca Account: " + accountId;
-            String body = String.format(
-                "Please initiate the following ACATS transfer:\n\n" +
-                "Target Alpaca Account ID: %s\n" +
-                "Source External Broker DTC: %s\n" +
-                "Source Account Number: %s\n" +
-                "Account Type: %s\n\n" +
-                "Please process this request manually.", 
-                accountId, dtcNumber, transferAccountId, transferAccountType
-            );
+            String url = alpacaBaseUrl + "/accounts/" + accountId + "/transfers";
 
-            // 1. Send request to Alpaca Operations
-            emailService.sendEmail("support@alpaca.markets", subject, body);
-            
-            // 2. Send copy to Internal Support for tracking
-            emailService.sendEmail("help@fredvested.com", subject, body);
-            */
-            
-            logger.info("mocking email sent to support@alpaca.markets and help@fredvested.com for ACATS transfer");
-            
-            // Return a tracking ID to the frontend to confirm the process has been initiated
-            return "acats_initiated_" + java.util.UUID.randomUUID().toString();
+            Map<String, Object> request = new HashMap<>();
+            request.put("transfer_type", "ACAT");
+            request.put("direction", "INCOMING");
+            request.put("participant_code", dtcNumber);
+            request.put("account_number", transferAccountId);
 
+            HttpHeaders headers = createAuthHeaders();
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+
+            logger.info("Initiating ACAT transfer for account {} from external account {} (DTC: {})",
+                    accountId, transferAccountId, dtcNumber);
+
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+
+            if (response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.CREATED) {
+                JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+                if (jsonResponse.has("id") && !jsonResponse.get("id").isNull()) {
+                    return jsonResponse.get("id").asText();
+                }
+                return "acat_initiated_" + java.util.UUID.randomUUID().toString();
+            } else {
+                throw new RuntimeException("Failed to initiate ACAT transfer: HTTP " + response.getStatusCode() + ": " + response.getBody());
+            }
+
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
-            logger.error("Error initiating ACATS transfer", e);
-            throw new RuntimeException("Failed to initiate ACATS transfer: " + e.getMessage());
+            logger.error("Error initiating ACAT transfer for account {}", accountId, e);
+            throw new RuntimeException("Failed to initiate ACAT transfer: " + e.getMessage());
         }
     }
 

@@ -50,14 +50,22 @@ export class MyProfilePage implements OnInit {
   progressPercentage: number = 0; // currentPortfolioValue / portfolioGoal
 
   // Referral
-  referralCode: string = ''; 
+  referralCode: string = '';
   redeemCodeInput: string = '';
   referralCount: number = 0;
   hasAppliedReferral: boolean = false;
   isLoadingReferral: boolean = false;
+  isCodeValid = false;
+  referralThreshold = 3;
+  referralRewardTriggered = false;
+
+  get referralSegments(): number[] {
+    return Array.from({ length: this.referralThreshold }, (_, i) => i);
+  }
 
   // State
   isDirty: boolean = false;
+  isSubExpired: boolean = false;
   originalValues: { monthly: number, income: number } = { monthly: 0, income: 0 };
 
   // Constants
@@ -84,6 +92,10 @@ export class MyProfilePage implements OnInit {
     this.router.navigateByUrl('/document-upload');
   }
 
+  reactivateSubscription(): void {
+    // TODO: trigger Apple IAP resubscription
+    console.log('[MyProfile] Reactivate subscription requested');
+  }
 
   ngOnInit() {
     this.loadUserData();
@@ -121,6 +133,15 @@ export class MyProfilePage implements OnInit {
         if (progress.hasAppliedReferral !== undefined) {
            this.hasAppliedReferral = progress.hasAppliedReferral;
         }
+        if (progress.referralRewardTriggered !== undefined) {
+           this.referralRewardTriggered = progress.referralRewardTriggered;
+        }
+
+        // Referral threshold by tier
+        if (progress.privateBeta) this.referralThreshold = 3;
+        else if (progress.selectedTier === 'plus') this.referralThreshold = 2;
+        else if (progress.selectedTier === 'pro') this.referralThreshold = 1;
+        else this.referralThreshold = 3;
 
         // Store originals for dirty check
         this.originalValues = {
@@ -129,6 +150,11 @@ export class MyProfilePage implements OnInit {
         };
 
         this.calculatePlan();
+
+        const fullyOnboarded = progress.investmentConfirmationCompleted === true;
+        const hasActiveSub = progress.selectedTier != null;
+        // TODO FRED-113: bypass expired gate for private beta users
+        this.isSubExpired = fullyOnboarded && !hasActiveSub;
       }
     });
 
@@ -408,6 +434,14 @@ export class MyProfilePage implements OnInit {
     if (!this.referralCode) return;
     await navigator.clipboard.writeText(this.referralCode);
     this.toastService.showToast('Referral code copied!', 'success');
+  }
+
+  onReferralCodeInput(value: string): void {
+    if (!value || value.trim().length < 3) { this.isCodeValid = false; return; }
+    this.authService.validateReferralCode(value.trim()).subscribe({
+      next: (res) => { this.isCodeValid = res.valid; },
+      error: () => { this.isCodeValid = false; }
+    });
   }
 
   redeemCode() {

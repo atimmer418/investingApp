@@ -13,6 +13,15 @@
 <ion-content class="profile-content">
   <div class="content-inner">
 
+    <div *ngIf="isSubExpired" class="reactivation-banner">
+      <span class="material-symbols-outlined">lock</span>
+      <div class="reactivation-text">
+        <strong>Subscription Inactive</strong>
+        <p>Reactivate to access your portfolio and retirement tools.</p>
+      </div>
+      <button class="reactivation-btn" (click)="reactivateSubscription()">Reactivate</button>
+    </div>
+
     <div *ngIf="(actionRequired$ | async)" class="action-required-banner" (click)="goToDocumentUpload()">
       <span class="material-symbols-outlined ar-icon">warning</span>
       <span class="ar-text">Action required: Upload verification documents</span>
@@ -90,14 +99,27 @@
       </div>
 
       <div class="referral-share">
-        <div class="field-label">SHARE THE WEALTH (<span class="referral-count">{{ referralCount }} / 3 Redeemed</span>)</div>
+        <div class="field-label">SHARE THE WEALTH</div>
+
+        <div class="referral-progress-bar">
+          <div *ngFor="let seg of referralSegments; let i = index"
+               class="referral-segment"
+               [class.filled]="i < referralCount"
+               [class.complete]="referralCount >= referralThreshold">
+          </div>
+        </div>
+        <div class="referral-progress-label">{{ referralCount }} / {{ referralThreshold }} redeemed</div>
+
         <div class="code-box">
           <div class="code-text">{{ referralCode }}</div>
           <div class="share-btn" (click)="copyReferral()">
             <ion-icon name="share-outline"></ion-icon>
           </div>
         </div>
-        <p class="helper-text">Lock in a $5/mo subscription for life when 3 users redeem your code. Users can redeem only one code.</p>
+        <div class="helper-text">Claim limited edition FRED merch when 3 users redeem your code. Users can redeem only one code.</div>
+        <div *ngIf="referralCount >= referralThreshold" class="reward-unlocked-banner">
+          Reward unlocked!
+        </div>
       </div>
 
       <div class="section-divider"></div>
@@ -108,9 +130,9 @@
           <div class="input-container">
             <span class="material-symbols-outlined input-icon">confirmation_number</span>
             <input type="text" [placeholder]="hasAppliedReferral ? 'Code applied' : 'Enter referral code'"
-              [(ngModel)]="redeemCodeInput" [disabled]="isLoadingReferral || hasAppliedReferral" />
+              [(ngModel)]="redeemCodeInput" (input)="onReferralCodeInput(redeemCodeInput)" [disabled]="isLoadingReferral || hasAppliedReferral" />
           </div>
-          <button class="apply-btn" (click)="redeemCode()" [disabled]="isLoadingReferral || hasAppliedReferral">
+          <button class="apply-btn" (click)="redeemCode()" [disabled]="isLoadingReferral || hasAppliedReferral || (!hasAppliedReferral && !isCodeValid)">
             {{ isLoadingReferral ? '...' : (hasAppliedReferral ? 'Applied' : 'Apply') }}
           </button>
         </div>

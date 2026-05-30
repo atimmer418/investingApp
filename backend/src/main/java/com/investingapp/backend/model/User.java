@@ -84,6 +84,21 @@ public class User {
     @Column(name = "referral_count")
     private Integer referralCount = 0;
 
+    @Column(name = "referral_applied_at")
+    private LocalDateTime referralAppliedAt;
+
+    @Column(name = "subscription_started_at")
+    private LocalDateTime subscriptionStartedAt;
+
+    @Column(name = "referral_reward_triggered")
+    private Boolean referralRewardTriggered = false;
+
+    @Column(name = "referral_counted")
+    private Boolean referralCounted = false;
+
+    @Column(name = "referred_by_user_id")
+    private Long referredByUserId;
+
     // Account Recovery
     @Column(name = "ssn", length = 512)
     private String ssn; // Stored as ENC:<base64(iv+ciphertext)> — encrypted at rest
@@ -213,6 +228,9 @@ public class User {
 
     @Column(name = "billing_period", nullable = true, length = 10)
     private String billingPeriod; // "monthly", "yearly"
+
+    @Column(name = "private_beta", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean privateBeta = false;
 
     // Helper method to get Plaid relationship ID (using existing ACH relationship
     // field)

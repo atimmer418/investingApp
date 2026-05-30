@@ -57,6 +57,11 @@ ion-router-outlet {
   bottom: calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
+.expired-tab {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
 // --- Tab icon wrapper for badge positioning ---
 .tab-icon-wrap {
   position: relative;

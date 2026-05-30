@@ -30,6 +30,8 @@
       <p>Test if your money will last through retirement using real market scenarios</p>
     </div>
 
+    <div class="mc-gate-wrapper">
+      <div class="mc-content-wrapper" [class.mc-blurred]="isMonteCarloLocked">
 
     <!-- Monte Carlo Explanation (Collapsible) -->
     <ion-card class="quick-guide-card">
@@ -457,83 +459,64 @@
         </div>
       </ion-card-content>
     </ion-card>
+
+      </div><!-- end mc-content-wrapper -->
+
+      <!-- Lock overlay (only shown when locked) -->
+      <div *ngIf="isMonteCarloLocked" class="mc-lock-overlay">
+        <span class="material-symbols-outlined mc-lock-icon">lock</span>
+        <p class="mc-lock-text">Available on Plus and Pro</p>
+        <button class="mc-upgrade-btn" (click)="upgradeToPlusClicked()">
+          Upgrade
+        </button>
+      </div>
+    </div><!-- end mc-gate-wrapper -->
   </div>
 
   <!-- Strategy Education Section -->
   <div *ngIf="isEducationSection()" class="strategy-section fade-in">
     <div class="strategy-header">
-      <h2>
-        <ion-icon name="school-outline" class="icon-enhanced primary"></ion-icon>
-        Retirement Withdrawal Strategies
-      </h2>
-      <p>Choose the strategy that fits your retirement goals and risk tolerance</p>
+      <h2>Withdrawal Strategies</h2>
+      <p>Tap a strategy to see how it works</p>
     </div>
 
-    <!-- 4 Main Strategy Cards -->
-    <div class="strategy-grid">
-      <!-- SBLOC / Optimal Growth -->
-      <ion-card class="modern-strategy-card" (click)="navigateToStrategy('sbloc')">
-        <div class="card-icon-header">
-          <ion-icon name="trending-up" class="strategy-icon"></ion-icon>
-        </div>
-        <ion-card-header>
-          <ion-card-title>Optimal Growth</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <div class="strategy-tags">
-            <span class="tag tag-positive">Highest Growth</span>
-            <span class="tag tag-positive">Volatility Protection</span>
-          </div>
-        </ion-card-content>
-      </ion-card>
+    <div class="edu-card-grid">
+      <div class="edu-card" (click)="openStrategy('yield')">
+        <span class="material-symbols-outlined edu-card-icon">payments</span>
+        <div class="edu-card-name">Yield-Based Income</div>
+        <div class="edu-card-tagline">Live off dividends and interest</div>
+      </div>
 
-      <!-- Annuity + Growth / Balanced Security -->
-      <ion-card class="modern-strategy-card" (click)="navigateToStrategy('annuity-growth')">
-        <div class="card-icon-header">
-          <ion-icon name="shield-checkmark" class="strategy-icon"></ion-icon>
-        </div>
-        <ion-card-header>
-          <ion-card-title>Balanced Security</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <div class="strategy-tags">
-            <span class="tag tag-positive">Essentials Guaranteed</span>
-            <span class="tag tag-positive">Good Growth</span>
-          </div>
-        </ion-card-content>
-      </ion-card>
+      <div class="edu-card" (click)="openStrategy('guardrails')">
+        <span class="material-symbols-outlined edu-card-icon">tune</span>
+        <div class="edu-card-name">Dynamic Guardrails</div>
+        <div class="edu-card-tagline">Spend more in good years, less in bad</div>
+      </div>
 
-      <!-- Dynamic Guardrails / Adaptive Spending -->
-      <ion-card class="modern-strategy-card" (click)="navigateToStrategy('dynamic-guardrails')">
-        <div class="card-icon-header">
-          <ion-icon name="swap-horizontal" class="strategy-icon"></ion-icon>
-        </div>
-        <ion-card-header>
-          <ion-card-title>Adaptive Spending</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <div class="strategy-tags">
-            <span class="tag tag-positive">High Growth</span>
-            <span class="tag tag-positive">No Debt</span>
-          </div>
-        </ion-card-content>
-      </ion-card>
+      <div class="edu-card" (click)="openStrategy('annuity')">
+        <span class="material-symbols-outlined edu-card-icon">security</span>
+        <div class="edu-card-name">Annuity</div>
+        <div class="edu-card-tagline">Guaranteed income for life</div>
+      </div>
 
-      <!-- Full Annuity / Safety First -->
-      <ion-card class="modern-strategy-card" (click)="navigateToStrategy('full-annuity')">
-        <div class="card-icon-header">
-          <ion-icon name="shield" class="strategy-icon"></ion-icon>
-        </div>
-        <ion-card-header>
-          <ion-card-title>Safety First</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <div class="strategy-tags">
-            <span class="tag tag-positive">Guaranteed Income</span>
-            <span class="tag tag-caution">No Market Growth</span>
-          </div>
-        </ion-card-content>
-      </ion-card>
+      <div class="edu-card" (click)="openStrategy('sbloc')">
+        <span class="material-symbols-outlined edu-card-icon">account_balance</span>
+        <div class="edu-card-name">SBLOC + 4% Rule</div>
+        <div class="edu-card-tagline">Borrow in bad years, sell in good years</div>
+      </div>
+    </div>
+
+    <!-- Bottom-sheet overlay -->
+    <div class="edu-sheet-backdrop" [class.visible]="openedStrategy !== null" (click)="closeStrategy()"></div>
+    <div class="edu-sheet" [class.visible]="openedStrategy !== null">
+      <div class="edu-sheet-handle"></div>
+      <h3 class="edu-sheet-title">{{ openedStrategyTitle }}</h3>
+      <ul class="edu-sheet-bullets">
+        <li *ngFor="let bullet of openedStrategyBullets">{{ bullet }}</li>
+      </ul>
+      <button class="edu-sheet-close" (click)="closeStrategy()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
     </div>
   </div>
 

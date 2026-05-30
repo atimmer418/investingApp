@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { ModalController, NavController } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { MonthlyFreedomUpdateService, MonthlyFreedomUpdateData, MilestoneDTO } from '../../services/monthly-freedom-update.service';
+import { ReviewService } from '../../services/review.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -27,7 +28,8 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
   constructor(
     private modalController: ModalController,
     private mfuService: MonthlyFreedomUpdateService,
-    private router: Router
+    private router: Router,
+    private reviewService: ReviewService
   ) {}
 
   ngOnInit() {
@@ -93,6 +95,9 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
       });
     }
     this.modalController.dismiss();
+    if (!this.isReopen) {
+      this.reviewService.requestReviewIfFirstMFU();
+    }
   }
 
   updateContribution() {

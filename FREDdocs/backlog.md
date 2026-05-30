@@ -54,7 +54,7 @@ give claude a way to verify things like...
 
 # APP FEATURES
 
-## FRED-106 — Auto-start ACATS transfer if localStorage flag set
+## FRED-106 — ✓ Auto-start ACATS transfer if localStorage flag set
 make it so that when a user signs up, check the localStorage to see if they had set up for an ACATS transfer and if they had, start that process
 
 ### Acceptance Criteria
@@ -70,7 +70,7 @@ make it so that when a user signs up, check the localStorage to see if they had 
 ## FRED-109 — 💤 Change investment question to work-optional framing
 Instead of: "How much do you want to invest?", Ask: "When do you want work to be optional?"
 
-## FRED-110 — Overhaul tab 2 education with four strategies
+## FRED-110 — ✓ Overhaul tab 2 education with four strategies
 go fix and clean up tab 2 and its content so that it matches the 4 strategies we are educating on (yield-based income, dynamic guardrails, annuity, sbloc 4% borrowing in downturn combined with traditional 4% selling when market is up), also make the cards on the education page smaller so that all 4 can appear on one page (2 on top half, 2 on bottom half). add a slide on brief instructions for how to do each strategy
 
 ### Acceptance Criteria
@@ -84,7 +84,7 @@ go fix and clean up tab 2 and its content so that it matches the 4 strategies we
 8. Builder must study the onboarding component series (surveyinitial, investment-schedule, kyc-verification, investmentconfirmation) before writing new UI — new components must feel native to that visual system.
 9. `npx tsc --noEmit` exits 0. Layout verified on 430×932.
 
-## FRED-111 — Equity milestone locks with blur and unlock animation
+## FRED-111 — ✓ Equity milestone locks with blur and unlock animation
 add $100k Total Equity lock for monte carlo, add $250k lock for retirement strategy education (frame it as a milestone and not to overwhelm the users) and also add a locked RETIRE button somewhere; we want the lock button to have the content locked (not the title such as monte carlo or retirement strategies...) and we want a big lock to display over the content with a big amount of blur on the content that is behind the lock. we want to make it so that when the user's equity is $100k/$250k, a button to unlock appears and it has a satisfying unlock animation and then the whole blurred background and the lock fades to reveal the page details
 
 ### Acceptance Criteria
@@ -98,7 +98,7 @@ add $100k Total Equity lock for monte carlo, add $250k lock for retirement strat
 8. Education section lock dropped — only Monte Carlo is gated by tier.
 9. `npx tsc --noEmit` exits 0; `./gradlew build -x test` exits 0.
 
-## FRED-112 — Subscription prompt, risk reversal, expired sub handling
+## FRED-112 — ✓ Subscription prompt, risk reversal, expired sub handling
 we want to prompt our apple subscription on the selection of the user's tier aka when they click the "Join The Pig Leagues" button. there should be a placeholder already for this function. we need to find out how we can prompt for the apple subscription. also, make it so that a user with an expired apple subscription can only access the tab 3 and provide a way for them to be able to reactivate their subscription.
 
 ### Acceptance Criteria
@@ -110,7 +110,7 @@ we want to prompt our apple subscription on the selection of the user's tier aka
 6. If IAP plugin not yet available, skip item 2 and focus on expired gate (items 3–5) only.
 7. `npx tsc --noEmit` exits 0.
 
-## FRED-113 — Private beta code, founder status, app store reauth
+## FRED-113 — ✓ Private beta code, founder status, app store reauth
 we want different code if the user is from the private beta. such as not prompting them for the subscription and also changing the referral reward text to say that you can claim a limited edition FRED outfit by having 3 people use your code (beta or non beta users). also showing FOUNDER STATUS somewhere such as like the loading screen in gold color. we also want to make sure their deviceId/iCloudKeychain is used to prompt them to login when they have downloaded the non-private beta version. i was thinking something along the lines of adding a privateBeta variable to the user model and setting it to value 1 for all people that sign up during that build but how will the prompting for reauth work if they are downloading the app off the app store for the first time?
 
 ### Acceptance Criteria
@@ -123,7 +123,7 @@ we want different code if the user is from the private beta. such as not prompti
 7. `privateBeta` is set manually in DB for all private beta signups (SQL update after beta period).
 8. `npx tsc --noEmit` exits 0; `./gradlew build -x test` exits 0.
 
-## FRED-114 — Referral reward for three uses, founders vs non-founders
+## FRED-114 — ✓ Referral reward for three uses, founders vs non-founders
 add referral code for users who have had 3 people use their code. for founders we want it to send them an email about asking them what kinda clothing piece they want the limited edition design on and then for non-founders, is it possible to update a user current apple subscription from being $8/mo to being $5/mo without them having to do anything special?
 
 ### Acceptance Criteria
@@ -142,7 +142,7 @@ add referral code for users who have had 3 people use their code. for founders w
 9. My Profile shows X/Y referral progress toward reward.
 10. `./gradlew build -x test` exits 0; `npx tsc --noEmit` exits 0.
 
-## FRED-115 — Add eye-catching referral progress bar
+## FRED-115 — ✓ Add eye-catching referral progress bar
 add referral progress bar, make it eye catching
 
 ### Acceptance Criteria

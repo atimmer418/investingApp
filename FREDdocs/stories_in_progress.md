@@ -5,13 +5,6 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 ## In Progress
 
 <!-- entries appended here -->
-- FRED-106 — Auto-start ACATS transfer if localStorage flag set
-- FRED-110 — Overhaul tab 2 education with four strategies
-- FRED-111 — Equity milestone locks with blur and unlock animation
-- FRED-112 — Subscription prompt, risk reversal, expired sub handling
-- FRED-113 — Private beta code, founder status, app store reauth
-- FRED-114 — Referral reward for three uses, founders vs non-founders
-- FRED-115 — Add eye-catching referral progress bar
 - FRED-116 — Prompt users for review after first MFU
 - FRED-117 — First-time tour ending with what's your story
 - FRED-120 — Audit npm vulnerabilities and all warnings
@@ -39,4 +32,11 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 - FRED-131 — Design five Fred faces for equity level ranges
 - FRED-133 — Design piggy bank Fred loading screen
 - FRED-136 — Test close account feature end to end
+- FRED-106 — Auto-start ACATS transfer if localStorage flag set
+- FRED-110 — Overhaul tab 2 education with four strategies
+- FRED-111 — Equity milestone locks with blur and unlock animation
+- FRED-112 — Subscription prompt, risk reversal, expired sub handling
+- FRED-113 — Private beta code, founder status, app store reauth
+- FRED-114 — Referral reward for three uses, founders vs non-founders
+- FRED-115 — Add eye-catching referral progress bar
 - FRED-2028 — Update app calculator to net-income yield model
