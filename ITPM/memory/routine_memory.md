@@ -18,6 +18,16 @@
 
 ## Daily Entries
 
+### 2026-05-31 — Bank Account UI + Review Prompt
+
+**Priorities selected:** FRED-124 + FRED-116
+**Rationale:** FRED-124 is the last major unpolished settings page — migrating it directly lifts pages-migrated % and readiness score. FRED-116 wires the App Store review prompt at peak user satisfaction (first MFU dismiss) with no backend changes — highest-leverage retention action in the backlog.
+**Metrics:** Readiness score: 67/100 | Piggy Tier: 70.0% | Pages migrated: 70% | Burndown: 32.9% (28/85) | Launch readiness: 60.0%
+**Days since last blocker:** 1
+**Status:** Pending approval from Andrew
+
+---
+
 ### 2026-05-30 — ITPM Initialized
 
 - ITPM routine established and committed to repo

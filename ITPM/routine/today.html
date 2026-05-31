@@ -106,18 +106,14 @@
       transition: opacity 0.15s ease;
     }
 
-    #reveal-btn:hover {
-      opacity: 0.9;
-    }
+    #reveal-btn:hover { opacity: 0.9; }
 
     #password-section {
       display: none;
       margin-top: 20px;
     }
 
-    #password-section.visible {
-      display: block;
-    }
+    #password-section.visible { display: block; }
 
     #password-input {
       width: 100%;
@@ -133,9 +129,7 @@
       transition: border-color 0.15s ease;
     }
 
-    #password-input:focus {
-      border-color: var(--blue);
-    }
+    #password-input:focus { border-color: var(--blue); }
 
     #unlock-btn {
       width: 100%;
@@ -151,9 +145,7 @@
       transition: opacity 0.15s ease;
     }
 
-    #unlock-btn:hover {
-      opacity: 0.85;
-    }
+    #unlock-btn:hover { opacity: 0.85; }
 
     #error-msg {
       display: none;
@@ -163,9 +155,7 @@
       font-weight: 600;
     }
 
-    #error-msg.visible {
-      display: block;
-    }
+    #error-msg.visible { display: block; }
 
     /* ─── Dashboard ─── */
     #dashboard {
@@ -226,9 +216,7 @@
       margin-bottom: 12px;
     }
 
-    .section-group {
-      margin-bottom: 32px;
-    }
+    .section-group { margin-bottom: 32px; }
 
     /* ─── Card base ─── */
     .card {
@@ -238,10 +226,10 @@
       padding: 24px;
     }
 
-    .card-pending {
-      color: var(--gray);
-      font-style: italic;
+    .card-text {
       font-size: 14px;
+      color: var(--text);
+      line-height: 1.65;
     }
 
     /* ─── Scoreboard Grid ─── */
@@ -277,6 +265,9 @@
       line-height: 1.1;
     }
 
+    .metric-value.positive { color: #059669; }
+    .metric-value.warning  { color: #d97706; }
+
     .metric-sublabel {
       font-size: 12px;
       color: var(--gray);
@@ -308,7 +299,10 @@
       display: flex;
       align-items: flex-start;
       gap: 16px;
+      margin-bottom: 12px;
     }
+
+    .priority-card:last-child { margin-bottom: 0; }
 
     .priority-badge {
       flex-shrink: 0;
@@ -321,9 +315,7 @@
       white-space: nowrap;
     }
 
-    .priority-body {
-      flex: 1;
-    }
+    .priority-body { flex: 1; }
 
     .priority-title {
       font-size: 17px;
@@ -346,11 +338,16 @@
       border-radius: 100px;
     }
 
-    .chip-amber { background: #fef3c7; color: #92400e; }
-    .chip-teal  { background: #ccfbf1; color: #065f46; }
-    .chip-green { background: #dcfce7; color: #14532d; }
+    .chip-amber  { background: #fef3c7; color: #92400e; }
+    .chip-teal   { background: #ccfbf1; color: #065f46; }
+    .chip-green  { background: #dcfce7; color: #14532d; }
     .chip-purple { background: #ede9fe; color: #5b21b6; }
-    .chip-red   { background: #fee2e2; color: #991b1b; }
+    .chip-red    { background: #fee2e2; color: #991b1b; }
+
+    .diff-chip { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .diff-easy   { background: #dcfce7; color: #14532d; }
+    .diff-medium { background: #fef3c7; color: #92400e; }
+    .diff-hard   { background: #fee2e2; color: #991b1b; }
 
     /* ─── Option Cards ─── */
     .option-group {
@@ -368,26 +365,71 @@
       transition: border-color 0.15s ease, background 0.15s ease;
     }
 
-    .option-card:hover {
-      border-color: var(--blue);
-    }
+    .option-card:hover { border-color: var(--blue); }
 
     .option-card.selected {
       border-color: var(--blue);
       background: #eff6ff;
     }
 
-    /* ─── Question Inputs ─── */
-    .question-block {
-      margin-bottom: 16px;
-    }
-
-    .question-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
+    .option-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       margin-bottom: 8px;
     }
+
+    .option-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .option-rec {
+      font-size: 11px;
+      font-weight: 700;
+      background: #dcfce7;
+      color: #14532d;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .option-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .option-body {
+      font-size: 13px;
+      color: var(--gray);
+      margin-bottom: 10px;
+      line-height: 1.55;
+    }
+
+    .option-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+    .meta-item { font-size: 12px; font-weight: 600; color: var(--gray); }
+    .meta-item span { color: var(--text); }
+
+    /* ─── Triage ─── */
+    .story-section { margin-bottom: 28px; }
+    .story-section:last-child { margin-bottom: 0; }
+    .story-header { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .triage-group { margin-bottom: 14px; }
+    .triage-group:last-child { margin-bottom: 0; }
+    .triage-group-title { font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .triage-list { padding-left: 18px; margin: 0; }
+    .triage-list li { font-size: 13px; color: var(--gray); margin-bottom: 4px; line-height: 1.55; }
+
+    /* ─── Question Inputs ─── */
+    .question-item { margin-bottom: 20px; }
+    .question-item:last-child { margin-bottom: 0; }
+    .question-text { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; line-height: 1.5; }
+    .required-badge { flex-shrink: 0; font-size: 10px; font-weight: 700; background: #fee2e2; color: #991b1b; padding: 2px 7px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 1px; }
+    .optional-badge { flex-shrink: 0; font-size: 10px; font-weight: 700; background: #f3f4f6; color: #6b7280; padding: 2px 7px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 1px; }
 
     .question-input {
       width: 100%;
@@ -404,16 +446,21 @@
       transition: border-color 0.15s ease;
     }
 
-    .question-input:focus {
-      border-color: var(--blue);
-    }
+    .question-input:focus { border-color: var(--blue); }
+
+    /* ─── Execution Steps ─── */
+    .step-item { display: flex; align-items: flex-start; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .step-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .step-num { flex-shrink: 0; background: var(--blue); color: var(--white); font-size: 12px; font-weight: 800; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .step-body { font-size: 14px; color: var(--text); line-height: 1.5; padding-top: 3px; }
+
+    /* ─── Tomorrow List ─── */
+    .tomorrow-list { padding-left: 0; list-style: none; margin: 0; }
+    .tomorrow-list li { font-size: 14px; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
+    .tomorrow-list li:last-child { border-bottom: none; padding-bottom: 0; }
 
     /* ─── Revision Section ─── */
-    .revision-label {
-      font-size: 14px;
-      color: var(--gray);
-      margin-bottom: 14px;
-    }
+    .revision-label { font-size: 14px; color: var(--gray); margin-bottom: 14px; }
 
     .revision-textarea {
       width: 100%;
@@ -431,9 +478,7 @@
       transition: border-color 0.15s ease;
     }
 
-    .revision-textarea:focus {
-      border-color: var(--blue);
-    }
+    .revision-textarea:focus { border-color: var(--blue); }
 
     .btn-dark {
       display: inline-block;
@@ -449,9 +494,7 @@
       transition: opacity 0.15s ease;
     }
 
-    .btn-dark:hover {
-      opacity: 0.85;
-    }
+    .btn-dark:hover { opacity: 0.85; }
 
     /* ─── Approve Bar ─── */
     #approve-bar {
@@ -469,11 +512,7 @@
       gap: 16px;
     }
 
-    #approve-status {
-      font-size: 13px;
-      color: var(--gray);
-      font-weight: 500;
-    }
+    #approve-status { font-size: 13px; color: var(--gray); font-weight: 500; }
 
     #approve-btn {
       flex-shrink: 0;
@@ -496,9 +535,7 @@
       cursor: pointer;
     }
 
-    #approve-btn.ready:hover {
-      opacity: 0.9;
-    }
+    #approve-btn.ready:hover { opacity: 0.9; }
 
     #approve-btn.approved {
       background: #065f46;
@@ -508,38 +545,13 @@
 
     /* ─── Responsive ─── */
     @media (max-width: 600px) {
-      .scoreboard {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .priority-card {
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .priority-badge {
-        align-self: flex-start;
-      }
-
-      #approve-bar {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 14px 16px;
-        gap: 10px;
-      }
-
-      #approve-btn {
-        width: 100%;
-        text-align: center;
-      }
-
-      #approve-status {
-        text-align: center;
-      }
-
-      .lock-card {
-        padding: 32px 24px;
-      }
+      .scoreboard { grid-template-columns: repeat(2, 1fr); }
+      .priority-card { flex-direction: column; gap: 10px; }
+      .priority-badge { align-self: flex-start; }
+      #approve-bar { flex-direction: column; align-items: stretch; padding: 14px 16px; gap: 10px; }
+      #approve-btn { width: 100%; text-align: center; }
+      #approve-status { text-align: center; }
+      .lock-card { padding: 32px 24px; }
     }
   </style>
 </head>
@@ -554,12 +566,7 @@
       <div class="date-chip" id="overlay-date">Loading...</div>
       <button id="reveal-btn" onclick="revealPassword()">Reveal Password Field</button>
       <div id="password-section">
-        <input
-          type="password"
-          id="password-input"
-          placeholder="Enter today's password"
-          autocomplete="off"
-        />
+        <input type="password" id="password-input" placeholder="Enter today's password" autocomplete="off" />
         <button id="unlock-btn" onclick="attemptUnlock()">Unlock Dashboard</button>
         <div id="error-msg">Incorrect password. Try again.</div>
       </div>
@@ -567,7 +574,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="false">
+  <div id="dashboard" data-populated="true">
 
     <div class="dashboard-header">
       <div class="header-left">
@@ -577,141 +584,386 @@
       <div class="header-date" id="header-date">Loading...</div>
     </div>
 
-    <!-- Routine Success Criteria -->
+    <!-- ── Scoreboard ── -->
     <div class="section-group">
       <div class="section-label">Routine Success Criteria</div>
       <div class="scoreboard">
+
         <div class="metric-card">
           <div class="metric-label">Backlog Burn-Down</div>
-          <div class="metric-value">—</div>
-          <div class="metric-sublabel">Stories done this week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:0%"></div></div>
+          <div class="metric-value warning">32.9%</div>
+          <div class="metric-sublabel">28 of 85 stories done</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:32.9%"></div></div>
         </div>
+
         <div class="metric-card">
           <div class="metric-label">Piggy Tier Done</div>
-          <div class="metric-value">—</div>
-          <div class="metric-sublabel">% of Piggy stories complete</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:0%"></div></div>
+          <div class="metric-value warning">70.0%</div>
+          <div class="metric-sublabel">28 of 40 core stories complete</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:70%"></div></div>
         </div>
+
         <div class="metric-card">
           <div class="metric-label">Pages Migrated</div>
-          <div class="metric-value">—</div>
-          <div class="metric-sublabel">% of UI pages updated</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:0%"></div></div>
+          <div class="metric-value warning">70%</div>
+          <div class="metric-sublabel">Onboarding done; settings remaining</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:70%"></div></div>
         </div>
+
         <div class="metric-card">
           <div class="metric-label">Prod Readiness</div>
-          <div class="metric-value">—</div>
+          <div class="metric-value warning">67</div>
           <div class="metric-sublabel">Score out of 100</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:0%"></div></div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:67%"></div></div>
         </div>
+
         <div class="metric-card">
           <div class="metric-label">Days Since Blocker</div>
-          <div class="metric-value">—</div>
-          <div class="metric-sublabel">Last production-ready blocker</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:0%"></div></div>
+          <div class="metric-value positive">1</div>
+          <div class="metric-sublabel">No active production blockers</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:3%"></div></div>
         </div>
+
         <div class="metric-card">
           <div class="metric-label">Launch Readiness</div>
-          <div class="metric-value">—</div>
-          <div class="metric-sublabel">Composite estimate %</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:0%"></div></div>
+          <div class="metric-value warning">60.0%</div>
+          <div class="metric-sublabel">Composite estimate</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:60%"></div></div>
         </div>
+
       </div>
     </div>
 
-    <!-- Today's Priorities -->
+    <!-- ── Today's Priorities ── -->
     <div class="section-group">
       <div class="section-label">Today's Priorities</div>
+
       <div class="priority-card">
         <div class="priority-badge">#1</div>
         <div class="priority-body">
-          <div class="priority-title">Routine not yet run for today</div>
-          <div class="priority-desc">Today's top priority will appear after the ITPM routine runs and populates this dashboard.</div>
-          <span class="chip chip-amber">Medium</span>
+          <div class="priority-title">FRED-124 — Change Bank Account Page Full UI Overhaul</div>
+          <div class="priority-desc">The last major "ALMOST DONE" settings page. Already functional — needs a full visual lift to match the polished Account Security and My Profile standard. Direct path to improving the pages-migrated metric.</div>
+          <span class="diff-chip diff-medium">Medium</span>
+        </div>
+      </div>
+
+      <div class="priority-card">
+        <div class="priority-badge">#2</div>
+        <div class="priority-body">
+          <div class="priority-title">FRED-116 — Prompt Users for Review After First MFU</div>
+          <div class="priority-desc">Highest-leverage retention action in the backlog. Triggers the native iOS App Store review sheet at peak satisfaction — right after a user sees their first Monthly Freedom Update. No backend changes required.</div>
+          <span class="diff-chip diff-easy">Easy</span>
         </div>
       </div>
     </div>
 
-    <!-- Why I Picked These -->
+    <!-- ── Why I Picked These ── -->
     <div class="section-group">
       <div class="section-label">Why I Picked These</div>
       <div class="card">
-        <div class="card-pending">Reasoning will appear after the first routine run.</div>
+        <div class="card-text">FRED's production readiness bottleneck is page-by-page UI polish. FRED-124 is the highest-impact unfinished UI page — it has a working backend, a functional component, and a clear design pattern to follow from FRED-123 (Account Security). Completing it pushes pages-migrated from 70% toward 73% and moves the readiness score. FRED-116 pairs perfectly as a guaranteed-complete retention win: one install, one localStorage guard, one native iOS call. Together these two stories deliver a meaningful readiness bump and wire the most important organic growth signal before launch.</div>
       </div>
     </div>
 
-    <!-- Strategic Alignment -->
+    <!-- ── Strategic Alignment ── -->
     <div class="section-group">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
-        <div class="card-pending">Strategic alignment will appear after the first routine run.</div>
+        <div class="card-text">Both stories serve the current production readiness mission directly. UI completeness is the single largest gap between FRED today and a launch-ready app. App Store reviews earned during private beta compound — every star earned before public launch is a trust signal that shows on day one. Neither story introduces scope risk or architectural complexity.</div>
       </div>
     </div>
 
-    <!-- Production Readiness Impact -->
+    <!-- ── Production Readiness Impact ── -->
     <div class="section-group">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
-        <div class="card-pending">Production readiness impact will appear after the first routine run.</div>
+        <div class="card-text">FRED-124 migrates one of the last visually unpolished settings pages, pushing pages-migrated from 70% to approximately 73% and the production readiness score from 67 toward 68. FRED-116 adds the App Store review prompt — a zero-backend, one-shot implementation that activates the organic ratings flywheel at exactly the right moment: when users first see their financial progress come to life.</div>
       </div>
     </div>
 
-    <!-- Implementation Options -->
+    <!-- ── Implementation Options ── -->
     <div class="section-group">
       <div class="section-label">Implementation Options — Select Your Approach</div>
-      <div class="card">
-        <div class="card-pending">Options will appear after the first routine run.</div>
+
+      <!-- FRED-124 options -->
+      <div style="margin-bottom: 24px;">
+        <div class="section-label" style="margin-bottom: 10px; color: var(--text); font-size: 13px; text-transform: none; letter-spacing: 0; font-weight: 700;">FRED-124 — Change Bank Account Page — Select Approach</div>
+        <div class="option-group">
+
+          <div class="option-card selected" onclick="selectOption(this)">
+            <div class="option-header">
+              <span class="option-label">Option A</span>
+              <span class="option-rec">Recommended</span>
+            </div>
+            <div class="option-title">Mirror Account Security Card Pattern</div>
+            <div class="option-body">Style the change-bank-account page using the identical card layout established in FRED-123 (Account Security). Current bank name and masked account number in a detail row with a single "Change" CTA that opens Plaid Link directly. Loading spinner while bank data fetches; empty state if no bank is linked yet; error toast if Plaid fails.</div>
+            <div class="option-meta">
+              <div class="meta-item">Risk: <span>Low</span></div>
+              <div class="meta-item">Est: <span>3h</span></div>
+              <div class="meta-item">Pros: <span>100% design consistency, fast, reuses proven pattern</span></div>
+            </div>
+          </div>
+
+          <div class="option-card" onclick="selectOption(this)">
+            <div class="option-header">
+              <span class="option-label">Option B</span>
+            </div>
+            <div class="option-title">Add AlertController Confirmation Before Plaid</div>
+            <div class="option-body">Same card pattern as Option A, but tapping "Change Bank" first shows an AlertController confirmation explaining that a new bank connection will replace the current one, then opens Plaid Link. Adds a trust signal for a financially sensitive action.</div>
+            <div class="option-meta">
+              <div class="meta-item">Risk: <span>Low</span></div>
+              <div class="meta-item">Est: <span>4h</span></div>
+              <div class="meta-item">Cons: <span>Extra friction, minimal benefit for a settings action</span></div>
+            </div>
+          </div>
+
+          <div class="option-card" onclick="selectOption(this)">
+            <div class="option-header">
+              <span class="option-label">Option C</span>
+            </div>
+            <div class="option-title">Premium Badge + Animated Success State</div>
+            <div class="option-body">Full custom card with bank name, connection status badge, and a success animation when Plaid link completes. More premium feel but requires additional design work and potentially fetching bank branding assets.</div>
+            <div class="option-meta">
+              <div class="meta-item">Risk: <span>Medium</span></div>
+              <div class="meta-item">Est: <span>6h</span></div>
+              <div class="meta-item">Cons: <span>Over-scoped for a settings page, delays ship</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- FRED-116 options -->
+      <div>
+        <div class="section-label" style="margin-bottom: 10px; color: var(--text); font-size: 13px; text-transform: none; letter-spacing: 0; font-weight: 700;">FRED-116 — Review Prompt After First MFU — Select Approach</div>
+        <div class="option-group">
+
+          <div class="option-card selected" onclick="selectOption(this)">
+            <div class="option-header">
+              <span class="option-label">Option A</span>
+              <span class="option-rec">Recommended</span>
+            </div>
+            <div class="option-title">@capacitor/rate-app — Native iOS Sheet</div>
+            <div class="option-body">Install the official Capacitor rate-app plugin. In the MFU modal's dismiss callback, check localStorage for 'hasSeenFirstMFU'. If absent, call RateApp.requestReview() and set the flag. Fires the native iOS star-rating sheet — no custom UI. Apple throttles display frequency, so worst case is the sheet doesn't show; there is no downside.</div>
+            <div class="option-meta">
+              <div class="meta-item">Risk: <span>Low</span></div>
+              <div class="meta-item">Est: <span>1h</span></div>
+              <div class="meta-item">Pros: <span>Official plugin, zero custom UI, fires at peak satisfaction moment</span></div>
+            </div>
+          </div>
+
+          <div class="option-card" onclick="selectOption(this)">
+            <div class="option-header">
+              <span class="option-label">Option B</span>
+            </div>
+            <div class="option-title">Custom Pre-Prompt Modal ("Enjoying FRED?")</div>
+            <div class="option-body">Show a custom "Enjoying FRED? Yes / Not Yet" modal before invoking the native sheet. On "Yes" → native sheet. On "Not Yet" → offer a feedback form. More control over timing but adds UI complexity and a friction step before the rating.</div>
+            <div class="option-meta">
+              <div class="meta-item">Risk: <span>Low</span></div>
+              <div class="meta-item">Est: <span>3h</span></div>
+              <div class="meta-item">Cons: <span>Adds friction, custom UI to maintain, Apple guidelines discourage pre-prompts</span></div>
+            </div>
+          </div>
+
+          <div class="option-card" onclick="selectOption(this)">
+            <div class="option-header">
+              <span class="option-label">Option C</span>
+            </div>
+            <div class="option-title">Defer to Post-Launch with Server-Side Timing</div>
+            <div class="option-body">Skip now, implement post-launch with a backend flag that controls when the prompt fires, enabling A/B testing of timing and frequency.</div>
+            <div class="option-meta">
+              <div class="meta-item">Risk: <span>Low</span></div>
+              <div class="meta-item">Est: <span>Future</span></div>
+              <div class="meta-item">Cons: <span>Delays a high-value retention action with no good reason to wait</span></div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
 
-    <!-- Triage Findings -->
+    <!-- ── Triage Findings ── -->
     <div class="section-group">
       <div class="section-label">Triage Findings</div>
       <div class="card">
-        <div class="card-pending">Triage findings will appear after the first routine run.</div>
+
+        <div class="story-section">
+          <div class="story-header">FRED-124 — Change Bank Account Page Full UI Overhaul</div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">In Scope</div>
+            <ul class="triage-list">
+              <li>Complete visual redesign of the change-bank-account settings page to match Account Security card standard</li>
+              <li>Display current linked bank name and masked account number in a detail card</li>
+              <li>Single "Change" CTA that triggers the existing Plaid Link flow</li>
+              <li>Loading state: spinner while fetching current bank info from backend</li>
+              <li>Empty state: "No bank account linked" with a "Link Bank" CTA</li>
+              <li>Error state: toast if Plaid Link fails or returns an error</li>
+              <li>Success state: toast confirmation on successful bank switch</li>
+              <li>Mobile-first layout verified at 390×844</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">Potentially Out of Scope</div>
+            <ul class="triage-list">
+              <li>Plaid backend integration changes — already in place</li>
+              <li>Multiple bank account support — not planned for Piggy Tier</li>
+              <li>Bank logo/branding assets — not available yet (use institution name as text)</li>
+              <li>Transaction history on this page — belongs on a separate screen</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">UX Considerations</div>
+            <ul class="triage-list">
+              <li>Loading: full-screen semi-transparent veil while bank data loads (consistent with rest of app)</li>
+              <li>Empty: prominent "Link Bank Account" CTA card — don't leave a blank page</li>
+              <li>Error/retry: toast with "Try again" action; Plaid Link errors should not crash silently</li>
+              <li>Mobile-first: generous card padding, tap targets ≥ 44px, no horizontal scroll</li>
+              <li>Tier gating: bank connection is Piggy Tier — no gate needed</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="story-section">
+          <div class="story-header">FRED-116 — Prompt Users for Review After First MFU</div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">In Scope</div>
+            <ul class="triage-list">
+              <li>Install <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@capacitor/rate-app</code> if not already present</li>
+              <li>Add import and call to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">RateApp.requestReview()</code> in the MFU modal dismiss handler</li>
+              <li>Guard with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">localStorage.getItem('hasSeenFirstMFU')</code> — fires exactly once per install</li>
+              <li>Set <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">localStorage.setItem('hasSeenFirstMFU', 'true')</code> immediately after triggering</li>
+              <li>Prompt fires after <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">modalController.dismiss()</code> completes — does not block or delay the close</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">Potentially Out of Scope</div>
+            <ul class="triage-list">
+              <li>Android review prompt — future story, @capacitor/rate-app has an Android path but save for after iOS launch</li>
+              <li>Tracking whether user actually submitted a rating — iOS doesn't expose this</li>
+              <li>Custom review UI — native sheet only per Apple guidelines</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">UX Considerations</div>
+            <ul class="triage-list">
+              <li>Native Apple sheet only — no custom loading states or animations needed</li>
+              <li>Fires post-dismiss so the MFU experience is uninterrupted</li>
+              <li>Apple may throttle display (shows at most 3 times per year per device) — this is expected behavior, not a bug</li>
+            </ul>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- Potentially Out of Scope -->
+    <!-- ── Potentially Out of Scope ── -->
     <div class="section-group">
       <div class="section-label">Potentially Out of Scope</div>
       <div class="card">
-        <div class="card-pending">Out-of-scope items will appear after the first routine run.</div>
+        <ul class="triage-list" style="padding-left: 18px;">
+          <li><strong>FRED-188 (null userId guard in ChatService)</strong> — 15-minute fix that can be folded in as a bonus; not a planned priority but worth doing if there's time after FRED-116</li>
+          <li><strong>FRED-109 (investment question wording)</strong> — Easy and valuable but deferred to tomorrow; doing three stories today risks none shipping polished</li>
+          <li><strong>Bank branding logos (FRED-124)</strong> — Deferred; use institution name as text only, no logo fetch needed this sprint</li>
+          <li><strong>Multiple bank account support</strong> — Not in scope for Piggy Tier; out of scope for today and this phase</li>
+        </ul>
       </div>
     </div>
 
-    <!-- Questions For Andrew -->
+    <!-- ── Questions For Andrew ── -->
     <div class="section-group">
       <div class="section-label">Questions For Andrew</div>
       <div class="card">
-        <div class="card-pending">Questions will appear after the first routine run.</div>
+
+        <div class="question-item">
+          <div class="question-text">
+            FRED-124: When a user opens Plaid Link to change their bank and cancels without completing — should the existing bank account remain silently unchanged, or should we show a dismissal toast ("Bank change cancelled")?
+            <span class="required-badge">Required</span>
+          </div>
+          <textarea class="question-input" data-required="true" placeholder="Your answer..."></textarea>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text">
+            FRED-116: Should the review prompt fire for users who have already experienced multiple MFUs but have never been prompted (i.e., users who had 'hasSeenFirstMFU' never set)? Or only going forward for the next first-time MFU dismissal?
+            <span class="required-badge">Required</span>
+          </div>
+          <textarea class="question-input" data-required="true" placeholder="Your answer..."></textarea>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text">
+            FRED-124: Should the page show the bank account type (checking vs savings) alongside the bank name and masked account number, or just name + masked number?
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Your answer..."></textarea>
+        </div>
+
       </div>
     </div>
 
-    <!-- Suggested Execution Order -->
+    <!-- ── Suggested Execution Order ── -->
     <div class="section-group">
       <div class="section-label">Suggested Execution Order</div>
       <div class="card">
-        <div class="card-pending">Execution order will appear after the first routine run.</div>
+
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-body"><strong>FRED-116 — Install plugin</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm install @capacitor/rate-app</code> in /frontend and verify it resolves without conflicts.</div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-body"><strong>FRED-116 — Wire review prompt</strong> — Import RateApp in the MFU modal component, add localStorage guard, fire <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">RateApp.requestReview()</code> after dismiss. Verify TypeScript exits 0.</div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-body"><strong>FRED-124 — Read existing component</strong> — Read change-bank-account.component.html, .scss, and .ts to map what's currently rendered and what data is already flowing in.</div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-body"><strong>FRED-124 — Redesign the card layout</strong> — Apply the Account Security card pattern: bank name + masked account number in a detail row, single "Change" CTA. Remove all old/inconsistent styling.</div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">5</div>
+          <div class="step-body"><strong>FRED-124 — Add all three states</strong> — Implement loading veil, empty state card with "Link Bank" CTA, and error toast on Plaid failure. Verify layout at 390×844.</div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">6</div>
+          <div class="step-body"><strong>Bonus — FRED-188 null guard</strong> — If time permits, add the one-line null check to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.java processChat()</code> while in the codebase.</div>
+        </div>
+
       </div>
     </div>
 
-    <!-- Tomorrow's Likely Priorities -->
+    <!-- ── Tomorrow's Likely Priorities ── -->
     <div class="section-group">
       <div class="section-label">Tomorrow's Likely Priorities</div>
       <div class="card">
-        <div class="card-pending">Tomorrow's priorities will appear after the first routine run.</div>
+        <ul class="tomorrow-list">
+          <li><strong>FRED-109</strong> — Change investment question to "When do you want work to be optional?" — Easy, single-question wording change in the onboarding flow, high product quality signal.</li>
+          <li><strong>FRED-177</strong> — Remove back button from two onboarding pages — Easy, 20-minute polish item, prevents users from navigating out of critical onboarding steps.</li>
+          <li><strong>FRED-117</strong> — First-time tour ending with "What's your story FRED?" — Medium, the next major user experience feature once the small polish items are cleared.</li>
+        </ul>
       </div>
     </div>
 
-    <!-- Request a Revision -->
+    <!-- ── Request a Revision ── -->
     <div class="section-group">
       <div class="section-label">Request a Revision</div>
       <div class="card">
-        <div class="revision-label">Need different priorities? Describe changes here. Copy to clipboard, then paste into Claude Code to re-run.</div>
+        <div class="revision-label">Need different priorities or a different approach? Describe your changes below. Click "Copy &amp; Regenerate" to copy a formatted revision request to your clipboard — then paste it into Claude Code.</div>
         <textarea class="revision-textarea" id="revision-textarea" placeholder="Describe what you'd like to change about today's priorities or approach..."></textarea>
-        <button class="btn-dark" id="revision-btn" onclick="copyRevision()">Send Revision</button>
+        <button class="btn-dark" id="revision-btn" onclick="copyRevision()">Copy &amp; Regenerate</button>
       </div>
     </div>
 
@@ -732,7 +984,16 @@
       return days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
     }
 
-    // ─── Auth key (date-scoped — resets automatically each new day/deploy) ──────
+    // ─── Client-Side Password ─────────────────────────────────────────────────
+
+    function getExpectedPassword() {
+      var d = new Date();
+      var mm = String(d.getMonth() + 1).padStart(2, '0');
+      var dd = String(d.getDate()).padStart(2, '0');
+      return mm + 'FR3D$aG00Db0y' + dd;
+    }
+
+    // ─── Auth key (date-scoped) ───────────────────────────────────────────────
 
     function getAuthKey() {
       var d = new Date();
@@ -755,8 +1016,6 @@
       var headerDate = document.getElementById('header-date');
       if (overlayDate) overlayDate.textContent = formatted;
       if (headerDate) headerDate.textContent = formatted;
-
-      // Skip lock screen if already authenticated today
       if (isAuthenticated()) {
         document.getElementById('lock-overlay').style.display = 'none';
         checkApproveReady();
@@ -775,54 +1034,28 @@
     function attemptUnlock() {
       var input = document.getElementById('password-input');
       var errorMsg = document.getElementById('error-msg');
-      var btn = document.getElementById('unlock-btn');
       var value = input.value;
       if (!value) return;
 
-      btn.textContent = 'Verifying...';
-      btn.disabled = true;
-
-      fetch('/unlock', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: value })
-      })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          if (data.ok) {
-            saveAuth();
-            document.getElementById('lock-overlay').style.display = 'none';
-            errorMsg.classList.remove('visible');
-            checkApproveReady();
-          } else {
-            errorMsg.classList.add('visible');
-            input.value = '';
-            input.focus();
-            btn.textContent = 'Unlock Dashboard';
-            btn.disabled = false;
-          }
-        })
-        .catch(function() {
-          errorMsg.classList.add('visible');
-          input.value = '';
-          input.focus();
-          btn.textContent = 'Unlock Dashboard';
-          btn.disabled = false;
-        });
+      if (value === getExpectedPassword()) {
+        saveAuth();
+        document.getElementById('lock-overlay').style.display = 'none';
+        errorMsg.classList.remove('visible');
+        checkApproveReady();
+      } else {
+        errorMsg.classList.add('visible');
+        input.value = '';
+        input.focus();
+      }
     }
 
-    // Allow Enter key on password input
     document.getElementById('password-input').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        attemptUnlock();
-      }
+      if (e.key === 'Enter') attemptUnlock();
     });
 
     // ─── Option Selection ─────────────────────────────────────────────────────
 
-    document.addEventListener('click', function(e) {
-      var card = e.target.closest('.option-card');
-      if (!card) return;
+    function selectOption(card) {
       var group = card.closest('.option-group');
       if (!group) return;
       group.querySelectorAll('.option-card').forEach(function(c) {
@@ -830,14 +1063,18 @@
       });
       card.classList.add('selected');
       checkApproveReady();
+    }
+
+    document.addEventListener('click', function(e) {
+      var card = e.target.closest('.option-card');
+      if (!card) return;
+      selectOption(card);
     });
 
     // ─── Question Inputs ──────────────────────────────────────────────────────
 
     document.addEventListener('input', function(e) {
-      if (e.target.classList.contains('question-input')) {
-        checkApproveReady();
-      }
+      if (e.target.classList.contains('question-input')) checkApproveReady();
     });
 
     // ─── Approve Ready Check ──────────────────────────────────────────────────
@@ -846,7 +1083,6 @@
       var btn = document.getElementById('approve-btn');
       var status = document.getElementById('approve-status');
 
-      // Locked until the ITPM skill populates the dashboard
       if (document.getElementById('dashboard').dataset.populated !== 'true') {
         btn.classList.remove('ready');
         if (status) status.textContent = 'Dashboard not yet populated — check back after 9am EST';
@@ -854,14 +1090,12 @@
       }
 
       var allQuestionsAnswered = true;
-      var requiredInputs = document.querySelectorAll('.question-input[data-required="true"]');
-      requiredInputs.forEach(function(input) {
+      document.querySelectorAll('.question-input[data-required="true"]').forEach(function(input) {
         if (!input.value.trim()) allQuestionsAnswered = false;
       });
 
       var allOptionsSelected = true;
-      var optionGroups = document.querySelectorAll('.option-group');
-      optionGroups.forEach(function(group) {
+      document.querySelectorAll('.option-group').forEach(function(group) {
         if (!group.querySelector('.option-card.selected')) allOptionsSelected = false;
       });
 
@@ -870,8 +1104,7 @@
         if (status) status.textContent = 'Ready to approve — all fields complete';
       } else {
         btn.classList.remove('ready');
-        var remaining = document.querySelectorAll('.question-input[data-required="true"]');
-        var unanswered = Array.from(remaining).filter(function(i) { return !i.value.trim(); }).length;
+        var unanswered = Array.from(document.querySelectorAll('.question-input[data-required="true"]')).filter(function(i) { return !i.value.trim(); }).length;
         if (status) status.textContent = unanswered > 0
           ? unanswered + ' required question' + (unanswered > 1 ? 's' : '') + ' remaining'
           : 'Select an implementation option to continue';
@@ -892,46 +1125,48 @@
 
       var answers = [];
       document.querySelectorAll('.question-input[data-required="true"]').forEach(function(input) {
-        var label = input.closest('.question-block');
-        var labelEl = label ? label.querySelector('.question-label') : null;
-        answers.push((labelEl ? labelEl.textContent.trim() : 'Question') + ': ' + input.value.trim());
+        var item = input.closest('.question-item');
+        var labelEl = item ? item.querySelector('.question-text') : null;
+        var labelText = labelEl ? labelEl.childNodes[0].textContent.trim() : 'Question';
+        answers.push(labelText + '\nAnswer: ' + input.value.trim());
       });
 
-      var content = 'Date: ' + formatDate(new Date());
-      if (selectedOptions.length > 0) content += '\n\nSelected Approach:\n' + selectedOptions.map(function(o) { return '- ' + o; }).join('\n');
-      if (answers.length > 0) content += '\n\nAndrew\'s Answers:\n' + answers.join('\n');
+      var content = 'ITPM APPROVAL — ' + formatDate(new Date());
+      content += '\n\nSelected Approaches:\n' + selectedOptions.map(function(o) { return '- ' + o; }).join('\n');
+      if (answers.length > 0) content += '\n\nAndrew\'s Answers:\n' + answers.join('\n\n');
       content += '\n\nProceed with implementation as planned.';
 
-      btn.textContent = 'Starting session...';
-      btn.classList.add('approved');
-      btn.classList.remove('ready');
-      btn.disabled = true;
-
-      fetch('/trigger', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'approval', content: content })
-      })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          if (data.ok) {
-            btn.textContent = '✓ Session started — Building...';
-            document.getElementById('approve-status').textContent = 'Claude is on it. Check your notifications when the build is done.';
-          } else {
-            btn.textContent = 'Approve / Get To Work';
-            btn.classList.remove('approved');
-            btn.classList.add('ready');
-            btn.disabled = false;
-            document.getElementById('approve-status').textContent = 'Failed to start session. Try again.';
-          }
-        })
-        .catch(function() {
-          btn.textContent = 'Approve / Get To Work';
-          btn.classList.remove('approved');
-          btn.classList.add('ready');
-          btn.disabled = false;
-          document.getElementById('approve-status').textContent = 'Connection error. Try again.';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(content).then(function() {
+          btn.textContent = '✓ Copied — Paste into Claude Code';
+          btn.classList.add('approved');
+          btn.classList.remove('ready');
+          document.getElementById('approve-status').textContent = 'Approval copied. Paste into Claude Code to start implementation.';
+        }).catch(function() {
+          fallbackCopy(content, btn);
         });
+      } else {
+        fallbackCopy(content, btn);
+      }
+    }
+
+    function fallbackCopy(text, btn) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        btn.textContent = '✓ Copied — Paste into Claude Code';
+        btn.classList.add('approved');
+        btn.classList.remove('ready');
+        document.getElementById('approve-status').textContent = 'Approval copied. Paste into Claude Code to start implementation.';
+      } catch(e) {
+        document.getElementById('approve-status').textContent = 'Could not copy. Please copy manually.';
+      }
+      document.body.removeChild(ta);
     }
 
     // ─── Revision ─────────────────────────────────────────────────────────────
@@ -940,31 +1175,35 @@
       var textarea = document.getElementById('revision-textarea');
       var btn = document.getElementById('revision-btn');
       var content = textarea.value.trim();
-
       if (!content) { textarea.focus(); return; }
 
-      btn.textContent = 'Starting session...';
-      btn.disabled = true;
+      var formatted = '--revision "' + content + '"';
 
-      fetch('/trigger', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'revision', content: content })
-      })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          if (data.ok) {
-            btn.textContent = '✓ Revision sent — Regenerating...';
-            textarea.disabled = true;
-          } else {
-            btn.textContent = 'Send Revision';
-            btn.disabled = false;
-          }
-        })
-        .catch(function() {
-          btn.textContent = 'Send Revision';
-          btn.disabled = false;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(formatted).then(function() {
+          btn.textContent = '✓ Copied — Paste into Claude Code';
+          btn.disabled = true;
+          setTimeout(function() { btn.textContent = 'Copy & Regenerate'; btn.disabled = false; }, 3000);
+        }).catch(function() {
+          btn.textContent = 'Copy failed — try again';
         });
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = formatted;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          btn.textContent = '✓ Copied — Paste into Claude Code';
+          btn.disabled = true;
+          setTimeout(function() { btn.textContent = 'Copy & Regenerate'; btn.disabled = false; }, 3000);
+        } catch(e) {
+          btn.textContent = 'Copy failed';
+        }
+        document.body.removeChild(ta);
+      }
     }
   </script>
 </body>
