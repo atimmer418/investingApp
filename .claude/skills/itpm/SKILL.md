@@ -148,6 +148,8 @@ Rewrite `ITPM/routine/today.html` completely using the design and structure of t
 
 Read the current `ITPM/routine/today.html` first to understand its exact structure, then rewrite it with all sections populated.
 
+**Critical:** Change `data-populated="false"` to `data-populated="true"` on the `<div id="dashboard">` element. This is what unlocks the Approve button for Andrew. If you forget this, he cannot approve the plan.
+
 **Scoreboard values to set:**
 For each of the 6 metric cards, set:
 - The `score-value` text to the computed number (e.g. "43.2%", "55", "0")

@@ -561,7 +561,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard">
+  <div id="dashboard" data-populated="false">
 
     <div class="dashboard-header">
       <div class="header-left">
@@ -837,27 +837,38 @@
     // ─── Approve Ready Check ──────────────────────────────────────────────────
 
     function checkApproveReady() {
+      var btn = document.getElementById('approve-btn');
+      var status = document.getElementById('approve-status');
+
+      // Locked until the ITPM skill populates the dashboard
+      if (document.getElementById('dashboard').dataset.populated !== 'true') {
+        btn.classList.remove('ready');
+        if (status) status.textContent = 'Dashboard not yet populated — check back after 9am EST';
+        return;
+      }
+
       var allQuestionsAnswered = true;
       var requiredInputs = document.querySelectorAll('.question-input[data-required="true"]');
       requiredInputs.forEach(function(input) {
-        if (!input.value.trim()) {
-          allQuestionsAnswered = false;
-        }
+        if (!input.value.trim()) allQuestionsAnswered = false;
       });
 
       var allOptionsSelected = true;
       var optionGroups = document.querySelectorAll('.option-group');
       optionGroups.forEach(function(group) {
-        if (!group.querySelector('.option-card.selected')) {
-          allOptionsSelected = false;
-        }
+        if (!group.querySelector('.option-card.selected')) allOptionsSelected = false;
       });
 
-      var btn = document.getElementById('approve-btn');
       if (allQuestionsAnswered && allOptionsSelected) {
         btn.classList.add('ready');
+        if (status) status.textContent = 'Ready to approve — all fields complete';
       } else {
         btn.classList.remove('ready');
+        var remaining = document.querySelectorAll('.question-input[data-required="true"]');
+        var unanswered = Array.from(remaining).filter(function(i) { return !i.value.trim(); }).length;
+        if (status) status.textContent = unanswered > 0
+          ? unanswered + ' required question' + (unanswered > 1 ? 's' : '') + ' remaining'
+          : 'Select an implementation option to continue';
       }
     }
 
