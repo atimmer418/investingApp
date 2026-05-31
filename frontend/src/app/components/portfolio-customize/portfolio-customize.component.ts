@@ -15,7 +15,7 @@ import {
   IonList, IonItem, IonLabel, IonReorderGroup,
   IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge
 } from '@ionic/angular/standalone';
-import { RouterLink } from '@angular/router';
+
 
 interface PortfolioItem {
   symbol: string;
@@ -75,7 +75,7 @@ interface Stock {
   styleUrls: ['./portfolio-customize.component.scss'],
   standalone: true,
   imports: [
-    CommonModule, FormsModule, RouterLink,
+    CommonModule, FormsModule,
     IonHeader, IonToolbar, IonContent, IonButton, IonIcon,
     IonList, IonItem, IonLabel, IonReorderGroup,
     IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge

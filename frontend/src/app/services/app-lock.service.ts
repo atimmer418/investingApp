@@ -156,9 +156,11 @@ export class AppLockService {
 
   private async handleAppStateChange(state: AppState) {
     if (!state.isActive) {
-      // App went to background — cover the view so iOS snapshot is white
-      // and WKWebView's repaint cycle is hidden on resume.
-      this.showAppCover();
+      // Skip the cover if the auth modal is already open — the passkey/FaceID system
+      // sheet briefly resigns app-active state, and covering here would bury the modal.
+      if (!this.isModalOpen) {
+        this.showAppCover();
+      }
       this.lastActiveTime = Date.now();
     } else {
       this.lockWasShownThisResume = false;

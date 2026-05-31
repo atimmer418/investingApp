@@ -140,31 +140,10 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
       this.unlockButton.textContent = 'Unlocking…';
     }
 
-    // When the JWT is still valid (pure app-lock), use LAContext biometric directly — Face ID
-    // prompts immediately with no "Use passkey" sheet and no backend round-trip needed.
-    // When the JWT is expired, fall through to the full FIDO2 ceremony so a fresh JWT is issued.
-    if (!this.jwtExpired && this.nativePasskeyService.isAvailable) {
-      try {
-        const result = await this.nativePasskeyService.verifyBiometric('Unlock FRED');
-        if (result?.verified) {
-          this.destroyUnlockButton();
-          this.modalController.dismiss({ authenticated: true });
-          return;
-        }
-      } catch (e: any) {
-        if (e?.message === 'USER_CANCELLED') {
-          this.isUnlocking = false;
-          if (this.unlockButton) {
-            this.unlockButton.disabled = false;
-            this.unlockButton.style.opacity = '1';
-            this.unlockButton.textContent = 'Try Again';
-          }
-          return;
-        }
-        // Biometric unavailable — fall through to FIDO2 ceremony
-      }
-    }
-
+    // Always use the full FIDO2 ceremony (ASAuthorizationController on iOS, WebAuthn on web).
+    // This guarantees the "Use passkey" sheet always appears, avoids the LAContext biometric
+    // session cache (which can silently succeed with no visible UI), and always issues a fresh
+    // JWT from the backend regardless of whether the current token is expired or still valid.
     const start$ = this.userEmail
       ? this.passkeyService.startAuthenticationForUser(this.userEmail)
       : this.passkeyService.startAuthentication();
@@ -201,9 +180,19 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
               allowedCredentials
             });
           } else {
-            credential = requestOptions.publicKey ?
-              await get(requestOptions) :
-              await get({ publicKey: requestOptions });
+            // Race the WebAuthn get() against a 90-second timeout.  On Safari,
+            // get() called without a prior user gesture can hang indefinitely
+            // (never resolves, never rejects), keeping isUnlocking=true and
+            // silently blocking every subsequent button click.  The timeout
+            // aborts the hang and reveals the unlock button so the user can retry
+            // with a real click (which satisfies Safari's user-gesture requirement).
+            const getOptions = requestOptions.publicKey ? requestOptions : { publicKey: requestOptions };
+            credential = await Promise.race([
+              get(getOptions as any),
+              new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('AUTH_TIMEOUT')), 90_000)
+              )
+            ]);
           }
 
           // Send the credential back to the server
@@ -231,6 +220,9 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
             }
           });
         } catch (error: any) {
+          if (error?.message !== 'AUTH_TIMEOUT') {
+            this.showToast('Authentication failed. Please try again.', 'danger');
+          }
           this.revealUnlockButton();
         }
       },

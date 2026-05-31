@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { NavController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import {
@@ -37,7 +37,6 @@ import { ToastService } from '../services/toast.service';
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     IonHeader, IonToolbar, IonContent, IonButton,
     IonIcon, IonButtons,
     IonInput,

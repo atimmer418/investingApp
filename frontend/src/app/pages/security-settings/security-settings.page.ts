@@ -11,7 +11,6 @@ import {
   IonList, IonItem, IonToggle,
   IonSpinner
 } from '@ionic/angular/standalone';
-import { RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
 import {
   shieldCheckmarkOutline, phonePortraitOutline,
@@ -44,7 +43,7 @@ import { ToastService } from '../../services/toast.service';
   styleUrls: ['./security-settings.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, FormsModule, RouterLink,
+    CommonModule, FormsModule,
     IonHeader, IonToolbar, IonContent,
     IonList, IonItem, IonToggle,
     IonSpinner

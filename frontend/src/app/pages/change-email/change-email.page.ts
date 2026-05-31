@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { NavController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
 import {
@@ -25,7 +25,7 @@ import { firstValueFrom } from 'rxjs';
   styleUrls: ['./change-email.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, FormsModule, RouterLink,
+    CommonModule, FormsModule,
     IonHeader, IonToolbar, IonContent,
     IonInput, IonSpinner
   ]

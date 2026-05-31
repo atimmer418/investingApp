@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { NavController } from '@ionic/angular';
 import {
   IonHeader,
@@ -46,7 +46,7 @@ import { ToastService } from '../services/toast.service';
   styleUrls: ['./beneficiaries.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, RouterLink,
+    CommonModule,
     IonHeader, IonToolbar, IonContent, IonIcon,
     IonBadge, IonProgressBar, IonSpinner,
     IonItemSliding, IonItem, IonItemOptions, IonItemOption

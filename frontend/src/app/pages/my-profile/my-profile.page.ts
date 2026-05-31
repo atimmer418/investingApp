@@ -13,7 +13,7 @@ import { ToastService } from '../../services/toast.service';
 import { PortfolioService } from '../../services/portfolio.service';
 import { AccountStatusService } from '../../services/account-status.service';
 import { MonthlyFreedomUpdateService } from '../../services/monthly-freedom-update.service';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -22,7 +22,7 @@ import { Observable } from 'rxjs';
   styleUrls: ['./my-profile.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, FormsModule, RouterLink,
+    CommonModule, FormsModule,
     IonContent, IonHeader, IonToolbar, IonIcon, IonAvatar
   ]
 })
