@@ -6,7 +6,7 @@
   <title>FRED ITPM Daily Brief</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet" />
   <style>
     :root {
       --blue: #2563EB;
@@ -57,10 +57,13 @@
     }
 
     .lock-wordmark {
-      font-size: 28px;
-      font-weight: 800;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 48px;
+      font-weight: 900;
+      font-style: italic;
       color: var(--blue);
-      letter-spacing: -0.5px;
+      letter-spacing: 0px;
+      line-height: 1;
       margin-bottom: 12px;
     }
 
@@ -705,7 +708,7 @@
       <div class="card">
         <div class="revision-label">Need different priorities? Describe changes here. Copy to clipboard, then paste into Claude Code to re-run.</div>
         <textarea class="revision-textarea" id="revision-textarea" placeholder="Describe what you'd like to change about today's priorities or approach..."></textarea>
-        <button class="btn-dark" id="revision-btn" onclick="copyRevision()">Copy &amp; Regenerate</button>
+        <button class="btn-dark" id="revision-btn" onclick="copyRevision()">Send Revision</button>
       </div>
     </div>
 
@@ -878,7 +881,6 @@
       var btn = document.getElementById('approve-btn');
       if (!btn.classList.contains('ready') || btn.classList.contains('approved')) return;
 
-      // Build approval message
       var selectedOptions = [];
       document.querySelectorAll('.option-card.selected').forEach(function(card) {
         var title = card.querySelector('.option-title');
@@ -892,23 +894,41 @@
         answers.push((labelEl ? labelEl.textContent.trim() : 'Question') + ': ' + input.value.trim());
       });
 
-      var approvalMessage = 'ITPM PLAN APPROVED — ' + formatDate(new Date()) + '\n\n';
-      if (selectedOptions.length > 0) {
-        approvalMessage += 'Selected Approach:\n' + selectedOptions.map(function(o) { return '- ' + o; }).join('\n') + '\n\n';
-      }
-      if (answers.length > 0) {
-        approvalMessage += 'Andrew\'s Answers:\n' + answers.join('\n') + '\n\n';
-      }
-      approvalMessage += 'Please proceed with implementation as planned.';
+      var content = 'Date: ' + formatDate(new Date());
+      if (selectedOptions.length > 0) content += '\n\nSelected Approach:\n' + selectedOptions.map(function(o) { return '- ' + o; }).join('\n');
+      if (answers.length > 0) content += '\n\nAndrew\'s Answers:\n' + answers.join('\n');
+      content += '\n\nProceed with implementation as planned.';
 
-      navigator.clipboard.writeText(approvalMessage).catch(function() {});
-
-      btn.textContent = '✓ Approved — Building...';
+      btn.textContent = 'Starting session...';
       btn.classList.add('approved');
       btn.classList.remove('ready');
       btn.disabled = true;
 
-      document.getElementById('approve-status').textContent = 'Plan approved. Paste the confirmation into Claude Code to begin execution.';
+      fetch('/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'approval', content: content })
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.ok) {
+            btn.textContent = '✓ Session started — Building...';
+            document.getElementById('approve-status').textContent = 'Claude is on it. Check your notifications when the build is done.';
+          } else {
+            btn.textContent = 'Approve / Get To Work';
+            btn.classList.remove('approved');
+            btn.classList.add('ready');
+            btn.disabled = false;
+            document.getElementById('approve-status').textContent = 'Failed to start session. Try again.';
+          }
+        })
+        .catch(function() {
+          btn.textContent = 'Approve / Get To Work';
+          btn.classList.remove('approved');
+          btn.classList.add('ready');
+          btn.disabled = false;
+          document.getElementById('approve-status').textContent = 'Connection error. Try again.';
+        });
     }
 
     // ─── Revision ─────────────────────────────────────────────────────────────
@@ -918,25 +938,30 @@
       var btn = document.getElementById('revision-btn');
       var content = textarea.value.trim();
 
-      if (!content) {
-        textarea.focus();
-        return;
-      }
+      if (!content) { textarea.focus(); return; }
 
-      var message = 'ITPM REVISION REQUEST — ' + formatDate(new Date()) + '\n\n' + content + '\n\nPlease re-run /itpm with this revision in mind.';
+      btn.textContent = 'Starting session...';
+      btn.disabled = true;
 
-      navigator.clipboard.writeText(message).then(function() {
-        var original = btn.textContent;
-        btn.textContent = '✓ Copied to clipboard';
-        setTimeout(function() {
-          btn.textContent = original;
-        }, 2500);
-      }).catch(function() {
-        btn.textContent = '✓ Copied to clipboard';
-        setTimeout(function() {
-          btn.textContent = 'Copy & Regenerate';
-        }, 2500);
-      });
+      fetch('/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'revision', content: content })
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.ok) {
+            btn.textContent = '✓ Revision sent — Regenerating...';
+            textarea.disabled = true;
+          } else {
+            btn.textContent = 'Send Revision';
+            btn.disabled = false;
+          }
+        })
+        .catch(function() {
+          btn.textContent = 'Send Revision';
+          btn.disabled = false;
+        });
     }
   </script>
 </body>
