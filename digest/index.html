@@ -3,278 +3,141 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Daily Digest</title>
+  <title>Claude Digest — 2026-05-31</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface-2: #22263a;
-      --border: #2a2e42;
-      --text: #e8eaf0;
-      --text-muted: #7c82a0;
-      --accent-releases: #5b8df6;
-      --accent-platform: #56c4a0;
-      --accent-x: #1da1f2;
-      --accent-releases-bg: rgba(91, 141, 246, 0.08);
-      --accent-platform-bg: rgba(86, 196, 160, 0.08);
-      --accent-x-bg: rgba(29, 161, 242, 0.08);
-      --tag-bg: #2a2e42;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-      font-size: 15px;
-      line-height: 1.6;
-      min-height: 100vh;
-      padding: 48px 24px 80px;
-    }
-
-    .container {
-      max-width: 680px;
-      margin: 0 auto;
-    }
-
-    @media (max-width: 600px) {
-      body { padding: 28px 16px 60px; font-size: 14px; }
-      h1 { font-size: 22px; }
-      .card-item { padding: 12px 14px; }
-      .section { margin-bottom: 24px; }
-      .divider { margin: 24px 0; }
-      header { margin-bottom: 28px; }
-    }
-
-    header {
-      margin-bottom: 40px;
-    }
-
-    .wordmark {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .wordmark-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #5b8df6, #a07cf6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-    }
-
-    .wordmark-text {
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
-
-    h1 {
-      font-size: 26px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--text);
-      line-height: 1.2;
-      margin-bottom: 8px;
-    }
-
-    .date-badge {
-      display: inline-block;
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 32px 0;
-    }
-
-    .section {
-      margin-bottom: 32px;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    .section-icon {
-      font-size: 16px;
-      line-height: 1;
-    }
-
-    .section-title {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
-
-    .section-count {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 20px;
-      background: var(--tag-bg);
-      color: var(--text-muted);
-      margin-left: auto;
-    }
-
-    .card {
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      overflow: hidden;
-    }
-
-    .card-item {
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .card-item:last-child {
-      border-bottom: none;
-    }
-
-    .card-item.releases { background: var(--accent-releases-bg); }
-    .card-item.platform { background: var(--accent-platform-bg); }
-    .card-item.x-post  { background: var(--accent-x-bg); }
-
-    .item-meta {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
-    }
-
-    .version-tag {
-      font-size: 12px;
-      font-weight: 700;
-      font-family: "SF Mono", "Fira Code", ui-monospace, monospace;
-      color: var(--accent-releases);
-    }
-
-    .item-time {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .item-handle {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--accent-x);
-    }
-
-    .item-body {
-      font-size: 14px;
-      color: var(--text);
-      line-height: 1.5;
-    }
-
-    .item-body a {
-      color: var(--accent-releases);
-      text-decoration: none;
-    }
-
-    .item-body a:hover {
-      text-decoration: underline;
-    }
-
-    .platform-date {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--accent-platform);
-    }
-
-    .empty-state {
-      padding: 20px 18px;
-      font-size: 13px;
-      color: var(--text-muted);
-      font-style: italic;
-    }
-
-    footer {
-      margin-top: 48px;
-      font-size: 12px;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .status-dot {
-      display: inline-block;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #56c4a0;
-      margin-right: 6px;
-    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0f1117;color:#e8eaf0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.6;padding:48px 24px 80px}
+    @media(max-width:600px){body{padding:28px 16px 60px;font-size:14px}}
+    .container{max-width:680px;margin:0 auto}
+    .wordmark{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+    .icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#5b8df6,#a07cf6);display:flex;align-items:center;justify-content:center;font-size:16px}
+    .wordmark-text{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#7c82a0}
+    h1{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+    @media(max-width:600px){h1{font-size:22px}}
+    .date-label{font-size:13px;color:#7c82a0}
+    hr{border:none;height:1px;background:#2a2e42;margin:32px 0}
+    @media(max-width:600px){hr{margin:24px 0}}
+    .section{margin-bottom:32px}
+    @media(max-width:600px){.section{margin-bottom:24px}}
+    .section-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .section-title{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7c82a0}
+    .card{border-radius:12px;border:1px solid #2a2e42;overflow:hidden}
+    .item{padding:14px 18px;border-bottom:1px solid #2a2e42}
+    @media(max-width:600px){.item{padding:12px 14px}}
+    .item:last-child{border-bottom:none}
+    .meta{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+    .version{font-size:12px;font-weight:700;font-family:ui-monospace,monospace;color:#5b8df6}
+    .handle{font-size:12px;font-weight:600;color:#1da1f2}
+    .tag{font-size:12px;font-weight:600;color:#56c4a0}
+    .ts{font-size:11px;color:#7c82a0}
+    .body{font-size:14px;color:#e8eaf0;line-height:1.5}
+    .quiet{font-size:14px;color:#7c82a0;font-style:italic}
+    .empty{padding:20px 18px;font-size:13px;color:#7c82a0;font-style:italic}
+    footer{margin-top:48px;font-size:12px;color:#7c82a0;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+    .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#56c4a0;margin-right:6px;vertical-align:middle}
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="wordmark">
-        <div class="wordmark-icon">🤖</div>
-        <span class="wordmark-text">Claude Daily Digest</span>
-      </div>
-      <h1 id="digest-headline">No digest yet</h1>
-      <span class="date-badge" id="digest-date">Waiting for first run — check back after 8 AM ET</span>
-    </header>
+<div class="container">
+  <header>
+    <div class="wordmark">
+      <div class="icon">🤖</div>
+      <span class="wordmark-text">Claude Daily Digest</span>
+    </div>
+    <h1>What's new in Claude</h1>
+    <span class="date-label">Sunday, May 31, 2026</span>
+  </header>
+  <hr />
 
-    <div class="divider"></div>
+  <section class="section">
+    <div class="section-head"><span>📦</span><span class="section-title">New Releases</span></div>
+    <div class="card">
+      <div class="item">
+        <div class="meta"><span class="version">v2.1.158</span><span class="ts">May 30, 2026</span></div>
+        <div class="body">Auto mode is now available on Bedrock, Vertex, and Foundry for Opus 4.7 and 4.8 — opt in with <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">CLAUDE_CODE_ENABLE_AUTO_MODE=1</code>.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="version">v2.1.157</span><span class="ts">May 29, 2026</span></div>
+        <div class="body">Plugins in <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">.claude/skills</code> directories now auto-load without marketplace requirements, and <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">claude plugin init &lt;name&gt;</code> scaffolds new plugins with autocomplete support.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="version">v2.1.156</span><span class="ts">May 29, 2026</span></div>
+        <div class="body">Fixed a bug where thinking blocks were modified when using Opus 4.8, which was causing API errors in multi-turn sessions.</div>
+      </div>
+    </div>
+  </section>
 
-    <section class="section" id="section-releases">
-      <div class="section-header">
-        <span class="section-icon">📦</span>
-        <span class="section-title">New Releases</span>
-        <span class="section-count" id="count-releases">—</span>
+  <section class="section">
+    <div class="section-head"><span>📰</span><span class="section-title">This Week</span></div>
+    <div class="card">
+      <div class="item">
+        <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
+        <div class="body"><strong>Claude Opus 4.8</strong> — Now the default model on Max, Team Premium, Enterprise pay-as-you-go, and the Anthropic API. Defaults to high effort; use <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">/effort xhigh</code> for the hardest tasks. Requires v2.1.154 or later.</div>
       </div>
-      <div class="card" id="releases-list">
-        <div class="empty-state">No data yet — runs daily at 8 AM ET.</div>
+      <div class="item">
+        <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
+        <div class="body"><strong>Dynamic workflows</strong> — Claude writes an orchestration script for your task and runs it across dozens to hundreds of subagents in parallel. Use it for codebase-wide audits, large migrations, or any task too big for one conversation — managed via <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">/workflows</code>.</div>
       </div>
-    </section>
+      <div class="item">
+        <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
+        <div class="body"><strong>Security guidance plugin</strong> — Runs a fast pattern check on each edit, a model review at end of each turn, and a deeper agentic review on commit or push. Install with <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">/plugin install security-guidance@claude-plugins-official</code>.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
+        <div class="body"><strong>Fast mode on Opus 4.8</strong> — Fast mode now defaults to Opus 4.8 at $10/$50 per MTok (~2.5x faster); Opus 4.7/4.6 fast mode pricing unchanged at $30/$150. Opus 4.6 fast mode is now deprecated.</div>
+      </div>
+    </div>
+  </section>
 
-    <section class="section" id="section-platform">
-      <div class="section-header">
-        <span class="section-icon">🔧</span>
-        <span class="section-title">Platform &amp; API Updates</span>
-        <span class="section-count" id="count-platform">—</span>
+  <section class="section">
+    <div class="section-head"><span>🔧</span><span class="section-title">Platform &amp; API</span></div>
+    <div class="card">
+      <div class="item">
+        <div class="meta"><span class="tag">May 28, 2026</span></div>
+        <div class="body"><strong>Claude Opus 4.8 launched</strong> — Most capable GA model with 1M token context window, 128k max output tokens, adaptive thinking (reasons only when needed), and a 1,024-token minimum for prompt caching. Effort defaults to <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">high</code> across all surfaces including the API.</div>
       </div>
-      <div class="card" id="platform-list">
-        <div class="empty-state">No data yet.</div>
+      <div class="item">
+        <div class="meta"><span class="tag">May 28, 2026</span></div>
+        <div class="body"><strong>Mid-conversation system messages</strong> — On Opus 4.8, you can now send <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">role: "system"</code> messages at non-first positions in the messages array, preserving prompt cache hits when instructions change mid-session.</div>
       </div>
-    </section>
+      <div class="item">
+        <div class="meta"><span class="tag">May 28, 2026</span></div>
+        <div class="body"><strong>Refusal categories in stop_details</strong> — Opus 4.8 now returns refusal categories when it declines a request, so applications can route different classes of refusal to the appropriate next step. No beta header required.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="tag">May 29, 2026</span></div>
+        <div class="body"><strong>Claude Managed Agents on AWS</strong> — Webhooks, multiagent orchestration, and self-hosted sandboxes are now available on Claude Platform on AWS, with new IAM actions and the <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">AnthropicSelfHostedEnvironmentAccess</code> managed policy.</div>
+      </div>
+    </div>
+  </section>
 
-    <section class="section" id="section-x">
-      <div class="section-header">
-        <span class="section-icon">𝕏</span>
-        <span class="section-title">From the Team</span>
-        <span class="section-count" id="count-x">—</span>
+  <section class="section">
+    <div class="section-head"><span>𝕏</span><span class="section-title">From the Team</span></div>
+    <div class="card">
+      <div class="item">
+        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">May 28, 2026</span></div>
+        <div class="body">Announced dynamic workflows — Claude writes an orchestration script on the fly, then spins up a large fleet of coordinated subagents in parallel. Available in research preview in CLI, Desktop, and VS Code for Max, Team, and Enterprise plans, and on the Claude API, Bedrock, Vertex AI, and Foundry.</div>
       </div>
-      <div class="card" id="x-list">
-        <div class="empty-state">No data yet.</div>
+      <div class="item">
+        <div class="meta"><span class="handle">@claudeai</span><span class="ts">May 28, 2026</span></div>
+        <div class="body">Opus 4.8 is here — the new most capable generally available Claude model. Also: Claude Design (a new Anthropic Labs product for visual outputs and prototypes) launched with Opus 4.7, and Anthropic doubled rate limits on Claude Code for developers at scale.</div>
       </div>
-    </section>
+      <div class="item">
+        <div class="meta"><span class="handle">@bcherny</span><span class="ts">May 19, 2026</span></div>
+        <div class="body">"Hello from Code with Claude London!" — Boris Cherny, creator of Claude Code, posted from the London leg of the Code with Claude 2026 developer conference. He's also noted he hasn't written a single line of code himself in 2026.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="handle">@trq212</span><span class="ts">Late April 2026</span></div>
+        <div class="body"><span class="quiet">Quiet this week.</span> Last notable post: responded to the HERMES.md billing bug incident in late April, announcing refunds and an additional month of credit for affected users.</div>
+      </div>
+    </div>
+  </section>
 
-    <div class="divider"></div>
-
-    <footer>
-      <span><span class="status-dot"></span>digest.fredvested.com</span>
-      <span id="footer-generated">Not yet generated</span>
-    </footer>
-  </div>
+  <hr />
+  <footer>
+    <span><span class="dot"></span>digest.fredvested.com</span>
+    <span>Generated 2026-05-31 at 8:00 AM ET</span>
+  </footer>
+</div>
 </body>
 </html>
