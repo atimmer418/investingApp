@@ -54,15 +54,15 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="version">v2.1.158</span><span class="ts">May 30, 2026</span></div>
-        <div class="body">Auto mode is now available on Bedrock, Vertex, and Foundry for Opus 4.7 and 4.8 — opt in with <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">CLAUDE_CODE_ENABLE_AUTO_MODE=1</code>.</div>
+        <div class="body">Auto mode is now available on Bedrock, Vertex, and Foundry for Opus 4.7 and Opus 4.8 — opt in with <code style="font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace">CLAUDE_CODE_ENABLE_AUTO_MODE=1</code>.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="version">v2.1.157</span><span class="ts">May 29, 2026</span></div>
-        <div class="body">Plugins in <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">.claude/skills</code> directories now auto-load without marketplace requirements, and <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">claude plugin init &lt;name&gt;</code> scaffolds new plugins with autocomplete support.</div>
+        <div class="body">Plugins in <code style="font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace">.claude/skills</code> directories now auto-load without the marketplace, and a new <code style="font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace">claude plugin init &lt;name&gt;</code> command scaffolds new plugins with autocomplete for all subcommands.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="version">v2.1.156</span><span class="ts">May 29, 2026</span></div>
-        <div class="body">Fixed a bug where thinking blocks were modified when using Opus 4.8, which was causing API errors in multi-turn sessions.</div>
+        <div class="body">Hotfix: resolved a thinking-block modification issue that occurred when using Opus 4.8 in extended thinking mode.</div>
       </div>
     </div>
   </section>
@@ -72,19 +72,19 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong>Claude Opus 4.8</strong> — Now the default model on Max, Team Premium, Enterprise pay-as-you-go, and the Anthropic API. Defaults to high effort; use <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">/effort xhigh</code> for the hardest tasks. Requires v2.1.154 or later.</div>
+        <div class="body"><strong style="color:#e8eaf0">Claude Opus 4.8</strong> is now the default model for Max, Team Premium, Enterprise pay-as-you-go, and Anthropic API accounts — high effort on by default, with <code style="font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace">/effort xhigh</code> available for the hardest tasks.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong>Dynamic workflows</strong> — Claude writes an orchestration script for your task and runs it across dozens to hundreds of subagents in parallel. Use it for codebase-wide audits, large migrations, or any task too big for one conversation — managed via <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">/workflows</code>.</div>
+        <div class="body"><strong style="color:#e8eaf0">Dynamic Workflows</strong> (research preview) let Claude write an orchestration script on the fly and spin up dozens to hundreds of coordinated subagents in parallel — results are verified before folding in, and the run iterates until answers converge.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong>Security guidance plugin</strong> — Runs a fast pattern check on each edit, a model review at end of each turn, and a deeper agentic review on commit or push. Install with <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">/plugin install security-guidance@claude-plugins-official</code>.</div>
+        <div class="body"><strong style="color:#e8eaf0">Security-guidance plugin</strong> reviews Claude's own changes for vulnerabilities as it works — runs inline without interrupting your flow.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong>Fast mode on Opus 4.8</strong> — Fast mode now defaults to Opus 4.8 at $10/$50 per MTok (~2.5x faster); Opus 4.7/4.6 fast mode pricing unchanged at $30/$150. Opus 4.6 fast mode is now deprecated.</div>
+        <div class="body"><strong style="color:#e8eaf0">Fast mode on Opus 4.8</strong> is now priced at $10/$50 per MTok and is the default for Max plan users, delivering up to 2.5× faster output generation.</div>
       </div>
     </div>
   </section>
@@ -93,20 +93,20 @@
     <div class="section-head"><span>🔧</span><span class="section-title">Platform &amp; API</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="tag">May 28, 2026</span></div>
-        <div class="body"><strong>Claude Opus 4.8 launched</strong> — Most capable GA model with 1M token context window, 128k max output tokens, adaptive thinking (reasons only when needed), and a 1,024-token minimum for prompt caching. Effort defaults to <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">high</code> across all surfaces including the API.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="tag">May 28, 2026</span></div>
-        <div class="body"><strong>Mid-conversation system messages</strong> — On Opus 4.8, you can now send <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">role: "system"</code> messages at non-first positions in the messages array, preserving prompt cache hits when instructions change mid-session.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="tag">May 28, 2026</span></div>
-        <div class="body"><strong>Refusal categories in stop_details</strong> — Opus 4.8 now returns refusal categories when it declines a request, so applications can route different classes of refusal to the appropriate next step. No beta header required.</div>
-      </div>
-      <div class="item">
         <div class="meta"><span class="tag">May 29, 2026</span></div>
-        <div class="body"><strong>Claude Managed Agents on AWS</strong> — Webhooks, multiagent orchestration, and self-hosted sandboxes are now available on Claude Platform on AWS, with new IAM actions and the <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-size:12px">AnthropicSelfHostedEnvironmentAccess</code> managed policy.</div>
+        <div class="body">Claude Managed Agents <strong style="color:#e8eaf0">webhooks</strong>, <strong style="color:#e8eaf0">multiagent orchestration</strong>, and <strong style="color:#e8eaf0">self-hosted sandboxes</strong> are now available on Claude Platform on AWS, with new IAM actions and the <code style="font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace">AnthropicSelfHostedEnvironmentAccess</code> managed policy.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="tag">May 28, 2026</span></div>
+        <div class="body"><strong style="color:#e8eaf0">Claude Opus 4.8</strong> launched with a 1M token context window by default, 128k max output tokens, mid-conversation system messages, refusal categories in <code style="font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace">stop_details</code>, and a lower 1,024-token minimum for prompt caching.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="tag">May 28, 2026</span></div>
+        <div class="body"><strong style="color:#e8eaf0">Adaptive thinking</strong> on Opus 4.8 triggers reasoning only when a turn needs it, cutting wasted thinking tokens vs. Opus 4.7 at the same effort level.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="tag">May 28, 2026</span></div>
+        <div class="body"><strong style="color:#e8eaf0">Workflows</strong> are available as a research preview in Claude Code, letting you define and run multi-step agentic plans. Fast mode for Opus 4.6 is now deprecated (removal ~30 days after launch).</div>
       </div>
     </div>
   </section>
@@ -116,19 +116,19 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">May 28, 2026</span></div>
-        <div class="body">Announced dynamic workflows — Claude writes an orchestration script on the fly, then spins up a large fleet of coordinated subagents in parallel. Available in research preview in CLI, Desktop, and VS Code for Max, Team, and Enterprise plans, and on the Claude API, Bedrock, Vertex AI, and Foundry.</div>
+        <div class="body">Announced Dynamic Workflows in research preview — Claude plans dynamically, fans work out across subagents in parallel, agents refute each other's findings, and the run iterates until answers converge. Available on all paid Claude Code plans.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="handle">@claudeai</span><span class="ts">May 28, 2026</span></div>
-        <div class="body">Opus 4.8 is here — the new most capable generally available Claude model. Also: Claude Design (a new Anthropic Labs product for visual outputs and prototypes) launched with Opus 4.7, and Anthropic doubled rate limits on Claude Code for developers at scale.</div>
+        <div class="body">Claude Opus 4.8 is here — the most capable generally available Claude model, now the default on Max and Team Premium. Also: Claude Design doubled its monthly token limits on May 18, and the Code with Claude conference wrapped up in London.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="handle">@bcherny</span><span class="ts">May 19, 2026</span></div>
-        <div class="body">"Hello from Code with Claude London!" — Boris Cherny, creator of Claude Code, posted from the London leg of the Code with Claude 2026 developer conference. He's also noted he hasn't written a single line of code himself in 2026.</div>
+        <div class="body">"Hello from Code with Claude London!" — Boris Cherny (creator of Claude Code) posted from the London developer conference. He's also noted publicly that he hasn't written a single line of code himself in 2026.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@trq212</span><span class="ts">Late April 2026</span></div>
-        <div class="body"><span class="quiet">Quiet this week.</span> Last notable post: responded to the HERMES.md billing bug incident in late April, announcing refunds and an additional month of credit for affected users.</div>
+        <div class="meta"><span class="handle">@trq212</span><span class="ts">—</span></div>
+        <div class="body"><span class="quiet">Quiet recently. Last notable post was in January 2026, clarifying policy on third-party Claude harnesses: supported path is the API, not OAuth subscription access.</span></div>
       </div>
     </div>
   </section>
