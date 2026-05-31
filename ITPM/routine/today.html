@@ -726,13 +726,6 @@
       return days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
     }
 
-    function getExpectedPassword() {
-      var d = new Date();
-      var m = String(d.getMonth() + 1).padStart(2, '0');
-      var day = String(d.getDate()).padStart(2, '0');
-      return m + 'FR3D' + String.fromCharCode(36) + 'aG00Db0y' + day;
-    }
-
     // ─── Auth key (date-scoped — resets automatically each new day/deploy) ──────
 
     function getAuthKey() {
@@ -776,18 +769,40 @@
     function attemptUnlock() {
       var input = document.getElementById('password-input');
       var errorMsg = document.getElementById('error-msg');
+      var btn = document.getElementById('unlock-btn');
       var value = input.value;
+      if (!value) return;
 
-      if (value === getExpectedPassword()) {
-        saveAuth();
-        document.getElementById('lock-overlay').style.display = 'none';
-        errorMsg.classList.remove('visible');
-        checkApproveReady();
-      } else {
-        errorMsg.classList.add('visible');
-        input.value = '';
-        input.focus();
-      }
+      btn.textContent = 'Verifying...';
+      btn.disabled = true;
+
+      fetch('/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: value })
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.ok) {
+            saveAuth();
+            document.getElementById('lock-overlay').style.display = 'none';
+            errorMsg.classList.remove('visible');
+            checkApproveReady();
+          } else {
+            errorMsg.classList.add('visible');
+            input.value = '';
+            input.focus();
+            btn.textContent = 'Unlock Dashboard';
+            btn.disabled = false;
+          }
+        })
+        .catch(function() {
+          errorMsg.classList.add('visible');
+          input.value = '';
+          input.focus();
+          btn.textContent = 'Unlock Dashboard';
+          btn.disabled = false;
+        });
     }
 
     // Allow Enter key on password input
