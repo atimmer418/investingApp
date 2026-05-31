@@ -733,6 +733,21 @@
       return m + 'FR3D' + String.fromCharCode(36) + 'aG00Db0y' + day;
     }
 
+    // ─── Auth key (date-scoped — resets automatically each new day/deploy) ──────
+
+    function getAuthKey() {
+      var d = new Date();
+      return 'itpm_auth_' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function isAuthenticated() {
+      try { return localStorage.getItem(getAuthKey()) === 'true'; } catch(e) { return false; }
+    }
+
+    function saveAuth() {
+      try { localStorage.setItem(getAuthKey(), 'true'); } catch(e) {}
+    }
+
     // ─── Init ─────────────────────────────────────────────────────────────────
 
     (function init() {
@@ -741,6 +756,12 @@
       var headerDate = document.getElementById('header-date');
       if (overlayDate) overlayDate.textContent = formatted;
       if (headerDate) headerDate.textContent = formatted;
+
+      // Skip lock screen if already authenticated today
+      if (isAuthenticated()) {
+        document.getElementById('lock-overlay').style.display = 'none';
+        checkApproveReady();
+      }
     })();
 
     // ─── Lock / Unlock ────────────────────────────────────────────────────────
@@ -758,6 +779,7 @@
       var value = input.value;
 
       if (value === getExpectedPassword()) {
+        saveAuth();
         document.getElementById('lock-overlay').style.display = 'none';
         errorMsg.classList.remove('visible');
         checkApproveReady();
