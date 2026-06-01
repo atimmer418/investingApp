@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Digest — 2026-05-31</title>
+  <title>Claude Digest — 2026-06-01</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#0f1117;color:#e8eaf0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.6;padding:48px 24px 80px}
@@ -45,7 +45,7 @@
       <span class="wordmark-text">Claude Daily Digest</span>
     </div>
     <h1>What's new in Claude</h1>
-    <span class="date-label">Sunday, May 31, 2026</span>
+    <span class="date-label">Sunday, June 1, 2026</span>
   </header>
   <hr />
 
@@ -53,16 +53,16 @@
     <div class="section-head"><span>📦</span><span class="section-title">New Releases</span></div>
     <div class="card">
       <div class="item">
+        <div class="meta"><span class="version">v2.1.159</span><span class="ts">May 31, 2026</span></div>
+        <div class="body">Internal infrastructure improvements with no user-facing changes.</div>
+      </div>
+      <div class="item">
         <div class="meta"><span class="version">v2.1.158</span><span class="ts">May 30, 2026</span></div>
-        <div class="body">Auto mode is now available on Bedrock, Vertex, and Foundry for Opus 4.7 and Opus 4.8 — opt in with <code style="font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace">CLAUDE_CODE_ENABLE_AUTO_MODE=1</code>.</div>
+        <div class="body">Auto mode is now available on Bedrock, Vertex, and Foundry for Opus 4.7 and Opus 4.8 — opt in with <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">CLAUDE_CODE_ENABLE_AUTO_MODE=1</code>.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="version">v2.1.157</span><span class="ts">May 29, 2026</span></div>
-        <div class="body">Plugins in <code style="font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace">.claude/skills</code> directories now auto-load without the marketplace, and a new <code style="font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace">claude plugin init &lt;name&gt;</code> command scaffolds new plugins with autocomplete for all subcommands.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="version">v2.1.156</span><span class="ts">May 29, 2026</span></div>
-        <div class="body">Hotfix: resolved a thinking-block modification issue that occurred when using Opus 4.8 in extended thinking mode.</div>
+        <div class="body">Plugins in <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">.claude/skills</code> directories now auto-load without a marketplace requirement; new <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">claude plugin init</code> scaffolding command included.</div>
       </div>
     </div>
   </section>
@@ -71,20 +71,20 @@
     <div class="section-head"><span>📰</span><span class="section-title">This Week</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong style="color:#e8eaf0">Claude Opus 4.8</strong> is now the default model for Max, Team Premium, Enterprise pay-as-you-go, and Anthropic API accounts — high effort on by default, with <code style="font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace">/effort xhigh</code> available for the hardest tasks.</div>
+        <div class="meta"><span class="tag">Week 22 · May 25–29</span></div>
+        <div class="body"><strong>Claude Opus 4.8</strong> is the new default model for Max, Team Premium, Enterprise pay-as-you-go, and Anthropic API accounts, with high effort by default and <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">/effort xhigh</code> for the hardest tasks.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong style="color:#e8eaf0">Dynamic Workflows</strong> (research preview) let Claude write an orchestration script on the fly and spin up dozens to hundreds of coordinated subagents in parallel — results are verified before folding in, and the run iterates until answers converge.</div>
+        <div class="meta"><span class="tag">Week 22 · May 25–29</span></div>
+        <div class="body"><strong>Dynamic workflows</strong> let Claude write a script that orchestrates dozens to hundreds of subagents, enabling large-scale parallel agentic work from a single session.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong style="color:#e8eaf0">Security-guidance plugin</strong> reviews Claude's own changes for vulnerabilities as it works — runs inline without interrupting your flow.</div>
+        <div class="meta"><span class="tag">Week 22 · May 25–29</span></div>
+        <div class="body">The new <strong>security-guidance plugin</strong> reviews Claude's own changes for vulnerabilities as it works, catching issues before they land in your codebase.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong style="color:#e8eaf0">Fast mode on Opus 4.8</strong> is now priced at $10/$50 per MTok and is the default for Max plan users, delivering up to 2.5× faster output generation.</div>
+        <div class="meta"><span class="tag">Week 22 · May 25–29</span></div>
+        <div class="body"><strong>Fast mode</strong> now runs on Opus 4.8 at $10/$50 per MTok, bringing the speed tier to the newest frontier model.</div>
       </div>
     </div>
   </section>
@@ -94,19 +94,19 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="tag">May 29, 2026</span></div>
-        <div class="body">Claude Managed Agents <strong style="color:#e8eaf0">webhooks</strong>, <strong style="color:#e8eaf0">multiagent orchestration</strong>, and <strong style="color:#e8eaf0">self-hosted sandboxes</strong> are now available on Claude Platform on AWS, with new IAM actions and the <code style="font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace">AnthropicSelfHostedEnvironmentAccess</code> managed policy.</div>
+        <div class="body">Claude Managed Agents webhooks, multiagent orchestration, and self-hosted sandboxes are now available on Claude Platform on AWS, with new IAM actions and the <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">AnthropicSelfHostedEnvironmentAccess</code> managed policy.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">May 28, 2026</span></div>
-        <div class="body"><strong style="color:#e8eaf0">Claude Opus 4.8</strong> launched with a 1M token context window by default, 128k max output tokens, mid-conversation system messages, refusal categories in <code style="font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace">stop_details</code>, and a lower 1,024-token minimum for prompt caching.</div>
+        <div class="body"><strong>Claude Opus 4.8</strong> launched with a 1M token context window, 128k max output, adaptive thinking, lower 1,024-token prompt cache threshold, and refusal categories in <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">stop_details</code>. Effort defaults to <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">high</code> across all surfaces.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">May 28, 2026</span></div>
-        <div class="body"><strong style="color:#e8eaf0">Adaptive thinking</strong> on Opus 4.8 triggers reasoning only when a turn needs it, cutting wasted thinking tokens vs. Opus 4.7 at the same effort level.</div>
+        <div class="body">In Claude Code: Auto mode expanded to more users, Max plan users default to fast mode on Opus 4.8, and <strong>Workflows</strong> are available as a research preview for defining multi-step agentic plans.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">May 28, 2026</span></div>
-        <div class="body"><strong style="color:#e8eaf0">Workflows</strong> are available as a research preview in Claude Code, letting you define and run multi-step agentic plans. Fast mode for Opus 4.6 is now deprecated (removal ~30 days after launch).</div>
+        <div class="body"><strong>Mid-conversation system messages</strong> now available on Opus 4.8 — send <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">role: "system"</code> at non-first positions to update instructions while preserving prompt cache hits. Fast mode for Opus 4.6 deprecated (~30-day removal window).</div>
       </div>
     </div>
   </section>
@@ -115,20 +115,20 @@
     <div class="section-head"><span>𝕏</span><span class="section-title">From the Team</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">May 28, 2026</span></div>
-        <div class="body">Announced Dynamic Workflows in research preview — Claude plans dynamically, fans work out across subagents in parallel, agents refute each other's findings, and the run iterates until answers converge. Available on all paid Claude Code plans.</div>
+        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">May 15, 2026</span></div>
+        <div class="body">Reset everyone's 5-hour and weekly rate limits, restoring full quotas to every Pro, Max, Team, and Enterprise subscriber. Also announced the new <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">/goal</code> command that keeps Claude working toward a completion condition across turns.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@claudeai</span><span class="ts">May 28, 2026</span></div>
-        <div class="body">Claude Opus 4.8 is here — the most capable generally available Claude model, now the default on Max and Team Premium. Also: Claude Design doubled its monthly token limits on May 18, and the Code with Claude conference wrapped up in London.</div>
+        <div class="meta"><span class="handle">@claudeai</span><span class="ts">May 2026</span></div>
+        <div class="body">Highlighted Computer Use (research preview on Pro and Max), Managed Agents with Dreaming — letting agents review past sessions to self-improve memory — and enterprise admin groups with per-team capability controls.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@bcherny</span><span class="ts">May 19, 2026</span></div>
-        <div class="body">"Hello from Code with Claude London!" — Boris Cherny (creator of Claude Code) posted from the London developer conference. He's also noted publicly that he hasn't written a single line of code himself in 2026.</div>
+        <div class="meta"><span class="handle">@bcherny</span><span class="ts">May 2026</span></div>
+        <div class="body">Shared that code output per Anthropic engineer is up 200% in 2026 since launching the new Code Review feature — a team of agents that runs a deep review on every PR. Boris says he hasn't written a line of code himself this year, and ships 20–30 PRs a day running 5 parallel Claude instances.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@trq212</span><span class="ts">—</span></div>
-        <div class="body"><span class="quiet">Quiet recently. Last notable post was in January 2026, clarifying policy on third-party Claude harnesses: supported path is the API, not OAuth subscription access.</span></div>
+        <div class="meta"><span class="handle">@trq212</span><span class="ts">2026</span></div>
+        <div class="body">Noted that many at Anthropic use Claude Code as a general-purpose agent, not just for code — and that he now uses it to help with almost all the work he does, not just engineering tasks.</div>
       </div>
     </div>
   </section>
@@ -136,7 +136,7 @@
   <hr />
   <footer>
     <span><span class="dot"></span>digest.fredvested.com</span>
-    <span>Generated 2026-05-31 at 8:00 AM ET</span>
+    <span>Generated 2026-06-01 at 8:00 AM ET</span>
   </footer>
 </div>
 </body>
