@@ -153,7 +153,7 @@ add referral progress bar, make it eye catching
 5. Falls back to N=3 if FRED-114 dynamic threshold not yet shipped.
 6. `npx tsc --noEmit` exits 0.
 
-## FRED-116 — Prompt users for review after first MFU
+## FRED-116 — ✓ Prompt users for review after first MFU
 prompt users to leave a review after first monthly freedom update
 
 ### Acceptance Criteria
@@ -163,7 +163,7 @@ prompt users to leave a review after first monthly freedom update
 4. Prompt fires after `modalController.dismiss()` completes — does not block or delay the modal close.
 5. `npx tsc --noEmit` exits 0.
 
-## FRED-117 — First-time tour ending with what's your story
+## FRED-117 — ✓ First-time tour ending with what's your story
 make a first time tour that ends with what's your story fred
 
 ### Acceptance Criteria
