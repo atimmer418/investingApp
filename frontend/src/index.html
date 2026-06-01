@@ -37,6 +37,18 @@
   </div>
   <script>
     (function() {
+      // Emergency backstop: if Angular never bootstraps (e.g. main.js 404s during a
+      // dev-server rebuild), hide the cover after 20 s so the user isn't permanently
+      // trapped. In production Angular always loads; this never fires there.
+      var _coverHideTimer = setTimeout(function() {
+        var cover = document.getElementById('app-resume-cover');
+        if (cover && cover.style.display !== 'none') cover.style.display = 'none';
+      }, 20000);
+
+      // Expose a cancel hook so AppComponent can cancel the timer once Angular is up.
+      window._cancelCoverHideTimer = function() { clearTimeout(_coverHideTimer); };
+
+
       var s = document.createElement('script');
       s.src = 'assets/lottie/lottie-web.min.js';
       s.onload = function() {
@@ -44,7 +56,10 @@
         var container = document.getElementById('app-resume-cover-lottie');
         var fallback = document.getElementById('app-resume-cover-fallback');
         if (!container) return;
-        window.lottie.loadAnimation({
+        // Store reference so showAppCover() can call .play() to resume the animation
+        // after the cover was hidden (display:none causes lottie-web to pause the
+        // animation; without an explicit play() the frame stays frozen on iOS).
+        window._fredCoverAnim = window.lottie.loadAnimation({
           container: container,
           path: 'assets/lottie/coin-drop.json',
           renderer: 'svg',

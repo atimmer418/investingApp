@@ -120,11 +120,31 @@ export class AppComponent implements OnInit {
       // this.simulateUserLogin('test@test.com');
     }
 
+    // DEV ONLY: ?devPage=/some-route logs in as the default dev user and then navigates
+    // directly to the specified page (bypasses navigateBasedOnProgress).
+    // e.g. http://localhost:8100?devPage=/survey-initial
+    const devPage = !environment.production ? urlParams.get('devPage') : null;
+    if (devPage) {
+      this.simulateUserLoginToPage('facebook@gmail.com', devPage);
+      return;
+    }
+
     // On background resume with no lock needed: re-check current route so
     // navigateBasedOnProgress() can hide the cover (same-route early return or navigation).
     this.appLockService.resumeNoLock$.subscribe(() => {
       requestAnimationFrame(() => this.checkSurveyStatusAndNavigate());
     });
+
+    // Emergency safety net: if the cover is still visible after 12 s (e.g. the dev
+    // server restarted and loadUserProgress() timed out before the timeout operator was
+    // introduced, or any other stuck-cover edge case) force-hide it so the user is
+    // never permanently trapped behind a white screen. Skip if the app is locked
+    // (passkey modal is up) — that modal owns the screen intentionally.
+    setTimeout(() => {
+      if (!this.appLockService.isCurrentlyLocked()) {
+        this.appLockService.hideAllCovers();
+      }
+    }, 12_000);
 
     // Set up the single navigation subscription
     this.setupNavigationLogic();
@@ -134,7 +154,26 @@ export class AppComponent implements OnInit {
    * DEV ONLY: Simulate logging in as an existing user.
    * Only calls handleSuccessfulAuthentication (which stores JWT once and loads progress once).
    */
+  /** DEV ONLY: Log in as a dev user and navigate directly to a specific page. */
+  private simulateUserLoginToPage(email: string, page: string): void {
+    this.authService.logout();
+    this.authService.authenticateAsUser(email).subscribe({
+      next: (response) => {
+        if (response?.success && response.jwtToken) {
+          this.authService.handleSuccessfulAuthentication(response.jwtToken, response.id!, response.email!);
+          this.router.navigateByUrl(page, { replaceUrl: true }).finally(() => {
+            this.appLockService.hideAllCovers();
+          });
+        }
+      },
+      error: () => this.router.navigate(['/get-started'], { replaceUrl: true })
+    });
+  }
+
   private simulateUserLogin(email?: string, userHandle?: string): void {
+    // Clear any stale session so AppLockService doesn't race ahead and show the passkey modal
+    // while the HTTP request is in-flight.
+    this.authService.logout();
     this.authService.authenticateAsUser(email, userHandle).subscribe({
       next: (response) => {
         if (response?.success && response.jwtToken) {
@@ -284,7 +323,13 @@ export class AppComponent implements OnInit {
 
   checkSurveyStatusAndNavigate(): void {
     const progress = this.authService.getCurrentProgress();
-    if (!progress) return;
+    if (!progress) {
+      // Progress is still loading from backend (userProgress$ was reset to null by
+      // handleSuccessfulAuthentication). resumeNoLock$ already confirmed no lock is
+      // needed, so hide the cover now rather than waiting for setupNavigationLogic.
+      this.hideCoversWhenReady();
+      return;
+    }
     this.navigateBasedOnProgress(progress);
   }
 }

@@ -3,6 +3,7 @@ package com.investingapp.backend.service;
 import com.investingapp.backend.dto.CreateAlpacaAccountRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpEntity;
@@ -40,7 +41,7 @@ public class AlpacaApiService {
             @Value("${alpaca.broker.base-url:https://broker-api.sandbox.alpaca.markets/v1}") String brokerBaseUrl,
             @Value("${alpaca.trading.base-url:https://paper-api.alpaca.markets/v2}") String tradingBaseUrl,
             AlpacaService alpacaService) {
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory());
         this.objectMapper = new ObjectMapper();
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
@@ -637,7 +638,6 @@ public class AlpacaApiService {
             Map<String, Object> identity = new HashMap<>();
             if (request.getGivenName() != null)     identity.put("given_name", request.getGivenName());
             if (request.getFamilyName() != null)    identity.put("family_name", request.getFamilyName());
-            if (request.getDateOfBirth() != null)   identity.put("date_of_birth", request.getDateOfBirth());
             if (request.getFundingSource() != null) identity.put("funding_source", request.getFundingSource());
 
             Map<String, Object> disclosures = new HashMap<>();

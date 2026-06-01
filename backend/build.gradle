@@ -37,7 +37,8 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5' // Or latest 0.11.x or 0.12.x if available and compatible
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'  // Choose one implementation
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // For Jackson JSON processing with JWTs
-	implementation 'org.springframework:spring-webflux' // For WebClient PATCH support
+	implementation 'org.apache.httpcomponents.client5:httpclient5' // Required for RestTemplate PATCH support
+	implementation 'org.springframework:spring-webflux' // For WebClient / AI token streaming
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.mysql:mysql-connector-j'

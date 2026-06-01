@@ -189,5 +189,19 @@ Spawn agents automatically for non-trivial tasks:
 
 For simple, targeted edits (single file, obvious change) you may implement directly without agents.
 
+### Bypassing Onboarding for Testing
+To skip onboarding and land directly in the app as a logged-in user, uncomment this line in `frontend/src/app/app.component.ts` (~line 130):
+```ts
+// this.simulateUserLogin('facebook@gmail.com');
+```
+Re-comment it when testing is complete. This logs in as the dev user and lets `navigateBasedOnProgress` drive to the correct screen for that user's state.
+
+**Testing a specific onboarding page** (verifier agent or manual): add `?devPage=/route-name` to the URL — no code changes needed:
+```
+http://localhost:8100?devPage=/survey-initial
+http://localhost:8100?devPage=/kyc-verification
+```
+This logs in as `facebook@gmail.com`, bypasses the progress redirect, and lands directly on the specified page with a valid JWT. Works for any route — onboarding pages, tab pages, etc.
+
 ### Periodic Review
 Every ~10 stories, re-read `.claude/agents/*.md` and ask: which Hard Rule has never triggered? Which tool has never been used? Which step is the model now smart enough to skip? Prune ruthlessly. Also promote any accumulated items in `.claude/agent-memory/findings.md` into the relevant sections of CONTEXT.md.

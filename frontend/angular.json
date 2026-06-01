@@ -73,7 +73,10 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
-              "namedChunks": true
+              "namedChunks": true,
+              "define": {
+                "FRED_BUILD": "\"v2\""
+              }
             },
             "dev": {
               "fileReplacements": [

@@ -156,9 +156,16 @@ export class AppLockService {
 
   private async handleAppStateChange(state: AppState) {
     if (!state.isActive) {
-      // Skip the cover if the auth modal is already open — the passkey/FaceID system
-      // sheet briefly resigns app-active state, and covering here would bury the modal.
-      if (!this.isModalOpen) {
+      // Skip the cover if:
+      // 1. The auth modal is open — the passkey/FaceID sheet briefly resigns active state,
+      //    and covering here would bury the modal.
+      // 2. We just unlocked within 5 s — iOS fires a cleanup appStateChange(false) 1-2 s
+      //    after ASAuthorizationController finishes, by which time isModalOpen is already
+      //    false but the passkey handoff is still completing. Without this guard the cover
+      //    appears over the live app and never gets hidden (checkSurveyStatusAndNavigate
+      //    bails early because userProgress$ is still null during loadUserProgress()).
+      const withinUnlockGrace = Date.now() - this.lastUnlockTime < 5000;
+      if (!this.isModalOpen && !withinUnlockGrace) {
         this.showAppCover();
       }
       this.lastActiveTime = Date.now();
@@ -192,6 +199,15 @@ export class AppLockService {
       document.body.appendChild(cover);
     }
     cover.style.display = 'flex';
+    // lottie-web pauses the coin-drop animation when display:none hides its container.
+    // iOS's IntersectionObserver callback fires asynchronously, so the animation can
+    // appear frozen (stuck on the first frame, which looks like a static piggybank)
+    // when the cover is shown again. Explicitly calling play() here ensures the
+    // animation always restarts regardless of whether the IO fired yet.
+    const coverAnim = (window as any)._fredCoverAnim;
+    if (coverAnim && typeof coverAnim.play === 'function') {
+      coverAnim.play();
+    }
   }
 
   hideAppCover() {

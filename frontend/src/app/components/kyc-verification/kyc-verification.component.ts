@@ -150,6 +150,10 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
       // SSN is not editable via KYC update — remove its validators
       this.step1Form.get('taxId')?.clearValidators();
       this.step1Form.get('taxId')?.updateValueAndValidity();
+      // User already agreed during sign-up — pre-check and lock the checkbox
+      const agreementsCtrl = this.step2Form.get('agreementsChecked');
+      agreementsCtrl?.setValue(true);
+      agreementsCtrl?.disable();
       this.loadKycDataForEdit();
     } else {
       this.prefillUserData();
@@ -401,7 +405,9 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
   }
 
   goBack() {
-    if (this.editMode) {
+    if (this.editMode && this.currentStep === 2) {
+      this.currentStep = 1;
+    } else if (this.editMode) {
       this.navCtrl.navigateBack('/security-settings');
     } else {
       this.navCtrl.navigateBack('/auth-finalize');
@@ -500,9 +506,6 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
       postalCode: s1.postalCode ? s1.postalCode.slice(0, 5) : undefined,
       givenName: s1.givenName ?? undefined,
       familyName: s1.familyName ?? undefined,
-      dateOfBirth: s1.dateOfBirth
-        ? (() => { const [mm, dd, yyyy] = s1.dateOfBirth.split('/'); return `${yyyy}-${mm}-${dd}`; })()
-        : undefined,
       fundingSource: s1.fundingSource ? [s1.fundingSource] : undefined,
       isControlPerson: s2.isControlPerson ?? false,
       isAffiliatedExchangeOrFinra: s2.isAffiliatedExchangeOrFinra ?? false,

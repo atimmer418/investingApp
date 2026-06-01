@@ -6,6 +6,7 @@ import { get } from '@github/webauthn-json';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { NativePasskeyService } from '../../services/native-passkey.service';
+import { timeout } from 'rxjs';
 
 @Component({
   selector: 'app-passkey-prompt',
@@ -45,33 +46,48 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     const lottie = (window as any).lottie;
-    if (!lottie) {
-      // Lottie unavailable — unblock native overlay and proceed with auth
-      setTimeout(() => {
-        this.zone.run(() => {
-          this.onLottieReady?.();
-          this.authenticate();
-        });
-      }, 400);
-      return;
-    }
 
-    const anim = lottie.loadAnimation({
-      container: this.lottieContainer.nativeElement,
-      path: 'assets/lottie/coin-drop.json',
-      renderer: 'svg',
-      loop: true,
-      autoplay: true,
-      rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
-    });
-
-    anim.addEventListener('DOMLoaded', () => {
-      // RAF runs inside Angular's zone because Zone.js patches requestAnimationFrame
-      requestAnimationFrame(() => {
+    // Called exactly once regardless of which path triggers it (DOMLoaded, error, or timeout).
+    let fired = false;
+    const startAuth = () => {
+      if (fired) return;
+      fired = true;
+      this.zone.run(() => {
         this.onLottieReady?.();
         this.authenticate();
       });
-    });
+    };
+
+    if (!lottie) {
+      // Lottie library not yet loaded — unblock native overlay and proceed with auth.
+      setTimeout(startAuth, 400);
+      return;
+    }
+
+    try {
+      const anim = lottie.loadAnimation({
+        container: this.lottieContainer.nativeElement,
+        path: 'assets/lottie/coin-drop.json',
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
+      });
+
+      // RAF runs inside Angular's zone because Zone.js patches requestAnimationFrame.
+      anim.addEventListener('DOMLoaded', () => requestAnimationFrame(startAuth));
+      // On iOS, DOMLoaded can silently fail to fire if the container has zero dimensions
+      // at animation-creation time (modal not yet presented). Fire startAuth on any
+      // Lottie error so authenticate() is never permanently blocked.
+      anim.addEventListener('data_failed', startAuth);
+      anim.addEventListener('error', startAuth);
+    } catch (e) {
+      console.error('[PasskeyPrompt] lottie.loadAnimation failed', e);
+    }
+
+    // Hard safety net: if neither DOMLoaded nor an error fires within 2 s, start auth
+    // anyway. Protects against any Lottie/WebKit rendering edge case.
+    setTimeout(startAuth, 2000);
   }
 
   /**
@@ -148,7 +164,11 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
       ? this.passkeyService.startAuthenticationForUser(this.userEmail)
       : this.passkeyService.startAuthentication();
 
-    start$.subscribe({
+    // 30-second hard cap on the challenge-fetch HTTP call. Without this, a slow or
+    // unreachable backend (e.g. Cloudflare tunnel from a remote device, dev server
+    // restart) causes the request to hang indefinitely — isUnlocking stays true, the
+    // Lottie plays forever, and the Unlock button never appears.
+    start$.pipe(timeout(30_000)).subscribe({
       next: async (response) => {
         try {
           let requestOptions;

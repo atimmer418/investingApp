@@ -63,6 +63,11 @@ ion-toolbar {
   color: var(--kyc-text);
 }
 
+.has-back .header-title {
+  padding-right: 40px;
+}
+
+
 // --- Content ---
 ion-content {
   --background: var(--kyc-bg);
@@ -420,6 +425,11 @@ input[type="date"].field-input {
   cursor: pointer;
   z-index: 1;
   margin: 0;
+
+  &:disabled + .custom-checkbox {
+    opacity: 0.4;
+    cursor: default;
+  }
 }
 
 .custom-checkbox {

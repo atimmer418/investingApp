@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap, catchError, of, lastValueFrom } from 'rxjs';
+import { Observable, BehaviorSubject, tap, catchError, of, lastValueFrom, timeout } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
 import { DeviceIdService } from './device-id.service';
@@ -247,7 +247,13 @@ export class AuthService {
   }
 
   loadUserProgress(): void {
-    this.getUserProgress().subscribe({
+    this.getUserProgress().pipe(
+      // 10-second hard cap — guards against the request hanging indefinitely (e.g. after
+      // a dev-server restart where the backend proxy takes time to re-establish). Without
+      // this, userProgress$ stays null forever, the navigation filter never passes, and
+      // the app cover never hides.
+      timeout(10_000)
+    ).subscribe({
       next: (progress) => {
         this.userProgressSubject.next(progress);
       },

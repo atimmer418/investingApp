@@ -1,6 +1,6 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
-    <div class="header-inner">
+    <div class="header-inner" [class.has-back]="editMode">
       <button *ngIf="editMode" class="back-btn" type="button" (click)="goBack()">
         <span class="material-symbols-outlined">arrow_back_ios</span>
       </button>
@@ -53,12 +53,23 @@
             <div class="error-msg" *ngIf="step1Form.get('emailAddress')?.invalid && step1Form.get('emailAddress')?.touched">Valid email required</div>
           </div>
 
-          <!-- Date of Birth + Phone row -->
+          <!-- Date of Birth + Phone row (sign-up) / Funding Source + Phone row (edit) -->
           <div class="form-row two-col">
-            <div class="form-field" [class.field-error]="step1Form.get('dateOfBirth')?.invalid && step1Form.get('dateOfBirth')?.touched">
+            <div *ngIf="!editMode" class="form-field" [class.field-error]="step1Form.get('dateOfBirth')?.invalid && step1Form.get('dateOfBirth')?.touched">
               <span class="field-label">DATE OF BIRTH</span>
               <input id="dateOfBirthInput" class="field-input" type="text" formControlName="dateOfBirth" placeholder="mm/dd/yyyy" inputmode="numeric" maxlength="10" (input)="onDateOfBirthInput($event)" autocomplete="bday" />
               <div class="error-msg" *ngIf="step1Form.get('dateOfBirth')?.invalid && step1Form.get('dateOfBirth')?.touched">Use mm/dd/yyyy</div>
+            </div>
+            <div *ngIf="editMode" class="form-field" [class.field-error]="step1Form.get('fundingSource')?.invalid && step1Form.get('fundingSource')?.touched">
+              <span class="field-label">PRIMARY SOURCE OF FUNDS</span>
+              <div class="select-wrapper">
+                <select class="field-select" formControlName="fundingSource">
+                  <option value="" disabled>Select source...</option>
+                  <option *ngFor="let fs of fundingSources" [value]="fs.value">{{ fs.label }}</option>
+                </select>
+                <span class="select-arrow material-symbols-outlined">expand_more</span>
+              </div>
+              <div class="error-msg" *ngIf="step1Form.get('fundingSource')?.invalid && step1Form.get('fundingSource')?.touched">Required</div>
             </div>
             <div class="form-field" [class.field-error]="step1Form.get('phoneNumber')?.invalid && step1Form.get('phoneNumber')?.touched">
               <span class="field-label">PHONE NUMBER</span>
@@ -99,8 +110,8 @@
             </div>
           </div>
 
-          <!-- SSN + Funding Source row -->
-          <div class="form-row two-col">
+          <!-- SSN + Funding Source row (sign-up only) -->
+          <div *ngIf="!editMode" class="form-row two-col">
             <div *ngIf="!editMode" class="form-field" [class.field-error]="step1Form.get('taxId')?.invalid && step1Form.get('taxId')?.touched">
               <span class="field-label">SOCIAL SECURITY NUMBER</span>
               <input id="taxIdInput" class="field-input" type="text" formControlName="taxId" placeholder="XXX-XX-XXXX" inputmode="numeric" maxlength="11" (input)="onTaxIdInput($event)" autocomplete="off" />
