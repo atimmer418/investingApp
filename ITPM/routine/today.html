@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <style>
     :root {
       --blue: #2563EB;
@@ -218,6 +219,15 @@
 
     .section-group { margin-bottom: 32px; }
 
+    /* ─── State Machine ─── */
+    [data-state="intermediary"] .section-planning-only,
+    [data-state="completed"] .section-planning-only { display: none; }
+
+    [data-state="intermediary"] .section-intermediary-only,
+    [data-state="completed"] .section-intermediary-only { display: block; }
+
+    [data-state="planning"] .section-intermediary-only { display: none; }
+
     /* ─── Card base ─── */
     .card {
       background: var(--white);
@@ -300,6 +310,7 @@
       align-items: flex-start;
       gap: 16px;
       margin-bottom: 12px;
+      position: relative;
     }
 
     .priority-card:last-child { margin-bottom: 0; }
@@ -349,6 +360,19 @@
     .diff-medium { background: #fef3c7; color: #92400e; }
     .diff-hard   { background: #fee2e2; color: #991b1b; }
 
+    /* ─── Priority Skip Checkbox ─── */
+    .priority-skip-label {
+      position: absolute; top: 16px; right: 16px;
+      display: flex; align-items: center; gap: 6px;
+      cursor: pointer; font-size: 12px; font-weight: 600;
+      color: var(--gray);
+    }
+    .priority-skip-label input { cursor: pointer; }
+    .priority-card.skipped {
+      opacity: 0.5;
+      border-color: #fca5a5;
+    }
+
     /* ─── Option Cards ─── */
     .option-group {
       display: flex;
@@ -363,6 +387,7 @@
       padding: 18px 20px;
       cursor: pointer;
       transition: border-color 0.15s ease, background 0.15s ease;
+      position: relative;
     }
 
     .option-card:hover { border-color: var(--blue); }
@@ -414,6 +439,22 @@
     .meta-item { font-size: 12px; font-weight: 600; color: var(--gray); }
     .meta-item span { color: var(--text); }
 
+    /* ─── Option Edit Button ─── */
+    .option-edit-btn {
+      position: absolute; top: 14px; right: 14px;
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--white); cursor: pointer;
+      display: none; align-items: center; justify-content: center;
+      color: var(--gray); font-size: 15px; transition: all 0.15s;
+    }
+    .option-card.selected .option-edit-btn { display: flex; }
+    .option-edit-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .option-edit-btn.editing { border-color: #059669; color: #059669; background: #f0fdf4; }
+    .option-body[contenteditable="true"] {
+      outline: none; border-bottom: 1.5px dashed var(--blue); padding-bottom: 2px;
+    }
+
     /* ─── Triage ─── */
     .story-section { margin-bottom: 28px; }
     .story-section:last-child { margin-bottom: 0; }
@@ -452,14 +493,35 @@
     .step-item { display: flex; align-items: flex-start; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
     .step-item:last-child { border-bottom: none; padding-bottom: 0; }
     .step-num { flex-shrink: 0; background: var(--blue); color: var(--white); font-size: 12px; font-weight: 800; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .step-body { font-size: 14px; color: var(--text); line-height: 1.5; padding-top: 3px; }
+    .step-body { flex: 1; font-size: 14px; color: var(--text); line-height: 1.5; padding-top: 3px; }
+
+    /* ─── Step Edit Button ─── */
+    .step-edit-btn {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      font-size: 16px;
+      color: var(--gray);
+    }
+    .step-edit-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .step-edit-btn.editing { border-color: #059669; color: #059669; background: #f0fdf4; }
+    .step-body[contenteditable="true"] {
+      outline: none;
+      border-bottom: 1.5px dashed var(--blue);
+      padding-bottom: 2px;
+    }
 
     /* ─── Tomorrow List ─── */
     .tomorrow-list { padding-left: 0; list-style: none; margin: 0; }
     .tomorrow-list li { font-size: 14px; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
     .tomorrow-list li:last-child { border-bottom: none; padding-bottom: 0; }
 
-    /* ─── Revision Section ─── */
+    /* ─── Anything Else Section ─── */
     .revision-label { font-size: 14px; color: var(--gray); margin-bottom: 14px; }
 
     .revision-textarea {
@@ -474,7 +536,7 @@
       resize: vertical;
       min-height: 100px;
       outline: none;
-      margin-bottom: 14px;
+      margin-bottom: 0;
       transition: border-color 0.15s ease;
     }
 
@@ -495,6 +557,17 @@
     }
 
     .btn-dark:hover { opacity: 0.85; }
+
+    /* ─── Looks Good Button ─── */
+    .btn-looks-good {
+      width: 100%; padding: 16px;
+      background: #059669; color: white;
+      border: none; border-radius: 12px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 16px; font-weight: 800;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-looks-good:hover { opacity: 0.9; }
 
     /* ─── Approve Bar ─── */
     #approve-bar {
@@ -574,7 +647,13 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true">
+  <div id="dashboard" data-populated="true" data-state="planning">
+
+    <!-- ─── Intermediary Banner ─── -->
+    <div id="intermediary-banner" style="display:none; background:#dbeafe; border:1px solid #93c5fd; border-radius:14px; padding:16px 20px; margin-bottom:20px;">
+      <p style="font-size:14px; font-weight:700; color:#1e40af; margin:0 0 4px;">Plan approved — execution queued</p>
+      <p style="font-size:13px; color:#1e40af; margin:0;">The ITPM execution agent picks this up at the top of the hour. You'll receive a push notification when the build is complete.</p>
+    </div>
 
     <div class="dashboard-header">
       <div class="header-left">
@@ -584,7 +663,7 @@
       <div class="header-date" id="header-date">Loading...</div>
     </div>
 
-    <!-- ── Scoreboard ── -->
+    <!-- ── Scoreboard (always visible) ── -->
     <div class="section-group">
       <div class="section-label">Routine Success Criteria</div>
       <div class="scoreboard">
@@ -634,11 +713,15 @@
       </div>
     </div>
 
-    <!-- ── Today's Priorities ── -->
-    <div class="section-group">
+    <!-- ── Today's Priorities (planning only) ── -->
+    <div class="section-group section-planning-only">
       <div class="section-label">Today's Priorities</div>
 
       <div class="priority-card">
+        <label class="priority-skip-label" title="Check to skip this story and regenerate">
+          <input type="checkbox" class="priority-skip-cb" onchange="handlePrioritySkip(this)" />
+          <span class="priority-skip-text">Skip</span>
+        </label>
         <div class="priority-badge">#1</div>
         <div class="priority-body">
           <div class="priority-title">FRED-124 — Change Bank Account Page Full UI Overhaul</div>
@@ -648,6 +731,10 @@
       </div>
 
       <div class="priority-card">
+        <label class="priority-skip-label" title="Check to skip this story and regenerate">
+          <input type="checkbox" class="priority-skip-cb" onchange="handlePrioritySkip(this)" />
+          <span class="priority-skip-text">Skip</span>
+        </label>
         <div class="priority-badge">#2</div>
         <div class="priority-body">
           <div class="priority-title">FRED-116 — Prompt Users for Review After First MFU</div>
@@ -657,32 +744,32 @@
       </div>
     </div>
 
-    <!-- ── Why I Picked These ── -->
-    <div class="section-group">
+    <!-- ── Why I Picked These (intermediary only) ── -->
+    <div class="section-group section-intermediary-only">
       <div class="section-label">Why I Picked These</div>
       <div class="card">
         <div class="card-text">FRED's production readiness bottleneck is page-by-page UI polish. FRED-124 is the highest-impact unfinished UI page — it has a working backend, a functional component, and a clear design pattern to follow from FRED-123 (Account Security). Completing it pushes pages-migrated from 70% toward 73% and moves the readiness score. FRED-116 pairs perfectly as a guaranteed-complete retention win: one install, one localStorage guard, one native iOS call. Together these two stories deliver a meaningful readiness bump and wire the most important organic growth signal before launch.</div>
       </div>
     </div>
 
-    <!-- ── Strategic Alignment ── -->
-    <div class="section-group">
+    <!-- ── Strategic Alignment (intermediary only) ── -->
+    <div class="section-group section-intermediary-only">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
         <div class="card-text">Both stories serve the current production readiness mission directly. UI completeness is the single largest gap between FRED today and a launch-ready app. App Store reviews earned during private beta compound — every star earned before public launch is a trust signal that shows on day one. Neither story introduces scope risk or architectural complexity.</div>
       </div>
     </div>
 
-    <!-- ── Production Readiness Impact ── -->
-    <div class="section-group">
+    <!-- ── Production Readiness Impact (intermediary only) ── -->
+    <div class="section-group section-intermediary-only">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
         <div class="card-text">FRED-124 migrates one of the last visually unpolished settings pages, pushing pages-migrated from 70% to approximately 73% and the production readiness score from 67 toward 68. FRED-116 adds the App Store review prompt — a zero-backend, one-shot implementation that activates the organic ratings flywheel at exactly the right moment: when users first see their financial progress come to life.</div>
       </div>
     </div>
 
-    <!-- ── Implementation Options ── -->
-    <div class="section-group">
+    <!-- ── Implementation Options (planning only) ── -->
+    <div class="section-group section-planning-only">
       <div class="section-label">Implementation Options — Select Your Approach</div>
 
       <!-- FRED-124 options -->
@@ -691,6 +778,9 @@
         <div class="option-group">
 
           <div class="option-card selected" onclick="selectOption(this)">
+            <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit implementation plan">
+              <span class="material-symbols-outlined">edit</span>
+            </button>
             <div class="option-header">
               <span class="option-label">Option A</span>
               <span class="option-rec">Recommended</span>
@@ -705,6 +795,9 @@
           </div>
 
           <div class="option-card" onclick="selectOption(this)">
+            <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit implementation plan">
+              <span class="material-symbols-outlined">edit</span>
+            </button>
             <div class="option-header">
               <span class="option-label">Option B</span>
             </div>
@@ -718,6 +811,9 @@
           </div>
 
           <div class="option-card" onclick="selectOption(this)">
+            <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit implementation plan">
+              <span class="material-symbols-outlined">edit</span>
+            </button>
             <div class="option-header">
               <span class="option-label">Option C</span>
             </div>
@@ -739,6 +835,9 @@
         <div class="option-group">
 
           <div class="option-card selected" onclick="selectOption(this)">
+            <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit implementation plan">
+              <span class="material-symbols-outlined">edit</span>
+            </button>
             <div class="option-header">
               <span class="option-label">Option A</span>
               <span class="option-rec">Recommended</span>
@@ -753,6 +852,9 @@
           </div>
 
           <div class="option-card" onclick="selectOption(this)">
+            <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit implementation plan">
+              <span class="material-symbols-outlined">edit</span>
+            </button>
             <div class="option-header">
               <span class="option-label">Option B</span>
             </div>
@@ -766,6 +868,9 @@
           </div>
 
           <div class="option-card" onclick="selectOption(this)">
+            <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit implementation plan">
+              <span class="material-symbols-outlined">edit</span>
+            </button>
             <div class="option-header">
               <span class="option-label">Option C</span>
             </div>
@@ -782,8 +887,8 @@
       </div>
     </div>
 
-    <!-- ── Triage Findings ── -->
-    <div class="section-group">
+    <!-- ── Triage Findings (planning only) ── -->
+    <div class="section-group section-planning-only">
       <div class="section-label">Triage Findings</div>
       <div class="card">
 
@@ -862,21 +967,8 @@
       </div>
     </div>
 
-    <!-- ── Potentially Out of Scope ── -->
-    <div class="section-group">
-      <div class="section-label">Potentially Out of Scope</div>
-      <div class="card">
-        <ul class="triage-list" style="padding-left: 18px;">
-          <li><strong>FRED-188 (null userId guard in ChatService)</strong> — 15-minute fix that can be folded in as a bonus; not a planned priority but worth doing if there's time after FRED-116</li>
-          <li><strong>FRED-109 (investment question wording)</strong> — Easy and valuable but deferred to tomorrow; doing three stories today risks none shipping polished</li>
-          <li><strong>Bank branding logos (FRED-124)</strong> — Deferred; use institution name as text only, no logo fetch needed this sprint</li>
-          <li><strong>Multiple bank account support</strong> — Not in scope for Piggy Tier; out of scope for today and this phase</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- ── Questions For Andrew ── -->
-    <div class="section-group">
+    <!-- ── Questions For Andrew (planning only) ── -->
+    <div class="section-group section-planning-only">
       <div class="section-label">Questions For Andrew</div>
       <div class="card">
 
@@ -907,46 +999,64 @@
       </div>
     </div>
 
-    <!-- ── Suggested Execution Order ── -->
-    <div class="section-group">
+    <!-- ── Suggested Execution Order (planning only) ── -->
+    <div class="section-group section-planning-only">
       <div class="section-label">Suggested Execution Order</div>
       <div class="card">
 
         <div class="step-item">
           <div class="step-num">1</div>
-          <div class="step-body"><strong>FRED-116 — Install plugin</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm install @capacitor/rate-app</code> in /frontend and verify it resolves without conflicts.</div>
+          <div class="step-body" contenteditable="false"><strong>FRED-116 — Install plugin</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm install @capacitor/rate-app</code> in /frontend and verify it resolves without conflicts.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
         </div>
 
         <div class="step-item">
           <div class="step-num">2</div>
-          <div class="step-body"><strong>FRED-116 — Wire review prompt</strong> — Import RateApp in the MFU modal component, add localStorage guard, fire <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">RateApp.requestReview()</code> after dismiss. Verify TypeScript exits 0.</div>
+          <div class="step-body" contenteditable="false"><strong>FRED-116 — Wire review prompt</strong> — Import RateApp in the MFU modal component, add localStorage guard, fire <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">RateApp.requestReview()</code> after dismiss. Verify TypeScript exits 0.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
         </div>
 
         <div class="step-item">
           <div class="step-num">3</div>
-          <div class="step-body"><strong>FRED-124 — Read existing component</strong> — Read change-bank-account.component.html, .scss, and .ts to map what's currently rendered and what data is already flowing in.</div>
+          <div class="step-body" contenteditable="false"><strong>FRED-124 — Read existing component</strong> — Read change-bank-account.component.html, .scss, and .ts to map what's currently rendered and what data is already flowing in.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
         </div>
 
         <div class="step-item">
           <div class="step-num">4</div>
-          <div class="step-body"><strong>FRED-124 — Redesign the card layout</strong> — Apply the Account Security card pattern: bank name + masked account number in a detail row, single "Change" CTA. Remove all old/inconsistent styling.</div>
+          <div class="step-body" contenteditable="false"><strong>FRED-124 — Redesign the card layout</strong> — Apply the Account Security card pattern: bank name + masked account number in a detail row, single "Change" CTA. Remove all old/inconsistent styling.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
         </div>
 
         <div class="step-item">
           <div class="step-num">5</div>
-          <div class="step-body"><strong>FRED-124 — Add all three states</strong> — Implement loading veil, empty state card with "Link Bank" CTA, and error toast on Plaid failure. Verify layout at 390×844.</div>
+          <div class="step-body" contenteditable="false"><strong>FRED-124 — Add all three states</strong> — Implement loading veil, empty state card with "Link Bank" CTA, and error toast on Plaid failure. Verify layout at 390×844.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
         </div>
 
         <div class="step-item">
           <div class="step-num">6</div>
-          <div class="step-body"><strong>Bonus — FRED-188 null guard</strong> — If time permits, add the one-line null check to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.java processChat()</code> while in the codebase.</div>
+          <div class="step-body" contenteditable="false"><strong>Bonus — FRED-188 null guard</strong> — If time permits, add the one-line null check to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.java processChat()</code> while in the codebase.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
         </div>
 
       </div>
     </div>
 
-    <!-- ── Tomorrow's Likely Priorities ── -->
-    <div class="section-group">
+    <!-- ── Tomorrow's Likely Priorities (intermediary only) ── -->
+    <div class="section-group section-intermediary-only">
       <div class="section-label">Tomorrow's Likely Priorities</div>
       <div class="card">
         <ul class="tomorrow-list">
@@ -957,13 +1067,23 @@
       </div>
     </div>
 
-    <!-- ── Request a Revision ── -->
-    <div class="section-group">
-      <div class="section-label">Request a Revision</div>
+    <!-- ── Completion Section (completed state only) ── -->
+    <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
+      <div class="section-label">WHAT GOT DONE</div>
+      <div class="card" id="completion-content">
+        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
+      </div>
+      <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;display:none;">
+        Looks Good &#10003;
+      </button>
+    </div>
+
+    <!-- ── Anything Else For the Execution Agent (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Anything Else For the Execution Agent?</div>
       <div class="card">
-        <div class="revision-label">Need different priorities or a different approach? Describe your changes below. Click "Copy &amp; Regenerate" to copy a formatted revision request to your clipboard — then paste it into Claude Code.</div>
-        <textarea class="revision-textarea" id="revision-textarea" placeholder="Describe what you'd like to change about today's priorities or approach..."></textarea>
-        <button class="btn-dark" id="revision-btn" onclick="copyRevision()">Copy &amp; Regenerate</button>
+        <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Make sure the loading state uses the existing LoadingVeilComponent, not a new spinner..."></textarea>
       </div>
     </div>
 
@@ -1016,9 +1136,28 @@
       var headerDate = document.getElementById('header-date');
       if (overlayDate) overlayDate.textContent = formatted;
       if (headerDate) headerDate.textContent = formatted;
+
+      var dashboard = document.getElementById('dashboard');
+
       if (isAuthenticated()) {
         document.getElementById('lock-overlay').style.display = 'none';
         checkApproveReady();
+        loadStepEdits();
+
+        if (dashboard.dataset.state === 'intermediary') {
+          document.getElementById('intermediary-banner').style.display = 'block';
+          var approveBtn = document.getElementById('approve-btn');
+          approveBtn.textContent = '&#10003; Queued';
+          approveBtn.disabled = true;
+          approveBtn.classList.add('approved');
+          var statusEl = document.getElementById('approve-status');
+          if (statusEl) statusEl.textContent = 'Execution queued — watch for a push notification when done.';
+        }
+
+        if (dashboard.dataset.state === 'completed') {
+          document.getElementById('completion-section').style.display = 'block';
+          document.getElementById('looks-good-btn').style.display = 'block';
+        }
       }
     })();
 
@@ -1042,6 +1181,23 @@
         document.getElementById('lock-overlay').style.display = 'none';
         errorMsg.classList.remove('visible');
         checkApproveReady();
+        loadStepEdits();
+
+        var dashboard = document.getElementById('dashboard');
+        if (dashboard.dataset.state === 'intermediary') {
+          document.getElementById('intermediary-banner').style.display = 'block';
+          var approveBtn = document.getElementById('approve-btn');
+          approveBtn.textContent = '&#10003; Queued';
+          approveBtn.disabled = true;
+          approveBtn.classList.add('approved');
+          var statusEl = document.getElementById('approve-status');
+          if (statusEl) statusEl.textContent = 'Execution queued — watch for a push notification when done.';
+        }
+
+        if (dashboard.dataset.state === 'completed') {
+          document.getElementById('completion-section').style.display = 'block';
+          document.getElementById('looks-good-btn').style.display = 'block';
+        }
       } else {
         errorMsg.classList.add('visible');
         input.value = '';
@@ -1066,10 +1222,76 @@
     }
 
     document.addEventListener('click', function(e) {
+      if (e.target.closest('.option-edit-btn') || e.target.closest('.step-edit-btn')) return;
       var card = e.target.closest('.option-card');
       if (!card) return;
       selectOption(card);
     });
+
+    // ─── Option Edit ──────────────────────────────────────────────────────────
+
+    function toggleOptionEdit(e, btn) {
+      e.stopPropagation();
+      var card = btn.closest('.option-card');
+      var body = card.querySelector('.option-body');
+      var icon = btn.querySelector('.material-symbols-outlined');
+      if (body.contentEditable === 'true') {
+        body.contentEditable = 'false';
+        btn.classList.remove('editing');
+        icon.textContent = 'edit';
+        try { localStorage.setItem('itpm_option_edit_' + getAuthKey(), body.innerText.trim()); } catch(e2) {}
+      } else {
+        body.contentEditable = 'true';
+        btn.classList.add('editing');
+        icon.textContent = 'check';
+        body.focus();
+      }
+    }
+
+    // ─── Step Edit ────────────────────────────────────────────────────────────
+
+    function toggleStepEdit(btn) {
+      var body = btn.previousElementSibling;
+      var icon = btn.querySelector('.material-symbols-outlined');
+      if (body.contentEditable === 'true') {
+        body.contentEditable = 'false';
+        btn.classList.remove('editing');
+        icon.textContent = 'edit';
+        saveStepEdits();
+      } else {
+        body.contentEditable = 'true';
+        btn.classList.add('editing');
+        icon.textContent = 'check';
+        body.focus();
+      }
+    }
+
+    function saveStepEdits() {
+      var steps = [];
+      document.querySelectorAll('.step-body').forEach(function(s) {
+        steps.push(s.innerText.trim());
+      });
+      try { localStorage.setItem('itpm_steps_' + getAuthKey(), JSON.stringify(steps)); } catch(e) {}
+    }
+
+    function loadStepEdits() {
+      try {
+        var saved = localStorage.getItem('itpm_steps_' + getAuthKey());
+        if (!saved) return;
+        var steps = JSON.parse(saved);
+        document.querySelectorAll('.step-body').forEach(function(s, i) {
+          if (steps[i]) s.innerText = steps[i];
+        });
+      } catch(e) {}
+    }
+
+    // ─── Priority Skip ────────────────────────────────────────────────────────
+
+    function handlePrioritySkip(cb) {
+      var card = cb.closest('.priority-card');
+      card.classList.toggle('skipped', cb.checked);
+      checkApproveReady();
+    }
 
     // ─── Question Inputs ──────────────────────────────────────────────────────
 
@@ -1117,93 +1339,98 @@
       var btn = document.getElementById('approve-btn');
       if (!btn.classList.contains('ready') || btn.classList.contains('approved')) return;
 
+      // Build approval content
+      var content = 'Date: ' + formatDate(new Date());
+
       var selectedOptions = [];
       document.querySelectorAll('.option-card.selected').forEach(function(card) {
         var title = card.querySelector('.option-title');
         if (title) selectedOptions.push(title.textContent.trim());
       });
+      if (selectedOptions.length > 0) content += '\n\nSelected Approach:\n' + selectedOptions.map(function(o) { return '- ' + o; }).join('\n');
+
+      var selectedBody = document.querySelector('.option-card.selected .option-body');
+      if (selectedBody) {
+        var savedEdit = null;
+        try { savedEdit = localStorage.getItem('itpm_option_edit_' + getAuthKey()); } catch(e) {}
+        content += '\n\nApproved implementation approach:\n' + (savedEdit || selectedBody.innerText.trim());
+      }
+
+      var stepEdits = null;
+      try { stepEdits = localStorage.getItem('itpm_steps_' + getAuthKey()); } catch(e) {}
+      if (stepEdits) {
+        try {
+          var steps = JSON.parse(stepEdits);
+          content += '\n\nExecution order (follow this exactly):\n' + steps.map(function(s, i) { return (i+1) + '. ' + s; }).join('\n');
+        } catch(e) {}
+      }
+
+      var skipped = [];
+      document.querySelectorAll('.priority-skip-cb:checked').forEach(function(cb) {
+        var t = cb.closest('.priority-card').querySelector('h3');
+        if (!t) t = cb.closest('.priority-card').querySelector('.priority-title');
+        if (t) skipped.push(t.textContent.trim());
+      });
+      if (skipped.length > 0) content += '\n\nSkip these stories and find alternatives:\n' + skipped.map(function(s) { return '- ' + s; }).join('\n');
 
       var answers = [];
       document.querySelectorAll('.question-input[data-required="true"]').forEach(function(input) {
-        var item = input.closest('.question-item');
-        var labelEl = item ? item.querySelector('.question-text') : null;
-        var labelText = labelEl ? labelEl.childNodes[0].textContent.trim() : 'Question';
-        answers.push(labelText + '\nAnswer: ' + input.value.trim());
+        var labelEl = input.closest('.question-block') ? input.closest('.question-block').querySelector('.question-label') : null;
+        if (!labelEl) labelEl = input.closest('.question-item') ? input.closest('.question-item').querySelector('.question-text') : null;
+        answers.push((labelEl ? labelEl.textContent.trim() : 'Question') + ': ' + input.value.trim());
       });
+      if (answers.length > 0) content += '\n\nAndrew\'s Answers:\n' + answers.join('\n');
 
-      var content = 'ITPM APPROVAL — ' + formatDate(new Date());
-      content += '\n\nSelected Approaches:\n' + selectedOptions.map(function(o) { return '- ' + o; }).join('\n');
-      if (answers.length > 0) content += '\n\nAndrew\'s Answers:\n' + answers.join('\n\n');
-      content += '\n\nProceed with implementation as planned.';
+      var notes = document.getElementById('revision-textarea');
+      if (notes && notes.value.trim()) content += '\n\nAdditional context:\n' + notes.value.trim();
 
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(content).then(function() {
-          btn.textContent = '✓ Copied — Paste into Claude Code';
-          btn.classList.add('approved');
-          btn.classList.remove('ready');
-          document.getElementById('approve-status').textContent = 'Approval copied. Paste into Claude Code to start implementation.';
-        }).catch(function() {
-          fallbackCopy(content, btn);
-        });
-      } else {
-        fallbackCopy(content, btn);
-      }
+      content += '\n\nProceed with implementation.';
+
+      // Switch to intermediary state immediately
+      var dashboard = document.getElementById('dashboard');
+      dashboard.dataset.state = 'intermediary';
+
+      btn.textContent = '✓ Queued';
+      btn.classList.add('approved');
+      btn.classList.remove('ready');
+      btn.disabled = true;
+
+      var statusEl = document.getElementById('approve-status');
+      if (statusEl) statusEl.textContent = 'Work queued — execution starts at the top of the hour. Watch for a push notification.';
+
+      // Show intermediary banner
+      var banner = document.getElementById('intermediary-banner');
+      if (banner) banner.style.display = 'block';
+
+      // POST to trigger
+      fetch('/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'approval', content: content })
+      }).catch(function() {});
     }
 
-    function fallbackCopy(text, btn) {
-      var ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand('copy');
-        btn.textContent = '✓ Copied — Paste into Claude Code';
-        btn.classList.add('approved');
-        btn.classList.remove('ready');
-        document.getElementById('approve-status').textContent = 'Approval copied. Paste into Claude Code to start implementation.';
-      } catch(e) {
-        document.getElementById('approve-status').textContent = 'Could not copy. Please copy manually.';
-      }
-      document.body.removeChild(ta);
-    }
+    // ─── Looks Good ───────────────────────────────────────────────────────────
 
-    // ─── Revision ─────────────────────────────────────────────────────────────
-
-    function copyRevision() {
-      var textarea = document.getElementById('revision-textarea');
-      var btn = document.getElementById('revision-btn');
-      var content = textarea.value.trim();
-      if (!content) { textarea.focus(); return; }
-
-      var formatted = '--revision "' + content + '"';
-
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(formatted).then(function() {
-          btn.textContent = '✓ Copied — Paste into Claude Code';
-          btn.disabled = true;
-          setTimeout(function() { btn.textContent = 'Copy & Regenerate'; btn.disabled = false; }, 3000);
-        }).catch(function() {
-          btn.textContent = 'Copy failed — try again';
+    function handleLooksGood() {
+      var btn = document.getElementById('looks-good-btn');
+      btn.textContent = 'Marking as done...';
+      btn.disabled = true;
+      fetch('/looks-good', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.ok) {
+            btn.textContent = '✓ All done — fresh brief tomorrow at 9am';
+            btn.style.background = '#6b7280';
+          } else {
+            btn.textContent = 'Looks Good ✓';
+            btn.disabled = false;
+          }
+        })
+        .catch(function() {
+          btn.textContent = 'Looks Good ✓';
+          btn.disabled = false;
         });
-      } else {
-        var ta = document.createElement('textarea');
-        ta.value = formatted;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-          document.execCommand('copy');
-          btn.textContent = '✓ Copied — Paste into Claude Code';
-          btn.disabled = true;
-          setTimeout(function() { btn.textContent = 'Copy & Regenerate'; btn.disabled = false; }, 3000);
-        } catch(e) {
-          btn.textContent = 'Copy failed';
-        }
-        document.body.removeChild(ta);
-      }
     }
   </script>
 </body>
