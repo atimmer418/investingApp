@@ -76,7 +76,10 @@ Parse `FREDdocs/backlog.md` to compute each metric. For EACH metric, also comput
 - Trend vs last week
 
 **Days since last production-ready blocker:**
-- Read from routine_memory.md. If no prior tracking, record 0 and note "tracking begins today."
+- Read the value from the most recent routine_memory.md entry.
+- If a blocker was logged in that entry (execute recorded one), reset to 0.
+- Otherwise increment by 1 (one more clean day).
+- If no prior tracking exists at all, record 0 and note "tracking begins today."
 
 **Launch readiness %:**
 - Average of burn-down %, Piggy %, pages migrated %, and (readiness/100)×100, 1 decimal
@@ -182,8 +185,9 @@ Populate:
 10. **Suggested Execution Order** — `.step-item`s.
 11. **Tomorrow's Likely Priorities** — 2–3 items.
 
-Commit and push:
+Commit and push. Pull immediately before pushing — other routines (digest, etc.) commit to `develop` during the minutes you spent generating, so a stale push will be rejected:
 ```bash
+git pull --no-rebase origin develop
 git add ITPM/routine/today.html ITPM/memory/routine_memory.md ITPM/archive/
 git commit -m "itpm: daily brief — $(date '+%Y-%m-%d')"
 git push origin develop
