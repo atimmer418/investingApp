@@ -1,6 +1,8 @@
 const REPO = 'atimmer418/FRED';
-const FILE_PATH = 'ITPM/pending/action.json';
-const API_BASE = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
+const ACTION_FILE_PATH = 'ITPM/pending/action.json';
+const TODAY_FILE_PATH = 'ITPM/routine/today.html';
+const ACTION_API = `https://api.github.com/repos/${REPO}/contents/${ACTION_FILE_PATH}`;
+const TODAY_API = `https://api.github.com/repos/${REPO}/contents/${TODAY_FILE_PATH}`;
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -23,25 +25,24 @@ export async function onRequestPost(context) {
     return json({ ok: false, error: 'Missing type or content' }, 400);
   }
 
-  // Step 1: GET existing file to retrieve SHA (needed for updates)
-  let existingSha;
-  const getResponse = await fetch(API_BASE, {
-    headers: {
-      'Authorization': `Bearer ${githubToken}`,
-      'User-Agent': 'FRED-ITPM',
-      'Accept': 'application/vnd.github+json'
-    }
-  });
+  const ghHeaders = {
+    'Authorization': `Bearer ${githubToken}`,
+    'User-Agent': 'FRED-ITPM',
+    'Accept': 'application/vnd.github+json'
+  };
 
-  if (getResponse.ok) {
-    const existing = await getResponse.json();
+  // Step 1: Write action.json
+  let existingSha;
+  const getActionRes = await fetch(ACTION_API, { headers: ghHeaders });
+
+  if (getActionRes.ok) {
+    const existing = await getActionRes.json();
     existingSha = existing.sha;
-  } else if (getResponse.status !== 404) {
-    const err = await getResponse.text();
+  } else if (getActionRes.status !== 404) {
+    const err = await getActionRes.text();
     return json({ ok: false, error: err }, 502);
   }
 
-  // Step 2: Build the action payload and base64-encode it
   const actionPayload = {
     type,
     content,
@@ -49,31 +50,66 @@ export async function onRequestPost(context) {
   };
   const encoded = btoa(JSON.stringify(actionPayload, null, 2));
 
-  // Step 3: PUT the file to GitHub
-  const putBody = {
+  const putActionBody = {
     message: `itpm: queue ${type} action`,
     content: encoded
   };
   if (existingSha) {
-    putBody.sha = existingSha;
+    putActionBody.sha = existingSha;
   }
 
-  const putResponse = await fetch(API_BASE, {
+  const putActionRes = await fetch(ACTION_API, {
     method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${githubToken}`,
-      'User-Agent': 'FRED-ITPM',
-      'Accept': 'application/vnd.github+json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(putBody)
+    headers: { ...ghHeaders, 'Content-Type': 'application/json' },
+    body: JSON.stringify(putActionBody)
   });
 
-  if (!putResponse.ok) {
-    const err = await putResponse.text();
+  if (!putActionRes.ok) {
+    const err = await putActionRes.text();
     return json({ ok: false, error: err }, 502);
   }
 
+  // Step 2: Patch today.html data-state from "planning" to "intermediary"
+  try {
+    const getTodayRes = await fetch(TODAY_API, { headers: ghHeaders });
+    if (getTodayRes.ok) {
+      const todayFile = await getTodayRes.json();
+      const currentHtml = atob(todayFile.content.replace(/\n/g, ''));
+      const updatedHtml = currentHtml.replace('data-state="planning"', 'data-state="intermediary"');
+
+      if (updatedHtml !== currentHtml) {
+        await fetch(TODAY_API, {
+          method: 'PUT',
+          headers: { ...ghHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: 'itpm: set state to intermediary on approval',
+            content: btoa(updatedHtml),
+            sha: todayFile.sha
+          })
+        });
+      }
+      // If already intermediary (string not found), skip silently
+    }
+  } catch (_) {
+    // Non-fatal — action.json is written; state patch is best-effort
+  }
+
+  // Step 3: Fire the execution routine immediately
+  const fireToken = env.ROUTINE_FIRE_TOKEN;
+  if (fireToken) {
+    await fetch('https://api.anthropic.com/v1/claude_code/routines/trig_01Lk17E9GS5sZ9mdjGH9gnGH/fire', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${fireToken}`,
+        'anthropic-beta': 'experimental-cc-routine-2026-04-01',
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ text: 'A pending ITPM action was queued. Check ITPM/pending/action.json and process it.' })
+    }).catch(function() {});
+  }
+
+  // Step 4: Return ok
   return json({ ok: true });
 }
 

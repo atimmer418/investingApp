@@ -221,7 +221,8 @@
 
     /* ─── State Machine ─── */
     [data-state="intermediary"] .section-planning-only,
-    [data-state="completed"] .section-planning-only { display: none; }
+    [data-state="completed"] .section-planning-only,
+    [data-state="failed"] .section-planning-only { display: none; }
 
     [data-state="intermediary"] .section-intermediary-only,
     [data-state="completed"] .section-intermediary-only { display: block; }
@@ -616,6 +617,100 @@
       cursor: default;
     }
 
+    /* ─── Metric Trend ─── */
+    .metric-trend {
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .metric-trend.positive { color: #059669; }
+    .metric-trend.negative { color: #991b1b; }
+    .metric-trend.neutral  { color: var(--gray); }
+
+    /* ─── Failure Banner ─── */
+    #failure-banner {
+      display: none;
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    #failure-banner h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #991b1b;
+      margin: 0 0 6px;
+    }
+    #failure-detail {
+      font-size: 13px;
+      color: #991b1b;
+      margin: 0;
+    }
+
+    /* ─── Phone Mockup Options (UI overhaul stories) ─── */
+    .phone-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .phone-option {
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .phone-option.selected .phone-frame {
+      outline: 3px solid var(--blue);
+      outline-offset: 3px;
+    }
+    .phone-frame {
+      width: 100%;
+      aspect-ratio: 390 / 844;
+      background: var(--white);
+      border: 8px solid #1f2937;
+      border-radius: 28px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+    }
+    .phone-screen {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      font-size: 9px;
+    }
+    .phone-option-label {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 10px;
+    }
+    .phone-option-rec {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      background: #dcfce7;
+      color: #14532d;
+      padding: 2px 7px;
+      border-radius: 5px;
+      margin-left: 6px;
+    }
+    .phone-option-note {
+      margin-top: 8px;
+    }
+    .phone-option-note textarea {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      background: var(--bg);
+      resize: vertical;
+      min-height: 50px;
+      outline: none;
+    }
+
     /* ─── Responsive ─── */
     @media (max-width: 600px) {
       .scoreboard { grid-template-columns: repeat(2, 1fr); }
@@ -625,6 +720,7 @@
       #approve-btn { width: 100%; text-align: center; }
       #approve-status { text-align: center; }
       .lock-card { padding: 32px 24px; }
+      .phone-options { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -649,10 +745,17 @@
   <!-- ─── Dashboard ─── -->
   <div id="dashboard" data-populated="true" data-state="planning">
 
+    <!-- ─── Failure Banner ─── -->
+    <div id="failure-banner">
+      <h3>Execution hit a blocker</h3>
+      <p id="failure-detail"></p>
+    </div>
+
     <!-- ─── Intermediary Banner ─── -->
     <div id="intermediary-banner" style="display:none; background:#dbeafe; border:1px solid #93c5fd; border-radius:14px; padding:16px 20px; margin-bottom:20px;">
       <p style="font-size:14px; font-weight:700; color:#1e40af; margin:0 0 4px;">Plan approved — execution queued</p>
-      <p style="font-size:13px; color:#1e40af; margin:0;">The ITPM execution agent picks this up at the top of the hour. You'll receive a push notification when the build is complete.</p>
+      <p style="font-size:13px; color:#1e40af; margin:0;">Execution started. You'll receive a push notification when the build is complete.</p>
+      <a id="routine-link" href="#" target="_blank" style="display:none; margin-top:10px; font-size:12px; font-weight:700; color:#1e40af; text-decoration:underline; text-underline-offset:2px;">Watch the run live &rarr;</a>
     </div>
 
     <div class="dashboard-header">
@@ -672,6 +775,7 @@
           <div class="metric-label">Backlog Burn-Down</div>
           <div class="metric-value warning">32.9%</div>
           <div class="metric-sublabel">28 of 85 stories done</div>
+          <div class="metric-trend"></div>
           <div class="metric-bar-track"><div class="metric-bar-fill" style="width:32.9%"></div></div>
         </div>
 
@@ -679,6 +783,7 @@
           <div class="metric-label">Piggy Tier Done</div>
           <div class="metric-value warning">70.0%</div>
           <div class="metric-sublabel">28 of 40 core stories complete</div>
+          <div class="metric-trend"></div>
           <div class="metric-bar-track"><div class="metric-bar-fill" style="width:70%"></div></div>
         </div>
 
@@ -686,6 +791,7 @@
           <div class="metric-label">Pages Migrated</div>
           <div class="metric-value warning">70%</div>
           <div class="metric-sublabel">Onboarding done; settings remaining</div>
+          <div class="metric-trend"></div>
           <div class="metric-bar-track"><div class="metric-bar-fill" style="width:70%"></div></div>
         </div>
 
@@ -693,6 +799,7 @@
           <div class="metric-label">Prod Readiness</div>
           <div class="metric-value warning">67</div>
           <div class="metric-sublabel">Score out of 100</div>
+          <div class="metric-trend"></div>
           <div class="metric-bar-track"><div class="metric-bar-fill" style="width:67%"></div></div>
         </div>
 
@@ -700,6 +807,7 @@
           <div class="metric-label">Days Since Blocker</div>
           <div class="metric-value positive">1</div>
           <div class="metric-sublabel">No active production blockers</div>
+          <div class="metric-trend"></div>
           <div class="metric-bar-track"><div class="metric-bar-fill" style="width:3%"></div></div>
         </div>
 
@@ -707,6 +815,7 @@
           <div class="metric-label">Launch Readiness</div>
           <div class="metric-value warning">60.0%</div>
           <div class="metric-sublabel">Composite estimate</div>
+          <div class="metric-trend"></div>
           <div class="metric-bar-track"><div class="metric-bar-fill" style="width:60%"></div></div>
         </div>
 
@@ -1087,6 +1196,16 @@
       </div>
     </div>
 
+    <!-- ── Add to Backlog (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Add to Backlog</div>
+      <div class="card">
+        <div class="revision-label" style="margin-bottom:14px;">Thought of something while reviewing? Add it to the backlog without leaving this page.</div>
+        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Add a confirmation step before deleting a beneficiary..." style="min-height:80px;margin-bottom:12px;"></textarea>
+        <button class="btn-dark" id="backlog-btn" onclick="handleAddBacklog()">Add to Backlog</button>
+      </div>
+    </div>
+
   </div>
 
   <!-- ─── Fixed Approve Bar ─── -->
@@ -1102,15 +1221,6 @@
       var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
       var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
       return days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
-    }
-
-    // ─── Client-Side Password ─────────────────────────────────────────────────
-
-    function getExpectedPassword() {
-      var d = new Date();
-      var mm = String(d.getMonth() + 1).padStart(2, '0');
-      var dd = String(d.getDate()).padStart(2, '0');
-      return mm + 'FR3D$aG00Db0y' + dd;
     }
 
     // ─── Auth key (date-scoped) ───────────────────────────────────────────────
@@ -1154,6 +1264,10 @@
           if (statusEl) statusEl.textContent = 'Execution queued — watch for a push notification when done.';
         }
 
+        if (dashboard.dataset.state === 'failed') {
+          document.getElementById('failure-banner').style.display = 'block';
+        }
+
         if (dashboard.dataset.state === 'completed') {
           document.getElementById('completion-section').style.display = 'block';
           document.getElementById('looks-good-btn').style.display = 'block';
@@ -1173,36 +1287,61 @@
     function attemptUnlock() {
       var input = document.getElementById('password-input');
       var errorMsg = document.getElementById('error-msg');
+      var unlockBtn = document.getElementById('unlock-btn');
       var value = input.value;
       if (!value) return;
 
-      if (value === getExpectedPassword()) {
-        saveAuth();
-        document.getElementById('lock-overlay').style.display = 'none';
-        errorMsg.classList.remove('visible');
-        checkApproveReady();
-        loadStepEdits();
+      unlockBtn.textContent = 'Verifying...';
+      unlockBtn.disabled = true;
 
-        var dashboard = document.getElementById('dashboard');
-        if (dashboard.dataset.state === 'intermediary') {
-          document.getElementById('intermediary-banner').style.display = 'block';
-          var approveBtn = document.getElementById('approve-btn');
-          approveBtn.textContent = '&#10003; Queued';
-          approveBtn.disabled = true;
-          approveBtn.classList.add('approved');
-          var statusEl = document.getElementById('approve-status');
-          if (statusEl) statusEl.textContent = 'Execution queued — watch for a push notification when done.';
-        }
+      fetch('/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: value })
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.ok) {
+            saveAuth();
+            document.getElementById('lock-overlay').style.display = 'none';
+            errorMsg.classList.remove('visible');
+            checkApproveReady();
+            loadStepEdits();
 
-        if (dashboard.dataset.state === 'completed') {
-          document.getElementById('completion-section').style.display = 'block';
-          document.getElementById('looks-good-btn').style.display = 'block';
-        }
-      } else {
-        errorMsg.classList.add('visible');
-        input.value = '';
-        input.focus();
-      }
+            var dashboard = document.getElementById('dashboard');
+            if (dashboard.dataset.state === 'intermediary') {
+              document.getElementById('intermediary-banner').style.display = 'block';
+              var approveBtn = document.getElementById('approve-btn');
+              approveBtn.textContent = '✓ Queued';
+              approveBtn.disabled = true;
+              approveBtn.classList.add('approved');
+              var statusEl = document.getElementById('approve-status');
+              if (statusEl) statusEl.textContent = 'Execution queued — watch for a push notification when done.';
+            }
+
+            if (dashboard.dataset.state === 'failed') {
+              document.getElementById('failure-banner').style.display = 'block';
+            }
+
+            if (dashboard.dataset.state === 'completed') {
+              document.getElementById('completion-section').style.display = 'block';
+              document.getElementById('looks-good-btn').style.display = 'block';
+            }
+          } else {
+            errorMsg.classList.add('visible');
+            input.value = '';
+            input.focus();
+            unlockBtn.textContent = 'Unlock Dashboard';
+            unlockBtn.disabled = false;
+          }
+        })
+        .catch(function() {
+          errorMsg.classList.add('visible');
+          input.value = '';
+          input.focus();
+          unlockBtn.textContent = 'Unlock Dashboard';
+          unlockBtn.disabled = false;
+        });
     }
 
     document.getElementById('password-input').addEventListener('keydown', function(e) {
@@ -1227,6 +1366,51 @@
       if (!card) return;
       selectOption(card);
     });
+
+    // ─── Phone Option Selection ───────────────────────────────────────────────
+
+    function selectPhoneOption(el) {
+      var group = el.closest('.phone-options');
+      if (!group) return;
+      group.querySelectorAll('.phone-option').forEach(function(opt) {
+        opt.classList.remove('selected');
+      });
+      el.classList.add('selected');
+      checkApproveReady();
+    }
+
+    document.addEventListener('click', function(e) {
+      var phoneOpt = e.target.closest('.phone-option');
+      if (!phoneOpt) return;
+      selectPhoneOption(phoneOpt);
+    });
+
+    // ─── Add to Backlog ───────────────────────────────────────────────────────
+
+    function handleAddBacklog() {
+      var ta = document.getElementById('backlog-input');
+      var btn = document.getElementById('backlog-btn');
+      var text = ta.value.trim();
+      if (!text) { ta.focus(); return; }
+      btn.textContent = 'Adding...';
+      btn.disabled = true;
+      fetch('/add-backlog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item: text })
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.ok) {
+            btn.textContent = '✓ Added';
+            ta.value = '';
+            setTimeout(function() { btn.textContent = 'Add to Backlog'; btn.disabled = false; }, 2500);
+          } else {
+            btn.textContent = 'Add to Backlog'; btn.disabled = false;
+          }
+        })
+        .catch(function() { btn.textContent = 'Add to Backlog'; btn.disabled = false; });
+    }
 
     // ─── Option Edit ──────────────────────────────────────────────────────────
 
@@ -1320,6 +1504,9 @@
       document.querySelectorAll('.option-group').forEach(function(group) {
         if (!group.querySelector('.option-card.selected')) allOptionsSelected = false;
       });
+      document.querySelectorAll('.phone-options').forEach(function(group) {
+        if (!group.querySelector('.phone-option.selected')) allOptionsSelected = false;
+      });
 
       if (allQuestionsAnswered && allOptionsSelected) {
         btn.classList.add('ready');
@@ -1384,6 +1571,17 @@
       var notes = document.getElementById('revision-textarea');
       if (notes && notes.value.trim()) content += '\n\nAdditional context:\n' + notes.value.trim();
 
+      var phoneNotes = [];
+      document.querySelectorAll('.phone-option').forEach(function(opt) {
+        var noteEl = opt.querySelector('.phone-option-note textarea');
+        if (noteEl && noteEl.value.trim()) {
+          var labelEl = opt.querySelector('.phone-option-label');
+          var label = labelEl ? labelEl.textContent.replace(/recommended/i, '').trim() : 'Option';
+          phoneNotes.push('Design feedback — ' + label + ': ' + noteEl.value.trim());
+        }
+      });
+      if (phoneNotes.length > 0) content += '\n\nDesign feedback per option:\n' + phoneNotes.join('\n');
+
       content += '\n\nProceed with implementation.';
 
       // Switch to intermediary state immediately
@@ -1396,7 +1594,7 @@
       btn.disabled = true;
 
       var statusEl = document.getElementById('approve-status');
-      if (statusEl) statusEl.textContent = 'Work queued — execution starts at the top of the hour. Watch for a push notification.';
+      if (statusEl) statusEl.textContent = 'Execution starting now — watch for a push notification when the build is complete.';
 
       // Show intermediary banner
       var banner = document.getElementById('intermediary-banner');
