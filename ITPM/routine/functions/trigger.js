@@ -48,7 +48,7 @@ export async function onRequestPost(context) {
     content,
     timestamp: new Date().toISOString()
   };
-  const encoded = btoa(JSON.stringify(actionPayload, null, 2));
+  const encoded = b64EncodeUtf8(JSON.stringify(actionPayload, null, 2));
 
   const putActionBody = {
     message: `itpm: queue ${type} action`,
@@ -74,7 +74,7 @@ export async function onRequestPost(context) {
     const getTodayRes = await fetch(TODAY_API, { headers: ghHeaders });
     if (getTodayRes.ok) {
       const todayFile = await getTodayRes.json();
-      const currentHtml = atob(todayFile.content.replace(/\n/g, ''));
+      const currentHtml = b64DecodeUtf8(todayFile.content.replace(/\n/g, ''));
       const updatedHtml = currentHtml.replace('data-state="planning"', 'data-state="intermediary"');
 
       if (updatedHtml !== currentHtml) {
@@ -83,7 +83,7 @@ export async function onRequestPost(context) {
           headers: { ...ghHeaders, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: 'itpm: set state to intermediary on approval',
-            content: btoa(updatedHtml),
+            content: b64EncodeUtf8(updatedHtml),
             sha: todayFile.sha
           })
         });
@@ -111,6 +111,22 @@ export async function onRequestPost(context) {
 
   // Step 4: Return ok
   return json({ ok: true });
+}
+
+// UTF-8-safe base64. Bare btoa/atob throw on code points > 0xFF (em-dashes,
+// arrows, checkmarks throughout today.html), which crashes the Worker (1101).
+function b64EncodeUtf8(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+function b64DecodeUtf8(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
 }
 
 function json(data, status = 200) {

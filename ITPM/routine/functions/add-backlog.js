@@ -35,7 +35,7 @@ export async function onRequestPost(context) {
   }
 
   const file = await getRes.json();
-  const currentContent = atob(file.content.replace(/\n/g, ''));
+  const currentContent = b64DecodeUtf8(file.content.replace(/\n/g, ''));
 
   const isoDate = new Date().toISOString().split('T')[0];
   const appendix = `\n\n## INBOX — ${item}\n_Added from ITPM dashboard ${isoDate}_`;
@@ -46,7 +46,7 @@ export async function onRequestPost(context) {
     headers: { ...ghHeaders, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       message: 'itpm: add backlog item from dashboard',
-      content: btoa(updatedContent),
+      content: b64EncodeUtf8(updatedContent),
       sha: file.sha
     })
   });
@@ -56,6 +56,22 @@ export async function onRequestPost(context) {
   }
 
   return json({ ok: true });
+}
+
+// UTF-8-safe base64. Bare btoa/atob throw on code points > 0xFF (em-dashes,
+// checkmarks, arrows in backlog.md), which crashes the Worker (1101).
+function b64EncodeUtf8(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+function b64DecodeUtf8(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
 }
 
 function json(data, status = 200) {
