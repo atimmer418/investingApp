@@ -40,16 +40,19 @@ Read `type`. Follow the matching section below.
 Andrew reviewed the plan and wants changes. The `content` field holds his feedback — it may include skipped stories, edited approaches, design feedback per UI mockup, and free-text notes.
 
 1. Read `.claude/skills/itpm/SKILL.md`, `ITPM/memory/fred_vision.md`, `FREDdocs/backlog.md`, `ITPM/memory/routine_memory.md`.
-2. Re-run the planning routine (planning skill Steps 1, 3–10) with the revision shaping picks. Honor skipped stories — substitute alternatives. Carry over any notes Andrew left so they survive into the new plan.
-3. Rewrite `ITPM/routine/today.html` with the revised plan. Set `data-populated="true"` AND `data-state="planning"` on the `#dashboard` div. Do not change the CSS or `<script>` — only the content.
-4. Commit and push:
+2. **Parse the skipped story ID(s) from `content`** (e.g. "Andrew skipped today's story: FRED-100"). These are HARD EXCLUSIONS.
+   - **First, log the skip durably:** add `**Skipped:** FRED-XXX (YYYY-MM-DD)` to today's `routine_memory.md` entry. This is what stops the same story coming back.
+   - Build the exclusion set: every story ID in today's skip + every story skipped in the last 7 days of memory entries.
+3. Re-run the planning routine (planning skill Steps 1, 3–10) with one absolute constraint: **the new pick MUST be a different story than any in the exclusion set.** Do not re-pick a skipped story even if your scoring ranks it highest — pick the next-best story that is not excluded. Carry over any free-text notes Andrew left.
+4. Rewrite `ITPM/routine/today.html` with the revised plan. Set `data-populated="true"` AND `data-state="planning"` on the `#dashboard` div. Do not change the CSS or `<script>` — only the content. The priority card must show the NEW story, not the skipped one.
+5. Commit and push:
    ```bash
    git pull --no-rebase origin develop
    git add ITPM/routine/today.html ITPM/memory/routine_memory.md
-   git commit -m "itpm: revised plan — $(date '+%Y-%m-%d')"
+   git commit -m "itpm: revised plan ($(date '+%Y-%m-%d')) — swapped out skipped story"
    git push origin develop
    ```
-5. PushNotification — title `FRED ITPM — Plan Revised`, message: what changed and why.
+6. PushNotification — title `FRED ITPM — Plan Revised`, message: which NEW story was picked and that it avoided the skipped one.
 
 Then stop.
 

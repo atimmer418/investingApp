@@ -114,7 +114,7 @@ State in "Why I Picked These" which tier you're operating in.
 - **Pick exactly ONE story.** This routine works one story at a time — one story, one plan, one approval. (Later we may run 2–3 parallel ITPM routines each picking their own story; for now it is strictly one.)
 - Pick the single highest-value story per the Decision Framework and difficulty bias.
 
-**Never pick:** blocked stories, work that can't ship today, stories Andrew rejected before.
+**Never pick:** blocked stories, work that can't ship today, stories Andrew rejected before, or any story logged as `**Skipped:**` in a `routine_memory.md` entry within the last 7 days. A skip is a signal Andrew does not want that story now — honor it.
 
 Record: story ID, title, difficulty, rationale, whether it's a UI overhaul, and whether it's Tier 1 or Tier 2.
 
