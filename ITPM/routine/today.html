@@ -840,8 +840,8 @@
         </label>
         <div class="priority-badge">#1</div>
         <div class="priority-body">
-          <div class="priority-title">FRED-100 — RAG Chunks for App Knowledge &amp; Boglehead Philosophy</div>
-          <div class="priority-desc">Author three canonical knowledge chunks so Ask Fred can answer with exact, on-brand guidance: the Boglehead philosophy, a full breakdown of the Monthly Freedom Update math, and an app navigation guide. Backend-only, fully A/C-specified, build-ready today. <strong>Tier 1.</strong></div>
+          <div class="priority-title">FRED-124 — Change Bank Account Page — Full UI Overhaul</div>
+          <div class="priority-desc">Redesigned at your request (FRED-100 skipped). Give the Change Bank Account settings page a full visual lift so it matches FRED's premium, calm design system — the current account, the Plaid security story, and the change CTA, all polished. It's the last unmigrated settings page, so shipping it finally moves Pages Migrated off 70%. Pick one of the three mockups below. <strong>Tier 2 — proposed acceptance criteria below for your approval.</strong></div>
           <span class="diff-chip diff-medium">Medium</span>
         </div>
       </div>
@@ -851,7 +851,7 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Why I Picked These</div>
       <div class="card">
-        <div class="card-text"><strong>Operating in Tier 1 — one story today.</strong> Of the A/C-ready stories left in the backlog, FRED-100 is the only one that's cleanly buildable today: FRED-101 (emailer) is blocked on a founder decision (pick an email provider + add SMTP credentials) and FRED-169 is App Store Connect config, not repo code. FRED-100 is backend-only, fully specified, and low-risk — it directly raises the quality of every Ask Fred answer by giving the model canonical, on-brand knowledge to ground on (the Boglehead thesis, the exact MFU math, and where every feature lives). It carries FRED's voice on the tab users lean on most, so it's the single highest-value build-ready item. The next quick win, FRED-188, is parked at the top of tomorrow's list rather than crammed into today.</div>
+        <div class="card-text"><strong>You picked this one — and it's a strong pick.</strong> You skipped FRED-100 (RAG chunks) and asked for the bank-account UI story. That's FRED-124 — "change bank account ALMOST DONE needs entire UI lift" (the FRED-141 you guessed is actually a post-beta feedback/reviews item, so I went with the clear intent). FRED-124 is the single best UI pick on the board right now: it's the last settings page still on the old look, so finishing it is the only move that takes Pages Migrated above 70% and directly lifts the readiness score. It's a self-contained, medium-difficulty visual lift on an existing, working flow — no backend, auth, or schema changes — so it ships cleanly in one day. <strong>Operating in Tier 2:</strong> this story has no acceptance criteria yet, so I've proposed a set below for you to approve or edit before the build starts.</div>
       </div>
     </div>
 
@@ -859,7 +859,7 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
-        <div class="card-text">FRED-100 serves production readiness without scope risk. Ask Fred is the tab that carries FRED's voice and the Boglehead thesis; grounding it in canonical, accurate knowledge is core to trust and retention. The chunks make the free Piggy-Tier experience genuinely useful and keep answers consistent and on-brand. It touches no UI, auth, or schema — pure backend content registered through the existing chunk system — so it ships cleanly in one day and leaves the codebase more knowledgeable than it found it.</div>
+        <div class="card-text">FRED-124 is squarely on the current mission: complete the UI overhaul on every remaining page. Settings is where users manage trust-critical actions — and changing the bank that funds their investing is one of the most sensitive. A polished, calm, Plaid-forward screen signals security and care at exactly the moment a user is second-guessing. It's also the cleanest design-consistency win left: bring the last stray page onto the FRED design system so nothing in the app still looks half-finished before private beta.</div>
       </div>
     </div>
 
@@ -867,71 +867,141 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
-        <div class="card-text">FRED-100 lifts feature completeness — three Piggy-Tier knowledge chunks that make the free Ask Fred experience genuinely useful. It doesn't move pages-migrated (still 70%, gated on FRED-124) and the score holds at ~71 today, but it raises the leading indicator: a more knowledgeable, more trustworthy core product. Shipping it also clears the last cleanly-buildable Tier-1 story, which sharpens tomorrow's picture — once it lands, FRED-101 and FRED-124 become the real readiness levers.</div>
+        <div class="card-text">This is the readiness lever the RAG pick wasn't. FRED-124 is the last settings page on the old UI, so shipping it is the one move that takes <strong>Pages Migrated from 70% to ~73%</strong> and nudges the production-readiness score above 71. Because UI coverage is weighted at 40 points, finishing the migration is the highest-leverage thing left for the score. It also closes the "no unfinished pages / no placeholder UX" gate — with the new design's loading, empty, and error states built in, there's no half-old screen left to apologize for at launch.</div>
       </div>
     </div>
 
-    <!-- ── Implementation Options (planning only) ── -->
+    <!-- ── Proposed Acceptance Criteria (Tier 2, planning only) ── -->
     <div class="section-group section-planning-only hide-on-skip">
-      <div class="section-label">Implementation Options — Select Your Approach</div>
+      <div class="section-label">Proposed Acceptance Criteria — Approve or Edit</div>
+      <div class="card">
+        <div class="revision-label" style="margin-bottom:14px;">FRED-124 has no acceptance criteria yet, so I drafted these. <strong>The build won't start until they're confirmed.</strong> Approving (by picking a mockup below and pressing Approve) accepts these as written — to change any of them, jot the edit in the "Anything Else" box near the bottom and I'll write the final version into the backlog before building.</div>
+        <ul class="triage-list" style="margin-bottom:4px;">
+          <li>The <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">change-bank-account.page</code> (.html + .scss) is rebuilt on the FRED design system — Manrope, the FRED palette only, white section cards with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#e5e7eb</code> borders, Material Symbols icons — matching security-settings and my-profile.</li>
+          <li>The current linked account is shown clearly: bank name, account type, and masked number (e.g. "Chase · Checking · •••• 4821") sourced from the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">GET /api/plaid/primary-bank-account</code> — no new endpoints.</li>
+          <li>A single primary CTA ("Change Bank Account") opens the existing Plaid Link flow; the existing step-up PIN check before opening Plaid is preserved exactly.</li>
+          <li>The Plaid security/trust messaging ("credentials never stored", "takes effect at your next scheduled investment") is kept and styled into the new layout.</li>
+          <li><strong>Loading</strong> state while Plaid initializes (button shows a spinner / "Preparing secure connection…"), <strong>empty</strong> state when no account is linked yet, and <strong>error + retry</strong> state if the token exchange fails — all designed, not placeholder.</li>
+          <li>Success path shows a confirmation toast and refreshes the displayed account, exactly as today.</li>
+          <li>No backend, auth, or schema changes. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0. Layout verified at 390×844 and 430×932.</li>
+        </ul>
+      </div>
+    </div>
 
-      <!-- FRED-100 options -->
-      <div style="margin-bottom: 24px;">
-        <div class="section-label" style="margin-bottom: 10px; color: var(--text); font-size: 13px; text-transform: none; letter-spacing: 0; font-weight: 700;">FRED-100 — RAG Knowledge Chunks — Select Approach</div>
-        <div class="option-group">
-
-          <div class="option-card selected" onclick="selectOption(this)">
-            <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit implementation plan">
-              <span class="material-symbols-outlined">edit</span>
-            </button>
-            <div class="option-header">
-              <span class="option-label">Option A</span>
-              <span class="option-rec">Recommended</span>
-            </div>
-            <div class="option-title">Inline Static Chunks in the Existing Registry</div>
-            <div class="option-body">Author the three chunks (bogleheads_philosophy_v1, monthly_freedom_update_explained_v1, app_navigation_guide_v1) as static CanonicalChunk(id, title, content, version, topic, riskLevel, active) instances in the existing FredKnowledge registry, exactly matching the current pattern, all with active: true. MFU chunk pulls the real formulas from MonthlyFreedomUpdate code so the math is verbatim, not paraphrased. No new infrastructure.</div>
-            <div class="option-meta">
-              <div class="meta-item">Risk: <span>Low</span></div>
-              <div class="meta-item">Est: <span>3h</span></div>
-              <div class="meta-item">Pros: <span>Matches convention, zero new infra, build-only, easy review</span></div>
-            </div>
-          </div>
-
-          <div class="option-card" onclick="selectOption(this)">
-            <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit implementation plan">
-              <span class="material-symbols-outlined">edit</span>
-            </button>
-            <div class="option-header">
-              <span class="option-label">Option B</span>
-            </div>
-            <div class="option-title">Externalize to Versioned Resource Files</div>
-            <div class="option-body">Store each chunk's body as a markdown file under src/main/resources/knowledge/ and load them at startup into CanonicalChunk objects. Cleaner for editing long-form content later and keeps prose out of Java string literals.</div>
-            <div class="option-meta">
-              <div class="meta-item">Risk: <span>Medium</span></div>
-              <div class="meta-item">Est: <span>5h</span></div>
-              <div class="meta-item">Cons: <span>New loading path = scope creep; diverges from current chunk pattern</span></div>
-            </div>
-          </div>
-
-          <div class="option-card" onclick="selectOption(this)">
-            <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit implementation plan">
-              <span class="material-symbols-outlined">edit</span>
-            </button>
-            <div class="option-header">
-              <span class="option-label">Option C</span>
-            </div>
-            <div class="option-title">Three Chunks + FREDdocs Index Chunk</div>
-            <div class="option-body">Option A plus a fourth chunk that indexes the FREDdocs .md files (the open question in the story). Broader knowledge coverage in one pass, but expands scope beyond the three the A/C requires and needs a judgment call on what FREDdocs content is user-facing.</div>
-            <div class="option-meta">
-              <div class="meta-item">Risk: <span>Medium</span></div>
-              <div class="meta-item">Est: <span>5h</span></div>
-              <div class="meta-item">Cons: <span>Goes past the A/C; FREDdocs scoping is its own decision (see Questions)</span></div>
-            </div>
-          </div>
-
-        </div>
+    <!-- ── Phone Mockups (UI overhaul, planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Design Directions — Pick One (Annotate Any)</div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-text" style="color:var(--gray);">Three real directions for the redesign, rendered in FRED's actual design system. Tap one to select it, and use the note box under each to mix and match — e.g. "build A, but take the detailed account rows from B." The flow, copy, and Plaid integration stay the same; this is purely the visual lift.</div>
       </div>
 
+      <div class="phone-options">
+
+        <!-- Option A — Airy Minimal -->
+        <div class="phone-option selected" onclick="selectPhoneOption(this)">
+          <div class="phone-frame"><div class="phone-screen">
+            <div style="background:#f8fafc;min-height:100%;display:flex;flex-direction:column;padding:14px 12px;font-family:'Manrope',sans-serif;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;">
+                <span class="material-symbols-outlined" style="font-size:15px;color:#0f172a;">arrow_back_ios_new</span>
+                <span style="font-size:13px;font-weight:800;color:#0f172a;">Bank Account</span>
+              </div>
+              <div style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">Linked account</div>
+              <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:22px 16px;text-align:center;margin-bottom:22px;">
+                <div style="width:44px;height:44px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                  <span class="material-symbols-outlined" style="font-size:22px;color:#2563EB;">account_balance</span>
+                </div>
+                <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:3px;">Chase</div>
+                <div style="font-size:10px;color:#6b7280;margin-bottom:12px;">Checking · •••• 4821</div>
+                <span style="display:inline-block;font-size:8px;font-weight:700;background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:100px;">● Active</span>
+              </div>
+              <div style="font-size:10px;color:#6b7280;line-height:1.6;text-align:center;padding:0 8px;">Switching banks won't pause your investing. Your new account takes over at the next scheduled investment.</div>
+              <div style="margin-top:auto;padding-top:24px;">
+                <button style="width:100%;background:#2563EB;color:#fff;border:none;border-radius:14px;padding:13px;font-family:'Manrope',sans-serif;font-size:12px;font-weight:800;box-shadow:0 8px 20px -4px rgba(37,99,235,0.4);">Change Bank Account</button>
+                <div style="display:flex;align-items:center;justify-content:center;gap:5px;margin-top:11px;">
+                  <span class="material-symbols-outlined" style="font-size:11px;color:#9ca3af;">lock</span>
+                  <span style="font-size:8px;color:#9ca3af;">Secured by Plaid · credentials never stored</span>
+                </div>
+              </div>
+            </div>
+          </div></div>
+          <div class="phone-option-label">Option A — Airy Minimal <span class="phone-option-rec">Recommended</span></div>
+          <div class="phone-option-note"><textarea placeholder="What do you like / want changed in this one?"></textarea></div>
+        </div>
+
+        <!-- Option B — Trust-Forward / Detailed -->
+        <div class="phone-option" onclick="selectPhoneOption(this)">
+          <div class="phone-frame"><div class="phone-screen">
+            <div style="background:#f8fafc;min-height:100%;padding:14px 12px;font-family:'Manrope',sans-serif;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;">
+                <span class="material-symbols-outlined" style="font-size:15px;color:#0f172a;">arrow_back_ios_new</span>
+                <span style="font-size:13px;font-weight:800;color:#0f172a;">Bank Account</span>
+              </div>
+              <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:13px;margin-bottom:11px;">
+                <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+                  <span class="material-symbols-outlined" style="font-size:14px;color:#2563EB;">account_balance</span>
+                  <span style="font-size:10px;font-weight:800;color:#0f172a;">Current Account</span>
+                  <span style="margin-left:auto;font-size:8px;font-weight:700;background:#dcfce7;color:#14532d;padding:2px 8px;border-radius:100px;">Verified</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid #f1f5f9;"><span style="font-size:10px;color:#6b7280;">Bank</span><span style="font-size:10px;font-weight:700;color:#0f172a;">Chase</span></div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid #f1f5f9;"><span style="font-size:10px;color:#6b7280;">Type</span><span style="font-size:10px;font-weight:700;color:#0f172a;">Checking</span></div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid #f1f5f9;"><span style="font-size:10px;color:#6b7280;">Account</span><span style="font-size:10px;font-weight:700;color:#0f172a;font-family:monospace;">•••• 4821</span></div>
+              </div>
+              <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:13px;margin-bottom:14px;">
+                <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;">
+                  <span class="material-symbols-outlined" style="font-size:14px;color:#2563EB;">shield</span>
+                  <span style="font-size:10px;font-weight:800;color:#0f172a;">Powered by Plaid</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;"><span class="material-symbols-outlined" style="font-size:12px;color:#059669;">lock</span><span style="font-size:9px;color:#6b7280;">Bank-level encryption</span></div>
+                <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;"><span class="material-symbols-outlined" style="font-size:12px;color:#059669;">visibility_off</span><span style="font-size:9px;color:#6b7280;">Credentials are never stored</span></div>
+                <div style="display:flex;align-items:center;gap:7px;"><span class="material-symbols-outlined" style="font-size:12px;color:#059669;">schedule</span><span style="font-size:9px;color:#6b7280;">Takes effect next investment</span></div>
+              </div>
+              <button style="width:100%;background:#2563EB;color:#fff;border:none;border-radius:13px;padding:13px;font-family:'Manrope',sans-serif;font-size:12px;font-weight:800;box-shadow:0 8px 20px -4px rgba(37,99,235,0.4);">Replace Bank Account</button>
+            </div>
+          </div></div>
+          <div class="phone-option-label">Option B — Trust-Forward</div>
+          <div class="phone-option-note"><textarea placeholder="What do you like / want changed in this one?"></textarea></div>
+        </div>
+
+        <!-- Option C — Hero-Led / Brand -->
+        <div class="phone-option" onclick="selectPhoneOption(this)">
+          <div class="phone-frame"><div class="phone-screen">
+            <div style="background:#f8fafc;min-height:100%;font-family:'Manrope',sans-serif;">
+              <div style="background:linear-gradient(135deg,#2563EB,#1d4ed8);padding:14px 14px 26px;color:#fff;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="material-symbols-outlined" style="font-size:15px;color:#fff;">arrow_back_ios_new</span>
+                  <span style="font-size:13px;font-weight:800;color:#fff;">Bank Account</span>
+                </div>
+                <div style="margin-top:18px;display:flex;align-items:center;gap:11px;">
+                  <div style="width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center;">
+                    <span class="material-symbols-outlined" style="font-size:24px;color:#fff;">account_balance</span>
+                  </div>
+                  <div>
+                    <div style="font-size:9px;opacity:0.85;text-transform:uppercase;letter-spacing:0.05em;">Linked bank</div>
+                    <div style="font-size:14px;font-weight:800;">Chase · Checking</div>
+                    <div style="font-size:10px;opacity:0.85;">•••• 4821</div>
+                  </div>
+                </div>
+              </div>
+              <div style="padding:0 14px;margin-top:-14px;">
+                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:15px;box-shadow:0 6px 16px rgba(15,23,42,0.06);">
+                  <div style="font-size:11px;font-weight:800;color:#0f172a;margin-bottom:11px;">Switch your bank</div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span class="material-symbols-outlined" style="font-size:13px;color:#2563EB;">sync</span><span style="font-size:9px;color:#475569;">No interruption to your schedule</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span class="material-symbols-outlined" style="font-size:13px;color:#2563EB;">verified_user</span><span style="font-size:9px;color:#475569;">Bank-level security via Plaid</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;"><span class="material-symbols-outlined" style="font-size:13px;color:#2563EB;">schedule</span><span style="font-size:9px;color:#475569;">Effective next investment</span></div>
+                  <button style="width:100%;background:#2563EB;color:#fff;border:none;border-radius:13px;padding:12px;font-family:'Manrope',sans-serif;font-size:12px;font-weight:800;box-shadow:0 8px 20px -4px rgba(37,99,235,0.4);">Connect a New Bank</button>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:center;gap:5px;margin-top:12px;">
+                  <span class="material-symbols-outlined" style="font-size:11px;color:#9ca3af;">lock</span>
+                  <span style="font-size:8px;color:#9ca3af;">Credentials never stored</span>
+                </div>
+              </div>
+            </div>
+          </div></div>
+          <div class="phone-option-label">Option C — Hero-Led</div>
+          <div class="phone-option-note"><textarea placeholder="What do you like / want changed in this one?"></textarea></div>
+        </div>
+
+      </div>
     </div>
 
     <!-- ── Triage Findings (planning only) ── -->
@@ -940,37 +1010,39 @@
       <div class="card">
 
         <div class="story-section">
-          <div class="story-header">FRED-100 — RAG Chunks for App Knowledge &amp; Boglehead Philosophy</div>
+          <div class="story-header">FRED-124 — Change Bank Account Page — Full UI Overhaul</div>
 
           <div class="triage-group">
             <div class="triage-group-title">In Scope</div>
             <ul class="triage-list">
-              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">bogleheads_philosophy_v1</code> — Bogle/Vanguard origin, three tenets (diversify broadly, minimize costs, stay the course), why index funds beat active managers, and how FRED's default portfolio + automation implements this</li>
-              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthly_freedom_update_explained_v1</code> — every MFU section: periodProgressDelta, returnRate formula, daysBoughtBack, statusPercentile, currentStreak, bestNextMove, quarterly-compare trigger — formulas pulled verbatim from the MFU code</li>
-              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app_navigation_guide_v1</code> — where every major feature lives across the tabs, recurring/one-time investments, portfolio customization, and account settings</li>
-              <li>All three use the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">CanonicalChunk(id, title, content, version, topic, riskLevel, active)</code> signature with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">active: true</code></li>
-              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code> exits 0</li>
+              <li>Rebuild <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">change-bank-account.page.html</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.scss</code> on the FRED design system, matching <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">security-settings</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">my-profile</code></li>
+              <li>Polished current-account display (bank name, type, masked number) from the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">primary-bank-account</code> endpoint</li>
+              <li>Redesigned Plaid CTA + trust messaging; existing step-up PIN check before Plaid opens preserved</li>
+              <li>Full loading / empty / error+retry / success states designed into the new layout</li>
+              <li>Small TS tweaks allowed if the template needs them (e.g. an empty-state flag), but no logic rewrite</li>
+              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0; verified at 390×844 and 430×932</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">Potentially Out of Scope</div>
             <ul class="triage-list">
-              <li>A fourth FREDdocs-index chunk — the story's open question; defer unless you say otherwise (see Questions, Option C)</li>
-              <li>Updating Ask Fred's pre-generated suggestion chips to surface these chunks — that's FRED-151, a clean follow-on</li>
-              <li>Any retrieval/embedding pipeline changes — chunks register into the existing system as-is</li>
-              <li>Rewriting FRED_STORY / Chunk 17 pig-voice copy — already handled in FRED-130</li>
+              <li>Multiple-accounts management (list, set-default, remove) — the story is a visual lift of the single-account swap, not a new feature; flag as a follow-on if you want it</li>
+              <li>Any backend, Plaid-service, or endpoint changes — the redesign reuses every existing call</li>
+              <li>Changing the step-up PIN logic itself — keep it exactly as-is, just restyle the surrounding screen</li>
+              <li>Touching the onboarding <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">linkplaid</code> component — different flow, out of scope here</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">UX Considerations</div>
             <ul class="triage-list">
-              <li>Backend-only — no screen, loading, empty, or error states to design</li>
-              <li>Content must match FRED's calm, plain-language voice; no hype, no guarantees</li>
-              <li>Financial disclaimers preserved; riskLevel set appropriately per chunk</li>
-              <li>MFU math must be exact — a wrong formula in a canonical chunk is worse than no chunk</li>
-              <li>No tier gating — app knowledge is Piggy Tier</li>
+              <li><strong>Loading:</strong> Plaid SDK + link-token init — button shows spinner / "Preparing secure connection…" (already exists; keep, restyle)</li>
+              <li><strong>Empty:</strong> no account linked yet — show a calm "No bank linked" state with the same primary CTA, not a blank card</li>
+              <li><strong>Error + retry:</strong> token exchange fails or Plaid exits with an error — clear inline message + a way to try again, not just red text</li>
+              <li>Mobile-first at 390×844, verified at 430×932 (your daily driver); generous spacing, one job per screen</li>
+              <li>FRED palette + Manrope only; light mode; no new competing patterns</li>
+              <li>No tier gating — managing your bank is a Piggy-Tier core action</li>
             </ul>
           </div>
         </div>
@@ -985,15 +1057,15 @@
 
         <div class="question-item">
           <div class="question-text">
-            FRED-100: The app_navigation_guide chunk needs the current tab map. The story text lists Tab 3 as "Ask Fred chat," but recent work (FRED-117, FRED-180) treats Tab 3 as My Profile with Ask Fred as its own AI tab. Confirm the live tab order so the chunk is accurate and doesn't misdirect users.
+            FRED-124: Is this a pure visual reskin of the existing single-account swap, or do you also want account-management features added (e.g. showing multiple linked accounts, set-default, remove)? My recommendation is a pure reskin today and a separate story for multi-account management — answer "reskin only" to lock that, or describe what you want added.
             <span class="required-badge">Required</span>
           </div>
-          <textarea class="question-input" data-required="true" placeholder="Your answer..."></textarea>
+          <textarea class="question-input" data-required="true" placeholder="e.g. Reskin only — keep the single-account swap, just make it look premium."></textarea>
         </div>
 
         <div class="question-item">
           <div class="question-text">
-            FRED-100: Ship the three required chunks only (Option A), or also add a fourth chunk indexing the FREDdocs .md files (Option C)? If yes, which FREDdocs are genuinely user-facing vs. internal-only?
+            FRED-124: Any specific bank or account detail you want surfaced that isn't today — e.g. routing number (masked), account nickname, last-verified date — or are bank name + type + masked number enough?
             <span class="optional-badge">Optional</span>
           </div>
           <textarea class="question-input" placeholder="Your answer..."></textarea>
@@ -1009,7 +1081,7 @@
 
         <div class="step-item">
           <div class="step-num">1</div>
-          <div class="step-body" contenteditable="false"><strong>Study the existing chunk pattern</strong> — Read the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">CanonicalChunk</code> record and the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FredKnowledge</code> registry to match the exact constructor signature, the topic/riskLevel conventions, and the voice of the existing chunks.</div>
+          <div class="step-body" contenteditable="false"><strong>Study the reference pages first</strong> — Read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">security-settings</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">my-profile</code> (.html + .scss) plus the current <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">change-bank-account.page</code> so the new UI matches the design system and reuses existing card / header / icon patterns.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1017,7 +1089,7 @@
 
         <div class="step-item">
           <div class="step-num">2</div>
-          <div class="step-body" contenteditable="false"><strong>Pull the real MFU formulas</strong> — Read the MonthlyFreedomUpdate code to capture periodProgressDelta, returnRate, daysBoughtBack, statusPercentile, streak, bestNextMove, and the quarterly-compare trigger verbatim — no paraphrasing the math.</div>
+          <div class="step-body" contenteditable="false"><strong>Map the existing logic</strong> — Note every binding the template uses (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">currentBankAccount</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isLoading</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isPlaidReady</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">statusMessage</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">openPlaid()</code>) so the redesign keeps the Plaid flow and step-up PIN check working untouched.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1025,7 +1097,7 @@
 
         <div class="step-item">
           <div class="step-num">3</div>
-          <div class="step-body" contenteditable="false"><strong>Confirm the live tab map</strong> — Using Andrew's answer to the required question, lock the current tab order so <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app_navigation_guide_v1</code> sends users to the right places.</div>
+          <div class="step-body" contenteditable="false"><strong>Rebuild the chosen direction</strong> — Implement the selected mockup (with any of your per-option notes) in the new HTML + SCSS: current-account card, redesigned CTA, and the Plaid trust messaging.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1033,7 +1105,7 @@
 
         <div class="step-item">
           <div class="step-num">4</div>
-          <div class="step-body" contenteditable="false"><strong>Author the three chunks</strong> — Write <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">bogleheads_philosophy_v1</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthly_freedom_update_explained_v1</code>, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app_navigation_guide_v1</code> in FRED's voice, all with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">active: true</code>. Preserve disclaimers; set riskLevel per chunk.</div>
+          <div class="step-body" contenteditable="false"><strong>Build all four UX states</strong> — Loading, empty (no account linked), error + retry, and success — each designed, not placeholder, so no state looks unfinished.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1041,7 +1113,7 @@
 
         <div class="step-item">
           <div class="step-num">5</div>
-          <div class="step-body" contenteditable="false"><strong>Build &amp; verify</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code> to confirm it exits 0 with the three chunks registered, then run the verifier agent.</div>
+          <div class="step-body" contenteditable="false"><strong>Verify &amp; check for regressions</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> (exits 0), confirm the layout at 390×844 and 430×932, re-test the live Plaid change flow + PIN step-up, then run the verifier agent.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1055,8 +1127,8 @@
       <div class="section-label">Tomorrow's Likely Priorities</div>
       <div class="card">
         <ul class="tomorrow-list">
-          <li><strong>FRED-188</strong> — Add null userId guard to processChat — Easy, the parked quick win: a one-line null guard mirroring the one already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> that closes a real NPE path. Tier 2 (needs A/C confirmed), but a guaranteed-complete bug-density win.</li>
-          <li><strong>FRED-124</strong> — Change bank account page full UI overhaul — Medium, still the last unmigrated settings page and the next UI-overhaul-as-single-story day; the only pick that moves pages-migrated off 70%.</li>
+          <li><strong>FRED-100</strong> — RAG chunks for app knowledge &amp; Boglehead philosophy — Medium, the Tier-1 story you skipped today; still fully A/C-ready and the highest-value backend pick whenever you want to ground Ask Fred in canonical knowledge.</li>
+          <li><strong>FRED-188</strong> — Add null userId guard to processChat — Easy, the parked quick win: a one-line null guard mirroring the one already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> that closes a real NPE path. Tier 2 (needs A/C confirmed), guaranteed-complete bug-density win.</li>
           <li><strong>FRED-101</strong> — Set up emailer for transactional notifications — Medium/Hard, becomes Tier 1 buildable the moment you pick an email provider and add SMTP credentials (the one thing blocking it today).</li>
         </ul>
       </div>
