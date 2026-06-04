@@ -219,19 +219,29 @@
 
     .section-group { margin-bottom: 32px; }
 
-    /* ─── State Machine ─── */
-    [data-state="looks_good"] .section-planning-only,
+    /* ─── State Machine ───
+       Default: planning-only sections show, intermediary-only sections hide.
+       Each state below flips exactly what it needs. Defaulting this way means a
+       stray/unknown state can never leak the post-action cards onto a plan. */
+    .section-intermediary-only { display: none; }
+
+    /* planning — the default brief Andrew reviews. Plan detail visible,
+       post-action cards hidden. (no overrides needed; defaults are correct) */
+
+    /* intermediary — work queued/running. Hide plan detail, but do NOT show the
+       why/strategy/impact cards yet (nothing's done). Only the banner shows. */
+    [data-state="intermediary"] .section-planning-only { display: none; }
+
+    /* completed / looks_good — work done. Hide plan detail, reveal the recap cards. */
     [data-state="completed"] .section-planning-only,
-    [data-state="failed"] .section-planning-only { display: none; }
-
-    [data-state="looks_good"] .section-intermediary-only,
-    [data-state="completed"] .section-intermediary-only { display: block; }
-
-    [data-state="intermediary"] .section-intermediary-only { display: none; }
-
-    /* looks_good is a post-confirmation handoff state — show the completion summary
-       like completed, but it carries no actionable controls. */
+    [data-state="looks_good"] .section-planning-only { display: none; }
+    [data-state="completed"] .section-intermediary-only,
+    [data-state="looks_good"] .section-intermediary-only { display: block; }
+    [data-state="completed"] #completion-section,
     [data-state="looks_good"] #completion-section { display: block; }
+
+    /* failed — hide plan detail; the failure banner carries the message. */
+    [data-state="failed"] .section-planning-only { display: none; }
 
     /* When a story is skipped, hide its plan detail — keep notes + add-to-backlog */
     #dashboard.skip-mode .hide-on-skip { display: none; }
