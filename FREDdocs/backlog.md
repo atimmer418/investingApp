@@ -613,3 +613,7 @@ check on if its possible to trigger an investment when the user's paycheck is se
 
 ## FRED-188 — Add null userId guard to processChat
 `ChatService.java` `processChat()` calls `userRepository.findById(request.userId())` without a null guard. Add the same guard that was added to `streamChat()`: `request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null`.
+
+
+## INBOX — __connectivity_test__ (safe to delete)
+_Added from ITPM dashboard 2026-06-04_
