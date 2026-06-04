@@ -229,6 +229,10 @@
 
     [data-state="planning"] .section-intermediary-only { display: none; }
 
+    /* looks_good is a post-confirmation handoff state — show the completion summary
+       like completed, but it carries no actionable controls. */
+    [data-state="looks_good"] #completion-section { display: block; }
+
     /* When a story is skipped, hide its plan detail — keep notes + add-to-backlog */
     #dashboard.skip-mode .hide-on-skip { display: none; }
 
@@ -1228,6 +1232,34 @@
 
     // ─── Init ─────────────────────────────────────────────────────────────────
 
+    // Apply all state-specific UI in one place. Called after unlock from both
+    // init() and attemptUnlock() so the two paths can never drift.
+    function applyStateUI() {
+      var dashboard = document.getElementById('dashboard');
+      var state = dashboard.dataset.state;
+      var approveBar = document.getElementById('approve-bar');
+
+      // The approve bar only has a job in 'planning'. Every other state is
+      // post-action (queued / built / failed / closed) — hide it so a stale
+      // "Approve Work" button can never appear over an intermediary/closed page.
+      if (approveBar) approveBar.style.display = (state === 'planning') ? 'flex' : 'none';
+
+      if (state === 'intermediary') {
+        document.getElementById('intermediary-banner').style.display = 'block';
+      }
+      if (state === 'failed') {
+        document.getElementById('failure-banner').style.display = 'block';
+      }
+      if (state === 'completed') {
+        document.getElementById('completion-section').style.display = 'block';
+        document.getElementById('looks-good-btn').style.display = 'block';
+      }
+      if (state === 'looks_good') {
+        // Closed-out: show the completion summary, but no Looks Good button (already pressed).
+        document.getElementById('completion-section').style.display = 'block';
+      }
+    }
+
     (function init() {
       var formatted = formatDate(new Date());
       var overlayDate = document.getElementById('overlay-date');
@@ -1235,31 +1267,11 @@
       if (overlayDate) overlayDate.textContent = formatted;
       if (headerDate) headerDate.textContent = formatted;
 
-      var dashboard = document.getElementById('dashboard');
-
       if (isAuthenticated()) {
         document.getElementById('lock-overlay').style.display = 'none';
         checkApproveReady();
         loadStepEdits();
-
-        if (dashboard.dataset.state === 'intermediary') {
-          document.getElementById('intermediary-banner').style.display = 'block';
-          var approveBtn = document.getElementById('approve-btn');
-          approveBtn.textContent = '&#10003; Queued';
-          approveBtn.disabled = true;
-          approveBtn.classList.add('approved');
-          var statusEl = document.getElementById('approve-status');
-          if (statusEl) statusEl.textContent = 'Execution queued — watch for a push notification when done.';
-        }
-
-        if (dashboard.dataset.state === 'failed') {
-          document.getElementById('failure-banner').style.display = 'block';
-        }
-
-        if (dashboard.dataset.state === 'completed') {
-          document.getElementById('completion-section').style.display = 'block';
-          document.getElementById('looks-good-btn').style.display = 'block';
-        }
+        applyStateUI();
       }
     })();
 
@@ -1295,26 +1307,7 @@
             errorMsg.classList.remove('visible');
             checkApproveReady();
             loadStepEdits();
-
-            var dashboard = document.getElementById('dashboard');
-            if (dashboard.dataset.state === 'intermediary') {
-              document.getElementById('intermediary-banner').style.display = 'block';
-              var approveBtn = document.getElementById('approve-btn');
-              approveBtn.textContent = '✓ Queued';
-              approveBtn.disabled = true;
-              approveBtn.classList.add('approved');
-              var statusEl = document.getElementById('approve-status');
-              if (statusEl) statusEl.textContent = 'Execution queued — watch for a push notification when done.';
-            }
-
-            if (dashboard.dataset.state === 'failed') {
-              document.getElementById('failure-banner').style.display = 'block';
-            }
-
-            if (dashboard.dataset.state === 'completed') {
-              document.getElementById('completion-section').style.display = 'block';
-              document.getElementById('looks-good-btn').style.display = 'block';
-            }
+            applyStateUI();
           } else {
             errorMsg.classList.add('visible');
             input.value = '';
