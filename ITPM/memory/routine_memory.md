@@ -18,6 +18,21 @@
 
 ## Daily Entries
 
+### 2026-06-04 (revised) — Bank Account UI Overhaul (single-story)
+
+**Priorities selected:** FRED-124 (was FRED-100 — skipped by Andrew)
+**Tier:** 2 (UI overhaul; no A/C in backlog → proposed A/C generated for approval)
+**Rationale:** Andrew skipped FRED-100 and asked for "the bank account UI story… FRED-141?". FRED-141 is actually a post-beta feedback/reviews item; the real bank-account-UI story is FRED-124 ("change bank account ALMOST DONE needs entire UI lift"). Re-planned around FRED-124: it's the last unmigrated settings page, so it's the only pick that moves Pages Migrated off 70% and lifts the readiness score (UI coverage weighted 40 pts). Pure visual lift on an existing, working Plaid flow — no backend/auth/schema. Dashboard regenerated as a UI-overhaul brief: three phone-frame design directions (A Airy Minimal [rec], B Trust-Forward, C Hero-Led) + a proposed-A/C section for approval.
+**Metrics:** Readiness 71/100, Piggy 75% (30/40), Pages 70%, Burndown 35.3% (30/85), Launch 62.7% — all unchanged (nothing shipped yet; re-plan only).
+**Trends:** Flat vs the earlier 06-04 plan. If FRED-124 ships, Pages → ~73% and Readiness ticks up.
+**Days since last blocker:** 5 (unchanged same-day re-plan)
+**Blockers active:** none
+**Skipped:** FRED-100 (2026-06-04) — hard exclusion; do not re-pick before 2026-06-11.
+**Notes:** Andrew's story-number guess (FRED-141) was off; logged the disambiguation so future picks map "bank account UI" → FRED-124. Open question carried into the plan: pure reskin vs. adding multi-account management (recommended reskin-only, multi-account as a follow-on story).
+**Status:** Pending approval from Andrew
+
+---
+
 ### 2026-06-04 — RAG Knowledge Chunks (single-story)
 
 **Priorities selected:** FRED-100
