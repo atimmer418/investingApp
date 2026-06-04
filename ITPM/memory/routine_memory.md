@@ -27,6 +27,7 @@
 **Trends:** Flat vs the earlier 06-04 plan. If FRED-124 ships, Pages → ~73% and Readiness ticks up.
 **Days since last blocker:** 5 (unchanged same-day re-plan)
 **Blockers active:** none
+**Skipped:** FRED-100 (2026-06-04) — hard exclusion; do not re-pick before 2026-06-11.
 **Notes:** Andrew's story-number guess (FRED-141) was off; logged the disambiguation so future picks map "bank account UI" → FRED-124. Open question carried into the plan: pure reskin vs. adding multi-account management (recommended reskin-only, multi-account as a follow-on story).
 **Status:** Pending approval from Andrew
 
