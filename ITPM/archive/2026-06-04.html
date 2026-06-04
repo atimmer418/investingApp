@@ -229,10 +229,6 @@
 
     [data-state="planning"] .section-intermediary-only { display: none; }
 
-    /* looks_good is a post-confirmation handoff state — show the completion summary
-       like completed, but it carries no actionable controls. */
-    [data-state="looks_good"] #completion-section { display: block; }
-
     /* When a story is skipped, hide its plan detail — keep notes + add-to-backlog */
     #dashboard.skip-mode .hide-on-skip { display: none; }
 
@@ -750,7 +746,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="planning">
+  <div id="dashboard" data-populated="true" data-state="looks_good">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -812,10 +808,10 @@
 
         <div class="metric-card">
           <div class="metric-label">Days Since Blocker</div>
-          <div class="metric-value positive">5</div>
+          <div class="metric-value positive">4</div>
           <div class="metric-sublabel">No active production blockers</div>
-          <div class="metric-trend positive">&#8593; +4 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:15%"></div></div>
+          <div class="metric-trend positive">&#8593; +3 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:12%"></div></div>
         </div>
 
         <div class="metric-card">
@@ -845,13 +841,26 @@
           <span class="diff-chip diff-medium">Medium</span>
         </div>
       </div>
+
+      <div class="priority-card">
+        <label class="priority-skip-label" title="Check to skip this story and regenerate">
+          <input type="checkbox" class="priority-skip-cb" onchange="handlePrioritySkip(this)" />
+          <span class="priority-skip-text">Skip</span>
+        </label>
+        <div class="priority-badge">#2</div>
+        <div class="priority-body">
+          <div class="priority-title">FRED-188 — Add Null userId Guard to processChat</div>
+          <div class="priority-desc">A one-line safety fix: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.processChat()</code> calls <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">findById(request.userId())</code> with no null check — the same guard already exists in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code>. Guaranteed-complete quick win that closes a real NPE path. <strong>Tier 2 — proposed A/C below.</strong></div>
+          <span class="diff-chip diff-easy">Easy</span>
+        </div>
+      </div>
     </div>
 
     <!-- ── Why I Picked These (intermediary only) ── -->
     <div class="section-group section-intermediary-only">
       <div class="section-label">Why I Picked These</div>
       <div class="card">
-        <div class="card-text"><strong>Operating in Tier 1 — one story today.</strong> Of the A/C-ready stories left in the backlog, FRED-100 is the only one that's cleanly buildable today: FRED-101 (emailer) is blocked on a founder decision (pick an email provider + add SMTP credentials) and FRED-169 is App Store Connect config, not repo code. FRED-100 is backend-only, fully specified, and low-risk — it directly raises the quality of every Ask Fred answer by giving the model canonical, on-brand knowledge to ground on (the Boglehead thesis, the exact MFU math, and where every feature lives). It carries FRED's voice on the tab users lean on most, so it's the single highest-value build-ready item. The next quick win, FRED-188, is parked at the top of tomorrow's list rather than crammed into today.</div>
+        <div class="card-text"><strong>Operating in Tier 1</strong> for the #1 pick. Of the A/C-ready stories left in the backlog, FRED-100 is the only one that's cleanly buildable today — FRED-101 (emailer) is blocked on a founder decision (pick an email provider + add SMTP credentials) and FRED-169 is App Store Connect config, not repo code. FRED-100 is backend-only, fully specified, and directly raises the quality of every Ask Fred answer by giving the model canonical, on-brand knowledge to ground on. With Tier 1 effectively exhausted after that pick, the #2 slot drops to <strong>Tier 2</strong>: FRED-188, a one-line null-guard that closes a real NPE path in chat — a guaranteed-complete win that lifts bug density. Its proposed acceptance criteria are below for you to approve before the build starts.</div>
       </div>
     </div>
 
@@ -859,7 +868,7 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
-        <div class="card-text">FRED-100 serves production readiness without scope risk. Ask Fred is the tab that carries FRED's voice and the Boglehead thesis; grounding it in canonical, accurate knowledge is core to trust and retention. The chunks make the free Piggy-Tier experience genuinely useful and keep answers consistent and on-brand. It touches no UI, auth, or schema — pure backend content registered through the existing chunk system — so it ships cleanly in one day and leaves the codebase more knowledgeable than it found it.</div>
+        <div class="card-text">Both stories serve production readiness without scope risk. FRED-100 makes Ask Fred — the tab that carries FRED's voice and the Boglehead thesis — answer accurately and consistently, which is core to trust and retention. FRED-188 hardens a core flow against a crash. Neither touches UI, auth, or schema, so both ship cleanly in one day and leave the codebase more reliable than they found it.</div>
       </div>
     </div>
 
@@ -867,7 +876,7 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
-        <div class="card-text">FRED-100 lifts feature completeness — three Piggy-Tier knowledge chunks that make the free Ask Fred experience genuinely useful. It doesn't move pages-migrated (still 70%, gated on FRED-124) and the score holds at ~71 today, but it raises the leading indicator: a more knowledgeable, more trustworthy core product. Shipping it also clears the last cleanly-buildable Tier-1 story, which sharpens tomorrow's picture — once it lands, FRED-101 and FRED-124 become the real readiness levers.</div>
+        <div class="card-text">FRED-100 lifts feature completeness — three Piggy-Tier knowledge chunks that make the free Ask Fred experience genuinely useful, nudging readiness from 67 to ~71. FRED-188 improves bug density by removing a null-pointer path in the chat backend. Neither moves pages-migrated (still 70%, gated on FRED-124), but both raise the leading indicator: a more reliable, more knowledgeable core product.</div>
       </div>
     </div>
 
@@ -932,6 +941,61 @@
         </div>
       </div>
 
+      <!-- FRED-188 Tier-2 Proposed Acceptance Criteria -->
+      <div style="margin-bottom: 16px;">
+        <div class="section-label" style="margin-bottom: 10px; color: var(--text); font-size: 13px; text-transform: none; letter-spacing: 0; font-weight: 700;">FRED-188 — Proposed Acceptance Criteria — approve or edit</div>
+        <div class="card" style="border-color:#93c5fd; background:#f5f9ff;">
+          <div class="card-text" style="margin-bottom:14px;"><strong>Tier 2 story — no acceptance criteria existed.</strong> These were generated by triage. The build will not start until you confirm (or edit) them; on approval the execute agent writes them back into <code style="font-size:12px;background:#e2e8f0;padding:1px 5px;border-radius:4px;">backlog.md</code> before coding.</div>
+          <ul class="triage-list" style="list-style:none; padding-left:0;">
+            <li style="margin-bottom:8px;">&#9744; <strong>1.</strong> <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.processChat()</code> resolves the user with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null</code> — identical to the guard already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code>.</li>
+            <li style="margin-bottom:8px;">&#9744; <strong>2.</strong> A request with a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> no longer throws — chat falls back to the same null-user path streaming already uses.</li>
+            <li style="margin-bottom:8px;">&#9744; <strong>3.</strong> No behavior change for requests that DO carry a valid userId.</li>
+            <li style="margin-bottom:8px;">&#9744; <strong>4.</strong> <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code> exits 0.</li>
+          </ul>
+          <textarea class="question-input" style="margin-top:12px;" placeholder="Edit the proposed acceptance criteria, or leave blank to approve as-is..."></textarea>
+        </div>
+      </div>
+
+      <!-- FRED-188 options -->
+      <div>
+        <div class="section-label" style="margin-bottom: 10px; color: var(--text); font-size: 13px; text-transform: none; letter-spacing: 0; font-weight: 700;">FRED-188 — Null Guard — Select Approach</div>
+        <div class="option-group">
+
+          <div class="option-card selected" onclick="selectOption(this)">
+            <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit implementation plan">
+              <span class="material-symbols-outlined">edit</span>
+            </button>
+            <div class="option-header">
+              <span class="option-label">Option A</span>
+              <span class="option-rec">Recommended</span>
+            </div>
+            <div class="option-title">Copy the Proven Inline Guard from streamChat</div>
+            <div class="option-body">Apply the exact ternary already used in streamChat() inline in processChat(). One line, identical semantics, nothing else touched. The two methods stay visibly consistent and the fix is trivially reviewable.</div>
+            <div class="option-meta">
+              <div class="meta-item">Risk: <span>Low</span></div>
+              <div class="meta-item">Est: <span>15m</span></div>
+              <div class="meta-item">Pros: <span>Smallest possible change, mirrors existing code, zero risk</span></div>
+            </div>
+          </div>
+
+          <div class="option-card" onclick="selectOption(this)">
+            <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit implementation plan">
+              <span class="material-symbols-outlined">edit</span>
+            </button>
+            <div class="option-header">
+              <span class="option-label">Option B</span>
+            </div>
+            <div class="option-title">Extract a Shared resolveUser() Helper</div>
+            <div class="option-body">Pull the null-safe lookup into a private resolveUser(userId) method used by both processChat() and streamChat() to remove the duplication. Slightly cleaner long-term, but edits streamChat() too — a touch more surface area for a one-line bug.</div>
+            <div class="option-meta">
+              <div class="meta-item">Risk: <span>Low</span></div>
+              <div class="meta-item">Est: <span>40m</span></div>
+              <div class="meta-item">Cons: <span>Touches a second working method; DRY not worth the extra blast radius now</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
 
     <!-- ── Triage Findings (planning only) ── -->
@@ -975,6 +1039,36 @@
           </div>
         </div>
 
+        <div class="story-section">
+          <div class="story-header">FRED-188 — Add Null userId Guard to processChat <span style="font-size:11px;font-weight:700;color:#1e40af;background:#dbeafe;padding:2px 8px;border-radius:6px;margin-left:6px;">Tier 2</span></div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">In Scope</div>
+            <ul class="triage-list">
+              <li>Add the null-safe user lookup to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.processChat()</code>, mirroring <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code></li>
+              <li>On approval, write the proposed acceptance criteria back into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> under FRED-188</li>
+              <li>Verify <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code> exits 0</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">Potentially Out of Scope</div>
+            <ul class="triage-list">
+              <li>Broader audit of other unguarded <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">findById</code> calls — note as a follow-up candidate, don't chase it now</li>
+              <li>Adding a unit test (no test infra changes this run; build excludes tests)</li>
+              <li>Refactoring the non-streaming POST /api/chat endpoint itself</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">UX Considerations</div>
+            <ul class="triage-list">
+              <li>Pure backend hardening — no user-visible change for valid requests</li>
+              <li>Confirm the null-user fallback returns a graceful anonymous response, not a 500</li>
+            </ul>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -999,6 +1093,14 @@
           <textarea class="question-input" placeholder="Your answer..."></textarea>
         </div>
 
+        <div class="question-item">
+          <div class="question-text">
+            FRED-188: Confirm the intended fallback when userId is null is a graceful anonymous chat reply (identical to streamChat), rather than rejecting the request — so the proposed A/C is correct before it's written into the backlog.
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Your answer..."></textarea>
+        </div>
+
       </div>
     </div>
 
@@ -1009,7 +1111,7 @@
 
         <div class="step-item">
           <div class="step-num">1</div>
-          <div class="step-body" contenteditable="false"><strong>Study the existing chunk pattern</strong> — Read the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">CanonicalChunk</code> record and the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FredKnowledge</code> registry to match the exact constructor signature, the topic/riskLevel conventions, and the voice of the existing chunks.</div>
+          <div class="step-body" contenteditable="false"><strong>FRED-188 — Bank the quick win first</strong> — Add the null-safe guard to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.processChat()</code> (Option A), copying the ternary from <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code>. Write the approved A/C back into backlog.md under FRED-188.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1017,7 +1119,7 @@
 
         <div class="step-item">
           <div class="step-num">2</div>
-          <div class="step-body" contenteditable="false"><strong>Pull the real MFU formulas</strong> — Read the MonthlyFreedomUpdate code to capture periodProgressDelta, returnRate, daysBoughtBack, statusPercentile, streak, bestNextMove, and the quarterly-compare trigger verbatim — no paraphrasing the math.</div>
+          <div class="step-body" contenteditable="false"><strong>FRED-100 — Study the existing chunk pattern</strong> — Read the CanonicalChunk class and the FredKnowledge registry to match the exact constructor signature, topic/riskLevel conventions, and how existing chunks are authored.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1025,7 +1127,7 @@
 
         <div class="step-item">
           <div class="step-num">3</div>
-          <div class="step-body" contenteditable="false"><strong>Confirm the live tab map</strong> — Using Andrew's answer to the required question, lock the current tab order so <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app_navigation_guide_v1</code> sends users to the right places.</div>
+          <div class="step-body" contenteditable="false"><strong>FRED-100 — Pull the real MFU formulas</strong> — Read the MonthlyFreedomUpdate code to capture periodProgressDelta, returnRate, daysBoughtBack, statusPercentile, streak, and the quarterly-compare trigger verbatim — no paraphrasing the math.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1033,7 +1135,7 @@
 
         <div class="step-item">
           <div class="step-num">4</div>
-          <div class="step-body" contenteditable="false"><strong>Author the three chunks</strong> — Write <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">bogleheads_philosophy_v1</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthly_freedom_update_explained_v1</code>, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app_navigation_guide_v1</code> in FRED's voice, all with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">active: true</code>. Preserve disclaimers; set riskLevel per chunk.</div>
+          <div class="step-body" contenteditable="false"><strong>FRED-100 — Author the three chunks</strong> — Write <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">bogleheads_philosophy_v1</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthly_freedom_update_explained_v1</code>, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app_navigation_guide_v1</code> in FRED's voice, using the confirmed tab map. Register all with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">active: true</code>.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1041,7 +1143,7 @@
 
         <div class="step-item">
           <div class="step-num">5</div>
-          <div class="step-body" contenteditable="false"><strong>Build &amp; verify</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code> to confirm it exits 0 with the three chunks registered, then run the verifier agent.</div>
+          <div class="step-body" contenteditable="false"><strong>FRED-100 + FRED-188 — Build &amp; verify</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code> to confirm it exits 0 with all changes in place, then run the verifier agent.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1055,9 +1157,9 @@
       <div class="section-label">Tomorrow's Likely Priorities</div>
       <div class="card">
         <ul class="tomorrow-list">
-          <li><strong>FRED-188</strong> — Add null userId guard to processChat — Easy, the parked quick win: a one-line null guard mirroring the one already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> that closes a real NPE path. Tier 2 (needs A/C confirmed), but a guaranteed-complete bug-density win.</li>
-          <li><strong>FRED-124</strong> — Change bank account page full UI overhaul — Medium, still the last unmigrated settings page and the next UI-overhaul-as-single-story day; the only pick that moves pages-migrated off 70%.</li>
-          <li><strong>FRED-101</strong> — Set up emailer for transactional notifications — Medium/Hard, becomes Tier 1 buildable the moment you pick an email provider and add SMTP credentials (the one thing blocking it today).</li>
+          <li><strong>FRED-151</strong> — Update Fred's pre-generated questions to be RAG-focused — Easy, the natural follow-on once today's chunks land: point the suggestion chips at the new canonical knowledge so users actually discover it.</li>
+          <li><strong>FRED-124</strong> — Change bank account page full UI overhaul — Medium, still the last unmigrated settings page and the next UI-overhaul-as-single-story day; moves pages-migrated off 70%.</li>
+          <li><strong>FRED-101</strong> — Set up emailer for transactional notifications — Medium/Hard, becomes Tier 1 buildable the moment you pick an email provider and add SMTP credentials (the only thing blocking it today).</li>
         </ul>
       </div>
     </div>
@@ -1126,34 +1228,6 @@
 
     // ─── Init ─────────────────────────────────────────────────────────────────
 
-    // Apply all state-specific UI in one place. Called after unlock from both
-    // init() and attemptUnlock() so the two paths can never drift.
-    function applyStateUI() {
-      var dashboard = document.getElementById('dashboard');
-      var state = dashboard.dataset.state;
-      var approveBar = document.getElementById('approve-bar');
-
-      // The approve bar only has a job in 'planning'. Every other state is
-      // post-action (queued / built / failed / closed) — hide it so a stale
-      // "Approve Work" button can never appear over an intermediary/closed page.
-      if (approveBar) approveBar.style.display = (state === 'planning') ? 'flex' : 'none';
-
-      if (state === 'intermediary') {
-        document.getElementById('intermediary-banner').style.display = 'block';
-      }
-      if (state === 'failed') {
-        document.getElementById('failure-banner').style.display = 'block';
-      }
-      if (state === 'completed') {
-        document.getElementById('completion-section').style.display = 'block';
-        document.getElementById('looks-good-btn').style.display = 'block';
-      }
-      if (state === 'looks_good') {
-        // Closed-out: show the completion summary, but no Looks Good button (already pressed).
-        document.getElementById('completion-section').style.display = 'block';
-      }
-    }
-
     (function init() {
       var formatted = formatDate(new Date());
       var overlayDate = document.getElementById('overlay-date');
@@ -1161,11 +1235,31 @@
       if (overlayDate) overlayDate.textContent = formatted;
       if (headerDate) headerDate.textContent = formatted;
 
+      var dashboard = document.getElementById('dashboard');
+
       if (isAuthenticated()) {
         document.getElementById('lock-overlay').style.display = 'none';
         checkApproveReady();
         loadStepEdits();
-        applyStateUI();
+
+        if (dashboard.dataset.state === 'intermediary') {
+          document.getElementById('intermediary-banner').style.display = 'block';
+          var approveBtn = document.getElementById('approve-btn');
+          approveBtn.textContent = '&#10003; Queued';
+          approveBtn.disabled = true;
+          approveBtn.classList.add('approved');
+          var statusEl = document.getElementById('approve-status');
+          if (statusEl) statusEl.textContent = 'Execution queued — watch for a push notification when done.';
+        }
+
+        if (dashboard.dataset.state === 'failed') {
+          document.getElementById('failure-banner').style.display = 'block';
+        }
+
+        if (dashboard.dataset.state === 'completed') {
+          document.getElementById('completion-section').style.display = 'block';
+          document.getElementById('looks-good-btn').style.display = 'block';
+        }
       }
     })();
 
@@ -1201,7 +1295,26 @@
             errorMsg.classList.remove('visible');
             checkApproveReady();
             loadStepEdits();
-            applyStateUI();
+
+            var dashboard = document.getElementById('dashboard');
+            if (dashboard.dataset.state === 'intermediary') {
+              document.getElementById('intermediary-banner').style.display = 'block';
+              var approveBtn = document.getElementById('approve-btn');
+              approveBtn.textContent = '✓ Queued';
+              approveBtn.disabled = true;
+              approveBtn.classList.add('approved');
+              var statusEl = document.getElementById('approve-status');
+              if (statusEl) statusEl.textContent = 'Execution queued — watch for a push notification when done.';
+            }
+
+            if (dashboard.dataset.state === 'failed') {
+              document.getElementById('failure-banner').style.display = 'block';
+            }
+
+            if (dashboard.dataset.state === 'completed') {
+              document.getElementById('completion-section').style.display = 'block';
+              document.getElementById('looks-good-btn').style.display = 'block';
+            }
           } else {
             errorMsg.classList.add('visible');
             input.value = '';

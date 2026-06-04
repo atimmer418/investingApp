@@ -18,6 +18,20 @@
 
 ## Daily Entries
 
+### 2026-06-04 — RAG Knowledge Chunks (single-story)
+
+**Priorities selected:** FRED-100
+**Tier:** 1 (A/C ready)
+**Rationale:** Skill now mandates exactly ONE story per day. FRED-100 is the only cleanly buildable Tier-1 A/C-ready story left (FRED-101 founder-gated on email provider/SMTP, FRED-169 is App Store Connect config); it grounds Ask Fred in canonical knowledge — Boglehead thesis, exact MFU math, app navigation. Nothing shipped since 06-03 (FRED-100 still 💤), so it remains the top build-ready item. FRED-188 parked to tomorrow rather than picked as a second story.
+**Metrics:** Readiness 71/100, Piggy 75% (30/40), Pages 70%, Burndown 35.3% (30/85), Launch 62.7%
+**Trends:** All flat day-over-day (no build shipped since 06-03). Week-over-week vs 05-31: Burndown ↑ +2, Piggy ↑ +5.0, Readiness ↑ +4, Launch ↑ +2.7, Pages → no change.
+**Days since last blocker:** 5 (incremented; no blocker logged in 06-03 entry)
+**Blockers active:** none (FRED-101 founder-gated on email provider + SMTP creds — a prerequisite, not a logged blocker)
+**Notes:** Prior 06-03 brief picked FRED-100 + FRED-188 (two stories) and closed to looks_good without either shipping to the backlog. Re-picked FRED-100 alone under the one-story rule.
+**Status:** Pending approval from Andrew
+
+---
+
 ### 2026-06-03 — RAG Knowledge Chunks + Chat Null Guard
 
 **Priorities selected:** FRED-100 (+ FRED-188)
