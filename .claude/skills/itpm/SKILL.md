@@ -111,13 +111,12 @@ Apply the Decision Framework from `ITPM/routine.md` in order: prerequisites → 
 State in "Why I Picked These" which tier you're operating in.
 
 **Pick rules:**
-- A UI overhaul story is ALWAYS the single story of the day — see Step 7. Never pair it with a second story.
-- One dominant initiative (large, strategically critical, Hard) → pick only #1
-- Otherwise → pick Top 2
+- **Pick exactly ONE story.** This routine works one story at a time — one story, one plan, one approval. (Later we may run 2–3 parallel ITPM routines each picking their own story; for now it is strictly one.)
+- Pick the single highest-value story per the Decision Framework and difficulty bias.
 
 **Never pick:** blocked stories, work that can't ship today, stories Andrew rejected before.
 
-For each pick record: story ID, title, difficulty, rationale, whether it's a UI overhaul, and whether it's Tier 1 or Tier 2.
+Record: story ID, title, difficulty, rationale, whether it's a UI overhaul, and whether it's Tier 1 or Tier 2.
 
 ---
 
@@ -174,7 +173,7 @@ Read the current `ITPM/routine/today.html` to get the exact current structure (i
 
 Populate:
 1. **Scoreboard** — all 6 metric values, bar-fill widths, `positive`/`warning` classes, AND the `.metric-trend` span for each (`↑ +N vs last week` green / `↓ -N vs last week` red / `→ no change` gray).
-2. **Today's Priorities** — `.priority-card` per pick with the skip checkbox already in template, title, desc, difficulty chip.
+2. **Today's Priority** — exactly ONE `.priority-card` (badge "#1") with the skip checkbox already in template, title, desc, difficulty chip. If Andrew checks Skip, the dashboard hides the plan detail and the approve button becomes "Find New Story" — which sends a revision asking for a different single story. Do not render a second priority card.
 3. **Why I Picked These** — 2–3 sentences; state Tier 1 or Tier 2.
 4. **Strategic Alignment** — 1–2 sentences.
 5. **Production Readiness Impact** — 1–2 sentences.

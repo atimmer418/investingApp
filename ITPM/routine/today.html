@@ -229,6 +229,9 @@
 
     [data-state="planning"] .section-intermediary-only { display: none; }
 
+    /* When a story is skipped, hide its plan detail — keep notes + add-to-backlog */
+    #dashboard.skip-mode .hide-on-skip { display: none; }
+
     /* ─── Card base ─── */
     .card {
       background: var(--white);
@@ -878,7 +881,7 @@
     </div>
 
     <!-- ── Implementation Options (planning only) ── -->
-    <div class="section-group section-planning-only">
+    <div class="section-group section-planning-only hide-on-skip">
       <div class="section-label">Implementation Options — Select Your Approach</div>
 
       <!-- FRED-100 options -->
@@ -996,7 +999,7 @@
     </div>
 
     <!-- ── Triage Findings (planning only) ── -->
-    <div class="section-group section-planning-only">
+    <div class="section-group section-planning-only hide-on-skip">
       <div class="section-label">Triage Findings</div>
       <div class="card">
 
@@ -1070,7 +1073,7 @@
     </div>
 
     <!-- ── Questions For Andrew (planning only) ── -->
-    <div class="section-group section-planning-only">
+    <div class="section-group section-planning-only hide-on-skip">
       <div class="section-label">Questions For Andrew</div>
       <div class="card">
 
@@ -1102,7 +1105,7 @@
     </div>
 
     <!-- ── Suggested Execution Order (planning only) ── -->
-    <div class="section-group section-planning-only">
+    <div class="section-group section-planning-only hide-on-skip">
       <div class="section-label">Suggested Execution Order</div>
       <div class="card">
 
@@ -1459,6 +1462,11 @@
     function handlePrioritySkip(cb) {
       var card = cb.closest('.priority-card');
       card.classList.toggle('skipped', cb.checked);
+      // Single-story model: any skip puts the whole dashboard in skip-mode,
+      // hiding plan detail (options, triage, questions, steps) and turning
+      // the approve button into "Find New Story".
+      var anySkipped = document.querySelector('.priority-skip-cb:checked') !== null;
+      document.getElementById('dashboard').classList.toggle('skip-mode', anySkipped);
       checkApproveReady();
     }
 
@@ -1476,9 +1484,19 @@
 
       if (document.getElementById('dashboard').dataset.populated !== 'true') {
         btn.classList.remove('ready');
+        btn.textContent = 'Approve / Get To Work';
         if (status) status.textContent = 'Dashboard not yet populated — check back after 9am EST';
         return;
       }
+
+      // Skip mode: story is being rejected — button becomes "Find New Story", always ready.
+      if (document.getElementById('dashboard').classList.contains('skip-mode')) {
+        btn.classList.add('ready');
+        btn.textContent = 'Find New Story';
+        if (status) status.textContent = 'This story will be swapped for a new one. Add any guidance below, then find a new story.';
+        return;
+      }
+      btn.textContent = 'Approve / Get To Work';
 
       var allQuestionsAnswered = true;
       document.querySelectorAll('.question-input[data-required="true"]').forEach(function(input) {
@@ -1510,6 +1528,40 @@
     function handleApprove() {
       var btn = document.getElementById('approve-btn');
       if (!btn.classList.contains('ready') || btn.classList.contains('approved')) return;
+
+      var dashboard = document.getElementById('dashboard');
+
+      // ── Skip-mode path: reject this story, ask for a new one (revision) ──
+      if (dashboard.classList.contains('skip-mode')) {
+        var skippedTitle = '';
+        var skippedCard = document.querySelector('.priority-skip-cb:checked');
+        if (skippedCard) {
+          var tEl = skippedCard.closest('.priority-card').querySelector('.priority-title');
+          if (tEl) skippedTitle = tEl.textContent.trim();
+        }
+        var revContent = 'Date: ' + formatDate(new Date())
+          + '\n\nAndrew skipped today\'s story: ' + skippedTitle
+          + '\n\nPick a different single story and regenerate the full plan.';
+        var guidance = document.getElementById('revision-textarea');
+        if (guidance && guidance.value.trim()) revContent += '\n\nGuidance for the new pick:\n' + guidance.value.trim();
+
+        dashboard.dataset.state = 'intermediary';
+        btn.textContent = '✓ Finding new story...';
+        btn.classList.add('approved');
+        btn.classList.remove('ready');
+        btn.disabled = true;
+        var skipStatus = document.getElementById('approve-status');
+        if (skipStatus) skipStatus.textContent = 'Regenerating with a new story — watch for a push notification.';
+        var skipBanner = document.getElementById('intermediary-banner');
+        if (skipBanner) skipBanner.style.display = 'block';
+
+        fetch('/trigger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'revision', content: revContent })
+        }).catch(function() {});
+        return;
+      }
 
       // Build approval content
       var content = 'Date: ' + formatDate(new Date());
