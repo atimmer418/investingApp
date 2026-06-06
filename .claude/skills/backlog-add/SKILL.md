@@ -1,13 +1,13 @@
 ---
 name: backlog-add
-description: Use when adding new items to the FRED project backlog from raw notes or a bulk dump — parses items, assigns the correct project prefix, and appends to FREDdocs/backlog.md after confirmation.
+description: Use when adding new items to the FRED project backlog from raw notes or a bulk dump — parses items, assigns the correct project prefix, appends to FREDdocs/backlog.md after confirmation, then offers to enrich code-relevant stories (Summary + acceptance criteria) via the triage skill.
 ---
 
 # FRED Backlog — Add Items
 
 ## Overview
 
-Parses a raw notes dump into numbered story items, assigns the correct project prefix based on category, and appends to `FREDdocs/backlog.md` after confirmation. Does not overwrite existing entries.
+Parses a raw notes dump into numbered story items, assigns the correct project prefix based on category, and appends to `FREDdocs/backlog.md` after confirmation. Does not overwrite existing entries. After appending, it offers to hand each code-relevant story (`FRED`, `DEV`, `QA`, `LPFRED`) to the **triage** skill's `--enrich` flow, which adds a `### Summary` and `### Acceptance Criteria` block to that backlog entry.
 
 ## Prefix Reference
 
@@ -32,6 +32,11 @@ When in doubt between `FRED` and another prefix, ask Andrew rather than guess.
 5. Generate a short title (5–8 words) for each.
 6. Show the parsed result inline and ask Andrew to confirm. Fix problems and show again. Do not write until confirmed.
 7. After confirmation, APPEND the new items to the bottom of `FREDdocs/backlog.md`. Do not overwrite or modify existing entries.
+8. **Enrich code-relevant stories (via triage).** After appending, find the newly-added stories whose prefix is `FRED`, `DEV`, `QA`, or `LPFRED`. If there are none, stop. Otherwise ask once: *"Enrich the N code-relevant new stories now via triage? (yes / not now)"*
+   - **Not now** → stop. The stories stay as raw entries and can be enriched later with `triage --story=<ID>`.
+   - **Yes** → for each of those stories, in ascending ID order, invoke the **triage** skill's `--enrich=<ID>` flow, one story at a time. Each runs triage's per-story A/C gate (Approve / Edit / Skip / Block) and, on approval, appends a `### Summary` + `### Acceptance Criteria` block to that backlog entry. It does **not** mark the story In Progress.
+   - `BUSINESS`, `LEGAL`, and `DESIGN` stories are always left as raw entries — triage's code-oriented ticket format doesn't fit them.
+   - When finished, report which IDs were enriched and which were left as raw entries.
 
 ## Item Format
 
@@ -67,3 +72,4 @@ Original note text, preserved as-is.
 - Don't skip or reuse numbers, even where gaps exist from merges.
 - Don't use `FRED` as a catch-all when a more specific prefix clearly applies.
 - Don't write to the file until Andrew confirms the parsed list.
+- Don't enrich `BUSINESS`, `LEGAL`, or `DESIGN` stories — only `FRED`, `DEV`, `QA`, and `LPFRED` go through triage `--enrich`.
