@@ -262,6 +262,19 @@ account security ALMOST DONE needs ability to update kyc form
 change bank account ALMOST DONE needs entire UI lift
 [merged from FRED-108: make change bank account setting page look clean]
 
+Scope: reskin only — keep the single-account swap flow; multi-account management (list, set-default, remove) is a separate follow-on story.
+
+Acceptance criteria (approved 2026-06-06, Option C — Hero-Led):
+1. `change-bank-account.page` (.html + .scss) is rebuilt on the FRED design system — Manrope, the FRED palette only, white section cards with #e5e7eb borders, Material Symbols icons — matching security-settings, my-profile, and the tab3 blue-header-over-white pattern.
+2. Hero-led layout: a blue gradient header at the top with the white page content sitting over top of it (same pattern as tab3 settings). The header title is centered (not left-aligned), matching the centered ion-header in security-settings, with the back button on the left.
+3. The current linked account is shown clearly (bank name, account type, masked number — e.g. "Chase · Checking") sourced from the existing `GET /api/plaid/primary-bank-account` — no new endpoints.
+4. Directly under the current-account display, show the linkplaid illustration card (the gradient illustration card with the account_balance / sync_alt icons), and under that illustration card show the "Connect a New Bank" CTA card.
+5. The single primary CTA opens the existing Plaid Link flow; the existing step-up PIN check before opening Plaid is preserved exactly.
+6. The Plaid security/trust messaging ("credentials never stored", "takes effect at your next scheduled investment") is kept and styled into the new layout.
+7. Loading state while Plaid initializes (button shows a spinner / "Preparing secure connection…"), empty state when no account is linked yet, and error + retry state if the token exchange fails — all designed, not placeholder.
+8. Success path shows a confirmation toast and refreshes the displayed account, exactly as today.
+9. No backend, auth, or schema changes. `npx tsc --noEmit` exits 0. Layout verified at 390×844 and 430×932.
+
 ## FRED-125 — ✓ Recurring investments streak badge and pause warning
 recurring investments ALMOST DONE needs monthly streak badge and are you sure you want to pause your investments, this will break your investing streak and reset it to 0 and that it may be better to do less than none
 
