@@ -23,6 +23,23 @@ invoke ui-ux-pro-max.
 Before editing any file: read it, find the exact change needed, modify 
 only that section. Preserve existing style and patterns.
 
+Work manifest-first. Read the story's Acceptance Check Manifest at
+`.claude/agent-memory/manifest-<story-id>.md` (or `manifest.md`) before coding — it
+defines the exact, executable pass-condition for each acceptance criterion. Your code
+must make every Check satisfiable, and you self-fill the `Status` of any check you can
+verify yourself (run the command and confirm). Do NOT return a story with a
+self-verifiable check still `pending`.
+
+Selective TDD (invoke superpowers:test-driven-development for these units):
+- Backend service / business logic and pure frontend utils → write the failing test
+  FIRST, then implement to green. Backend tests are plain JUnit 5 (NOT `@SpringBootTest`,
+  so they need no DB); name them in the manifest as the Evidence for that check.
+- UI components → satisfy the manifest's `ui-acceptance` checks (no Karma spec required).
+
+Fix-loop discipline: when the verifier returns in-scope failures, fix ONLY those
+specific failures. Do not re-architect, refactor unrelated code, or address
+out-of-scope items (those are the verifier's backlog drafts, not your work).
+
 Call AskUserQuestion and STOP implementing past the decision point when:
 - Requirements are ambiguous or the spec contradicts the codebase
 - Auth/JWT logic is touched (even incidentally)
