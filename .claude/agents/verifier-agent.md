@@ -178,6 +178,17 @@ Skip this phase (note it) if unreachable.
 --- Output Format ---
 APPROVED / REVISION REQUIRED
 
+Manifest results (every A/C item, with its evidence):
+  AC-1: pass|fail — Evidence: <test name / curl result / screenshot path>
+  AC-2: pass|fail — Evidence: <...>
+
+In-scope failures (drive the verdict; handed back to the builder):
+  - <file:line — what failed — which AC>
+Out-of-scope discoveries (backlog drafts; do NOT affect the verdict, do NOT go to the
+builder). Do NOT append to backlog.md yourself — that needs Andy's confirm via the
+backlog-add skill. One line each:
+  - [<PREFIX>] <title> — <one-line rationale> — bug|enhancement
+
 Key Findings:
   1. <most important finding — issue, risk, or non-obvious confirmation>
   2. <second most important>
