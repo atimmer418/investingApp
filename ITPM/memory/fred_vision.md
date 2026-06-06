@@ -69,6 +69,9 @@ NOT current priority: Growth, marketing, dark mode, advanced analytics.
 
 - Onboarding component series: hero top-aligned, content center-aligned, CTA at bottom with transparent back button
 - Section cards with single clear header and body content — do not mix concerns in one card
+- Blue-header-over-white ("hero-led") settings pages: a `div.custom-profile-header` directly inside `ion-header` (no ion-toolbar) with a blue gradient and an `&::after` concave cutout whose bg exactly matches `ion-content --background`, so the white content curves up over the blue (tab3 pattern; reused on change-bank-account FRED-124)
+- Centered ion-header title: back button (40px) + `flex:1` centered title + a 40px balancing spacer/`padding-right` so the title is truly centered (security-settings pattern)
+- Reusing the linkplaid `.illustration-card` on other pages: copy the markup/styles and substitute its `--plaid-*` CSS vars with FRED palette literals (its `:host` scope does not carry over)
 - Material Symbols Outlined icon font (subset loaded from /assets/fonts/)
 - Loading veil: full-screen semi-transparent overlay on async operations
 - Separate builder-agent + verifier-agent pattern for implementing and reviewing changes

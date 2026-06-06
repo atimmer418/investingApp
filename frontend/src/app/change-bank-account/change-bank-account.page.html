@@ -9,7 +9,7 @@
     </div>
     <div class="hero-account-peek" *ngIf="currentBankAccount">
       <span class="material-symbols-outlined hero-bank-icon">account_balance</span>
-      <span class="hero-account-text">{{ currentBankAccount.institutionName }} &middot; {{ currentBankAccount.accountSubType || 'Checking' }}</span>
+      <span class="hero-account-text">{{ currentBankAccount.institutionName }} &middot; {{ currentBankAccount.accountSubtype || 'Checking' }}</span>
     </div>
     <div class="hero-account-peek hero-account-peek--empty" *ngIf="!currentBankAccount">
       <span class="material-symbols-outlined hero-bank-icon">link_off</span>
@@ -34,7 +34,7 @@
         </div>
         <div class="account-details">
           <span class="account-name">{{ currentBankAccount.institutionName || 'Bank Account' }}</span>
-          <span class="account-type">{{ currentBankAccount.accountSubType || 'Checking' }}</span>
+          <span class="account-type">{{ currentBankAccount.accountSubtype || 'Checking' }}</span>
         </div>
       </div>
     </div>

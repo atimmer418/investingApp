@@ -18,6 +18,21 @@
 
 ## Daily Entries
 
+### 2026-06-06 — Change Bank Account Page Redesign — SHIPPED (FRED-124)
+
+**Priorities selected:** FRED-124 (approved by Andrew on 2026-06-06)
+**Tier:** 2 — proposed A/C approved as written; written into `FREDdocs/backlog.md` under FRED-124 before build.
+**What shipped:** Full UI overhaul of `frontend/src/app/change-bank-account/change-bank-account.page.{html,scss}` — reskin only, zero `.ts` logic changes. Implemented **Option C (Hero-Led)** per Andrew's feedback: blue gradient hero header with a concave white cutout (tab3 `.custom-profile-header` pattern), white content sitting over the blue, **centered** header title with left back button (security-settings pattern). Card order top-to-bottom: current-account display → linkplaid **illustration card** (account_balance + sync_alt tiles, reused from linkplaid.component) → **"Connect a New Bank" CTA card** with Plaid trust messaging. All four UX states designed (loading spinner / empty dashed "No bank linked yet" card / error + retry button / success confirmation). Plaid flow + step-up PIN check (`openPlaid()`) preserved untouched. Also fixed a pre-existing field-case bug surfaced by the verifier: template bound `accountSubType` but backend returns `accountSubtype` — corrected both bindings so the real account type now displays instead of always falling back to "Checking".
+**Verification:** verifier-agent APPROVED — all 8 A/C pass, type-clean (only pre-existing repo-wide tsconfig deprecation warnings), no palette/font violations, no regressions (only entry point is tab3 route; `goBack()` + success path intact). **Caveat:** verifier Phases 2 (live API) and 3 (browser render at 390×844 / 430×932) could NOT run in the sandbox (backend down, `local.fredvested.com` host blocked, Angular CLI absent) — live API status codes and the rendered four states should be spot-checked by Andy in a running environment before release.
+**Readiness needle:** FRED-124 was the last unmigrated settings page, so shipping it moves **Pages Migrated 70% → ~73%** and nudges **Prod Readiness 71 → ~72** (UI coverage weighted 40 pts). Closes the "no half-old/placeholder pages" gate for this screen ahead of private beta.
+**Metrics (updated):** Readiness ~72/100, Piggy 77.5% (31/40), Pages ~73%, Burndown ~36.5% (31/85), Launch ~64%.
+**Days since last blocker:** 6 (incremented; no blocker today)
+**Blockers active:** none
+**Lessons learned:** The linkplaid illustration card transplants cleanly when its `--plaid-*` CSS vars are substituted with FRED palette literals. The tab3 blue-header-over-white pattern needs the `&::after` cutout bg to exactly match `ion-content --background`. Pre-existing `accountSubType`/`accountSubtype` case mismatch is now fixed here; `formatAccountDisplay()` in the TS still has the old casing but is no longer called by the template.
+**Status:** Complete
+
+---
+
 ### 2026-06-04 (revised) — Bank Account UI Overhaul (single-story)
 
 **Priorities selected:** FRED-124 (was FRED-100 — skipped by Andrew)

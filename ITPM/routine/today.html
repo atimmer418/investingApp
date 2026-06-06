@@ -760,7 +760,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="intermediary">
+  <div id="dashboard" data-populated="true" data-state="completed">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -1148,9 +1148,25 @@
     <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
-        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-124 — Change Bank Account Page — Full UI Overhaul</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Rebuilt <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">change-bank-account.page</code> (.html + .scss) as the approved <strong>Option C — Hero-Led</strong> design, reskin only — no backend, auth, or logic changes (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.page.ts</code> untouched, Plaid flow + step-up PIN check preserved). A blue gradient hero header now sits behind white content with a concave cutout (the tab3 settings pattern), the header title is centered like security-settings, and the cards run current account &rarr; the linkplaid illustration card &rarr; a "Connect a New Bank" CTA card with the Plaid trust messaging. All four UX states are designed (loading, empty, error + retry, success). Also corrected a pre-existing field-case bug so the real account type displays instead of always showing "Checking".</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>Page rebuilt on the FRED design system — Manrope, FRED palette only, Material Symbols icons</li>
+            <li>Hero-led blue header over white content; centered title with left back button</li>
+            <li>Current linked account shown (bank name + type) from the existing primary-bank-account endpoint — no new endpoints</li>
+            <li>Linkplaid illustration card under the current account; "Connect a New Bank" CTA card under that</li>
+            <li>Primary CTA opens the existing Plaid flow; step-up PIN check preserved exactly</li>
+            <li>Plaid trust messaging kept and restyled into the new layout</li>
+            <li>Loading, empty, error + retry, and success states all designed, not placeholder</li>
+            <li>No backend/auth/schema changes; verifier-agent approved all criteria, type-clean, no regressions</li>
+          </ul>
+          <p style="font-size:13px;color:#92400e;background:#fef3c7;border-radius:8px;padding:8px 12px;line-height:1.5;margin:0 0 12px;">Heads up: the verifier couldn't render the live page or hit the API in its sandbox (backend down / host blocked) — worth a quick look on your device at the four states before release.</p>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Readiness needle: FRED-124 was the last unmigrated settings page — Pages Migrated 70% &rarr; ~73%, Prod Readiness 71 &rarr; ~72.</p>
+        </div>
       </div>
-      <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;display:none;">
+      <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;
       </button>
     </div>
