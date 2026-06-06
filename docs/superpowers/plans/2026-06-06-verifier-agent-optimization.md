@@ -513,18 +513,13 @@ git commit -m "feat(verifier-agent): output format with manifest results + in/ou
 
 - [ ] **Step 1: Add manifest generation to Step B**
 
-In the `### Step B — Read Context` section, find item `3. Read `ITPM/memory/fred_vision.md` for design system context.` Immediately AFTER it, insert:
+In the `### Step B — Read Context` section, find item `3. Read `ITPM/memory/fred_vision.md` for design system context.` Immediately AFTER it (and BEFORE the `### Step C` heading), insert the block below as an **UNNUMBERED bold paragraph** — do NOT give it a list number. The skill uses one continuous numbered list spanning Steps B/C/D/E (items 1–11); a new "4." here would collide with Step C's existing "4. Invoke builder-agent". Insert verbatim:
 ````markdown
-4. **Generate the Acceptance Check Manifest** at
-   `.claude/agent-memory/manifest-<story-id>.md` from the story's acceptance criteria
-   (format defined in `.claude/CONTEXT.md` → Agents → The Acceptance Check Manifest).
-   One entry per A/C item: pick the right `Type` (backend-unit | frontend-unit |
-   api-integration | ui-acceptance), write a concrete executable `Check`, leave
-   `Evidence` empty and `Status: pending`. Commit it:
-   ```bash
-   git add .claude/agent-memory/manifest-*.md
-   git commit -m "itpm: manifest for <story-id>" && git push origin develop
-   ```
+**Generate the Acceptance Check Manifest** (after reading the A/C above, before dispatching the builder) at `.claude/agent-memory/manifest-<story-id>.md` from the story's acceptance criteria (format defined in `.claude/CONTEXT.md` → Agents → The Acceptance Check Manifest). One entry per A/C item: pick the right `Type` (backend-unit | frontend-unit | api-integration | ui-acceptance), write a concrete executable `Check`, leave `Evidence` empty and `Status: pending`. Commit it:
+```bash
+git add .claude/agent-memory/manifest-*.md
+git commit -m "itpm: manifest for <story-id>" && git push origin develop
+```
 ````
 
 - [ ] **Step 2: Verify**
