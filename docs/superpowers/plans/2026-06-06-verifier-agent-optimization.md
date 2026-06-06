@@ -30,6 +30,8 @@ Design spec: `docs/superpowers/specs/2026-06-06-verifier-agent-optimization-desi
 
 ## Task 1: Frontend-unit pillar proof (executable de-risk — do first)
 
+> ✅ **COMPLETED** in commit `fix(frontend): scope karma to glob7/minimatch3 so ng test runs`. Root cause of the runner being red was a security-`overrides` glob/minimatch major bump that broke karma@6.4.4; fixed via a nested `overrides.karma` pin. `decodeJwtPayload` spec created and runs `2/2 SUCCESS` headless. Findings recorded. **Skip this task during execution.**
+
 Validates spec open-question #1 (does `ng test` run green headless?) and the selective-xUnit path the design leans on, using the existing pure function `JwtTokenUtils.decodeJwtPayload`.
 
 **Files:**
@@ -630,8 +632,11 @@ Expected: the report-only / never-write language is present.
 
 - [ ] **Step 4: Commit any spike fixes**
 
+Use explicit paths only — never `git add -A`. Two unrelated files (`.claude/skills/backlog-add/SKILL.md`, `.claude/skills/triage/SKILL.md`) are intentionally left modified-and-uncommitted in the working tree; they must NOT be swept into this commit.
+
 ````bash
-git add -A && git commit -m "chore: resolve /code-review subagent spike + consistency checks" || echo "nothing to commit"
+git add .claude/agents/verifier-agent.md .claude/agent-memory/findings.md 2>/dev/null
+git commit -m "chore: resolve /code-review subagent spike + consistency checks" || echo "nothing to commit"
 ````
 
 ---
