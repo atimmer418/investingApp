@@ -82,6 +82,12 @@ Send an early PushNotification — title `FRED ITPM — Build Started`, message:
 2. Read `FREDdocs/backlog.md` for the story's acceptance criteria. **If this was a Tier-2 story** (A/C proposed in the dashboard), write the approved/edited acceptance criteria back into `backlog.md` under that story, commit, and push BEFORE building.
 3. Read `ITPM/memory/fred_vision.md` for design system context.
 
+**Generate the Acceptance Check Manifest** (after reading the A/C above, before dispatching the builder) at `.claude/agent-memory/manifest-<story-id>.md` from the story's acceptance criteria (format defined in `.claude/CONTEXT.md` → Agents → The Acceptance Check Manifest). One entry per A/C item: pick the right `Type` (backend-unit | frontend-unit | api-integration | ui-acceptance), write a concrete executable `Check`, leave `Evidence` empty and `Status: pending`. Commit it:
+```bash
+git add .claude/agent-memory/manifest-*.md
+git commit -m "itpm: manifest for <story-id>" && git push origin develop
+```
+
 ### Step C — Implement
 
 4. Invoke **builder-agent** with a complete spec:
@@ -94,9 +100,24 @@ Send an early PushNotification — title `FRED ITPM — Build Started`, message:
    - Design constraints from fred_vision.md
    - Any UI mockup design feedback
    - Any additional context from Andrew
+   - The path to the Acceptance Check Manifest (`.claude/agent-memory/manifest-<story-id>.md`)
+     — instruct the builder to work manifest-first and self-fill the checks it can verify
 5. PushNotification — title `FRED ITPM — Verifying`, message: builder done, verifier starting.
-6. Invoke **verifier-agent**: verify acceptance criteria, run available tests, check FRED design system compliance, check for regressions in adjacent screens.
-7. If verifier finds issues: return to builder-agent with the specific findings. Repeat until verifier passes OR you hit a hard blocker.
+6. Invoke **verifier-agent** with the diff + the manifest path. It executes every
+   manifest Check, attaches Evidence, and returns: a verdict (APPROVED / REVISION
+   REQUIRED), an **in-scope failures** list, and an **out-of-scope discoveries** list.
+7. Bounded fix-loop (cap = 2 cycles):
+   - If REVISION REQUIRED and cycles_done < 2: hand back to builder-agent ONLY the
+     in-scope failures ("fix exactly these; do not re-architect or touch out-of-scope
+     items"), then re-invoke the verifier (back to step 6). Increment the cycle count.
+   - If still REVISION REQUIRED after 2 cycles: treat as a Hard Blocker (below) — do
+     NOT keep looping. The failure-detail must list the surviving in-scope failures.
+   - Out-of-scope discoveries are NEVER handed to the builder and NEVER block the
+     verdict.
+8. On APPROVED: surface the verifier's out-of-scope discoveries to Andy as backlog
+   drafts. Use the backlog-add skill to append them ONLY after Andrew confirms (include
+   them in the completion PushNotification / dashboard so he can confirm). Do not
+   silently append.
 
 ### If a Hard Blocker Is Hit (build cannot complete)
 
@@ -108,7 +129,7 @@ e. PushNotification — title `FRED ITPM — Build Blocked`, message: the blocke
 
 ### Step D — On Success, Update Memory
 
-8. Update `ITPM/memory/routine_memory.md` today's entry:
+9. Update `ITPM/memory/routine_memory.md` today's entry:
    - What shipped (specific files/components changed)
    - How it moves the production readiness needle
    - Updated readiness score estimate
@@ -119,7 +140,7 @@ e. PushNotification — title `FRED ITPM — Build Blocked`, message: the blocke
 
 ### Step E — Update today.html to Completed
 
-9. Read the current `ITPM/routine/today.html`. Then:
+10. Read the current `ITPM/routine/today.html`. Then:
    a. Set `data-state="completed"` on the `#dashboard` div.
    b. Replace the contents of `#completion-content` with:
       ```html
@@ -132,14 +153,14 @@ e. PushNotification — title `FRED ITPM — Build Blocked`, message: the blocke
       </div>
       ```
    c. Remove `style="display:none"` from `#looks-good-btn` so Andrew can confirm.
-10. Commit and push:
+11. Commit and push:
     ```bash
     git pull --no-rebase origin develop
     git add ITPM/routine/today.html ITPM/memory/routine_memory.md ITPM/memory/fred_vision.md
     git commit -m "itpm: complete — $(date '+%Y-%m-%d')"
     git push origin develop
     ```
-11. PushNotification — title `FRED ITPM — Done`, message: story ID + what shipped + readiness delta + that Andrew can press "Looks Good" when satisfied.
+12. PushNotification — title `FRED ITPM — Done`, message: story ID + what shipped + readiness delta + that Andrew can press "Looks Good" when satisfied.
 
 ---
 

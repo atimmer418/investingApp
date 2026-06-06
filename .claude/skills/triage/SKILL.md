@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Use when starting a FRED work session to decide what to build today, when the day's work needs to be picked from FREDdocs/backlog.md, or when setting up the backlog for the first time. Pass --mode=override to pick one on-demand item, --story=FRED-XXX to triage one specific item by ID, or --done=FRED-XXX to mark a story complete.
+description: Use when starting a FRED work session to decide what to build today, when the day's work needs to be picked from FREDdocs/backlog.md, or when setting up the backlog for the first time. Pass --mode=override to pick one on-demand item, --story=FRED-XXX to triage one specific item by ID, --enrich=FRED-XXX to shape a freshly-added backlog item (Summary + acceptance criteria, no in-progress write), or --done=FRED-XXX to mark a story complete.
 ---
 
 # FRED Triage
@@ -20,11 +20,14 @@ Check the actual current date — do not ask.
 | Tuesday | No time | 0 items — short message + Flags section only |
 | `--mode=override` (any day) | On-demand | Exactly 1 item (any type); also appends to `stories_in_progress.md` |
 | `--story=<ID>` (any day) | Targeted | Exactly 1 item — the backlog entry matching `<ID>`; also appends to `stories_in_progress.md` |
+| `--enrich=<ID>` (any day) | Backlog enrichment | Exactly 1 freshly-added item — writes `.stories/<ID>.md` and appends `### Summary` + `### Acceptance Criteria` to the backlog entry. Does **not** append to `stories_in_progress.md`. |
 | `--done=<ID>` (any day) | Completion | Marks one story done in `stories_in_progress.md` and `backlog.md` |
 
 **Override:** If invocation args contain `--mode=override`, pick exactly 1 item regardless of day. Append the chosen story to `FREDdocs/stories_in_progress.md` (dedup by ID, same as `--story`).
 
 **Story target:** If invocation args contain `--story=<ID>` (e.g. `--story=FRED-119`), skip day-of-week rules and scoring entirely — shape only that one backlog entry. Match `<ID>` case-insensitively. If no match, report the error and list closest matches — stop without writing any file.
+
+**Enrich:** If invocation args contain `--enrich=<ID>` (e.g. `--enrich=FRED-150`), run the **Enrich Flow** — used by the `backlog-add` skill to shape a story that was just appended to the backlog. Match `<ID>` case-insensitively.
 
 **Done flag:** If invocation args contain `--done=<ID>`, run the **Done Flag Flow** — do not pick any work items.
 
@@ -38,6 +41,7 @@ Check the actual current date — do not ask.
 
 0. **Check invocation args first:**
    - Contains `--story=<ID>` → jump to **Targeted Story Flow**; skip everything below.
+   - Contains `--enrich=<ID>` → jump to **Enrich Flow**; skip everything below.
    - Contains `--done=<ID>` → jump to **Done Flag Flow**; skip everything below.
    - Otherwise, continue with steps 1–9.
 1. Read `FREDdocs/backlog.md`. If it doesn't exist → jump to **First-Run Setup**.
@@ -69,6 +73,14 @@ Check the actual current date — do not ask.
 10. Append to `FREDdocs/stories_in_progress.md` under **In Progress** if `<ID>` is not already listed anywhere in that file. Format: `- <ID> — <title>`. Do not duplicate if already present in In Progress or Done.
 11. Do **not** touch `FREDdocs/today.md`. Do **not** produce Punted or Flags sections.
 
+## Enrich Flow (`--enrich=<ID>`)
+
+Used by the `backlog-add` skill to shape a story that was just appended to the backlog. Identical to the **Targeted Story Flow** above, with three changes:
+
+1. **Steps 1–8 are the same:** parse `<ID>`; find the `## <ID> — <title>` heading in `FREDdocs/backlog.md` (if absent, report the error, list the closest IDs present, and stop — write nothing); read `.claude/REFERENCES.md` and `.claude/CONTEXT.md`; build the structured ticket (Ticket Format); write it to `FREDdocs/.stories/<ID>.md` (overwrite if it already exists); then run the **A/C approval gate** (Approve / Edit / Skip / Block).
+2. **On Approve or edit-then-approved:** append a `### Summary` block below the original note text (and above the next `##` heading), then the final `### Acceptance Criteria` block directly beneath the Summary. The `### Summary` is a 1–3 sentence plain-language description distilled from the raw note — what the story is and what "done" looks like. Leave the original note text untouched.
+3. **Do not** append to `FREDdocs/stories_in_progress.md` — enrichment populates the backlog, it does not start work. Skip (`💤`) and Block (`🚫`) behave exactly as in the Targeted Story Flow: insert the marker on the heading and stop, leaving the story as the raw entry with no Summary or Acceptance Criteria.
+
 ## Done Flag Flow (`--done=<ID>`)
 
 1. Parse `<ID>` from the invocation arg (e.g. `--done=FRED-119` → `FRED-119`).
@@ -94,7 +106,7 @@ Check the actual current date — do not ask.
 
 ## Output Sections in today.md
 
-Applies to day-of-week and `--mode=override` runs only. The `--story` flow writes to `FREDdocs/.stories/<ID>.md`; `--done` modifies `stories_in_progress.md` and `backlog.md`.
+Applies to day-of-week and `--mode=override` runs only. The `--story` and `--enrich` flows write to `FREDdocs/.stories/<ID>.md`; `--done` modifies `stories_in_progress.md` and `backlog.md`.
 
 1. **Today's Picks** — the before/after pairs
 2. **Punted** — 3–5 items that almost made the cut, one-sentence reason each
@@ -132,9 +144,9 @@ When `FREDdocs/backlog.md` does not exist:
 - Don't pick content that requires public posting until legal review is cleared.
 - Don't invent file paths — use `.claude/REFERENCES.md`; surface unknowns as open questions in the ticket.
 - Don't pad picks. If Sunday only has one good quick win, pick one and explain.
-- Don't reformat or rewrite items in `backlog.md` after first-run setup — except adding `✓` via `--done`, inserting `💤` or `🚫` markers via the `--story` A/C gate, or appending `### Acceptance Criteria` blocks via the `--story` A/C gate.
+- Don't reformat or rewrite items in `backlog.md` after first-run setup — except adding `✓` via `--done`; inserting `💤` or `🚫` markers via the `--story` or `--enrich` A/C gate; appending `### Acceptance Criteria` blocks via the `--story` or `--enrich` A/C gate; or appending `### Summary` blocks via the `--enrich` A/C gate.
 - Don't use `.claude/CONTEXT.md` for prioritization — it's for code conventions only.
 - Don't ask Andrew what day it is — check the current date programmatically.
-- Don't write to `today.md` when `--story=<ID>` or `--done=<ID>` is used.
+- Don't write to `today.md` when `--story=<ID>`, `--enrich=<ID>`, or `--done=<ID>` is used.
 - Don't append to `stories_in_progress.md` if the ID is already listed anywhere in that file.
-- Don't accept a `--story` or `--done` ID that isn't in `backlog.md` — surface the error and stop.
+- Don't accept a `--story`, `--enrich`, or `--done` ID that isn't in `backlog.md` — surface the error and stop.
