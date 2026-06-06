@@ -61,10 +61,27 @@ KYC status, subscription tier, referral state, or progress flags. If yes,
 note which states were NOT covered by Phase 3 testing (Phase 3 always uses
 facebook@gmail.com). Flag this as a coverage gap in your output.
 
-TypeScript compilation check — run if any frontend .ts files changed:
-  cd frontend && npx tsc --noEmit --skipLibCheck 2>&1 | head -60
-Any compiler error is an immediate REVISION REQUIRED flag with the error
-message and file:line. Do not proceed to Phase 3 if compilation fails.
+Compile gates (immediate REVISION REQUIRED on error — do NOT proceed to later phases):
+- If any frontend .ts changed:
+    cd frontend && npx tsc --noEmit --skipLibCheck 2>&1 | head -60
+- If any backend .java changed:
+    cd backend && ./gradlew compileJava 2>&1 | tail -40
+Report the error message and file:line for any failure.
+
+Selective xUnit — run the manifest's unit checks and use the result as Evidence:
+- backend-unit:  cd backend && ./gradlew test --tests <FullyQualifiedClass> 2>&1 | tail -30
+- frontend-unit: cd frontend && ng test --include='**/<name>.spec.ts' --watch=false --browsers=ChromeHeadless 2>&1 | tail -30
+  ALWAYS target the specific spec with --include. NEVER run the whole suite — legacy
+  CLI-generated component specs may be red and would block the gate.
+Any unit failure → in-scope failure; record the failing test name as Evidence.
+
+Code-review pass (correctness + simplification):
+Review the diff INLINE for bugs, duplicated logic, simpler equivalents, and dead code
+(the same lens /code-review uses). This inline review is the reliable path and the
+gate never depends on anything else. Additionally, IF you can invoke the /code-review
+skill (plain effort — NEVER `ultra`, NEVER `--fix`), run it and merge its findings.
+Route A/C-relevant issues to in-scope failures; everything else to out-of-scope
+backlog drafts. Never run /simplify.
 
 --- Phase 2: API Integration ---
 1. Check that test/api/config.local.sh exists. If missing, skip this phase
