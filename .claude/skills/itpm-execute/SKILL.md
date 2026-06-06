@@ -82,6 +82,12 @@ Send an early PushNotification — title `FRED ITPM — Build Started`, message:
 2. Read `FREDdocs/backlog.md` for the story's acceptance criteria. **If this was a Tier-2 story** (A/C proposed in the dashboard), write the approved/edited acceptance criteria back into `backlog.md` under that story, commit, and push BEFORE building.
 3. Read `ITPM/memory/fred_vision.md` for design system context.
 
+**Generate the Acceptance Check Manifest** (after reading the A/C above, before dispatching the builder) at `.claude/agent-memory/manifest-<story-id>.md` from the story's acceptance criteria (format defined in `.claude/CONTEXT.md` → Agents → The Acceptance Check Manifest). One entry per A/C item: pick the right `Type` (backend-unit | frontend-unit | api-integration | ui-acceptance), write a concrete executable `Check`, leave `Evidence` empty and `Status: pending`. Commit it:
+```bash
+git add .claude/agent-memory/manifest-*.md
+git commit -m "itpm: manifest for <story-id>" && git push origin develop
+```
+
 ### Step C — Implement
 
 4. Invoke **builder-agent** with a complete spec:
