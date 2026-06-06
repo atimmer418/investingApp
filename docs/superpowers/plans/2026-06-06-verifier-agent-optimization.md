@@ -632,7 +632,7 @@ Expected: the report-only / never-write language is present.
 
 - [ ] **Step 4: Commit any spike fixes**
 
-Use explicit paths only — never `git add -A`. Two unrelated files (`.claude/skills/backlog-add/SKILL.md`, `.claude/skills/triage/SKILL.md`) are intentionally left modified-and-uncommitted in the working tree; they must NOT be swept into this commit.
+Use explicit paths only — never `git add -A` (good hygiene: only stage what this task touched).
 
 ````bash
 git add .claude/agents/verifier-agent.md .claude/agent-memory/findings.md 2>/dev/null
