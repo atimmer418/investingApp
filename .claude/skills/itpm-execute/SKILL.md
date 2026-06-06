@@ -129,7 +129,7 @@ e. PushNotification — title `FRED ITPM — Build Blocked`, message: the blocke
 
 ### Step D — On Success, Update Memory
 
-8. Update `ITPM/memory/routine_memory.md` today's entry:
+9. Update `ITPM/memory/routine_memory.md` today's entry:
    - What shipped (specific files/components changed)
    - How it moves the production readiness needle
    - Updated readiness score estimate
@@ -140,7 +140,7 @@ e. PushNotification — title `FRED ITPM — Build Blocked`, message: the blocke
 
 ### Step E — Update today.html to Completed
 
-9. Read the current `ITPM/routine/today.html`. Then:
+10. Read the current `ITPM/routine/today.html`. Then:
    a. Set `data-state="completed"` on the `#dashboard` div.
    b. Replace the contents of `#completion-content` with:
       ```html
@@ -153,14 +153,14 @@ e. PushNotification — title `FRED ITPM — Build Blocked`, message: the blocke
       </div>
       ```
    c. Remove `style="display:none"` from `#looks-good-btn` so Andrew can confirm.
-10. Commit and push:
+11. Commit and push:
     ```bash
     git pull --no-rebase origin develop
     git add ITPM/routine/today.html ITPM/memory/routine_memory.md ITPM/memory/fred_vision.md
     git commit -m "itpm: complete — $(date '+%Y-%m-%d')"
     git push origin develop
     ```
-11. PushNotification — title `FRED ITPM — Done`, message: story ID + what shipped + readiness delta + that Andrew can press "Looks Good" when satisfied.
+12. PushNotification — title `FRED ITPM — Done`, message: story ID + what shipped + readiness delta + that Andrew can press "Looks Good" when satisfied.
 
 ---
 
