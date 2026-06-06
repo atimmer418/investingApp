@@ -626,3 +626,37 @@ check on if its possible to trigger an investment when the user's paycheck is se
 
 ## FRED-188 — Add null userId guard to processChat
 `ChatService.java` `processChat()` calls `userRepository.findById(request.userId())` without a null guard. Add the same guard that was added to `streamChat()`: `request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null`.
+
+## FRED-189 — Fix bank account subtype always showing Checking
+Backend `GET /api/plaid/primary-bank-account` returns the field `accountSubtype` (lowercase t) at `PlaidController.java:177`. The frontend `change-bank-account.page.ts` stores the raw response (`this.currentBankAccount = response`, line 85), then `formatAccountDisplay()` reads `this.currentBankAccount.accountSubType` (capital T, line 232) — always undefined, so the displayed subtype always falls back to 'Checking' regardless of the user's real account type (Savings, etc.). Fix: read `accountSubtype` (lowercase t) at `change-bank-account.page.ts:232` to match the backend; `plaid.service.ts:80-82` already reads it correctly. Pre-existing, user-facing; related to FRED-124.
+
+## DEV-190 — Resolve @capacitor peer conflict (drop --legacy-peer-deps)
+`@capacitor/push-notifications@8.1.1` requires `@capacitor/core@>=8`, but the repo pins `@capacitor/core@7.2.0` (the rest of `@capacitor/*` is on 7.x). A plain `npm install` ERESOLVE-fails and only succeeds with `--legacy-peer-deps`, which silences all peer-dependency checks and can mask real breakage. Fix: either downgrade `@capacitor/push-notifications` to a 7.x-compatible release, or upgrade the whole `@capacitor/*` suite to 8.x together.
+
+## FRED-191 — Measure and optimize app loading performance
+use network waterfall and core web vitals to measure loading time for app and then optimize initial loading time and other timings that could be optimized
+
+### Summary
+Baseline the app's cold-load performance — network waterfall + Core Web Vitals, including the Capacitor iOS webview — rank the biggest contributors, then optimize the top 2–3 using existing patterns and re-measure on a local build to prove a measurable improvement. No hard time target.
+
+### Acceptance Criteria
+1. Baseline captured on a local build, measuring the Capacitor iOS webview cold start (desktop Chrome for waterfall detail): network waterfall + Core Web Vitals (LCP, FCP, TTI, TBT, CLS), largest contributors listed.
+2. Top contributors to initial load ranked by impact.
+3. Top 2–3 bottlenecks optimized using existing-pattern techniques only (lazy-load gaps, eager providers, font/image preload, deferred startup work in app.component.ts, build budgets) — no new architecture.
+4. Same-method re-measurement shows a measurable reduction (no specific time target required).
+5. `npx tsc --noEmit` exits 0 and `ng build` succeeds within budgets.
+6. Before/after numbers written up.
+
+## FRED-192 — Redesign tab3 settings page UI (keep blue header)
+redesign the UI of tab3 (settings) page. we want to keep the blue header with the my profile and welcome and "FRED" but we kinda want a cleaner design. refer to the FRED UI Style Guide for how to come up with more designs for tab3 while still keeping that blue header idea. there should be 3-5 options for how it could look
+
+### Summary
+Produce 3–5 cleaner tab3 settings designs as static HTML/CSS mockups posted in today.html, each keeping the blue-header concept (avatar + "My Account"/welcome + "FRED") — header and greeting copy may be restyled — all grounded in the FRED UI Style Guide, for Andrew to pick from before implementation.
+
+### Acceptance Criteria
+1. 3–5 options, each keeping the blue-header concept (avatar + "My Account"/welcome + "FRED" present); the header itself and greeting copy may be restyled.
+2. Every option grounded in the FRED UI Style Guide — FRED palette, Manrope type scale, Material Symbols icons, established card/row patterns; no ad-hoc colors or spacing.
+3. All content + actions preserved (Investment Management / Account & Security / Support & Legal groups, profile action badge, FRED-logo MFU interaction) — visual only, no nav/behavior changes.
+4. Options meaningfully distinct (e.g., grouped cards vs. flat inset list vs. iOS-grouped vs. hero-stat header), not trivial reskins.
+5. Each option annotated — how it's cleaner + trade-offs.
+6. Delivered as static HTML/CSS mockups posted in today.html; chosen option becomes a separate implementation story.

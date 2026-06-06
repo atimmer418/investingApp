@@ -30,13 +30,13 @@ When in doubt between `FRED` and another prefix, ask Andrew rather than guess.
 3. Parse into individual items using line breaks, bullets, and obvious topic shifts as separators. Ask to clarify rather than guess on ambiguous splits.
 4. For each item, assign the correct prefix from the table above and the next sequential number, incrementing by 1 per item.
 5. Generate a short title (5–8 words) for each.
-6. Show the parsed result inline and ask Andrew to confirm. Fix problems and show again. Do not write until confirmed.
-7. After confirmation, APPEND the new items to the bottom of `FREDdocs/backlog.md`. Do not overwrite or modify existing entries.
-8. **Enrich code-relevant stories (via triage).** After appending, find the newly-added stories whose prefix is `FRED`, `DEV`, `QA`, or `LPFRED`. If there are none, stop. Otherwise ask once: *"Enrich the N code-relevant new stories now via triage? (yes / not now)"*
-   - **Not now** → stop. The stories stay as raw entries and can be enriched later with `triage --story=<ID>`.
-   - **Yes** → for each of those stories, in ascending ID order, invoke the **triage** skill's `--enrich=<ID>` flow, one story at a time. Each runs triage's per-story A/C gate (Approve / Edit / Skip / Block) and, on approval, appends a `### Summary` + `### Acceptance Criteria` block to that backlog entry. It does **not** mark the story In Progress.
-   - `BUSINESS`, `LEGAL`, and `DESIGN` stories are always left as raw entries — triage's code-oriented ticket format doesn't fit them.
-   - When finished, report which IDs were enriched and which were left as raw entries.
+6. Show the parsed result inline — each item's prefix, number, title, and original note. Then present the confirmation as an **`AskUserQuestion`** (header "Confirm") with these options:
+   - **Looks right — enrich** — confirm the list, append it (step 7), then enrich the code-relevant stories (step 8). *Include this option only when at least one parsed item is `FRED`, `DEV`, `QA`, or `LPFRED`.*
+   - **Looks right — don't enrich** — confirm the list and append it (step 7); skip enrichment. *When no parsed item is enrichable, this is the only "looks right" option — label it just **Looks right**.*
+   - **No — tell me what to change** — write nothing; Andrew says what to fix; re-parse and show again.
+   Do not write to `backlog.md` until Andrew picks one of the "Looks right" options.
+7. APPEND the confirmed items to the bottom of `FREDdocs/backlog.md`. Do not overwrite or modify existing entries.
+8. **Enrich (only when Andrew chose "Looks right — enrich").** For each newly-added story whose prefix is `FRED`, `DEV`, `QA`, or `LPFRED`, in ascending ID order, invoke the **triage** skill's `--enrich=<ID>` flow, one story at a time. Each runs triage's per-story A/C gate (Approve / Edit / Skip / Block) and, on approval, appends a `### Summary` + `### Acceptance Criteria` block to that backlog entry. It does **not** mark the story In Progress. `BUSINESS`, `LEGAL`, and `DESIGN` stories are always left as raw entries — triage's code-oriented ticket format doesn't fit them. When finished, report which IDs were enriched and which were left as raw entries.
 
 ## Item Format
 
