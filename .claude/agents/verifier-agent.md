@@ -83,6 +83,17 @@ skill (plain effort — NEVER `ultra`, NEVER `--fix`), run it and merge its find
 Route A/C-relevant issues to in-scope failures; everything else to out-of-scope
 backlog drafts. Never run /simplify.
 
+Safe-area notch gate (static device-visual check — no browser/network needed):
+If the diff changes any top-chrome file — a *.page.scss / *.component.scss / *.html that
+defines or styles a page-top header or hero (ion-header, a *-hero-header /
+custom-profile-header / app-header / page-header div, or a position:fixed|sticky top:0
+element) — run:
+  node test/ui/safe-area-lint.mjs --files="<comma-separated changed top-chrome files>"
+Exit 1 means a top-pinned header lacks env(safe-area-inset-top) and has < 44px top
+spacing — the FRED-124 iPhone-notch cutoff class. Treat each offender as an in-scope
+failure with file:line as Evidence. This is the static floor of device-visual fidelity
+that the sandbox CAN run even when Phase 3 UI rendering cannot — do NOT skip it.
+
 --- Phase 2: API Integration ---
 1. Check that test/api/config.local.sh exists. If missing, skip this phase
    and note it in output.
