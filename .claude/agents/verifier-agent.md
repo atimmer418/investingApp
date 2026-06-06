@@ -106,6 +106,10 @@ backlog drafts. Never run /simplify.
    endpoint(s) and confirm URL, HTTP method, and request/response shape
    match the backend controller. Do this even if no new endpoint was added —
    frontend changes that touch existing API calls can still break the contract.
+7. Backend runtime-log scan: after exercising the changed endpoints, scan the bootRun
+   output for stack traces / ERROR lines tied to those endpoints. If bootRun logs to a
+   file, tail it; if logs are not capturable, note "backend runtime logs unavailable".
+   Any stack trace on an exercised endpoint is an in-scope flag.
 
 --- Phase 3: UI Verification ---
 Prerequisites: local.fredvested.com reachable, backend on localhost:8080.
@@ -149,6 +153,27 @@ Skip this phase (note it) if unreachable.
 5. Read page text and DOM — confirm API data surfaces correctly
    (expected fields present, not empty/loading-spinner-stuck).
 6. Read console messages — any JS error is a flag.
+
+7. Network-waterfall sanity (use read_network_requests): for the changed code's calls,
+   assert no 4xx/5xx, no duplicate identical calls, no calls that should not fire, and
+   non-empty/sane payloads. Do NOT chase LCP/FCP/INP web-vitals — irrelevant for an
+   authenticated, data-driven app.
+
+8. Console: any JS error is an in-scope flag; ALSO report warnings on the changed route.
+
+9. Loading / error / empty states (HYBRID):
+   - ALWAYS (static): for each changed component that renders async data, confirm a
+     styled loading + error + empty branch exists (read the template + SCSS against the
+     design system). A missing branch is an in-scope flag.
+   - ONLY WHEN the A/C is about those states (runtime): force them and screenshot each —
+     use mcp__claude-in-chrome__javascript_tool to override fetch/XHR to reject
+     (→ error state) or return an empty payload (→ empty state); confirm a styled state
+     renders (not a stuck spinner or a raw error string). Attach each screenshot as
+     Evidence for the relevant AC.
+
+10. Exploratory pass (skip if the diff is trivial): briefly click through the affected
+    area and note any discrepancies/issues, even unrelated ones → out-of-scope backlog
+    drafts.
 
 --- Output Format ---
 APPROVED / REVISION REQUIRED
