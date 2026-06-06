@@ -1,23 +1,55 @@
+// Force light mode
 :host {
   --ion-background-color: #f8fafc;
-  --ion-toolbar-background: #f8fafc;
-  --ion-toolbar-color: #0f172a;
+  --ion-toolbar-background: transparent;
+  --ion-toolbar-color: #ffffff;
   --ion-text-color: #0f172a;
   --ion-color-primary: #2563EB;
 }
 
 ion-content { --background: #f8fafc; }
 
-ion-toolbar {
-  --background: #f8fafc;
-  --border-width: 0;
-  --min-height: 52px;
+// ─── Blue Hero Header ──────────────────────────────────────────────────────────
+
+ion-header {
+  --background: transparent;
+  background: transparent !important;
+  contain: none;
+  overflow: visible;
 }
 
-.header-inner {
+ion-toolbar {
+  --background: transparent;
+  --border-width: 0;
+  --min-height: 0;
+}
+
+.blue-hero-header {
+  background: linear-gradient(0deg, #2563EB 0%, #3b82f6 100%);
+  padding: 10px 20px 40px 20px; // extra bottom padding for the concave cutout
+  position: relative;
+  z-index: 10;
+
+  // Concave white cutout — white page bg curves up into the blue header
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 24px;
+    background: #f8fafc;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+  }
+}
+
+// Nav row: back button + centered title + spacer
+.hero-nav {
   display: flex;
   align-items: center;
-  padding: 0 4px;
+  padding-top: 4px;
+  margin-bottom: 16px;
 }
 
 .back-btn {
@@ -27,15 +59,22 @@ ion-toolbar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.15);
   border: none;
   cursor: pointer;
-  color: #0f172a;
+  color: #ffffff;
   flex-shrink: 0;
+  transition: background 0.15s ease;
 
-  &:active { background: rgba(0, 0, 0, 0.05); }
+  &:active { background: rgba(255, 255, 255, 0.25); }
 
   .material-symbols-outlined { font-size: 20px; }
+}
+
+// Spacer mirrors the back-btn width so the title is truly centered
+.back-btn-spacer {
+  width: 40px;
+  flex-shrink: 0;
 }
 
 .header-title {
@@ -46,23 +85,59 @@ ion-toolbar {
   text-align: center;
   flex: 1;
   margin: 0;
-  padding-right: 40px;
-  color: #0f172a;
+  color: #ffffff;
 }
 
+// Peeked account summary inside the blue hero
+.hero-account-peek {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  .hero-bank-icon {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.85);
+    font-variation-settings: 'FILL' 1;
+  }
+
+  .hero-account-text {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: -0.01em;
+  }
+
+  &--empty {
+    .hero-bank-icon { color: rgba(255, 255, 255, 0.55); }
+    .hero-account-text { color: rgba(255, 255, 255, 0.6); }
+  }
+}
+
+// ─── Content ──────────────────────────────────────────────────────────────────
+
 .content-inner {
-  padding: 12px 18px 40px;
+  padding: 12px 18px 48px;
   font-family: 'Manrope', sans-serif;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
+// ─── Section Cards ────────────────────────────────────────────────────────────
+
 .section-card {
-  background: white;
+  background: #ffffff;
   border-radius: 14px;
   border: 2px solid #e5e7eb;
   padding: 16px;
+
+  &--empty {
+    border-style: dashed;
+    border-color: #d1d5db;
+    background: #fafafa;
+  }
 }
 
 .card-header-row {
@@ -76,6 +151,10 @@ ion-toolbar {
     color: #2563EB;
     font-variation-settings: 'FILL' 1;
     flex-shrink: 0;
+
+    &--gray {
+      color: #9ca3af;
+    }
   }
 
   .card-title {
@@ -87,6 +166,17 @@ ion-toolbar {
     margin: 0;
     flex: 1;
   }
+}
+
+.connected-badge {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #dcfce7;
+  border-radius: 6px;
+  padding: 3px 8px;
+  flex-shrink: 0;
 }
 
 // Current account row
@@ -113,31 +203,159 @@ ion-toolbar {
     flex: 1;
     display: flex;
     flex-direction: column;
+    gap: 2px;
 
-    .account-label {
+    .account-name {
       font-family: 'Manrope', sans-serif;
-      font-size: 11px;
+      font-size: 16px;
       font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #6b7280;
-      margin-bottom: 2px;
+      color: #0f172a;
+      letter-spacing: -0.015em;
     }
 
-    .account-val {
-      font-family: 'Courier New', monospace;
-      font-size: 15px;
-      font-weight: 600;
-      color: #0f172a;
+    .account-type {
+      font-family: 'Manrope', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: #6b7280;
+      text-transform: capitalize;
     }
   }
 }
 
-// Feature list
+// Empty state row
+.empty-account-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0;
+
+  .empty-icon {
+    font-size: 28px;
+    color: #9ca3af;
+    flex-shrink: 0;
+    font-variation-settings: 'FILL' 0;
+  }
+
+  .empty-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    .empty-label {
+      font-family: 'Manrope', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #6b7280;
+    }
+
+    .empty-hint {
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      color: #9ca3af;
+      line-height: 1.4;
+    }
+  }
+}
+
+// ─── Illustration Card (reused from linkplaid) ────────────────────────────────
+
+.illustration-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
+  border-radius: 16px;
+  padding: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #bfdbfe;
+  min-height: 110px;
+}
+
+.illus-blob {
+  position: absolute;
+  border-radius: 50%;
+
+  &--top {
+    top: -20px;
+    right: -20px;
+    width: 80px;
+    height: 80px;
+    background: rgba(37, 99, 235, 0.12);
+    filter: blur(20px);
+  }
+
+  &--bottom {
+    bottom: -16px;
+    left: -16px;
+    width: 64px;
+    height: 64px;
+    background: rgba(139, 92, 246, 0.1);
+    filter: blur(16px);
+  }
+}
+
+.illus-icons {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  height: 64px;
+}
+
+.illus-main {
+  width: 64px;
+  height: 64px;
+  background: white;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transform: rotate(-6deg);
+  z-index: 2;
+
+  .material-symbols-outlined {
+    font-size: 32px;
+    color: #2563EB;
+    font-variation-settings: 'FILL' 1;
+  }
+}
+
+.illus-secondary {
+  width: 48px;
+  height: 48px;
+  background: #dbeafe;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: -24px;
+  top: -4px;
+  transform: rotate(12deg);
+  border: 2px solid white;
+  z-index: 1;
+
+  .material-symbols-outlined {
+    font-size: 20px;
+    color: #2563EB;
+  }
+}
+
+// ─── CTA Card ─────────────────────────────────────────────────────────────────
+
+.cta-card {
+  .card-header-row { margin-bottom: 14px; }
+}
+
 .feature-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-bottom: 18px;
 
   .feature-item {
     display: flex;
@@ -166,7 +384,6 @@ ion-toolbar {
   }
 }
 
-// CTA section
 .cta-section {
   display: flex;
   flex-direction: column;
@@ -219,20 +436,73 @@ ion-toolbar {
   margin: 0;
 }
 
-// Status message
-.status-message {
-  background: white;
+// ─── Status Cards ─────────────────────────────────────────────────────────────
+
+.status-card {
   border-radius: 12px;
-  border: 2px solid #e5e7eb;
   padding: 14px 16px;
-  text-align: center;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  .status-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    font-variation-settings: 'FILL' 1;
+    margin-top: 1px;
+  }
 
   .status-text {
     font-family: 'Manrope', sans-serif;
     font-size: 14px;
     font-weight: 600;
+    line-height: 1.4;
+    flex: 1;
+  }
 
-    &.status-success { color: #16a34a; }
-    &.status-danger  { color: #ef4444; }
+  &--success {
+    background: #f0fdf4;
+    border: 1.5px solid #bbf7d0;
+
+    .status-icon { color: #16a34a; }
+    .status-text { color: #15803d; }
+  }
+
+  &--error {
+    background: #fef2f2;
+    border: 1.5px solid #fecaca;
+
+    .status-icon { color: #ef4444; }
+    .status-text { color: #b91c1c; }
+  }
+}
+
+.status-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.retry-btn {
+  align-self: flex-start;
+  background: transparent;
+  border: 1.5px solid #ef4444;
+  border-radius: 8px;
+  color: #ef4444;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:active:not(:disabled) {
+    background: #fef2f2;
   }
 }
