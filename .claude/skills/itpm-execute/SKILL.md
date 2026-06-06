@@ -100,9 +100,24 @@ git commit -m "itpm: manifest for <story-id>" && git push origin develop
    - Design constraints from fred_vision.md
    - Any UI mockup design feedback
    - Any additional context from Andrew
+   - The path to the Acceptance Check Manifest (`.claude/agent-memory/manifest-<story-id>.md`)
+     — instruct the builder to work manifest-first and self-fill the checks it can verify
 5. PushNotification — title `FRED ITPM — Verifying`, message: builder done, verifier starting.
-6. Invoke **verifier-agent**: verify acceptance criteria, run available tests, check FRED design system compliance, check for regressions in adjacent screens.
-7. If verifier finds issues: return to builder-agent with the specific findings. Repeat until verifier passes OR you hit a hard blocker.
+6. Invoke **verifier-agent** with the diff + the manifest path. It executes every
+   manifest Check, attaches Evidence, and returns: a verdict (APPROVED / REVISION
+   REQUIRED), an **in-scope failures** list, and an **out-of-scope discoveries** list.
+7. Bounded fix-loop (cap = 2 cycles):
+   - If REVISION REQUIRED and cycles_done < 2: hand back to builder-agent ONLY the
+     in-scope failures ("fix exactly these; do not re-architect or touch out-of-scope
+     items"), then re-invoke the verifier (back to step 6). Increment the cycle count.
+   - If still REVISION REQUIRED after 2 cycles: treat as a Hard Blocker (below) — do
+     NOT keep looping. The failure-detail must list the surviving in-scope failures.
+   - Out-of-scope discoveries are NEVER handed to the builder and NEVER block the
+     verdict.
+8. On APPROVED: surface the verifier's out-of-scope discoveries to Andy as backlog
+   drafts. Use the backlog-add skill to append them ONLY after Andrew confirms (include
+   them in the completion PushNotification / dashboard so he can confirm). Do not
+   silently append.
 
 ### If a Hard Blocker Is Hit (build cannot complete)
 
