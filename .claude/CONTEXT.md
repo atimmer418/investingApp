@@ -181,6 +181,49 @@ frontend/src/app/
 - **builder_agent** — implements the change
 - **verifier_agent** — reviews what the builder built for correctness, safety, and completeness
 
+### The Acceptance Check Manifest (shared contract)
+Every non-trivial story carries a manifest at
+`.claude/agent-memory/manifest-<story-id>.md` (use `manifest.md` if no story ID).
+It is the single source of truth for "done": the orchestrator generates it, the
+builder satisfies it, the verifier executes it. One entry per acceptance criterion:
+
+```
+## AC-1: <the acceptance criterion, restated>
+- Type:     backend-unit | frontend-unit | api-integration | ui-acceptance
+- Check:    <concrete, executable pass-condition>
+- Evidence: <artifact that proves it — JUnit test name / curl assertion /
+             screenshot path + network assertion>
+- Status:   pending        # verifier flips to pass | fail
+```
+
+**Evidence gate:** the verifier may only return APPROVED when EVERY check is `pass`
+with an attached Evidence artifact. No artifact ⇒ that item cannot be approved.
+
+**Selective xUnit commands:**
+- backend-unit: `cd backend && ./gradlew test --tests <FullyQualifiedClass>`
+  — write plain JUnit 5 (NOT `@SpringBootTest`) so unit tests need no DB.
+- frontend-unit: `cd frontend && ng test --include='**/<name>.spec.ts' --watch=false --browsers=ChromeHeadless`
+  — ALWAYS target the specific spec with `--include`; never run the whole suite
+  (legacy CLI-generated component specs may be red and would block the gate).
+
+### The Bounded Fix-Loop (builder ↔ verifier)
+The builder and verifier never talk directly — whoever orchestrates them
+(`itpm-execute`, or this session for manual runs) mediates. This is what keeps the
+loop bounded and the verifier independent:
+1. Dispatch **builder** (story + A/C + manifest). It implements, writes selective
+   xUnit, self-fills the checks it can, returns.
+2. Dispatch **verifier** (diff + manifest). It flips each Status, attaches evidence,
+   returns a verdict plus TWO separate lists: in-scope failures and out-of-scope
+   discoveries.
+3. If REVISION REQUIRED and cycle < 2: hand ONLY the in-scope failures back to the
+   builder, then re-verify (back to step 2). Out-of-scope discoveries NEVER go to the
+   builder.
+4. Still REVISION REQUIRED after 2 cycles: escalate to Andy. Do NOT keep looping.
+5. Out-of-scope discoveries → drafted backlog items (backlog-add semantics, confirm
+   before appending) — they NEVER block the verdict.
+
+Termination is on objective evidence (checks pass), never on "agreement."
+
 ### When to Spawn Them
 Spawn agents automatically for non-trivial tasks:
 1. Spawn `builder_agent` to implement the change
