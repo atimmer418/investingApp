@@ -258,7 +258,7 @@ account security ALMOST DONE needs ability to update kyc form
 5. On Alpaca API error: descriptive error toast; form stays open for retry.
 6. `npx tsc --noEmit` exits 0; `./gradlew build -x test` exits 0.
 
-## FRED-124 — 💤 Change bank account page full UI overhaul
+## FRED-124 — ✓ Change bank account page full UI overhaul
 change bank account ALMOST DONE needs entire UI lift
 [merged from FRED-108: make change bank account setting page look clean]
 
