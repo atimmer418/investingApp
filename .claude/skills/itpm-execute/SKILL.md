@@ -164,6 +164,22 @@ e. PushNotification — title `FRED ITPM — Build Blocked`, message: the blocke
 
 ---
 
+## IF type is `rework`
+
+Andrew reviewed a COMPLETED build, was not satisfied, and submitted feedback. The same story must be reworked — **do NOT re-pick or re-plan.** The `content` holds the story ID and his feedback.
+
+1. Parse the story ID and feedback from `content`.
+2. Read `ITPM/routine/today.html` to recover what was built (the completion summary, the originally selected approach) and `FREDdocs/backlog.md` for the story's acceptance criteria. Read `ITPM/memory/fred_vision.md` for design constraints.
+3. The Cloudflare function already set `data-state="intermediary"`. Send a PushNotification — title `FRED ITPM — Reworking`, message: the story is being reworked on your feedback.
+4. Invoke **builder-agent** with: the story ID + title, the original approach, **Andrew's rework feedback as the priority directive** ("the previous build shipped X; Andrew wants these changes: …"), all acceptance criteria, and the manifest path. Tell it to address the feedback specifically, not re-architect.
+5. Invoke **verifier-agent** with the diff + manifest (same bounded fix-loop, cap = 2, as the approval path). If it can't pass after 2 cycles, treat as a Hard Blocker (set `failed`, notify).
+6. On success: update today's `routine_memory.md` entry with a `**Reworked:** [what changed per feedback]` note. Then redo **Step E** (update `today.html` back to `data-state="completed"`, refresh `#completion-content` with the new summary, keep `#looks-good-btn` visible).
+7. Commit, push, and PushNotification — title `FRED ITPM — Reworked`, message: what changed + that Andrew can press "Looks Good" or request more changes.
+
+Then stop.
+
+---
+
 ## Note on planning
 
 Plan generation (story selection, triage, options/mockups, metrics) is owned by the planning skill `.claude/skills/itpm/SKILL.md`, NOT this skill. This skill only consumes an already-queued action.

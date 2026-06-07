@@ -69,20 +69,24 @@ export async function onRequestPost(context) {
     return json({ ok: false, error: err }, 502);
   }
 
-  // Step 2: Patch today.html data-state from "planning" to "intermediary"
+  // Step 2: Patch today.html data-state → "intermediary".
+  // approval/revision come from a "planning" page; rework comes from a
+  // "completed" page. Flip whichever source state is present.
   try {
     const getTodayRes = await fetch(TODAY_API, { headers: ghHeaders });
     if (getTodayRes.ok) {
       const todayFile = await getTodayRes.json();
       const currentHtml = b64DecodeUtf8(todayFile.content.replace(/\n/g, ''));
-      const updatedHtml = currentHtml.replace('data-state="planning"', 'data-state="intermediary"');
+      const updatedHtml = currentHtml
+        .replace('data-state="planning"', 'data-state="intermediary"')
+        .replace('data-state="completed"', 'data-state="intermediary"');
 
       if (updatedHtml !== currentHtml) {
         await fetch(TODAY_API, {
           method: 'PUT',
           headers: { ...ghHeaders, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            message: 'itpm: set state to intermediary on approval',
+            message: `itpm: set state to intermediary on ${type}`,
             content: b64EncodeUtf8(updatedHtml),
             sha: todayFile.sha
           })

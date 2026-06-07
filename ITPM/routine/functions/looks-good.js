@@ -1,11 +1,17 @@
 const REPO = 'atimmer418/FRED';
-const FILE_PATH = 'ITPM/routine/today.html';
-const API_BASE = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
+const TODAY_PATH = 'ITPM/routine/today.html';
+const BACKLOG_PATH = 'FREDdocs/backlog.md';
 
 export async function onRequestPost(context) {
-  const { env } = context;
+  const { request, env } = context;
   const githubToken = env.GITHUB_TOKEN;
   if (!githubToken) return json({ ok: false, error: 'GITHUB_TOKEN not configured' }, 500);
+
+  let storyId = '';
+  try {
+    const body = await request.json();
+    storyId = (body.storyId || '').trim();
+  } catch (_) { /* storyId optional; state flip still runs */ }
 
   const headers = {
     'Authorization': `Bearer ${githubToken}`,
@@ -13,31 +19,81 @@ export async function onRequestPost(context) {
     'Accept': 'application/vnd.github+json'
   };
 
-  const getRes = await fetch(API_BASE, { headers });
-  if (!getRes.ok) return json({ ok: false, error: 'Could not fetch file' }, 502);
+  // ── 1. Flip today.html data-state → looks_good ──
+  // Accept either "completed" or "intermediary" as the source state so a
+  // half-finished prior transition can still be closed out cleanly.
+  const todayApi = `https://api.github.com/repos/${REPO}/contents/${TODAY_PATH}`;
+  const todayRes = await fetch(todayApi, { headers });
+  if (!todayRes.ok) return json({ ok: false, error: 'Could not fetch today.html' }, 502);
+  const todayFile = await todayRes.json();
+  const todayHtml = b64DecodeUtf8(todayFile.content.replace(/\n/g, ''));
 
-  const file = await getRes.json();
-  const currentContent = b64DecodeUtf8(file.content.replace(/\n/g, ''));
-  const updated = currentContent.replace('data-state="completed"', 'data-state="looks_good"');
+  let updatedHtml = todayHtml
+    .replace('data-state="completed"', 'data-state="looks_good"')
+    .replace('data-state="intermediary"', 'data-state="looks_good"');
 
-  if (updated === currentContent) return json({ ok: false, error: 'data-state="completed" not found in file' }, 400);
+  if (updatedHtml !== todayHtml) {
+    const putToday = await fetch(todayApi, {
+      method: 'PUT',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'itpm: looks good — approved completion',
+        content: b64EncodeUtf8(updatedHtml),
+        sha: todayFile.sha
+      })
+    });
+    if (!putToday.ok) return json({ ok: false, error: await putToday.text() }, 502);
+  }
+  // If the state was already looks_good, that's fine — fall through to the checkmark.
 
-  const putRes = await fetch(API_BASE, {
-    method: 'PUT',
-    headers: { ...headers, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      message: 'itpm: looks good — approved completion',
-      content: b64EncodeUtf8(updated),
-      sha: file.sha
-    })
-  });
+  // ── 2. Checkmark the story in backlog.md so it's never re-picked ──
+  let backlogMarked = false;
+  if (/^FRED-\d+$/.test(storyId)) {
+    const backlogApi = `https://api.github.com/repos/${REPO}/contents/${BACKLOG_PATH}`;
+    const blRes = await fetch(backlogApi, { headers });
+    if (blRes.ok) {
+      const blFile = await blRes.json();
+      const blContent = b64DecodeUtf8(blFile.content.replace(/\n/g, ''));
 
-  if (!putRes.ok) return json({ ok: false, error: await putRes.text() }, 502);
-  return json({ ok: true });
+      // Heading looks like:  ## FRED-124 — 💤 Change bank account page...
+      // Replace the status emoji (💤 / ⏳ / any) right after the em-dash with ✓.
+      // Only touch the heading line for this exact story id.
+      const lines = blContent.split('\n');
+      let changed = false;
+      for (let i = 0; i < lines.length; i++) {
+        const headingRe = new RegExp('^(##\\s+' + storyId + '\\s+[—-]\\s+)(.*)$');
+        const m = lines[i].match(headingRe);
+        if (m) {
+          // Strip a leading status emoji if present, then prepend ✓.
+          const rest = m[2].replace(/^([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}✅⏳\u{1F4A4}]️?\s*)/u, '');
+          if (!rest.startsWith('✓')) {
+            lines[i] = m[1] + '✓ ' + rest;
+            changed = true;
+          }
+          break;
+        }
+      }
+
+      if (changed) {
+        const putBl = await fetch(backlogApi, {
+          method: 'PUT',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `itpm: mark ${storyId} done (looks good)`,
+            content: b64EncodeUtf8(lines.join('\n')),
+            sha: blFile.sha
+          })
+        });
+        backlogMarked = putBl.ok;
+      }
+    }
+  }
+
+  return json({ ok: true, backlogMarked });
 }
 
 // UTF-8-safe base64. Bare btoa/atob throw on code points > 0xFF (em-dashes,
-// arrows, checkmarks all over today.html), which crashes the Worker (1101).
+// arrows, checkmarks all over today.html + backlog.md), which crashes the Worker.
 function b64EncodeUtf8(str) {
   const bytes = new TextEncoder().encode(str);
   let bin = '';

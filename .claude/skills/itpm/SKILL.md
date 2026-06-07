@@ -169,7 +169,13 @@ Andrew can pick one and annotate each via the note textareas — the approval wi
 
 Read the current `ITPM/routine/today.html` to get the exact current structure (it has the full state machine, phone-mockup CSS, trend spans, add-backlog section, etc.). Rewrite it with all sections populated. **Do not change the CSS or the `<script>`** — only swap in the data/content. Preserve every function and class.
 
-**Critical flags on `<div id="dashboard">`:** set `data-populated="true"` AND `data-state="planning"`.
+**Critical flags on `<div id="dashboard">`:** set `data-populated="true"` AND `data-state="planning"`. This is a brand-new day — the page must be a clean planning brief with NO leftover completion content.
+
+**Reset stale state from yesterday's cycle:**
+- Reset `#completion-content` back to its placeholder: `<p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>`
+- Reset `#completion-section` to `style="display:none;"` (the state CSS shows it only in completed/looks_good).
+- Clear `<p id="failure-detail">` and keep `#failure-banner` hidden.
+- The approve bar must show "Approve / Get To Work" (planning state shows it; the JS handles this via `applyStateUI`).
 
 Populate:
 1. **Scoreboard** — all 6 metric values, bar-fill widths, `positive`/`warning` classes, AND the `.metric-trend` span for each (`↑ +N vs last week` green / `↓ -N vs last week` red / `→ no change` gray).

@@ -233,7 +233,7 @@
     [data-state="intermediary"] .section-planning-only { display: none; }
 
     /* completed / looks_good — work done. Hide plan detail, reveal the recap cards. */
-    [data-state="looks_good"] .section-planning-only,
+    [data-state="completed"] .section-planning-only,
     [data-state="looks_good"] .section-planning-only { display: none; }
     [data-state="completed"] .section-intermediary-only,
     [data-state="looks_good"] .section-intermediary-only { display: block; }
@@ -1169,6 +1169,13 @@
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;
       </button>
+
+      <!-- Request Changes — rework the same story with feedback -->
+      <div id="rework-block" style="margin-top:14px;">
+        <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The hero header is too tall — tighten it. And the empty state should use the existing illustration, not a new one."></textarea>
+        <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
+      </div>
     </div>
 
     <!-- ── Anything Else For the Execution Agent (planning only) ── -->
@@ -1632,16 +1639,31 @@
 
     // ─── Looks Good ───────────────────────────────────────────────────────────
 
+    // Pull the story ID (e.g. "FRED-124") out of the completion summary so the
+    // backend functions know which backlog story to check off / rework.
+    function getCompletedStoryId() {
+      var el = document.getElementById('completion-content');
+      if (!el) return '';
+      var m = el.textContent.match(/FRED-\d+/);
+      return m ? m[0] : '';
+    }
+
     function handleLooksGood() {
       var btn = document.getElementById('looks-good-btn');
       btn.textContent = 'Marking as done...';
       btn.disabled = true;
-      fetch('/looks-good', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+      fetch('/looks-good', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storyId: getCompletedStoryId() })
+      })
         .then(function(res) { return res.json(); })
         .then(function(data) {
           if (data.ok) {
             btn.textContent = '✓ All done — fresh brief tomorrow at 9am';
             btn.style.background = '#6b7280';
+            var rework = document.getElementById('rework-block');
+            if (rework) rework.style.display = 'none';
           } else {
             btn.textContent = 'Looks Good ✓';
             btn.disabled = false;
@@ -1651,6 +1673,36 @@
           btn.textContent = 'Looks Good ✓';
           btn.disabled = false;
         });
+    }
+
+    // Request Changes — send feedback to rework the SAME story. Page goes
+    // intermediary while the builder reworks, then returns to completed.
+    function handleRework() {
+      var btn = document.getElementById('rework-btn');
+      var ta = document.getElementById('rework-textarea');
+      var feedback = ta ? ta.value.trim() : '';
+      if (!feedback) { if (ta) ta.focus(); return; }
+
+      var content = 'Date: ' + formatDate(new Date())
+        + '\n\nStory: ' + getCompletedStoryId()
+        + '\n\nAndrew reviewed the completed build and is NOT satisfied. Rework the SAME story (do not re-pick or re-plan). His feedback:\n' + feedback;
+
+      btn.textContent = 'Sending to builder...';
+      btn.disabled = true;
+      if (ta) ta.disabled = true;
+      document.getElementById('looks-good-btn').disabled = true;
+
+      var dashboard = document.getElementById('dashboard');
+      dashboard.dataset.state = 'intermediary';
+      var banner = document.getElementById('intermediary-banner');
+      if (banner) banner.style.display = 'block';
+      applyStateUI();
+
+      fetch('/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'rework', content: content })
+      }).catch(function() {});
     }
   </script>
 </body>
