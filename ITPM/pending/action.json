@@ -1,0 +1,5 @@
+{
+  "type": "rework",
+  "content": "Date: Sunday, June 7, 2026\n\nStory: FRED-124\n\nAndrew reviewed the completed build and is NOT satisfied. Rework the SAME story (do not re-pick or re-plan). His feedback:\nthe top notch on iphone was not considered in this design. currently, the \"Change Bank Account\" header and the back button on the same line with it are displaying too far up. the \"Change Bank Account\" header is being cut off by the front camera notch so it reads as \"Cha...notch...unt\" while the back button is showing right behind the time display in the upper left hand corner of the rendered display on iphone",
+  "timestamp": "2026-06-07T22:43:14.273Z"
+}
