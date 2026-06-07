@@ -29,7 +29,8 @@
 **Days since last blocker:** 6 (incremented; no blocker today)
 **Blockers active:** none
 **Lessons learned:** The linkplaid illustration card transplants cleanly when its `--plaid-*` CSS vars are substituted with FRED palette literals. The tab3 blue-header-over-white pattern needs the `&::after` cutout bg to exactly match `ion-content --background`. Pre-existing `accountSubType`/`accountSubtype` case mismatch is now fixed here; `formatAccountDisplay()` in the TS still has the old casing but is no longer called by the template.
-**Status:** Complete
+**Reworked (2026-06-07):** Andrew reviewed on a real iPhone — the blue hero header (back button + "Change Bank Account" title) was rendering under the notch/status bar and getting clipped. Root cause: the hero is a plain `<div class="blue-hero-header">` inside `<ion-header>` with no `ion-toolbar`, so it never received Ionic's automatic top safe-area padding. Fix: changed the `.blue-hero-header` top padding from a flat `10px` to `calc(env(safe-area-inset-top, 0px) + 10px)` — clears the notch on notched iPhones (390×844, 430×932) and keeps a 10px gap, while resolving to exactly 10px (no regression) on non-notched devices. One-line SCSS change, scope-confirmed to `change-bank-account.page.scss` only; `.ts`/`.html`/backend untouched. verifier-agent APPROVED (5/5 checks; static safe-area lint clean; tsc clean). **Lesson:** when copying the tab3 hero pattern, carry the `safe-area-top` handling too — tab3 applies the global `.safe-area-top` class on its header div; any raw-div-in-ion-header pattern must explicitly honor `env(safe-area-inset-top)` or it will sit under the notch.
+**Status:** Complete (reworked 2026-06-07)
 
 ---
 

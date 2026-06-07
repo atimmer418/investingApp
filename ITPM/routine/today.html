@@ -230,14 +230,14 @@
 
     /* intermediary — work queued/running. Hide plan detail, but do NOT show the
        why/strategy/impact cards yet (nothing's done). Only the banner shows. */
-    [data-state="intermediary"] .section-planning-only { display: none; }
+    [data-state="completed"] .section-planning-only { display: none; }
 
     /* completed / looks_good — work done. Hide plan detail, reveal the recap cards. */
-    [data-state="intermediary"] .section-planning-only,
+    [data-state="completed"] .section-planning-only,
     [data-state="looks_good"] .section-planning-only { display: none; }
-    [data-state="intermediary"] .section-intermediary-only,
+    [data-state="completed"] .section-intermediary-only,
     [data-state="looks_good"] .section-intermediary-only { display: block; }
-    [data-state="intermediary"] #completion-section,
+    [data-state="completed"] #completion-section,
     [data-state="looks_good"] #completion-section { display: block; }
 
     /* failed — hide plan detail; the failure banner carries the message. */
@@ -760,7 +760,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="intermediary">
+  <div id="dashboard" data-populated="true" data-state="completed">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -1162,7 +1162,8 @@
             <li>Loading, empty, error + retry, and success states all designed, not placeholder</li>
             <li>No backend/auth/schema changes; verifier-agent approved all criteria, type-clean, no regressions</li>
           </ul>
-          <p style="font-size:13px;color:#92400e;background:#fef3c7;border-radius:8px;padding:8px 12px;line-height:1.5;margin:0 0 12px;">Heads up: the verifier couldn't render the live page or hit the API in its sandbox (backend down / host blocked) — worth a quick look on your device at the four states before release.</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;"><strong>Reworked on your feedback (Jun 7):</strong> the blue header was rendering under the iPhone notch — the "Change Bank Account" title was clipped and the back button sat behind the status-bar time. Root cause: the hero is a plain header div (no <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-toolbar</code>), so it wasn't getting Ionic's automatic top safe-area padding. Fixed by setting the header's top padding to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">calc(env(safe-area-inset-top, 0px) + 10px)</code> — it now clears the notch on notched iPhones (390×844, 430×932) and stays unchanged (10px) on non-notched devices. One-line SCSS change; verifier re-approved (5/5 checks, safe-area lint clean, type-clean).</p>
+          <p style="font-size:13px;color:#92400e;background:#fef3c7;border-radius:8px;padding:8px 12px;line-height:1.5;margin:0 0 12px;">Heads up: the verifier still can't render the live page in its sandbox — please confirm on your device that the header now sits cleanly below the notch. Separately, a pre-existing item (not introduced by this work) worth a backlog entry: an account-subtype field-case mismatch can make the type fall back to "Checking" — say the word and I'll add it to the backlog.</p>
           <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Readiness needle: FRED-124 was the last unmigrated settings page — Pages Migrated 70% &rarr; ~73%, Prod Readiness 71 &rarr; ~72.</p>
         </div>
       </div>
