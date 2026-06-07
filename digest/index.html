@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Digest — 2026-06-06</title>
+  <title>Claude Digest — 2026-06-07</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#0f1117;color:#e8eaf0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.6;padding:48px 24px 80px}
@@ -45,7 +45,7 @@
       <span class="wordmark-text">Claude Daily Digest</span>
     </div>
     <h1>What's new in Claude</h1>
-    <span class="date-label">Saturday, June 6, 2026</span>
+    <span class="date-label">Sunday, June 7, 2026</span>
   </header>
   <hr />
 
@@ -53,12 +53,12 @@
     <div class="section-head"><span>📦</span><span class="section-title">New Releases</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="version">v2.1.167</span><span class="ts">June 6, 2026</span></div>
-        <div class="body">Bug fixes and reliability improvements.</div>
+        <div class="meta"><span class="version">v2.1.166</span><span class="ts">June 6, 2026</span></div>
+        <div class="body">Adds <code style="font-family:ui-monospace,monospace;font-size:12px;color:#a07cf6">fallbackModel</code> setting for up to three ordered fallback models when the primary is overloaded, glob pattern support in deny-rule tool names, hardened cross-session messaging security, and fixes for image processing, remote session stability, terminal rendering glitches, and PowerShell validation hangs.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="version">v2.1.166</span><span class="ts">June 6, 2026</span></div>
-        <div class="body">Added <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px">fallbackModel</code> setting for configurable model fallbacks, hardened cross-session messaging security, disabled thinking on models that think by default via new toggles, improved MCP timeout handling, and fixed image processing errors, remote session hangs, JetBrains terminal rendering, and PowerShell command validation hangs.</div>
+        <div class="meta"><span class="version">v2.1.167 – v2.1.168</span><span class="ts">June 6, 2026</span></div>
+        <div class="body">Bug fixes and reliability improvements across both patch releases.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="version">v2.1.165</span><span class="ts">June 5, 2026</span></div>
@@ -72,19 +72,19 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026 · v2.1.150–v2.1.157</span></div>
-        <div class="body"><strong>Claude Opus 4.8</strong> is now the default model for Max, Team Premium, Enterprise pay-as-you-go, and Anthropic API accounts — high effort on by default, with <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px">/effort xhigh</code> for the hardest tasks.</div>
+        <div class="body"><strong style="color:#e8eaf0">Claude Opus 4.8</strong> is now the default model for Max, Team Premium, Enterprise pay-as-you-go, and Anthropic API accounts — high effort on by default, with <code style="font-family:ui-monospace,monospace;font-size:12px;color:#a07cf6">/effort xhigh</code> available for the hardest tasks.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong>Dynamic workflows</strong> let Claude orchestrate dozens to hundreds of subagents by writing the orchestration script itself — no manual wiring required.</div>
+        <div class="body"><strong style="color:#e8eaf0">Dynamic workflows</strong> (research preview) let Claude write a script that orchestrates dozens to hundreds of subagents in parallel — demonstrated by Jarred Sumner porting Bun from Zig to Rust with hundreds of agents running simultaneously.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong>Security-guidance plugin</strong> reviews Claude's code changes for vulnerabilities in real time as it works, surfacing findings before they land in your repo.</div>
+        <div class="body"><strong style="color:#e8eaf0">Security-guidance plugin</strong> reviews Claude's own code changes for vulnerabilities as it works, running continuously alongside your session.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong>Fast mode</strong> now runs on Opus 4.8 at $10/$50 per MTok — faster output without dropping to a smaller model.</div>
+        <div class="body"><strong style="color:#e8eaf0">Fast mode on Opus 4.8</strong> is now priced at $10/$50 per MTok, making high-speed Opus access available at a predictable cost for heavy workloads.</div>
       </div>
     </div>
   </section>
@@ -94,15 +94,19 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="tag">June 5, 2026</span></div>
-        <div class="body"><strong>Claude Opus 4.1 deprecated</strong> — <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px">claude-opus-4-1-20250805</code> will be retired from the Claude API on August 5, 2026. Anthropic recommends migrating to Claude Opus 4.8.</div>
+        <div class="body"><strong style="color:#e8eaf0">Claude Opus 4.1 deprecation announced</strong> — the <code style="font-family:ui-monospace,monospace;font-size:12px;color:#a07cf6">claude-opus-4-1-20250805</code> model will retire from the Claude API on August 5, 2026. Anthropic recommends migrating to Claude Opus 4.8 now.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">June 2, 2026</span></div>
-        <div class="body"><strong>Advisor tool gains <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px">max_tokens</code></strong> — cap the advisor model's output per call to reduce latency and token cost for workloads that don't need full-length responses.</div>
+        <div class="body"><strong style="color:#e8eaf0">Advisor tool gets <code style="font-family:ui-monospace,monospace;font-size:12px;color:#a07cf6">max_tokens</code></strong> — set <code style="font-family:ui-monospace,monospace;font-size:12px;color:#a07cf6">tools[].max_tokens</code> on the advisor tool definition to cap output per call, reducing latency and cost for workloads that don't need full-length advisor responses.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">June 2, 2026</span></div>
-        <div class="body"><strong>No billing for refusals</strong> — API requests that return <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 5px;border-radius:4px">stop_reason: "refusal"</code> with zero generated output are no longer billed.</div>
+        <div class="body"><strong style="color:#e8eaf0">No billing for zero-output refusals</strong> — API requests that return <code style="font-family:ui-monospace,monospace;font-size:12px;color:#a07cf6">stop_reason: "refusal"</code> without any generated output are no longer charged.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="tag">June 15, 2026 (upcoming)</span></div>
+        <div class="body"><strong style="color:#e8eaf0">Billing pool split</strong> — interactive use and programmatic Agent SDK use will split into separate billing pools. Programmatic workloads move to a new monthly credit pool billed at standard API rates ($20–$200/mo).</div>
       </div>
     </div>
   </section>
@@ -112,19 +116,19 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">Recent</span></div>
-        <div class="body">Weekly usage limits increased 50% for all paid plans (Pro, Max, Team, Enterprise) through July 13, 2026. Also: programmatic usage credits split from chat limits starting June 15 — Agent SDK, headless Claude Code, and GitHub Actions move to a separate monthly credit at API rates.</div>
+        <div class="body">Claude Code weekly limits raised 50% through July 13, 2026 (Pro, Max, Team, and Enterprise plans). Starting June 15, paid plan users can claim a dedicated monthly credit for programmatic (Agent SDK) usage — separate from interactive limits.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="handle">@claudeai</span><span class="ts">Recent</span></div>
-        <div class="body">Managed Agents now support self-hosted sandboxes in public beta — connect to your private MCP servers from your own infrastructure or via Cloudflare, Daytona, Modal, or Vercel. Claude Design (research preview) lets you create prototypes, landing pages, and marketing assets through conversation.</div>
+        <div class="body">Claude Managed Agents now support self-hosted sandboxes (public beta) — tool execution moves to an environment you configure while the agent loop stays on Anthropic's infrastructure. Also: multiagent orchestration lets a lead agent delegate to specialist subagents on a shared filesystem, each with its own model and tools.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="handle">@bcherny</span><span class="ts">Recent</span></div>
-        <div class="body">"Code output per Anthropic engineer is up 200% this year and reviews were the bottleneck" — launched <strong>Code Review</strong>: a team of agents runs a deep review on every PR, finding issues personally missed for weeks of testing.</div>
+        <div class="body">"New in Claude Code: Code Review. A team of agents runs a deep review on every PR. We built it for ourselves first. Code output per Anthropic engineer is up 200% this year and reviews were the bottleneck. Personally, I've been using it for a few weeks and have found it catches [bugs] early." — Boris Cherny, creator of Claude Code</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@trq212</span><span class="ts">June 5–6, 2026</span></div>
-        <div class="body">Code with Claude conference touched down in Tokyo this weekend. Also: Todos are becoming Tasks in Claude Code — a rename that reflects their broader role beyond just coding checklists.</div>
+        <div class="meta"><span class="handle">@trq212</span><span class="ts">Recent</span></div>
+        <div class="body">"We're turning Todos into Tasks in Claude Code" — Thariq Shihipar announced a rename/redesign of the Todo system in Claude Code, promoting task tracking to a first-class concept. Also active promoting Claude Code as a general-purpose agent beyond just coding.</div>
       </div>
     </div>
   </section>
@@ -132,7 +136,7 @@
   <hr />
   <footer>
     <span><span class="dot"></span>digest.fredvested.com</span>
-    <span>Generated 2026-06-06 at 8:00 AM ET</span>
+    <span>Generated 2026-06-07 at 8:00 AM ET</span>
   </footer>
 </div>
 </body>
