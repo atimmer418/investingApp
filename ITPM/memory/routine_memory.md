@@ -18,6 +18,21 @@
 
 ## Daily Entries
 
+### 2026-06-09 — Tab 3 (Settings) Page UI Redesign — DIRECTION PICK (FRED-192)
+
+**Priorities selected:** FRED-192 — Redesign Tab 3 (Settings) Page UI
+**Tier:** 1 (A/C ready) — FRED-192 already carries a Summary + Acceptance Criteria block in `backlog.md`, so no triage gap; build-ready.
+**Rationale:** Natural successor to FRED-124 (which shipped 06-06). FRED-124 migrated the last *standalone* settings page, but Tab 3 — the hub every settings page hangs off — is still on the old look. FRED-192 is a UI overhaul, so per the skill it's presented as three phone-frame mockups (not text options); the chosen direction becomes its own build story. Pure visual lift (HTML+SCSS only, no backend/auth/schema), Medium difficulty, guaranteed completion, directly advances the #1 strategic priority (complete UI overhaul on all remaining pages). Tier-1 candidates today were only FRED-192 and FRED-191; FRED-191 (perf measurement) needs a running Capacitor build/real device the sandbox can't guarantee, so FRED-192 was the cleaner, lower-risk pick under the Easy/Medium bias (readiness 72 < 75).
+**Mockups presented:** A — Elevated Grouped Cards (Recommended; white-section-card pattern consistent with security-settings/my-profile/change-bank-account); B — Hero Stat Header (blue header carries a Freedom-date / "Ahead of 85%" stat strip); C — iOS Inset Grouped List (Apple-Settings-style inset rows, airy/flat). All three keep the blue-header concept (avatar + "My Account" welcome + "FRED" wordmark) and preserve all content/actions.
+**Metrics:** Readiness 72/100, Piggy 77.5% (31/40), Pages 73%, Burndown 34.8% (31/89), Launch 64.3%
+**Trends (vs 05-31 baseline):** Burndown ↑ +3 done (28→31; note burndown % dipped 36.5%→34.8% only because the denominator grew 85→89 as new stories FRED-185–192/DEV-190/LPFRED-184 were added — completed count rose). Piggy ↑ +7.5, Pages ↑ +3, Readiness ↑ +5, Launch ↑ +4.3, Days-since-blocker ↑ +8.
+**Days since last blocker:** 9 (06-06 recorded 6; +3 clean days for 06-07/08/09 — routine did not run 06-07/06-08, so caught up by elapsed clean days rather than a flat +1)
+**Blockers active:** none
+**Notes:** FRED-191 parked as a future pick (needs live-build/device measurement). Tomorrow's likely pick: the FRED-192 implementation story once a direction is approved.
+**Status:** Pending approval from Andrew
+
+---
+
 ### 2026-06-06 — Change Bank Account Page Redesign — SHIPPED (FRED-124)
 
 **Priorities selected:** FRED-124 (approved by Andrew on 2026-06-06)
