@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Digest — 2026-06-11</title>
+  <title>Claude Digest — 2026-06-12</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#0f1117;color:#e8eaf0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.6;padding:48px 24px 80px}
@@ -45,7 +45,7 @@
       <span class="wordmark-text">Claude Daily Digest</span>
     </div>
     <h1>What's new in Claude</h1>
-    <span class="date-label">Thursday, June 11, 2026</span>
+    <span class="date-label">Friday, June 12, 2026</span>
   </header>
   <hr />
 
@@ -53,16 +53,16 @@
     <div class="section-head"><span>📦</span><span class="section-title">New Releases</span></div>
     <div class="card">
       <div class="item">
+        <div class="meta"><span class="version">v2.1.175</span><span class="ts">June 12, 2026</span></div>
+        <div class="body">Added <code>enforceAvailableModels</code> managed setting to constrain the Default model and prevent users or projects from widening managed <code>availableModels</code> allowlists — a new guardrail for enterprise admins.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="version">v2.1.174</span><span class="ts">June 12, 2026</span></div>
+        <div class="body">Multiple quality-of-life fixes: mouse-wheel scroll acceleration control, <code>/model</code> picker improvements, Bedrock GovCloud region fixes, and performance gains for skill hot-reload and long conversations.</div>
+      </div>
+      <div class="item">
         <div class="meta"><span class="version">v2.1.173</span><span class="ts">June 11, 2026</span></div>
-        <div class="body">Fixed Fable 5 model names with the <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2236;padding:1px 5px;border-radius:4px">[1m]</code> suffix not being normalized correctly, and resolved a spurious "sandbox dependencies missing" startup warning on Windows.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="version">v2.1.172</span><span class="ts">June 10, 2026</span></div>
-        <div class="body">Sub-agents can now spawn their own sub-agents up to 5 levels deep, plus 30+ bug fixes covering context compaction, agent dispatch, wildcard domain permission rules, workflow validation, and UI rendering performance.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="version">v2.1.170</span><span class="ts">June 9, 2026</span></div>
-        <div class="body">Introduced support for Claude Fable 5 as the default model option, and fixed session transcript saving issues that caused incomplete logs on long-running sessions.</div>
+        <div class="body">Fixed Fable 5 model name normalization (strips spurious <code>[1m]</code> suffix) and eliminated false sandbox dependency warnings on Windows.</div>
       </div>
     </div>
   </section>
@@ -71,20 +71,20 @@
     <div class="section-head"><span>📰</span><span class="section-title">This Week</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body">Most recent published weekly digest. <strong>Claude Opus 4.8</strong> became the new default model for Max, Team Premium, Enterprise pay-as-you-go, and Anthropic API accounts — high effort on by default, with <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2236;padding:1px 5px;border-radius:4px">/effort xhigh</code> for the hardest tasks.</div>
+        <div class="meta"><span class="tag">Week 22 · May 25–29, 2026 · v2.1.150–v2.1.157</span></div>
+        <div class="body"><strong>Claude Opus 4.8</strong> is the new default model for Max, Team Premium, Enterprise pay-as-you-go, and API accounts — high effort on by default, with <code>/effort xhigh</code> available for the hardest tasks.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong>Dynamic workflows</strong> let Claude write a script that orchestrates dozens to hundreds of sub-agents in parallel, replacing manual task decomposition for large multi-step jobs.</div>
+        <div class="body"><strong>Dynamic workflows</strong> let Claude orchestrate dozens to hundreds of subagents from a script it writes on the fly, enabling fully autonomous multi-step pipelines.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body">The new <strong>security-guidance plugin</strong> runs alongside Claude as it edits code, flagging potential vulnerabilities in real time before changes are committed.</div>
+        <div class="body">The <strong>security-guidance plugin</strong> reviews Claude's own changes for vulnerabilities in real time as it works — a built-in automated security reviewer for every session.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong>Fast mode</strong> now runs on Opus 4.8 at $10/$50 per MTok, giving Max and Team users a faster path through routine tasks without dropping to a smaller model.</div>
+        <div class="body"><strong>Fast mode</strong> is now powered by Opus 4.8 at $10/$50 per MTok, bringing the fastest response path up to the newest flagship model.</div>
       </div>
     </div>
   </section>
@@ -94,19 +94,19 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="tag">June 9, 2026</span></div>
-        <div class="body"><strong>Claude Fable 5</strong> (<code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2236;padding:1px 5px;border-radius:4px">claude-fable-5</code>) and <strong>Claude Mythos 5</strong> (<code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2236;padding:1px 5px;border-radius:4px">claude-mythos-5</code>, Project Glasswing only) launched — both support a 1M-token context window, 128k max output tokens, and always-on adaptive thinking.</div>
+        <div class="body"><strong>Claude Fable 5</strong> (<code>claude-fable-5</code>) launched — Anthropic's most capable widely-released model, with a 1M token context window, 128k max output tokens, and always-on adaptive thinking. Claude Mythos 5 (<code>claude-mythos-5</code>) is available simultaneously for Project Glasswing participants.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">June 9, 2026</span></div>
-        <div class="body">Fable 5 and Mythos 5 use a new tokenizer (first introduced in Claude Opus 4.7). The same text produces roughly 30% more tokens compared to earlier models — use the token counting API with <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2236;padding:1px 5px;border-radius:4px">model: "claude-fable-5"</code> to measure your prompts accurately.</div>
+        <div class="body">Fable 5 uses the new tokenizer introduced with Opus 4.7 — the same text produces roughly <strong>30% more tokens</strong> than pre-Opus 4.7 models. Use the token-counting API with <code>model: "claude-fable-5"</code> to measure prompts under the new tokenizer before migrating.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">June 9, 2026</span></div>
-        <div class="body">Safety classifiers now run on all Fable 5 requests. When a classifier refuses, the Messages API returns <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2236;padding:1px 5px;border-radius:4px">stop_reason: "refusal"</code> and you are not billed. An opt-in <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2236;padding:1px 5px;border-radius:4px">fallbacks</code> parameter (beta) re-runs refused requests on another model at that model's rates.</div>
+        <div class="meta"><span class="tag">June 10, 2026</span></div>
+        <div class="body">The <code>GET /v1/environments/{id}/work</code> endpoint for self-hosted sandboxes is now available on Claude Platform on AWS, including the new <code>GetEnvironment</code> IAM action that authorizes it.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">June 15, 2026 (upcoming)</span></div>
-        <div class="body">Programmatic usage (Claude Agent SDK, headless Claude Code, GitHub Actions, third-party agents) moves off subscription limits onto a separate monthly credit billed at API rates. Interactive Claude Code sessions on existing plans are unaffected.</div>
+        <div class="meta"><span class="tag">June 11, 2026</span></div>
+        <div class="body">Flagged requests to Claude Fable 5 now visibly fall back to Opus 4.8 — consistent with how safeguards for cyber and bio domains already behaved — making refusal boundaries more transparent.</div>
       </div>
     </div>
   </section>
@@ -115,20 +115,20 @@
     <div class="section-head"><span>𝕏</span><span class="section-title">From the Team</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">May 13–14, 2026</span></div>
-        <div class="body">Claude Code weekly limits raised 50% (through July 13) for Pro, Max, Team, and seat-based Enterprise. Also announced: starting June 15, paid plans can claim a dedicated monthly credit for programmatic usage separate from interactive limits.</div>
+        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">June 11, 2026</span></div>
+        <div class="body">Hosted <strong>Code with Claude: Extended Tokyo</strong> — an in-person event for indie devs and early-stage founders, featuring founder stories, builder deep-dives, and workshops from Anthropic's Applied AI team. Weekly Claude Code limits remain 50% higher through July 13 to counter Codex pricing competition.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@claudeai</span><span class="ts">June 2026</span></div>
-        <div class="body">Highlighted Claude Fable 5 launch, the new Agent View in Claude Code, Managed Agents running on cron schedules with vault-stored credentials, safe mode for troubleshooting, and Claude integration with Apple's Foundation Models framework on iOS/iPadOS/macOS 27.</div>
+        <div class="meta"><span class="handle">@claudeai</span><span class="ts">June 9, 2026</span></div>
+        <div class="body">Announced <strong>Claude Fable 5</strong> — a Mythos-class model now safe for general use, excelling at software engineering, knowledge work, and vision. Also highlighted new Managed Agents features: "Dreaming" (scheduled memory curation between sessions) and multiagent orchestration with specialist subagents on a shared filesystem.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="handle">@bcherny</span><span class="ts">June 8, 2026</span></div>
-        <div class="body">One year since Claude Code GA: Boris Cherny shared that he hasn't written a line of code by hand in 8 months, coordinates hundreds to thousands of agents on a typical day, and does most of his work from his phone. Code output per Anthropic engineer is up 200% this year.</div>
+        <div class="body">One-year GA retrospective: Boris Cherny says he hasn't written a line of code by hand in 8 months and some mornings coordinates tens of thousands of agents from his phone. Code produced inside Anthropic is up 8× since start of 2026. Also announced <strong>Code Review</strong>: a team of agents running deep automated review on every PR — code output per engineer up 200%, with PR reviews having been the bottleneck.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="handle">@trq212</span><span class="ts">June 2026</span></div>
-        <div class="body">Published "Lessons from Building Claude Code: Seeing like an Agent" — a deep dive into how the Claude Code team thinks about agent cognition and task decomposition. Also: Todos are becoming Tasks in Claude Code.</div>
+        <div class="body">Published "We're turning Todos into Tasks in Claude Code" — a post covering the redesign of Claude Code's task-tracking system, plus recapped the Code with Claude Extended Tokyo event on June 11.</div>
       </div>
     </div>
   </section>
@@ -136,7 +136,7 @@
   <hr />
   <footer>
     <span><span class="dot"></span>digest.fredvested.com</span>
-    <span>Generated 2026-06-11 at 8:00 AM ET</span>
+    <span>Generated June 12, 2026 at 8:00 AM ET</span>
   </footer>
 </div>
 </body>
