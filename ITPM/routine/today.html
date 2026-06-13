@@ -233,7 +233,7 @@
     [data-state="looks_good"] .section-planning-only { display: none; }
 
     /* completed / looks_good — work done. Hide plan detail, reveal the recap cards. */
-    [data-state="completed"] .section-planning-only,
+    [data-state="intermediary"] .section-planning-only,
     [data-state="looks_good"] .section-planning-only { display: none; }
     [data-state="completed"] .section-intermediary-only,
     [data-state="looks_good"] .section-intermediary-only { display: block; }
@@ -760,7 +760,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="planning">
+  <div id="dashboard" data-populated="true" data-state="intermediary">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
