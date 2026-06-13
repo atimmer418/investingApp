@@ -89,3 +89,5 @@ NOT current priority: Growth, marketing, dark mode, advanced analytics.
 - Small TS additions are fine alongside HTML/SCSS changes — don't over-scope
 - Prerequisites must be complete before dependent work starts (UI overhaul then dark mode, not the reverse)
 - Backlog burn-down is a lagging indicator — look at production readiness score as the leading one
+- When a picked design includes a data-backed flourish (e.g. a hero stat strip) but the story is scoped "HTML + SCSS only, no .ts rewrite," OMIT the flourish rather than fill it with placeholder numbers — fake financial data violates the no-mock-data rule. Offer it as a follow-up wired to real data.
+- The sandbox often can't serve a frontend or drive a browser, so UI stories may only reach a static/SCSS-level verification floor. That's acceptable, but the live device-render confirmation (390×844 / 430×932) must be handed to Andrew explicitly via "Looks Good" — never imply screenshots were captured when they weren't.

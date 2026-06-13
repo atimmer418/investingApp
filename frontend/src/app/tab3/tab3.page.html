@@ -10,7 +10,7 @@
         </div>
         <div class="user-text">
           <h1 class="name">My Account</h1>
-          <p class="email">Hi, Firstname</p>
+          <p class="greeting">Hi, Firstname</p>
         </div>
       </div>
       <div class="header-branding"
@@ -21,44 +21,49 @@
 </ion-header>
 
 <ion-content [scrollY]="false" class="settings-content">
-  <div class="content-wrapper">
-    <!-- Settings Sections -->
-    <div class="settings-sections mobile-container">
-      <div *ngFor="let section of settingSections" class="settings-group">
-        <h3 class="group-header text-gray text-xs font-semibold">{{ section.title }}</h3>
+  <div class="content-scroll">
+    <!-- Overlapping white card pulled up over the blue header -->
+    <div class="sections-card">
 
-        <div class="settings-card mobile-card">
-          <div class="settings-list">
-            <button *ngFor="let item of section.items; let last = last" class="setting-item mobile-touch-target"
-              [class.last-item]="last" (click)="onSettingClick(item.action)">
+      <!-- Settings Sections -->
+      <div *ngFor="let section of settingSections; let lastSection = last" class="settings-group">
+        <h3 class="group-header">{{ section.title }}</h3>
 
-              <div class="setting-icon-container">
-                <ion-icon [name]="item.icon" class="setting-icon"></ion-icon>
+        <div class="settings-list">
+          <button
+            *ngFor="let item of section.items; let last = last"
+            class="setting-item"
+            [class.last-item]="last"
+            (click)="onSettingClick(item.action)">
+
+            <div class="setting-icon-container">
+              <ion-icon [name]="item.icon" class="setting-icon"></ion-icon>
+            </div>
+
+            <div class="setting-content">
+              <div class="setting-main">
+                <h4 class="setting-title">{{ item.title }}</h4>
               </div>
 
-              <div class="setting-content">
-                <div class="setting-main">
-                  <h4 class="setting-title font-medium text-dark">{{ item.title }}</h4>
-                  <p *ngIf="item.subtitle" class="setting-subtitle text-gray">{{ item.subtitle }}</p>
-                </div>
-
-                <div class="setting-trailing">
-                  <ion-badge *ngIf="item.badge" [color]="item.badgeColor || 'primary'" class="setting-badge">
-                    {{ item.badge }}
-                  </ion-badge>
-                  <ion-icon name="chevron-forward" class="chevron-icon text-gray"></ion-icon>
-                </div>
+              <div class="setting-trailing">
+                <ion-badge *ngIf="item.badge" [color]="item.badgeColor || 'primary'" class="setting-badge">
+                  {{ item.badge }}
+                </ion-badge>
+                <ion-icon name="chevron-forward" class="chevron-icon"></ion-icon>
               </div>
-            </button>
-          </div>
+            </div>
+          </button>
         </div>
+
+        <!-- Section-group spacer: rendered between groups, not after the last -->
+        <div *ngIf="!lastSection" class="section-group-spacer"></div>
       </div>
+
     </div>
 
-    <!-- Centered Footer Info -->
+    <!-- Footer -->
     <div class="footer-content">
-      <p class="legal-text">© 2026 FREDvested</p>
-      <p class="version-text">v1.0.0 (Beta)</p>
+      <p class="footer-text">© 2026 FREDvested · v1.0.0 (Beta)</p>
     </div>
   </div>
 </ion-content>

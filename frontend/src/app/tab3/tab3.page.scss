@@ -1,148 +1,131 @@
 :host {
-  --settings-background: var(--app-background);
-  --settings-card-background: var(--app-card-background);
-  --settings-text-primary: var(--app-gray-900);
-  --settings-text-secondary: var(--app-gray-500);
-  --settings-border: var(--app-card-border);
-  --settings-success: var(--app-success);
-  --settings-danger: var(--app-danger);
-  --settings-primary: var(--app-primary);
-}
-
-// Enhanced Header Styling for Tab 3
-ion-header {
-  --background: var(--app-background);
-  background: var(--app-background) !important;
-
-  ion-toolbar {
-    --background: var(--app-background);
-    --color: var(--app-text-primary);
-    --border-width: 0;
-  }
+  --settings-background: #f8fafc;
+  --settings-card-background: #ffffff;
+  --settings-text-primary: #0f172a;
+  --settings-text-secondary: #6b7280;
+  --settings-border: #e5e7eb;
+  --settings-primary: #2563EB;
 }
 
 /* =============================================================================
-   NEW CUSTOM PROFILE HEADER
+   HERO HEADER — Option B
    ============================================================================= */
 
+ion-header {
+  --background: transparent;
+  background: transparent !important;
+}
+
 .custom-profile-header {
-  background: var(--ion-color-primary);
-  /* Flipped Gradient: Bottom-Up (dark to light/tint) */
-  background: linear-gradient(0deg, var(--ion-color-primary) 0%, var(--ion-color-primary-tint) 100%);
-  
-  /* Flipped Shape: Concave Bottom 
-     (Achieved by removing the border-radius here and using a pseudo-element) */
-  box-shadow: none; /* Shadow handled by the content overlap or simplified */
-  
-  padding: 10px 24px 34px 24px; /* Extra bottom padding for the cutout */
+  background: linear-gradient(135deg, #2563EB, #1d4ed8);
+  padding: 10px 20px 36px 20px;
   position: relative;
   z-index: 10;
-  
-  /* The "Concave" Curve - Gray page background curving UP into the header */
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -1px; /* Overlap slightly to prevent sub-pixel gaps */
-    left: 0;
-    right: 0;
-    height: 24px;
-    background: #f2f2f7; /* Matches settings-content background */
-    border-top-left-radius: 24px;
-    border-top-right-radius: 24px;
-  }
-  
+
   .header-content {
     display: flex;
     align-items: center;
-    // justify-content: space-between; // Removed as branding is now absolute
     padding-top: 10px;
-    position: relative; /* Context for absolute positioning of branding */
+    position: relative;
   }
 
   .user-details {
     display: flex;
     align-items: center;
-    justify-content: flex-start; /* Left align everything */
+    gap: 12px;
     position: relative;
-    z-index: 10; 
-    
-    /* Constraint: Ensure text stops before reaching the FRED watermark */
-    /* Adjust this value based on the actual visual width of 'FRED' */
-    width: calc(100% - 150px); 
-    
+    z-index: 10;
+    /* leave room for the FRED wordmark on the right */
+    width: calc(100% - 110px);
+  }
+
+  .avatar-badge-wrap {
+    position: relative;
+    display: inline-flex;
+    cursor: pointer;
+    flex-shrink: 0;
+
     .user-avatar {
       width: 52px;
       height: 52px;
-      border: 2px solid rgba(255, 255, 255, 0.2);
-      margin-right: 10px; /* Spacing on right */
-      margin-left: 0;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      flex-shrink: 0; /* Prevent avatar squishing */
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     }
-    
-    .user-text {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start; /* Left align text */
-      text-align: left;        /* Left align text */
-      min-width: 0;            /* Critical for flex child truncation */
-      width: 100%;             /* Take remaining space in constrained parent */
-      
-      .name {
-        margin: 0;
-        font-size: 20px;
-        font-weight: 700;
-        color: white;
-        letter-spacing: -0.01em;
-        white-space: nowrap;
-        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-        
-        /* Truncate with ellipsis (...) */
-        overflow: hidden;
-        text-overflow: ellipsis;
-        width: 100%;
-      }
-      
-      .email {
-        margin: 2px 0 0 0;
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 500;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        
-        /* Truncate with ellipsis (...) */
-        white-space: nowrap; 
-        overflow: hidden;
-        text-overflow: ellipsis;
-        width: 100%;
-        /* removed hard max-width to let container dictate */
-      }
+
+    .profile-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      --background: #dc2626;
+      --color: white;
+      --padding-start: 3px;
+      --padding-end: 3px;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 16px;
+      border: 1.5px solid white;
     }
   }
 
+  .user-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    .name {
+      margin: 0;
+      font-family: 'Manrope', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.015em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .greeting {
+      margin: 2px 0 0 0;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.85);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  /* -------------------------------------------------------------------
+     FRED WORDMARK — verbatim from original .header-branding (both states)
+     ------------------------------------------------------------------- */
   .header-branding {
     position: absolute;
-    right: 3px; /* Decreased position slightly from edge */
+    right: 3px;
     top: 50%;
-    transform: translateY(calc(-50% + 6px)); /* Moved down 10px */
-    z-index: 1; /* Behind user details */
+    transform: translateY(calc(-50% + 6px));
+    z-index: 1;
 
     font-family: 'Montserrat Black Italic', sans-serif;
-    font-size: 48px; /* Slightly larger per request vibe */
+    font-size: 48px;
     font-weight: 900;
-    color: #f2f2f7; 
-    opacity: 0.25;     /* Subtle watermark effect */
-    letter-spacing: 0.0px; /* Tighten up 'Black Italic' usually looks better tight */
-    font-style: italic; /* Explicitly set style if font doesn't auto-trigger */
+    color: #f2f2f7;
+    opacity: 0.25;
+    letter-spacing: 0.0px;
+    font-style: italic;
     line-height: 1;
-    pointer-events: none; 
+    pointer-events: none;
     margin: 0;
 
-    // When MFU period is available, make it look & act like a button
     &.mfu-active {
       pointer-events: auto;
       cursor: pointer;
-      z-index: 11; // Above .user-details (z-index: 10) so clicks register
+      z-index: 11;
       opacity: 0.85;
       text-shadow:
         0 0 8px rgba(255, 255, 255, 0.3);
@@ -157,114 +140,63 @@ ion-header {
   }
 }
 
+/* =============================================================================
+   CONTENT AREA
+   ============================================================================= */
+
 .settings-content {
-  --background: #f2f2f7;
-  --padding-top: 0; /* Cutout handles the spacing */
+  --background: #f8fafc;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
 }
 
-// Remove old classes to avoid confusion
-.profile-header-container,
-.profile-card,
-.profile-gradient-separator {
-  display: none;
+.content-scroll {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
 }
 
 /* =============================================================================
-   PROFILE HERO SECTION (Legacy - Removed)
+   OVERLAPPING WHITE SECTIONS CARD
+   Option B: white rounded card pulled up over the blue header
    ============================================================================= */
 
-/* .profile-hero {
-  margin-bottom: var(--app-spacing-lg);
-} */
-
-/* .profile-card {
-  background: linear-gradient(135deg, #007AFF 0%, #5AC8FA 50%, #AF52DE 100%);
-  color: white;
-  padding: var(--app-spacing-xl) var(--app-spacing-lg);
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 8px 25px rgba(0, 122, 255, 0.2);
-  border-radius: 20px;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -30%;
-    left: -10%;
-    width: 150px;
-    height: 150px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-} */
-
-/* .profile-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  z-index: 1;
-  width: 100%;
-} */
-
-/* .user-details {
-  text-align: center;
-  width: 100%;
-  
-  .user-name {
-    margin: 0 0 var(--app-spacing-lg) 0;
-    color: white;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-    font-size: 28px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-  }
-} */
-
-
+.sections-card {
+  background: #ffffff;
+  border-radius: 16px 16px 0 0;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+  margin-top: -20px;
+  padding: 20px 0 0 0;
+  /* Extend to bottom with no border-radius at the bottom so it flows into the footer area */
+}
 
 /* =============================================================================
-   SETTINGS SECTIONS
+   SECTION GROUPS
    ============================================================================= */
-
-.settings-sections {
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-spacing-md);
-  margin-left: 16px;
-  margin-right: 16px;
-  padding: 0;
-}
 
 .settings-group {
-  .group-header {
-    margin: 0 0 var(--app-spacing-sm) var(--app-spacing-sm);
-    color: var(--settings-text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
+  padding: 0;
 }
 
-.settings-card {
-  padding: 0;
-  overflow: hidden;
+.group-header {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #6b7280;
+  margin: 0 0 6px 0;
+  padding: 0 20px;
 }
 
 .settings-list {
   display: flex;
   flex-direction: column;
+  background: #ffffff;
 }
 
 .setting-item {
@@ -273,45 +205,35 @@ ion-header {
   width: 100%;
   background: transparent;
   border: none;
-  padding: var(--app-spacing-md);
-  gap: var(--app-spacing-md);
+  padding: 14px 20px;
+  gap: 14px;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-bottom: 1px solid var(--settings-border);
-  
-  &:not(.last-item) {
-    border-bottom: 1px solid var(--settings-border);
-  }
-  
-  &:last-child {
+  transition: background 0.15s ease;
+  border-bottom: 1px solid #f1f5f9;
+
+  &.last-item {
     border-bottom: none;
   }
-  
+
   &:active {
-    background: var(--app-gray-50);
-    transform: scale(0.98);
-    
-    @media (prefers-color-scheme: dark) {
-      background: var(--app-gray-800);
-    }
+    background: #f8fafc;
   }
 }
 
 .setting-icon-container {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  
+
   .setting-icon {
-    font-size: 25px !important;
-    width: 25px !important;
-    height: 25px !important;
-    color: var(--settings-primary);
-    opacity: 0.8;
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    color: #2563EB;
   }
 }
 
@@ -326,208 +248,74 @@ ion-header {
 .setting-main {
   flex: 1;
   min-width: 0;
-  
+
   .setting-title {
-    margin: 0 0 2px 0;
-    color: var(--settings-text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-weight: 400;
-    letter-spacing: -0.01em;
-    font-size: 15px !important;
-  }
-  
-  .setting-subtitle {
     margin: 0;
-    color: var(--settings-text-secondary);
-    line-height: 1.3;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-weight: 400;
-    letter-spacing: -0.005em;
-    font-size: 12px !important;
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-}.setting-trailing {
+}
+
+.setting-trailing {
   display: flex;
   align-items: center;
-  gap: var(--app-spacing-xs);
+  gap: 6px;
   flex-shrink: 0;
-  
+
   .setting-badge {
-    font-size: var(--app-font-size-xs);
+    font-size: 11px;
     font-weight: 600;
   }
-  
+
   .chevron-icon {
     font-size: 16px;
+    color: #6b7280;
     opacity: 0.5;
   }
 }
 
-/* =============================================================================
-   LOGOUT SECTION
-   ============================================================================= */
-
-.logout-section {
-  margin-top: var(--app-spacing-lg);
-}
-
-.logout-button {
-  width: 100%;
-  background: var(--settings-card-background);
-  border: 1px solid var(--settings-border);
-  padding: var(--app-spacing-md);
-  border-radius: var(--app-border-radius-lg);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:active {
-    background: var(--app-gray-50);
-    transform: scale(0.98);
-    
-    @media (prefers-color-scheme: dark) {
-      background: var(--app-gray-800);
-    }
-  }
-  
-  .logout-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--app-spacing-sm);
-    
-    .logout-icon {
-      font-size: 20px;
-    }
-    
-    .logout-text {
-      margin: 0;
-    }
-  }
+/* Thicker gray spacer between section groups */
+.section-group-spacer {
+  height: 8px;
+  background: #f1f5f9;
+  margin: 16px 0 16px 0;
 }
 
 /* =============================================================================
-   APP VERSION
+   FOOTER
    ============================================================================= */
-
-.app-version {
-  margin-top: 6px;
-  margin-bottom: 6px;
-  
-  .version-text {
-    margin: 0;
-    opacity: 0.6;
-  }
-}
-
-/* =============================================================================
-   RESPONSIVE DESIGN
-   ============================================================================= */
-
-@media (max-width: 480px) {
-  .profile-info {
-    gap: var(--app-spacing-sm);
-    
-    .avatar-container .user-avatar {
-      width: 56px;
-      height: 56px;
-    }
-  }
-  
-  .setting-item {
-    padding: var(--app-spacing-sm) var(--app-spacing-md);
-    
-    .setting-icon-container {
-      width: 28px;
-      height: 28px;
-      
-      .setting-icon {
-        font-size: 16px;
-      }
-    }
-  }
-}
-
-@media (min-width: 768px) {
-  .mobile-container {
-    max-width: 600px;
-  }
-}
-
-/* =============================================================================
-   PROFILE BADGE (action-required indicator)
-   ============================================================================= */
-
-.avatar-badge-wrap {
-  position: relative;
-  display: inline-flex;
-  cursor: pointer;
-  flex-shrink: 0;
-
-  .profile-badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    --background: #dc2626;
-    --color: white;
-    --padding-start: 3px;
-    --padding-end: 3px;
-    min-width: 16px;
-    height: 16px;
-    border-radius: 8px;
-    font-size: 10px;
-    font-weight: 700;
-    line-height: 16px;
-    border: 1.5px solid white;
-  }
-}
-
-/* =============================================================================
-   DARK MODE SUPPORT
-   ============================================================================= */
-
-@media (prefers-color-scheme: dark) {
-  :host {
-    --settings-text-primary: var(--app-gray-100);
-    --settings-text-secondary: var(--app-gray-400);
-  }
-}
-
-/* =============================================================================
-   SETTINGS FOOTER
-   ============================================================================= */
-
-.content-wrapper {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-}
 
 .footer-content {
+  background: #ffffff;
+  padding: 20px 20px 24px 20px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  
-  /* This pushes the footer to the vertical center of the available space */
-  margin-top: auto; 
-  margin-bottom: auto;
-  
-  padding: 16px; 
-  gap: 2px;
-    
-    .legal-text {
-      margin: 0;
-      font-size: 11px;
-      color: var(--app-gray-400);
-      text-align: center;
-    }
-    
-    .version-text {
-      margin-top: 0; /* Removed margin for tighter spacing */
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--app-gray-500);
-      text-align: center;
-      font-family: monospace;
-      opacity: 0.7;
-    }
+
+  .footer-text {
+    margin: 0;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    color: #6b7280;
+    text-align: center;
+    opacity: 0.8;
+  }
+}
+
+/* =============================================================================
+   TABLET BREAKPOINT
+   ============================================================================= */
+
+@media (min-width: 768px) {
+  .sections-card {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }

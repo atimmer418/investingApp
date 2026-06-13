@@ -18,6 +18,23 @@
 
 ## Daily Entries
 
+### 2026-06-13 — Tab 3 (Settings) Page UI Redesign — SHIPPED (FRED-192, Option B)
+
+**Priorities selected:** FRED-192 implementation (Andrew approved on 2026-06-12, executed 06-13)
+**Direction chosen:** **Option B — Hero Stat Header.** Andrew: "i think option B and everything that comes with option B." Per-option note: keep the design, but first copy the current tab3 "FRED" wordmark SCSS for both the clickable white-shadow version and the non-white unclickable version. Approved execution order was explicit: HTML + SCSS only, no `.ts` logic rewrite.
+**What shipped:** Rebuilt `frontend/src/app/tab3/tab3.page.{html,scss}` to Option B — expanded blue gradient hero header (`.custom-profile-header`, carries the global `.safe-area-top` class for notch clearance) with avatar + `profileActionRequired$` badge + "My Account" greeting + "FRED" wordmark; an overlapping white rounded card (`.sections-card`, margin-top:-20px, radius 16px, `box-shadow:0 6px 16px rgba(15,23,42,0.06)`, 1px #e5e7eb border) holding three flat-row groups (`.setting-item`, 14px/20px, #f1f5f9 dividers, `.section-group-spacer` between groups) over a centered footer. The existing `.header-branding` SCSS was carried over **verbatim for both states** (default watermark opacity:0.25/pointer-events:none; `.mfu-active` opacity:0.85/pointer-events:auto/text-shadow/-webkit-text-stroke 0.6px/&:active scale) per Andrew's note. **Zero `.ts` changes** (0-line `tab3.page.ts` diff) — settingSections, *ngFor rows, onSettingClick routing, goToMyProfile, onFredLogoClick MFU tap, and the profile badge all preserved. Existing `ion-icon`s kept in FRED blue (not swapped to Material Symbols, since that would touch the data array). Row subtitles dropped from the HTML render only (Option B is single-line); `subtitle` field left in the data.
+**Key decision — stat strip omitted:** Option B's mockup showed "Freedom date / Ahead of 85%" tiles. Omitted deliberately: tab3 has no real freedom-date data and the directive was "no .ts rewrite," so building the tiles would have meant shipping hardcoded mock financial numbers (against the no-mock-data rule). Surfaced to Andrew in the completion card as an optional follow-up (wire to real projection data later).
+**Verification:** verifier-agent — **zero in-scope code failures.** AC-2 (wordmark both states verbatim), AC-3 (0-line .ts diff), AC-4 (tsc: stash-compared, only the two pre-existing TS5101/TS5107 tsconfig deprecations, zero new errors) fully sealed with evidence. AC-1/AC-5/AC-6/AC-7 passed at the static/binding/SCSS level. **Caveat (same as FRED-124):** no served frontend + no browser MCP tools in the sandbox, so the 390×844 / 430×932 device screenshots and live click-through could not be auto-captured — left for Andrew's eyeball via the "Looks Good" button. safe-area-lint exit-1 on the header div is a confirmed false positive (notch padding comes from the global `.safe-area-top` class the linter can't see). Carried the FRED-124 lesson forward: the tab3 hero applies `.safe-area-top`, so the notch clipping that bit FRED-124 was pre-empted here.
+**Readiness needle:** finishes the settings-hub migration (the hub every settings page hangs off) — Pages Migrated 73% → ~76%, Prod Readiness 72 → mid-70s (UI coverage weighted 40 pts). Closes the last visible "old FRED" seam on the most-visited settings surface before private beta.
+**Metrics (updated):** Readiness ~73/100, Piggy 77.5% (31/40), Pages ~76%, Burndown ~36.0% (32/89), Launch ~65%.
+**Days since last blocker:** 13 (06-09 recorded 9; +4 clean elapsed days through 06-13; no blocker today)
+**Blockers active:** none
+**Lessons learned:** When carrying the tab3 hero pattern, the `.safe-area-top` class on the header div is what clears the notch — keep it (FRED-124 was reworked for exactly this). Static-only verification is acceptable as a floor when the sandbox can't serve a browser, but device-render confirmation must be explicitly handed to Andrew, not implied. When a picked mockup contains a data-backed flourish (stat strip) that the "no .ts" constraint forbids filling with real data, omit it rather than ship placeholders, and offer it as a follow-up.
+**Out-of-scope follow-ups flagged (await Andrew's confirm before backlog-add):** (1) wire header greeting to real user first name (shows "Hi, Firstname"); (2) Option B freedom-date/status stat strip once real projection data exists.
+**Status:** Complete (pending Andrew's visual "Looks Good" confirmation)
+
+---
+
 ### 2026-06-09 — Tab 3 (Settings) Page UI Redesign — DIRECTION PICK (FRED-192)
 
 **Priorities selected:** FRED-192 — Redesign Tab 3 (Settings) Page UI
