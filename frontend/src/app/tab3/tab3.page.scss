@@ -215,12 +215,14 @@ ion-header {
 
 .sections-card {
   background: #ffffff;
-  border-radius: 16px 16px 0 0;
+  border-radius: 16px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
   margin-top: -20px;
-  padding: 20px 0 0 0;
-  /* Extend to bottom with no border-radius at the bottom so it flows into the footer area */
+  margin-left: 12px;
+  margin-right: 12px;
+  padding: 0;
+  overflow: hidden;
 }
 
 /* =============================================================================
@@ -239,7 +241,11 @@ ion-header {
   letter-spacing: 0.07em;
   color: #6b7280;
   margin: 0 0 6px 0;
-  padding: 0 20px;
+  padding: 11px 20px 4px;
+}
+
+.settings-group:not(:first-child) .group-header {
+  border-top: 6px solid #f8fafc;
 }
 
 .settings-list {
@@ -329,19 +335,12 @@ ion-header {
   }
 }
 
-/* Thicker gray spacer between section groups */
-.section-group-spacer {
-  height: 8px;
-  background: #f1f5f9;
-  margin: 16px 0 16px 0;
-}
-
 /* =============================================================================
    FOOTER
    ============================================================================= */
 
 .footer-content {
-  background: #ffffff;
+  background: transparent;
   padding: 20px 20px 24px 20px;
   display: flex;
   align-items: center;
@@ -366,5 +365,9 @@ ion-header {
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
+  }
+
+  .footer-content {
+    text-align: center;
   }
 }

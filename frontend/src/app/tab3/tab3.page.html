@@ -42,7 +42,7 @@
     <div class="sections-card">
 
       <!-- Settings Sections -->
-      <div *ngFor="let section of settingSections; let lastSection = last" class="settings-group">
+      <div *ngFor="let section of settingSections" class="settings-group">
         <h3 class="group-header">{{ section.title }}</h3>
 
         <div class="settings-list">
@@ -71,8 +71,6 @@
           </button>
         </div>
 
-        <!-- Section-group spacer: rendered between groups, not after the last -->
-        <div *ngIf="!lastSection" class="section-group-spacer"></div>
       </div>
 
     </div>

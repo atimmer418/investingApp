@@ -192,3 +192,70 @@ lift: HTML + SCSS, no `.ts` logic rewrite.
             `hasMfuPeriod` (ts:88), `profileActionRequired$` (ts:89), existing ngOnInit subscriptions
             (ts:236-259) — are unchanged in behavior.
 - Status:   pass
+
+---
+## REWORK 2 — single continuous card (2026-06-13)
+
+## AC-R2-1: Three settings groups render inside ONE continuous white card (no full-bleed gray bars)
+- Type:     ui-acceptance
+- Check:    The `.section-group-spacer` div and its SCSS rule are gone. All three `.settings-group`
+            elements sit inside a single `.sections-card` div with no full-bleed separators between them.
+- Evidence: HTML: `<div *ngIf="!lastSection" class="section-group-spacer"></div>` removed (was HTML:75);
+            `let lastSection = last` removed from *ngFor (was HTML:45). SCSS: `.section-group-spacer`
+            rule (was scss:333-337) deleted. Confirmed by reading final file state.
+- Status:   pass (static)
+
+## AC-R2-2: Card is rounded on all four corners and visibly overlaps the blue hero header
+- Type:     ui-acceptance
+- Check:    `.sections-card` has `border-radius: 16px` (all four corners) and `margin-top: -20px`
+            so the card visibly overlaps the bottom edge of the blue header.
+- Evidence: scss:218 `border-radius: 16px`; scss:221 `margin-top: -20px`. Both confirmed in final
+            file state. Previously `border-radius: 16px 16px 0 0` (top-only) — now all four corners.
+- Status:   pass (static)
+
+## AC-R2-3: Card has horizontal side margins creating a floating appearance
+- Type:     ui-acceptance
+- Check:    `.sections-card` has `margin-left: 12px` and `margin-right: 12px`, and `overflow: hidden`
+            so rounded corners clip the rows cleanly.
+- Evidence: scss:222-225 `margin-left: 12px; margin-right: 12px; padding: 0; overflow: hidden`.
+            Previously full-bleed (no left/right margins). Confirmed in final file state.
+- Status:   pass (static)
+
+## AC-R2-4: Groups separated by subtle in-card divider only (6px #f8fafc band on 2nd/3rd group headers)
+- Type:     ui-acceptance
+- Check:    `.settings-group:not(:first-child) .group-header` has `border-top: 6px solid #f8fafc`.
+            First group header has no top border. All group headers have `padding: 11px 20px 4px`.
+- Evidence: scss:247-249 `.settings-group:not(:first-child) .group-header { border-top: 6px solid #f8fafc; }`.
+            scss:244 `padding: 11px 20px 4px`. Confirmed in final file state.
+- Status:   pass (static)
+
+## AC-R2-5: All rows, icons, chevrons, badge, stat strip, FRED wordmark, and click handlers unchanged
+- Type:     ui-acceptance
+- Check:    Every ion-icon in #2563EB, chevron-icon, setting-badge, stat-strip tiles, header-branding
+            both states, and all (click) bindings are present and unaltered. tab3.page.ts is
+            byte-for-byte unchanged.
+- Evidence: `git diff --name-only frontend/src/app/tab3/tab3.page.ts` → empty (no output). HTML
+            retains all (click) bindings, ion-icons, stat-strip, header-branding. SCSS retains
+            .setting-icon color:#2563EB (scss:291), .chevron-icon (scss:331-335),
+            .stat-strip/.stat-tile (scss:107-151), .header-branding both states (scss:156-189).
+- Status:   pass (static + git-verified)
+
+## AC-R2-6: Footer sits on page background (transparent, not white card stub)
+- Type:     ui-acceptance
+- Check:    `.footer-content` has `background: transparent`.
+- Evidence: scss:343 `background: transparent`. Previously `background: #ffffff`.
+- Status:   pass (static)
+
+## AC-R2-7: Tablet breakpoint still works with new margins
+- Type:     ui-acceptance
+- Check:    `@media (min-width: 768px)` keeps `.sections-card { max-width: 600px; margin-left: auto;
+            margin-right: auto; }` so card centers on wider screens, overriding the 12px mobile margins.
+- Evidence: scss:363-373. Confirmed in final file state.
+- Status:   pass (static)
+
+## AC-R2-8: `cd frontend && npx tsc --noEmit` introduces no NEW errors
+- Type:     frontend-unit
+- Check:    Only the two pre-existing TS5101/TS5107 tsconfig deprecation warnings appear.
+- Evidence: Ran `cd /home/user/FRED/frontend && npx tsc --noEmit 2>&1` → only TS5101 + TS5107.
+            Zero new errors. Matches pre-existing baseline.
+- Status:   pass
