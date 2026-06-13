@@ -14,6 +14,12 @@
 ion-header {
   --background: transparent;
   background: transparent !important;
+  /* Ionic clips ion-header (contain) and stacks it above ion-content (z-index:10).
+     Both prevent the white card's top lip from showing on the blue — undo them so
+     the rounded card edge + first group label can paint on top of the header. */
+  contain: none;
+  overflow: visible;
+  z-index: 1;
 }
 
 .custom-profile-header {
@@ -199,6 +205,10 @@ ion-header {
   --padding-bottom: 0;
   --padding-start: 0;
   --padding-end: 0;
+  /* Lift the whole content (incl. the card's overlapping top lip) above the
+     blue header so the rounded card edge + first group label sit on the blue. */
+  position: relative;
+  z-index: 2;
 }
 
 .content-scroll {
