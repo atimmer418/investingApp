@@ -47,6 +47,8 @@ import { MonthlyFreedomUpdateComponent } from '../components/monthly-freedom-upd
 import { MonthlyFreedomUpdateService } from '../services/monthly-freedom-update.service';
 import { AppLockService } from '../services/app-lock.service';
 import { AccountStatusService } from '../services/account-status.service';
+import { PortfolioService } from '../services/portfolio.service';
+import { AlpacaService } from '../services/alpaca.service';
 import { Observable } from 'rxjs';
 
 interface SettingSection {
@@ -85,6 +87,12 @@ export class Tab3Page implements OnInit, OnDestroy {
   public userEmail: string = '';
   public hasMfuPeriod: boolean = false;
   public profileActionRequired$: Observable<boolean>;
+
+  // --- Stat strip (freedom date, freedom age, dollars away) ---
+  public statStripLoading: boolean = true;
+  public freedomYear: string = '—';
+  public freedomAge: string = '—';
+  public dollarsAway: string = '—';
 
   public settingSections: SettingSection[] = [
     {
@@ -190,7 +198,9 @@ export class Tab3Page implements OnInit, OnDestroy {
     private modalController: ModalController,
     private mfuService: MonthlyFreedomUpdateService,
     private appLockService: AppLockService,
-    private accountStatusService: AccountStatusService
+    private accountStatusService: AccountStatusService,
+    private portfolioService: PortfolioService,
+    private alpacaService: AlpacaService
   ) {
     this.profileActionRequired$ = this.accountStatusService.actionRequired$;
     addIcons({
@@ -245,6 +255,8 @@ export class Tab3Page implements OnInit, OnDestroy {
         this.recurringInvestment = investment;
       });
 
+    // Load freedom stat strip data (additive — does not alter existing logic above)
+    this.loadStatStrip();
   }
 
   ionViewWillEnter() {
@@ -255,6 +267,121 @@ export class Tab3Page implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private loadStatStrip() {
+    const SAFE_WITHDRAWAL_RATE = 0.04;
+    let freedomEstimate: number | null = null;
+    let retirementIncomeAnnual: number | null = null;
+    let currentEquity: number | null = null;
+    let birthYear: number | null = null;
+
+    // Track how many of the two async calls have completed so we know when to render.
+    let progressDone = false;
+    let portfolioDone = false;
+    let kycDone = false;
+
+    const tryRender = () => {
+      if (!progressDone || !portfolioDone || !kycDone) return;
+
+      // Freedom date
+      if (freedomEstimate != null) {
+        this.freedomYear = String(freedomEstimate);
+      } else {
+        this.freedomYear = '—';
+      }
+
+      // Freedom age
+      if (freedomEstimate != null && birthYear != null) {
+        const age = freedomEstimate - birthYear;
+        this.freedomAge = age > 0 ? String(age) : '—';
+      } else {
+        this.freedomAge = '—';
+      }
+
+      // Dollars away
+      if (retirementIncomeAnnual != null && currentEquity != null) {
+        const target = retirementIncomeAnnual / SAFE_WITHDRAWAL_RATE;
+        const gap = Math.max(0, target - currentEquity);
+        this.dollarsAway = this.formatCompactCurrency(gap);
+      } else {
+        this.dollarsAway = '—';
+      }
+
+      this.statStripLoading = false;
+    };
+
+    // 1. UserProgress: freedom estimate + retirement income
+    this.authService.getUserProgress()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (progress) => {
+          if (progress) {
+            freedomEstimate = progress.currentFreedomEstimate ?? null;
+            retirementIncomeAnnual = progress.retirementIncome ?? null;
+          }
+          progressDone = true;
+          tryRender();
+        },
+        error: () => {
+          progressDone = true;
+          tryRender();
+        }
+      });
+
+    // 2. Portfolio dashboard: current equity
+    this.portfolioService.getPortfolioDashboard()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          if (data && data.summary) {
+            currentEquity = data.summary.equity ?? 0;
+          } else {
+            currentEquity = 0;
+          }
+          portfolioDone = true;
+          tryRender();
+        },
+        error: () => {
+          currentEquity = 0;
+          portfolioDone = true;
+          tryRender();
+        }
+      });
+
+    // 3. KYC data: date of birth for freedom age
+    this.alpacaService.getKycData()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (kyc) => {
+          if (kyc && kyc.dateOfBirth) {
+            const dob: string = kyc.dateOfBirth;
+            const parsed = parseInt(dob.substring(0, 4), 10);
+            birthYear = isNaN(parsed) ? null : parsed;
+          }
+          kycDone = true;
+          tryRender();
+        },
+        error: () => {
+          kycDone = true;
+          tryRender();
+        }
+      });
+  }
+
+  /** Format a dollar amount compactly for the narrow strip tile. */
+  private formatCompactCurrency(value: number): string {
+    if (!isFinite(value) || isNaN(value)) return '—';
+    if (value === 0) return '$0';
+    if (value >= 1_000_000) {
+      const m = value / 1_000_000;
+      return '$' + (m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)) + 'M';
+    }
+    if (value >= 1_000) {
+      const k = value / 1_000;
+      return '$' + (k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)) + 'K';
+    }
+    return '$' + Math.round(value).toLocaleString();
   }
 
   private initializeSettingSections() {

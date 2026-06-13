@@ -18,7 +18,7 @@ ion-header {
 
 .custom-profile-header {
   background: linear-gradient(135deg, #2563EB, #1d4ed8);
-  padding: 10px 20px 36px 20px;
+  padding: 10px 20px 40px 20px;
   position: relative;
   z-index: 10;
 
@@ -98,6 +98,55 @@ ion-header {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+  }
+
+  /* -------------------------------------------------------------------
+     FREEDOM STAT STRIP — three equal tiles below the user/branding row
+     ------------------------------------------------------------------- */
+  .stat-strip {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-top: 14px;
+    // height is fixed so no layout shift while data loads
+    min-height: 58px;
+  }
+
+  .stat-tile {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 11px;
+    padding: 8px 10px;
+    min-width: 0;
+
+    .stat-label {
+      font-family: 'Manrope', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: rgba(255, 255, 255, 0.8);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .stat-value {
+      font-family: 'Manrope', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
     }
   }
 

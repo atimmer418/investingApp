@@ -44,3 +44,17 @@
 - AC-4: `npx tsc --noEmit` produces two TS5101/TS5107 deprecation errors in tsconfig.json. These are identical on HEAD before this story's changes — confirmed pre-existing. No new errors introduced by this change. PASS (pre-existing condition; same result as baseline).
 - The HTML and SCSS working-tree changes match every Option B requirement: gradient hero header, `.safe-area-top` on header, overlapping white card (margin-top: -20px, border-radius: 16px, box-shadow), flat single-line rows with ion-icons in FRED blue, group headers in uppercase gray, `section-group-spacer` between groups, and the footer. Stat strip intentionally omitted per resolved decision.
 - Both FRED wordmark states verified in SCSS: default opacity:0.25/pointer-events:none and `.mfu-active` with opacity:0.85/pointer-events:auto/text-shadow/‑webkit-text-stroke/&:active scale. Bindings `[class.mfu-active]="hasMfuPeriod"` and `(click)="onFredLogoClick()"` preserved in HTML.
+
+## Rework additions — stat strip (2026-06-13)
+
+- **retirementIncome is ANNUAL**: Confirmed via my-profile.page.ts:158-161 ("Income is stored as Annual in backend"). The formula `retirementIncome / 0.04` is correct as-is — no need to multiply by 12 first. The spec said not to multiply by 12 again, and the code does not.
+
+- **Three-call coordination pattern**: Used three boolean flags (`progressDone`, `portfolioDone`, `kycDone`) and a `tryRender()` closure to wait for all three HTTP calls before rendering values. This avoids partial renders and ensures `statStripLoading` flips to false exactly once per ngOnInit.
+
+- **freedomAge as plain number**: Shows "52" not "Age 52" since the tile label "Freedom age" already provides context. Spec allowed either; plain number is more compact and fits the narrow tile.
+
+- **formatCompactCurrency private helper**: New private method (not a rewrite of any existing code). Formats 0→"$0", <1K→"$NNN", ≥1K→"$NK", ≥1M→"$N.NM". Guards NaN/Infinity→"—". Consistent with spec requirement for compact display.
+
+- **Header bottom padding change**: Increased from 36px to 40px to accommodate the strip (margin-top:14px + min-height:58px = 72px of strip area; net clearance above card = 40px - 20px = 20px). This was the only SCSS change beyond adding the strip styles.
+
+- **AC verification (rework)**: `npx tsc --noEmit` → only pre-existing TS5101/TS5107. `git diff HEAD tab3.page.ts` → 1 removed line (trailing comma), 128 added lines, zero behavioral lines changed. AC-8 through AC-13 all statically verified and marked pass.

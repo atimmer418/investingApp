@@ -17,6 +17,22 @@
            [class.mfu-active]="hasMfuPeriod"
            (click)="onFredLogoClick()"> FRED</div>
     </div>
+
+    <!-- Freedom stat strip — three tiles below the user/branding row -->
+    <div class="stat-strip">
+      <div class="stat-tile">
+        <span class="stat-label">Freedom date</span>
+        <span class="stat-value">{{ statStripLoading ? '—' : freedomYear }}</span>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-label">Freedom age</span>
+        <span class="stat-value">{{ statStripLoading ? '—' : freedomAge }}</span>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-label">To go</span>
+        <span class="stat-value">{{ statStripLoading ? '—' : dollarsAway }}</span>
+      </div>
+    </div>
   </div>
 </ion-header>
 

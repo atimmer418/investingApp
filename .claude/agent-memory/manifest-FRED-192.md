@@ -105,3 +105,90 @@ lift: HTML + SCSS, no `.ts` logic rewrite.
             remain `<ion-icon [name]="item.icon">` in #2563EB (scss:236) — NOT swapped to Material
             Symbols.
 - Status:   pass (static)
+
+---
+## REWORK ADDITIONS (FRED-192 stat strip — 2026-06-13)
+
+## AC-8: Stat strip renders three tiles inside the blue hero header
+- Type:     ui-acceptance
+- Check:    Inside `.custom-profile-header`, below `.header-content`, a `.stat-strip` div containing
+            three `.stat-tile` children renders: "Freedom date", "Freedom age", "To go". Tiles are
+            flex:1, gap 8px, translucent white bg (rgba(255,255,255,0.14)), border-radius 11px,
+            Manrope font, white text. Header padding-bottom is 40px; sections-card margin-top is -20px;
+            net clearance between strip bottom and card top is ~20px — strip is fully visible.
+- Evidence: STATIC PASS. HTML:21-35 has the `.stat-strip` with three `.stat-tile` children, each
+            with `.stat-label` and `.stat-value` spans. SCSS:107-151 defines `.stat-strip`
+            (display:flex, gap:8px, margin-top:14px, min-height:58px) and `.stat-tile` (flex:1,
+            rgba(255,255,255,0.14) bg, border-radius:11px, padding:8px 10px). Strip is inside
+            `.custom-profile-header` (scss:19), which has padding-bottom:40px; `.sections-card`
+            margin-top:-20px leaves 20px clearance above card. Runtime render not executed.
+- Status:   pass (static)
+
+## AC-9: Freedom date tile wired to currentFreedomEstimate
+- Type:     frontend-unit
+- Check:    `freedomYear` is set from `progress.currentFreedomEstimate` (a year integer, e.g. 2049)
+            via `AuthService.getUserProgress()`. Shows just the year string, not a fabricated month.
+            Falls back to "—" if null/undefined.
+- Evidence: STATIC PASS. ts:286-292 (loadStatStrip): `freedomEstimate = progress.currentFreedomEstimate ?? null`,
+            then `this.freedomYear = freedomEstimate != null ? String(freedomEstimate) : '—'`. Matches
+            my-profile.page.ts:189-191 canonical reference. HTML:25 binds
+            `{{ statStripLoading ? '—' : freedomYear }}`. No month fabricated.
+- Status:   pass (static)
+
+## AC-10: Freedom age computed from DOB via AlpacaService.getKycData()
+- Type:     frontend-unit
+- Check:    `freedomAge` = `currentFreedomEstimate − birthYear`, where birthYear is parsed from
+            `kyc.dateOfBirth` (YYYY-MM-DD string substring(0,4)). Shows e.g. "52". Falls back to "—"
+            if either value is null, or if age ≤ 0.
+- Evidence: STATIC PASS. ts:350-368 (loadStatStrip KYC block): `const dob: string = kyc.dateOfBirth;
+            const parsed = parseInt(dob.substring(0, 4), 10); birthYear = isNaN(parsed) ? null : parsed`.
+            ts:294-300: `age = freedomEstimate - birthYear; this.freedomAge = age > 0 ? String(age) : '—'`.
+            AlpacaService.getKycData() confirmed at alpaca.service.ts:166-169 — GET /alpaca/account/kyc,
+            returns Observable<any> with dateOfBirth field.
+- Status:   pass (static)
+
+## AC-11: Dollars-away = (retirementIncome / 0.04) − equity, clamped at 0
+- Type:     frontend-unit
+- Check:    `dollarsAway` = `Math.max(0, (retirementIncome / 0.04) − data.summary.equity)`, formatted
+            compactly (e.g. "$248K", "$1.2M", "$0"). `retirementIncome` from UserProgress is ANNUAL
+            (confirmed: my-profile.page.ts:158-161 stores it as annual, divides by 12 for UI).
+            PortfolioService.getPortfolioDashboard() → data.summary.equity.
+- Evidence: STATIC PASS. ts:302-309: `const target = retirementIncomeAnnual / SAFE_WITHDRAWAL_RATE (0.04);
+            const gap = Math.max(0, target - currentEquity); this.dollarsAway = this.formatCompactCurrency(gap)`.
+            `retirementIncomeAnnual` set from `progress.retirementIncome` (annual, confirmed via
+            my-profile code comment "Income is stored as Annual in backend"). `currentEquity` set from
+            `data.summary.equity` (ts:335-338). formatCompactCurrency (ts:372-385) handles $0, $K, $M,
+            NaN/Infinity → "—".
+- Status:   pass (static)
+
+## AC-12: Loading + error fallbacks present; no NaN/undefined; no layout shift
+- Type:     ui-acceptance
+- Check:    While all three HTTP calls are pending, `statStripLoading = true` so tiles show "—" (stable
+            height via min-height:58px). After all three complete, values render. If any call errors,
+            that partial data is null and the relevant tile(s) show "—". No NaN or "undefined" can
+            appear in the DOM.
+- Evidence: STATIC PASS.
+            Loading: `statStripLoading` starts true (ts:92); HTML uses ternary `statStripLoading ? '—' : value`
+            (HTML:25/29/33). Render fires only when all three `*Done` flags are true (ts:284-285).
+            Error handlers: progressDone=true / kycDone=true on error (ts:325-329 / ts:363-367);
+            portfolioDone=true + currentEquity=0 on error (ts:341-347). Null checks before assignment:
+            freedomEstimate, retirementIncomeAnnual guarded by `!= null`; formatCompactCurrency guards
+            `isNaN/isFinite` → "—". New-user edge: equity=0, retirementIncome=null → dollarsAway="—";
+            equity=0, retirementIncome=50000 → gap=full target shown. min-height:58px on .stat-strip
+            prevents layout shift.
+- Status:   pass (static)
+
+## AC-13: No rewrite of existing tab3.page.ts logic — diff is additions only
+- Type:     frontend-unit
+- Check:    Existing `settingSections` array, `onSettingClick`, `onFredLogoClick`, MFU flow,
+            `profileActionRequired$`, `goToMyProfile`, and all existing subscriptions in `ngOnInit`
+            are UNCHANGED. The rework diff is purely additive.
+- Evidence: CONFIRMED. `git diff HEAD frontend/src/app/tab3/tab3.page.ts`: 1 removed line
+            (trailing comma adjustment when adding new constructor params — not a behavioral change),
+            128 added lines (2 new imports, 6 new properties, `loadStatStrip()` call in ngOnInit,
+            `loadStatStrip()` method body 115 lines, `formatCompactCurrency()` helper 14 lines,
+            2 new constructor injections). All existing methods — `settingSections` (ts:97),
+            `onSettingClick` (ts:494), `goToMyProfile` (ts:568), `onFredLogoClick` (ts:469),
+            `hasMfuPeriod` (ts:88), `profileActionRequired$` (ts:89), existing ngOnInit subscriptions
+            (ts:236-259) — are unchanged in behavior.
+- Status:   pass
