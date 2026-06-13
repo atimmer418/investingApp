@@ -1,5 +1,0 @@
-{
-  "type": "rework",
-  "content": "Date: Saturday, June 13, 2026\n\nStory: FRED-192\n\nAndrew reviewed the completed build and is NOT satisfied. Rework the SAME story (do not re-pick or re-plan). His feedback:\ndo not omit the strip. we want the strip since it was part of the UI layout change. no .ts rewrites means no changing current ts, you can add .ts in no .ts rewrites because that is not a rewrite; so add the strip to reflect those values. it should wire in their freedom date and their freedom age (using their date of birth to calculate) and dollars away from retirement using their target portfolio - the current equity/portfolio value",
-  "timestamp": "2026-06-13T04:40:38.204Z"
-}
