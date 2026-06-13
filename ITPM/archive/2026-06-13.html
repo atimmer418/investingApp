@@ -760,7 +760,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="planning">
+  <div id="dashboard" data-populated="true" data-state="completed">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -790,50 +790,50 @@
 
         <div class="metric-card">
           <div class="metric-label">Backlog Burn-Down</div>
-          <div class="metric-value warning">36.0%</div>
-          <div class="metric-sublabel">32 of 89 stories done</div>
-          <div class="metric-trend positive">&#8593; +1 done vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:36.0%"></div></div>
+          <div class="metric-value warning">34.8%</div>
+          <div class="metric-sublabel">31 of 89 stories done</div>
+          <div class="metric-trend positive">&#8593; +3 done vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:34.8%"></div></div>
         </div>
 
         <div class="metric-card">
           <div class="metric-label">Piggy Tier Done</div>
           <div class="metric-value warning">77.5%</div>
           <div class="metric-sublabel">31 of 40 core stories complete</div>
-          <div class="metric-trend neutral">&#8594; no change vs last week</div>
+          <div class="metric-trend positive">&#8593; +7.5 vs last week</div>
           <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77.5%"></div></div>
         </div>
 
         <div class="metric-card">
           <div class="metric-label">Pages Migrated</div>
-          <div class="metric-value warning">76%</div>
-          <div class="metric-sublabel">Tab 3 settings hub shipped</div>
+          <div class="metric-value warning">73%</div>
+          <div class="metric-sublabel">Settings migrated; tab3 next</div>
           <div class="metric-trend positive">&#8593; +3 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:76%"></div></div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:73%"></div></div>
         </div>
 
         <div class="metric-card">
           <div class="metric-label">Prod Readiness</div>
-          <div class="metric-value warning">74</div>
+          <div class="metric-value warning">72</div>
           <div class="metric-sublabel">Score out of 100</div>
-          <div class="metric-trend positive">&#8593; +2 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:74%"></div></div>
+          <div class="metric-trend positive">&#8593; +5 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:72%"></div></div>
         </div>
 
         <div class="metric-card">
           <div class="metric-label">Days Since Blocker</div>
-          <div class="metric-value positive">13</div>
+          <div class="metric-value positive">9</div>
           <div class="metric-sublabel">No active production blockers</div>
-          <div class="metric-trend positive">&#8593; +7 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:43%"></div></div>
+          <div class="metric-trend positive">&#8593; +8 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:30%"></div></div>
         </div>
 
         <div class="metric-card">
           <div class="metric-label">Launch Readiness</div>
-          <div class="metric-value warning">65.9%</div>
+          <div class="metric-value warning">64.3%</div>
           <div class="metric-sublabel">Composite estimate</div>
-          <div class="metric-trend positive">&#8593; +1.9 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:65.9%"></div></div>
+          <div class="metric-trend positive">&#8593; +4.3 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:64.3%"></div></div>
         </div>
 
       </div>
@@ -850,9 +850,9 @@
         </label>
         <div class="priority-badge">#1</div>
         <div class="priority-body">
-          <div class="priority-title">FRED-100 — RAG Knowledge Chunks: Philosophy, MFU Math &amp; App Navigation</div>
-          <div class="priority-desc">Teach Ask Fred how FRED itself actually works. Add three canonical knowledge chunks so the chat answers precisely from FRED's own source of truth instead of improvising: (1) the Boglehead philosophy behind the default portfolio, (2) the exact Monthly Freedom Update math — every metric and formula, and (3) a complete app-navigation map of where to find every feature. Pure additive backend content (three Java string chunks in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FredKnowledge.java</code>) — no UI, no schema, no auth. Builds and verifies in-sandbox. <strong>Tier 1 — acceptance criteria already in the backlog.</strong></div>
-          <span class="diff-chip diff-easy">Easy</span>
+          <div class="priority-title">FRED-192 — Redesign Tab 3 (Settings) Page UI</div>
+          <div class="priority-desc">The natural next step after the bank-account page shipped: give the Tab 3 settings hub a cleaner design while keeping the signature blue header (avatar + "My Account" welcome + "FRED" wordmark). All content and actions stay — Investment Management, Account &amp; Security, Support &amp; Legal — this is a pure visual lift. Today's job is to pick a direction: three real design mockups are below, each grounded in the FRED UI Style Guide. The winner becomes a separate build story. <strong>Tier 1 — acceptance criteria already in the backlog.</strong></div>
+          <span class="diff-chip diff-medium">Medium</span>
         </div>
       </div>
     </div>
@@ -861,7 +861,7 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Why I Picked These</div>
       <div class="card">
-        <div class="card-text"><strong>FRED-100 is the only build-ready Tier-1 story that can actually ship today.</strong> With Tab 3 (FRED-192) now done, the other A/C-ready stories are all gated: FRED-101 (emailer) waits on a founder decision — email provider + SMTP credentials; FRED-169 (14-day trial) is App Store Connect config, not code; and FRED-191 (load-perf measurement) needs a running Capacitor build on a real device this sandbox can't provide. FRED-100 has no such gate — it's a pure additive backend change (three canonical knowledge chunks in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FredKnowledge.java</code>) that builds and verifies in-sandbox. It was deprioritized twice in early June while the bank-account and Tab-3 UI work took precedence, but that UI thread is finished and the 7-day skip window has long since lapsed, so it's cleanly back on the board. <strong>Tier 1</strong> — full acceptance criteria already in the backlog, no triage gap. Easy difficulty, guaranteed one-day completion.</div>
+        <div class="card-text"><strong>This is the cleanest momentum pick on the board.</strong> FRED-124 (Change Bank Account) just shipped, which migrated the last <em>standalone</em> settings page — but Tab 3 itself, the settings hub every one of those pages hangs off of, is still on the old look. FRED-192 finishes that thought: redesign the hub so the whole settings surface feels like one polished system before private beta. It's <strong>Tier 1</strong> — the story already carries a Summary and Acceptance Criteria in the backlog, so it's build-ready with no triage gap. It's a pure visual lift (no backend, auth, or schema), which keeps it Medium-difficulty and a guaranteed completion. Because it's a UI overhaul, the deliverable today is a <em>direction</em>, not code: three real mockups below, all keeping the blue-header concept you already like. The chosen one becomes its own implementation story.</div>
       </div>
     </div>
 
@@ -869,7 +869,7 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
-        <div class="card-text">Grounding Ask Fred in canonical knowledge serves trust and retention directly — two of FRED's stated business priorities. When a user asks "how does FRED calculate my freedom date?", "what's the philosophy behind my portfolio?", or "where do I change my bank?", FRED should answer precisely from its own source of truth, not paraphrase from a general model. These three chunks — the Boglehead thesis, the exact MFU math, and a full navigation map — close the biggest "the AI doesn't actually know how the app works" gaps on the Tab 3 chat surface, complementing the now-finished UI overhaul with substance behind it.</div>
+        <div class="card-text">FRED-192 sits squarely on the current mission: complete the UI overhaul on every remaining page. Tab 3 is the front door to settings — it's the screen users return to whenever they manage money, security, or support, so its polish sets the tone for the entire account experience. Redesigning it consolidates the settings surface onto one consistent design system (the same white-section-card pattern the just-shipped bank-account and security pages now use), eliminating the last visible seam between "new FRED" and "old FRED" before private beta.</div>
       </div>
     </div>
 
@@ -877,62 +877,172 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
-        <div class="card-text">This lifts the <strong>feature-completeness</strong> component (Piggy Tier) rather than UI coverage: it makes the Ask Fred experience answer-accurate and on-brand, removing a real "the AI improvises about its own app" gap before private beta. It's low-risk — additive content only, no change to the RAG retrieval pipeline, build-only verification — and a guaranteed one-day completion that keeps the readiness score climbing toward the 75 threshold without taking on any Hard work. Compliance framing ("based on these assumptions, if X then Y") is preserved in the new copy, consistent with FRED's existing knowledge chunks.</div>
+        <div class="card-text">Tab 3 is a high-traffic surface, so migrating it moves the needle on UI coverage — the production-readiness component weighted at 40 points. Shipping the redesign is expected to take <strong>Pages Migrated from 73% to ~76%</strong> and nudge the readiness score from 72 toward the mid-70s, the threshold where the difficulty bias starts allowing Hard work. Just as important, it closes the "no half-finished screens" gate on the most-visited settings page: once the hub matches the pages it links to, the entire account experience reads as one finished product at launch.</div>
       </div>
     </div>
 
-    <!-- ── Implementation Options (planning only) ── -->
+    <!-- ── Phone Mockups (UI overhaul, planning only) ── -->
     <div class="section-group section-planning-only hide-on-skip">
-      <div class="section-label">Implementation Options</div>
+      <div class="section-label">Design Directions — Pick One (Annotate Any)</div>
       <div class="card" style="margin-bottom:16px;">
-        <div class="card-text" style="color:var(--gray);">Three ways to scope FRED-100. All three add the same required chunks to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FredKnowledge.java</code> — they differ only in how much extra knowledge-base work rides along. Tap one to select it; use the edit pencil on the selected card to tweak the approach before approving.</div>
+        <div class="card-text" style="color:var(--gray);">Three real directions for the Tab 3 redesign, rendered in FRED's actual design system. Every option keeps the blue-header concept (avatar + "My Account" welcome + "FRED" wordmark) and preserves all content and actions — Investment Management, Account &amp; Security, Support &amp; Legal. Tap one to select it, and use the note box under each to mix and match — e.g. "build A, but borrow the hero stat strip from B." This is a visual-only lift; nothing about navigation or behavior changes.</div>
       </div>
-      <div class="option-group">
 
-        <div class="option-card selected">
-          <div class="option-header">
-            <span class="option-label">Option A</span>
-            <span class="option-rec">Recommended</span>
-          </div>
-          <div class="option-title">Three chunks, exactly as the acceptance criteria specify</div>
-          <div class="option-body">Add precisely the three canonical chunks named in the A/C — <code>bogleheads_philosophy_v1</code>, <code>monthly_freedom_update_explained_v1</code>, and <code>app_navigation_guide_v1</code> — to the <code>CANONICAL_CHUNKS</code> static list in <code>FredKnowledge.java</code>, using the existing <code>CanonicalChunk</code> record with <code>active:true</code>. Each chunk's content matches the exact section + formula list in the A/C, with the MFU math sourced from the live Monthly Freedom Update code so it's precise, not approximated.</div>
-          <div class="option-meta">
-            <span class="meta-item">Pros: <span>smallest, lowest-risk change; meets the A/C exactly; pure additive Java strings; verifies with build only.</span></span>
-            <span class="meta-item">Cons: <span>leaves the A/C's open "any other valuable chunks?" prompt for a separate follow-up.</span></span>
-            <span class="meta-item">Risk: <span>Low — additive content, no retrieval/embedding change; only real risk is formula accuracy, mitigated by reading the MFU source.</span></span>
-            <span class="meta-item">Estimate: <span>~2–3 hrs</span></span>
-          </div>
-          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+      <div class="phone-options">
+
+        <!-- Option A — Elevated Grouped Cards -->
+        <div class="phone-option selected" onclick="selectPhoneOption(this)">
+          <div class="phone-frame"><div class="phone-screen">
+            <div style="background:#f8fafc;min-height:100%;font-family:'Manrope',sans-serif;">
+              <!-- blue header (kept) -->
+              <div style="background:linear-gradient(135deg,#2563EB,#1d4ed8);padding:16px 14px 22px;color:#fff;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div style="display:flex;align-items:center;gap:9px;">
+                    <div style="position:relative;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;">
+                      <span class="material-symbols-outlined" style="font-size:24px;color:#fff;">person</span>
+                      <span style="position:absolute;top:-3px;right:-3px;background:#FBC926;color:#0f172a;font-size:7px;font-weight:800;width:13px;height:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;">1</span>
+                    </div>
+                    <div>
+                      <div style="font-size:13px;font-weight:800;line-height:1.15;">My Account</div>
+                      <div style="font-size:9px;opacity:0.85;">Hi, Andy</div>
+                    </div>
+                  </div>
+                  <div style="font-family:'Montserrat',sans-serif;font-style:italic;font-weight:900;font-size:18px;">FRED</div>
+                </div>
+              </div>
+              <!-- grouped cards -->
+              <div style="padding:14px 12px 16px;">
+                <div style="font-size:8px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;margin:0 2px 7px;">Investment Management</div>
+                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:15px;">
+                  <div style="display:flex;align-items:center;gap:9px;padding:10px 11px;border-bottom:1px solid #f1f5f9;"><div style="width:26px;height:26px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:15px;color:#2563EB;">schedule</span></div><div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#0f172a;">Recurring Investments</div><div style="font-size:8px;color:#6b7280;">Adjust or pause auto-investing</div></div><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;padding:10px 11px;border-bottom:1px solid #f1f5f9;"><div style="width:26px;height:26px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:15px;color:#2563EB;">payments</span></div><div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#0f172a;">One-Time Transactions</div><div style="font-size:8px;color:#6b7280;">Invest once or transfer in</div></div><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;padding:10px 11px;border-bottom:1px solid #f1f5f9;"><div style="width:26px;height:26px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:15px;color:#2563EB;">pie_chart</span></div><div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#0f172a;">Portfolio Allocation</div><div style="font-size:8px;color:#6b7280;">Customize your strategy</div></div><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;padding:10px 11px;"><div style="width:26px;height:26px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:15px;color:#2563EB;">credit_card</span></div><div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#0f172a;">Sell &amp; Withdraw</div><div style="font-size:8px;color:#6b7280;">Sell stocks and withdraw</div></div><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                </div>
+                <div style="font-size:8px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;margin:0 2px 7px;">Account &amp; Security</div>
+                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:15px;">
+                  <div style="display:flex;align-items:center;gap:9px;padding:10px 11px;border-bottom:1px solid #f1f5f9;"><div style="width:26px;height:26px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:15px;color:#2563EB;">verified_user</span></div><div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#0f172a;">Account Security</div><div style="font-size:8px;color:#6b7280;">App lock, identity, email</div></div><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;padding:10px 11px;border-bottom:1px solid #f1f5f9;"><div style="width:26px;height:26px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:15px;color:#2563EB;">account_balance</span></div><div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#0f172a;">Change Bank Account</div><div style="font-size:8px;color:#6b7280;">Link a different bank</div></div><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;padding:10px 11px;border-bottom:1px solid #f1f5f9;"><div style="width:26px;height:26px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:15px;color:#2563EB;">description</span></div><div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#0f172a;">Documents</div><div style="font-size:8px;color:#6b7280;">Tax forms &amp; statements</div></div><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;padding:10px 11px;"><div style="width:26px;height:26px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:15px;color:#2563EB;">group</span></div><div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#0f172a;">Beneficiaries</div><div style="font-size:8px;color:#6b7280;">Manage beneficiaries &amp; TOD</div></div><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                </div>
+                <div style="font-size:8px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;margin:0 2px 7px;">Support &amp; Legal</div>
+                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:14px;">
+                  <div style="display:flex;align-items:center;gap:9px;padding:10px 11px;border-bottom:1px solid #f1f5f9;"><div style="width:26px;height:26px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:15px;color:#2563EB;">help</span></div><div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#0f172a;">FAQs</div></div><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;padding:10px 11px;border-bottom:1px solid #f1f5f9;"><div style="width:26px;height:26px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:15px;color:#2563EB;">mail</span></div><div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#0f172a;">Contact Us</div></div><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;padding:10px 11px;"><div style="width:26px;height:26px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:15px;color:#2563EB;">gavel</span></div><div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#0f172a;">Legal Information</div></div><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                </div>
+                <div style="text-align:center;"><div style="font-size:8px;color:#9ca3af;">© 2026 FREDvested</div><div style="font-size:8px;color:#cbd5e1;">v1.0.0 (Beta)</div></div>
+              </div>
+            </div>
+          </div></div>
+          <div class="phone-option-label">Option A — Elevated Grouped Cards <span class="phone-option-rec">Recommended</span></div>
+          <div class="phone-option-note"><textarea placeholder="What do you like / want changed in this one?"></textarea></div>
         </div>
 
-        <div class="option-card">
-          <div class="option-header">
-            <span class="option-label">Option B</span>
-          </div>
-          <div class="option-title">The three chunks + a 4th core-calculation chunk</div>
-          <div class="option-body">Everything in Option A, plus a fourth chunk on FRED's core retirement math — target portfolio = (annual desired income ÷ 0.04), 10% average annual growth, compounding, DRIP, and time-to-freedom projection. This is the engine behind the entire app and the single most-asked user question ("how does FRED calculate my freedom date?"), currently only partially covered by the existing mission/portfolio chunks.</div>
-          <div class="option-meta">
-            <span class="meta-item">Pros: <span>answers the #1 user question precisely; closes the A/C's "other valuable chunks?" prompt in part.</span></span>
-            <span class="meta-item">Cons: <span>slightly larger; needs a dedup pass against the 28 existing chunks to avoid overlap.</span></span>
-            <span class="meta-item">Risk: <span>Low–Medium — content overlap with existing chunks could add retrieval noise; mitigated by checking existing topics first.</span></span>
-            <span class="meta-item">Estimate: <span>~3–4 hrs</span></span>
-          </div>
-          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        <!-- Option B — Hero Stat Header -->
+        <div class="phone-option" onclick="selectPhoneOption(this)">
+          <div class="phone-frame"><div class="phone-screen">
+            <div style="background:#f8fafc;min-height:100%;font-family:'Manrope',sans-serif;">
+              <!-- expanded blue hero header with freedom stat -->
+              <div style="background:linear-gradient(135deg,#2563EB,#1d4ed8);padding:16px 14px 30px;color:#fff;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                  <div style="display:flex;align-items:center;gap:9px;">
+                    <div style="position:relative;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;">
+                      <span class="material-symbols-outlined" style="font-size:22px;color:#fff;">person</span>
+                      <span style="position:absolute;top:-3px;right:-3px;background:#FBC926;color:#0f172a;font-size:7px;font-weight:800;width:13px;height:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;">1</span>
+                    </div>
+                    <div>
+                      <div style="font-size:13px;font-weight:800;line-height:1.15;">My Account</div>
+                      <div style="font-size:9px;opacity:0.85;">Hi, Andy</div>
+                    </div>
+                  </div>
+                  <div style="font-family:'Montserrat',sans-serif;font-style:italic;font-weight:900;font-size:18px;">FRED</div>
+                </div>
+                <!-- freedom stat strip -->
+                <div style="display:flex;gap:8px;">
+                  <div style="flex:1;background:rgba(255,255,255,0.14);border-radius:11px;padding:8px 10px;">
+                    <div style="font-size:7px;opacity:0.8;text-transform:uppercase;letter-spacing:0.05em;">Freedom date</div>
+                    <div style="font-size:13px;font-weight:800;">Aug 2049</div>
+                  </div>
+                  <div style="flex:1;background:rgba(255,255,255,0.14);border-radius:11px;padding:8px 10px;">
+                    <div style="font-size:7px;opacity:0.8;text-transform:uppercase;letter-spacing:0.05em;">Status</div>
+                    <div style="font-size:11px;font-weight:800;display:flex;align-items:center;gap:3px;"><span class="material-symbols-outlined" style="font-size:12px;color:#FBC926;">trending_up</span>Ahead of 85%</div>
+                  </div>
+                </div>
+              </div>
+              <!-- flat rows over white -->
+              <div style="background:#fff;margin:-14px 10px 0;border-radius:16px;border:1px solid #e5e7eb;box-shadow:0 6px 16px rgba(15,23,42,0.06);overflow:hidden;">
+                <div style="font-size:8px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;padding:11px 12px 4px;">Investment Management</div>
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 12px;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">schedule</span><span style="flex:1;font-size:10px;font-weight:600;color:#0f172a;">Recurring Investments</span><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 12px;border-top:1px solid #f1f5f9;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">payments</span><span style="flex:1;font-size:10px;font-weight:600;color:#0f172a;">One-Time Transactions</span><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 12px;border-top:1px solid #f1f5f9;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">pie_chart</span><span style="flex:1;font-size:10px;font-weight:600;color:#0f172a;">Portfolio Allocation</span><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 12px;border-top:1px solid #f1f5f9;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">credit_card</span><span style="flex:1;font-size:10px;font-weight:600;color:#0f172a;">Sell &amp; Withdraw</span><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                <div style="font-size:8px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;padding:11px 12px 4px;border-top:6px solid #f8fafc;">Account &amp; Security</div>
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 12px;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">verified_user</span><span style="flex:1;font-size:10px;font-weight:600;color:#0f172a;">Account Security</span><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 12px;border-top:1px solid #f1f5f9;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">account_balance</span><span style="flex:1;font-size:10px;font-weight:600;color:#0f172a;">Change Bank Account</span><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 12px;border-top:1px solid #f1f5f9;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">description</span><span style="flex:1;font-size:10px;font-weight:600;color:#0f172a;">Documents</span><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 12px;border-top:1px solid #f1f5f9;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">group</span><span style="flex:1;font-size:10px;font-weight:600;color:#0f172a;">Beneficiaries</span><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                <div style="font-size:8px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;padding:11px 12px 4px;border-top:6px solid #f8fafc;">Support &amp; Legal</div>
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 12px;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">help</span><span style="flex:1;font-size:10px;font-weight:600;color:#0f172a;">FAQs</span><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 12px;border-top:1px solid #f1f5f9;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">mail</span><span style="flex:1;font-size:10px;font-weight:600;color:#0f172a;">Contact Us</span><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 12px;border-top:1px solid #f1f5f9;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">gavel</span><span style="flex:1;font-size:10px;font-weight:600;color:#0f172a;">Legal Information</span><span class="material-symbols-outlined" style="font-size:13px;color:#cbd5e1;">chevron_right</span></div>
+              </div>
+              <div style="text-align:center;padding:12px 0 14px;"><div style="font-size:8px;color:#9ca3af;">© 2026 FREDvested · v1.0.0 (Beta)</div></div>
+            </div>
+          </div></div>
+          <div class="phone-option-label">Option B — Hero Stat Header</div>
+          <div class="phone-option-note"><textarea placeholder="What do you like / want changed in this one?"></textarea></div>
         </div>
 
-        <div class="option-card">
-          <div class="option-header">
-            <span class="option-label">Option C</span>
-          </div>
-          <div class="option-title">Full knowledge-base audit, then add what's missing</div>
-          <div class="option-body">Before writing anything, audit all 28 existing chunks and the <code>FREDdocs</code> .md files for coverage gaps, then add the three required chunks plus any others the audit surfaces, and propose a chunk taxonomy (topic + version conventions). The most thorough answer to the A/C's "are there other valuable chunks?" question, producing a durable knowledge-base map.</div>
-          <div class="option-meta">
-            <span class="meta-item">Pros: <span>most thorough; directly answers the A/C's FREDdocs question; yields a reusable KB map.</span></span>
-            <span class="meta-item">Cons: <span>largest, most open-ended scope; lower one-day completion certainty; risks scope creep beyond the A/C.</span></span>
-            <span class="meta-item">Risk: <span>Medium — open-ended audit can balloon; cuts against the Easy/Medium bias and the guaranteed-completion rule.</span></span>
-            <span class="meta-item">Estimate: <span>~5–6 hrs</span></span>
-          </div>
-          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        <!-- Option C — iOS Inset Grouped List -->
+        <div class="phone-option" onclick="selectPhoneOption(this)">
+          <div class="phone-frame"><div class="phone-screen">
+            <div style="background:#eef0f4;min-height:100%;font-family:'Manrope',sans-serif;">
+              <!-- compact blue header (kept, minimal) -->
+              <div style="background:linear-gradient(135deg,#2563EB,#1d4ed8);padding:14px 14px 16px;color:#fff;border-radius:0 0 18px 18px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div style="display:flex;align-items:center;gap:9px;">
+                    <div style="position:relative;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;">
+                      <span class="material-symbols-outlined" style="font-size:20px;color:#fff;">person</span>
+                      <span style="position:absolute;top:-3px;right:-3px;background:#FBC926;color:#0f172a;font-size:7px;font-weight:800;width:12px;height:12px;border-radius:50%;display:flex;align-items:center;justify-content:center;">1</span>
+                    </div>
+                    <div>
+                      <div style="font-size:12px;font-weight:800;line-height:1.15;">My Account</div>
+                      <div style="font-size:9px;opacity:0.85;">Hi, Andy</div>
+                    </div>
+                  </div>
+                  <div style="font-family:'Montserrat',sans-serif;font-style:italic;font-weight:900;font-size:17px;">FRED</div>
+                </div>
+              </div>
+              <!-- iOS inset grouped lists -->
+              <div style="padding:14px 13px 16px;">
+                <div style="font-size:8px;font-weight:600;color:#8a909c;text-transform:uppercase;letter-spacing:0.05em;margin:0 6px 5px;">Investment Management</div>
+                <div style="background:#fff;border-radius:13px;overflow:hidden;margin-bottom:16px;">
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">schedule</span><span style="flex:1;font-size:10px;color:#0f172a;">Recurring Investments</span><span class="material-symbols-outlined" style="font-size:14px;color:#c7ccd4;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid #eef0f4;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">payments</span><span style="flex:1;font-size:10px;color:#0f172a;">One-Time Transactions</span><span class="material-symbols-outlined" style="font-size:14px;color:#c7ccd4;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid #eef0f4;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">pie_chart</span><span style="flex:1;font-size:10px;color:#0f172a;">Portfolio Allocation</span><span class="material-symbols-outlined" style="font-size:14px;color:#c7ccd4;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid #eef0f4;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">credit_card</span><span style="flex:1;font-size:10px;color:#0f172a;">Sell &amp; Withdraw</span><span class="material-symbols-outlined" style="font-size:14px;color:#c7ccd4;">chevron_right</span></div>
+                </div>
+                <div style="font-size:8px;font-weight:600;color:#8a909c;text-transform:uppercase;letter-spacing:0.05em;margin:0 6px 5px;">Account &amp; Security</div>
+                <div style="background:#fff;border-radius:13px;overflow:hidden;margin-bottom:16px;">
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">verified_user</span><span style="flex:1;font-size:10px;color:#0f172a;">Account Security</span><span class="material-symbols-outlined" style="font-size:14px;color:#c7ccd4;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid #eef0f4;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">account_balance</span><span style="flex:1;font-size:10px;color:#0f172a;">Change Bank Account</span><span class="material-symbols-outlined" style="font-size:14px;color:#c7ccd4;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid #eef0f4;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">description</span><span style="flex:1;font-size:10px;color:#0f172a;">Documents</span><span class="material-symbols-outlined" style="font-size:14px;color:#c7ccd4;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid #eef0f4;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">group</span><span style="flex:1;font-size:10px;color:#0f172a;">Beneficiaries</span><span class="material-symbols-outlined" style="font-size:14px;color:#c7ccd4;">chevron_right</span></div>
+                </div>
+                <div style="font-size:8px;font-weight:600;color:#8a909c;text-transform:uppercase;letter-spacing:0.05em;margin:0 6px 5px;">Support &amp; Legal</div>
+                <div style="background:#fff;border-radius:13px;overflow:hidden;margin-bottom:16px;">
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">help</span><span style="flex:1;font-size:10px;color:#0f172a;">FAQs</span><span class="material-symbols-outlined" style="font-size:14px;color:#c7ccd4;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid #eef0f4;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">mail</span><span style="flex:1;font-size:10px;color:#0f172a;">Contact Us</span><span class="material-symbols-outlined" style="font-size:14px;color:#c7ccd4;">chevron_right</span></div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid #eef0f4;"><span class="material-symbols-outlined" style="font-size:16px;color:#2563EB;">gavel</span><span style="flex:1;font-size:10px;color:#0f172a;">Legal Information</span><span class="material-symbols-outlined" style="font-size:14px;color:#c7ccd4;">chevron_right</span></div>
+                </div>
+                <div style="text-align:center;"><div style="font-size:8px;color:#a3a9b3;">© 2026 FREDvested · v1.0.0 (Beta)</div></div>
+              </div>
+            </div>
+          </div></div>
+          <div class="phone-option-label">Option C — iOS Inset Grouped List</div>
+          <div class="phone-option-note"><textarea placeholder="What do you like / want changed in this one?"></textarea></div>
         </div>
 
       </div>
@@ -944,38 +1054,37 @@
       <div class="card">
 
         <div class="story-section">
-          <div class="story-header">FRED-100 — RAG Knowledge Chunks: Philosophy, MFU Math &amp; App Navigation</div>
+          <div class="story-header">FRED-192 — Redesign Tab 3 (Settings) Page UI</div>
 
           <div class="triage-group">
             <div class="triage-group-title">In Scope</div>
             <ul class="triage-list">
-              <li>Add three new entries to the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">CANONICAL_CHUNKS</code> static list in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FredKnowledge.java</code>, using the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">CanonicalChunk(id, title, content, version, topic, riskLevel, active)</code> record — all <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">active:true</code> (chunk count 28 → 31).</li>
-              <li><strong>bogleheads_philosophy_v1</strong> — Bogle/Vanguard origin, the three tenets (diversify broadly, minimize costs, stay the course), why low-cost index funds beat most active managers over time, and how FRED's default portfolio + automation implement the philosophy.</li>
-              <li><strong>monthly_freedom_update_explained_v1</strong> — every MFU modal section with its exact formula: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">periodProgressDelta</code> (endEquity − startEquity), <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">returnRate</code> ((delta − contributions) / startEquity), <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">daysBoughtBack</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">statusPercentile</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">currentStreak</code>, the bestNextMove card, and the quarterly-compare trigger (every 3rd MFU).</li>
-              <li><strong>app_navigation_guide_v1</strong> — where to find every major feature: Tab 1 (portfolio dashboard, chart, holdings), Tab 2 (education / strategies / Monte Carlo), Tab 3 (settings hub) + Ask Fred chat, recurring &amp; one-time investments, portfolio customization, and account settings (security, email, beneficiaries, bank, sell/withdraw, tax docs).</li>
-              <li>Source the MFU formulas from the live Monthly Freedom Update service/DTO so the math is exact; keep FRED's calm, educational voice consistent with the existing 28 chunks.</li>
-              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code> exits 0.</li>
+              <li>This story's deliverable is the <strong>3–5 design mockups in today.html</strong> (delivered below) for you to pick from — the chosen direction becomes its own implementation story.</li>
+              <li>Each direction keeps the blue-header concept (avatar + "My Account"/welcome + "FRED" wordmark) — the header and greeting copy may be restyled, but the concept stays.</li>
+              <li>All content + actions preserved: Investment Management (Recurring Investments, One-Time Transactions, Portfolio Allocation, Sell &amp; Withdraw), Account &amp; Security (Account Security, Change Bank Account, Documents, Beneficiaries), Support &amp; Legal (FAQs, Contact Us, Legal Information), plus the profile action badge and the FRED-logo MFU interaction.</li>
+              <li>Every option grounded in the FRED UI Style Guide — FRED palette, Manrope type scale, Material Symbols icons, established card/row patterns.</li>
+              <li>Each option annotated with how it's cleaner and its trade-offs.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">Potentially Out of Scope</div>
             <ul class="triage-list">
-              <li>The A/C's open "are there other valuable chunks in the FREDdocs .md files?" prompt — Option A keeps to the three specified and surfaces extras as a follow-up (a 4th core-calc chunk is Option B; a full audit is Option C).</li>
-              <li>Any change to the RAG retrieval / embedding / scoring pipeline in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">RAGService.java</code> — content-only this run.</li>
-              <li>Updating Fred's pre-generated suggestion questions — that's FRED-151.</li>
-              <li>Any frontend / chat-UI change; the SSE token streaming (FRED-183) is untouched.</li>
-              <li>Re-versioning or rewriting any of the existing 28 chunks.</li>
+              <li><strong>Implementation</strong> of the chosen design — that's the follow-on build story, not today. Today is direction-only.</li>
+              <li>Any navigation or behavior change — this is visual-only; the settings rows route exactly where they do now.</li>
+              <li>Restyling the downstream settings pages themselves (security-settings, change-bank-account, etc.) — they're already migrated; only the hub changes.</li>
+              <li>Replacing the placeholder avatar image (tracked under FRED-122's pig-art work) — keep whatever the avatar shows today.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">UX Considerations</div>
             <ul class="triage-list">
-              <li><strong>No direct UI surface</strong> — this lifts Ask Fred answer quality and trust: accurate, on-brand explanations of FRED's own math and philosophy instead of generic-model improvisation. No loading/empty/error states to design (content baked into the backend).</li>
-              <li><strong>Compliance:</strong> the MFU and Bogleheads copy must stay educational ("based on these assumptions, if X then Y") — general education, never personalized advice — matching the existing high-riskLevel compliance chunk's framing.</li>
-              <li><strong>riskLevel tagging:</strong> recommend <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">low</code> for philosophy + navigation (purely informational), with the MFU explainer's level left to your call below since it describes return math.</li>
-              <li><strong>Consistency:</strong> new chunks must not contradict the existing mission, default-portfolio, or compliance chunks — keep the steady, plain-language tone uniform across the knowledge base.</li>
+              <li><strong>Loading / empty:</strong> Tab 3 is static content (the section list is hard-coded), so there's no data-fetch state to design — but the avatar image and the profile action badge should not cause layout shift while they resolve.</li>
+              <li><strong>Safe area:</strong> carry the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">safe-area-top</code> handling on the blue header (the lesson from FRED-124 — a raw header div must honor <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">env(safe-area-inset-top)</code> or it sits under the notch).</li>
+              <li>Mobile-first at 390×844, verified at 430×932 (your daily driver); generous spacing, one job per screen; the full list fits without feeling cramped.</li>
+              <li>FRED palette + Manrope + Material Symbols only; light mode forced; no competing patterns.</li>
+              <li>Design consistency: the white-section-card pattern now used by security-settings, my-profile, and the just-shipped change-bank-account is the safest baseline — Option A leans into it directly.</li>
             </ul>
           </div>
         </div>
@@ -990,15 +1099,15 @@
 
         <div class="question-item">
           <div class="question-text">
-            FRED-100: For the MFU explainer chunk, should it state the exact internal formulas verbatim (e.g. "returnRate = (periodProgressDelta − contributions) / startEquity"), or describe them in plain-English terms a user would actually read in chat? The A/C lists the formulas, but Ask Fred answers read more naturally in plain language. My recommendation: <strong>plain-English explanation that still names each metric, with the formula in parentheses</strong> — accurate and readable.
+            FRED-192: Which direction do you want built? Pick one of the three mockups above (tap to select). My recommendation is <strong>Option A — Elevated Grouped Cards</strong> because it's the most consistent with the white-section-card pattern your other migrated pages just standardized on, and it's the lowest-risk "cleaner" win. Use the per-option note boxes if you want to mix elements (e.g. "A's cards but B's hero stat strip").
             <span class="required-badge">Required</span>
           </div>
-          <textarea class="question-input" data-required="true" placeholder="e.g. Plain English with the formula in parentheses — your recommendation is good."></textarea>
+          <textarea class="question-input" data-required="true" placeholder="e.g. Go with A. I like the grouped cards — keep it simple."></textarea>
         </div>
 
         <div class="question-item">
           <div class="question-text">
-            FRED-100: riskLevel tags — OK to tag <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">bogleheads_philosophy_v1</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app_navigation_guide_v1</code> as <strong>low</strong> (purely informational), and the MFU explainer as <strong>low</strong> too — or would you prefer the MFU one at <strong>medium</strong> since it explains return math?
+            FRED-192: The greeting currently reads "Hi, Firstname" / "My Account" with a placeholder avatar. Do you want the redesign to wire in the real first name and a pig-art avatar (overlaps FRED-122/FRED-131 art), or keep the greeting/avatar exactly as-is and treat this as layout-only?
             <span class="optional-badge">Optional</span>
           </div>
           <textarea class="question-input" placeholder="Your answer..."></textarea>
@@ -1006,7 +1115,7 @@
 
         <div class="question-item">
           <div class="question-text">
-            FRED-100: The A/C also asks whether other FREDdocs .md content is worth chunking. Want me to log a follow-up story to audit FREDdocs for additional chunk candidates (Option C territory), or leave RAG coverage at these three for now?
+            FRED-192: Option B surfaces a personal "Freedom date / Ahead of 85%" stat strip in the header. That data already exists (FRED-180 freedom timeline, FRED-122 status percentile). Want that personalization pulled into whichever direction wins, or keep the header purely about identity + branding?
             <span class="optional-badge">Optional</span>
           </div>
           <textarea class="question-input" placeholder="Your answer..."></textarea>
@@ -1022,7 +1131,7 @@
 
         <div class="step-item">
           <div class="step-num">1</div>
-          <div class="step-body" contenteditable="false"><strong>Study the existing chunk patterns</strong> — Read every chunk in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FredKnowledge.java</code> (id / title / topic / riskLevel / version conventions and the established voice) and how <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">RAGService.java</code> consumes <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">CANONICAL_CHUNKS</code>, so the new entries match format and don't duplicate existing topics.</div>
+          <div class="step-body" contenteditable="false"><strong>Lock the direction</strong> — You pick one of the three mockups above (plus any per-option notes). That selection becomes a new, separate implementation story; the steps below are the build plan for whichever direction wins.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1030,7 +1139,7 @@
 
         <div class="step-item">
           <div class="step-num">2</div>
-          <div class="step-body" contenteditable="false"><strong>Source the MFU math from live code</strong> — Read the Monthly Freedom Update service/DTO to capture the exact formulas (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">periodProgressDelta</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">returnRate</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">daysBoughtBack</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">statusPercentile</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">currentStreak</code>, bestNextMove, the every-3rd-MFU quarterly compare) so the explainer chunk is accurate, not approximated.</div>
+          <div class="step-body" contenteditable="false"><strong>Study the reference pages first</strong> — Read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">security-settings</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">my-profile</code>, and the just-shipped <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">change-bank-account.page</code> (.html + .scss) plus the current <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tab3.page</code> so the redesign reuses the established card / row / icon patterns.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1038,7 +1147,7 @@
 
         <div class="step-item">
           <div class="step-num">3</div>
-          <div class="step-body" contenteditable="false"><strong>Write the three chunks</strong> — Author <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">bogleheads_philosophy_v1</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthly_freedom_update_explained_v1</code>, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app_navigation_guide_v1</code> as new <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">CANONICAL_CHUNKS.add(...)</code> entries (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">active:true</code>), in FRED's calm voice, preserving the educational/compliance framing per your answers above.</div>
+          <div class="step-body" contenteditable="false"><strong>Preserve the data + behavior</strong> — Keep the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settingSections</code> array, the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">*ngFor</code> rows, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">onSettingClick(action)</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">goToMyProfile()</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">onFredLogoClick()</code> MFU interaction, and the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">profileActionRequired$</code> badge wired exactly as-is — this is HTML + SCSS only, no .ts logic rewrite.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1046,7 +1155,15 @@
 
         <div class="step-item">
           <div class="step-num">4</div>
-          <div class="step-body" contenteditable="false"><strong>Build &amp; verify</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code> (exits 0), confirm the chunk count goes 28 → 31 and the three ids are unique, then run the verifier agent to check each chunk's content against the A/C and the live MFU formulas.</div>
+          <div class="step-body" contenteditable="false"><strong>Rebuild tab3.page.html + .scss</strong> — Implement the chosen direction: restyle the blue header (carrying <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">safe-area-top</code>), the three grouped sections, and the footer. FRED palette + Manrope + Material Symbols only.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">5</div>
+          <div class="step-body" contenteditable="false"><strong>Verify &amp; check for regressions</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> (exits 0), confirm the header clears the notch and the full list fits at 390×844 and 430×932, re-test every settings row still routes correctly and the FRED-logo MFU tap still fires, then run the verifier agent.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1060,8 +1177,8 @@
       <div class="section-label">Tomorrow's Likely Priorities</div>
       <div class="card">
         <ul class="tomorrow-list">
-          <li><strong>FRED-188</strong> — Add null userId guard to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> — Easy, a parked quick win: a one-line null guard mirroring the one already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> that closes a real NPE path. Tier 2 (needs A/C confirmed), guaranteed-complete bug-density win — and a natural pairing with today's chat-knowledge work.</li>
-          <li><strong>FRED-189</strong> — Fix bank-account subtype always showing "Checking" — Easy, a user-facing field-case bug (frontend reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code> but the backend returns <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code>) related to the just-shipped FRED-124; pure code, Tier 2.</li>
+          <li><strong>FRED-192 implementation</strong> — Once you pick a direction today, the chosen design becomes its own build story (HTML + SCSS, visual-only) — the most likely next pick, since it converts today's decision into the actual Pages-Migrated lift.</li>
+          <li><strong>FRED-188</strong> — Add null userId guard to processChat — Easy, the parked quick win: a one-line null guard mirroring the one already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> that closes a real NPE path. Tier 2 (needs A/C confirmed), guaranteed-complete bug-density win.</li>
           <li><strong>FRED-186</strong> — Update API searches to use debounce + switchMap — Medium, a clean front-end consistency pass that hardens every type-ahead/search call; pure code, no founder gating.</li>
         </ul>
       </div>
@@ -1071,7 +1188,22 @@
     <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
-        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
+      <div style="margin-bottom:16px;">
+        <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-192 — Tab 3 Redesign (Option B) <span style="font-weight:600;color:#2563EB;">· reworked again (single card)</span></p>
+        <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Fixed exactly what you flagged: <em>"the cards … do not look like option B — I thought the ngFor would be one long card, rounded at the top, that sits a little on the blue header."</em> It now does. The three setting groups (Investment Management, Account &amp; Security, Support &amp; Legal) live inside <strong>one continuous white card</strong> instead of three separate-looking ones.</p>
+        <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">What was wrong: a full-width gray bar sat between each group, visually chopping the single card into three. I removed that bar. Now there's <strong>one rounded card</strong> that pulls up over the bottom of the blue header (so it "sits a little on the blue"), and the groups are separated only by a subtle thin inset line inside the card — exactly like the Option B mockup. The hero header, the freedom stat strip, all rows/icons/links, and the "FRED" wordmark are unchanged.</p>
+        <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">What changed:</p>
+        <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+          <li>The three groups now render inside <strong>one</strong> rounded card (full-width gray spacer removed) <span style="color:#059669;">(verified)</span></li>
+          <li>Card is rounded on all corners and overlaps the bottom of the blue header <span style="color:#059669;">(verified)</span></li>
+          <li>Groups separated by a subtle in-card divider (6px inset line), not a full-width gap <span style="color:#059669;">(verified)</span></li>
+          <li>Every row, icon, chevron, badge, the stat strip and the FRED wordmark unchanged; <code>tab3.page.ts</code> byte-for-byte untouched <span style="color:#059669;">(verified)</span></li>
+          <li>HTML + SCSS only; <code>npx tsc --noEmit</code> adds zero new errors <span style="color:#059669;">(verified)</span></li>
+        </ul>
+        <p style="font-size:12px;color:#92400e;line-height:1.6;margin:0 0 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;">Same honest caveat: this environment can't serve a browser, so I confirmed the single-card structure statically (every property the mockup needs is present) but couldn't auto-screenshot it. Please glance at Tab 3 in the running app — tap <strong>Looks Good</strong> if it matches the mockup now, or <strong>Request changes</strong> with a note.</p>
+        <p style="font-size:13px;font-weight:600;color:#059669;margin:0 0 8px;">Readiness needle: tab3 now matches the approved Option B design pixel-intent — settings-hub migration is visually locked in. Pages Migrated ~76%, Prod Readiness holding mid-70s.</p>
+        <p style="font-size:12px;color:var(--gray);line-height:1.6;margin:0;"><strong>Still open from before (not built — confirm if you want it on the backlog):</strong> the header greeting shows the hardcoded "Hi, Firstname" — wire it to your real first name.</p>
+      </div>
       </div>
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;
