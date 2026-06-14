@@ -14,12 +14,6 @@
 ion-header {
   --background: transparent;
   background: transparent !important;
-  /* Ionic clips ion-header (contain) and stacks it above ion-content (z-index:10).
-     Both prevent the white card's top lip from showing on the blue — undo them so
-     the rounded card edge + first group label can paint on top of the header. */
-  contain: none;
-  overflow: visible;
-  z-index: 1;
 }
 
 .custom-profile-header {
@@ -205,10 +199,6 @@ ion-header {
   --padding-bottom: 0;
   --padding-start: 0;
   --padding-end: 0;
-  /* Lift the whole content (incl. the card's overlapping top lip) above the
-     blue header so the rounded card edge + first group label sit on the blue. */
-  position: relative;
-  z-index: 2;
 }
 
 .content-scroll {
@@ -219,8 +209,23 @@ ion-header {
 }
 
 /* =============================================================================
+   HEADER-OVERLAP STRIP
+   A blue band at the very top of ion-content that continues the blue header.
+   The white card overlaps onto THIS (a sibling inside ion-content) instead of
+   poking up into ion-header — so the rounded top + first group label render
+   on blue without crossing the header boundary (which is what clipped them).
+   It scrolls under the pinned header naturally, so no rows bleed over the blue.
+   ============================================================================= */
+
+.header-overlap {
+  height: 20px;
+  /* approximates the blue header's bottom edge so the seam reads as continuous */
+  background: linear-gradient(90deg, #2a5ae0, #1d4ed8);
+}
+
+/* =============================================================================
    OVERLAPPING WHITE SECTIONS CARD
-   Option B: white rounded card pulled up over the blue header
+   Option B: white rounded card pulled up over the blue header strip
    ============================================================================= */
 
 .sections-card {
@@ -228,11 +233,14 @@ ion-header {
   border-radius: 16px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-  margin-top: -20px;
+  /* overlaps onto the .header-overlap strip above it (sibling, same container) */
+  margin-top: -14px;
   margin-left: 12px;
   margin-right: 12px;
   padding: 0;
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 /* =============================================================================

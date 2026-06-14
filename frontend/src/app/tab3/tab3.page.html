@@ -38,7 +38,11 @@
 
 <ion-content [scrollY]="false" class="settings-content">
   <div class="content-scroll">
-    <!-- Overlapping white card pulled up over the blue header -->
+    <!-- Blue strip continuing the header; the card overlaps onto this so its
+         rounded top + first label sit on blue without crossing into ion-header -->
+    <div class="header-overlap" aria-hidden="true"></div>
+
+    <!-- Overlapping white card pulled up over the blue strip -->
     <div class="sections-card">
 
       <!-- Settings Sections -->
