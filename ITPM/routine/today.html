@@ -219,29 +219,30 @@
 
     .section-group { margin-bottom: 32px; }
 
-    /* ─── State Machine ───
-       Default: planning-only sections show, intermediary-only sections hide.
-       Each state below flips exactly what it needs. Defaulting this way means a
-       stray/unknown state can never leak the post-action cards onto a plan. */
+    /* ─── State Machine ───────────────────────────────────────────────────────
+       EXHAUSTIVE and MUTUALLY EXCLUSIVE. Two section buckets:
+         .section-planning-only      → only the planning brief (priorities, options, triage…)
+         .section-intermediary-only  → only post-build content (recap cards, completion)
+       Default: BOTH hidden. Each state turns on exactly one bucket. This way no
+       state — known or stray — can ever show both at once. Do not "simplify" by
+       relying on defaults; every state is spelled out on purpose. */
+    .section-planning-only { display: none; }
     .section-intermediary-only { display: none; }
 
-    /* planning — the default brief Andrew reviews. Plan detail visible,
-       post-action cards hidden. (no overrides needed; defaults are correct) */
+    /* planning — the brief Andrew reviews. Plan detail ONLY. */
+    [data-state="planning"] .section-planning-only { display: block; }
 
-    /* intermediary — work queued/running. Hide plan detail, but do NOT show the
-       why/strategy/impact cards yet (nothing's done). Only the banner shows. */
-    [data-state="looks_good"] .section-planning-only { display: none; }
+    /* intermediary — work queued/building. NOTHING but the banner (no plan, no recap). */
+    /* (both buckets stay hidden; #intermediary-banner is shown via JS) */
 
-    /* completed / looks_good — work done. Hide plan detail, reveal the recap cards. */
-    [data-state="intermediary"] .section-planning-only,
-    [data-state="looks_good"] .section-planning-only { display: none; }
+    /* completed / looks_good — work done. Recap + completion ONLY, never plan detail. */
     [data-state="completed"] .section-intermediary-only,
     [data-state="looks_good"] .section-intermediary-only { display: block; }
     [data-state="completed"] #completion-section,
     [data-state="looks_good"] #completion-section { display: block; }
 
-    /* failed — hide plan detail; the failure banner carries the message. */
-    [data-state="failed"] .section-planning-only { display: none; }
+    /* failed — nothing but the failure banner (shown via JS). */
+    /* (both buckets stay hidden) */
 
     /* When a story is skipped, hide its plan detail — keep notes + add-to-backlog */
     #dashboard.skip-mode .hide-on-skip { display: none; }
@@ -1310,8 +1311,51 @@
         checkApproveReady();
         loadStepEdits();
         applyStateUI();
+        startAutoRefresh();
       }
     })();
+
+    // ─── Auto-Refresh ─────────────────────────────────────────────────────────
+    // The execute/morning routines commit a new today.html behind the scenes;
+    // Cloudflare redeploys it. Poll the deployed page and hard-reload when its
+    // content changes, so Andrew never has to manually refresh to see an update.
+    function currentSignature() {
+      // A cheap fingerprint of "what plan/state am I showing": the dashboard
+      // state + the first story id + the completion summary's first 120 chars.
+      var dash = document.getElementById('dashboard');
+      var state = dash ? dash.dataset.state : '';
+      var story = '';
+      var pc = document.querySelector('.priority-title');
+      if (pc) story = pc.textContent.trim();
+      var comp = document.getElementById('completion-content');
+      var compSig = comp ? comp.textContent.replace(/\s+/g, ' ').trim().slice(0, 120) : '';
+      return state + '||' + story + '||' + compSig;
+    }
+
+    function startAutoRefresh() {
+      var mine = currentSignature();
+      setInterval(function () {
+        // Cache-bust so we read the freshly deployed file, not a cached copy.
+        fetch(location.pathname + '?_=' + (new Date().getTime()), { cache: 'no-store' })
+          .then(function (r) { return r.text(); })
+          .then(function (html) {
+            var doc = new DOMParser().parseFromString(html, 'text/html');
+            var dash = doc.getElementById('dashboard');
+            if (!dash) return;
+            var state = dash.getAttribute('data-state') || '';
+            var pcEl = doc.querySelector('.priority-title');
+            var story = pcEl ? pcEl.textContent.trim() : '';
+            var compEl = doc.getElementById('completion-content');
+            var compSig = compEl ? compEl.textContent.replace(/\s+/g, ' ').trim().slice(0, 120) : '';
+            var fresh = state + '||' + story + '||' + compSig;
+            if (fresh !== mine) {
+              // Something changed server-side — reload to show it.
+              location.reload();
+            }
+          })
+          .catch(function () { /* offline / transient — try again next tick */ });
+      }, 30000); // every 30s
+    }
 
     // ─── Lock / Unlock ────────────────────────────────────────────────────────
 

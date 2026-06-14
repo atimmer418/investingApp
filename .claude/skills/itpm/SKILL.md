@@ -11,17 +11,19 @@ This skill is the PLANNING brain. It generates the daily brief. It does NOT impl
 
 ---
 
-## Step 0 — State Guard
+## Step 0 — State Guard (HARD GATE)
 
-Before doing anything, check the current dashboard state:
+Before doing ANYTHING, run this exact check. It reads the state off the **dashboard div specifically** (not CSS selectors, which also contain `data-state`):
 
 ```bash
-grep -o 'data-state="[^"]*"' ITPM/routine/today.html | head -1
+STATE=$(grep -o 'id="dashboard"[^>]*data-state="[^"]*"' ITPM/routine/today.html | grep -o 'data-state="[^"]*"' | head -1)
+if [ "$STATE" != 'data-state="looks_good"' ]; then echo "GUARD_STOP: $STATE"; else echo "GUARD_PASS"; fi
 ```
 
-**Only regenerate if the state is `looks_good`.** If the state is `planning`, `intermediary`, `completed`, or `failed`, a cycle is still in flight — STOP immediately, do nothing, send no notification. Andrew hasn't closed out the last brief yet.
+- `GUARD_STOP` → **STOP immediately.** Do not generate, commit, or notify. A `planning`/`intermediary`/`completed`/`failed` page means Andrew hasn't closed out the prior cycle; overwriting it destroys unreviewed work. End silently.
+- `GUARD_PASS` → proceed to Step 1.
 
-(When invoked manually with `/itpm`, you may override this guard if Andrew explicitly asks for a fresh brief.)
+**The only exception:** Andrew invokes `/itpm` manually AND explicitly says to force a fresh brief. The automated morning run has NO override.
 
 ---
 
