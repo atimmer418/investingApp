@@ -30,6 +30,10 @@ import { join, resolve, extname } from 'node:path';
 
 const NOTCH_MIN = 44; // px — below this, top spacing cannot clear a notch/Dynamic Island
 
+// Global utility classes that supply env(safe-area-inset-top) from global.scss.
+// An element carrying one of these is already safe even if its component SCSS never mentions insets.
+const GLOBAL_SAFE_TOP_CLASSES = ['safe-area-top'];
+
 function arg(name, dflt) {
   const hit = process.argv.find(a => a.startsWith(`--${name}=`));
   return hit ? hit.split('=').slice(1).join('=') : dflt;
@@ -82,6 +86,10 @@ function lintScss(file, text) {
       /(^|[\s.>])(ion-header|.*hero-header|custom-profile-header|app-header|page-header)\b/i.test(b.selector);
     if (!isTopPinned && !looksLikeHeader) continue;
 
+    // A rule FOR a global safe-top utility class itself supplies env(safe-area-inset-top)
+    // at the global level; don't flag the utility's own component-side declaration.
+    if (GLOBAL_SAFE_TOP_CLASSES.some(c => b.selector.includes('.' + c))) continue;
+
     const hasSafeTop = /safe-area-inset-top/.test(body);
     if (hasSafeTop) continue; // good citizen
 
@@ -110,7 +118,10 @@ function lintHtml(file, text) {
   // with no matching safe-area rule anywhere in its sibling SCSS is the FRED-124 shape.
   const m = text.match(/<ion-header[^>]*>\s*<div([^>]*)>/i);
   if (m) {
-    const cls = (m[1].match(/class\s*=\s*"([^"]*)"/) || [])[1] || '(no class)';
+    const clsAttr = (m[1].match(/class\s*=\s*"([^"]*)"/) || [])[1] || '';
+    const classList = clsAttr.split(/\s+/);
+    if (classList.some(c => GLOBAL_SAFE_TOP_CLASSES.includes(c))) return; // safe via global utility class
+    const cls = clsAttr || '(no class)';
     offenders.push({
       file, line: lineOf(text, m.index),
       selector: `ion-header > div.${cls}`,
