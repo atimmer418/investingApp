@@ -46,50 +46,101 @@ export async function onRequestPost(context) {
   }
   // If the state was already looks_good, that's fine — fall through to the checkmark.
 
-  // ── 2. Checkmark the story in backlog.md so it's never re-picked ──
+  // ── 2. Checkmark the completed story AND re-sort the whole backlog ──
+  // by status: Ready (no marker) → Sleeping (💤) → Blocked (🚫) → Done (✓).
   let backlogMarked = false;
-  if (/^FRED-\d+$/.test(storyId)) {
-    const backlogApi = `https://api.github.com/repos/${REPO}/contents/${BACKLOG_PATH}`;
-    const blRes = await fetch(backlogApi, { headers });
-    if (blRes.ok) {
-      const blFile = await blRes.json();
-      const blContent = b64DecodeUtf8(blFile.content.replace(/\n/g, ''));
+  let backlogReorganized = false;
+  const backlogApi = `https://api.github.com/repos/${REPO}/contents/${BACKLOG_PATH}`;
+  const blRes = await fetch(backlogApi, { headers });
+  if (blRes.ok) {
+    const blFile = await blRes.json();
+    const blContent = b64DecodeUtf8(blFile.content.replace(/\n/g, ''));
 
-      // Heading looks like:  ## FRED-124 — 💤 Change bank account page...
-      // Replace the status emoji (💤 / ⏳ / any) right after the em-dash with ✓.
-      // Only touch the heading line for this exact story id.
-      const lines = blContent.split('\n');
-      let changed = false;
-      for (let i = 0; i < lines.length; i++) {
-        const headingRe = new RegExp('^(##\\s+' + storyId + '\\s+[—-]\\s+)(.*)$');
-        const m = lines[i].match(headingRe);
-        if (m) {
-          // Strip a leading status emoji if present, then prepend ✓.
-          const rest = m[2].replace(/^([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}✅⏳\u{1F4A4}]️?\s*)/u, '');
-          if (!rest.startsWith('✓')) {
-            lines[i] = m[1] + '✓ ' + rest;
-            changed = true;
-          }
-          break;
-        }
-      }
+    const { markdown, marked } = reorganizeBacklog(blContent, storyId);
+    backlogMarked = marked;
 
-      if (changed) {
-        const putBl = await fetch(backlogApi, {
-          method: 'PUT',
-          headers: { ...headers, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: `itpm: mark ${storyId} done (looks good)`,
-            content: b64EncodeUtf8(lines.join('\n')),
-            sha: blFile.sha
-          })
-        });
-        backlogMarked = putBl.ok;
-      }
+    if (markdown !== blContent) {
+      const putBl = await fetch(backlogApi, {
+        method: 'PUT',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `itpm: mark ${storyId || 'story'} done + re-sort backlog (looks good)`,
+          content: b64EncodeUtf8(markdown),
+          sha: blFile.sha
+        })
+      });
+      backlogReorganized = putBl.ok;
     }
   }
 
-  return json({ ok: true, backlogMarked });
+  return json({ ok: true, backlogMarked, backlogReorganized });
+}
+
+// Parse every "## PREFIX-NNN — ..." story (FRED-, LPFRED-, DEV-, etc.), optionally
+// checkmark `doneId`, then regroup by status and rebuild the file. Story bodies run
+// from one "## " heading to the next "## "/"# ". Old "# CATEGORY" headers are dropped.
+function reorganizeBacklog(content, doneId) {
+  const lines = content.split('\n');
+  const headingRe = /^##\s+([A-Z]+-\d+)\s*[—-]\s*(.*)$/;
+  const stories = [];
+  let marked = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(headingRe);
+    if (!m) continue;
+    const id = m[1];
+    let heading = lines[i];
+    const body = [];
+    i++;
+    while (i < lines.length && !/^#{1,2}\s/.test(lines[i])) { body.push(lines[i]); i++; }
+    i--; // step back; outer loop will re-test this line
+
+    // Checkmark the finished story: strip any leading status marker, prepend ✓.
+    if (doneId && id === doneId) {
+      const hm = heading.match(/^(##\s+[A-Z]+-\d+\s*[—-]\s*)(.*)$/);
+      if (hm) {
+        const rest = hm[2].replace(/^([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}✅⏳\u{1F4A4}]️?\s*)/u, '');
+        if (!rest.startsWith('✓')) { heading = hm[1] + '✓ ' + rest; marked = true; }
+      }
+    }
+    stories.push({ id, heading, body: body.join('\n').replace(/\s+$/, '') });
+  }
+
+  const statusOf = (heading) => {
+    const after = heading.replace(/^##\s+[A-Z]+-\d+\s*[—-]\s*/, '');
+    if (after.startsWith('✓')) return 'done';
+    if (after.startsWith('💤')) return 'sleeping';
+    if (after.startsWith('🚫')) return 'blocked';
+    return 'ready';
+  };
+
+  const groups = { ready: [], sleeping: [], blocked: [], done: [] };
+  for (const s of stories) groups[statusOf(s.heading)].push(s);
+  const num = (s) => parseInt(s.id.match(/-(\d+)/)[1], 10);
+  for (const g of Object.keys(groups)) groups[g].sort((a, b) => num(a) - num(b));
+
+  const sections = [
+    ['ready',    '# ✅ READY — Most Suitable for Next Work', '_No status marker. These are the candidates the ITPM routine should pick from first._'],
+    ['sleeping', '# 💤 SLEEPING — Backlog (not yet started)', '_Queued but not prioritized. Promote to READY (remove the 💤) when ripe._'],
+    ['blocked',  '# 🚫 BLOCKED — Waiting on Something', '_Cannot proceed until a dependency or external party clears._'],
+    ['done',     '# ✓ DONE — Completed', '_Shipped. Kept for history; never re-picked._']
+  ];
+
+  const out = [
+    '# FRED BACKLOG', '',
+    '> Auto-organized by status: Ready → Sleeping → Blocked → Done.',
+    '> The ITPM Looks-Good trigger checkmarks the finished story and re-sorts this file.', ''
+  ];
+  for (const [key, header, desc] of sections) {
+    out.push(header, desc, '');
+    for (const s of groups[key]) {
+      out.push(s.heading);
+      if (s.body.trim()) out.push(s.body);
+      out.push('');
+    }
+    out.push('');
+  }
+  return { markdown: out.join('\n').replace(/\s+$/, '') + '\n', marked };
 }
 
 // UTF-8-safe base64. Bare btoa/atob throw on code points > 0xFF (em-dashes,

@@ -1,16 +1,46 @@
-# BIG ONES
+# FRED BACKLOG
 
-## FRED-99 — ✓ Implement all features from tiered pricing
-implement all features from tiered pricing
+> Auto-organized by status: Ready → Sleeping → Blocked → Done.
+> The ITPM Looks-Good trigger checkmarks the finished story and re-sorts this file.
+
+# ✅ READY — Most Suitable for Next Work
+_No status marker. These are the candidates the ITPM routine should pick from first._
+
+## LPFRED-184 — Update LP calculator to net-income yield model
+Update the landing page calculator so it calculates based on a net income per month (instead of yearly pre-tax salary). Logic: multiply desired monthly net income by 12 → divide by 0.04 (4% tax-exempt yield) to get target portfolio value. Then use 10% annual growth with compound interest and DRIP to calculate how long it takes to reach that value given the user's monthly investable income.
+
+## FRED-186 — Update API searches to use debounce and switchMap
+update all api searches to use debounce and switchMap
+
+## FRED-187 — Investigate Plaid paycheck-triggered investment flow
+check on if its possible to trigger an investment when the user's paycheck is seen via Plaid
+
+## FRED-188 — Add null userId guard to processChat
+`ChatService.java` `processChat()` calls `userRepository.findById(request.userId())` without a null guard. Add the same guard that was added to `streamChat()`: `request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null`.
+
+## FRED-189 — Fix bank account subtype always showing Checking
+Backend `GET /api/plaid/primary-bank-account` returns the field `accountSubtype` (lowercase t) at `PlaidController.java:177`. The frontend `change-bank-account.page.ts` stores the raw response (`this.currentBankAccount = response`, line 85), then `formatAccountDisplay()` reads `this.currentBankAccount.accountSubType` (capital T, line 232) — always undefined, so the displayed subtype always falls back to 'Checking' regardless of the user's real account type (Savings, etc.). Fix: read `accountSubtype` (lowercase t) at `change-bank-account.page.ts:232` to match the backend; `plaid.service.ts:80-82` already reads it correctly. Pre-existing, user-facing; related to FRED-124.
+
+## DEV-190 — Resolve @capacitor peer conflict (drop --legacy-peer-deps)
+`@capacitor/push-notifications@8.1.1` requires `@capacitor/core@>=8`, but the repo pins `@capacitor/core@7.2.0` (the rest of `@capacitor/*` is on 7.x). A plain `npm install` ERESOLVE-fails and only succeeds with `--legacy-peer-deps`, which silences all peer-dependency checks and can mask real breakage. Fix: either downgrade `@capacitor/push-notifications` to a 7.x-compatible release, or upgrade the whole `@capacitor/*` suite to 8.x together.
+
+## FRED-191 — Measure and optimize app loading performance
+use network waterfall and core web vitals to measure loading time for app and then optimize initial loading time and other timings that could be optimized
+
+### Summary
+Baseline the app's cold-load performance — network waterfall + Core Web Vitals, including the Capacitor iOS webview — rank the biggest contributors, then optimize the top 2–3 using existing patterns and re-measure on a local build to prove a measurable improvement. No hard time target.
 
 ### Acceptance Criteria
-1. `User.java` gets `selectedTier` (nullable VARCHAR(10)) and `billingPeriod` (nullable VARCHAR(10)); Flyway migration adds both columns to the `user` table
-2. `PUT /user/profile` accepts and persists `selectedTier` + `billingPeriod`
-3. `GET /user/me` (or equivalent) returns `selectedTier` and `billingPeriod` in its response
-4. `selectTier()` in the component calls `authService.updateUserProfile({ selectedTier, billingPeriod })`, waits for resolve, then calls `authorizeRecurringInvestment()` — errors logged but don't block
-5. `authService.updateUserProfile()` TypeScript interface widened to include `selectedTier?` and `billingPeriod?`
-6. `npx tsc --noEmit` exits 0; `./gradlew build -x test` exits 0
-7. Smoke: select Pro (yearly) → tap CTA → profile API returns `selectedTier: "pro"`, `billingPeriod: "yearly"`
+1. Baseline captured on a local build, measuring the Capacitor iOS webview cold start (desktop Chrome for waterfall detail): network waterfall + Core Web Vitals (LCP, FCP, TTI, TBT, CLS), largest contributors listed.
+2. Top contributors to initial load ranked by impact.
+3. Top 2–3 bottlenecks optimized using existing-pattern techniques only (lazy-load gaps, eager providers, font/image preload, deferred startup work in app.component.ts, build budgets) — no new architecture.
+4. Same-method re-measurement shows a measurable reduction (no specific time target required).
+5. `npx tsc --noEmit` exits 0 and `ng build` succeeds within budgets.
+6. Before/after numbers written up.
+
+
+# 💤 SLEEPING — Backlog (not yet started)
+_Queued but not prioritized. Promote to READY (remove the 💤) when ripe._
 
 ## FRED-100 — 💤 RAG chunks for app knowledge and philosophy
 we want RAG/canonical chunks for knowing the application itself (to answer questions with exact directions on where to find things or an overview of just about every how process in the app works that there needs to be known about such as the calculations for the MonthlyFreedomUpdate and also a chunk on the boglehead philosophy) and its context as to how this helps the user achieve a good retirement. also, are there any good RAG/canonical chunks that would be valuable for the user to have FRED know in the FREDdocs .md files?
@@ -42,8 +72,6 @@ I am on the 14 Max Pro iPhone model display on inspect element/devTools (430x932
 ## FRED-103 — 💤 iOS Xcode plugin build target and EXPO investigation
 After syncing capacitor copy ios, you'll need to ensure the new KeychainSyncPlugin.swift is included in the Xcode project's build target. Capacitor custom plugins placed in App/App/ are typically picked up automatically, but double-check in Xcode that the file appears under the App target's "Compile Sources" build phase. look into EXPO for deploying to app store?
 
-# DEV TOOLING
-
 ## FRED-104 — 💤 Give Claude JWT testing and frontend navigation tools
 give claude a way to verify things like...
 - a jwt token to test its code outputs for the backend
@@ -52,7 +80,192 @@ give claude a way to verify things like...
 ## FRED-105 — 💤 MCP setup for Railway and MySQL databases
 [MCP Setup]: add mcp for railway (user-scoped) and mysql (local-scoped)
 
-# APP FEATURES
+## FRED-109 — 💤 Change investment question to work-optional framing
+Instead of: "How much do you want to invest?", Ask: "When do you want work to be optional?"
+
+## FRED-121 — 💤 Check for tax documents in Feb/March 2026
+check for tax documents in feb/march 2026
+
+## FRED-128 — 💤 Tax documents verify PDF display on phone
+tax documents page is ALMOST DONE; need to verify how it pdfs look and work on phone
+
+## FRED-132 — 💤 Three shirt designs plus limited founders edition
+for the shirts, make 3 unique front and back designs and then 1 limited edition founders design. talk to Han
+
+## FRED-134 — 💤 Test profile picture quality and speed on phone
+test pfp quality and speed of loading pictures on phone
+
+## FRED-135 — 💤 Test scrollbar height and fade on phone
+test scrollbar height and scrollbar fade on phone
+
+## FRED-137 — 💤 Check Ethan's Plaid account transaction details
+Check the Ethan plaid account for transaction details
+
+## FRED-138 — 💤 Add legal information and TOS to app
+add legal information and TOS
+[merged from FRED-127: legal info ALMOST DONE just needs privacy policy and TOS]
+
+## FRED-139 — 💤 Secure securities attorney and Alpaca review
+this app needs to be reviewed by a securities attorney, then alpaca; the core ACCEPTABLE concept is "Based on these assumptions, if x, then y"
+
+## FRED-140 — 💤 Plan landing page go-to-market strategy
+once app is released, use landing page to sell. have mobile and web version. mobile will link them to the download, web will quiz and ask them for their email maybe or another way to get them to download?
+
+## FRED-141 — 💤 Respond to feedback and prompt in-app reviews
+respond to user feedback and ask for reviews
+
+## FRED-142 — 💤 Add monthly MFU notification first day 8am
+add mfu notification? (first day of every month at like 8am)
+
+## FRED-143 — 💤 Activate referral rewards merch and price discount
+activate user's referrals (for founder members: merch, non-founder members: price discount)
+
+## FRED-144 — 💤 Apple Business Connect KYC wallet verification setup
+set up verify with wallet for kyc part on apple business connect
+
+## FRED-145 — 💤 Convert Angular frontend to native Xcode app
+convert angular to xcode
+
+## FRED-146 — 💤 Dark mode with phone-inherited color scheme
+we want to make a dark mode, give me all the colors that fred currently uses and we want to find negatives of them that are UI/UX compliant. the light or dark mode should be inherited from whatever the phone is currently in at the moment
+
+## FRED-147 — 💤 Export MFU as shareable image with Fred art
+let users export their monthly freedom updates. (it could be fred holding up the mfu as pitchfork sign) change the location of the close button to be on the left and the export on the right. the close button could also become the back button
+
+## FRED-148 — 💤 Switch account recovery to phone number OTP
+switch recovery process to use phone otp instead of email? more secure that way?
+
+## FRED-149 — 💤 Fix star alignment in customize portfolio screen
+fix star aligning with title in customize portfolio
+
+## FRED-150 — 💤 Upgrade to latest GPT model via OpenAI
+upgrade gpt model (thru OpenAI API)
+
+## FRED-151 — 💤 Update Fred pre-generated questions to be RAG-focused
+update fred pre generated questions to be more specifically about rag chunks, boglehead philosophy, and things that a user would actually want to know
+
+## FRED-152 — 💤 Build Android variant of FRED app
+make android variant
+
+## LPFRED-153 — 💤 Add emailer to FRED landing page
+add emailer
+
+## LPFRED-154 — 💤 Update landing page wording for RIA status
+update wording of main page and ToS and PP to reflect soon-to-be RIA status
+
+## LPFRED-155 — 💤 Update landing page default calculation values
+update default calculations to show an age of 49 to be retired; 22, $1k/mo
+
+## LPFRED-156 — 💤 Update landing page comparison chart
+update comparison chart
+
+## LPFRED-157 — 💤 Claude landing page audit using Hormozi strategies
+have claude ingest the ultimate landing page, give our landing page a rating and asking where to improve
+
+Alex Hormozi's Landing Page Strategy for 2026 (https://www.youtube.com/watch?v=zA0B-VwOPn4)
+4 Proven Steps to Build a MILLION DOLLAR Landing Page (https://www.youtube.com/watch?v=KneaEGicMZ4)
+Brutally Honest Landing Page Advice from Alex Hormozi (https://www.youtube.com/watch?v=Qgtq-xxA00I)
+The NEW Way Of Landing Pages in 2026 (https://www.youtube.com/watch?v=1gvPLQzrbmM)
+
+## LPFRED-158 — 💤 Optimize landing pages for maximum conversions
+landing pages need to be optimized for maximum conversions
+
+## LPFRED-159 — 💤 Adjust landing page comparison table for accuracy
+landing page comparison table needs to be adjusted
+
+## LPFRED-160 — 💤 Change Desired Freedom Income to retirement framing
+change Desired Freedom Income text to Desired Retirement Income
+
+## LPFRED-161 — 💤 Build three subscription pricing tiers for launch
+BUILD A PRODUCT THAT IS GOOD, REFINE THE LANDING PAGE TO REFLECT THE PRODUCT BETTER, MAKE TWO TIERS ON TOP OF CURRENT
+$8, $15, $40 (as low as $5, $10, $20)
+
+## LPFRED-162 — 💤 Add private beta testimonials to landing page
+add private beta user testimonials
+
+## FRED-163 — 💤 Show calculation assumptions for credibility
+B) Open Assumptions
+Show:
+* Expected return: 12%
+* Inflation: 2–3%
+* Withdrawal rate: 3.5–4%
+Explain risks.
+This builds credibility.
+
+## FRED-164 — 💤 Historical simulator for bad market year scenarios
+C) Historical Simulator
+Show:
+"If you started in 2000, 2008, 2020…"
+What happens?
+Even bad years.
+Transparency = trust.
+
+## FRED-165 — 💤 Early beta user case studies social proof
+D) Case Studies (Early)
+From beta users:
+"Jake, 26 → +$14k → -2 years"
+Screenshot + quote.
+Real names (with permission).
+
+## FRED-166 — 💤 What FRED won't do transparency section
+E) What FRED won't do:
+This is powerful.
+Example:
+We don't:
+* Pick stocks
+* Promise returns
+* Encourage leverage
+* Push trading
+Signals integrity.
+
+## FRED-167 — 💤 Redesign Ask Fred UI like Cloudflare Ask AI
+make ask fred look like cloudflare's ask AI
+
+## FRED-169 — 💤 Reduce free trial to 14 days
+make the fred free trial 14 days to allow for one automated paycheck investing and force them to make a decision
+
+### Acceptance Criteria
+1. In App Store Connect, update subscription product free trial to 14 days.
+2. Test on sandbox account: new user gets 14-day trial before billing.
+3. Confirm frontend subscription gate correctly reflects 14-day window.
+
+## LPFRED-172 — 💤 Build calculator page for email collection
+make calculator page for optimal email collection
+
+## FRED-177 — 💤 Remove back button from two onboarding pages (ONBOARDING)
+Remove the back button from 2 pages in the onboarding flow.
+
+## FRED-182 — 💤 Add 3 Monte Carlo piggy bank visual states
+add 3 forms of piggy banks based on monte carlo simulation results (mint condition, cracked condition, exploded into pieces condition)
+
+
+# 🚫 BLOCKED — Waiting on Something
+_Cannot proceed until a dependency or external party clears._
+
+## FRED-173 — 🚫 Lock referral entry until 30 days post-trial
+A new subscriber must be a subscriber for at least 30 days after their 14-day free trial ends before they can access the referral entry point. Lock the referral UI until that condition is met.
+
+## FRED-175 — 🚫 Initiate ACATS API transfer during onboarding (ONBOARDING)
+ACATS API transfer needs to be initiated as part of the onboarding flow.
+
+## FRED-179 — 🚫 Export monthly freedom update as shareable image
+Add export ability for monthly freedom update (export to insta story and what not)
+
+
+# ✓ DONE — Completed
+_Shipped. Kept for history; never re-picked._
+
+## FRED-99 — ✓ Implement all features from tiered pricing
+implement all features from tiered pricing
+
+### Acceptance Criteria
+1. `User.java` gets `selectedTier` (nullable VARCHAR(10)) and `billingPeriod` (nullable VARCHAR(10)); Flyway migration adds both columns to the `user` table
+2. `PUT /user/profile` accepts and persists `selectedTier` + `billingPeriod`
+3. `GET /user/me` (or equivalent) returns `selectedTier` and `billingPeriod` in its response
+4. `selectTier()` in the component calls `authService.updateUserProfile({ selectedTier, billingPeriod })`, waits for resolve, then calls `authorizeRecurringInvestment()` — errors logged but don't block
+5. `authService.updateUserProfile()` TypeScript interface widened to include `selectedTier?` and `billingPeriod?`
+6. `npx tsc --noEmit` exits 0; `./gradlew build -x test` exits 0
+7. Smoke: select Pro (yearly) → tap CTA → profile API returns `selectedTier: "pro"`, `billingPeriod: "yearly"`
 
 ## FRED-106 — ✓ Auto-start ACATS transfer if localStorage flag set
 make it so that when a user signs up, check the localStorage to see if they had set up for an ACATS transfer and if they had, start that process
@@ -66,9 +279,6 @@ make it so that when a user signs up, check the localStorage to see if they had 
 6. If `pendingAcats` is absent at subscription completion, do nothing.
 7. Update `investment-schedule.component.ts` to also save `accountType` inside `pendingAcats` JSON.
 8. `./gradlew build -x test` exits 0; `npx tsc --noEmit` exits 0.
-
-## FRED-109 — 💤 Change investment question to work-optional framing
-Instead of: "How much do you want to invest?", Ask: "When do you want work to be optional?"
 
 ## FRED-110 — ✓ Overhaul tab 2 education with four strategies
 go fix and clean up tab 2 and its content so that it matches the 4 strategies we are educating on (yield-based income, dynamic guardrails, annuity, sbloc 4% borrowing in downturn combined with traditional 4% selling when market is up), also make the cards on the education page smaller so that all 4 can appear on one page (2 on top half, 2 on bottom half). add a slide on brief instructions for how to do each strategy
@@ -229,13 +439,6 @@ Fixed (application code deprecation warnings):
 
 Result: `./gradlew clean build -x test` exits 0 with zero application-code warnings.
 
-# CALENDAR
-
-## FRED-121 — 💤 Check for tax documents in Feb/March 2026
-check for tax documents in feb/march 2026
-
-# ALMOST DONE
-
 ## FRED-122 — ✓ My profile final polish and compliance language check
 my profile page ALMOST DONE needs badge of ahead of 85%, fred pfps, and fixing ui spacing. also, update my profile language to be complaint? maybe wait till after securities attorney review
 
@@ -300,11 +503,6 @@ one-time transactions ALMOST DONE it just needs ACATS API functionality once it 
 5. Error toast: "Transfer request failed. Please try again."
 6. `npx tsc --noEmit` exits 0.
 
-## FRED-128 — 💤 Tax documents verify PDF display on phone
-tax documents page is ALMOST DONE; need to verify how it pdfs look and work on phone
-
-# CONTENT / DESIGN
-
 ## FRED-129 — ✓ Add pig art to MFU equity milestones
 add pig for certain equity milestones on MFU and also unlocking of monte carlo at $100k and unlocking of retirement strategies at $250k
 
@@ -337,157 +535,11 @@ make 5 fred faces for accounts over $0 to $1000, $1000 to $10k, $10k to $100k, $
 4. FRED-129 `milestoneEquityPigSrc` getter auto-picks them up.
 **✓ Done**
 
-## FRED-132 — 💤 Three shirt designs plus limited founders edition
-for the shirts, make 3 unique front and back designs and then 1 limited edition founders design. talk to Han
-
 ## FRED-133 — ✓ Design piggy bank Fred loading screen
 loading screen (piggy bank fred)
 
-# TESTING
-
-## FRED-134 — 💤 Test profile picture quality and speed on phone
-test pfp quality and speed of loading pictures on phone
-
-## FRED-135 — 💤 Test scrollbar height and fade on phone
-test scrollbar height and scrollbar fade on phone
-
 ## FRED-136 — ✓ Test close account feature end to end
 test close account feature
-
-## FRED-137 — 💤 Check Ethan's Plaid account transaction details
-Check the Ethan plaid account for transaction details
-
-# LEGAL / COMPLIANCE
-
-## FRED-138 — 💤 Add legal information and TOS to app
-add legal information and TOS
-[merged from FRED-127: legal info ALMOST DONE just needs privacy policy and TOS]
-
-## FRED-139 — 💤 Secure securities attorney and Alpaca review
-this app needs to be reviewed by a securities attorney, then alpaca; the core ACCEPTABLE concept is "Based on these assumptions, if x, then y"
-
-# POST-LAUNCH
-
-## FRED-140 — 💤 Plan landing page go-to-market strategy
-once app is released, use landing page to sell. have mobile and web version. mobile will link them to the download, web will quiz and ask them for their email maybe or another way to get them to download?
-
-# AFTER PRIVATE BETA
-
-## FRED-141 — 💤 Respond to feedback and prompt in-app reviews
-respond to user feedback and ask for reviews
-
-## FRED-142 — 💤 Add monthly MFU notification first day 8am
-add mfu notification? (first day of every month at like 8am)
-
-## FRED-143 — 💤 Activate referral rewards merch and price discount
-activate user's referrals (for founder members: merch, non-founder members: price discount)
-
-## FRED-144 — 💤 Apple Business Connect KYC wallet verification setup
-set up verify with wallet for kyc part on apple business connect
-
-## FRED-145 — 💤 Convert Angular frontend to native Xcode app
-convert angular to xcode
-
-# FUTURE UPDATES
-
-## FRED-146 — 💤 Dark mode with phone-inherited color scheme
-we want to make a dark mode, give me all the colors that fred currently uses and we want to find negatives of them that are UI/UX compliant. the light or dark mode should be inherited from whatever the phone is currently in at the moment
-
-## FRED-147 — 💤 Export MFU as shareable image with Fred art
-let users export their monthly freedom updates. (it could be fred holding up the mfu as pitchfork sign) change the location of the close button to be on the left and the export on the right. the close button could also become the back button
-
-## FRED-148 — 💤 Switch account recovery to phone number OTP
-switch recovery process to use phone otp instead of email? more secure that way?
-
-## FRED-149 — 💤 Fix star alignment in customize portfolio screen
-fix star aligning with title in customize portfolio
-
-## FRED-150 — 💤 Upgrade to latest GPT model via OpenAI
-upgrade gpt model (thru OpenAI API)
-
-## FRED-151 — 💤 Update Fred pre-generated questions to be RAG-focused
-update fred pre generated questions to be more specifically about rag chunks, boglehead philosophy, and things that a user would actually want to know
-
-## FRED-152 — 💤 Build Android variant of FRED app
-make android variant
-
-# LANDING PAGE
-
-## LPFRED-153 — 💤 Add emailer to FRED landing page
-add emailer
-
-## LPFRED-154 — 💤 Update landing page wording for RIA status
-update wording of main page and ToS and PP to reflect soon-to-be RIA status
-
-## LPFRED-155 — 💤 Update landing page default calculation values
-update default calculations to show an age of 49 to be retired; 22, $1k/mo
-
-## LPFRED-156 — 💤 Update landing page comparison chart
-update comparison chart
-
-## LPFRED-157 — 💤 Claude landing page audit using Hormozi strategies
-have claude ingest the ultimate landing page, give our landing page a rating and asking where to improve
-
-Alex Hormozi's Landing Page Strategy for 2026 (https://www.youtube.com/watch?v=zA0B-VwOPn4)
-4 Proven Steps to Build a MILLION DOLLAR Landing Page (https://www.youtube.com/watch?v=KneaEGicMZ4)
-Brutally Honest Landing Page Advice from Alex Hormozi (https://www.youtube.com/watch?v=Qgtq-xxA00I)
-The NEW Way Of Landing Pages in 2026 (https://www.youtube.com/watch?v=1gvPLQzrbmM)
-
-## LPFRED-158 — 💤 Optimize landing pages for maximum conversions
-landing pages need to be optimized for maximum conversions
-
-## LPFRED-159 — 💤 Adjust landing page comparison table for accuracy
-landing page comparison table needs to be adjusted
-
-## LPFRED-160 — 💤 Change Desired Freedom Income to retirement framing
-change Desired Freedom Income text to Desired Retirement Income
-
-## LPFRED-161 — 💤 Build three subscription pricing tiers for launch
-BUILD A PRODUCT THAT IS GOOD, REFINE THE LANDING PAGE TO REFLECT THE PRODUCT BETTER, MAKE TWO TIERS ON TOP OF CURRENT
-$8, $15, $40 (as low as $5, $10, $20)
-
-## LPFRED-162 — 💤 Add private beta testimonials to landing page
-add private beta user testimonials
-
-# LAUNCH NOTES (item 10)
-
-## FRED-163 — 💤 Show calculation assumptions for credibility
-B) Open Assumptions
-Show:
-* Expected return: 12%
-* Inflation: 2–3%
-* Withdrawal rate: 3.5–4%
-Explain risks.
-This builds credibility.
-
-## FRED-164 — 💤 Historical simulator for bad market year scenarios
-C) Historical Simulator
-Show:
-"If you started in 2000, 2008, 2020…"
-What happens?
-Even bad years.
-Transparency = trust.
-
-## FRED-165 — 💤 Early beta user case studies social proof
-D) Case Studies (Early)
-From beta users:
-"Jake, 26 → +$14k → -2 years"
-Screenshot + quote.
-Real names (with permission).
-
-## FRED-166 — 💤 What FRED won't do transparency section
-E) What FRED won't do:
-This is powerful.
-Example:
-We don't:
-* Pick stocks
-* Promise returns
-* Encourage leverage
-* Push trading
-Signals integrity.
-
-## FRED-167 — 💤 Redesign Ask Fred UI like Cloudflare Ask AI
-make ask fred look like cloudflare's ask AI
 
 ## FRED-168 — ✓ Referral-discounted tier upgrade on profile page
 Add ability to upgrade tiers in my profile page. if they already have had 1 referral, they can go to $20/mo instead of $40/mo. if they already have had 2 referrals, they can go to $10/mo instead of $15/mo
@@ -499,14 +551,6 @@ Add ability to upgrade tiers in my profile page. if they already have had 1 refe
 4. On confirm, call updateUserProfile({ selectedTier, billingPeriod: 'monthly' }) + success toast.
 5. Section hides after upgrade is applied.
 6. No backend changes needed beyond existing PATCH /api/users/profile.
-
-## FRED-169 — 💤 Reduce free trial to 14 days
-make the fred free trial 14 days to allow for one automated paycheck investing and force them to make a decision
-
-### Acceptance Criteria
-1. In App Store Connect, update subscription product free trial to 14 days.
-2. Test on sandbox account: new user gets 14-day trial before billing.
-3. Confirm frontend subscription gate correctly reflects 14-day window.
 
 ## FRED-170 — ✓ Optimize loading screen timings
 Optimize loading screen timings.
@@ -533,12 +577,6 @@ Day after payday: "You just got 6 days closer to freedom without lifting a finge
 5. New Flyway migration for device_push_token column on users table.
 6. Users without push token still receive emails; no error if push disabled.
 
-## LPFRED-172 — 💤 Build calculator page for email collection
-make calculator page for optimal email collection
-
-## FRED-173 — 🚫 Lock referral entry until 30 days post-trial
-A new subscriber must be a subscriber for at least 30 days after their 14-day free trial ends before they can access the referral entry point. Lock the referral UI until that condition is met.
-
 ## FRED-174 — ✓ Wire up Apple subscription to pricing tiers (ONBOARDING)
 Apple subscription needs to be set up with the pricing tiers section on investmentconfirmation.
 
@@ -548,9 +586,6 @@ Apple subscription needs to be set up with the pricing tiers section on investme
 3. POST /api/users/subscription/confirm endpoint: sets selectedTier, billingPeriod, subscriptionStartDate on confirm.
 4. On expiry/cancellation webhook: backend sets selectedTier = null (FRED-112 expired gate activates).
 5. All FRED-99 data fields (selectedTier, billingPeriod) continue working correctly.
-
-## FRED-175 — 🚫 Initiate ACATS API transfer during onboarding (ONBOARDING)
-ACATS API transfer needs to be initiated as part of the onboarding flow.
 
 ## FRED-176 — ✓ Connect email list opt-in checkbox to emailer (ONBOARDING)
 The "Keep me updated" marketing checkbox needs to be wired up to the FRED email list.
@@ -562,9 +597,6 @@ The "Keep me updated" marketing checkbox needs to be wired up to the FRED email 
 4. If false: no action, no error.
 5. Data captured and stored; actual list subscription wired in a future story.
 
-## FRED-177 — 💤 Remove back button from two onboarding pages (ONBOARDING)
-Remove the back button from 2 pages in the onboarding flow.
-
 ## FRED-178 — ✓ Rebrand passkey auth to Face ID variant
 Change passkey to face-ID passkey variant
 
@@ -574,9 +606,6 @@ Change passkey to face-ID passkey variant
 3. Prototype the feasible approach and document result; include impact on login/registration + step-up auth.
 4. If feasible: write implementation plan covering all three auth touch points before coding.
 5. If not feasible: document why and propose best available alternative.
-
-## FRED-179 — 🚫 Export monthly freedom update as shareable image
-Add export ability for monthly freedom update (export to insta story and what not)
 
 ## FRED-180 — ✓ Add time-to-freedom visual on profile page
 Add time to freedom date visual on the my profile page (the whenPiggybanksFly picture that lives in surveyinitial)
@@ -597,9 +626,6 @@ Allow sharing of monte carlo results
 4. Error toast if capture or share fails.
 5. Works on real iPhone.
 
-## FRED-182 — 💤 Add 3 Monte Carlo piggy bank visual states
-add 3 forms of piggy banks based on monte carlo simulation results (mint condition, cracked condition, exploded into pieces condition)
-
 ## FRED-183 — ✓ Change request/response for ai chat page to use token streaming via SSE
 update the ai chat response endpoint to send token's via SSE and spring boot's flux streaming
 
@@ -612,42 +638,10 @@ update the ai chat response endpoint to send token's via SSE and spring boot's f
 6. Old POST /api/chat preserved for fallback.
 Note: JWT must be passed as query param (EventSource doesn't support custom headers in WKWebView).
 
-## LPFRED-184 — Update LP calculator to net-income yield model
-Update the landing page calculator so it calculates based on a net income per month (instead of yearly pre-tax salary). Logic: multiply desired monthly net income by 12 → divide by 0.04 (4% tax-exempt yield) to get target portfolio value. Then use 10% annual growth with compound interest and DRIP to calculate how long it takes to reach that value given the user's monthly investable income.
-
 ## FRED-185 — ✓ Update app calculator to net-income yield model
 Update the in-app calculator to use the same net-income-based model: (monthly net income × 12) / 0.04 = target portfolio value. Use 10% average annual rate with compound interest and DRIP reinvestment to determine time to reach that portfolio value based on the user's monthly investable income input.
 
-## FRED-186 — Update API searches to use debounce and switchMap
-update all api searches to use debounce and switchMap
-
-## FRED-187 — Investigate Plaid paycheck-triggered investment flow
-check on if its possible to trigger an investment when the user's paycheck is seen via Plaid
-
-## FRED-188 — Add null userId guard to processChat
-`ChatService.java` `processChat()` calls `userRepository.findById(request.userId())` without a null guard. Add the same guard that was added to `streamChat()`: `request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null`.
-
-## FRED-189 — Fix bank account subtype always showing Checking
-Backend `GET /api/plaid/primary-bank-account` returns the field `accountSubtype` (lowercase t) at `PlaidController.java:177`. The frontend `change-bank-account.page.ts` stores the raw response (`this.currentBankAccount = response`, line 85), then `formatAccountDisplay()` reads `this.currentBankAccount.accountSubType` (capital T, line 232) — always undefined, so the displayed subtype always falls back to 'Checking' regardless of the user's real account type (Savings, etc.). Fix: read `accountSubtype` (lowercase t) at `change-bank-account.page.ts:232` to match the backend; `plaid.service.ts:80-82` already reads it correctly. Pre-existing, user-facing; related to FRED-124.
-
-## DEV-190 — Resolve @capacitor peer conflict (drop --legacy-peer-deps)
-`@capacitor/push-notifications@8.1.1` requires `@capacitor/core@>=8`, but the repo pins `@capacitor/core@7.2.0` (the rest of `@capacitor/*` is on 7.x). A plain `npm install` ERESOLVE-fails and only succeeds with `--legacy-peer-deps`, which silences all peer-dependency checks and can mask real breakage. Fix: either downgrade `@capacitor/push-notifications` to a 7.x-compatible release, or upgrade the whole `@capacitor/*` suite to 8.x together.
-
-## FRED-191 — Measure and optimize app loading performance
-use network waterfall and core web vitals to measure loading time for app and then optimize initial loading time and other timings that could be optimized
-
-### Summary
-Baseline the app's cold-load performance — network waterfall + Core Web Vitals, including the Capacitor iOS webview — rank the biggest contributors, then optimize the top 2–3 using existing patterns and re-measure on a local build to prove a measurable improvement. No hard time target.
-
-### Acceptance Criteria
-1. Baseline captured on a local build, measuring the Capacitor iOS webview cold start (desktop Chrome for waterfall detail): network waterfall + Core Web Vitals (LCP, FCP, TTI, TBT, CLS), largest contributors listed.
-2. Top contributors to initial load ranked by impact.
-3. Top 2–3 bottlenecks optimized using existing-pattern techniques only (lazy-load gaps, eager providers, font/image preload, deferred startup work in app.component.ts, build budgets) — no new architecture.
-4. Same-method re-measurement shows a measurable reduction (no specific time target required).
-5. `npx tsc --noEmit` exits 0 and `ng build` succeeds within budgets.
-6. Before/after numbers written up.
-
-## FRED-192 — Redesign tab3 settings page UI (keep blue header)
+## FRED-192 — ✓ Redesign tab3 settings page UI (keep blue header)
 redesign the UI of tab3 (settings) page. we want to keep the blue header with the my profile and welcome and "FRED" but we kinda want a cleaner design. refer to the FRED UI Style Guide for how to come up with more designs for tab3 while still keeping that blue header idea. there should be 3-5 options for how it could look
 
 ### Summary
