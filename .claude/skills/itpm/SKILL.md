@@ -56,8 +56,8 @@ This runs every time. A week from now Andrew can look back at what was picked an
 Parse `FREDdocs/backlog.md` to compute each metric. For EACH metric, also compute the **weekly trend** — the delta versus the value recorded in `routine_memory.md` approximately 7 days ago (the closest daily entry or weekly summary). Express as `↑ +N`, `↓ -N`, or `→ no change`.
 
 **Backlog burn-down:**
-- Total stories: count headings matching `## FRED-\d+`
-- Completed: count those whose heading contains a checkmark (✓)
+- Total stories: count all headings matching `## [A-Z]+-\d+` (covers FRED-, LPFRED-, DEV-, etc.)
+- Completed: count stories in the `# ✓ DONE` section (equivalently, headings whose marker is ✓)
 - Burn-down %: (completed / total) × 100, 1 decimal
 - Trend: completed-count now vs ~7 days ago
 
@@ -100,6 +100,8 @@ From routine_memory.md extract:
 ---
 
 ## Step 5 — Pick Today's Work (A/C tiering)
+
+**The backlog is pre-sorted by status.** `FREDdocs/backlog.md` has four top-level sections: `# ✅ READY` (no marker — most suitable), `# 💤 SLEEPING`, `# 🚫 BLOCKED`, `# ✓ DONE`. **Pick from the READY section first.** Only fall to a SLEEPING story (and remove its 💤) if READY is empty or nothing in READY fits today. NEVER pick from BLOCKED or DONE.
 
 Apply the Decision Framework from `ITPM/routine.md` in order: prerequisites → dependency chains → quick wins → guaranteed completion → production readiness impact → long-term value.
 
