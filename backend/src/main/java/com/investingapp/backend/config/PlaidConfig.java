@@ -8,11 +8,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@Profile("!ci") // Skip the real Plaid client in CI (offline boot). A ci stub bean is provided in CiStubConfig.
 public class PlaidConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(PlaidConfig.class);
