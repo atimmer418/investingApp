@@ -74,6 +74,11 @@ Selective xUnit — run the manifest's unit checks and use the result as Evidenc
   ALWAYS target the specific spec with --include. NEVER run the whole suite — legacy
   CLI-generated component specs may be red and would block the gate.
 Any unit failure → in-scope failure; record the failing test name as Evidence.
+If the frontend-unit `ng test` cannot run locally (no Angular CLI / no ChromeHeadless
+in this sandbox), do NOT treat it as pass and do NOT silently skip: set that manifest
+check `Status: deferred-to-CI` (the PR's `backend-frontend` CI job runs the scoped spec)
+and the verdict becomes PROVISIONAL — see the Output Format rule. Backend-unit normally
+runs locally; defer it the same way only if `./gradlew` is genuinely unavailable.
 
 Code-review pass (correctness + simplification):
 Review the diff INLINE for bugs, duplicated logic, simpler equivalents, and dead code
@@ -98,9 +103,14 @@ that the sandbox CAN run even when Phase 3 UI rendering cannot — do NOT skip i
 1. Check that test/api/config.local.sh exists. If missing, skip this phase
    and note it in output.
 2. Verify backend is reachable before running any tests:
-     curl -s --max-time 3 http://localhost:8080/actuator/health 2>&1 || \
+     curl -s --max-time 3 http://localhost:8080/hello 2>&1 || \
      curl -s --max-time 3 http://localhost:8080 2>&1
-   If both fail, skip this phase and note "backend unreachable on :8080".
+   If both fail, the runtime :8080 probe cannot run here: set every Phase 2
+   manifest check `Status: deferred-to-CI` (the PR's `backend-frontend` CI job
+   boots the ci backend and runs test/api/run-all.sh against it), note
+   "backend unreachable on :8080 — deferred to CI", and make the verdict
+   PROVISIONAL (see Output Format). Do NOT mark these checks pass without a
+   live run.
 3. Run: bash test/api/lib/auth.sh (sources config.local.sh, exports $TOKEN)
 4. List available domain test scripts: ls test/api/*.sh
    From the git diff, identify each /api/{domain}/* prefix that was
@@ -126,7 +136,11 @@ that the sandbox CAN run even when Phase 3 UI rendering cannot — do NOT skip i
 Prerequisites: local.fredvested.com reachable, backend on localhost:8080.
 Check reachability first:
   curl -s --max-time 3 https://local.fredvested.com > /dev/null && echo reachable || echo unreachable
-Skip this phase (note it) if unreachable.
+If unreachable, the runtime tunnel probe cannot run here: set the Phase 3 /
+device-visual manifest checks `Status: deferred-to-CI`, note "tunnel
+unreachable — deferred to CI", and make the verdict PROVISIONAL (see Output
+Format). (The static safe-area notch gate in Phase 1 still runs regardless and
+is NOT deferred.) Do NOT mark a UI check pass without a live render.
 
 1. Determine the affected route by reading navigateByUrl calls and @NgModule
    route declarations in the changed component files from the diff.
@@ -187,11 +201,19 @@ Skip this phase (note it) if unreachable.
     drafts.
 
 --- Output Format ---
-APPROVED / REVISION REQUIRED
+APPROVED / PROVISIONAL / REVISION REQUIRED
+
+Verdict rule — PROVISIONAL: the static tier passed (no in-scope failures) but one
+or more runtime checks could not run locally and are marked `Status: deferred-to-CI`
+(the Phase 2 :8080 probe, the Phase 3 tunnel probe, and/or the frontend-unit
+`ng test`). The PR's `backend-frontend` CI run is the authoritative gate for those
+checks. NEVER return APPROVED while ANY check is `deferred-to-CI` — APPROVED requires
+every check `pass` with attached Evidence (see EVIDENCE GATE). Use REVISION REQUIRED
+for any in-scope failure (a check that ran and failed); deferral is not a failure.
 
 Manifest results (every A/C item, with its evidence):
-  AC-1: pass|fail — Evidence: <test name / curl result / screenshot path>
-  AC-2: pass|fail — Evidence: <...>
+  AC-1: pass|fail|deferred-to-CI — Evidence: <test name / curl result / screenshot path; for deferred, the CI job that will run it>
+  AC-2: pass|fail|deferred-to-CI — Evidence: <...>
 
 In-scope failures (drive the verdict; handed back to the builder):
   - <file:line — what failed — which AC>
@@ -211,6 +233,9 @@ Key Findings rules:
 - APPROVED: top 3 are non-obvious things that were verified (e.g.
   "edge case X handled correctly", "no JWT leakage in new code path",
   "console clean on the affected route") — not generic praise.
+- PROVISIONAL: top 3 are what the static tier DID verify, and one slot
+  MUST name exactly which checks are deferred-to-CI and that the PR's
+  `backend-frontend` CI run is the authoritative gate for them.
 - If a phase was skipped, one slot must flag it so Andy doesn't miss
   the gap.
 - If user-state coverage is incomplete, one slot must name the untested
