@@ -1,0 +1,90 @@
+# FRED's first CI. Boots an ephemeral, offline backend under the Spring `ci`
+# profile (externals guarded by @Profile("!ci"); test users seeded by
+# CiSeedConfig), then runs the real Phase 2 API contract suite, a frontend
+# type-check, and a scoped frontend unit spec. Gates every PR into `develop`.
+name: verify
+
+on:
+  pull_request:
+    branches: [develop]
+
+jobs:
+  # Job/check name is referenced verbatim by branch protection on `develop`
+  # (Task 8) — do not rename without updating the required status check.
+  backend-frontend:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        # The committed application-ci.properties already points the `ci`
+        # datasource at 127.0.0.1:3306/fred with user root / password ci,
+        # so no DB env override is needed in the backend boot step.
+        env:
+          MYSQL_ROOT_PASSWORD: ci
+          MYSQL_DATABASE: fred
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Java 17 — backend/build.gradle toolchain: JavaLanguageVersion.of(17)
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # Node 22 — no .nvmrc/engines pin in the repo; 22 LTS is the version
+      # Angular CLI ^19.2.x officially supports.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Boot backend (ci profile)
+        working-directory: backend
+        run: |
+          SPRING_PROFILES_ACTIVE=ci ./gradlew bootRun > /tmp/boot.log 2>&1 &
+          # Readiness probe: GET /hello is the app's permitAll health endpoint
+          # (HealthCheckController). The backend has no spring-boot-actuator
+          # dependency, so /actuator/health would 404 — /hello is the correct,
+          # dependency-free signal that the context is up.
+          for i in $(seq 1 90); do
+            curl -sf localhost:8080/hello && break
+            sleep 2
+          done
+          curl -sf localhost:8080/hello || { echo "backend failed to boot"; tail -80 /tmp/boot.log; exit 1; }
+
+      - name: Phase 2 — API contract
+        run: |
+          # test/api/lib/auth.sh sources config.local.sh (gitignored, absent in
+          # CI), then authenticates against $BASE_URL via
+          # /api/dev/authenticate-as-user and exports $TOKEN. It uses the
+          # dev-auth endpoint — NOT real passkey — so the only thing CI must
+          # provide is this config pointing at the local backend with a seeded
+          # email (facebook@gmail.com is seeded by CiSeedConfig under `ci`).
+          # This is the CI equivalent of config.example.sh, retargeted at the
+          # local backend (config.local.sh itself is gitignored).
+          cat > test/api/config.local.sh <<'EOF'
+          #!/bin/bash
+          export TEST_USER_EMAIL="facebook@gmail.com"
+          export BASE_URL="http://localhost:8080"
+          EOF
+          bash test/api/run-all.sh
+
+      - name: Frontend — install + tsc + scoped unit
+        working-directory: frontend
+        run: |
+          npm ci --legacy-peer-deps
+          npx tsc --noEmit
+          # Scoped on purpose: the full `ng test` fails on FRED's bit-rotted
+          # legacy CLI-generated component specs. jwt-token.utils.spec.ts is
+          # proven green and confirms the karma/ChromeHeadless runner works.
+          # TODO: select the per-story specs by diff in a later iteration
+          # (the verifier already runs `ng test --include=<changed>.spec.ts`).
+          npx ng test --include='**/jwt-token.utils.spec.ts' --watch=false --browsers=ChromeHeadless
