@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Digest — 2026-06-13</title>
+  <title>Claude Digest — 2026-06-14</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#0f1117;color:#e8eaf0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.6;padding:48px 24px 80px}
@@ -45,7 +45,7 @@
       <span class="wordmark-text">Claude Daily Digest</span>
     </div>
     <h1>What's new in Claude</h1>
-    <span class="date-label">Saturday, June 13, 2026</span>
+    <span class="date-label">Sunday, June 14, 2026</span>
   </header>
   <hr />
 
@@ -54,15 +54,19 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="version">v2.1.176</span><span class="ts">June 12, 2026</span></div>
-        <div class="body">Session titles now generate in your conversation language, credential caching improved for Bedrock, and fixes for background sessions, Remote Control, and permission handling (including model redirect vulnerability where /fast could switch to blocked models).</div>
+        <div class="body">Session titles now generate in your conversation's language; improved Bedrock credential caching; and critical fixes for model enforcement and Linux sandbox symlink handling.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="version">v2.1.175</span><span class="ts">June 12, 2026</span></div>
-        <div class="body">Added <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;font-size:12px">enforceAvailableModels</code> managed setting to constrain the Default model to the allowlist and prevent settings from widening model restrictions — useful for org-wide model governance.</div>
+        <div class="body">New <code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px;">enforceAvailableModels</code> managed setting lets enterprise admins constrain the Default model to the allowlist.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="version">v2.1.174</span><span class="ts">June 12, 2026</span></div>
-        <div class="body">Added <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;font-size:12px">wheelScrollAccelerationEnabled</code> setting to disable mouse-wheel scroll acceleration, fixed /model picker display issues, and corrected Bedrock GovCloud region inference.</div>
+        <div class="body">New <code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px;">wheelScrollAccelerationEnabled</code> setting for smoother scrolling; fixed <code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px;">/model</code> picker display across different plan types.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="version">v2.1.173</span><span class="ts">June 11, 2026</span></div>
+        <div class="body">Fixed Fable 5 model names with <code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px;">[1m]</code> suffix not being normalized correctly.</div>
       </div>
     </div>
   </section>
@@ -72,19 +76,19 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026 · v2.1.150–v2.1.157</span></div>
-        <div class="body"><strong style="color:#c9d1f0">Claude Opus 4.8</strong> is now the default model for Max, Team Premium, Enterprise pay-as-you-go, and API accounts — high effort on by default, with /effort xhigh for the hardest tasks.</div>
+        <div class="body"><strong>Claude Opus 4.8</strong> is now the default model for Max, Team Premium, Enterprise pay-as-you-go, and Anthropic API accounts — high effort by default, with <code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px;">/effort xhigh</code> for the hardest tasks.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong style="color:#c9d1f0">Dynamic workflows</strong> let Claude write and execute a script that orchestrates dozens to hundreds of subagents — replacing one-shot prompts with structured multi-agent plans.</div>
+        <div class="body"><strong>Dynamic workflows</strong> let Claude write and orchestrate dozens to hundreds of subagents from a script — a major step toward fully autonomous multi-agent pipelines.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong style="color:#c9d1f0">Security-guidance plugin</strong> reviews Claude's code changes for vulnerabilities in real time as it works — think of it as a live security co-pilot running alongside every edit.</div>
+        <div class="body">The new <strong>security-guidance plugin</strong> reviews Claude's code changes for vulnerabilities in real time as it works, tightening the security loop on every edit.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 22 · May 25–29, 2026</span></div>
-        <div class="body"><strong style="color:#c9d1f0">Fast mode on Opus 4.8</strong> is now available at $10/$50 per MTok input/output — the same speed tier, now on the most capable generally available model.</div>
+        <div class="body"><strong>Fast mode</strong> now runs on Opus 4.8 at $10/$50 per MTok — faster output without dropping to a smaller model, toggled with <code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px;">/fast</code>.</div>
       </div>
     </div>
   </section>
@@ -93,24 +97,16 @@
     <div class="section-head"><span>🔧</span><span class="section-title">Platform &amp; API</span></div>
     <div class="card">
       <div class="item">
+        <div class="meta"><span class="tag">June 9, 2026</span></div>
+        <div class="body"><strong>Claude Fable 5</strong> (<code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px;">claude-fable-5</code>) and <strong>Claude Mythos 5</strong> (<code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px;">claude-mythos-5</code>) launched — both support a 1M token context window, 128k max output tokens, and always-on adaptive thinking. New tokenizer produces ~30% more tokens vs. pre-Opus 4.7 models.</div>
+      </div>
+      <div class="item">
         <div class="meta"><span class="tag">June 10, 2026</span></div>
-        <div class="body">The <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;font-size:12px">GET /v1/environments/{id}/work</code> endpoint for self-hosted sandboxes is now available on Claude Platform on AWS, with the <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;font-size:12px">GetEnvironment</code> IAM action authorizing it.</div>
+        <div class="body">The <code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px;">GET /v1/environments/{id}/work</code> endpoint for self-hosted sandboxes is now available on Claude Platform on AWS, enabling queued work retrieval from self-hosted environments.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">June 9, 2026</span></div>
-        <div class="body"><strong style="color:#c9d1f0">Claude Fable 5</strong> (<code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;font-size:12px">claude-fable-5</code>) launched as Anthropic's most capable widely released model, with a 1M token context window, 128k max output, always-on adaptive thinking, and safety classifiers that return <code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;font-size:12px">stop_reason: "refusal"</code> (non-billed) when a request is declined.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="tag">June 9, 2026</span></div>
-        <div class="body"><strong style="color:#c9d1f0">Claude Mythos 5</strong> (<code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;font-size:12px">claude-mythos-5</code>) launches for Project Glasswing participants — same 1M context + 128k output, sitting above Opus in both capability and price.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="tag">June 9, 2026</span></div>
-        <div class="body">Claude Managed Agents now supports <strong style="color:#c9d1f0">scheduled deployments</strong> (cron-based sessions) and <strong style="color:#c9d1f0">vault environment variable credentials</strong>, so you can securely inject secrets into agent sandboxes without a custom scheduler.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="tag">June 5, 2026</span></div>
-        <div class="body">Claude Opus 4.1 (<code style="background:#1a1e2e;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;font-size:12px">claude-opus-4-1-20250805</code>) deprecated — retire date is August 5, 2026. Anthropic recommends migrating to Claude Opus 4.8.</div>
+        <div class="meta"><span class="tag">June 15, 2026 — upcoming</span></div>
+        <div class="body"><strong>Programmatic usage credits</strong> launch June 15: paid plan users can claim a dedicated monthly credit covering the Claude Agent SDK, <code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px;">claude -p</code> CLI, Claude Code GitHub Actions, and third-party Agent SDK apps. Also: Claude Sonnet 4 and Opus 4 (20250514) retire on the API.</div>
       </div>
     </div>
   </section>
@@ -119,20 +115,20 @@
     <div class="section-head"><span>𝕏</span><span class="section-title">From the Team</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">May 13–14, 2026</span></div>
-        <div class="body">Claude Code weekly limits raised by 50% through July 13 for Pro, Max, Team, and Enterprise users. Also announced: starting June 15, paid-plan users can claim a dedicated monthly credit for programmatic/Agent SDK usage.</div>
+        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">~2 days ago</span></div>
+        <div class="body">Claude Code weekly limits are raised 50% through July 13, 2026 — live now for Pro, Max, Team, and seat-based Enterprise. A direct response to developer demand as usage has scaled rapidly.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="handle">@claudeai</span><span class="ts">June 9, 2026</span></div>
-        <div class="body">Announced Claude Fable 5 and new Managed Agents features including scheduled deployments, multiagent orchestration, and Dreaming — a scheduled process that reviews past agent sessions and curates memory so agents improve between runs.</div>
+        <div class="body">Claude Fable 5 is here — the most capable widely released model, beating Opus 4.8 on harder tasks, with a 1M context window and support for text, images, and files. Claude Mythos 5 is also available for Project Glasswing participants.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@bcherny</span><span class="ts">June 8, 2026</span></div>
-        <div class="body">Boris Cherny marked one year of Claude Code GA: "I haven't written a line of code by hand in eight months. Some mornings I coordinate tens of thousands of agents." Code output at Anthropic is up 8x since the start of 2026.</div>
+        <div class="meta"><span class="handle">@bcherny</span><span class="ts">recent</span></div>
+        <div class="body">Code Review in Claude Code: a team of agents now runs a deep review on every PR. "Code output per Anthropic engineer is up 200% this year and reviews were the bottleneck" — Boris uses it daily and says it catches things human reviewers miss.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@trq212</span><span class="ts">June 1, 2026</span></div>
-        <div class="body">Thariq Shihipar asked Anthropic teammates how they stay in the loop with Claude — shared a favorite tip from a colleague about tracking agent work across sessions. Quiet since then while team responded to the June 2 service outage.</div>
+        <div class="meta"><span class="handle">@trq212</span><span class="ts">recent</span></div>
+        <div class="body">Claude Code Channels launched — control your Claude Code session through Telegram or Discord MCPs, letting you message Claude Code directly from your phone. Voice mode also rolling out, live for ~5% of users with a ramp underway.</div>
       </div>
     </div>
   </section>
@@ -140,7 +136,7 @@
   <hr />
   <footer>
     <span><span class="dot"></span>digest.fredvested.com</span>
-    <span>Generated June 13, 2026 at 8:00 AM ET</span>
+    <span>Generated 2026-06-14 at 8:00 AM ET</span>
   </footer>
 </div>
 </body>
