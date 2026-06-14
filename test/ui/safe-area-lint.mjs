@@ -132,6 +132,18 @@ function lintHtml(file, text) {
   }
 }
 
+// True if any element in the HTML carries BOTH `cls` and a global safe-area utility class
+// (the element gets its safe-area-inset-top from the global class, applied in the template).
+function htmlElementHasBoth(html, cls, globalClasses) {
+  const re = /class\s*=\s*"([^"]*)"/g;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const toks = m[1].split(/\s+/);
+    if (toks.includes(cls) && globalClasses.some(g => toks.includes(g))) return true;
+  }
+  return false;
+}
+
 function main() {
   const filesArg = arg('files', '');
   let files;
@@ -150,7 +162,16 @@ function main() {
 
   // Pair HTML advisories with SCSS hard-flags: a header div in ion-header is only a HARD
   // failure if the sibling SCSS has no safe-area-inset-top at all.
-  const hard = offenders.filter(o => !o.advisory);
+  // SCSS hard-flags: suppress when the sibling HTML applies the flagged class together with a
+  // global safe-area utility class (safe-area comes from the global class, not the component SCSS).
+  const hard = offenders.filter(o => !o.advisory).filter(o => {
+    const selClasses = [...o.selector.matchAll(/\.([A-Za-z0-9_-]+)/g)].map(x => x[1]);
+    if (selClasses.length === 0) return true;
+    const htmlSib = o.file.replace(/\.scss$/, '.html');
+    let html;
+    try { html = readFileSync(htmlSib, 'utf8'); } catch { return true; }
+    return !selClasses.some(cls => htmlElementHasBoth(html, cls, GLOBAL_SAFE_TOP_CLASSES));
+  });
   const advisories = offenders.filter(o => o.advisory).filter(adv => {
     const dir = adv.file.replace(/\.page\.html$/, '');
     const sib = files.find(f => f.startsWith(dir) && f.endsWith('.scss'));
