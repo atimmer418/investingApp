@@ -230,13 +230,13 @@
     .section-intermediary-only { display: none; }
 
     /* planning — the brief Andrew reviews. Plan detail ONLY. */
-    [data-state="intermediary"] .section-planning-only { display: block; }
+    [data-state="planning"] .section-planning-only { display: block; }
 
     /* intermediary — work queued/building. NOTHING but the banner (no plan, no recap). */
     /* (both buckets stay hidden; #intermediary-banner is shown via JS) */
 
     /* completed / looks_good — work done. Recap + completion ONLY, never plan detail. */
-    [data-state="intermediary"] .section-intermediary-only,
+    [data-state="completed"] .section-intermediary-only,
     [data-state="looks_good"] .section-intermediary-only { display: block; }
     [data-state="completed"] #completion-section,
     [data-state="looks_good"] #completion-section { display: block; }
