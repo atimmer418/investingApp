@@ -75,6 +75,7 @@ NOT current priority: Growth, marketing, dark mode, advanced analytics.
 - Material Symbols Outlined icon font (subset loaded from /assets/fonts/)
 - Loading veil: full-screen semi-transparent overlay on async operations
 - Separate builder-agent + verifier-agent pattern for implementing and reviewing changes
+- Transient-only HTTP retry on resilience-sensitive observables: reuse the canonical `auth.service.ts loadUserProgress()` block verbatim — `timeout(10_000)` + `retry({count:2, delay})` where `transient = isTimeout || status===0 || status>=500`, non-transient errors re-thrown via `throwError(()=>err)`, backoff `timer(400·2^(attempt-1))`. The non-transient re-throw is load-bearing: it prevents retrying 401/403/4xx so auth failures are never masked as retryable blips (FRED-196, tab3 KYC call). Pair with an error handler that still settles the render gate so a permanently-failing call can't hang the view.
 
 ## Rejected Patterns
 

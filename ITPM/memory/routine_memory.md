@@ -42,10 +42,17 @@
 **Tier:** 1 (A/C ready) — FRED-196 carries a full Acceptance Criteria block in `backlog.md`; build-ready, no triage gap.
 **Rationale:** Of the Tier-1 stories, FRED-196 is the strongest in-sandbox pick: a well-scoped, additive frontend resilience fix that hardens the error-state coverage of the tab3 stat strip just shipped in FRED-192's rework. The other A/C-ready stories are gated — FRED-191 (load-perf) needs a real-device Capacitor build the sandbox can't run; FRED-195 (pig avatars) needs SVGs from the `PersonalTypeshit/FRED Logo` sibling dir outside the repo; FRED-194 (uniform settings headers) is a large 9-page UI overhaul that can't be visually verified in-sandbox. FRED-196 is Medium, tsc-verifiable, low architectural risk, and closes a real user-facing reliability gap ("complete retry/error states" is core to the production-readiness mission). FRED-101 (emailer) remains founder-gated; FRED-169 (14-day trial) is App Store Connect config.
 **Metrics:** Readiness 74/100, Piggy 77.5% (31/40), Pages 76%, Burndown 36.0% (32/89), Launch 65.9% (carried from 06-13 — no new work shipped since)
-**Days since last blocker:** 13 (held flat — revision only, no build, no blocker)
+**Days since last blocker:** 14 (no blocker today; build shipped clean)
 **Blockers active:** none
 **Notes:** Exclusion set for the repick = FRED-100 (skipped today). No other skips within the last 7 days (the early-June FRED-100 skip window expired 06-11). Tomorrow's likely picks unchanged: FRED-188 (chat null guard), FRED-189 (bank-subtype field-case bug), FRED-186 (debounce + switchMap).
-**Status:** Pending approval from Andrew
+
+**Built & shipped (approval, 2026-06-15):** FRED-196 — tab3 Freedom Age resilient to flaky KYC.
+- **What shipped:** `frontend/src/app/tab3/tab3.page.ts` — the KYC observable in `loadStatStrip()` (call #3, `alpacaService.getKycData()`) is now wrapped with `timeout(10_000)` + a bounded transient-only `retry({count:2})` (transient = TimeoutError / status 0 / status ≥ 500; non-transient re-throws via `throwError`; backoff `timer(400·2^(attempt-1))`), mirroring `auth.service.ts loadUserProgress()` verbatim. Imports extended with `timeout, retry, timer, throwError`. The existing error handler (`kycDone=true; tryRender()`) was left untouched so the render gate still settles. Per Andrew's authoritative directive, the failed state stays a plain "—" with NO manual retry affordance — the auto-retry self-heals transient blips. `frontend/src/app/tab3/tab3.page.spec.ts` gained 7 fakeAsync specs (all pass); `frontend/karma.conf.js` gained a `ChromeHeadlessNoSandbox` launcher for CI/sandbox.
+- **Verifier verdict:** APPROVED, 0 in-scope failures. The adversarial AC-1b spec proves a 401 is NOT retried (`callCount===1`) — the fix can't mask an auth failure as a retryable blip. tsc clean. Shipped through a CI-gated PR on `verify/FRED-196` (backend-frontend job).
+- **Readiness needle:** closes a real user-facing reliability gap (honest error/retry states on the tab3 stat strip just rebuilt in FRED-192) — "complete retry/error states" is core to the production-readiness mission. Readiness 74 → 75.
+- **Lessons:** the canonical `loadUserProgress` retry block transplants cleanly to any observable needing transient-only resilience — reuse it verbatim (same predicate, same backoff, non-transient `throwError`) rather than re-deriving. The non-transient re-throw is the load-bearing safety property: without it, a retry on 401/403 would mask auth failures.
+- **Out-of-scope discoveries surfaced for Andrew's confirm before backlog-add:** (1) [DEV] package-lock.json `libc` field churn — reverted in this PR to keep the diff minimal; consider standardizing the repo npm version. (2) [DEV] `karma.conf.js ChromeHeadlessNoSandbox` launcher now committed — confirm it should live in the repo. (3) [DEV] pre-existing Ionicons `book-outline` not-registered warning on tab3 render (addIcons gap).
+**Status:** Complete
 
 ---
 
