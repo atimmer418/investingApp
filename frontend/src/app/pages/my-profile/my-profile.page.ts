@@ -15,6 +15,7 @@ import { AccountStatusService } from '../../services/account-status.service';
 import { MonthlyFreedomUpdateService } from '../../services/monthly-freedom-update.service';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import { EquityPigUtils } from '../../utils/equity-pig.utils';
 
 @Component({
   selector: 'app-my-profile',
@@ -68,8 +69,7 @@ export class MyProfilePage implements OnInit {
   equityLevel: number = 0;
 
   get avatarSrc(): string {
-    const level = this.equityLevel > 0 ? Math.max(1, Math.min(6, this.equityLevel)) : 1;
-    return `assets/images/pig-level-${level}.svg`;
+    return EquityPigUtils.pigSrcFromEquity(this.currentPortfolioValue);
   }
 
   selectedTier: string = '';

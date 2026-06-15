@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap, catchError, of, lastValueFrom, timeout } from 'rxjs';
+import { Observable, BehaviorSubject, tap, catchError, of, lastValueFrom, timeout, retry, timer, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
 import { DeviceIdService } from './device-id.service';
@@ -31,6 +31,7 @@ export interface UserProgress {
   referralRewardTriggered?: boolean;
   currentFreedomEstimate?: number;
   timeToFI?: string;
+  _source?: 'db' | 'localStorageFallback';
 }
 
 export interface PasskeyAuthRequest {
@@ -248,20 +249,32 @@ export class AuthService {
 
   loadUserProgress(): void {
     this.getUserProgress().pipe(
-      // 10-second hard cap — guards against the request hanging indefinitely (e.g. after
-      // a dev-server restart where the backend proxy takes time to re-establish). Without
-      // this, userProgress$ stays null forever, the navigation filter never passes, and
-      // the app cover never hides.
-      timeout(10_000)
+      // Per-attempt 10s cap (unchanged) — guards against a hung request.
+      timeout(10_000),
+      // Retry transient failures so a single network blip / cold proxy / 5xx self-heals
+      // into real DB data instead of the all-false localStorage fallback. NEVER retry
+      // 401/403/4xx — those won't heal by retrying.
+      retry({
+        count: 2,
+        delay: (err: any, attempt: number) => {
+          const status = err?.status ?? 0;
+          const isTimeout = err?.name === 'TimeoutError';
+          const transient = isTimeout || status === 0 || status >= 500;
+          if (!transient) return throwError(() => err);
+          return timer(400 * Math.pow(2, attempt - 1)); // 400ms, 800ms
+        }
+      })
     ).subscribe({
       next: (progress) => {
-        this.userProgressSubject.next(progress);
+        // Real DB data — safe to drive navigation.
+        this.userProgressSubject.next({ ...progress, _source: 'db' });
       },
       error: (err) => {
-        console.error('[AuthService] Failed to load user progress:', err);
-        // Emit localStorage fallback so userProgress$ is never permanently null.
-        // Without this, the navigation filter blocks forever and the cover never hides.
-        this.userProgressSubject.next(this.buildProgressFromLocalStorage());
+        console.error('[AuthService] Failed to load user progress (after retries):', err);
+        // Tag the fallback so the navigation layer can refuse to route an authenticated
+        // user by it (an all-false fallback would eject a real user to /get-started).
+        // Still emit a non-null value so userProgress$ never stays null and the cover hides.
+        this.userProgressSubject.next({ ...this.buildProgressFromLocalStorage(), _source: 'localStorageFallback' });
       }
     });
   }
@@ -394,18 +407,25 @@ export class AuthService {
    * list is empty, preventing the "Scan QR Code" sheet from appearing.
    */
   async promptForPasskeyReauth(): Promise<boolean> {
+    // Known-user re-auth is owned by AppLockService → PasskeyPromptComponent (account-specific).
+    // This discovery flow is ONLY for devices that don't know the user. Leave reAuthInProgress
+    // untouched here so the known-user path keeps ownership.
     if (localStorage.getItem('userEmail')) return false;
+
+    // Set the defer flag SYNCHRONOUSLY, before the first await, so AppComponent's
+    // setupNavigationLogic() can't race ahead to /get-started while the keychain read +
+    // /authenticate/start call are still in flight. Every early-return below resets it.
+    this.reAuthInProgressSubject.next(true);
 
     // Identify the account via iCloud Keychain (survives reinstalls/upgrades).
     // If nothing is in the Keychain this is a genuinely first-time user — skip.
     const keychainEmail = await this.keychainSyncService.getAccountEmail();
     if (!keychainEmail) {
+      this.reAuthInProgressSubject.next(false); // genuine first-timer → allow get-started
       return false;
     }
 
     try {
-      this.reAuthInProgressSubject.next(true);
-
       // Ask the backend for this account's passkeys.
       let startResponse: { requestOptions: string, sessionId: string };
       try {
@@ -414,11 +434,15 @@ export class AuthService {
             `${BACKEND_API_URL}/passkey/authenticate/start`,
             { email: keychainEmail },
             { headers: this.getAuthHeaders() }
-          )
+          ).pipe(timeout(10_000))
         );
-      } catch {
-        // Account deleted or backend error — clear the stale Keychain entry.
-        this.keychainSyncService.clearAccountEmail();
+      } catch (err) {
+        // A failed start is almost always TRANSIENT (backend down, tunnel/network error,
+        // timeout, 5xx). The backend can't cleanly distinguish "unknown email" from an
+        // outage here, so do NOT clear the Keychain recovery anchor — wrongly clearing it
+        // permanently disarms cross-device recovery after a brief blip. Keep the anchor,
+        // abort, and let the next launch/resume retry.
+        console.warn('[AuthService] Passkey reauth start failed; keeping Keychain anchor:', err);
         this.reAuthInProgressSubject.next(false);
         return false;
       }

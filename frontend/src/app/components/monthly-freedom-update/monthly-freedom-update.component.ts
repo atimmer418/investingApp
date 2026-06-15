@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { MonthlyFreedomUpdateService, MonthlyFreedomUpdateData, MilestoneDTO } from '../../services/monthly-freedom-update.service';
 import { ReviewService } from '../../services/review.service';
 import { Router } from '@angular/router';
+import { EquityPigUtils } from '../../utils/equity-pig.utils';
 
 @Component({
   selector: 'app-monthly-freedom-update',
@@ -159,9 +160,7 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
   }
 
   get milestoneEquityPigSrc(): string {
-    const level = this.data?.equityLevel;
-    const validLevel = (level && level >= 1 && level <= 6) ? level : 1;
-    return `assets/images/pig-level-${validLevel}.svg`;
+    return EquityPigUtils.pigSrcFromLevel(this.data?.equityLevel);
   }
 
   /**

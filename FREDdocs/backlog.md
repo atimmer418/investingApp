@@ -38,6 +38,68 @@ Baseline the app's cold-load performance — network waterfall + Core Web Vitals
 5. `npx tsc --noEmit` exits 0 and `ng build` succeeds within budgets.
 6. Before/after numbers written up.
 
+## FRED-193 — Remove dark mode from tab-switcher, tab1, tab2, ai-chat
+remove dark mode from ion-tabs aka the tab-switcher; remove dark mode from tab1 and tab2 and ai-chat page
+
+### Summary
+Remove dark mode from the app for now so everything renders in light styling regardless of the device's OS Dark Mode setting. The originating surfaces are the tab-switcher (ion-tabs), tab1, tab2, and the AI chat page, but because global background flips drive dark app-wide, the clean fix is to strip dark mode across the app and make it light-only for now. The theme infrastructure (the settings-service `'light' | 'dark' | 'auto'` machinery) stays in place so a planned future story can implement a full, properly-supported dark mode across the app — this story just turns dark off for now without burning that bridge.
+
+### Acceptance Criteria
+1. With the device/OS set to Dark Mode, the whole app renders in light styling — verified specifically on the tab-switcher, tab1, tab2, and the ai-chat page (each identical to Light Mode: backgrounds, cards, text, borders, bubbles, tab bar). No surface shows a dark/near-black background, dark border, or inverted text.
+2. All `@media (prefers-color-scheme: dark)` blocks are removed from the four named surfaces' SCSS (`tabs.page.scss`, `portfolio-dashboard.component.scss`, `retirement-planning.component.scss`, `ai-chat.page.scss`).
+3. The global dark flips in `theme/variables.scss` (~L11) and `global.scss` (~L181) are removed/made inert so they no longer darken any page background; the dark scrollbar blocks (`global.scss` ~L676, L702) and the stray `monthly-freedom-update.component.scss` (~L683) dark block are removed too, so no part of the app is left half-dark.
+4. No dead code: no empty `@media` wrappers, no orphaned SCSS variables, no commented-out dark blocks left behind (clean removal per CONTEXT.md).
+5. The theme infrastructure in `settings.service.ts` is preserved (the `'light' | 'dark' | 'auto'` type, `applyTheme()`, and `body.dark` toggle remain) and the effective default is light, so nothing renders dark now. If a dark/theme toggle is surfaced in any settings UI, it is hidden or disabled for now (confirm whether one exists).
+6. Frontend compiles cleanly — `cd frontend && npx tsc --noEmit` / the scoped build passes with no new SCSS or TS warnings from this change.
+
+Follow-up: a future story will implement full, properly-supported dark mode across the app — the theme infrastructure is intentionally kept for it.
+
+## FRED-194 — Uniform ion-header styling across tab3 settings pages
+change all settings page linked to from tab3 to have the exact same styling in their ion-headers as change-bank-account does. while youre at it, each page should also have similar styling usage so confirm that they do and if they dont, make them have uniform styling across each settings page
+
+### Summary
+Make every settings page linked from tab3 use the exact same ion-header as `change-bank-account` — the `.blue-hero-header` (blue gradient + concave white cutout + back button / centered title / spacer) — replacing each page's current `<ion-toolbar>` + `.header-inner` header. Then audit each page's broader styling (content background, section cards, spacing, CTAs) and bring any divergence into line so all settings pages look uniform. Done when every listed page renders a header identical to change-bank-account and the pages share consistent body styling.
+
+### Acceptance Criteria
+1. Each of the 9 pages — recurring-investments, portfolio-customize (a component rendered as a page; treated identically), sell-withdraw, security-settings, tax-documents, faq, lump-sum-investment, my-profile, beneficiaries — renders an ion-header visually identical to change-bank-account: blue gradient `linear-gradient(90deg, #2a5ae0, #1d4ed8)`, concave white cutout, safe-area-inset-top padding, `arrow_back_ios_new` back button on the left, centered title, spacer on the right. All are in scope.
+2. Each page's old `<ion-toolbar><div class="header-inner">…</div></ion-toolbar>` is replaced by the `<div class="blue-hero-header"><div class="hero-nav">…<div class="back-btn-spacer"></div></div></div>` structure. Each page keeps its own title text and existing `goBack()` behavior; no navigation regressions.
+3. The hero-header styling lives in one shared SCSS partial/mixin (e.g., `theme/_blue-hero-header.scss`) included by all listed pages, and change-bank-account is refactored to consume the same source — no duplicated gradient/cutout SCSS copy-pasted across files. (Per-file duplication is an allowed fallback if preferred.)
+4. Body styling uniformity ("while you're at it"): every settings page uses the same content background (`#f8fafc`) and consistent section-card, spacing, and CTA styling per the FRED Style Guide. Each page is explicitly confirmed; any divergence is corrected. (If this clause balloons, split it into its own follow-up story rather than blocking the header work.)
+5. No page-specific header content is lost. If a page needs extra header content (e.g., my-profile avatar/subtitle), it sits inside `.blue-hero-header` like change-bank-account's (commented) `hero-account-peek` — not via the old toolbar.
+6. Headers render correctly on a notched device — `env(safe-area-inset-top)` honored — and the concave cutout meets the page background seamlessly with no seam/gap.
+7. Frontend compiles cleanly (`cd frontend && npx tsc --noEmit` / scoped build) with no new warnings; spot-check each page's happy path for visual regressions.
+
+## FRED-195 — Equity-range pig avatar for profile & MFU
+in the directory PersonalTypeshit/FRED Logo, there are 5 pig directories with ranges each containing an svg. these svgs (the non-blackandwhiteversion) should be copied to an assets directory on the frontend of FRED, the ranges should be the range of the user's total equity, so when the user's total equity is within that range, the profile picture in the my profile link from tab 3 should display that svg and same with the actual profile picture within the my profile page. also, the mfu achievement that displays in the mfu should show this svg as well when that respective new bottom range of total equity has been achieved
+
+### Summary
+Copy the 5 non-B&W pig SVGs (one per total-equity range: $0–1k, $1k–10k, $10k–100k, $100k–1m, $1m+) from `PersonalTypeshit/FRED Logo/FREDpig$*` (a sibling of the FRED repo — `PersonalTypeshit` contains both `FRED` and `FRED Logo`) into `frontend/src/assets/images/`, then drive three avatars off the user's total-equity range: the profile picture on tab3's "My Profile" link, the avatar on the My Profile page, and the pig in the MFU achievement. The two profile avatars use the user's LIVE total equity (`summary.equity`); the MFU achievement reflects the equity tier achieved in that MFU. The new 5-range art fully replaces the existing `pig-level-1..6.svg` set (old files deleted), mapping the backend `equityLevel` levels 5 & 6 → the single $1m+ pig. Done when each of the three spots shows the SVG matching the right equity range.
+
+### Acceptance Criteria
+1. The 5 non-B&W pig SVGs (`pig$*.svg`, not `blackandwhiteversion.svg`) are copied from `PersonalTypeshit/FRED Logo/FREDpig$*/` (sibling of the FRED repo) into `frontend/src/assets/images/` with URL-safe filenames (source names contain `$`/`+` and must be sanitized); the range→file mapping is documented.
+2. A single shared helper maps a total-equity value → one of the 5 range SVGs ($0–1k, $1k–10k, $10k–100k, $100k–1m, $1m+). Backend `equityLevel` L5 & L6 both map to the $1m+ pig. No duplicated threshold logic across the three spots.
+3. The tab3 "My Profile" link avatar (`tab3.page.html`, currently a hardcoded Ionic placeholder) shows the pig SVG for the user's LIVE total-equity range (`summary.equity`).
+4. The My Profile page avatar shows the same range pig driven by LIVE total equity (`summary.equity`), replacing the old `pig-level-${level}.svg` that read the stale MFU `equityLevel`.
+5. The MFU achievement shows the range pig for the equity tier achieved in that MFU (MFU-derived), replacing `pig-level-${validLevel}.svg`, when a non-DEFAULT milestone is achieved.
+6. The two profile avatars are consistent for the same user (both off live equity); zero/null/empty equity falls back to the $0–1k pig — no broken `<img>`.
+7. The old `pig-level-1..6.svg` assets are deleted entirely (full replacement); frontend compiles cleanly with no broken image references and no remaining references to the old files.
+
+Decisions (Andy): profile avatars use LIVE equity; old pig-level art fully replaced; L5 & L6 → $1m+ (5 ranges only). Est. 1-3hr, [code].
+
+## FRED-196 — tab3 Freedom Age blanks on flaky KYC call
+tab3 Freedom Age stat shows "-" when the Alpaca GET /alpaca/account/kyc call (its birthYear source, a third call separate from the two that feed Freedom Date and To Go) fails or returns no DOB on weak connections — the KYC error handler opens the render gate without setting birthYear, so Freedom Date and To Go render real values while Freedom Age silently blanks. Give Freedom Age its own fallback/retry (e.g. retry the KYC call on transient errors, and/or a clearer placeholder) so a flaky Alpaca call doesn't silently blank it.
+
+### Summary
+The tab3 stat strip's "Freedom Age" tile silently shows "—" whenever the Alpaca KYC call (`GET /alpaca/account/kyc`) — the only source of the user's birth year — fails or returns no usable date_of_birth, while "Freedom Date" and "To Go" still render real values. Make Freedom Age resilient: retry the KYC fetch on transient failures and give it an honest state (loading vs unavailable) so a brief Alpaca/connection hiccup doesn't blank it. Done when a flaky/failed KYC call no longer silently blanks Freedom Age and the happy path (valid DOB) is unchanged.
+
+### Acceptance Criteria
+1. The KYC fetch feeding Freedom Age retries on transient failures only — TimeoutError / HTTP status 0 / status ≥ 500 — with bounded backoff; never 401/403/404. Mirror `loadUserProgress`'s retry shape for consistency.
+2. On ultimate KYC failure, Freedom Age is visually distinct from the empty placeholder (retry affordance / "unavailable") — a failure must not look identical to "still loading".
+3. "Missing data" vs "failed to load" handled distinctly — a genuine no-DOB (pre-KYC user) shows the normal "—" with no error treatment.
+4. Freedom Date and To Go are unaffected — they render from `/user/progress` + `/portfolio/dashboard` regardless of KYC outcome.
+5. The render gate still opens once all three calls settle — no hang on a permanently-failing KYC call.
+6. Happy path unchanged — with a valid DOB, Freedom Age = `resolvedFreedomYear − birthYear`. Est. 1-3hr, [code].
+
 
 # 💤 SLEEPING — Backlog (not yet started)
 _Queued but not prioritized. Promote to READY (remove the 💤) when ripe._
@@ -128,6 +190,20 @@ convert angular to xcode
 
 ## FRED-146 — 💤 Dark mode with phone-inherited color scheme
 we want to make a dark mode, give me all the colors that fred currently uses and we want to find negatives of them that are UI/UX compliant. the light or dark mode should be inherited from whatever the phone is currently in at the moment
+
+### Summary
+Build a full, properly-supported dark mode driven by the theme infrastructure already in `settings.service.ts` (`'light' | 'dark' | 'auto'` + `body.dark` toggle; `auto` inherits the phone's current scheme). Catalog every color FRED uses, define a UI/UX-compliant (WCAG-AA-contrast) dark palette — proper dark equivalents, not naive inversions — and theme the app through a single CSS-variable layer under `body.dark`. Done when toggling the device (or the in-app setting) into dark renders every surface in an accessible dark theme with no light bleed, and `auto` follows the phone. Realistically a multi-day epic; depends on FRED-193 (light-only cleanup) landing first.
+
+### Acceptance Criteria
+1. A documented dark palette exists: every current FRED color mapped to a dark-mode equivalent meeting WCAG AA contrast for its use (text/background/interactive), with rationale — not auto-inverted.
+2. Colors are driven through semantic CSS variables themed under `body.dark`; the worst hardcoded-hex offenders (`#2563EB`, `#0f172a`, `#f8fafc`, `#6b7280`, `#e5e7eb`, and the rest of the high-count list — ~600+ hardcoded values today) are migrated to those tokens so they respond to the theme.
+3. `auto` mode inherits the phone's scheme (light phone → light app, dark phone → dark app) via the existing `settings.service` `body.dark` toggle; switching the phone scheme updates the app.
+4. A working in-app light / dark / auto control is available (the `settings.service` setting persists and applies on load) — full support, not phone-inherited only.
+5. All key surfaces render correctly in dark with no light-mode bleed and no illegible/low-contrast text: tab-switcher, tab1, tab2, tab3 + all settings pages, ai-chat, onboarding, modals, toasts, charts, and Lottie animations.
+6. No regressions to light mode; light remains the default until dark is fully verified.
+7. `index.html` `color-scheme` updated to support dark once shipped.
+
+Notes: depends on FRED-193 first. Likely split into sub-stories — (1) consolidate to one semantic token set + migrate hardcoded hex → tokens, (2) define/document the compliant dark palette, (3) apply under `body.dark` + wire the settings toggle, (4) QA contrast across every surface (incl. charts/Lottie/brand assets). Palette derivation is design-heavy and should get a design/approval pass before it's applied.
 
 ## FRED-147 — 💤 Export MFU as shareable image with Fred art
 let users export their monthly freedom updates. (it could be fred holding up the mfu as pitchfork sign) change the location of the close button to be on the left and the export on the right. the close button could also become the back button
@@ -237,6 +313,9 @@ Remove the back button from 2 pages in the onboarding flow.
 
 ## FRED-182 — 💤 Add 3 Monte Carlo piggy bank visual states
 add 3 forms of piggy banks based on monte carlo simulation results (mint condition, cracked condition, exploded into pieces condition)
+
+## FRED-197 — 💤 First-time tour highlights My Profile link
+update the first time tour to show the my profile icon on tab 3 as a link to a page (so it should darken the rest of the page while showing click here to access your profile); this can be put as sleeping for now and we can enrich it later
 
 
 # 🚫 BLOCKED — Waiting on Something

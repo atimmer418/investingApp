@@ -25,7 +25,8 @@ ion-toolbar {
 }
 
 .blue-hero-header {
-  background: linear-gradient(0deg, #2563EB 0%, #3b82f6 100%);
+  background: linear-gradient(90deg, #2a5ae0, #1d4ed8);
+
   padding: calc(env(safe-area-inset-top, 0px) + 2px) 20px 36px 20px; // top honours iPhone notch; extra bottom padding for the concave cutout
   position: relative;
   z-index: 10;
@@ -57,7 +58,7 @@ ion-toolbar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.0);
   border: none;
   cursor: pointer;
   color: #ffffff;

@@ -216,7 +216,14 @@ export class AppComponent implements OnInit {
       })
     ).subscribe(([isLoggedIn, progress]) => {
       if (isLoggedIn && progress) {
-        this.navigateBasedOnProgress(progress);
+        // A logged-in user has passed auth-finalize; their real progress lives in the DB.
+        // If we only have the localStorage FALLBACK (DB load failed after retries), do NOT
+        // route by it — an all-false fallback would eject a real user to /get-started.
+        if (progress._source === 'localStorageFallback') {
+          this.holdAuthenticatedUserOnFallback();
+        } else {
+          this.navigateBasedOnProgress(progress);
+        }
       } else if (!isLoggedIn) {
         const unifiedProgress = this.authService.getUnifiedProgress();
         const hasAnyProgress = unifiedProgress.getStartedCompleted ||
@@ -331,5 +338,26 @@ export class AppComponent implements OnInit {
       return;
     }
     this.navigateBasedOnProgress(progress);
+  }
+
+  /**
+   * An authenticated user whose progress could only be resolved from the all-false
+   * localStorage FALLBACK (DB load failed after retries) must never be routed by it.
+   * A valid token means they are past auth-finalize, so they belong in the app — keep
+   * them where they are if already on a real route, else default to the app home.
+   */
+  private holdAuthenticatedUserOnFallback(): void {
+    const currentBaseUrl = this.router.url.split('?')[0].split('#')[0];
+    const onboardingRoutes = [
+      '/get-started', '/survey-initial', '/fi-plan-results',
+      '/auth-finalize', '/kyc-verification', '/link-bank',
+      '/investment-schedule', '/investment-confirmation', '/', ''
+    ];
+    if (onboardingRoutes.includes(currentBaseUrl)) {
+      this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true })
+        .finally(() => this.hideCoversWhenReady('/tabs/tab1'));
+    } else {
+      this.hideCoversWhenReady(currentBaseUrl);
+    }
   }
 }

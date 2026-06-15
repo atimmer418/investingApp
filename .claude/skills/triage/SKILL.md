@@ -75,11 +75,12 @@ Check the actual current date — do not ask.
 
 ## Enrich Flow (`--enrich=<ID>`)
 
-Used by the `backlog-add` skill to shape a story that was just appended to the backlog. Identical to the **Targeted Story Flow** above, with three changes:
+Used by the `backlog-add` skill to shape a story that was just appended to the backlog. Identical to the **Targeted Story Flow** above, with four changes:
 
 1. **Steps 1–8 are the same:** parse `<ID>`; find the `## <ID> — <title>` heading in `FREDdocs/backlog.md` (if absent, report the error, list the closest IDs present, and stop — write nothing); read `.claude/REFERENCES.md` and `.claude/CONTEXT.md`; build the structured ticket (Ticket Format); write it to `FREDdocs/.stories/<ID>.md` (overwrite if it already exists); then run the **A/C approval gate** (Approve / Edit / Skip / Block).
 2. **On Approve or edit-then-approved:** append a `### Summary` block below the original note text (and above the next `##` heading), then the final `### Acceptance Criteria` block directly beneath the Summary. The `### Summary` is a 1–3 sentence plain-language description distilled from the raw note — what the story is and what "done" looks like. Leave the original note text untouched.
 3. **Do not** append to `FREDdocs/stories_in_progress.md` — enrichment populates the backlog, it does not start work. Skip (`💤`) and Block (`🚫`) behave exactly as in the Targeted Story Flow: insert the marker on the heading and stop, leaving the story as the raw entry with no Summary or Acceptance Criteria.
+4. **Placement — default `# ✅ READY`:** a newly-added, enriched story belongs in the `# ✅ READY` section by default (consistent with `backlog-add`, which already inserts new items there). On **Approve**, if the story's heading is not already under `# ✅ READY`, move the whole entry (heading + note + the new `### Summary` + `### Acceptance Criteria`) to the end of `# ✅ READY` and strip any `💤`/`🚫` marker from the title — **unless** Andrew explicitly said to park it in `# 💤 SLEEPING` or it is genuinely `# 🚫 BLOCKED`. (Skip/Block at the A/C gate still behave as in point 3 — mark and stop, no enrichment.)
 
 ## Done Flag Flow (`--done=<ID>`)
 

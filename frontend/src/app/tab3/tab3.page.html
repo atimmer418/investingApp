@@ -4,7 +4,7 @@
       <div class="user-details">
         <div class="avatar-badge-wrap" (click)="goToMyProfile()">
           <ion-avatar class="user-avatar">
-            <img src="https://ionicframework.com/docs/img/demos/avatar.svg" />
+            <img [src]="pigAvatarSrc" />
           </ion-avatar>
           <ion-badge *ngIf="(profileActionRequired$ | async)" class="profile-badge">1</ion-badge>
         </div>
@@ -38,12 +38,13 @@
 
 <ion-content [scrollY]="false" class="settings-content">
   <div class="content-scroll">
-    <!-- Blue strip continuing the header; the card overlaps onto this so its
+    <div class="scroll-inner">
+      <!-- Blue strip continuing the header; the card overlaps onto this so its
          rounded top + first label sit on blue without crossing into ion-header -->
-    <div class="header-overlap" aria-hidden="true"></div>
+      <div class="header-overlap" aria-hidden="true"></div>
 
-    <!-- Overlapping white card pulled up over the blue strip -->
-    <div class="sections-card">
+      <!-- Overlapping white card pulled up over the blue strip -->
+      <div class="sections-card">
 
       <!-- Settings Sections -->
       <div *ngFor="let section of settingSections" class="settings-group">
@@ -77,11 +78,12 @@
 
       </div>
 
-    </div>
+      </div>
 
-    <!-- Footer -->
-    <div class="footer-content">
-      <p class="footer-text">© 2026 FREDvested · v1.0.0 (Beta)</p>
+      <!-- Footer -->
+      <div class="footer-content">
+      <p class="footer-text">© 2026 FREDvested LLC · v1.0.0 (Beta)</p>
+      </div>
     </div>
   </div>
 </ion-content>
