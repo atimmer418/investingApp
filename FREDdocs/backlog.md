@@ -86,20 +86,6 @@ Copy the 5 non-B&W pig SVGs (one per total-equity range: $0–1k, $1k–10k, $10
 
 Decisions (Andy): profile avatars use LIVE equity; old pig-level art fully replaced; L5 & L6 → $1m+ (5 ranges only). Est. 1-3hr, [code].
 
-## FRED-196 — tab3 Freedom Age blanks on flaky KYC call
-tab3 Freedom Age stat shows "-" when the Alpaca GET /alpaca/account/kyc call (its birthYear source, a third call separate from the two that feed Freedom Date and To Go) fails or returns no DOB on weak connections — the KYC error handler opens the render gate without setting birthYear, so Freedom Date and To Go render real values while Freedom Age silently blanks. Give Freedom Age its own fallback/retry (e.g. retry the KYC call on transient errors, and/or a clearer placeholder) so a flaky Alpaca call doesn't silently blank it.
-
-### Summary
-The tab3 stat strip's "Freedom Age" tile silently shows "—" whenever the Alpaca KYC call (`GET /alpaca/account/kyc`) — the only source of the user's birth year — fails or returns no usable date_of_birth, while "Freedom Date" and "To Go" still render real values. Make Freedom Age resilient: retry the KYC fetch on transient failures and give it an honest state (loading vs unavailable) so a brief Alpaca/connection hiccup doesn't blank it. Done when a flaky/failed KYC call no longer silently blanks Freedom Age and the happy path (valid DOB) is unchanged.
-
-### Acceptance Criteria
-1. The KYC fetch feeding Freedom Age retries on transient failures only — TimeoutError / HTTP status 0 / status ≥ 500 — with bounded backoff; never 401/403/404. Mirror `loadUserProgress`'s retry shape for consistency.
-2. On ultimate KYC failure, Freedom Age is visually distinct from the empty placeholder (retry affordance / "unavailable") — a failure must not look identical to "still loading".
-3. "Missing data" vs "failed to load" handled distinctly — a genuine no-DOB (pre-KYC user) shows the normal "—" with no error treatment.
-4. Freedom Date and To Go are unaffected — they render from `/user/progress` + `/portfolio/dashboard` regardless of KYC outcome.
-5. The render gate still opens once all three calls settle — no hang on a permanently-failing KYC call.
-6. Happy path unchanged — with a valid DOB, Freedom Age = `resolvedFreedomYear − birthYear`. Est. 1-3hr, [code].
-
 
 # 💤 SLEEPING — Backlog (not yet started)
 _Queued but not prioritized. Promote to READY (remove the 💤) when ripe._
@@ -733,3 +719,17 @@ Produce 3–5 cleaner tab3 settings designs as static HTML/CSS mockups posted in
 4. Options meaningfully distinct (e.g., grouped cards vs. flat inset list vs. iOS-grouped vs. hero-stat header), not trivial reskins.
 5. Each option annotated — how it's cleaner + trade-offs.
 6. Delivered as static HTML/CSS mockups posted in today.html; chosen option becomes a separate implementation story.
+
+## FRED-196 — ✓ tab3 Freedom Age blanks on flaky KYC call
+tab3 Freedom Age stat shows "-" when the Alpaca GET /alpaca/account/kyc call (its birthYear source, a third call separate from the two that feed Freedom Date and To Go) fails or returns no DOB on weak connections — the KYC error handler opens the render gate without setting birthYear, so Freedom Date and To Go render real values while Freedom Age silently blanks. Give Freedom Age its own fallback/retry (e.g. retry the KYC call on transient errors, and/or a clearer placeholder) so a flaky Alpaca call doesn't silently blank it.
+
+### Summary
+The tab3 stat strip's "Freedom Age" tile silently shows "—" whenever the Alpaca KYC call (`GET /alpaca/account/kyc`) — the only source of the user's birth year — fails or returns no usable date_of_birth, while "Freedom Date" and "To Go" still render real values. Make Freedom Age resilient: retry the KYC fetch on transient failures and give it an honest state (loading vs unavailable) so a brief Alpaca/connection hiccup doesn't blank it. Done when a flaky/failed KYC call no longer silently blanks Freedom Age and the happy path (valid DOB) is unchanged.
+
+### Acceptance Criteria
+1. The KYC fetch feeding Freedom Age retries on transient failures only — TimeoutError / HTTP status 0 / status ≥ 500 — with bounded backoff; never 401/403/404. Mirror `loadUserProgress`'s retry shape for consistency.
+2. On ultimate KYC failure, Freedom Age is visually distinct from the empty placeholder (retry affordance / "unavailable") — a failure must not look identical to "still loading".
+3. "Missing data" vs "failed to load" handled distinctly — a genuine no-DOB (pre-KYC user) shows the normal "—" with no error treatment.
+4. Freedom Date and To Go are unaffected — they render from `/user/progress` + `/portfolio/dashboard` regardless of KYC outcome.
+5. The render gate still opens once all three calls settle — no hang on a permanently-failing KYC call.
+6. Happy path unchanged — with a valid DOB, Freedom Age = `resolvedFreedomYear − birthYear`. Est. 1-3hr, [code].
