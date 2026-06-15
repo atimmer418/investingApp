@@ -171,7 +171,9 @@ Andrew can pick one and annotate each via the note textareas — the approval wi
 
 ## Step 9 — Generate and Commit today.html
 
-Read the current `ITPM/routine/today.html` to get the exact current structure (it has the full state machine, phone-mockup CSS, trend spans, add-backlog section, etc.). Rewrite it with all sections populated. **Do not change the CSS or the `<script>`** — only swap in the data/content. Preserve every function and class.
+Read the current `ITPM/routine/today.html` to get the exact content structure. **CSS lives in `ITPM/routine/styles.css` and JS in `ITPM/routine/app.js` — those files are OFF LIMITS. Never edit them, never re-inline them.** today.html's `<head>` contains `<link rel="stylesheet" href="/styles.css" />` and just before `</body>` is `<script src="/app.js"></script>` — leave both EXACTLY as they are. Do NOT add any `<style>` or inline `<script>` blocks to today.html.
+
+You ONLY edit the content INSIDE `<div id="dashboard">…</div>` (and its `data-state`/`data-populated` attributes). Use the existing classes (`.section-planning-only`, `.priority-card`, `.option-group`, `.metric-trend`, etc.) — they're already styled in styles.css. Swap in the new data; keep every class name and element id the JS depends on.
 
 **Critical flags on `<div id="dashboard">`:** set `data-populated="true"` AND `data-state="planning"`. This is a brand-new day — the page must be a clean planning brief with NO leftover completion content.
 

@@ -47,7 +47,7 @@ Andrew reviewed the plan and wants changes. The `content` field holds his feedba
    - **Log the skip durably:** add `**Skipped:** FRED-XXX (YYYY-MM-DD)` to today's `routine_memory.md` entry. This is what stops the same story coming back.
    - Build the exclusion set: every story ID in today's skip + every story skipped in the last 7 days of memory entries.
 4. Decide the new pick: if Andrew named a story in step 1, use it (it overrides scoring). Otherwise re-run the planning routine (planning skill Steps 1, 3–10) with one absolute constraint: **the new pick MUST be a different story than any in the exclusion set** — pick the next-best story that is not excluded, even if scoring ranks a skipped one highest.
-5. Rewrite `ITPM/routine/today.html` with the revised plan. Set `data-populated="true"` AND `data-state="planning"` on the `#dashboard` div. Do not change the CSS or `<script>` — only the content. The priority card must show the NEW story, not the skipped one.
+5. Rewrite ONLY the content inside `<div id="dashboard">` in `ITPM/routine/today.html` with the revised plan. Set `data-populated="true"` AND `data-state="planning"` on the `#dashboard` div. **CSS is in `/styles.css` and JS in `/app.js` — never edit or re-inline them; leave the `<link>`/`<script src>` in today.html untouched.** The priority card must show the NEW story, not the skipped one.
 6. Commit and push:
    ```bash
    git pull --no-rebase origin develop
