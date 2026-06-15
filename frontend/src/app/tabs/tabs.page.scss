@@ -19,10 +19,6 @@
   background: rgba(255, 255, 255, 0.95);
   padding-top: 10px !important;
   padding-bottom: 16px !important;
-
-  @media (prefers-color-scheme: dark) {
-    background: rgba(28, 28, 30, 0.95);
-  }
 }
 
 .mobile-tab-button {
@@ -86,11 +82,3 @@ ion-router-outlet {
   line-height: 16px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :host {
-    --tab-background: var(--app-gray-800);
-    --tab-border: var(--app-gray-700);
-    --tab-text-color: var(--app-gray-400);
-    --tab-background-selected: rgba(0, 122, 255, 0.2);
-  }
-}

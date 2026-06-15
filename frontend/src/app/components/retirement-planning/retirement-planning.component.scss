@@ -64,9 +64,6 @@ ion-content {
   margin: 0 auto;
   position: relative;
 
-  @media (prefers-color-scheme: dark) {
-    background: var(--app-gray-800);
-  }
 }
 
 .ios-tab-button {
@@ -107,13 +104,6 @@ ion-content {
     box-shadow:
       0 2px 8px rgba(0, 0, 0, 0.1),
       0 1px 3px rgba(0, 0, 0, 0.06);
-
-    @media (prefers-color-scheme: dark) {
-      background: var(--app-gray-700);
-      box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.3),
-        0 1px 3px rgba(0, 0, 0, 0.2);
-    }
 
     ion-icon {
       transform: scale(1.05);

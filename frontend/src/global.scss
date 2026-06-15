@@ -177,14 +177,6 @@ ion-back-button {
   --app-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
-/* Dark mode overrides */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --app-background: #000000;
-    --app-card-background: #1c1c1e;
-    --app-card-border: #3a3a3c;
-  }
-}
 
 /* =============================================================================
    MOBILE-OPTIMIZED COMPONENT OVERRIDES
@@ -672,12 +664,6 @@ ion-toast.stacked-toast {
   background-clip: content-box;
 }
 
-/* Dark mode scrollbar */
-@media (prefers-color-scheme: dark) {
-  *::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.3);
-  }
-}
 
 /* Apply scrollbar styling to Ionic's shadow DOM scroll containers */
 ion-content::part(scroll)::-webkit-scrollbar {
@@ -699,11 +685,6 @@ ion-content::part(scroll)::-webkit-scrollbar-thumb {
   background-clip: content-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  ion-content::part(scroll)::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.3);
-  }
-}
 
 /* =============================================================================
    REFRESHER SPINNER COLOR

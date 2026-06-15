@@ -302,9 +302,6 @@ ion-header {
   margin: 0 auto;
   position: relative;
 
-  @media (prefers-color-scheme: dark) {
-    background: var(--app-gray-800);
-  }
 }
 
 .ios-tab-button {
@@ -345,13 +342,6 @@ ion-header {
     box-shadow:
       0 2px 8px rgba(0, 0, 0, 0.1),
       0 1px 3px rgba(0, 0, 0, 0.06);
-
-    @media (prefers-color-scheme: dark) {
-      background: var(--app-gray-700);
-      box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.3),
-        0 1px 3px rgba(0, 0, 0, 0.2);
-    }
 
     ion-icon {
       transform: scale(1.05);
@@ -726,10 +716,6 @@ ion-header {
 
       &:hover {
         background-color: var(--app-gray-50);
-
-        @media (prefers-color-scheme: dark) {
-          background-color: var(--app-gray-800);
-        }
       }
 
       &:last-child {
@@ -780,17 +766,6 @@ ion-header {
   flex-direction: column;
   align-items: flex-end;
   gap: 2px;
-}
-
-/* =============================================================================
-   DARK MODE SUPPORT
-   ============================================================================= */
-
-@media (prefers-color-scheme: dark) {
-  :host {
-    --portfolio-text-primary: var(--app-gray-100);
-    --portfolio-text-secondary: var(--app-gray-400);
-  }
 }
 
 /* =============================================================================

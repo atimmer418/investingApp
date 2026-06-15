@@ -376,34 +376,6 @@ ion-footer {
   }
 }
 
-// Dark mode adjustments
-@media (prefers-color-scheme: dark) {
-  ion-content {
-    --background: #000000;
-  }
-
-  .message-wrapper.assistant-message .message-bubble {
-    background-color: #1c1c1e;
-    color: #ffffff;
-  }
-
-  ion-footer,
-  .input-toolbar {
-    background: #000000;
-    --background: #000000;
-    border-top-color: #38383a;
-  }
-
-  .input-container {
-    background: #1c1c1e;
-    border-color: #38383a;
-
-    ion-textarea {
-      color: white;
-    }
-  }
-}
-
 /* Failed message styling */
 .message-wrapper.failed-message {
   opacity: 0.6;
