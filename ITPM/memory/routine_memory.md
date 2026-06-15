@@ -35,6 +35,20 @@
 
 ## Daily Entries
 
+### 2026-06-15 (Revision) — FRED-100 skipped, repicked FRED-196 (tab3 Freedom Age resilience)
+
+**Skipped:** FRED-100 (2026-06-15) — Andrew skipped today's RAG-chunks story via the dashboard ("pick a different single story"). No replacement named, so re-ran the pick with FRED-100 as a hard exclusion (7-day window).
+**Priorities selected:** FRED-196 — tab3 Freedom Age blanks on flaky KYC call
+**Tier:** 1 (A/C ready) — FRED-196 carries a full Acceptance Criteria block in `backlog.md`; build-ready, no triage gap.
+**Rationale:** Of the Tier-1 stories, FRED-196 is the strongest in-sandbox pick: a well-scoped, additive frontend resilience fix that hardens the error-state coverage of the tab3 stat strip just shipped in FRED-192's rework. The other A/C-ready stories are gated — FRED-191 (load-perf) needs a real-device Capacitor build the sandbox can't run; FRED-195 (pig avatars) needs SVGs from the `PersonalTypeshit/FRED Logo` sibling dir outside the repo; FRED-194 (uniform settings headers) is a large 9-page UI overhaul that can't be visually verified in-sandbox. FRED-196 is Medium, tsc-verifiable, low architectural risk, and closes a real user-facing reliability gap ("complete retry/error states" is core to the production-readiness mission). FRED-101 (emailer) remains founder-gated; FRED-169 (14-day trial) is App Store Connect config.
+**Metrics:** Readiness 74/100, Piggy 77.5% (31/40), Pages 76%, Burndown 36.0% (32/89), Launch 65.9% (carried from 06-13 — no new work shipped since)
+**Days since last blocker:** 13 (held flat — revision only, no build, no blocker)
+**Blockers active:** none
+**Notes:** Exclusion set for the repick = FRED-100 (skipped today). No other skips within the last 7 days (the early-June FRED-100 skip window expired 06-11). Tomorrow's likely picks unchanged: FRED-188 (chat null guard), FRED-189 (bank-subtype field-case bug), FRED-186 (debounce + switchMap).
+**Status:** Pending approval from Andrew
+
+---
+
 ### 2026-06-13 (Morning Brief) — RAG Knowledge Chunks (single-story)
 
 **Priorities selected:** FRED-100

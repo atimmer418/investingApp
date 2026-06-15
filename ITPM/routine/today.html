@@ -851,9 +851,9 @@
         </label>
         <div class="priority-badge">#1</div>
         <div class="priority-body">
-          <div class="priority-title">FRED-100 — RAG Knowledge Chunks: Philosophy, MFU Math &amp; App Navigation</div>
-          <div class="priority-desc">Teach Ask Fred how FRED itself actually works. Add three canonical knowledge chunks so the chat answers precisely from FRED's own source of truth instead of improvising: (1) the Boglehead philosophy behind the default portfolio, (2) the exact Monthly Freedom Update math — every metric and formula, and (3) a complete app-navigation map of where to find every feature. Pure additive backend content (three Java string chunks in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FredKnowledge.java</code>) — no UI, no schema, no auth. Builds and verifies in-sandbox. <strong>Tier 1 — acceptance criteria already in the backlog.</strong></div>
-          <span class="diff-chip diff-easy">Easy</span>
+          <div class="priority-title">FRED-196 — tab3 Freedom Age blanks on a flaky KYC call</div>
+          <div class="priority-desc">Make the Tab 3 stat strip's <strong>Freedom Age</strong> tile resilient. Today, its only data source — the Alpaca <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">GET /alpaca/account/kyc</code> call that supplies the user's birth year — silently blanks the tile to "—" whenever that call fails or returns no DOB on a weak connection, while the other two tiles (Freedom Date, To Go) still render real values. Give Freedom Age its own transient-only retry and an honest "unavailable" state so a brief Alpaca hiccup doesn't make the strip look half-broken. Frontend-only, additive change in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tab3.page.ts</code> — no backend, schema, or auth. Verifies with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc --noEmit</code> in-sandbox. <strong>Tier 1 — acceptance criteria already in the backlog.</strong></div>
+          <span class="diff-chip diff-medium">Medium</span>
         </div>
       </div>
     </div>
@@ -862,7 +862,7 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Why I Picked These</div>
       <div class="card">
-        <div class="card-text"><strong>FRED-100 is the only build-ready Tier-1 story that can actually ship today.</strong> With Tab 3 (FRED-192) now done, the other A/C-ready stories are all gated: FRED-101 (emailer) waits on a founder decision — email provider + SMTP credentials; FRED-169 (14-day trial) is App Store Connect config, not code; and FRED-191 (load-perf measurement) needs a running Capacitor build on a real device this sandbox can't provide. FRED-100 has no such gate — it's a pure additive backend change (three canonical knowledge chunks in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FredKnowledge.java</code>) that builds and verifies in-sandbox. It was deprioritized twice in early June while the bank-account and Tab-3 UI work took precedence, but that UI thread is finished and the 7-day skip window has long since lapsed, so it's cleanly back on the board. <strong>Tier 1</strong> — full acceptance criteria already in the backlog, no triage gap. Easy difficulty, guaranteed one-day completion.</div>
+        <div class="card-text">You skipped FRED-100 (RAG chunks), so I re-ran the pick with it excluded. <strong>FRED-196 is the strongest Tier-1 story that can actually ship and be verified in-sandbox today.</strong> It's a tightly-scoped, additive frontend resilience fix that hardens the error-state coverage of the Tab 3 stat strip just shipped in the FRED-192 rework — so it builds directly on finished work. The other A/C-ready stories are gated: FRED-191 (load-perf) needs a running Capacitor build on a real device this sandbox can't provide; FRED-195 (pig avatars) needs SVGs from the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PersonalTypeshit/FRED&nbsp;Logo</code> sibling directory that lives outside this repo; FRED-194 (uniform settings headers) is a large 9-page UI overhaul that can't be visually verified without a browser; FRED-101 (emailer) is founder-gated on an email provider + SMTP creds; FRED-169 (14-day trial) is App Store Connect config, not code. FRED-196 has no such gate. <strong>Tier 1</strong> — full acceptance criteria already in the backlog, no triage gap. Medium difficulty, guaranteed one-day completion.</div>
       </div>
     </div>
 
@@ -870,7 +870,7 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
-        <div class="card-text">Grounding Ask Fred in canonical knowledge serves trust and retention directly — two of FRED's stated business priorities. When a user asks "how does FRED calculate my freedom date?", "what's the philosophy behind my portfolio?", or "where do I change my bank?", FRED should answer precisely from its own source of truth, not paraphrase from a general model. These three chunks — the Boglehead thesis, the exact MFU math, and a full navigation map — close the biggest "the AI doesn't actually know how the app works" gaps on the Tab 3 chat surface, complementing the now-finished UI overhaul with substance behind it.</div>
+        <div class="card-text">Tab 3 is the most-visited settings surface, and its new stat strip is the first thing a user sees there. A tile that silently blanks on a weak connection reads as "this app is buggy" — exactly the trust erosion FRED can't afford right before private beta, where retention and trust are the top business priorities. Many real users will hit flaky cellular connections, so a single dropped Alpaca call shouldn't make a freshly-shipped feature look half-broken. This fix makes the strip degrade honestly (retry, then a clear "unavailable" state) instead of failing quietly — turning a fragile surface into a dependable one.</div>
       </div>
     </div>
 
@@ -878,7 +878,7 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
-        <div class="card-text">This lifts the <strong>feature-completeness</strong> component (Piggy Tier) rather than UI coverage: it makes the Ask Fred experience answer-accurate and on-brand, removing a real "the AI improvises about its own app" gap before private beta. It's low-risk — additive content only, no change to the RAG retrieval pipeline, build-only verification — and a guaranteed one-day completion that keeps the readiness score climbing toward the 75 threshold without taking on any Hard work. Compliance framing ("based on these assumptions, if X then Y") is preserved in the new copy, consistent with FRED's existing knowledge chunks.</div>
+        <div class="card-text">This lifts the <strong>error-state-coverage</strong> component of the readiness score directly — "complete loading / empty / retry / error states" is an explicit production-readiness requirement, and the Freedom Age tile is a concrete gap in it. It's low-risk: additive, frontend-only, no backend or schema change, and it reuses the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadUserProgress</code> retry pattern rather than inventing a new one. A guaranteed one-day completion that keeps the readiness score climbing toward the 75 threshold without taking on any Hard work, while making a high-traffic surface dependable before beta.</div>
       </div>
     </div>
 
@@ -886,7 +886,7 @@
     <div class="section-group section-planning-only hide-on-skip">
       <div class="section-label">Implementation Options</div>
       <div class="card" style="margin-bottom:16px;">
-        <div class="card-text" style="color:var(--gray);">Three ways to scope FRED-100. All three add the same required chunks to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FredKnowledge.java</code> — they differ only in how much extra knowledge-base work rides along. Tap one to select it; use the edit pencil on the selected card to tweak the approach before approving.</div>
+        <div class="card-text" style="color:var(--gray);">Three ways to scope FRED-196. All three give the Freedom Age tile a transient-only retry and an honest failure state; they differ in how much of the rest of the strip's resilience rides along. Tap one to select it; use the edit pencil on the selected card to tweak the approach before approving.</div>
       </div>
       <div class="option-group">
 
@@ -895,12 +895,12 @@
             <span class="option-label">Option A</span>
             <span class="option-rec">Recommended</span>
           </div>
-          <div class="option-title">Three chunks, exactly as the acceptance criteria specify</div>
-          <div class="option-body">Add precisely the three canonical chunks named in the A/C — <code>bogleheads_philosophy_v1</code>, <code>monthly_freedom_update_explained_v1</code>, and <code>app_navigation_guide_v1</code> — to the <code>CANONICAL_CHUNKS</code> static list in <code>FredKnowledge.java</code>, using the existing <code>CanonicalChunk</code> record with <code>active:true</code>. Each chunk's content matches the exact section + formula list in the A/C, with the MFU math sourced from the live Monthly Freedom Update code so it's precise, not approximated.</div>
+          <div class="option-title">Freedom-Age-only fix, mirroring the existing retry pattern</div>
+          <div class="option-body">Add a bounded, transient-only retry to the KYC observable in <code>tab3.page.ts</code> — retrying on TimeoutError / HTTP status 0 / status ≥ 500 only, never 401/403/404 — copying the retry shape <code>loadUserProgress</code> already uses. Track a distinct Freedom-Age state (loading / value / missing-DOB "—" / failed-"unavailable") so a genuine pre-KYC user still shows a plain "—" while a real failure shows an "unavailable" treatment with a retry affordance. Keep the render gate settling via <code>finalize</code> so a permanently-failing KYC call can never hang the strip. Exactly the A/C, nothing more.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>smallest, lowest-risk change; meets the A/C exactly; pure additive Java strings; verifies with build only.</span></span>
-            <span class="meta-item">Cons: <span>leaves the A/C's open "any other valuable chunks?" prompt for a separate follow-up.</span></span>
-            <span class="meta-item">Risk: <span>Low — additive content, no retrieval/embedding change; only real risk is formula accuracy, mitigated by reading the MFU source.</span></span>
+            <span class="meta-item">Pros: <span>smallest change; meets every A/C item; reuses an in-repo pattern; frontend-only, tsc-verifiable.</span></span>
+            <span class="meta-item">Cons: <span>the other two tiles keep their current (shared) error handling — not touched this run.</span></span>
+            <span class="meta-item">Risk: <span>Low — additive, scoped to one tile's data path; happy path byte-for-byte unchanged.</span></span>
             <span class="meta-item">Estimate: <span>~2–3 hrs</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
@@ -910,12 +910,12 @@
           <div class="option-header">
             <span class="option-label">Option B</span>
           </div>
-          <div class="option-title">The three chunks + a 4th core-calculation chunk</div>
-          <div class="option-body">Everything in Option A, plus a fourth chunk on FRED's core retirement math — target portfolio = (annual desired income ÷ 0.04), 10% average annual growth, compounding, DRIP, and time-to-freedom projection. This is the engine behind the entire app and the single most-asked user question ("how does FRED calculate my freedom date?"), currently only partially covered by the existing mission/portfolio chunks.</div>
+          <div class="option-title">Option A + extract one shared transient-retry helper</div>
+          <div class="option-body">Everything in Option A, but factor the transient-retry policy (the "retry on Timeout / 0 / ≥500, never on 4xx" logic that <code>loadUserProgress</code> and now KYC both want) into a single shared RxJS operator/helper, so the duplication doesn't drift over time. Freedom Age and <code>loadUserProgress</code> both consume the one source of truth.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>answers the #1 user question precisely; closes the A/C's "other valuable chunks?" prompt in part.</span></span>
-            <span class="meta-item">Cons: <span>slightly larger; needs a dedup pass against the 28 existing chunks to avoid overlap.</span></span>
-            <span class="meta-item">Risk: <span>Low–Medium — content overlap with existing chunks could add retrieval noise; mitigated by checking existing topics first.</span></span>
+            <span class="meta-item">Pros: <span>removes a copy-paste retry pattern; future calls get a consistent policy for free.</span></span>
+            <span class="meta-item">Cons: <span>touches <code>loadUserProgress</code> (working code) to route it through the helper — slightly wider blast radius.</span></span>
+            <span class="meta-item">Risk: <span>Low–Medium — refactoring a live path; mitigated by keeping behavior identical and tsc-checking.</span></span>
             <span class="meta-item">Estimate: <span>~3–4 hrs</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
@@ -925,13 +925,13 @@
           <div class="option-header">
             <span class="option-label">Option C</span>
           </div>
-          <div class="option-title">Full knowledge-base audit, then add what's missing</div>
-          <div class="option-body">Before writing anything, audit all 28 existing chunks and the <code>FREDdocs</code> .md files for coverage gaps, then add the three required chunks plus any others the audit surfaces, and propose a chunk taxonomy (topic + version conventions). The most thorough answer to the A/C's "are there other valuable chunks?" question, producing a durable knowledge-base map.</div>
+          <div class="option-title">Per-tile resilience for all three stat tiles</div>
+          <div class="option-body">Decouple all three stat-strip calls so each tile (Freedom Date, To Go, Freedom Age) has its own independent loading / value / failed-retry state, not just Freedom Age. A flaky call on any of the three then degrades gracefully on that one tile instead of relying on the shared gate. The most robust strip, but it expands scope beyond the A/C's Freedom-Age focus.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>most thorough; directly answers the A/C's FREDdocs question; yields a reusable KB map.</span></span>
-            <span class="meta-item">Cons: <span>largest, most open-ended scope; lower one-day completion certainty; risks scope creep beyond the A/C.</span></span>
-            <span class="meta-item">Risk: <span>Medium — open-ended audit can balloon; cuts against the Easy/Medium bias and the guaranteed-completion rule.</span></span>
-            <span class="meta-item">Estimate: <span>~5–6 hrs</span></span>
+            <span class="meta-item">Pros: <span>most robust; no tile can silently blank; consistent UX across the whole strip.</span></span>
+            <span class="meta-item">Cons: <span>largest; touches all three data paths and the render gate; goes past what the A/C asks for.</span></span>
+            <span class="meta-item">Risk: <span>Medium — broader rework of working code; cuts against the guaranteed-completion + minimal-change bias.</span></span>
+            <span class="meta-item">Estimate: <span>~4–6 hrs</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -945,38 +945,38 @@
       <div class="card">
 
         <div class="story-section">
-          <div class="story-header">FRED-100 — RAG Knowledge Chunks: Philosophy, MFU Math &amp; App Navigation</div>
+          <div class="story-header">FRED-196 — tab3 Freedom Age blanks on a flaky KYC call</div>
 
           <div class="triage-group">
             <div class="triage-group-title">In Scope</div>
             <ul class="triage-list">
-              <li>Add three new entries to the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">CANONICAL_CHUNKS</code> static list in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FredKnowledge.java</code>, using the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">CanonicalChunk(id, title, content, version, topic, riskLevel, active)</code> record — all <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">active:true</code> (chunk count 28 → 31).</li>
-              <li><strong>bogleheads_philosophy_v1</strong> — Bogle/Vanguard origin, the three tenets (diversify broadly, minimize costs, stay the course), why low-cost index funds beat most active managers over time, and how FRED's default portfolio + automation implement the philosophy.</li>
-              <li><strong>monthly_freedom_update_explained_v1</strong> — every MFU modal section with its exact formula: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">periodProgressDelta</code> (endEquity − startEquity), <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">returnRate</code> ((delta − contributions) / startEquity), <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">daysBoughtBack</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">statusPercentile</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">currentStreak</code>, the bestNextMove card, and the quarterly-compare trigger (every 3rd MFU).</li>
-              <li><strong>app_navigation_guide_v1</strong> — where to find every major feature: Tab 1 (portfolio dashboard, chart, holdings), Tab 2 (education / strategies / Monte Carlo), Tab 3 (settings hub) + Ask Fred chat, recurring &amp; one-time investments, portfolio customization, and account settings (security, email, beneficiaries, bank, sell/withdraw, tax docs).</li>
-              <li>Source the MFU formulas from the live Monthly Freedom Update service/DTO so the math is exact; keep FRED's calm, educational voice consistent with the existing 28 chunks.</li>
-              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code> exits 0.</li>
+              <li>Add a bounded, transient-only retry to the KYC fetch (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">GET /alpaca/account/kyc</code>) in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tab3.page.ts</code> — retry only on TimeoutError / HTTP status 0 / status ≥ 500; never on 401/403/404 — mirroring the retry shape <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadUserProgress</code> already uses.</li>
+              <li>Give Freedom Age a distinct state machine: <em>loading</em> → <em>value</em> (valid DOB) / <em>missing-DOB</em> (pre-KYC user shows the normal "—", no error treatment) / <em>failed</em> (after retries exhausted — a visually distinct "unavailable" state with a retry affordance, never identical to the empty placeholder).</li>
+              <li>Keep the render gate opening once all three calls settle (e.g. via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">finalize</code>) so a permanently-failing KYC call can't hang the strip.</li>
+              <li>Leave Freedom Date and To Go untouched — they render from <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/user/progress</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/portfolio/dashboard</code> regardless of KYC outcome.</li>
+              <li>Preserve the happy path exactly: with a valid DOB, Freedom Age = <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">resolvedFreedomYear − birthYear</code>.</li>
+              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> exits 0.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">Potentially Out of Scope</div>
             <ul class="triage-list">
-              <li>The A/C's open "are there other valuable chunks in the FREDdocs .md files?" prompt — Option A keeps to the three specified and surfaces extras as a follow-up (a 4th core-calc chunk is Option B; a full audit is Option C).</li>
-              <li>Any change to the RAG retrieval / embedding / scoring pipeline in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">RAGService.java</code> — content-only this run.</li>
-              <li>Updating Fred's pre-generated suggestion questions — that's FRED-151.</li>
-              <li>Any frontend / chat-UI change; the SSE token streaming (FRED-183) is untouched.</li>
-              <li>Re-versioning or rewriting any of the existing 28 chunks.</li>
+              <li>Per-tile resilience for Freedom Date and To Go — that's Option C; Option A keeps the fix to Freedom Age as the A/C specifies.</li>
+              <li>Any backend change to the Alpaca KYC endpoint or its error responses — frontend-only this run.</li>
+              <li>Re-architecting how the three calls are orchestrated beyond what's needed to keep the gate non-hanging.</li>
+              <li>The earlier my-profile pattern that loads the same data — not modified unless a shared helper is chosen (Option B).</li>
+              <li>Any change to the visual design of the stat strip beyond the new failed/retry treatment.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">UX Considerations</div>
             <ul class="triage-list">
-              <li><strong>No direct UI surface</strong> — this lifts Ask Fred answer quality and trust: accurate, on-brand explanations of FRED's own math and philosophy instead of generic-model improvisation. No loading/empty/error states to design (content baked into the backend).</li>
-              <li><strong>Compliance:</strong> the MFU and Bogleheads copy must stay educational ("based on these assumptions, if X then Y") — general education, never personalized advice — matching the existing high-riskLevel compliance chunk's framing.</li>
-              <li><strong>riskLevel tagging:</strong> recommend <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">low</code> for philosophy + navigation (purely informational), with the MFU explainer's level left to your call below since it describes return math.</li>
-              <li><strong>Consistency:</strong> new chunks must not contradict the existing mission, default-portfolio, or compliance chunks — keep the steady, plain-language tone uniform across the knowledge base.</li>
+              <li><strong>Failed vs empty must look different</strong> — a genuine pre-KYC user (no DOB) shows the calm "—" with no error styling; a real load failure shows an "unavailable" treatment with a retry affordance. The two must never be visually identical.</li>
+              <li><strong>Loading state</strong> — Freedom Age should read as "still loading" until its call settles, distinct from both the value and the failed states; no flash of "—" before the retry chain finishes.</li>
+              <li><strong>No layout shift</strong> — the failed/retry treatment must fit the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.stat-tile</code> footprint (the strip already uses <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">min-height</code> to prevent shift) at 390×844 / 430×932.</li>
+              <li><strong>Retry affordance</strong> — keep it subtle and on-brand (FRED palette, Manrope); a small tap-to-retry on the tile, not a disruptive banner. Confirm the exact treatment in the questions below.</li>
             </ul>
           </div>
         </div>
@@ -991,15 +991,15 @@
 
         <div class="question-item">
           <div class="question-text">
-            FRED-100: For the MFU explainer chunk, should it state the exact internal formulas verbatim (e.g. "returnRate = (periodProgressDelta − contributions) / startEquity"), or describe them in plain-English terms a user would actually read in chat? The A/C lists the formulas, but Ask Fred answers read more naturally in plain language. My recommendation: <strong>plain-English explanation that still names each metric, with the formula in parentheses</strong> — accurate and readable.
+            FRED-196: The failed-state treatment for the Freedom Age tile — do you want a <strong>tappable "Retry" affordance</strong> on the tile (a small tap-to-retry that re-fires the KYC call), or just a clear static <strong>"unavailable"</strong> label with no manual retry? My recommendation: <strong>both — show "unavailable" and make the tile tappable to retry</strong>, since it's the most honest and self-healing.
             <span class="required-badge">Required</span>
           </div>
-          <textarea class="question-input" data-required="true" placeholder="e.g. Plain English with the formula in parentheses — your recommendation is good."></textarea>
+          <textarea class="question-input" data-required="true" placeholder="e.g. Both — 'unavailable' label plus tap-to-retry. Your recommendation is good."></textarea>
         </div>
 
         <div class="question-item">
           <div class="question-text">
-            FRED-100: riskLevel tags — OK to tag <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">bogleheads_philosophy_v1</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app_navigation_guide_v1</code> as <strong>low</strong> (purely informational), and the MFU explainer as <strong>low</strong> too — or would you prefer the MFU one at <strong>medium</strong> since it explains return math?
+            FRED-196: Retry policy — OK to mirror <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadUserProgress</code> exactly (same retry count + backoff it already uses), so the strip behaves consistently? If you want a specific count/backoff instead, name it here.
             <span class="optional-badge">Optional</span>
           </div>
           <textarea class="question-input" placeholder="Your answer..."></textarea>
@@ -1007,7 +1007,7 @@
 
         <div class="question-item">
           <div class="question-text">
-            FRED-100: The A/C also asks whether other FREDdocs .md content is worth chunking. Want me to log a follow-up story to audit FREDdocs for additional chunk candidates (Option C territory), or leave RAG coverage at these three for now?
+            FRED-196: Scope — keep this to the Freedom Age tile only (Option A, matching the A/C), or extend the same resilience to Freedom Date and To Go now (Option C)? My recommendation: <strong>Freedom Age only this run</strong>, and I'll log per-tile resilience for the other two as a follow-up if you want it.
             <span class="optional-badge">Optional</span>
           </div>
           <textarea class="question-input" placeholder="Your answer..."></textarea>
@@ -1023,7 +1023,7 @@
 
         <div class="step-item">
           <div class="step-num">1</div>
-          <div class="step-body" contenteditable="false"><strong>Study the existing chunk patterns</strong> — Read every chunk in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FredKnowledge.java</code> (id / title / topic / riskLevel / version conventions and the established voice) and how <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">RAGService.java</code> consumes <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">CANONICAL_CHUNKS</code>, so the new entries match format and don't duplicate existing topics.</div>
+          <div class="step-body" contenteditable="false"><strong>Read the stat-strip loading code</strong> — In <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tab3.page.ts</code>, study <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadStatStrip()</code>, the three call subscriptions (Freedom Date, To Go, the KYC/birthYear call), how the render gate opens, and the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadUserProgress</code> retry shape to mirror. Note the current Freedom Age error handler that opens the gate without setting birthYear.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1031,7 +1031,7 @@
 
         <div class="step-item">
           <div class="step-num">2</div>
-          <div class="step-body" contenteditable="false"><strong>Source the MFU math from live code</strong> — Read the Monthly Freedom Update service/DTO to capture the exact formulas (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">periodProgressDelta</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">returnRate</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">daysBoughtBack</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">statusPercentile</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">currentStreak</code>, bestNextMove, the every-3rd-MFU quarterly compare) so the explainer chunk is accurate, not approximated.</div>
+          <div class="step-body" contenteditable="false"><strong>Add the transient-only retry</strong> — Wrap the KYC observable with a bounded retry that fires only on TimeoutError / HTTP 0 / status ≥ 500 and never on 401/403/404, copying <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadUserProgress</code>'s policy (or the helper, if Option B). Use <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">takeUntil(destroy$)</code> like the existing subscriptions.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1039,7 +1039,7 @@
 
         <div class="step-item">
           <div class="step-num">3</div>
-          <div class="step-body" contenteditable="false"><strong>Write the three chunks</strong> — Author <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">bogleheads_philosophy_v1</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthly_freedom_update_explained_v1</code>, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app_navigation_guide_v1</code> as new <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">CANONICAL_CHUNKS.add(...)</code> entries (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">active:true</code>), in FRED's calm voice, preserving the educational/compliance framing per your answers above.</div>
+          <div class="step-body" contenteditable="false"><strong>Add the Freedom Age state machine</strong> — Introduce distinct loading / value / missing-DOB ("—") / failed ("unavailable" + retry affordance) states, keeping them visually distinct per the A/C. Ensure the render gate still settles via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">finalize</code> so a permanently-failing KYC call never hangs the strip. Leave Freedom Date / To Go and the happy-path arithmetic untouched.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1047,7 +1047,7 @@
 
         <div class="step-item">
           <div class="step-num">4</div>
-          <div class="step-body" contenteditable="false"><strong>Build &amp; verify</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code> (exits 0), confirm the chunk count goes 28 → 31 and the three ids are unique, then run the verifier agent to check each chunk's content against the A/C and the live MFU formulas.</div>
+          <div class="step-body" contenteditable="false"><strong>Style the failed/retry tile + verify</strong> — Render the "unavailable"/retry treatment inside the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.stat-tile</code> footprint (no layout shift, FRED palette, Manrope). Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> (exits 0), then run the verifier agent over the four paths: happy DOB, missing DOB, transient failure → retry → success, and permanent failure → "unavailable" with the gate still opening.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -1061,7 +1061,7 @@
       <div class="section-label">Tomorrow's Likely Priorities</div>
       <div class="card">
         <ul class="tomorrow-list">
-          <li><strong>FRED-188</strong> — Add null userId guard to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> — Easy, a parked quick win: a one-line null guard mirroring the one already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> that closes a real NPE path. Tier 2 (needs A/C confirmed), guaranteed-complete bug-density win — and a natural pairing with today's chat-knowledge work.</li>
+          <li><strong>FRED-188</strong> — Add null userId guard to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> — Easy, a parked quick win: a one-line null guard mirroring the one already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> that closes a real NPE path. Tier 2 (needs A/C confirmed), guaranteed-complete bug-density win.</li>
           <li><strong>FRED-189</strong> — Fix bank-account subtype always showing "Checking" — Easy, a user-facing field-case bug (frontend reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code> but the backend returns <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code>) related to the just-shipped FRED-124; pure code, Tier 2.</li>
           <li><strong>FRED-186</strong> — Update API searches to use debounce + switchMap — Medium, a clean front-end consistency pass that hardens every type-ahead/search call; pure code, no founder gating.</li>
         </ul>
