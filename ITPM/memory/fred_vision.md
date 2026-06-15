@@ -46,7 +46,7 @@ All Piggy Tier features must be fully implemented before launch. Production read
 3. Generous spacing — FRED doesn't cram; white space does the heavy lifting
 4. FRED palette only — #2563EB primary, #0f172a text, #6b7280 gray, #f8fafc bg, #ffffff cards, #e5e7eb borders
 5. Manrope everywhere — set it on every element Ionic touches
-6. Light mode forced — color-scheme: light on every component
+6. Light mode forced — color-scheme: light on every component. As of FRED-193 (2026-06-15) all `@media (prefers-color-scheme: dark)` blocks are removed app-wide; the `settings.service.ts` theme infra (`'light'|'dark'|'auto'`, `applyTheme()`, `body.dark` toggle) is kept inert for the future FRED-146 dark-mode epic. When removing/forcing a scheme, grep for surviving `.dark`/`body.dark` selectors too — not just the media query — since `applyTheme('auto')` could otherwise re-activate them.
 7. Mobile-first at 390x844 — iPhone 14 baseline, verify at 402x874 (iPhone 17)
 8. Motion earns its place — purposeful transitions, nothing decorative
 9. Copy is calm and direct — freedom-focused, never pushy or urgent
