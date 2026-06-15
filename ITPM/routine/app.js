@@ -63,50 +63,52 @@
         checkApproveReady();
         loadStepEdits();
         applyStateUI();
-        startAutoRefresh();
       }
+      // Auto-refresh runs ALWAYS — even on the lock screen — so a newly
+      // deployed today.html is picked up no matter the auth/render state.
+      startAutoRefresh();
     })();
 
     // ─── Auto-Refresh ─────────────────────────────────────────────────────────
-    // The execute/morning routines commit a new today.html behind the scenes;
-    // Cloudflare redeploys it. Poll the deployed page and hard-reload when its
-    // content changes, so Andrew never has to manually refresh to see an update.
-    function currentSignature() {
-      // A cheap fingerprint of "what plan/state am I showing": the dashboard
-      // state + the first story id + the completion summary's first 120 chars.
-      var dash = document.getElementById('dashboard');
-      var state = dash ? dash.dataset.state : '';
-      var story = '';
-      var pc = document.querySelector('.priority-title');
-      if (pc) story = pc.textContent.trim();
-      var comp = document.getElementById('completion-content');
-      var compSig = comp ? comp.textContent.replace(/\s+/g, ' ').trim().slice(0, 120) : '';
-      return state + '||' + story + '||' + compSig;
+    // The execute/morning routines commit a new today.html; Cloudflare redeploys
+    // it (cache-control: must-revalidate, so a fresh fetch always gets the live
+    // file). We hash the ENTIRE fetched HTML — any byte change triggers a reload.
+    // No dependency on content structure or render state, so it works even if a
+    // page is mid-corruption or showing the lock screen.
+    function hashString(str) {
+      // djb2 — tiny, fast, good enough to detect "the file changed".
+      var h = 5381;
+      for (var i = 0; i < str.length; i++) {
+        h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+      }
+      return h;
     }
 
+    var autoRefreshBaseline = null;
+
     function startAutoRefresh() {
-      var mine = currentSignature();
-      setInterval(function () {
-        // Cache-bust so we read the freshly deployed file, not a cached copy.
-        fetch(location.pathname + '?_=' + (new Date().getTime()), { cache: 'no-store' })
-          .then(function (r) { return r.text(); })
+      // Compare the live deployed file against itself on a poll. On the first
+      // tick we record the baseline; on every later tick, a different hash means
+      // a new version deployed → hard reload.
+      function poll() {
+        // Poll the exact path the user is on (canonical is /today). Cache-bust
+        // so we always read the freshly deployed file, never a cached copy.
+        var path = location.pathname && location.pathname !== '/' ? location.pathname : '/today';
+        fetch(path + '?_=' + (new Date().getTime()), { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.text() : null; })
           .then(function (html) {
-            var doc = new DOMParser().parseFromString(html, 'text/html');
-            var dash = doc.getElementById('dashboard');
-            if (!dash) return;
-            var state = dash.getAttribute('data-state') || '';
-            var pcEl = doc.querySelector('.priority-title');
-            var story = pcEl ? pcEl.textContent.trim() : '';
-            var compEl = doc.getElementById('completion-content');
-            var compSig = compEl ? compEl.textContent.replace(/\s+/g, ' ').trim().slice(0, 120) : '';
-            var fresh = state + '||' + story + '||' + compSig;
-            if (fresh !== mine) {
-              // Something changed server-side — reload to show it.
-              location.reload();
+            if (!html) return;
+            var h = hashString(html);
+            if (autoRefreshBaseline === null) {
+              autoRefreshBaseline = h;          // first read — establish baseline
+            } else if (h !== autoRefreshBaseline) {
+              location.reload();                // file changed on the server
             }
           })
           .catch(function () { /* offline / transient — try again next tick */ });
-      }, 30000); // every 30s
+      }
+      poll();                                    // seed the baseline right away
+      setInterval(poll, 20000);                  // then every 20s
     }
 
     // ─── Lock / Unlock ────────────────────────────────────────────────────────
