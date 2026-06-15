@@ -1,0 +1,731 @@
+    :root {
+      --blue: #2563EB;
+      --text: #0f172a;
+      --gray: #6b7280;
+      --bg: #f8fafc;
+      --white: #ffffff;
+      --border: #e5e7eb;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: 'Manrope', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Lock Overlay ─── */
+    #lock-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .lock-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.15);
+    }
+
+    .lock-wordmark {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 48px;
+      font-weight: 900;
+      font-style: italic;
+      color: var(--blue);
+      letter-spacing: 0px;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .lock-heading {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .lock-subtext {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 20px;
+    }
+
+    .date-chip {
+      display: inline-block;
+      background: #ede9fe;
+      color: #5b21b6;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 28px;
+    }
+
+    #reveal-btn {
+      display: inline-block;
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      padding: 14px 28px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      transition: opacity 0.15s ease;
+    }
+
+    #reveal-btn:hover { opacity: 0.9; }
+
+    #password-section {
+      display: none;
+      margin-top: 20px;
+    }
+
+    #password-section.visible { display: block; }
+
+    #password-input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      background: var(--bg);
+      margin-bottom: 12px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    #password-input:focus { border-color: var(--blue); }
+
+    #unlock-btn {
+      width: 100%;
+      background: var(--text);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      padding: 14px 28px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+
+    #unlock-btn:hover { opacity: 0.85; }
+
+    #error-msg {
+      display: none;
+      margin-top: 10px;
+      color: #991b1b;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    #error-msg.visible { display: block; }
+
+    /* ─── Dashboard ─── */
+    #dashboard {
+      padding: 24px 20px 120px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-wordmark {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 48px;
+      font-weight: 900;
+      font-style: italic;
+      color: var(--blue);
+      letter-spacing: 0px;
+      line-height: 1;
+    }
+
+    .itpm-badge {
+      background: #ede9fe;
+      color: #5b21b6;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .header-date {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray);
+    }
+
+    /* ─── Section Labels ─── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+
+    .section-group { margin-bottom: 32px; }
+
+    /* ─── State Machine ───────────────────────────────────────────────────────
+       EXHAUSTIVE and MUTUALLY EXCLUSIVE. Two section buckets:
+         .section-planning-only      → only the planning brief (priorities, options, triage…)
+         .section-intermediary-only  → only post-build content (recap cards, completion)
+       Default: BOTH hidden. Each state turns on exactly one bucket. This way no
+       state — known or stray — can ever show both at once. Do not "simplify" by
+       relying on defaults; every state is spelled out on purpose. */
+    .section-planning-only { display: none; }
+    .section-intermediary-only { display: none; }
+
+    /* planning — the brief Andrew reviews. Plan detail ONLY. */
+    [data-state="planning"] .section-planning-only { display: block; }
+
+    /* intermediary — work queued/building. NOTHING but the banner (no plan, no recap). */
+    /* (both buckets stay hidden; #intermediary-banner is shown via JS) */
+
+    /* completed / looks_good — work done. Recap + completion ONLY, never plan detail. */
+    [data-state="completed"] .section-intermediary-only,
+    [data-state="looks_good"] .section-intermediary-only { display: block; }
+    [data-state="completed"] #completion-section,
+    [data-state="looks_good"] #completion-section { display: block; }
+
+    /* failed — nothing but the failure banner (shown via JS). */
+    /* (both buckets stay hidden) */
+
+    /* When a story is skipped, hide its plan detail — keep notes + add-to-backlog */
+    #dashboard.skip-mode .hide-on-skip { display: none; }
+
+    /* ─── Card base ─── */
+    .card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .card-text {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    /* ─── Scoreboard Grid ─── */
+    .scoreboard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .metric-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .metric-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -1px;
+      line-height: 1.1;
+    }
+
+    .metric-value.positive { color: #059669; }
+    .metric-value.warning  { color: #d97706; }
+
+    .metric-sublabel {
+      font-size: 12px;
+      color: var(--gray);
+      font-weight: 500;
+    }
+
+    .metric-bar-track {
+      margin-top: 10px;
+      background: var(--border);
+      border-radius: 100px;
+      height: 4px;
+      overflow: hidden;
+    }
+
+    .metric-bar-fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 100px;
+      width: 0%;
+      transition: width 0.6s ease;
+    }
+
+    /* ─── Priority Card ─── */
+    .priority-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .priority-card:last-child { margin-bottom: 0; }
+
+    .priority-badge {
+      flex-shrink: 0;
+      background: var(--blue);
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    .priority-body { flex: 1; }
+
+    .priority-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .priority-desc {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 12px;
+    }
+
+    .chip {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 100px;
+    }
+
+    .chip-amber  { background: #fef3c7; color: #92400e; }
+    .chip-teal   { background: #ccfbf1; color: #065f46; }
+    .chip-green  { background: #dcfce7; color: #14532d; }
+    .chip-purple { background: #ede9fe; color: #5b21b6; }
+    .chip-red    { background: #fee2e2; color: #991b1b; }
+
+    .diff-chip { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .diff-easy   { background: #dcfce7; color: #14532d; }
+    .diff-medium { background: #fef3c7; color: #92400e; }
+    .diff-hard   { background: #fee2e2; color: #991b1b; }
+
+    /* ─── Priority Skip Checkbox ─── */
+    .priority-skip-label {
+      position: absolute; top: 16px; right: 16px;
+      display: flex; align-items: center; gap: 6px;
+      cursor: pointer; font-size: 12px; font-weight: 600;
+      color: var(--gray);
+    }
+    .priority-skip-label input { cursor: pointer; }
+    .priority-card.skipped {
+      opacity: 0.5;
+      border-color: #fca5a5;
+    }
+
+    /* ─── Option Cards ─── */
+    .option-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-card {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+      position: relative;
+    }
+
+    .option-card:hover { border-color: var(--blue); }
+
+    .option-card.selected {
+      border-color: var(--blue);
+      background: #eff6ff;
+    }
+
+    .option-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .option-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .option-rec {
+      font-size: 11px;
+      font-weight: 700;
+      background: #dcfce7;
+      color: #14532d;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .option-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .option-body {
+      font-size: 13px;
+      color: var(--gray);
+      margin-bottom: 10px;
+      line-height: 1.55;
+    }
+
+    .option-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+    .meta-item { font-size: 12px; font-weight: 600; color: var(--gray); }
+    .meta-item span { color: var(--text); }
+
+    /* ─── Option Edit Button ─── */
+    .option-edit-btn {
+      position: absolute; top: 14px; right: 14px;
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--white); cursor: pointer;
+      display: none; align-items: center; justify-content: center;
+      color: var(--gray); font-size: 15px; transition: all 0.15s;
+    }
+    .option-card.selected .option-edit-btn { display: flex; }
+    .option-edit-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .option-edit-btn.editing { border-color: #059669; color: #059669; background: #f0fdf4; }
+    .option-body[contenteditable="true"] {
+      outline: none; border-bottom: 1.5px dashed var(--blue); padding-bottom: 2px;
+    }
+
+    /* ─── Triage ─── */
+    .story-section { margin-bottom: 28px; }
+    .story-section:last-child { margin-bottom: 0; }
+    .story-header { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .triage-group { margin-bottom: 14px; }
+    .triage-group:last-child { margin-bottom: 0; }
+    .triage-group-title { font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .triage-list { padding-left: 18px; margin: 0; }
+    .triage-list li { font-size: 13px; color: var(--gray); margin-bottom: 4px; line-height: 1.55; }
+
+    /* ─── Question Inputs ─── */
+    .question-item { margin-bottom: 20px; }
+    .question-item:last-child { margin-bottom: 0; }
+    .question-text { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; line-height: 1.5; }
+    .required-badge { flex-shrink: 0; font-size: 10px; font-weight: 700; background: #fee2e2; color: #991b1b; padding: 2px 7px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 1px; }
+    .optional-badge { flex-shrink: 0; font-size: 10px; font-weight: 700; background: #f3f4f6; color: #6b7280; padding: 2px 7px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 1px; }
+
+    .question-input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .question-input:focus { border-color: var(--blue); }
+
+    /* ─── Execution Steps ─── */
+    .step-item { display: flex; align-items: flex-start; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .step-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .step-num { flex-shrink: 0; background: var(--blue); color: var(--white); font-size: 12px; font-weight: 800; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .step-body { flex: 1; font-size: 14px; color: var(--text); line-height: 1.5; padding-top: 3px; }
+
+    /* ─── Step Edit Button ─── */
+    .step-edit-btn {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      font-size: 16px;
+      color: var(--gray);
+    }
+    .step-edit-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .step-edit-btn.editing { border-color: #059669; color: #059669; background: #f0fdf4; }
+    .step-body[contenteditable="true"] {
+      outline: none;
+      border-bottom: 1.5px dashed var(--blue);
+      padding-bottom: 2px;
+    }
+
+    /* ─── Tomorrow List ─── */
+    .tomorrow-list { padding-left: 0; list-style: none; margin: 0; }
+    .tomorrow-list li { font-size: 14px; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
+    .tomorrow-list li:last-child { border-bottom: none; padding-bottom: 0; }
+
+    /* ─── Anything Else Section ─── */
+    .revision-label { font-size: 14px; color: var(--gray); margin-bottom: 14px; }
+
+    .revision-textarea {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      resize: vertical;
+      min-height: 100px;
+      outline: none;
+      margin-bottom: 0;
+      transition: border-color 0.15s ease;
+    }
+
+    .revision-textarea:focus { border-color: var(--blue); }
+
+    .btn-dark {
+      display: inline-block;
+      background: var(--text);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      padding: 13px 24px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+
+    .btn-dark:hover { opacity: 0.85; }
+
+    /* ─── Looks Good Button ─── */
+    .btn-looks-good {
+      width: 100%; padding: 16px;
+      background: #059669; color: white;
+      border: none; border-radius: 12px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 16px; font-weight: 800;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-looks-good:hover { opacity: 0.9; }
+
+    /* ─── Approve Bar ─── */
+    #approve-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: var(--white);
+      border-top: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      gap: 16px;
+    }
+
+    #approve-status { font-size: 13px; color: var(--gray); font-weight: 500; }
+
+    #approve-btn {
+      flex-shrink: 0;
+      background: var(--border);
+      color: var(--gray);
+      border: none;
+      border-radius: 12px;
+      padding: 13px 22px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: not-allowed;
+      transition: background 0.2s ease, color 0.2s ease;
+      white-space: nowrap;
+    }
+
+    #approve-btn.ready {
+      background: var(--blue);
+      color: var(--white);
+      cursor: pointer;
+    }
+
+    #approve-btn.ready:hover { opacity: 0.9; }
+
+    #approve-btn.approved {
+      background: #065f46;
+      color: var(--white);
+      cursor: default;
+    }
+
+    /* ─── Metric Trend ─── */
+    .metric-trend {
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .metric-trend.positive { color: #059669; }
+    .metric-trend.negative { color: #991b1b; }
+    .metric-trend.neutral  { color: var(--gray); }
+
+    /* ─── Failure Banner ─── */
+    #failure-banner {
+      display: none;
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    #failure-banner h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #991b1b;
+      margin: 0 0 6px;
+    }
+    #failure-detail {
+      font-size: 13px;
+      color: #991b1b;
+      margin: 0;
+    }
+
+    /* ─── Phone Mockup Options (UI overhaul stories) ─── */
+    .phone-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .phone-option {
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .phone-option.selected .phone-frame {
+      outline: 3px solid var(--blue);
+      outline-offset: 3px;
+    }
+    .phone-frame {
+      width: 100%;
+      aspect-ratio: 390 / 844;
+      background: var(--white);
+      border: 8px solid #1f2937;
+      border-radius: 28px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+    }
+    .phone-screen {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      font-size: 9px;
+    }
+    .phone-option-label {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 10px;
+    }
+    .phone-option-rec {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      background: #dcfce7;
+      color: #14532d;
+      padding: 2px 7px;
+      border-radius: 5px;
+      margin-left: 6px;
+    }
+    .phone-option-note {
+      margin-top: 8px;
+    }
+    .phone-option-note textarea {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      background: var(--bg);
+      resize: vertical;
+      min-height: 50px;
+      outline: none;
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 600px) {
+      .scoreboard { grid-template-columns: repeat(2, 1fr); }
+      .priority-card { flex-direction: column; gap: 10px; }
+      .priority-badge { align-self: flex-start; }
+      #approve-bar { flex-direction: column; align-items: stretch; padding: 14px 16px; gap: 10px; }
+      #approve-btn { width: 100%; text-align: center; }
+      #approve-status { text-align: center; }
+      .lock-card { padding: 32px 24px; }
+      .phone-options { grid-template-columns: 1fr; }
+    }
