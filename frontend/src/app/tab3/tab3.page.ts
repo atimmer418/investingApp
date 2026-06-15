@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Subject, takeUntil, filter, take } from 'rxjs';
+import { Subject, takeUntil, filter, take, timeout, retry, timer, throwError } from 'rxjs';
 import {
   IonHeader,
   IonContent,
@@ -391,8 +391,25 @@ export class Tab3Page implements OnInit, OnDestroy {
     // GET /account/kyc returns the raw nested Alpaca payload ({ contact, identity,
     // disclosures }) with snake_case keys, so the DOB is at identity.date_of_birth
     // (YYYY-MM-DD) — matching how the kyc-verification component reads it.
+    // Wrapped with a bounded transient-only retry (mirrors loadUserProgress in
+    // auth.service.ts): retries on TimeoutError / status 0 / status ≥ 500 only,
+    // never on 401/403/404. Error handler still sets kycDone + calls tryRender so
+    // the render gate can never hang on a permanently-failing KYC call.
     this.alpacaService.getKycData()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        timeout(10_000),
+        retry({
+          count: 2,
+          delay: (err: any, attempt: number) => {
+            const status = err?.status ?? 0;
+            const isTimeout = err?.name === 'TimeoutError';
+            const transient = isTimeout || status === 0 || status >= 500;
+            if (!transient) return throwError(() => err);
+            return timer(400 * Math.pow(2, attempt - 1)); // 400ms, 800ms
+          }
+        }),
+        takeUntil(this.destroy$)
+      )
       .subscribe({
         next: (kyc) => {
           const dob: string | undefined = kyc?.identity?.date_of_birth;
