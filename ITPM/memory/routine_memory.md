@@ -35,6 +35,20 @@
 
 ## Daily Entries
 
+### 2026-06-15 (Morning Brief) — Remove dark mode, force light-only (FRED-193)
+
+**Priorities selected:** FRED-193 — Remove dark mode from tab-switcher, tab1, tab2, ai-chat (force the app light-only for now)
+**Tier:** 1 (A/C ready) — FRED-193 carries a full Acceptance Criteria block in `backlog.md`; build-ready, no triage gap.
+**Rationale:** FRED-196 shipped and was closed out (now in DONE, 33/94). Re-ran the pick over the remaining Tier-1 stories; FRED-193 is the strongest in-sandbox pick. It's a clean SCSS-only removal whose footprint I verified directly — a grep for `prefers-color-scheme: dark` returns exactly the 7 SCSS files the A/C names (`tabs.page.scss`, `portfolio-dashboard.component.scss`, `retirement-planning.component.scss`, `ai-chat.page.scss`, `global.scss`, `theme/variables.scss`, `monthly-freedom-update.component.scss`) plus `settings.service.ts`, which is the theme infra we intentionally preserve — no surprise files. The other A/C-ready stories are gated: FRED-191 (load-perf) needs a real-device Capacitor build the sandbox can't run; FRED-195 (pig avatars) needs SVGs from the `PersonalTypeshit/FRED Logo` sibling dir outside the repo; FRED-194 (uniform settings headers) is a large 9-page UI overhaul with wide blast radius, no in-sandbox visual verify. FRED-193 aligns dead-on with the vision ("Light mode forced", dark mode = rejected/premature) and is a prerequisite that unblocks the future FRED-146 dark-mode epic (dependency-chain + quick-win + guaranteed-completion). Not a UI overhaul (a removal, no design decision) → standard A/B/C options: A spec-exact surgical removal [rec], B + root `color-scheme:light` light-lock guardrail, C gate blocks behind `body.dark` instead of deleting (rejected — leaves dead code, violates AC-4).
+**Metrics:** Readiness 75/100, Piggy 77.5% (31/40), Pages 76%, Burndown 35.1% (33/94), Launch 65.9%
+**Trends (vs ~7 days ago):** Burndown ↑ +2 done (31→33; the % dipped 36.0→35.1 only because 5 new stories were added to the backlog, growing the denominator 89→94), Pages ↑ +3 (73→76), Readiness ↑ +3 (72→75), Days-since-blocker ↑ +6 (9→15), Launch ↑ +1.9 (64.0→65.9), Piggy → no change (77.5%).
+**Days since last blocker:** 15 (FRED-196 shipped clean; one more clean day past the 06-15 ship entry's 14)
+**Blockers active:** none (BLOCKED section holds FRED-173/175/179, all external-dependency stories, not production blockers)
+**Notes:** FRED-196 closed out to `looks_good` → guard passed → fresh brief generated. Data-hygiene check: FRED-196 now correctly sits in the DONE section (re-sort commit landed). Exclusion set: FRED-100 (skipped 06-15, 7-day window active through ~06-22). No other skips in the last 7 days. Tomorrow's likely picks: FRED-188 (chat null guard), FRED-189 (bank-subtype field-case bug); FRED-146 (full dark mode) becomes unblocked but is a multi-day Hard epic, not a one-day pick.
+**Status:** Pending approval from Andrew
+
+---
+
 ### 2026-06-15 (Revision) — FRED-100 skipped, repicked FRED-196 (tab3 Freedom Age resilience)
 
 **Skipped:** FRED-100 (2026-06-15) — Andrew skipped today's RAG-chunks story via the dashboard ("pick a different single story"). No replacement named, so re-ran the pick with FRED-100 as a hard exclusion (7-day window).

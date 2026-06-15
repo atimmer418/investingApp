@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="looks_good">
+  <div id="dashboard" data-populated="true" data-state="planning">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -65,10 +65,10 @@
 
         <div class="metric-card">
           <div class="metric-label">Backlog Burn-Down</div>
-          <div class="metric-value warning">36.0%</div>
-          <div class="metric-sublabel">32 of 89 stories done</div>
-          <div class="metric-trend positive">&#8593; +1 done vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:36.0%"></div></div>
+          <div class="metric-value warning">35.1%</div>
+          <div class="metric-sublabel">33 of 94 stories done</div>
+          <div class="metric-trend positive">&#8593; +2 done vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:35.1%"></div></div>
         </div>
 
         <div class="metric-card">
@@ -89,18 +89,18 @@
 
         <div class="metric-card">
           <div class="metric-label">Prod Readiness</div>
-          <div class="metric-value warning">74</div>
+          <div class="metric-value warning">75</div>
           <div class="metric-sublabel">Score out of 100</div>
-          <div class="metric-trend positive">&#8593; +2 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:74%"></div></div>
+          <div class="metric-trend positive">&#8593; +3 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:75%"></div></div>
         </div>
 
         <div class="metric-card">
           <div class="metric-label">Days Since Blocker</div>
-          <div class="metric-value positive">13</div>
+          <div class="metric-value positive">15</div>
           <div class="metric-sublabel">No active production blockers</div>
-          <div class="metric-trend positive">&#8593; +7 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:43%"></div></div>
+          <div class="metric-trend positive">&#8593; +6 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:50%"></div></div>
         </div>
 
         <div class="metric-card">
@@ -125,8 +125,8 @@
         </label>
         <div class="priority-badge">#1</div>
         <div class="priority-body">
-          <div class="priority-title">FRED-196 — tab3 Freedom Age blanks on a flaky KYC call</div>
-          <div class="priority-desc">Make the Tab 3 stat strip's <strong>Freedom Age</strong> tile resilient. Today, its only data source — the Alpaca <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">GET /alpaca/account/kyc</code> call that supplies the user's birth year — silently blanks the tile to "—" whenever that call fails or returns no DOB on a weak connection, while the other two tiles (Freedom Date, To Go) still render real values. Give Freedom Age its own transient-only retry and an honest "unavailable" state so a brief Alpaca hiccup doesn't make the strip look half-broken. Frontend-only, additive change in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tab3.page.ts</code> — no backend, schema, or auth. Verifies with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc --noEmit</code> in-sandbox. <strong>Tier 1 — acceptance criteria already in the backlog.</strong></div>
+          <div class="priority-title">FRED-193 — Remove dark mode (force the app light-only for now)</div>
+          <div class="priority-desc">Strip dark mode from the app so every surface renders in light styling regardless of the device's OS Dark Mode setting. The visible offenders are the tab-switcher, tab1, tab2, and the AI chat page — but because the global background flips drive dark app-wide, the clean fix is to remove the dark CSS across all of it. Concretely: delete the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@media (prefers-color-scheme: dark)</code> blocks from the four named surfaces, neutralize the two global flips in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/variables.scss</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code>, and remove the dark scrollbar blocks plus the stray <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthly-freedom-update</code> dark block. The theme infrastructure in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'light' | 'dark' | 'auto'</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">applyTheme()</code>, the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">body.dark</code> toggle) <strong>stays in place</strong> so a future story (FRED-146) can build a proper, WCAG-AA dark mode without burning that bridge. Frontend SCSS-only; grep + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>/build verifiable in-sandbox. <strong>Tier 1 — acceptance criteria already in the backlog.</strong></div>
           <span class="diff-chip diff-medium">Medium</span>
         </div>
       </div>
@@ -136,7 +136,7 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Why I Picked These</div>
       <div class="card">
-        <div class="card-text">You skipped FRED-100 (RAG chunks), so I re-ran the pick with it excluded. <strong>FRED-196 is the strongest Tier-1 story that can actually ship and be verified in-sandbox today.</strong> It's a tightly-scoped, additive frontend resilience fix that hardens the error-state coverage of the Tab 3 stat strip just shipped in the FRED-192 rework — so it builds directly on finished work. The other A/C-ready stories are gated: FRED-191 (load-perf) needs a running Capacitor build on a real device this sandbox can't provide; FRED-195 (pig avatars) needs SVGs from the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PersonalTypeshit/FRED&nbsp;Logo</code> sibling directory that lives outside this repo; FRED-194 (uniform settings headers) is a large 9-page UI overhaul that can't be visually verified without a browser; FRED-101 (emailer) is founder-gated on an email provider + SMTP creds; FRED-169 (14-day trial) is App Store Connect config, not code. FRED-196 has no such gate. <strong>Tier 1</strong> — full acceptance criteria already in the backlog, no triage gap. Medium difficulty, guaranteed one-day completion.</div>
+        <div class="card-text">FRED-196 shipped and you closed it out, so I re-ran the pick over the remaining Tier-1 stories. <strong>FRED-193 is the strongest one that can actually ship and be verified in this sandbox today.</strong> The other A/C-ready stories are gated: FRED-191 (load-perf) needs a running Capacitor build on a real device this sandbox can't provide; FRED-195 (pig avatars) needs SVGs from the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PersonalTypeshit/FRED&nbsp;Logo</code> sibling directory that lives outside this repo; FRED-194 (uniform settings headers) is a large 9-page UI overhaul with a wide blast radius that can't be visually verified without a browser. FRED-193 has no such gate — it's a clean SCSS removal whose footprint I verified directly (a grep for <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">prefers-color-scheme: dark</code> returns exactly the 7 SCSS files the A/C names, plus <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> which is the theme infra we intentionally keep — no surprise files). <strong>Tier 1</strong>, full acceptance criteria in the backlog, no triage gap. It's also a prerequisite that unblocks the future FRED-146 dark-mode epic, which scores high on the Decision Framework (dependency chains + quick win + guaranteed completion). Medium difficulty, one-day completion.</div>
       </div>
     </div>
 
@@ -144,7 +144,7 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
-        <div class="card-text">Tab 3 is the most-visited settings surface, and its new stat strip is the first thing a user sees there. A tile that silently blanks on a weak connection reads as "this app is buggy" — exactly the trust erosion FRED can't afford right before private beta, where retention and trust are the top business priorities. Many real users will hit flaky cellular connections, so a single dropped Alpaca call shouldn't make a freshly-shipped feature look half-broken. This fix makes the strip degrade honestly (retry, then a clear "unavailable" state) instead of failing quietly — turning a fragile surface into a dependable one.</div>
+        <div class="card-text">The product vision is explicit: <em>"Light mode forced — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">color-scheme: light</code> on every component,"</em> and dark mode is a <em>rejected/premature</em> pattern to be done only after every screen is migrated. Right now a user on an OS set to Dark Mode sees a half-broken, partially-inverted app — dark backgrounds bleeding through some surfaces while others stay light. That inconsistency reads as "unfinished" exactly when we're hardening for private beta, where trust and a polished, consistent surface are the priority. Forcing the app fully light now removes that seam everywhere and gives the eventual FRED-146 dark mode a clean, properly-designed foundation instead of the naive auto-inverted blocks we have today.</div>
       </div>
     </div>
 
@@ -152,7 +152,7 @@
     <div class="section-group section-intermediary-only">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
-        <div class="card-text">This lifts the <strong>error-state-coverage</strong> component of the readiness score directly — "complete loading / empty / retry / error states" is an explicit production-readiness requirement, and the Freedom Age tile is a concrete gap in it. It's low-risk: additive, frontend-only, no backend or schema change, and it reuses the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadUserProgress</code> retry pattern rather than inventing a new one. A guaranteed one-day completion that keeps the readiness score climbing toward the 75 threshold without taking on any Hard work, while making a high-traffic surface dependable before beta.</div>
+        <div class="card-text">This lifts the <strong>UI-coverage / no-placeholder-UX</strong> side of readiness directly — "polished UI everywhere, no half-dark surfaces" is a concrete production-readiness requirement, and the inconsistent dark bleed is a visible gap in it across four high-traffic surfaces (tab-switcher, tab1, tab2, AI chat). It's low-risk: SCSS-only removal, no backend, schema, auth, or behavior change, with the theme infrastructure preserved so nothing is foreclosed for the future. A guaranteed one-day completion that keeps the readiness score climbing while staying squarely in the Easy/Medium band the difficulty bias calls for at this stage.</div>
       </div>
     </div>
 
@@ -160,7 +160,7 @@
     <div class="section-group section-planning-only hide-on-skip">
       <div class="section-label">Implementation Options</div>
       <div class="card" style="margin-bottom:16px;">
-        <div class="card-text" style="color:var(--gray);">Three ways to scope FRED-196. All three give the Freedom Age tile a transient-only retry and an honest failure state; they differ in how much of the rest of the strip's resilience rides along. Tap one to select it; use the edit pencil on the selected card to tweak the approach before approving.</div>
+        <div class="card-text" style="color:var(--gray);">Three ways to scope FRED-193. All three end with the app rendering fully light on a dark-set device and the theme infrastructure preserved; they differ in how the dark CSS is retired and whether we add a forward guardrail. Tap one to select it; use the edit pencil on the selected card to tweak the approach before approving.</div>
       </div>
       <div class="option-group">
 
@@ -169,12 +169,12 @@
             <span class="option-label">Option A</span>
             <span class="option-rec">Recommended</span>
           </div>
-          <div class="option-title">Freedom-Age-only fix, mirroring the existing retry pattern</div>
-          <div class="option-body">Add a bounded, transient-only retry to the KYC observable in <code>tab3.page.ts</code> — retrying on TimeoutError / HTTP status 0 / status ≥ 500 only, never 401/403/404 — copying the retry shape <code>loadUserProgress</code> already uses. Track a distinct Freedom-Age state (loading / value / missing-DOB "—" / failed-"unavailable") so a genuine pre-KYC user still shows a plain "—" while a real failure shows an "unavailable" treatment with a retry affordance. Keep the render gate settling via <code>finalize</code> so a permanently-failing KYC call can never hang the strip. Exactly the A/C, nothing more.</div>
+          <div class="option-title">Spec-exact surgical removal</div>
+          <div class="option-body">Do precisely what the A/C enumerates: delete the <code>@media (prefers-color-scheme: dark)</code> blocks from the four surface SCSS files (<code>tabs.page.scss</code>, <code>portfolio-dashboard.component.scss</code>, <code>retirement-planning.component.scss</code>, <code>ai-chat.page.scss</code>); remove/neutralize the global flips in <code>theme/variables.scss</code> (~L11) and <code>global.scss</code> (~L181); remove the dark scrollbar blocks (<code>global.scss</code> ~L676/L702) and the stray <code>monthly-freedom-update.component.scss</code> block (~L683). Clean removal — no empty <code>@media</code> wrappers, no orphaned vars, no commented-out blocks. Leave <code>settings.service.ts</code> theme infra fully intact; hide/disable any dark toggle surfaced in settings UI. Grep proves zero remaining dark blocks; <code>tsc</code>/build verify.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>smallest change; meets every A/C item; reuses an in-repo pattern; frontend-only, tsc-verifiable.</span></span>
-            <span class="meta-item">Cons: <span>the other two tiles keep their current (shared) error handling — not touched this run.</span></span>
-            <span class="meta-item">Risk: <span>Low — additive, scoped to one tile's data path; happy path byte-for-byte unchanged.</span></span>
+            <span class="meta-item">Pros: <span>smallest faithful diff; meets every A/C item exactly; fully verifiable in-sandbox; no tech debt left behind.</span></span>
+            <span class="meta-item">Cons: <span>no forward guardrail — a future stray dark block could re-introduce bleed (low likelihood).</span></span>
+            <span class="meta-item">Risk: <span>Low — SCSS-only, no behavior change; the happy light path is unchanged.</span></span>
             <span class="meta-item">Estimate: <span>~2–3 hrs</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
@@ -184,13 +184,13 @@
           <div class="option-header">
             <span class="option-label">Option B</span>
           </div>
-          <div class="option-title">Option A + extract one shared transient-retry helper</div>
-          <div class="option-body">Everything in Option A, but factor the transient-retry policy (the "retry on Timeout / 0 / ≥500, never on 4xx" logic that <code>loadUserProgress</code> and now KYC both want) into a single shared RxJS operator/helper, so the duplication doesn't drift over time. Freedom Age and <code>loadUserProgress</code> both consume the one source of truth.</div>
+          <div class="option-title">Option A + a root light-lock guardrail</div>
+          <div class="option-body">Everything in Option A, plus enforce <code>color-scheme: light</code> at the root (<code>index.html</code> / <code>:root</code>) so even a future stray or third-party dark rule can't flip the app while we're light-only. A durable belt-and-suspenders that makes "light-only" a hard invariant, not just an absence of dark CSS.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>removes a copy-paste retry pattern; future calls get a consistent policy for free.</span></span>
-            <span class="meta-item">Cons: <span>touches <code>loadUserProgress</code> (working code) to route it through the helper — slightly wider blast radius.</span></span>
-            <span class="meta-item">Risk: <span>Low–Medium — refactoring a live path; mitigated by keeping behavior identical and tsc-checking.</span></span>
-            <span class="meta-item">Estimate: <span>~3–4 hrs</span></span>
+            <span class="meta-item">Pros: <span>can't silently regress to dark; codifies the vision's "light mode forced" as an enforced rule.</span></span>
+            <span class="meta-item">Cons: <span>slightly beyond the A/C; the FRED-146 dark-mode epic will need to lift this lock when it ships.</span></span>
+            <span class="meta-item">Risk: <span>Low — a single declarative line; well-understood.</span></span>
+            <span class="meta-item">Estimate: <span>~2.5–3.5 hrs</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -199,13 +199,13 @@
           <div class="option-header">
             <span class="option-label">Option C</span>
           </div>
-          <div class="option-title">Per-tile resilience for all three stat tiles</div>
-          <div class="option-body">Decouple all three stat-strip calls so each tile (Freedom Date, To Go, Freedom Age) has its own independent loading / value / failed-retry state, not just Freedom Age. A flaky call on any of the three then degrades gracefully on that one tile instead of relying on the shared gate. The most robust strip, but it expands scope beyond the A/C's Freedom-Age focus.</div>
+          <div class="option-title">Gate the dark blocks behind <code>body.dark</code> instead of deleting</div>
+          <div class="option-body">Rather than delete the dark CSS, re-scope every block under <code>body.dark</code> (never set now that <code>auto</code> resolves to light), leaving the rules dormant but retained for the future dark-mode rebuild. Preserves the old styling as reference material.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>most robust; no tile can silently blank; consistent UX across the whole strip.</span></span>
-            <span class="meta-item">Cons: <span>largest; touches all three data paths and the render gate; goes past what the A/C asks for.</span></span>
-            <span class="meta-item">Risk: <span>Medium — broader rework of working code; cuts against the guaranteed-completion + minimal-change bias.</span></span>
-            <span class="meta-item">Estimate: <span>~4–6 hrs</span></span>
+            <span class="meta-item">Pros: <span>keeps the existing dark styling on hand for FRED-146.</span></span>
+            <span class="meta-item">Cons: <span>violates AC-4 (no dead/dormant dark code, clean removal) and leaves tech debt; FRED-146 explicitly wants a fresh WCAG-AA palette, "not auto-inverted," so the retained blocks have no real value.</span></span>
+            <span class="meta-item">Risk: <span>Medium — dormant CSS is easy to re-activate by accident and muddies the "light-only" intent.</span></span>
+            <span class="meta-item">Estimate: <span>~3–4 hrs</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -219,38 +219,38 @@
       <div class="card">
 
         <div class="story-section">
-          <div class="story-header">FRED-196 — tab3 Freedom Age blanks on a flaky KYC call</div>
+          <div class="story-header">FRED-193 — Remove dark mode (force light-only for now)</div>
 
           <div class="triage-group">
             <div class="triage-group-title">In Scope</div>
             <ul class="triage-list">
-              <li>Add a bounded, transient-only retry to the KYC fetch (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">GET /alpaca/account/kyc</code>) in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tab3.page.ts</code> — retry only on TimeoutError / HTTP status 0 / status ≥ 500; never on 401/403/404 — mirroring the retry shape <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadUserProgress</code> already uses.</li>
-              <li>Give Freedom Age a distinct state machine: <em>loading</em> → <em>value</em> (valid DOB) / <em>missing-DOB</em> (pre-KYC user shows the normal "—", no error treatment) / <em>failed</em> (after retries exhausted — a visually distinct "unavailable" state with a retry affordance, never identical to the empty placeholder).</li>
-              <li>Keep the render gate opening once all three calls settle (e.g. via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">finalize</code>) so a permanently-failing KYC call can't hang the strip.</li>
-              <li>Leave Freedom Date and To Go untouched — they render from <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/user/progress</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/portfolio/dashboard</code> regardless of KYC outcome.</li>
-              <li>Preserve the happy path exactly: with a valid DOB, Freedom Age = <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">resolvedFreedomYear − birthYear</code>.</li>
-              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> exits 0.</li>
+              <li>Remove the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@media (prefers-color-scheme: dark)</code> blocks from the four named surfaces: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tabs.page.scss</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">portfolio-dashboard.component.scss</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">retirement-planning.component.scss</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.scss</code>.</li>
+              <li>Remove / make inert the global dark flips in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/variables.scss</code> (~L11) and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code> (~L181) so they no longer darken any page background.</li>
+              <li>Remove the dark scrollbar blocks (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code> ~L676/L702) and the stray <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthly-freedom-update.component.scss</code> block (~L683).</li>
+              <li>Clean removal — no empty <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@media</code> wrappers, no orphaned SCSS variables, no commented-out dark blocks left behind (CONTEXT.md no-dead-code rule).</li>
+              <li>Preserve the theme infrastructure in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'light' | 'dark' | 'auto'</code> type, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">applyTheme()</code>, the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">body.dark</code> toggle and its <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">matchMedia</code> listener); effective default stays light.</li>
+              <li>If a dark/theme toggle is surfaced anywhere in settings UI, hide or disable it for now (confirm whether one exists during the footprint audit).</li>
+              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> exits 0; the scoped build passes with no new SCSS/TS warnings.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">Potentially Out of Scope</div>
             <ul class="triage-list">
-              <li>Per-tile resilience for Freedom Date and To Go — that's Option C; Option A keeps the fix to Freedom Age as the A/C specifies.</li>
-              <li>Any backend change to the Alpaca KYC endpoint or its error responses — frontend-only this run.</li>
-              <li>Re-architecting how the three calls are orchestrated beyond what's needed to keep the gate non-hanging.</li>
-              <li>The earlier my-profile pattern that loads the same data — not modified unless a shared helper is chosen (Option B).</li>
-              <li>Any change to the visual design of the stat strip beyond the new failed/retry treatment.</li>
+              <li>Building any actual dark palette — that's FRED-146, a multi-day epic this story intentionally unblocks but does not start.</li>
+              <li>Removing the theme machinery in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> — it stays for the future dark-mode rebuild.</li>
+              <li>Touching <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">prefers-color-scheme: dark</code> blocks beyond the named A/C set if any are discovered — surface them as a follow-up rather than silently expanding scope (architectural-drift rule).</li>
+              <li>Migrating hardcoded hex to semantic tokens — that's part of the FRED-146 dark-mode work, not this removal.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">UX Considerations</div>
             <ul class="triage-list">
-              <li><strong>Failed vs empty must look different</strong> — a genuine pre-KYC user (no DOB) shows the calm "—" with no error styling; a real load failure shows an "unavailable" treatment with a retry affordance. The two must never be visually identical.</li>
-              <li><strong>Loading state</strong> — Freedom Age should read as "still loading" until its call settles, distinct from both the value and the failed states; no flash of "—" before the retry chain finishes.</li>
-              <li><strong>No layout shift</strong> — the failed/retry treatment must fit the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.stat-tile</code> footprint (the strip already uses <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">min-height</code> to prevent shift) at 390×844 / 430×932.</li>
-              <li><strong>Retry affordance</strong> — keep it subtle and on-brand (FRED palette, Manrope); a small tap-to-retry on the tile, not a disruptive banner. Confirm the exact treatment in the questions below.</li>
+              <li><strong>Verify on a dark-set device</strong> — the whole app must render in light styling with a device/OS set to Dark Mode, checked specifically on tab-switcher, tab1, tab2, and ai-chat: backgrounds, cards, text, borders, bubbles, and tab bar all identical to Light Mode, with no dark/near-black background, dark border, or inverted text anywhere.</li>
+              <li><strong>No half-dark surfaces</strong> — because the global flips currently drive dark app-wide, the audit must confirm no page is left partially dark after removal (scrollbars included).</li>
+              <li><strong>Settings toggle</strong> — if a light/dark control is visible in settings, it must not advertise a mode that no longer does anything; hide/disable it for now.</li>
+              <li><strong>No regressions to light mode</strong> — light is and remains the default; the happy path should look byte-identical to today on a light device.</li>
             </ul>
           </div>
         </div>
@@ -265,15 +265,15 @@
 
         <div class="question-item">
           <div class="question-text">
-            FRED-196: The failed-state treatment for the Freedom Age tile — do you want a <strong>tappable "Retry" affordance</strong> on the tile (a small tap-to-retry that re-fires the KYC call), or just a clear static <strong>"unavailable"</strong> label with no manual retry? My recommendation: <strong>both — show "unavailable" and make the tile tappable to retry</strong>, since it's the most honest and self-healing.
+            FRED-193: If a light/dark toggle is surfaced anywhere in the settings UI today, should the build <strong>hide/disable it</strong> for now (recommended, since dark is going light-only and the toggle would do nothing), or leave it visible? My recommendation: <strong>hide/disable it</strong>, keeping the underlying <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service</code> machinery intact for FRED-146.
             <span class="required-badge">Required</span>
           </div>
-          <textarea class="question-input" data-required="true" placeholder="e.g. Both — 'unavailable' label plus tap-to-retry. Your recommendation is good."></textarea>
+          <textarea class="question-input" data-required="true" placeholder="e.g. Yes, hide/disable any dark toggle for now; keep the infra. (Or: there is no toggle surfaced.)"></textarea>
         </div>
 
         <div class="question-item">
           <div class="question-text">
-            FRED-196: Retry policy — OK to mirror <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadUserProgress</code> exactly (same retry count + backoff it already uses), so the strip behaves consistently? If you want a specific count/backoff instead, name it here.
+            FRED-193: Global flips (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">variables.scss</code> ~L11, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code> ~L181) — fully <strong>delete</strong> them (recommended, cleanest, satisfies the no-dead-code rule) or make them <strong>inert</strong> in place? Either satisfies the A/C.
             <span class="optional-badge">Optional</span>
           </div>
           <textarea class="question-input" placeholder="Your answer..."></textarea>
@@ -281,7 +281,7 @@
 
         <div class="question-item">
           <div class="question-text">
-            FRED-196: Scope — keep this to the Freedom Age tile only (Option A, matching the A/C), or extend the same resilience to Freedom Date and To Go now (Option C)? My recommendation: <strong>Freedom Age only this run</strong>, and I'll log per-tile resilience for the other two as a follow-up if you want it.
+            FRED-193: Do you want the Option B <strong>root light-lock guardrail</strong> (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">color-scheme: light</code> enforced at the root so nothing can flip dark while we're light-only), or keep it a pure removal (Option A)? My recommendation: <strong>Option A</strong> — clean removal is enough, and FRED-146 would otherwise have to lift the lock.
             <span class="optional-badge">Optional</span>
           </div>
           <textarea class="question-input" placeholder="Your answer..."></textarea>
@@ -297,7 +297,7 @@
 
         <div class="step-item">
           <div class="step-num">1</div>
-          <div class="step-body" contenteditable="false"><strong>Read the stat-strip loading code</strong> — In <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tab3.page.ts</code>, study <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadStatStrip()</code>, the three call subscriptions (Freedom Date, To Go, the KYC/birthYear call), how the render gate opens, and the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadUserProgress</code> retry shape to mirror. Note the current Freedom Age error handler that opens the gate without setting birthYear.</div>
+          <div class="step-body" contenteditable="false"><strong>Audit the footprint</strong> — Grep the whole frontend for <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">prefers-color-scheme: dark</code> to confirm the complete set (the 7 SCSS files the A/C names + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> infra to preserve). Check whether a dark/theme toggle is surfaced in any settings UI. If any dark block exists beyond the named files, surface it rather than silently expanding scope.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -305,7 +305,7 @@
 
         <div class="step-item">
           <div class="step-num">2</div>
-          <div class="step-body" contenteditable="false"><strong>Add the transient-only retry</strong> — Wrap the KYC observable with a bounded retry that fires only on TimeoutError / HTTP 0 / status ≥ 500 and never on 401/403/404, copying <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadUserProgress</code>'s policy (or the helper, if Option B). Use <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">takeUntil(destroy$)</code> like the existing subscriptions.</div>
+          <div class="step-body" contenteditable="false"><strong>Remove the four surface blocks</strong> — Delete the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@media (prefers-color-scheme: dark)</code> blocks from <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tabs.page.scss</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">portfolio-dashboard.component.scss</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">retirement-planning.component.scss</code>, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.scss</code> — clean removal, no empty wrappers or orphaned vars.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -313,7 +313,7 @@
 
         <div class="step-item">
           <div class="step-num">3</div>
-          <div class="step-body" contenteditable="false"><strong>Add the Freedom Age state machine</strong> — Introduce distinct loading / value / missing-DOB ("—") / failed ("unavailable" + retry affordance) states, keeping them visually distinct per the A/C. Ensure the render gate still settles via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">finalize</code> so a permanently-failing KYC call never hangs the strip. Leave Freedom Date / To Go and the happy-path arithmetic untouched.</div>
+          <div class="step-body" contenteditable="false"><strong>Neutralize the globals</strong> — Remove/make inert the global dark flips in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/variables.scss</code> (~L11) and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code> (~L181), and remove the dark scrollbar blocks (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code> ~L676/L702) and the stray <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthly-freedom-update.component.scss</code> block (~L683), per your delete-vs-inert answer. Confirm <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> theme infra is untouched; hide/disable any surfaced dark toggle.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -321,7 +321,7 @@
 
         <div class="step-item">
           <div class="step-num">4</div>
-          <div class="step-body" contenteditable="false"><strong>Style the failed/retry tile + verify</strong> — Render the "unavailable"/retry treatment inside the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.stat-tile</code> footprint (no layout shift, FRED palette, Manrope). Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> (exits 0), then run the verifier agent over the four paths: happy DOB, missing DOB, transient failure → retry → success, and permanent failure → "unavailable" with the gate still opening.</div>
+          <div class="step-body" contenteditable="false"><strong>Verify + hand off</strong> — Re-grep to prove zero remaining dark blocks in SCSS (only the preserved <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> matchMedia remains); run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> (exits 0) and the scoped build (no new SCSS/TS warnings); run the verifier agent over the manifest. Hand the live dark-device-renders-light confirmation across the four surfaces to Andrew via "Looks Good" (the sandbox can't drive a real device).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
             <span class="material-symbols-outlined">edit</span>
           </button>
@@ -337,7 +337,7 @@
         <ul class="tomorrow-list">
           <li><strong>FRED-188</strong> — Add null userId guard to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> — Easy, a parked quick win: a one-line null guard mirroring the one already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> that closes a real NPE path. Tier 2 (needs A/C confirmed), guaranteed-complete bug-density win.</li>
           <li><strong>FRED-189</strong> — Fix bank-account subtype always showing "Checking" — Easy, a user-facing field-case bug (frontend reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code> but the backend returns <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code>) related to the just-shipped FRED-124; pure code, Tier 2.</li>
-          <li><strong>FRED-186</strong> — Update API searches to use debounce + switchMap — Medium, a clean front-end consistency pass that hardens every type-ahead/search call; pure code, no founder gating.</li>
+          <li><strong>FRED-146</strong> — Full dark mode — now <em>unblocked</em> once FRED-193 lands, but it's a multi-day Hard epic (WCAG-AA palette + ~600 hardcoded-hex migration), so it's a future planning candidate, not a one-day pick.</li>
         </ul>
       </div>
     </div>
@@ -346,21 +346,7 @@
     <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
-        <div style="margin-bottom:16px;">
-          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-196 — tab3 Freedom Age blanks on flaky KYC call</p>
-          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Hardened the tab3 stat strip's "Freedom age" tile against weak connections. In <code>tab3.page.ts</code> <code>loadStatStrip()</code>, the Alpaca KYC call (<code>getKycData()</code> — the only source of your birth year) now retries on transient failures only: a 10s timeout plus a bounded retry (2 attempts, 400ms→800ms backoff) on TimeoutError / HTTP 0 / status ≥ 500, and never on 401/403/404. It copies the exact retry shape already used by <code>loadUserProgress()</code>. The existing error handler is untouched, so the render gate still settles — a permanently-failing call can never hang the strip. Per your call, a failed tile just shows "—" (no manual retry button); the automatic retry self-heals a brief blip. Freedom date and To go are completely unaffected. Backed by 7 new unit specs (all passing) and a clean type-check.</p>
-          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
-          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
-            <li>KYC fetch retries on transient failures only (TimeoutError / 0 / ≥500), bounded backoff, never 401/403/404 — mirrors <code>loadUserProgress</code>.</li>
-            <li>On ultimate failure the tile shows a plain "—" with no manual retry affordance (your directive — the auto-retry handles self-heal).</li>
-            <li>A genuine pre-KYC user (no DOB on file) still shows the normal "—" with no error treatment.</li>
-            <li>Freedom date and To go render their real values regardless of the KYC outcome.</li>
-            <li>The render gate still opens once all three calls settle — no hang on a permanently-failing KYC call.</li>
-            <li>Happy path unchanged — with a valid DOB, Freedom age = freedom year − birth year.</li>
-          </ul>
-          <p style="font-size:13px;font-weight:600;color:#059669;margin:0 0 10px;">Readiness 74 → 75: closes a real user-facing reliability gap on the stat strip just rebuilt in FRED-192 — "complete retry/error states" is core to production readiness.</p>
-          <p style="font-size:12px;color:var(--gray);line-height:1.6;margin:0;border-top:1px solid var(--border,#e5e7eb);padding-top:10px;"><strong>Two notes for you:</strong> (1) ⚠️ Shipped directly to <code>develop</code> — the CI PR gate was <em>skipped</em> because neither the GitHub app nor the routine's token is allowed to open a pull request in this sandbox (push works, PRs are 403). The change was fully verified locally instead (7 specs pass, type-check clean, adversarial 401-not-retried check). Granting <code>pull_requests:write</code> to the routine token would re-enable the CI gate. (2) Three out-of-scope items the verifier flagged — reply if you'd like any added to the backlog: a <code>package-lock.json</code> libc-field churn (reverted here to keep the diff clean), the <code>ChromeHeadlessNoSandbox</code> karma launcher now committed for sandbox/CI test runs, and a pre-existing Ionicons <code>book-outline</code> not-registered warning on the tab3 render.</p>
-        </div>
+        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
       </div>
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;
