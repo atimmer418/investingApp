@@ -138,6 +138,55 @@ e. PushNotification — title `FRED ITPM — Build Blocked`, message: the blocke
    - Set `**Status:** Complete`
    Add any meaningful pattern or decision to `ITPM/memory/fred_vision.md`.
 
+### Step D2 — Ship the story code via a CI-gated PR
+
+The builder's code changes are uncommitted in the working tree (the build does not commit
+them itself). Ship them through a PR so the `backend-frontend` CI job verifies them BEFORE
+they reach `develop`. The dashboard (`today.html`) + memory still go to `develop` directly
+in Step E so the live page keeps updating in real time. At this point the ONLY uncommitted
+changes are the build's, so `git add -A` stages exactly the story's work.
+
+First capture the design reference for the design-fidelity check: copy the chosen UI mockup
+(from the approval `content` / today.html) to `ITPM/verify/design-ref/<story-id>.png` (or `.html`).
+
+Check gh availability, then ship:
+```bash
+gh auth status >/dev/null 2>&1 && GH_OK=1 || GH_OK=0
+STORY=<story-id>
+```
+- **gh available (GH_OK=1) — PR flow:**
+  ```bash
+  git checkout -b "verify/$STORY"
+  git add -A                                  # the build's changes + the design-ref (today.html/memory not touched yet)
+  git commit -m "itpm: $STORY — <one-line summary of the build>"
+  git push -u origin "verify/$STORY"
+  gh pr create --base develop --head "verify/$STORY" \
+    --title "itpm: $STORY — <story title>" \
+    --body "Approved build for $STORY, verified by CI (backend-frontend). Acceptance criteria: <list>."
+  gh pr merge --auto --squash "verify/$STORY"
+  git checkout develop                        # working tree is now clean on develop
+  ```
+  Set `data-state="verifying-in-ci"` on `today.html`, commit+push it to develop, PushNotification
+  "Build done — verifying in CI", then watch the PR's CI:
+  ```bash
+  gh pr checks "verify/$STORY" --watch --interval 30
+  ```
+  - **CI green** → auto-merge lands the code on develop → proceed to Step E (Completed).
+  - **CI red** → bounded fix-loop (cap 2) ON THE PR BRANCH: hand the failing CI logs to
+    builder-agent → it fixes on `verify/$STORY` → `git push` → CI re-runs. After 2 failed
+    cycles, treat as a Hard Blocker (leave the PR open, set `data-state="failed"`, notify).
+    Do NOT proceed to Completed while CI is red.
+- **gh unavailable (GH_OK=0) — SAFE FALLBACK (so the routine never hard-breaks):** commit the
+  code directly to develop (the pre-PR behavior) and flag that the gate was skipped:
+  ```bash
+  git add -A
+  git commit -m "itpm: $STORY — <summary> (CI PR gate SKIPPED — gh unavailable in sandbox)"
+  git pull --no-rebase origin develop && git push origin develop
+  ```
+  Note in the completion PushNotification: "⚠️ Shipped directly to develop — CI PR gate skipped
+  because `gh` isn't authed in the routine sandbox. Enable gh auth there to activate the gate."
+  Then proceed to Step E.
+
 ### Step E — Update today.html to Completed
 
 10. Read the current `ITPM/routine/today.html`. Then:
@@ -174,7 +223,7 @@ Andrew reviewed a COMPLETED build, was not satisfied, and submitted feedback. Th
 4. Invoke **builder-agent** with: the story ID + title, the original approach, **Andrew's rework feedback as the priority directive** ("the previous build shipped X; Andrew wants these changes: …"), all acceptance criteria, and the manifest path. Tell it to address the feedback specifically, not re-architect.
 5. Invoke **verifier-agent** with the diff + manifest (same bounded fix-loop, cap = 2, as the approval path). If it can't pass after 2 cycles, treat as a Hard Blocker (set `failed`, notify).
 6. On success: update today's `routine_memory.md` entry with a `**Reworked:** [what changed per feedback]` note. Then redo **Step E** (update `today.html` back to `data-state="completed"`, refresh `#completion-content` with the new summary, keep `#looks-good-btn` visible).
-7. Commit, push, and PushNotification — title `FRED ITPM — Reworked`, message: what changed + that Andrew can press "Looks Good" or request more changes.
+7. Ship the reworked code via the **Step D2** CI-gated PR flow (branch `verify/<story>`, PR, auto-merge on CI green; the gh-unavailable fallback = direct push). Then PushNotification — title `FRED ITPM — Reworked`, message: what changed + that Andrew can press "Looks Good" or request more changes.
 
 Then stop.
 
