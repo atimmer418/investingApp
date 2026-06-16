@@ -216,22 +216,26 @@
          .section-intermediary-only  → the completion section (#completion-section)
        Default: ALL hidden. Each state turns on exactly the buckets it needs.
        No state — known or stray — can ever show the wrong bucket. Every state is
-       spelled out on purpose; do not "simplify" by relying on defaults. */
+       spelled out on purpose; do not "simplify" by relying on defaults.
+       NOTE: the show-rules use !important on purpose. The execute/morning agents
+       rewrite today.html and have repeatedly re-injected inline style="display:none"
+       onto #completion-section etc. A stylesheet !important beats inline styles
+       (that lack !important), so these rules win no matter what the agent emits. */
     .section-planning-only { display: none; }
     .section-recap-only { display: none; }
     .section-intermediary-only { display: none; }
 
     /* planning — the brief Andrew reviews. Plan detail ONLY. */
-    [data-state="planning"] .section-planning-only { display: block; }
+    [data-state="planning"] .section-planning-only { display: block !important; }
 
     /* intermediary — work queued/building. The recap cards (why/alignment/impact/
        tomorrow) ONLY, plus the banner (shown via JS). No plan, no completion. */
-    [data-state="intermediary"] .section-recap-only { display: block; }
+    [data-state="intermediary"] .section-recap-only { display: block !important; }
 
     /* completed / looks_good — work done. The completion section ONLY
        (What Got Done + Looks Good + Request Changes). Never plan, never recap. */
     [data-state="completed"] #completion-section,
-    [data-state="looks_good"] #completion-section { display: block; }
+    [data-state="looks_good"] #completion-section { display: block !important; }
 
     /* failed — nothing but the failure banner (shown via JS). */
     /* (all buckets stay hidden) */

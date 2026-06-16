@@ -189,9 +189,9 @@ STORY=<story-id>
 
 ### Step E — Update today.html to Completed
 
-10. Read the current `ITPM/routine/today.html`. Then:
-   a. Set `data-state="completed"` on the `#dashboard` div.
-   b. Replace the contents of `#completion-content` with:
+10. Read the current `ITPM/routine/today.html`. Then make ONLY these two surgical edits — do not rewrite or restructure the rest of the file, and do NOT touch CSS/JS (they're in `/styles.css` and `/app.js`):
+   a. Set `data-state="completed"` on the `#dashboard` div (change the attribute value only).
+   b. Replace the INNER contents of `#completion-content` (between `<div class="card" id="completion-content">` and its closing `</div>`) with:
       ```html
       <div style="margin-bottom:16px;">
         <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">[Story ID] — [Story title]</p>
@@ -201,7 +201,7 @@ STORY=<story-id>
         <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">[How this moved the production readiness needle]</p>
       </div>
       ```
-   c. Remove `style="display:none"` from `#looks-good-btn` so Andrew can confirm.
+   **CRITICAL — do NOT add any `style="display:none"` (or any inline style) to `#completion-section`, `#looks-good-btn`, or `#rework-block`. Their visibility is owned entirely by `/styles.css` + `/app.js`. The `#completion-section` opening tag must stay exactly `<div class="section-group section-intermediary-only" id="completion-section">` with no style attribute. Adding `display:none` there hides the whole completion view on the completed page — a known regression.**
 11. Commit and push:
     ```bash
     git pull --no-rebase origin develop
