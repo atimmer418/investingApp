@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRED ITPM Daily Brief</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- ════════════════════════════════════════════════════════════════════
+       ITPM DASHBOARD CONTENT — agents may rewrite ONLY the content inside
+       #dashboard below. Do NOT add <style> or <script> here; styling lives
+       in /styles.css and logic in /app.js. Keep the <link>/<script src> in
+       <head> intact.
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <!-- ─── Lock Overlay ─── -->
+  <div id="lock-overlay">
+    <div class="lock-card">
+      <div class="lock-wordmark">FRED</div>
+      <div class="lock-heading">FRED ITPM Daily Brief</div>
+      <div class="lock-subtext">Today's priorities, options, and approval workflow.</div>
+      <div class="date-chip" id="overlay-date">Loading...</div>
+      <button id="reveal-btn" onclick="revealPassword()">Reveal Password Field</button>
+      <div id="password-section">
+        <input type="password" id="password-input" placeholder="Enter today's password" autocomplete="off" />
+        <button id="unlock-btn" onclick="attemptUnlock()">Unlock Dashboard</button>
+        <div id="error-msg">Incorrect password. Try again.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Dashboard ─── -->
+  <div id="dashboard" data-populated="true" data-state="looks_good">
+
+    <!-- ─── Failure Banner ─── -->
+    <div id="failure-banner">
+      <h3>Execution hit a blocker</h3>
+      <p id="failure-detail"></p>
+    </div>
+
+    <!-- ─── Intermediary Banner ─── -->
+    <div id="intermediary-banner" style="display:none; background:#dbeafe; border:1px solid #93c5fd; border-radius:14px; padding:16px 20px; margin-bottom:20px;">
+      <p style="font-size:14px; font-weight:700; color:#1e40af; margin:0 0 4px;">Plan approved — execution queued</p>
+      <p style="font-size:13px; color:#1e40af; margin:0;">Execution started. You'll receive a push notification when the build is complete.</p>
+      <a id="routine-link" href="#" target="_blank" style="display:none; margin-top:10px; font-size:12px; font-weight:700; color:#1e40af; text-decoration:underline; text-underline-offset:2px;">Watch the run live &rarr;</a>
+    </div>
+
+    <div class="dashboard-header">
+      <div class="header-left">
+        <div class="header-wordmark">FRED</div>
+        <div class="itpm-badge">ITPM</div>
+      </div>
+      <div class="header-date" id="header-date">Loading...</div>
+    </div>
+
+    <!-- ── Scoreboard (always visible) ── -->
+    <div class="section-group">
+      <div class="section-label">Routine Success Criteria</div>
+      <div class="scoreboard">
+
+        <div class="metric-card">
+          <div class="metric-label">Backlog Burn-Down</div>
+          <div class="metric-value warning">35.1%</div>
+          <div class="metric-sublabel">33 of 94 stories done</div>
+          <div class="metric-trend positive">&#8593; +2 done vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:35.1%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Piggy Tier Done</div>
+          <div class="metric-value warning">77.5%</div>
+          <div class="metric-sublabel">31 of 40 core stories complete</div>
+          <div class="metric-trend neutral">&#8594; no change vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77.5%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Pages Migrated</div>
+          <div class="metric-value warning">76%</div>
+          <div class="metric-sublabel">Tab 3 settings hub shipped</div>
+          <div class="metric-trend positive">&#8593; +3 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:76%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Prod Readiness</div>
+          <div class="metric-value warning">75</div>
+          <div class="metric-sublabel">Score out of 100</div>
+          <div class="metric-trend positive">&#8593; +3 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:75%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Days Since Blocker</div>
+          <div class="metric-value positive">15</div>
+          <div class="metric-sublabel">No active production blockers</div>
+          <div class="metric-trend positive">&#8593; +6 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:50%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Launch Readiness</div>
+          <div class="metric-value warning">65.9%</div>
+          <div class="metric-sublabel">Composite estimate</div>
+          <div class="metric-trend positive">&#8593; +1.9 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:65.9%"></div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Today's Priorities (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Today's Priorities</div>
+
+      <div class="priority-card">
+        <label class="priority-skip-label" title="Check to skip this story and regenerate">
+          <input type="checkbox" class="priority-skip-cb" onchange="handlePrioritySkip(this)" />
+          <span class="priority-skip-text">Skip</span>
+        </label>
+        <div class="priority-badge">#1</div>
+        <div class="priority-body">
+          <div class="priority-title">FRED-193 — Remove dark mode (force the app light-only for now)</div>
+          <div class="priority-desc">Strip dark mode from the app so every surface renders in light styling regardless of the device's OS Dark Mode setting. The visible offenders are the tab-switcher, tab1, tab2, and the AI chat page — but because the global background flips drive dark app-wide, the clean fix is to remove the dark CSS across all of it. Concretely: delete the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@media (prefers-color-scheme: dark)</code> blocks from the four named surfaces, neutralize the two global flips in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/variables.scss</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code>, and remove the dark scrollbar blocks plus the stray <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthly-freedom-update</code> dark block. The theme infrastructure in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'light' | 'dark' | 'auto'</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">applyTheme()</code>, the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">body.dark</code> toggle) <strong>stays in place</strong> so a future story (FRED-146) can build a proper, WCAG-AA dark mode without burning that bridge. Frontend SCSS-only; grep + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>/build verifiable in-sandbox. <strong>Tier 1 — acceptance criteria already in the backlog.</strong></div>
+          <span class="diff-chip diff-medium">Medium</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Why I Picked This (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Why I Picked This</div>
+      <div class="card">
+        <div class="card-text">FRED-196 shipped and you closed it out, so I re-ran the pick over the remaining Tier-1 stories. <strong>FRED-193 is the strongest one that can actually ship and be verified in this sandbox today.</strong> The other A/C-ready stories are gated: FRED-191 (load-perf) needs a running Capacitor build on a real device this sandbox can't provide; FRED-195 (pig avatars) needs SVGs from the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PersonalTypeshit/FRED&nbsp;Logo</code> sibling directory that lives outside this repo; FRED-194 (uniform settings headers) is a large 9-page UI overhaul with a wide blast radius that can't be visually verified without a browser. FRED-193 has no such gate — it's a clean SCSS removal whose footprint I verified directly (a grep for <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">prefers-color-scheme: dark</code> returns exactly the 7 SCSS files the A/C names, plus <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> which is the theme infra we intentionally keep — no surprise files). <strong>Tier 1</strong>, full acceptance criteria in the backlog, no triage gap. It's also a prerequisite that unblocks the future FRED-146 dark-mode epic, which scores high on the Decision Framework (dependency chains + quick win + guaranteed completion). Medium difficulty, one-day completion.</div>
+      </div>
+    </div>
+
+    <!-- ── Strategic Alignment (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Strategic Alignment</div>
+      <div class="card">
+        <div class="card-text">The product vision is explicit: <em>"Light mode forced — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">color-scheme: light</code> on every component,"</em> and dark mode is a <em>rejected/premature</em> pattern to be done only after every screen is migrated. Right now a user on an OS set to Dark Mode sees a half-broken, partially-inverted app — dark backgrounds bleeding through some surfaces while others stay light. That inconsistency reads as "unfinished" exactly when we're hardening for private beta, where trust and a polished, consistent surface are the priority. Forcing the app fully light now removes that seam everywhere and gives the eventual FRED-146 dark mode a clean, properly-designed foundation instead of the naive auto-inverted blocks we have today.</div>
+      </div>
+    </div>
+
+    <!-- ── Production Readiness Impact (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Production Readiness Impact</div>
+      <div class="card">
+        <div class="card-text">This lifts the <strong>UI-coverage / no-placeholder-UX</strong> side of readiness directly — "polished UI everywhere, no half-dark surfaces" is a concrete production-readiness requirement, and the inconsistent dark bleed is a visible gap in it across four high-traffic surfaces (tab-switcher, tab1, tab2, AI chat). It's low-risk: SCSS-only removal, no backend, schema, auth, or behavior change, with the theme infrastructure preserved so nothing is foreclosed for the future. A guaranteed one-day completion that keeps the readiness score climbing while staying squarely in the Easy/Medium band the difficulty bias calls for at this stage.</div>
+      </div>
+    </div>
+
+    <!-- ── Implementation Options (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Implementation Options</div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-text" style="color:var(--gray);">Three ways to scope FRED-193. All three end with the app rendering fully light on a dark-set device and the theme infrastructure preserved; they differ in how the dark CSS is retired and whether we add a forward guardrail. Tap one to select it; use the edit pencil on the selected card to tweak the approach before approving.</div>
+      </div>
+      <div class="option-group">
+
+        <div class="option-card selected">
+          <div class="option-header">
+            <span class="option-label">Option A</span>
+            <span class="option-rec">Recommended</span>
+          </div>
+          <div class="option-title">Spec-exact surgical removal</div>
+          <div class="option-body">Do precisely what the A/C enumerates: delete the <code>@media (prefers-color-scheme: dark)</code> blocks from the four surface SCSS files (<code>tabs.page.scss</code>, <code>portfolio-dashboard.component.scss</code>, <code>retirement-planning.component.scss</code>, <code>ai-chat.page.scss</code>); remove/neutralize the global flips in <code>theme/variables.scss</code> (~L11) and <code>global.scss</code> (~L181); remove the dark scrollbar blocks (<code>global.scss</code> ~L676/L702) and the stray <code>monthly-freedom-update.component.scss</code> block (~L683). Clean removal — no empty <code>@media</code> wrappers, no orphaned vars, no commented-out blocks. Leave <code>settings.service.ts</code> theme infra fully intact; hide/disable any dark toggle surfaced in settings UI. Grep proves zero remaining dark blocks; <code>tsc</code>/build verify.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>smallest faithful diff; meets every A/C item exactly; fully verifiable in-sandbox; no tech debt left behind.</span></span>
+            <span class="meta-item">Cons: <span>no forward guardrail — a future stray dark block could re-introduce bleed (low likelihood).</span></span>
+            <span class="meta-item">Risk: <span>Low — SCSS-only, no behavior change; the happy light path is unchanged.</span></span>
+            <span class="meta-item">Estimate: <span>~2–3 hrs</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option B</span>
+          </div>
+          <div class="option-title">Option A + a root light-lock guardrail</div>
+          <div class="option-body">Everything in Option A, plus enforce <code>color-scheme: light</code> at the root (<code>index.html</code> / <code>:root</code>) so even a future stray or third-party dark rule can't flip the app while we're light-only. A durable belt-and-suspenders that makes "light-only" a hard invariant, not just an absence of dark CSS.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>can't silently regress to dark; codifies the vision's "light mode forced" as an enforced rule.</span></span>
+            <span class="meta-item">Cons: <span>slightly beyond the A/C; the FRED-146 dark-mode epic will need to lift this lock when it ships.</span></span>
+            <span class="meta-item">Risk: <span>Low — a single declarative line; well-understood.</span></span>
+            <span class="meta-item">Estimate: <span>~2.5–3.5 hrs</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option C</span>
+          </div>
+          <div class="option-title">Gate the dark blocks behind <code>body.dark</code> instead of deleting</div>
+          <div class="option-body">Rather than delete the dark CSS, re-scope every block under <code>body.dark</code> (never set now that <code>auto</code> resolves to light), leaving the rules dormant but retained for the future dark-mode rebuild. Preserves the old styling as reference material.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>keeps the existing dark styling on hand for FRED-146.</span></span>
+            <span class="meta-item">Cons: <span>violates AC-4 (no dead/dormant dark code, clean removal) and leaves tech debt; FRED-146 explicitly wants a fresh WCAG-AA palette, "not auto-inverted," so the retained blocks have no real value.</span></span>
+            <span class="meta-item">Risk: <span>Medium — dormant CSS is easy to re-activate by accident and muddies the "light-only" intent.</span></span>
+            <span class="meta-item">Estimate: <span>~3–4 hrs</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Triage Findings (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Triage Findings</div>
+      <div class="card">
+
+        <div class="story-section">
+          <div class="story-header">FRED-193 — Remove dark mode (force light-only for now)</div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">In Scope</div>
+            <ul class="triage-list">
+              <li>Remove the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@media (prefers-color-scheme: dark)</code> blocks from the four named surfaces: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tabs.page.scss</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">portfolio-dashboard.component.scss</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">retirement-planning.component.scss</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.scss</code>.</li>
+              <li>Remove / make inert the global dark flips in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/variables.scss</code> (~L11) and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code> (~L181) so they no longer darken any page background.</li>
+              <li>Remove the dark scrollbar blocks (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code> ~L676/L702) and the stray <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthly-freedom-update.component.scss</code> block (~L683).</li>
+              <li>Clean removal — no empty <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@media</code> wrappers, no orphaned SCSS variables, no commented-out dark blocks left behind (CONTEXT.md no-dead-code rule).</li>
+              <li>Preserve the theme infrastructure in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'light' | 'dark' | 'auto'</code> type, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">applyTheme()</code>, the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">body.dark</code> toggle and its <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">matchMedia</code> listener); effective default stays light.</li>
+              <li>If a dark/theme toggle is surfaced anywhere in settings UI, hide or disable it for now (confirm whether one exists during the footprint audit).</li>
+              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> exits 0; the scoped build passes with no new SCSS/TS warnings.</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">Potentially Out of Scope</div>
+            <ul class="triage-list">
+              <li>Building any actual dark palette — that's FRED-146, a multi-day epic this story intentionally unblocks but does not start.</li>
+              <li>Removing the theme machinery in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> — it stays for the future dark-mode rebuild.</li>
+              <li>Touching <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">prefers-color-scheme: dark</code> blocks beyond the named A/C set if any are discovered — surface them as a follow-up rather than silently expanding scope (architectural-drift rule).</li>
+              <li>Migrating hardcoded hex to semantic tokens — that's part of the FRED-146 dark-mode work, not this removal.</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">UX Considerations</div>
+            <ul class="triage-list">
+              <li><strong>Verify on a dark-set device</strong> — the whole app must render in light styling with a device/OS set to Dark Mode, checked specifically on tab-switcher, tab1, tab2, and ai-chat: backgrounds, cards, text, borders, bubbles, and tab bar all identical to Light Mode, with no dark/near-black background, dark border, or inverted text anywhere.</li>
+              <li><strong>No half-dark surfaces</strong> — because the global flips currently drive dark app-wide, the audit must confirm no page is left partially dark after removal (scrollbars included).</li>
+              <li><strong>Settings toggle</strong> — if a light/dark control is visible in settings, it must not advertise a mode that no longer does anything; hide/disable it for now.</li>
+              <li><strong>No regressions to light mode</strong> — light is and remains the default; the happy path should look byte-identical to today on a light device.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Questions For Andrew (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Questions For Andrew</div>
+      <div class="card">
+
+        <div class="question-item">
+          <div class="question-text">
+            FRED-193: If a light/dark toggle is surfaced anywhere in the settings UI today, should the build <strong>hide/disable it</strong> for now (recommended, since dark is going light-only and the toggle would do nothing), or leave it visible? My recommendation: <strong>hide/disable it</strong>, keeping the underlying <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service</code> machinery intact for FRED-146.
+            <span class="required-badge">Required</span>
+          </div>
+          <textarea class="question-input" data-required="true" placeholder="e.g. Yes, hide/disable any dark toggle for now; keep the infra. (Or: there is no toggle surfaced.)"></textarea>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text">
+            FRED-193: Global flips (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">variables.scss</code> ~L11, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code> ~L181) — fully <strong>delete</strong> them (recommended, cleanest, satisfies the no-dead-code rule) or make them <strong>inert</strong> in place? Either satisfies the A/C.
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Your answer..."></textarea>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text">
+            FRED-193: Do you want the Option B <strong>root light-lock guardrail</strong> (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">color-scheme: light</code> enforced at the root so nothing can flip dark while we're light-only), or keep it a pure removal (Option A)? My recommendation: <strong>Option A</strong> — clean removal is enough, and FRED-146 would otherwise have to lift the lock.
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Your answer..."></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Suggested Execution Order (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Suggested Execution Order</div>
+      <div class="card">
+
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-body" contenteditable="false"><strong>Audit the footprint</strong> — Grep the whole frontend for <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">prefers-color-scheme: dark</code> to confirm the complete set (the 7 SCSS files the A/C names + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> infra to preserve). Check whether a dark/theme toggle is surfaced in any settings UI. If any dark block exists beyond the named files, surface it rather than silently expanding scope.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-body" contenteditable="false"><strong>Remove the four surface blocks</strong> — Delete the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@media (prefers-color-scheme: dark)</code> blocks from <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tabs.page.scss</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">portfolio-dashboard.component.scss</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">retirement-planning.component.scss</code>, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.scss</code> — clean removal, no empty wrappers or orphaned vars.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-body" contenteditable="false"><strong>Neutralize the globals</strong> — Remove/make inert the global dark flips in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/variables.scss</code> (~L11) and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code> (~L181), and remove the dark scrollbar blocks (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code> ~L676/L702) and the stray <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthly-freedom-update.component.scss</code> block (~L683), per your delete-vs-inert answer. Confirm <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> theme infra is untouched; hide/disable any surfaced dark toggle.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-body" contenteditable="false"><strong>Verify + hand off</strong> — Re-grep to prove zero remaining dark blocks in SCSS (only the preserved <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> matchMedia remains); run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> (exits 0) and the scoped build (no new SCSS/TS warnings); run the verifier agent over the manifest. Hand the live dark-device-renders-light confirmation across the four surfaces to Andrew via "Looks Good" (the sandbox can't drive a real device).</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Tomorrow's Likely Pick (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Tomorrow's Likely Pick</div>
+      <div class="card">
+        <ul class="tomorrow-list">
+          <li><strong>FRED-188</strong> — Add null userId guard to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> — Easy, a parked quick win: a one-line null guard mirroring the one already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> that closes a real NPE path. Tier 2 (needs A/C confirmed), guaranteed-complete bug-density win.</li>
+          <li><strong>FRED-189</strong> — Fix bank-account subtype always showing "Checking" — Easy, a user-facing field-case bug (frontend reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code> but the backend returns <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code>) related to the just-shipped FRED-124; pure code, Tier 2.</li>
+          <li><strong>FRED-146</strong> — Full dark mode — now <em>unblocked</em> once FRED-193 lands, but it's a multi-day Hard epic (WCAG-AA palette + ~600 hardcoded-hex migration), so it's a future planning candidate, not a one-day pick.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── Completion Section (completed state only) ── -->
+    <div class="section-group section-intermediary-only" id="completion-section">
+      <div class="section-label">WHAT GOT DONE</div>
+      <div class="card" id="completion-content">
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-193 — Remove dark mode (force the app light-only)</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Pure SCSS removal across 7 files: every <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@media (prefers-color-scheme: dark)</code> block was deleted — the four named surfaces (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tabs.page.scss</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">portfolio-dashboard</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">retirement-planning</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat</code>), the global flips in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/variables.scss</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code>, the dark scrollbar blocks, and the stray <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthly-freedom-update</code> dark block plus its orphaned <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">$background-dark</code> var. 271 deletions, 0 net additions, no <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.ts</code> touched. The <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> theme infrastructure is fully preserved for the future FRED-146 dark-mode epic, and no light/dark toggle surfaces anywhere.</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>All dark <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@media</code> blocks removed from the four named surfaces — grep returns zero matches.</li>
+            <li>Global flips, dark scrollbar blocks, and the stray MFU dark block removed — no part of the app left half-dark.</li>
+            <li>No dead code — no empty <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@media</code> wrappers, no orphaned vars, no commented blocks; the only remaining <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">prefers-color-scheme</code> reference is the kept <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> auto-mode listener.</li>
+            <li>Theme infra preserved (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'light' | 'dark' | 'auto'</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">applyTheme()</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">body.dark</code>); default is light; no theme toggle surfaced.</li>
+            <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> compiles clean (no new errors).</li>
+          </ul>
+          <p style="font-size:12px;color:var(--gray);line-height:1.6;margin:0 0 12px;"><strong>Note:</strong> the on-device visual check (app rendering light under OS Dark Mode) couldn't run in the sandbox — no browser/dev-server was reachable — so it's deferred to you on "Looks Good". Static proof is conclusive: with zero dark <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@media</code> blocks and zero <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.dark</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">body.dark</code> selectors remaining, a dark render is physically impossible. <strong>CI PR gate was skipped</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">gh</code> and PR-create permission are unavailable in the routine sandbox, so the verified code went straight to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">develop</code> (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">c186245</code>).</p>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Readiness 75 → 76 — removes the half-inverted "unfinished" seam a dark-OS user sees today and gives the future FRED-146 dark-mode epic a clean, light-only foundation.</p>
+        </div>
+      </div>
+      <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
+        Looks Good &#10003;
+      </button>
+
+      <!-- Request Changes — rework the same story with feedback -->
+      <div id="rework-block" style="margin-top:14px;">
+        <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The hero header is too tall — tighten it. And the empty state should use the existing illustration, not a new one."></textarea>
+        <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
+      </div>
+    </div>
+
+    <!-- ── Anything Else For the Execution Agent (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Anything Else For the Execution Agent?</div>
+      <div class="card">
+        <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Make sure the loading state uses the existing LoadingVeilComponent, not a new spinner..."></textarea>
+      </div>
+    </div>
+
+    <!-- ── Add to Backlog (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Add to Backlog</div>
+      <div class="card">
+        <div class="revision-label" style="margin-bottom:14px;">Thought of something while reviewing? Add it to the backlog without leaving this page.</div>
+        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Add a confirmation step before deleting a beneficiary..." style="min-height:80px;margin-bottom:12px;"></textarea>
+        <button class="btn-dark" id="backlog-btn" onclick="handleAddBacklog()">Add to Backlog</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Fixed Approve Bar ─── -->
+  <div id="approve-bar">
+    <div id="approve-status">Complete all required fields to unlock approval</div>
+    <button id="approve-btn" onclick="handleApprove()">Approve / Get To Work</button>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

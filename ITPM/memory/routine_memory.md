@@ -35,6 +35,20 @@
 
 ## Daily Entries
 
+### 2026-06-16 (Morning Brief) — Uniform settings-page headers (FRED-194)
+
+**Priorities selected:** FRED-194 — Uniform ion-header styling across tab3 settings pages (standardize all 9 settings pages on change-bank-account's `.blue-hero-header`)
+**Tier:** 1 (A/C ready) — FRED-194 carries a full Acceptance Criteria block in `backlog.md`; build-ready, no triage gap.
+**Rationale:** FRED-193 shipped and was closed out to `looks_good` (now 34/94 done) → guard passed → fresh brief. Re-ran the pick over the remaining Tier-1 stories; FRED-194 is the strongest in-sandbox pick. The other two A/C-ready stories are gated: FRED-191 (load-perf) needs a real-device Capacitor build the sandbox can't run; FRED-195 (pig avatars) needs SVGs from the `PersonalTypeshit/FRED Logo` sibling dir — I verified it is NOT present on disk in this sandbox. FRED-194 has no gate: confirmed all 9 target pages (recurring-investments, components/portfolio-customize, sell-withdraw, pages/security-settings, pages/tax-documents, faq, lump-sum-investment, pages/my-profile, beneficiaries) exist and still use the old `ion-toolbar`/`header-inner`; change-bank-account already carries the reference `.blue-hero-header` (`hero-nav`/`back-btn`/`back-btn-spacer`); and `frontend/src/theme/` exists to host the shared partial. SCSS + header markup, tsc/build-verifiable here. Continues the settings-hub consistency thread FRED-124 (change-bank-account) + FRED-192 (tab3) started — strong on the Decision Framework (dependency chain + production-readiness impact). Medium difficulty: mechanical/well-specified with a working reference, but wide blast radius (9 pages). Not a from-scratch UI redesign (we're applying an EXISTING decided pattern uniformly) → standard A/B/C options, NOT 3-mockup design exploration: A shared SCSS partial + header swap + light body pass [rec]; B full body restyle on all 9 now; C per-file header duplication (rejected — violates AC-3, 10 copies to maintain).
+**Metrics:** Readiness 76/100, Piggy 77.5% (31/40), Pages 76%, Burndown 36.2% (34/94), Launch 66.4%
+**Trends (vs ~7 days ago / 06-09 weekly close):** Burndown ↑ +3 done (31→34; FRED-193+FRED-196 landed since), Pages ↑ +3 (73→76), Readiness ↑ +4 (72→76), Days-since-blocker ↑ +7 (9→16), Launch ↑ +2.1 (64.3→66.4), Piggy → no change (77.5%).
+**Days since last blocker:** 16 (FRED-193 shipped clean on 06-15 recording 15; +1 clean day, no blocker today)
+**Blockers active:** none (BLOCKED section holds FRED-173/175/179, all external-dependency stories, not production blockers)
+**Notes:** FRED-193 closed out to `looks_good` → guard passed → fresh brief generated. Exclusion set: FRED-100 (skipped 06-15, 7-day window active through ~06-22) — not re-eligible today, but it wasn't the pick anyway. No other skips in the last 7 days. Tomorrow's likely picks: FRED-189 (bank-subtype field-case bug, a page in today's set), FRED-188 (chat null guard), FRED-186 (debounce + switchMap). Carry-forward lesson applied in triage: the FRED-124 notch lesson (raw header div in `ion-header` clips without `env(safe-area-inset-top)`) must be baked into the shared partial; portfolio-customize's `:host` scope needs watching when consuming the partial.
+**Status:** Pending approval from Andrew
+
+---
+
 ### 2026-06-15 (Morning Brief) — Remove dark mode, force light-only (FRED-193)
 
 **Priorities selected:** FRED-193 — Remove dark mode from tab-switcher, tab1, tab2, ai-chat (force the app light-only for now)
