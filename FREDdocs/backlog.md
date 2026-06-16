@@ -38,21 +38,6 @@ Baseline the app's cold-load performance — network waterfall + Core Web Vitals
 5. `npx tsc --noEmit` exits 0 and `ng build` succeeds within budgets.
 6. Before/after numbers written up.
 
-## FRED-194 — Uniform ion-header styling across tab3 settings pages
-change all settings page linked to from tab3 to have the exact same styling in their ion-headers as change-bank-account does. while youre at it, each page should also have similar styling usage so confirm that they do and if they dont, make them have uniform styling across each settings page
-
-### Summary
-Make every settings page linked from tab3 use the exact same ion-header as `change-bank-account` — the `.blue-hero-header` (blue gradient + concave white cutout + back button / centered title / spacer) — replacing each page's current `<ion-toolbar>` + `.header-inner` header. Then audit each page's broader styling (content background, section cards, spacing, CTAs) and bring any divergence into line so all settings pages look uniform. Done when every listed page renders a header identical to change-bank-account and the pages share consistent body styling.
-
-### Acceptance Criteria
-1. Each of the 9 pages — recurring-investments, portfolio-customize (a component rendered as a page; treated identically), sell-withdraw, security-settings, tax-documents, faq, lump-sum-investment, my-profile, beneficiaries — renders an ion-header visually identical to change-bank-account: blue gradient `linear-gradient(90deg, #2a5ae0, #1d4ed8)`, concave white cutout, safe-area-inset-top padding, `arrow_back_ios_new` back button on the left, centered title, spacer on the right. All are in scope.
-2. Each page's old `<ion-toolbar><div class="header-inner">…</div></ion-toolbar>` is replaced by the `<div class="blue-hero-header"><div class="hero-nav">…<div class="back-btn-spacer"></div></div></div>` structure. Each page keeps its own title text and existing `goBack()` behavior; no navigation regressions.
-3. The hero-header styling lives in one shared SCSS partial/mixin (e.g., `theme/_blue-hero-header.scss`) included by all listed pages, and change-bank-account is refactored to consume the same source — no duplicated gradient/cutout SCSS copy-pasted across files. (Per-file duplication is an allowed fallback if preferred.)
-4. Body styling uniformity ("while you're at it"): every settings page uses the same content background (`#f8fafc`) and consistent section-card, spacing, and CTA styling per the FRED Style Guide. Each page is explicitly confirmed; any divergence is corrected. (If this clause balloons, split it into its own follow-up story rather than blocking the header work.)
-5. No page-specific header content is lost. If a page needs extra header content (e.g., my-profile avatar/subtitle), it sits inside `.blue-hero-header` like change-bank-account's (commented) `hero-account-peek` — not via the old toolbar.
-6. Headers render correctly on a notched device — `env(safe-area-inset-top)` honored — and the concave cutout meets the page background seamlessly with no seam/gap.
-7. Frontend compiles cleanly (`cd frontend && npx tsc --noEmit` / scoped build) with no new warnings; spot-check each page's happy path for visual regressions.
-
 ## FRED-195 — Equity-range pig avatar for profile & MFU
 in the directory PersonalTypeshit/FRED Logo, there are 5 pig directories with ranges each containing an svg. these svgs (the non-blackandwhiteversion) should be copied to an assets directory on the frontend of FRED, the ranges should be the range of the user's total equity, so when the user's total equity is within that range, the profile picture in the my profile link from tab 3 should display that svg and same with the actual profile picture within the my profile page. also, the mfu achievement that displays in the mfu should show this svg as well when that respective new bottom range of total equity has been achieved
 
@@ -722,6 +707,21 @@ Remove dark mode from the app for now so everything renders in light styling reg
 6. Frontend compiles cleanly — `cd frontend && npx tsc --noEmit` / the scoped build passes with no new SCSS or TS warnings from this change.
 
 Follow-up: a future story will implement full, properly-supported dark mode across the app — the theme infrastructure is intentionally kept for it.
+
+## FRED-194 — ✓ Uniform ion-header styling across tab3 settings pages
+change all settings page linked to from tab3 to have the exact same styling in their ion-headers as change-bank-account does. while youre at it, each page should also have similar styling usage so confirm that they do and if they dont, make them have uniform styling across each settings page
+
+### Summary
+Make every settings page linked from tab3 use the exact same ion-header as `change-bank-account` — the `.blue-hero-header` (blue gradient + concave white cutout + back button / centered title / spacer) — replacing each page's current `<ion-toolbar>` + `.header-inner` header. Then audit each page's broader styling (content background, section cards, spacing, CTAs) and bring any divergence into line so all settings pages look uniform. Done when every listed page renders a header identical to change-bank-account and the pages share consistent body styling.
+
+### Acceptance Criteria
+1. Each of the 9 pages — recurring-investments, portfolio-customize (a component rendered as a page; treated identically), sell-withdraw, security-settings, tax-documents, faq, lump-sum-investment, my-profile, beneficiaries — renders an ion-header visually identical to change-bank-account: blue gradient `linear-gradient(90deg, #2a5ae0, #1d4ed8)`, concave white cutout, safe-area-inset-top padding, `arrow_back_ios_new` back button on the left, centered title, spacer on the right. All are in scope.
+2. Each page's old `<ion-toolbar><div class="header-inner">…</div></ion-toolbar>` is replaced by the `<div class="blue-hero-header"><div class="hero-nav">…<div class="back-btn-spacer"></div></div></div>` structure. Each page keeps its own title text and existing `goBack()` behavior; no navigation regressions.
+3. The hero-header styling lives in one shared SCSS partial/mixin (e.g., `theme/_blue-hero-header.scss`) included by all listed pages, and change-bank-account is refactored to consume the same source — no duplicated gradient/cutout SCSS copy-pasted across files. (Per-file duplication is an allowed fallback if preferred.)
+4. Body styling uniformity ("while you're at it"): every settings page uses the same content background (`#f8fafc`) and consistent section-card, spacing, and CTA styling per the FRED Style Guide. Each page is explicitly confirmed; any divergence is corrected. (If this clause balloons, split it into its own follow-up story rather than blocking the header work.)
+5. No page-specific header content is lost. If a page needs extra header content (e.g., my-profile avatar/subtitle), it sits inside `.blue-hero-header` like change-bank-account's (commented) `hero-account-peek` — not via the old toolbar.
+6. Headers render correctly on a notched device — `env(safe-area-inset-top)` honored — and the concave cutout meets the page background seamlessly with no seam/gap.
+7. Frontend compiles cleanly (`cd frontend && npx tsc --noEmit` / scoped build) with no new warnings; spot-check each page's happy path for visual regressions.
 
 ## FRED-196 — ✓ tab3 Freedom Age blanks on flaky KYC call
 tab3 Freedom Age stat shows "-" when the Alpaca GET /alpaca/account/kyc call (its birthYear source, a third call separate from the two that feed Freedom Date and To Go) fails or returns no DOB on weak connections — the KYC error handler opens the render gate without setting birthYear, so Freedom Date and To Go render real values while Freedom Age silently blanks. Give Freedom Age its own fallback/retry (e.g. retry the KYC call on transient errors, and/or a clearer placeholder) so a flaky Alpaca call doesn't silently blank it.
