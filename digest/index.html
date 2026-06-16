@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Digest — 2026-06-15</title>
+  <title>Claude Digest — 2026-06-16</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#0f1117;color:#e8eaf0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.6;padding:48px 24px 80px}
@@ -35,7 +35,7 @@
     .empty{padding:20px 18px;font-size:13px;color:#7c82a0;font-style:italic}
     footer{margin-top:48px;font-size:12px;color:#7c82a0;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
     .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#56c4a0;margin-right:6px;vertical-align:middle}
-    .highlight{background:#1a2235;border-left:3px solid #5b8df6}
+    code{font-family:ui-monospace,monospace;font-size:12px;background:#1a1e2e;padding:2px 5px;border-radius:4px;color:#a07cf6}
   </style>
 </head>
 <body>
@@ -46,7 +46,7 @@
       <span class="wordmark-text">Claude Daily Digest</span>
     </div>
     <h1>What's new in Claude</h1>
-    <span class="date-label">Monday, June 15, 2026</span>
+    <span class="date-label">Monday, June 16, 2026</span>
   </header>
   <hr />
 
@@ -54,42 +54,31 @@
     <div class="section-head"><span>📦</span><span class="section-title">New Releases</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="version">v2.1.176</span><span class="ts">June 12, 2026</span></div>
-        <div class="body">Session titles now generate in the conversation's language; improved Bedrock credential caching; fixed model enforcement for aliases and fast-mode toggling; resolved numerous bugs in auto mode, Remote Control, background sessions, and UI rendering across platforms.</div>
+        <div class="meta"><span class="version">v2.1.178</span><span class="ts">June 15, 2026</span></div>
+        <div class="body">Added <code>Tool(param:value)</code> syntax for permission rules with wildcard support (e.g. <code>Agent(model:opus)</code> to block Opus subagents), improved nested <code>.claude/</code> directory precedence so the closest directory wins, hardened auto mode by evaluating subagent spawns through the classifier before launch, and enhanced <code>/doctor</code> with a flat tree layout and clearer status icons. Also includes 12 bug fixes covering subagent transcript viewing, background session state, vim undo behavior, and MCP disallowed-tools handling.</div>
       </div>
-      <div class="item">
-        <div class="meta"><span class="version">v2.1.175</span><span class="ts">June 12, 2026</span></div>
-        <div class="body">Added <code style="background:#1e2235;padding:1px 5px;border-radius:3px;font-size:12px">enforceAvailableModels</code> managed setting, giving admins the ability to constrain the Default model selection and prevent widening of managed model allowlists.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="version">v2.1.174</span><span class="ts">June 12, 2026</span></div>
-        <div class="body">Added mouse-wheel scroll acceleration toggle; fixed model picker display issues for various plan types; improved Bedrock GovCloud support; fixed background session environment variable inheritance.</div>
-      </div>
+      <div class="empty">No new releases on June 16. Most recent is v2.1.178 — June 15, 2026.</div>
     </div>
   </section>
 
   <section class="section">
-    <div class="section-head"><span>📰</span><span class="section-title">This Week</span></div>
+    <div class="section-head"><span>📰</span><span class="section-title">This Week (Week 24 · June 8–12)</span></div>
     <div class="card">
-      <div class="item highlight">
-        <div class="meta"><span class="tag">Today · June 15 — Billing Change</span></div>
-        <div class="body">Paid Claude plans can now claim a dedicated monthly credit for programmatic usage. The credit covers: Claude Agent SDK, <code style="background:#1e2235;padding:1px 5px;border-radius:3px;font-size:12px">claude -p</code> (headless), Claude Code GitHub Actions, and third-party apps built on the Agent SDK — separating agentic usage from your interactive subscription limits.</div>
+      <div class="item">
+        <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span><span class="ts">v2.1.169</span></div>
+        <div class="body"><strong>/cd command</strong> — move the current session to a different working directory mid-conversation without rebuilding the prompt cache; the new directory's <code>CLAUDE.md</code> is appended as a message and the session relocates to the new project's storage so <code>--resume</code> finds it there.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">Week 22 · May 25–29</span></div>
-        <div class="body"><strong>Claude Opus 4.8</strong> is now the default model for Max, Team Premium, Enterprise pay-as-you-go, and API accounts, with high effort by default and <code style="background:#1e2235;padding:1px 5px;border-radius:3px;font-size:12px">/effort xhigh</code> available for the hardest tasks.</div>
+        <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span><span class="ts">v2.1.172</span></div>
+        <div class="body"><strong>Sub-agents can spawn sub-agents</strong> — nested agent trees are now supported with a live tree view in the subagent panel; background chains are capped at five levels deep to prevent runaway concurrency, while foreground chains can go any depth.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">Week 22 · May 25–29</span></div>
-        <div class="body"><strong>Dynamic workflows</strong>: Claude now writes its own orchestration harness on the fly, coordinating dozens to hundreds of subagents from a script it composes custom-built for each task.</div>
+        <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span><span class="ts">v2.1.169</span></div>
+        <div class="body"><strong>Safe mode for troubleshooting</strong> — launch with <code>--safe-mode</code> or <code>CLAUDE_CODE_SAFE_MODE</code> to disable all customizations (CLAUDE.md, skills, plugins, hooks, MCPs, custom commands) while keeping auth, model selection, and permissions intact. If a problem disappears in safe mode, one of those surfaces is the cause.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">Week 22 · May 25–29</span></div>
-        <div class="body"><strong>Security-guidance plugin</strong>: a new plugin from the marketplace (<code style="background:#1e2235;padding:1px 5px;border-radius:3px;font-size:12px">/plugins</code>) reviews Claude's changes for vulnerabilities in real time as it writes code — available to all Claude Code users.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="tag">Week 22 · May 25–29</span></div>
-        <div class="body"><strong>Fast mode on Opus 4.8</strong> now runs at $10/$50 per MTok, giving Claude Code users faster Opus responses at fixed pricing for interactive and background sessions.</div>
+        <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span><span class="ts">v2.1.166+</span></div>
+        <div class="body"><strong>fallbackModel chains</strong> — configure up to three fallback models tried in order when the primary model is overloaded or unavailable; <code>--fallback-model</code> now also applies to interactive sessions. Also: plugin search in <code>/plugin</code> marketplace, new <code>disableBundledSkills</code> setting, deny rules now accept glob patterns in the tool-name position, and cross-session <code>SendMessage</code> authority is hardened in auto mode.</div>
       </div>
     </div>
   </section>
@@ -97,17 +86,17 @@
   <section class="section">
     <div class="section-head"><span>🔧</span><span class="section-title">Platform &amp; API</span></div>
     <div class="card">
-      <div class="item highlight">
-        <div class="meta"><span class="tag">June 9, 2026</span></div>
-        <div class="body"><strong>Claude Fable 5</strong> (<code style="background:#1e2235;padding:1px 5px;border-radius:3px;font-size:12px">claude-fable-5</code>) launched as the most capable widely-released Claude model, with a 1M token context window, 128k max output tokens, and always-on adaptive thinking. <strong>Claude Mythos 5</strong> also launched for Project Glasswing participants.</div>
+      <div class="item">
+        <div class="meta"><span class="tag">June 15, 2026</span></div>
+        <div class="body"><strong>Model retirements:</strong> <code>claude-sonnet-4-20250514</code> and <code>claude-opus-4-20250514</code> have been retired — all requests now return an error. Upgrade to Claude Sonnet 4.6 and Claude Opus 4.8. Researchers can request ongoing access via the External Researcher Access Program.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">June 9, 2026 — Tokenizer Note</span></div>
-        <div class="body">Fable 5 and Mythos 5 use the tokenizer introduced with Opus 4.7. The same text now produces roughly <strong>30% more tokens</strong> than pre-Opus-4.7 models — use the token counting API with <code style="background:#1e2235;padding:1px 5px;border-radius:3px;font-size:12px">model: "claude-fable-5"</code> to measure prompts under the new tokenizer.</div>
+        <div class="meta"><span class="tag">June 15, 2026</span></div>
+        <div class="body"><strong>Programmatic usage credits:</strong> Users on paid plans can now claim a dedicated monthly credit for programmatic use, covering the Claude Agent SDK, <code>claude -p</code> CLI, Claude Code GitHub Actions, and third-party Agent SDK apps. This separates programmatic usage from interactive plan limits.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">June 10, 2026</span></div>
-        <div class="body">The <code style="background:#1e2235;padding:1px 5px;border-radius:3px;font-size:12px">GET /v1/environments/{id}/work</code> endpoint for self-hosted sandboxes is now available on Claude Platform on AWS, with the new <code style="background:#1e2235;padding:1px 5px;border-radius:3px;font-size:12px">GetEnvironment</code> IAM action authorizing access.</div>
+        <div class="body"><strong>AWS Claude Platform:</strong> The <code>GET /v1/environments/{id}/work</code> endpoint (listing pending work for self-hosted sandboxes) is now available on Claude Platform on AWS. See IAM actions docs for the <code>GetEnvironment</code> action that authorizes it.</div>
       </div>
     </div>
   </section>
@@ -117,19 +106,19 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">June 15, 2026</span></div>
-        <div class="body">Starting June 15, paid Claude plans can claim a dedicated monthly credit for programmatic usage — covering the Agent SDK, <code style="background:#1e2235;padding:1px 5px;border-radius:3px;font-size:12px">claude -p</code>, GitHub Actions, and third-party Agent SDK apps. Weekly limits also up 50% through July 13 for all Pro, Max, Team, and Enterprise users.</div>
+        <div class="body">Announced that starting June 15, paid-plan users can claim a dedicated monthly credit for programmatic usage (Agent SDK, <code>claude -p</code>, GitHub Actions, third-party Agent SDK apps) — separating it from interactive plan limits. Claude Code weekly limits also increased 50% through July 13.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@claudeai</span><span class="ts">June 2026</span></div>
-        <div class="body">Claude Code now stretches across terminal, IDE, web, desktop, and scheduled agent workflows. Managed Agents can run in your own sandbox connected to private MCP servers. 1M token context window enabled on Opus 4.6 and Sonnet 4.6 in Claude Code — no beta header, no surcharge, flat pricing.</div>
+        <div class="meta"><span class="handle">@claudeai</span><span class="ts">~June 2026</span></div>
+        <div class="body"><span class="quiet">Quiet today — no posts in the last 48 hours from @claudeai.</span></div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@bcherny</span><span class="ts">2026</span></div>
-        <div class="body">"I haven't written a line of code myself in 2026." Boris Cherny, Claude Code's creator, recently led the launch of the plugins system — the easiest way to share and install bundles of agents, slash commands, MCP servers, and hooks across teams.</div>
+        <div class="meta"><span class="handle">@bcherny</span><span class="ts">~June 2026</span></div>
+        <div class="body">Boris Cherny (Claude Code creator) posted live from "Code with Claude London": "Hello from Code with Claude London!" — the team is on a world tour expanding access. He's also been sharing that he hasn't written a single line of code himself in 2026, noting the team is "living in the future."</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@trq212</span><span class="ts">June 1–2, 2026</span></div>
-        <div class="body">Thariq shared a deep-dive on <strong>dynamic workflows</strong>: Claude can now write its own harness on the fly, custom-built for the task at hand — making multi-agent orchestration a first-class part of every session.</div>
+        <div class="meta"><span class="handle">@trq212</span><span class="ts">June 2026</span></div>
+        <div class="body">Thariq shared a deep-dive on dynamic workflows ("A harness for every task") — Claude Code writing its own task harness on the fly, custom-built per problem. Also shared how Anthropic teammates stay in sync with Claude's work, citing Suzanne's method of using Claude to track and summarize ongoing sessions.</div>
       </div>
     </div>
   </section>
@@ -137,7 +126,7 @@
   <hr />
   <footer>
     <span><span class="dot"></span>digest.fredvested.com</span>
-    <span>Generated 2026-06-15 at 8:00 AM ET</span>
+    <span>Generated 2026-06-16 at 8:00 AM ET</span>
   </footer>
 </div>
 </body>
