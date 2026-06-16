@@ -38,22 +38,6 @@ Baseline the app's cold-load performance — network waterfall + Core Web Vitals
 5. `npx tsc --noEmit` exits 0 and `ng build` succeeds within budgets.
 6. Before/after numbers written up.
 
-## FRED-193 — Remove dark mode from tab-switcher, tab1, tab2, ai-chat
-remove dark mode from ion-tabs aka the tab-switcher; remove dark mode from tab1 and tab2 and ai-chat page
-
-### Summary
-Remove dark mode from the app for now so everything renders in light styling regardless of the device's OS Dark Mode setting. The originating surfaces are the tab-switcher (ion-tabs), tab1, tab2, and the AI chat page, but because global background flips drive dark app-wide, the clean fix is to strip dark mode across the app and make it light-only for now. The theme infrastructure (the settings-service `'light' | 'dark' | 'auto'` machinery) stays in place so a planned future story can implement a full, properly-supported dark mode across the app — this story just turns dark off for now without burning that bridge.
-
-### Acceptance Criteria
-1. With the device/OS set to Dark Mode, the whole app renders in light styling — verified specifically on the tab-switcher, tab1, tab2, and the ai-chat page (each identical to Light Mode: backgrounds, cards, text, borders, bubbles, tab bar). No surface shows a dark/near-black background, dark border, or inverted text.
-2. All `@media (prefers-color-scheme: dark)` blocks are removed from the four named surfaces' SCSS (`tabs.page.scss`, `portfolio-dashboard.component.scss`, `retirement-planning.component.scss`, `ai-chat.page.scss`).
-3. The global dark flips in `theme/variables.scss` (~L11) and `global.scss` (~L181) are removed/made inert so they no longer darken any page background; the dark scrollbar blocks (`global.scss` ~L676, L702) and the stray `monthly-freedom-update.component.scss` (~L683) dark block are removed too, so no part of the app is left half-dark.
-4. No dead code: no empty `@media` wrappers, no orphaned SCSS variables, no commented-out dark blocks left behind (clean removal per CONTEXT.md).
-5. The theme infrastructure in `settings.service.ts` is preserved (the `'light' | 'dark' | 'auto'` type, `applyTheme()`, and `body.dark` toggle remain) and the effective default is light, so nothing renders dark now. If a dark/theme toggle is surfaced in any settings UI, it is hidden or disabled for now (confirm whether one exists).
-6. Frontend compiles cleanly — `cd frontend && npx tsc --noEmit` / the scoped build passes with no new SCSS or TS warnings from this change.
-
-Follow-up: a future story will implement full, properly-supported dark mode across the app — the theme infrastructure is intentionally kept for it.
-
 ## FRED-194 — Uniform ion-header styling across tab3 settings pages
 change all settings page linked to from tab3 to have the exact same styling in their ion-headers as change-bank-account does. while youre at it, each page should also have similar styling usage so confirm that they do and if they dont, make them have uniform styling across each settings page
 
@@ -719,6 +703,22 @@ Produce 3–5 cleaner tab3 settings designs as static HTML/CSS mockups posted in
 4. Options meaningfully distinct (e.g., grouped cards vs. flat inset list vs. iOS-grouped vs. hero-stat header), not trivial reskins.
 5. Each option annotated — how it's cleaner + trade-offs.
 6. Delivered as static HTML/CSS mockups posted in today.html; chosen option becomes a separate implementation story.
+
+## FRED-193 — ✓ Remove dark mode from tab-switcher, tab1, tab2, ai-chat
+remove dark mode from ion-tabs aka the tab-switcher; remove dark mode from tab1 and tab2 and ai-chat page
+
+### Summary
+Remove dark mode from the app for now so everything renders in light styling regardless of the device's OS Dark Mode setting. The originating surfaces are the tab-switcher (ion-tabs), tab1, tab2, and the AI chat page, but because global background flips drive dark app-wide, the clean fix is to strip dark mode across the app and make it light-only for now. The theme infrastructure (the settings-service `'light' | 'dark' | 'auto'` machinery) stays in place so a planned future story can implement a full, properly-supported dark mode across the app — this story just turns dark off for now without burning that bridge.
+
+### Acceptance Criteria
+1. With the device/OS set to Dark Mode, the whole app renders in light styling — verified specifically on the tab-switcher, tab1, tab2, and the ai-chat page (each identical to Light Mode: backgrounds, cards, text, borders, bubbles, tab bar). No surface shows a dark/near-black background, dark border, or inverted text.
+2. All `@media (prefers-color-scheme: dark)` blocks are removed from the four named surfaces' SCSS (`tabs.page.scss`, `portfolio-dashboard.component.scss`, `retirement-planning.component.scss`, `ai-chat.page.scss`).
+3. The global dark flips in `theme/variables.scss` (~L11) and `global.scss` (~L181) are removed/made inert so they no longer darken any page background; the dark scrollbar blocks (`global.scss` ~L676, L702) and the stray `monthly-freedom-update.component.scss` (~L683) dark block are removed too, so no part of the app is left half-dark.
+4. No dead code: no empty `@media` wrappers, no orphaned SCSS variables, no commented-out dark blocks left behind (clean removal per CONTEXT.md).
+5. The theme infrastructure in `settings.service.ts` is preserved (the `'light' | 'dark' | 'auto'` type, `applyTheme()`, and `body.dark` toggle remain) and the effective default is light, so nothing renders dark now. If a dark/theme toggle is surfaced in any settings UI, it is hidden or disabled for now (confirm whether one exists).
+6. Frontend compiles cleanly — `cd frontend && npx tsc --noEmit` / the scoped build passes with no new SCSS or TS warnings from this change.
+
+Follow-up: a future story will implement full, properly-supported dark mode across the app — the theme infrastructure is intentionally kept for it.
 
 ## FRED-196 — ✓ tab3 Freedom Age blanks on flaky KYC call
 tab3 Freedom Age stat shows "-" when the Alpaca GET /alpaca/account/kyc call (its birthYear source, a third call separate from the two that feed Freedom Date and To Go) fails or returns no DOB on weak connections — the KYC error handler opens the render gate without setting birthYear, so Freedom Date and To Go render real values while Freedom Age silently blanks. Give Freedom Age its own fallback/retry (e.g. retry the KYC call on transient errors, and/or a clearer placeholder) so a flaky Alpaca call doesn't silently blank it.
