@@ -1,0 +1,37 @@
+# Opens a PR for itpm-routine work. The routine pushes a `verify/<story>` branch
+# (its integration can push but CANNOT create PRs — GitHub returns 403 "Resource
+# not accessible by integration"). This workflow creates the PR using a PAT stored
+# as the repo secret ITPM_PAT, so the resulting PR DOES trigger verify.yml (the
+# built-in GITHUB_TOKEN is blocked from triggering other workflows). verify.yml
+# then verifies and squash-merges it to develop when green.
+#
+# Triggers ONLY on `verify/**` pushes — your own pushes to develop or any feature
+# branch never hit this. The PAT lives in exactly one place (the repo secret).
+name: auto-pr
+
+on:
+  push:
+    branches: ['verify/**']
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open PR for the routine branch
+        env:
+          GH_TOKEN: ${{ secrets.ITPM_PAT }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::ITPM_PAT secret not set — add a repo secret ITPM_PAT (a PAT with Contents + Pull requests: write)"; exit 1
+          fi
+          BR="${GITHUB_REF_NAME}"
+          if [ -n "$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BR" --base develop --state open --json number -q '.[0].number')" ]; then
+            echo "PR already open for $BR — nothing to do."; exit 0
+          fi
+          gh pr create --repo "$GITHUB_REPOSITORY" --base develop --head "$BR" \
+            --title "itpm: $BR" \
+            --body "Auto-opened for routine branch \`$BR\`. CI (\`backend-frontend\`) verifies it and squash-merges to develop when green."

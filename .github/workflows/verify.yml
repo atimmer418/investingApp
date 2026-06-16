@@ -1,12 +1,18 @@
 # FRED's first CI. Boots an ephemeral, offline backend under the Spring `ci`
 # profile (externals guarded by @Profile("!ci"); test users seeded by
 # CiSeedConfig), then runs the real Phase 2 API contract suite, a frontend
-# type-check, and a scoped frontend unit spec. Gates every PR into `develop`.
+# type-check, and a scoped frontend unit spec. Gates every PR into `develop`,
+# and squash-merges the itpm routine's verify/* PRs when green.
 name: verify
 
 on:
   pull_request:
     branches: [develop]
+
+# The final step squash-merges routine PRs; verification steps only need read.
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   # Job/check name is referenced verbatim by branch protection on `develop`
@@ -88,3 +94,13 @@ jobs:
           # TODO: select the per-story specs by diff in a later iteration
           # (the verifier already runs `ng test --include=<changed>.spec.ts`).
           npx ng test --include='**/jwt-token.utils.spec.ts' --watch=false --browsers=ChromeHeadless
+
+      # Squash-merge the routine's verify/<story> PR to develop once everything
+      # above is green. Runs ONLY for verify/* PRs (the itpm routine) — a PR you
+      # open yourself is NOT auto-merged. This step only executes if every
+      # verification step above succeeded.
+      - name: Auto-merge routine PR on green
+        if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'verify/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr merge ${{ github.event.pull_request.number }} --squash --delete-branch

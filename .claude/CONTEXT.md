@@ -215,10 +215,10 @@ loop bounded and the verifier independent:
 2. Dispatch **verifier** (diff + manifest). It flips each Status, attaches evidence,
    returns a verdict plus TWO separate lists: in-scope failures and out-of-scope
    discoveries.
-3. If REVISION REQUIRED and cycle < 2: hand ONLY the in-scope failures back to the
-   builder, then re-verify (back to step 2). Out-of-scope discoveries NEVER go to the
-   builder.
-4. Still REVISION REQUIRED after 2 cycles: escalate to Andy. Do NOT keep looping.
+3. If REVISION REQUIRED and go-backs so far < 2: hand ONLY the in-scope failures back to
+   the builder, then re-verify (back to step 2). Out-of-scope discoveries NEVER go to the
+   builder. (Up to 2 go-backs — the builder gets 2 chances to fix; up to 3 verifier passes.)
+4. Still REVISION REQUIRED after the 2nd go-back: escalate to Andy. Do NOT keep looping.
 5. Out-of-scope discoveries → drafted backlog items (backlog-add semantics, confirm
    before appending) — they NEVER block the verdict.
 
