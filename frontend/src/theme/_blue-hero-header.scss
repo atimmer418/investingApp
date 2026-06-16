@@ -1,0 +1,127 @@
+// ─── Blue Hero Header — shared partial ────────────────────────────────────────
+// Import this partial with `@use '../../theme/blue-hero-header'` (or the
+// relative path from your page SCSS) so the gradient + cutout live in one place.
+
+ion-header {
+  --background: transparent;
+  background: transparent !important;
+  contain: none;
+  overflow: visible;
+}
+
+ion-toolbar {
+  --background: transparent;
+  --border-width: 0;
+  --min-height: 0;
+}
+
+.blue-hero-header {
+  background: linear-gradient(90deg, #2a5ae0, #1d4ed8);
+
+  // Top padding honours iPhone notch; extra bottom padding for the concave cutout
+  padding: calc(env(safe-area-inset-top, 0px) + 2px) 20px 36px 20px;
+  position: relative;
+  z-index: 10;
+
+  // Concave white cutout — page bg curves up into the blue header
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 24px;
+    background: #f8fafc;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+  }
+}
+
+// Nav row: back button + centered title + spacer (or right-side action)
+.hero-nav {
+  display: flex;
+  align-items: center;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.0);
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+
+  &:active { background: rgba(255, 255, 255, 0.25); }
+
+  .material-symbols-outlined { font-size: 20px; }
+}
+
+// Spacer mirrors the back-btn width so the title is truly centered
+.back-btn-spacer {
+  width: 40px;
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  text-align: center;
+  flex: 1;
+  margin: 0;
+  color: #ffffff;
+}
+
+// Optional right-side action button (e.g. Save on my-profile)
+// Matches back-btn width so title stays centered
+.hero-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 40px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0;
+
+  &:active { opacity: 0.75; }
+}
+
+// Peeked account summary inside the blue hero (see change-bank-account)
+.hero-account-peek {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  .hero-bank-icon {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.85);
+    font-variation-settings: 'FILL' 1;
+  }
+
+  .hero-account-text {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: -0.01em;
+  }
+
+  &--empty {
+    .hero-bank-icon { color: rgba(255, 255, 255, 0.55); }
+    .hero-account-text { color: rgba(255, 255, 255, 0.6); }
+  }
+}
