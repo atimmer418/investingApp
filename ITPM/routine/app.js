@@ -35,19 +35,20 @@
       // "Approve Work" button can never appear over an intermediary/closed page.
       if (approveBar) approveBar.style.display = (state === 'planning') ? 'flex' : 'none';
 
+      // Section visibility (recap cards, completion section) is owned entirely by
+      // the CSS state machine in styles.css. Here we only toggle the few elements
+      // CSS can't key off cleanly: the banners and the Looks Good button.
       if (state === 'intermediary') {
         document.getElementById('intermediary-banner').style.display = 'block';
       }
       if (state === 'failed') {
         document.getElementById('failure-banner').style.display = 'block';
       }
-      if (state === 'completed') {
-        document.getElementById('completion-section').style.display = 'block';
-        document.getElementById('looks-good-btn').style.display = 'block';
-      }
-      if (state === 'looks_good') {
-        // Closed-out: show the completion summary, but no Looks Good button (already pressed).
-        document.getElementById('completion-section').style.display = 'block';
+      var looksGoodBtn = document.getElementById('looks-good-btn');
+      if (looksGoodBtn) {
+        // The button only appears on 'completed' (awaiting Andrew's confirm).
+        // On 'looks_good' it's already been pressed — hide it.
+        looksGoodBtn.style.display = (state === 'completed') ? 'block' : 'none';
       }
     }
 
@@ -85,11 +86,21 @@
     }
 
     var autoRefreshBaseline = null;
+    // When Andrew takes an action that will rewrite today.html (Looks Good,
+    // Approve, Request Changes, Find New Story), we hold off auto-reloading
+    // until that change has fully deployed. Otherwise the poller can catch an
+    // intermediate commit (e.g. the state flip before the backlog re-sort
+    // lands) and reload the page to a stale state — the "flicker" where the
+    // button reappears. suppressReloadUntil is an epoch-ms deadline.
+    var suppressReloadUntil = 0;
+    function suppressAutoRefresh(ms) {
+      suppressReloadUntil = (new Date().getTime()) + ms;
+    }
 
     function startAutoRefresh() {
       // Compare the live deployed file against itself on a poll. On the first
       // tick we record the baseline; on every later tick, a different hash means
-      // a new version deployed → hard reload.
+      // a new version deployed → hard reload (unless we're in a suppress window).
       function poll() {
         // Poll the exact path the user is on (canonical is /today). Cache-bust
         // so we always read the freshly deployed file, never a cached copy.
@@ -101,9 +112,18 @@
             var h = hashString(html);
             if (autoRefreshBaseline === null) {
               autoRefreshBaseline = h;          // first read — establish baseline
-            } else if (h !== autoRefreshBaseline) {
-              location.reload();                // file changed on the server
+              return;
             }
+            if (h === autoRefreshBaseline) return;  // nothing changed
+            // File changed. If we're inside a suppress window (Andrew just acted
+            // and the change is still deploying), keep waiting — but adopt the
+            // new hash as baseline so the eventual real reload uses the final
+            // version, not an intermediate one.
+            if ((new Date().getTime()) < suppressReloadUntil) {
+              autoRefreshBaseline = h;
+              return;
+            }
+            location.reload();
           })
           .catch(function () { /* offline / transient — try again next tick */ });
       }
@@ -384,6 +404,7 @@
         var skipBanner = document.getElementById('intermediary-banner');
         if (skipBanner) skipBanner.style.display = 'block';
 
+        suppressAutoRefresh(30000);   // smooth over the intermediary-state commit
         fetch('/trigger', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -467,6 +488,7 @@
       if (banner) banner.style.display = 'block';
 
       // POST to trigger
+      suppressAutoRefresh(30000);   // smooth over the intermediary-state commit
       fetch('/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -489,6 +511,9 @@
       var btn = document.getElementById('looks-good-btn');
       btn.textContent = 'Marking as done...';
       btn.disabled = true;
+      // Hold off auto-reload until the looks_good commit + deploy fully lands,
+      // so the page doesn't flicker back to the button mid-transaction.
+      suppressAutoRefresh(120000);
       fetch('/looks-good', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -502,11 +527,13 @@
             var rework = document.getElementById('rework-block');
             if (rework) rework.style.display = 'none';
           } else {
+            suppressReloadUntil = 0;           // failed — let refresh resume
             btn.textContent = 'Looks Good ✓';
             btn.disabled = false;
           }
         })
         .catch(function() {
+          suppressReloadUntil = 0;
           btn.textContent = 'Looks Good ✓';
           btn.disabled = false;
         });
@@ -535,6 +562,7 @@
       if (banner) banner.style.display = 'block';
       applyStateUI();
 
+      suppressAutoRefresh(30000);   // smooth over the intermediary-state commit
       fetch('/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -132,16 +132,16 @@
       </div>
     </div>
 
-    <!-- ── Why I Picked These (intermediary only) ── -->
-    <div class="section-group section-intermediary-only">
-      <div class="section-label">Why I Picked These</div>
+    <!-- ── Why I Picked This (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Why I Picked This</div>
       <div class="card">
         <div class="card-text">FRED-196 shipped and you closed it out, so I re-ran the pick over the remaining Tier-1 stories. <strong>FRED-193 is the strongest one that can actually ship and be verified in this sandbox today.</strong> The other A/C-ready stories are gated: FRED-191 (load-perf) needs a running Capacitor build on a real device this sandbox can't provide; FRED-195 (pig avatars) needs SVGs from the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PersonalTypeshit/FRED&nbsp;Logo</code> sibling directory that lives outside this repo; FRED-194 (uniform settings headers) is a large 9-page UI overhaul with a wide blast radius that can't be visually verified without a browser. FRED-193 has no such gate — it's a clean SCSS removal whose footprint I verified directly (a grep for <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">prefers-color-scheme: dark</code> returns exactly the 7 SCSS files the A/C names, plus <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">settings.service.ts</code> which is the theme infra we intentionally keep — no surprise files). <strong>Tier 1</strong>, full acceptance criteria in the backlog, no triage gap. It's also a prerequisite that unblocks the future FRED-146 dark-mode epic, which scores high on the Decision Framework (dependency chains + quick win + guaranteed completion). Medium difficulty, one-day completion.</div>
       </div>
     </div>
 
     <!-- ── Strategic Alignment (intermediary only) ── -->
-    <div class="section-group section-intermediary-only">
+    <div class="section-group section-recap-only">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
         <div class="card-text">The product vision is explicit: <em>"Light mode forced — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">color-scheme: light</code> on every component,"</em> and dark mode is a <em>rejected/premature</em> pattern to be done only after every screen is migrated. Right now a user on an OS set to Dark Mode sees a half-broken, partially-inverted app — dark backgrounds bleeding through some surfaces while others stay light. That inconsistency reads as "unfinished" exactly when we're hardening for private beta, where trust and a polished, consistent surface are the priority. Forcing the app fully light now removes that seam everywhere and gives the eventual FRED-146 dark mode a clean, properly-designed foundation instead of the naive auto-inverted blocks we have today.</div>
@@ -149,7 +149,7 @@
     </div>
 
     <!-- ── Production Readiness Impact (intermediary only) ── -->
-    <div class="section-group section-intermediary-only">
+    <div class="section-group section-recap-only">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
         <div class="card-text">This lifts the <strong>UI-coverage / no-placeholder-UX</strong> side of readiness directly — "polished UI everywhere, no half-dark surfaces" is a concrete production-readiness requirement, and the inconsistent dark bleed is a visible gap in it across four high-traffic surfaces (tab-switcher, tab1, tab2, AI chat). It's low-risk: SCSS-only removal, no backend, schema, auth, or behavior change, with the theme infrastructure preserved so nothing is foreclosed for the future. A guaranteed one-day completion that keeps the readiness score climbing while staying squarely in the Easy/Medium band the difficulty bias calls for at this stage.</div>
@@ -330,9 +330,9 @@
       </div>
     </div>
 
-    <!-- ── Tomorrow's Likely Priorities (intermediary only) ── -->
-    <div class="section-group section-intermediary-only">
-      <div class="section-label">Tomorrow's Likely Priorities</div>
+    <!-- ── Tomorrow's Likely Pick (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Tomorrow's Likely Pick</div>
       <div class="card">
         <ul class="tomorrow-list">
           <li><strong>FRED-188</strong> — Add null userId guard to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> — Easy, a parked quick win: a one-line null guard mirroring the one already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> that closes a real NPE path. Tier 2 (needs A/C confirmed), guaranteed-complete bug-density win.</li>
@@ -343,7 +343,7 @@
     </div>
 
     <!-- ── Completion Section (completed state only) ── -->
-    <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
+    <div class="section-group section-intermediary-only" id="completion-section">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
         <div style="margin-bottom:16px;">

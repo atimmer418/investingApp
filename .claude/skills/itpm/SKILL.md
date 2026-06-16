@@ -112,7 +112,7 @@ Apply the Decision Framework from `ITPM/routine.md` in order: prerequisites → 
 1. **Tier 1 (default):** Only pick stories that already have an `### Acceptance Criteria` block in `backlog.md`. These are build-ready.
 2. **Tier 2 (only when Tier 1 is exhausted):** If no suitable A/C-complete stories remain, pick a story WITHOUT acceptance criteria, run the **triage skill** against it to generate proposed A/C, and present those A/C in the dashboard as a **proposal for Andrew to approve or edit** (see Step 9, A/C Proposal Mode). The execute agent will write the approved A/C back into backlog.md before building.
 
-State in "Why I Picked These" which tier you're operating in.
+State in "Why I Picked This" which tier you're operating in.
 
 **Pick rules:**
 - **Pick exactly ONE story.** This routine works one story at a time — one story, one plan, one approval. (Later we may run 2–3 parallel ITPM routines each picking their own story; for now it is strictly one.)
@@ -165,7 +165,7 @@ Andrew can pick one and annotate each via the note textareas — the approval wi
 
 **Execution Order:** numbered `.step-item` steps (with the edit-button structure already in the template), logical implementation sequence.
 
-**Tomorrow's Likely Priorities:** 1–3 likely next picks based on what ships today.
+**Tomorrow's Likely Pick:** 1–3 likely next picks based on what ships today.
 
 ---
 
@@ -186,15 +186,17 @@ You ONLY edit the content INSIDE `<div id="dashboard">…</div>` (and its `data-
 Populate:
 1. **Scoreboard** — all 6 metric values, bar-fill widths, `positive`/`warning` classes, AND the `.metric-trend` span for each (`↑ +N vs last week` green / `↓ -N vs last week` red / `→ no change` gray).
 2. **Today's Priority** — exactly ONE `.priority-card` (badge "#1") with the skip checkbox already in template, title, desc, difficulty chip. If Andrew checks Skip, the dashboard hides the plan detail and the approve button becomes "Find New Story" — which sends a revision asking for a different single story. Do not render a second priority card.
-3. **Why I Picked These** — 2–3 sentences; state Tier 1 or Tier 2.
-4. **Strategic Alignment** — 1–2 sentences.
-5. **Production Readiness Impact** — 1–2 sentences.
+3. **Why I Picked This** — 2–3 sentences; state Tier 1 or Tier 2. Section is class `section-recap-only` (shows during intermediary/building only).
+4. **Strategic Alignment** — 1–2 sentences. Class `section-recap-only`.
+5. **Production Readiness Impact** — 1–2 sentences. Class `section-recap-only`.
 6. **Options OR Phone Mockups** — per Step 7.
 7. **Triage Findings** — In Scope / Potentially Out of Scope / UX per story (Out-of-Scope lives here, NOT as its own section).
 8. **A/C Proposal Mode (Tier 2 only):** if this is a Tier-2 story, add a section before the options showing the generated acceptance criteria as a checklist with an editable note, labeled "Proposed Acceptance Criteria — approve or edit". Make clear the build won't start until A/C is confirmed.
 9. **Questions For Andrew** — `.question-item`s, Required/Optional badges.
 10. **Suggested Execution Order** — `.step-item`s.
-11. **Tomorrow's Likely Priorities** — 2–3 items.
+11. **Tomorrow's Likely Pick** — 1–3 items. Class `section-recap-only`.
+
+The four recap sections (Why I Picked This, Strategic Alignment, Production Readiness Impact, Tomorrow's Likely Pick) MUST use class `section-recap-only` — they appear only while work is building (intermediary), never on the planning or completed page. Do not tag them `section-intermediary-only` (that class is reserved for the completion section).
 
 Commit and push. Pull immediately before pushing — other routines (digest, etc.) commit to `develop` during the minutes you spent generating, so a stale push will be rejected:
 ```bash

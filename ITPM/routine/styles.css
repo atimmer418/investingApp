@@ -209,29 +209,32 @@
     .section-group { margin-bottom: 32px; }
 
     /* ─── State Machine ───────────────────────────────────────────────────────
-       EXHAUSTIVE and MUTUALLY EXCLUSIVE. Two section buckets:
-         .section-planning-only      → only the planning brief (priorities, options, triage…)
-         .section-intermediary-only  → only post-build content (recap cards, completion)
-       Default: BOTH hidden. Each state turns on exactly one bucket. This way no
-       state — known or stray — can ever show both at once. Do not "simplify" by
-       relying on defaults; every state is spelled out on purpose. */
+       EXHAUSTIVE and MUTUALLY EXCLUSIVE. Three section buckets:
+         .section-planning-only      → the planning brief (priorities, options, triage…)
+         .section-recap-only         → the "why I picked this / alignment / impact /
+                                        tomorrow's pick" recap cards
+         .section-intermediary-only  → the completion section (#completion-section)
+       Default: ALL hidden. Each state turns on exactly the buckets it needs.
+       No state — known or stray — can ever show the wrong bucket. Every state is
+       spelled out on purpose; do not "simplify" by relying on defaults. */
     .section-planning-only { display: none; }
+    .section-recap-only { display: none; }
     .section-intermediary-only { display: none; }
 
     /* planning — the brief Andrew reviews. Plan detail ONLY. */
     [data-state="planning"] .section-planning-only { display: block; }
 
-    /* intermediary — work queued/building. NOTHING but the banner (no plan, no recap). */
-    /* (both buckets stay hidden; #intermediary-banner is shown via JS) */
+    /* intermediary — work queued/building. The recap cards (why/alignment/impact/
+       tomorrow) ONLY, plus the banner (shown via JS). No plan, no completion. */
+    [data-state="intermediary"] .section-recap-only { display: block; }
 
-    /* completed / looks_good — work done. Recap + completion ONLY, never plan detail. */
-    [data-state="completed"] .section-intermediary-only,
-    [data-state="looks_good"] .section-intermediary-only { display: block; }
+    /* completed / looks_good — work done. The completion section ONLY
+       (What Got Done + Looks Good + Request Changes). Never plan, never recap. */
     [data-state="completed"] #completion-section,
     [data-state="looks_good"] #completion-section { display: block; }
 
     /* failed — nothing but the failure banner (shown via JS). */
-    /* (both buckets stay hidden) */
+    /* (all buckets stay hidden) */
 
     /* When a story is skipped, hide its plan detail — keep notes + add-to-backlog */
     #dashboard.skip-mode .hide-on-skip { display: none; }
