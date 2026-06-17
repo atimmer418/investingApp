@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Digest — 2026-06-16</title>
+  <title>Claude Digest — 2026-06-17</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#0f1117;color:#e8eaf0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.6;padding:48px 24px 80px}
@@ -35,7 +35,6 @@
     .empty{padding:20px 18px;font-size:13px;color:#7c82a0;font-style:italic}
     footer{margin-top:48px;font-size:12px;color:#7c82a0;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
     .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#56c4a0;margin-right:6px;vertical-align:middle}
-    code{font-family:ui-monospace,monospace;font-size:12px;background:#1a1e2e;padding:2px 5px;border-radius:4px;color:#a07cf6}
   </style>
 </head>
 <body>
@@ -46,7 +45,7 @@
       <span class="wordmark-text">Claude Daily Digest</span>
     </div>
     <h1>What's new in Claude</h1>
-    <span class="date-label">Monday, June 16, 2026</span>
+    <span class="date-label">Wednesday, June 17, 2026</span>
   </header>
   <hr />
 
@@ -54,31 +53,34 @@
     <div class="section-head"><span>📦</span><span class="section-title">New Releases</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="version">v2.1.178</span><span class="ts">June 15, 2026</span></div>
-        <div class="body">Added <code>Tool(param:value)</code> syntax for permission rules with wildcard support (e.g. <code>Agent(model:opus)</code> to block Opus subagents), improved nested <code>.claude/</code> directory precedence so the closest directory wins, hardened auto mode by evaluating subagent spawns through the classifier before launch, and enhanced <code>/doctor</code> with a flat tree layout and clearer status icons. Also includes 12 bug fixes covering subagent transcript viewing, background session state, vim undo behavior, and MCP disallowed-tools handling.</div>
+        <div class="meta"><span class="version">v2.1.179</span><span class="ts">June 16, 2026</span></div>
+        <div class="body">Fixed mid-stream connection drops, mouse-wheel scrolling in WSL2, sandbox glob performance issues, feedback survey capture, welcome screen stacking, and various UI/remote session improvements.</div>
       </div>
-      <div class="empty">No new releases on June 16. Most recent is v2.1.178 — June 15, 2026.</div>
+      <div class="item">
+        <div class="meta"><span class="version">v2.1.178</span><span class="ts">June 15, 2026</span></div>
+        <div class="body">Added <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">Tool(param:value)</code> syntax for permission rules, improved nested <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">.claude/</code> directory handling, enhanced auto mode subagent evaluation, and fixed multiple subagent transcript and MCP server issues.</div>
+      </div>
     </div>
   </section>
 
   <section class="section">
-    <div class="section-head"><span>📰</span><span class="section-title">This Week (Week 24 · June 8–12)</span></div>
+    <div class="section-head"><span>📰</span><span class="section-title">This Week</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span><span class="ts">v2.1.169</span></div>
-        <div class="body"><strong>/cd command</strong> — move the current session to a different working directory mid-conversation without rebuilding the prompt cache; the new directory's <code>CLAUDE.md</code> is appended as a message and the session relocates to the new project's storage so <code>--resume</code> finds it there.</div>
+        <div class="meta"><span class="tag">Week 24 · June 8–12, 2026 · v2.1.166–v2.1.176</span></div>
+        <div class="body"><strong style="color:#e8eaf0">/cd command</strong> — Move the current session to a new working directory mid-conversation without rebuilding the prompt cache.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span><span class="ts">v2.1.172</span></div>
-        <div class="body"><strong>Sub-agents can spawn sub-agents</strong> — nested agent trees are now supported with a live tree view in the subagent panel; background chains are capped at five levels deep to prevent runaway concurrency, while foreground chains can go any depth.</div>
+        <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span></div>
+        <div class="body"><strong style="color:#e8eaf0">Sub-agent chains</strong> — Sub-agents can now spawn their own sub-agents; background chains are capped at five levels deep to prevent runaway recursion.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span><span class="ts">v2.1.169</span></div>
-        <div class="body"><strong>Safe mode for troubleshooting</strong> — launch with <code>--safe-mode</code> or <code>CLAUDE_CODE_SAFE_MODE</code> to disable all customizations (CLAUDE.md, skills, plugins, hooks, MCPs, custom commands) while keeping auth, model selection, and permissions intact. If a problem disappears in safe mode, one of those surfaces is the cause.</div>
+        <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span></div>
+        <div class="body"><strong style="color:#e8eaf0">--safe-mode</strong> — Starts Claude Code with all customizations (hooks, plugins, MCPs) disabled for clean troubleshooting sessions.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span><span class="ts">v2.1.166+</span></div>
-        <div class="body"><strong>fallbackModel chains</strong> — configure up to three fallback models tried in order when the primary model is overloaded or unavailable; <code>--fallback-model</code> now also applies to interactive sessions. Also: plugin search in <code>/plugin</code> marketplace, new <code>disableBundledSkills</code> setting, deny rules now accept glob patterns in the tool-name position, and cross-session <code>SendMessage</code> authority is hardened in auto mode.</div>
+        <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span></div>
+        <div class="body"><strong style="color:#e8eaf0">fallbackModel</strong> — Configure up to three fallback models tried in sequence if the primary model is unavailable or over capacity.</div>
       </div>
     </div>
   </section>
@@ -88,15 +90,15 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="tag">June 15, 2026</span></div>
-        <div class="body"><strong>Model retirements:</strong> <code>claude-sonnet-4-20250514</code> and <code>claude-opus-4-20250514</code> have been retired — all requests now return an error. Upgrade to Claude Sonnet 4.6 and Claude Opus 4.8. Researchers can request ongoing access via the External Researcher Access Program.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="tag">June 15, 2026</span></div>
-        <div class="body"><strong>Programmatic usage credits:</strong> Users on paid plans can now claim a dedicated monthly credit for programmatic use, covering the Claude Agent SDK, <code>claude -p</code> CLI, Claude Code GitHub Actions, and third-party Agent SDK apps. This separates programmatic usage from interactive plan limits.</div>
+        <div class="body"><strong style="color:#e8eaf0">Model retirements:</strong> Claude Sonnet 4 (<code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">claude-sonnet-4-20250514</code>) and Claude Opus 4 (<code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">claude-opus-4-20250514</code>) are now retired — all requests return an error. Upgrade to Sonnet 4.6 and Opus 4.8.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">June 10, 2026</span></div>
-        <div class="body"><strong>AWS Claude Platform:</strong> The <code>GET /v1/environments/{id}/work</code> endpoint (listing pending work for self-hosted sandboxes) is now available on Claude Platform on AWS. See IAM actions docs for the <code>GetEnvironment</code> action that authorizes it.</div>
+        <div class="body"><strong style="color:#e8eaf0">Claude Platform on AWS:</strong> The <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">GET /v1/environments/{id}/work</code> endpoint for self-hosted sandboxes is now available on Claude Platform on AWS.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="tag">June 9, 2026</span></div>
+        <div class="body"><strong style="color:#e8eaf0">Claude Fable 5 launched</strong> — The most capable widely released model: 1M token context window, 128k max output tokens, always-on adaptive thinking, and a new <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">stop_reason: "refusal"</code> with zero billing on pre-output refusals. Claude Mythos 5 available for Project Glasswing participants.</div>
       </div>
     </div>
   </section>
@@ -105,20 +107,20 @@
     <div class="section-head"><span>𝕏</span><span class="section-title">From the Team</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">June 15, 2026</span></div>
-        <div class="body">Announced that starting June 15, paid-plan users can claim a dedicated monthly credit for programmatic usage (Agent SDK, <code>claude -p</code>, GitHub Actions, third-party Agent SDK apps) — separating it from interactive plan limits. Claude Code weekly limits also increased 50% through July 13.</div>
+        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">recent</span></div>
+        <div class="body">Claude Code weekly limits raised 50% through July 13, 2026 for Pro, Max, Team, and Enterprise plans. Starting June 15, paid plan users can claim a dedicated monthly credit for programmatic usage covering the Agent SDK, <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 5px;border-radius:4px">claude -p</code> CLI, GitHub Actions, and third-party Agent SDK apps.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@claudeai</span><span class="ts">~June 2026</span></div>
-        <div class="body"><span class="quiet">Quiet today — no posts in the last 48 hours from @claudeai.</span></div>
+        <div class="meta"><span class="handle">@claudeai</span><span class="ts">June 9, 2026</span></div>
+        <div class="body">Claude Fable 5 is here — Anthropic's most capable widely released model, sitting above the Opus class with a 1M token context window and always-on adaptive thinking. Claude Mythos 5 also launched for Project Glasswing participants.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@bcherny</span><span class="ts">~June 2026</span></div>
-        <div class="body">Boris Cherny (Claude Code creator) posted live from "Code with Claude London": "Hello from Code with Claude London!" — the team is on a world tour expanding access. He's also been sharing that he hasn't written a single line of code himself in 2026, noting the team is "living in the future."</div>
+        <div class="meta"><span class="handle">@bcherny</span><span class="ts">recent</span></div>
+        <div class="body">Boris Cherny (Claude Code creator) says he hasn't written a line of code himself in 2026. Shared tips from his surprisingly vanilla setup: he runs 5 parallel Claude Code instances using separate git checkouts of the same repo, and focuses on teaching accessible AI agent usage.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@trq212</span><span class="ts">June 2026</span></div>
-        <div class="body">Thariq shared a deep-dive on dynamic workflows ("A harness for every task") — Claude Code writing its own task harness on the fly, custom-built per problem. Also shared how Anthropic teammates stay in sync with Claude's work, citing Suzanne's method of using Claude to track and summarize ongoing sessions.</div>
+        <div class="meta"><span class="handle">@trq212</span><span class="ts">recent</span></div>
+        <div class="body">Thariq called Workflows "the biggest upgrade to Claude Code's capabilities since skills and subagents," highlighting how they enable non-technical task orchestration — diving deep with the team on best practices and example patterns.</div>
       </div>
     </div>
   </section>
@@ -126,7 +128,7 @@
   <hr />
   <footer>
     <span><span class="dot"></span>digest.fredvested.com</span>
-    <span>Generated 2026-06-16 at 8:00 AM ET</span>
+    <span>Generated 2026-06-17 at 8:00 AM ET</span>
   </footer>
 </div>
 </body>
