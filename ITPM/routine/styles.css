@@ -232,10 +232,16 @@
        tomorrow) ONLY, plus the banner (shown via JS). No plan, no completion. */
     [data-state="intermediary"] .section-recap-only { display: block !important; }
 
-    /* completed / looks_good — work done. The completion section ONLY
-       (What Got Done + Looks Good + Request Changes). Never plan, never recap. */
-    [data-state="completed"] #completion-section,
+    /* completed — work done, awaiting Andrew's verdict. Completion section with
+       BOTH the Looks Good button and Request Changes block. */
+    [data-state="completed"] #completion-section { display: block !important; }
+
+    /* looks_good — Andrew confirmed; story checkmarked. Show the read-only
+       "What Got Done" summary, but the action controls are spent — hide the
+       Looks Good button and the Request Changes block. */
     [data-state="looks_good"] #completion-section { display: block !important; }
+    [data-state="looks_good"] #looks-good-btn,
+    [data-state="looks_good"] #rework-block { display: none !important; }
 
     /* failed — nothing but the failure banner (shown via JS). */
     /* (all buckets stay hidden) */

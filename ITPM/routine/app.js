@@ -44,12 +44,14 @@
       if (state === 'failed') {
         document.getElementById('failure-banner').style.display = 'block';
       }
+      // The Looks Good button AND the Request Changes block are only actionable
+      // on 'completed' (awaiting Andrew's verdict). On 'looks_good' he's already
+      // confirmed and the story is checkmarked — hide both, leaving just the
+      // read-only "What Got Done" summary.
       var looksGoodBtn = document.getElementById('looks-good-btn');
-      if (looksGoodBtn) {
-        // The button only appears on 'completed' (awaiting Andrew's confirm).
-        // On 'looks_good' it's already been pressed — hide it.
-        looksGoodBtn.style.display = (state === 'completed') ? 'block' : 'none';
-      }
+      if (looksGoodBtn) looksGoodBtn.style.display = (state === 'completed') ? 'block' : 'none';
+      var reworkBlock = document.getElementById('rework-block');
+      if (reworkBlock) reworkBlock.style.display = (state === 'completed') ? 'block' : 'none';
     }
 
     (function init() {
