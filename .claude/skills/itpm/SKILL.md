@@ -130,7 +130,23 @@ For each selected story generate:
 - **In Scope:** concrete list of what implementing includes
 - **Potentially Out of Scope:** adjacent work to exclude this run (goes INSIDE triage findings, not its own section)
 - **UX Considerations:** loading / empty / error+retry states, mobile-first at 390×844, tier gating
-- **Questions For Andrew:** genuine decision-points only; mark Required (blocks) or Optional
+- **Questions For Andrew:** see the rules below.
+
+### Questions For Andrew — generation rules
+
+Andrew can submit the plan WITHOUT typing any answers — every question carries a **predicted answer** as its placeholder, and an empty submit means "your prediction was right." So questions are cheap to leave but must be genuinely useful. Follow these rules:
+
+1. **Variable count — ask only what you actually need.** Do NOT default to 3. Ask zero questions if the story is fully unambiguous. Ask one if there's one real fork. Ask more only if there are genuinely several independent decisions. Each question must be a real decision point where Andrew's answer would change what gets built — never filler, never "out of scope" curiosities.
+
+2. **First, mine the story's existing open questions.** The backlog story (its description / Summary / A/C / any "Questions"/"Open Questions" notes) often already contains unresolved questions Andrew wrote earlier. For each:
+   - Decide whether it STILL needs an answer to build this story, and why.
+   - If it's already answered elsewhere (A/C, vision, a prior decision in memory), do NOT re-ask — note it's resolved.
+   - If it genuinely still matters, surface it as a question here (prefixed so Andrew recognizes it, e.g. "From the story:") with your predicted answer.
+   - If it no longer matters (scope changed, obsolete), drop it.
+
+3. **Every question gets a PREDICTIVE placeholder.** The textarea `placeholder` must be your best prediction of Andrew's actual answer, phrased as if he wrote it (e.g. "Yes — build the shared partial and refactor change-bank-account to consume it too."). NEVER use a generic "Your answer..." placeholder. The placeholder IS the answer that gets sent if he submits empty, so make it correct and specific.
+
+4. **Required vs Optional is emphasis, not a gate.** Nothing blocks submission. Mark a question **Required** when you most want Andrew's explicit read (still submittable on the prediction); **Optional** when your prediction is high-confidence and you're mostly informing him. If you're confident enough that a question feels like you already know the answer, either make it Optional or don't ask it at all.
 
 ---
 
@@ -192,7 +208,7 @@ Populate:
 6. **Options OR Phone Mockups** — per Step 7.
 7. **Triage Findings** — In Scope / Potentially Out of Scope / UX per story (Out-of-Scope lives here, NOT as its own section).
 8. **A/C Proposal Mode (Tier 2 only):** if this is a Tier-2 story, add a section before the options showing the generated acceptance criteria as a checklist with an editable note, labeled "Proposed Acceptance Criteria — approve or edit". Make clear the build won't start until A/C is confirmed.
-9. **Questions For Andrew** — `.question-item`s, Required/Optional badges.
+9. **Questions For Andrew** — per the Step 6 generation rules: a VARIABLE number (0 to several, only what's genuinely needed — not always 3). Each `.question-item` has the question text, a `required-badge` OR `optional-badge` (emphasis only — neither blocks submission), and a `<textarea class="question-input">` whose **`placeholder` is your predicted answer** phrased as if Andrew wrote it (never "Your answer..."). Keep `data-required="true"` on the textarea for Required questions as a visual marker, but know it no longer gates the Approve button. If there are zero genuine questions, render the card with a single line like "No open decisions — the plan is unambiguous." and no question items.
 10. **Suggested Execution Order** — `.step-item`s.
 11. **Tomorrow's Likely Pick** — 1–3 items. Class `section-recap-only`.
 

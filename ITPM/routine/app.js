@@ -362,11 +362,11 @@
       }
       btn.textContent = 'Approve / Get To Work';
 
-      var allQuestionsAnswered = true;
-      document.querySelectorAll('.question-input[data-required="true"]').forEach(function(input) {
-        if (!input.value.trim()) allQuestionsAnswered = false;
-      });
-
+      // Questions never block submission. Each one carries a predicted answer
+      // (its placeholder); leaving a question empty means "your prediction is
+      // right." The only gate is that an implementation option is selected — and
+      // the recommended one is pre-selected, so the form is effectively always
+      // ready. (Required vs optional is now just visual emphasis.)
       var allOptionsSelected = true;
       document.querySelectorAll('.option-group').forEach(function(group) {
         if (!group.querySelector('.option-card.selected')) allOptionsSelected = false;
@@ -375,15 +375,17 @@
         if (!group.querySelector('.phone-option.selected')) allOptionsSelected = false;
       });
 
-      if (allQuestionsAnswered && allOptionsSelected) {
+      if (allOptionsSelected) {
         btn.classList.add('ready');
-        if (status) status.textContent = 'Ready to approve — all fields complete';
+        if (status) {
+          var blanks = Array.from(document.querySelectorAll('.question-input')).filter(function(i){ return !i.value.trim(); }).length;
+          status.textContent = blanks > 0
+            ? 'Ready to approve — ' + blanks + ' question' + (blanks > 1 ? 's' : '') + ' will use the predicted answer'
+            : 'Ready to approve';
+        }
       } else {
         btn.classList.remove('ready');
-        var unanswered = Array.from(document.querySelectorAll('.question-input[data-required="true"]')).filter(function(i) { return !i.value.trim(); }).length;
-        if (status) status.textContent = unanswered > 0
-          ? unanswered + ' required question' + (unanswered > 1 ? 's' : '') + ' remaining'
-          : 'Select an implementation option to continue';
+        if (status) status.textContent = 'Select an implementation option to continue';
       }
     }
 
@@ -462,11 +464,22 @@
       });
       if (skipped.length > 0) content += '\n\nSkip these stories and find alternatives:\n' + skipped.map(function(s) { return '- ' + s; }).join('\n');
 
+      // Collect EVERY question (not just required). If Andrew typed an answer,
+      // use it. If he left it blank, the placeholder was the routine's predicted
+      // answer and an empty submit means "your prediction was right" — so we send
+      // the placeholder text as the confirmed answer, tagged so the agent knows.
       var answers = [];
-      document.querySelectorAll('.question-input[data-required="true"]').forEach(function(input) {
-        var labelEl = input.closest('.question-block') ? input.closest('.question-block').querySelector('.question-label') : null;
-        if (!labelEl) labelEl = input.closest('.question-item') ? input.closest('.question-item').querySelector('.question-text') : null;
-        answers.push((labelEl ? labelEl.textContent.trim() : 'Question') + ': ' + input.value.trim());
+      document.querySelectorAll('.question-input').forEach(function(input) {
+        var item = input.closest('.question-item');
+        var qEl = item ? item.querySelector('.question-text') : null;
+        var question = qEl ? qEl.textContent.replace(/\s+/g, ' ').trim() : 'Question';
+        var typed = input.value.trim();
+        if (typed) {
+          answers.push('Q: ' + question + '\n  A (Andrew wrote): ' + typed);
+        } else {
+          var predicted = (input.getAttribute('placeholder') || '').trim();
+          answers.push('Q: ' + question + '\n  A (Andrew confirmed your prediction): ' + predicted);
+        }
       });
       if (answers.length > 0) content += '\n\nAndrew\'s Answers:\n' + answers.join('\n');
 
