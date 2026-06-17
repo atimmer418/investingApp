@@ -44,12 +44,25 @@
       if (state === 'failed') {
         document.getElementById('failure-banner').style.display = 'block';
       }
-      // The Looks Good button AND the Request Changes block are only actionable
-      // on 'completed' (awaiting Andrew's verdict). On 'looks_good' he's already
-      // confirmed and the story is checkmarked — hide both, leaving just the
-      // read-only "What Got Done" summary.
+      // Looks Good button + Request Changes are actionable only on 'completed'
+      // (awaiting Andrew's verdict). On 'looks_good' he's already confirmed:
+      //   - keep the Looks Good button visible but as a disabled "All done"
+      //     confirmation (so the page reads as closed-out, per Andrew's ask),
+      //   - hide Request Changes (you can't rework something you signed off).
       var looksGoodBtn = document.getElementById('looks-good-btn');
-      if (looksGoodBtn) looksGoodBtn.style.display = (state === 'completed') ? 'block' : 'none';
+      if (looksGoodBtn) {
+        if (state === 'completed') {
+          looksGoodBtn.style.display = 'block';
+        } else if (state === 'looks_good') {
+          looksGoodBtn.style.display = 'block';
+          looksGoodBtn.disabled = true;
+          looksGoodBtn.textContent = '✓ All done — fresh brief tomorrow at 9am';
+          looksGoodBtn.style.background = '#6b7280';
+          looksGoodBtn.style.cursor = 'default';
+        } else {
+          looksGoodBtn.style.display = 'none';
+        }
+      }
       var reworkBlock = document.getElementById('rework-block');
       if (reworkBlock) reworkBlock.style.display = (state === 'completed') ? 'block' : 'none';
     }
@@ -90,10 +103,14 @@
     var autoRefreshBaseline = null;
     // When Andrew takes an action that will rewrite today.html (Looks Good,
     // Approve, Request Changes, Find New Story), we hold off auto-reloading
-    // until that change has fully deployed. Otherwise the poller can catch an
-    // intermediate commit (e.g. the state flip before the backlog re-sort
-    // lands) and reload the page to a stale state — the "flicker" where the
-    // button reappears. suppressReloadUntil is an epoch-ms deadline.
+    // until that change has fully deployed — otherwise the poller can catch an
+    // intermediate commit (e.g. the state flip before the backlog re-sort lands)
+    // and reload to a flickery in-between state. CRITICAL: while suppressed we
+    // must NOT touch the baseline. Leaving it untouched means that once the
+    // window closes, the next poll still sees hash != baseline and performs the
+    // ONE real reload to the final deployed version. (An earlier version adopted
+    // the new hash as baseline during suppression, which swallowed that reload
+    // entirely — the open tab never updated.) suppressReloadUntil is epoch-ms.
     var suppressReloadUntil = 0;
     function suppressAutoRefresh(ms) {
       suppressReloadUntil = (new Date().getTime()) + ms;
@@ -102,7 +119,7 @@
     function startAutoRefresh() {
       // Compare the live deployed file against itself on a poll. On the first
       // tick we record the baseline; on every later tick, a different hash means
-      // a new version deployed → hard reload (unless we're in a suppress window).
+      // a new version deployed → hard reload (deferred while suppressed).
       function poll() {
         // Poll the exact path the user is on (canonical is /today). Cache-bust
         // so we always read the freshly deployed file, never a cached copy.
@@ -117,14 +134,10 @@
               return;
             }
             if (h === autoRefreshBaseline) return;  // nothing changed
-            // File changed. If we're inside a suppress window (Andrew just acted
-            // and the change is still deploying), keep waiting — but adopt the
-            // new hash as baseline so the eventual real reload uses the final
-            // version, not an intermediate one.
-            if ((new Date().getTime()) < suppressReloadUntil) {
-              autoRefreshBaseline = h;
-              return;
-            }
+            // File changed on the server. If we're still inside a suppress
+            // window, defer — but DO NOT adopt the new hash, so the reload still
+            // fires on a later tick once the window has elapsed.
+            if ((new Date().getTime()) < suppressReloadUntil) return;
             location.reload();
           })
           .catch(function () { /* offline / transient — try again next tick */ });
