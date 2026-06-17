@@ -35,6 +35,20 @@
 
 ## Daily Entries
 
+### 2026-06-17 (Morning Brief) — Skip step-up auth verify-flash (FRED-199)
+
+**Priorities selected:** FRED-199 — Skip the step-up auth "Security Verification" section/overlay for users who don't have step-up auth enabled
+**Tier:** 1 (A/C ready) — FRED-199 carries a full Acceptance Criteria block in `backlog.md`; build-ready, no triage gap.
+**Rationale:** FRED-194 shipped 06-16 and was closed out to `looks_good` (now checkmarked → 35/97 done) → guard passed → fresh brief. Re-ran the pick over the four A/C-ready READY stories. Two stay sandbox-gated exactly as on 06-15/06-16: FRED-191 (load-perf) needs a real-device Capacitor build the sandbox can't run; FRED-195 (pig avatars) needs SVGs from the `PersonalTypeshit/FRED Logo` sibling dir — re-verified ABSENT on disk this morning. That left FRED-199 vs FRED-200, both build-ready here. Picked FRED-199 on quick-win + guaranteed-completion + difficulty bias: it's a focused single-page loading/gating fix I grounded in-code (`security-settings.page.ts` `ngOnInit` defaults `isAuthenticated=false`/`isAuthenticating=true`, then `await`s `pinService.hasPin()` — so the `.auth-overlay` "verify your identity / Verifying…" paints for everyone during that async window before non-PIN users get dropped into settings). FRED-200 is a 3hr+ epic introducing Angular signals for the first time + a localStorage snapshot — higher architectural risk, deferred to tomorrow. Not a UI overhaul (a state/gating fix, no design decision) → standard A/B/C options: A distinct "checking" state + remove the vestigial verify button [rec]; B reuse existing flags + keep the button wired (overloads booleans, keeps dead-ish stub); C single "ready" gate before paint (rejected-ish — one boolean can't cleanly split checking vs verify, risks content-leak/blank-flash, weak on AC-3).
+**Metrics:** Readiness 77/100, Piggy 77.5% (31/40), Pages 76%, Burndown 36.1% (35/97), Launch 66.7%
+**Trends (vs ~7 days ago / 06-09 weekly close):** Burndown ↑ +4 done (31→35; FRED-193/196/194 landed since — the % only edged 34.8→36.1 because the denominator grew 89→97 as new stories were added), Pages ↑ +3 (73→76), Readiness ↑ +5 (72→77), Days-since-blocker ↑ +9 (9→18), Launch ↑ +2.4 (64.3→66.7), Piggy → no change (77.5%).
+**Days since last blocker:** 18 (06-16 post-ship recorded 17; +1 clean day, no blocker today)
+**Blockers active:** none (BLOCKED section holds FRED-173/175/179, all external-dependency stories, not production blockers)
+**Notes:** FRED-194 closed out to `looks_good` → guard passed → fresh brief generated. Backlog grew 94→97 total since 06-16 (digest/backlog-add: FRED-197 sleeping, FRED-199 + FRED-200 ready); done 34→35 (FRED-194 checkmarked). Exclusion set: FRED-100 (skipped 06-15, 7-day window active through ~06-22) — not eligible, wasn't the pick anyway. No other skips in the last 7 days. Two genuine Questions for Andrew, both mined from the story's own open questions with predictive placeholders: (a) preserve `hasPin()` fail-open on network error [Required, predicted: preserve], (b) OK to delete the vestigial "Verify Identity" button + `authenticateUser()` 1.5s setTimeout stub [Optional, predicted: yes delete]. Tomorrow's likely picks: FRED-200 (signals stat-strip epic), FRED-189 (bank-subtype field-case bug), FRED-188 (chat null guard).
+**Status:** Pending approval from Andrew
+
+---
+
 ### 2026-06-16 (Morning Brief) — Uniform settings-page headers (FRED-194)
 
 **Priorities selected:** FRED-194 — Uniform ion-header styling across tab3 settings pages (standardize all 9 settings pages on change-bank-account's `.blue-hero-header`)
