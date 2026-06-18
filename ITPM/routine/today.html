@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="verifying-in-ci">
+  <div id="dashboard" data-populated="true" data-state="completed">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -332,10 +332,24 @@
     </div>
 
     <!-- ── Completion Section (completed state only) ── -->
-    <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
+    <div class="section-group section-intermediary-only" id="completion-section">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
-        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-199 — Skip step-up auth section when not enabled</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Replaced the Account Security page's two-state first-paint model (which flashed the "Security Verification / Please verify your identity / Verifying…" overlay at <em>everyone</em> during the async PIN-status check) with a distinct three-state model: a neutral <code>checkingStepUp</code> spinner while <code>hasPin()</code> resolves, then either the verify overlay + PIN prompt (step-up users only) or straight into the loaded settings (non-step-up users) — no overlay flash, no content leak either direction. Removed the vestigial "Verify Identity" button and the <code>authenticateUser()</code> stub. Per your Q1 answer, hardened the fail-open hole: a per-user <code>stepUpEnabled:&lt;userId&gt;</code> marker is saved to localStorage so a failed PIN-status call now fails <strong>closed</strong> (still prompts) instead of silently letting a step-up user past the gate; the marker is wiped on PIN-off and on logout/user-switch. Files: <code>security-settings.page.{ts,html,scss}</code>, <code>pin.service.ts</code>, <code>jwt-token.utils.ts</code>, plus 19 new unit specs.</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>No step-up auth: verify overlay never shown — lands directly on loaded settings (device render → your "Looks Good").</li>
+            <li>Step-up enabled: verification section + <code>promptPin('verify')</code> behave exactly as today; cancel/fail routes back to <code>/tabs/tab3</code> (device render → your "Looks Good").</li>
+            <li>Distinct interim "checking" state — no misleading flash, no content leak either direction.</li>
+            <li>Post-gate behavior preserved: <code>loadSessions()</code> + <code>syncAlpacaAccountNumber()</code> still populate Trusted Devices + Alpaca account.</li>
+            <li>No new dead code: "Verify Identity" button + <code>authenticateUser()</code> + orphaned <code>isAuthenticating</code>/<code>fingerprint</code> removed.</li>
+            <li><code>npx tsc --noEmit</code> exits 0; 19/19 unit specs green; CI <code>backend-frontend</code> passed and squash-merged to develop.</li>
+            <li>Fail-open hardened to fail-closed via the localStorage step-up marker (your Q1 directive).</li>
+          </ul>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Readiness 77 → 78: removed a misleading flash on the most security-sensitive surface and closed a real fail-open auth bypass — a status-call network error can no longer be used to skip a user's step-up PIN.</p>
+        </div>
       </div>
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;
