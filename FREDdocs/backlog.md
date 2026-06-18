@@ -58,22 +58,6 @@ Decisions (Andy): profile avatars use LIVE equity; old pig-level art fully repla
 ## DEV-198 — Eliminate package-lock.json libc-field churn in diffs
 npm writes platform-specific `libc`/`os`/`cpu` fields into `package-lock.json` that differ between environments (the itpm routine cloud sandbox vs local vs GitHub Actions CI), producing noisy lockfile diffs that have to be reverted to keep PRs clean. Find a stable fix so `package-lock.json` stays identical across the routine sandbox, CI, and local — e.g. an `.npmrc` setting, pinning the npm version used everywhere, a normalize/commit-hook step, or omitting the optional-deps platform fields. Surfaced by the verifier during an itpm run on 2026-06-15.
 
-## FRED-199 — Skip step-up auth section when not enabled
-change the security settings loading animation for people without step up auth enabled to just load the security settings instead of showing that section; for people who do have step up auth, they should have that section still along with the prompting of the actual stepup auth pin entering
-
-### Summary
-On the Account Security page, only users with Step-Up Authentication enabled (a PIN set) should see the "Security Verification" overlay and be prompted for their step-up PIN. Users without step-up auth currently still flash that "verify your identity / Verifying…" overlay during the async `hasPin()` PIN-status check before the page loads — they should skip it entirely and land directly on the loaded security settings. Done when no-step-up users never see the verification overlay and step-up users keep the overlay + PIN prompt exactly as today. Root cause: `security-settings.page.ts` defaults to the unauthenticated overlay at first paint, then `await`s the async `GET /user/pin/status` before it knows whether step-up is even on.
-
-### Acceptance Criteria
-1. No step-up auth (`hasPin()` → false): the "Security Verification" overlay (shield + "Please verify your identity…" + "Verifying…") is never shown; the user lands directly on the loaded security settings. A neutral, non-"verify" loading indicator during the initial check/fetch is acceptable; the "verify your identity" framing is not.
-2. Step-up auth enabled (`hasPin()` → true): the verification section AND the step-up PIN modal (`promptPin('verify')`) behave exactly as today — success loads settings; cancel/fail routes back to `/tabs/tab3`. No regression.
-3. No misleading flash: because `hasPin()` is an async network call, add a distinct interim "checking" state so the verify overlay only ever renders for step-up users, and PIN users never briefly see the settings content before the PIN prompt (no content leak either direction).
-4. Post-gate behavior preserved: once the gate passes (no PIN, or PIN verified), `loadSessions()` and `syncAlpacaAccountNumber()` still populate Trusted Devices + Alpaca account as today.
-5. No new dead code (CONTEXT.md): if the change leaves the legacy "Verify Identity" button (HTML L27–30) and `authenticateUser()` (TS L160–167) unreachable, remove or wire them — no orphaned code.
-6. `cd frontend && npx tsc --noEmit` exits 0, no new SCSS/TS warnings. Both paths verified at 430×932 (spot-checked 390×844): no-PIN user loads straight into settings with no overlay; PIN user sees overlay + PIN modal and reaches settings only after verifying.
-
-Open questions (Andy): (a) `hasPin()` currently fails open on network error (treats error as no-PIN) — preserve (default, safer for availability) or harden? (b) the "Verify Identity" button looks vestigial — confirm OK to remove. Est. 1-3hr, [code].
-
 ## FRED-200 — Always-loaded tab3 stat strip via signals service
 The tab3 stat strip (Freedom date / Freedom age / To go) re-fetches three separate calls on every cold load — `authService.getUserProgress()`, `portfolioService.getPortfolioDashboard()`, `alpacaService.getKycData()` — coordinated in `loadStatStrip()` (`tab3.page.ts` ~285–428). It shows `—` dashes until all three settle, caches nothing, and doesn't reflect a My Profile edit until the component is recreated (tab3 never subscribes to the `userProgress$` BehaviorSubject that My Profile's `saveChanges()` already updates via `loadUserProgress()`).
 
@@ -775,3 +759,19 @@ The tab3 stat strip's "Freedom Age" tile silently shows "—" whenever the Alpac
 4. Freedom Date and To Go are unaffected — they render from `/user/progress` + `/portfolio/dashboard` regardless of KYC outcome.
 5. The render gate still opens once all three calls settle — no hang on a permanently-failing KYC call.
 6. Happy path unchanged — with a valid DOB, Freedom Age = `resolvedFreedomYear − birthYear`. Est. 1-3hr, [code].
+
+## FRED-199 — ✓ Skip step-up auth section when not enabled
+change the security settings loading animation for people without step up auth enabled to just load the security settings instead of showing that section; for people who do have step up auth, they should have that section still along with the prompting of the actual stepup auth pin entering
+
+### Summary
+On the Account Security page, only users with Step-Up Authentication enabled (a PIN set) should see the "Security Verification" overlay and be prompted for their step-up PIN. Users without step-up auth currently still flash that "verify your identity / Verifying…" overlay during the async `hasPin()` PIN-status check before the page loads — they should skip it entirely and land directly on the loaded security settings. Done when no-step-up users never see the verification overlay and step-up users keep the overlay + PIN prompt exactly as today. Root cause: `security-settings.page.ts` defaults to the unauthenticated overlay at first paint, then `await`s the async `GET /user/pin/status` before it knows whether step-up is even on.
+
+### Acceptance Criteria
+1. No step-up auth (`hasPin()` → false): the "Security Verification" overlay (shield + "Please verify your identity…" + "Verifying…") is never shown; the user lands directly on the loaded security settings. A neutral, non-"verify" loading indicator during the initial check/fetch is acceptable; the "verify your identity" framing is not.
+2. Step-up auth enabled (`hasPin()` → true): the verification section AND the step-up PIN modal (`promptPin('verify')`) behave exactly as today — success loads settings; cancel/fail routes back to `/tabs/tab3`. No regression.
+3. No misleading flash: because `hasPin()` is an async network call, add a distinct interim "checking" state so the verify overlay only ever renders for step-up users, and PIN users never briefly see the settings content before the PIN prompt (no content leak either direction).
+4. Post-gate behavior preserved: once the gate passes (no PIN, or PIN verified), `loadSessions()` and `syncAlpacaAccountNumber()` still populate Trusted Devices + Alpaca account as today.
+5. No new dead code (CONTEXT.md): if the change leaves the legacy "Verify Identity" button (HTML L27–30) and `authenticateUser()` (TS L160–167) unreachable, remove or wire them — no orphaned code.
+6. `cd frontend && npx tsc --noEmit` exits 0, no new SCSS/TS warnings. Both paths verified at 430×932 (spot-checked 390×844): no-PIN user loads straight into settings with no overlay; PIN user sees overlay + PIN modal and reaches settings only after verifying.
+
+Open questions (Andy): (a) `hasPin()` currently fails open on network error (treats error as no-PIN) — preserve (default, safer for availability) or harden? (b) the "Verify Identity" button looks vestigial — confirm OK to remove. Est. 1-3hr, [code].
