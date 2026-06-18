@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRED ITPM Daily Brief</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- ════════════════════════════════════════════════════════════════════
+       ITPM DASHBOARD CONTENT — agents may rewrite ONLY the content inside
+       #dashboard below. Do NOT add <style> or <script> here; styling lives
+       in /styles.css and logic in /app.js. Keep the <link>/<script src> in
+       <head> intact.
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <!-- ─── Lock Overlay ─── -->
+  <div id="lock-overlay">
+    <div class="lock-card">
+      <div class="lock-wordmark">FRED</div>
+      <div class="lock-heading">FRED ITPM Daily Brief</div>
+      <div class="lock-subtext">Today's priorities, options, and approval workflow.</div>
+      <div class="date-chip" id="overlay-date">Loading...</div>
+      <button id="reveal-btn" onclick="revealPassword()">Reveal Password Field</button>
+      <div id="password-section">
+        <input type="password" id="password-input" placeholder="Enter today's password" autocomplete="off" />
+        <button id="unlock-btn" onclick="attemptUnlock()">Unlock Dashboard</button>
+        <div id="error-msg">Incorrect password. Try again.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Dashboard ─── -->
+  <div id="dashboard" data-populated="true" data-state="looks_good">
+
+    <!-- ─── Failure Banner ─── -->
+    <div id="failure-banner">
+      <h3>Execution hit a blocker</h3>
+      <p id="failure-detail"></p>
+    </div>
+
+    <!-- ─── Intermediary Banner ─── -->
+    <div id="intermediary-banner" style="display:none; background:#dbeafe; border:1px solid #93c5fd; border-radius:14px; padding:16px 20px; margin-bottom:20px;">
+      <p style="font-size:14px; font-weight:700; color:#1e40af; margin:0 0 4px;">Plan approved — execution queued</p>
+      <p style="font-size:13px; color:#1e40af; margin:0;">Execution started. You'll receive a push notification when the build is complete.</p>
+      <a id="routine-link" href="#" target="_blank" style="display:none; margin-top:10px; font-size:12px; font-weight:700; color:#1e40af; text-decoration:underline; text-underline-offset:2px;">Watch the run live &rarr;</a>
+    </div>
+
+    <div class="dashboard-header">
+      <div class="header-left">
+        <div class="header-wordmark">FRED</div>
+        <div class="itpm-badge">ITPM</div>
+      </div>
+      <div class="header-date" id="header-date">Loading...</div>
+    </div>
+
+    <!-- ── Scoreboard (always visible) ── -->
+    <div class="section-group">
+      <div class="section-label">Routine Success Criteria</div>
+      <div class="scoreboard">
+
+        <div class="metric-card">
+          <div class="metric-label">Backlog Burn-Down</div>
+          <div class="metric-value warning">36.1%</div>
+          <div class="metric-sublabel">35 of 97 stories done</div>
+          <div class="metric-trend positive">&#8593; +4 done vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:36.1%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Piggy Tier Done</div>
+          <div class="metric-value warning">77.5%</div>
+          <div class="metric-sublabel">31 of 40 core stories complete</div>
+          <div class="metric-trend neutral">&#8594; no change vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77.5%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Pages Migrated</div>
+          <div class="metric-value warning">76%</div>
+          <div class="metric-sublabel">Settings hub unified; ~10 non-settings pages remain</div>
+          <div class="metric-trend positive">&#8593; +3 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:76%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Prod Readiness</div>
+          <div class="metric-value warning">77</div>
+          <div class="metric-sublabel">Score out of 100</div>
+          <div class="metric-trend positive">&#8593; +5 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Days Since Blocker</div>
+          <div class="metric-value positive">18</div>
+          <div class="metric-sublabel">No active production blockers</div>
+          <div class="metric-trend positive">&#8593; +9 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:60%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Launch Readiness</div>
+          <div class="metric-value warning">66.7%</div>
+          <div class="metric-sublabel">Composite estimate</div>
+          <div class="metric-trend positive">&#8593; +2.4 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:66.7%"></div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Today's Priorities (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Today's Priorities</div>
+
+      <div class="priority-card">
+        <label class="priority-skip-label" title="Check to skip this story and regenerate">
+          <input type="checkbox" class="priority-skip-cb" onchange="handlePrioritySkip(this)" />
+          <span class="priority-skip-text">Skip</span>
+        </label>
+        <div class="priority-badge">#1</div>
+        <div class="priority-body">
+          <div class="priority-title">FRED-199 — Skip the step-up auth section when it isn't enabled</div>
+          <div class="priority-desc">On the Account Security page, users <strong>without</strong> Step-Up Authentication still see the "Security Verification" overlay flash (shield + <em>"Please verify your identity…"</em> + <em>"Verifying…"</em>) during the async PIN-status check before the page loads. They should skip it entirely and land directly on the loaded security settings. Users <strong>with</strong> step-up keep the overlay and PIN prompt exactly as today. Root cause confirmed in-code: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">security-settings.page.ts</code> defaults to the unauthenticated overlay at first paint (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isAuthenticated=false</code>), then <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">await</code>s <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pinService.hasPin()</code> before it knows whether step-up is even on — so the verify overlay paints for everyone in that window. <strong>Tier 1 — acceptance criteria already in the backlog.</strong></div>
+          <span class="diff-chip diff-medium">Medium</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Why I Picked This (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Why I Picked This</div>
+      <div class="card">
+        <div class="card-text"><strong>FRED-199 is the strongest Tier-1 story that can ship and verify in this sandbox today.</strong> Of the four A/C-ready READY stories, two stay gated exactly as before: FRED-191 (load-perf) needs a running Capacitor build on a real device this sandbox can't provide, and FRED-195 (pig avatars) needs SVGs from the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PersonalTypeshit/FRED&nbsp;Logo</code> sibling directory — I re-checked this morning, still not on disk. That leaves FRED-199 and FRED-200, both build-ready here. I picked <strong>FRED-199</strong> over FRED-200 on the Decision Framework's quick-win + guaranteed-completion rule and the difficulty bias: FRED-199 is a focused, single-page loading/gating fix I confirmed in-code (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ngOnInit</code> paints the verify overlay during the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">await hasPin()</code> window), whereas FRED-200 is a 3hr+ epic that introduces Angular signals for the first time plus a localStorage snapshot — higher architectural risk, better as tomorrow's pick. <strong>Tier 1</strong>, full acceptance criteria in the backlog, no triage gap.</div>
+      </div>
+    </div>
+
+    <!-- ── Strategic Alignment (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Strategic Alignment</div>
+      <div class="card">
+        <div class="card-text">The vision calls for a <em>calm, premium, trustworthy</em> surface with <em>complete loading/error states and no misleading UX</em>. A security page that flashes "verify your identity / Verifying…" at a user who has no step-up auth — then silently drops them into settings a moment later — is exactly the kind of confusing, low-trust seam to remove before private beta. Security surfaces are where polish matters most for confidence.</div>
+      </div>
+    </div>
+
+    <!-- ── Production Readiness Impact (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Production Readiness Impact</div>
+      <div class="card">
+        <div class="card-text">This lifts the <strong>error/loading-state coverage</strong> side of readiness directly — it replaces a misleading interim flash with an honest, distinct "checking" state and removes vestigial dead code (the unreachable "Verify Identity" button + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">authenticateUser()</code> stub). Low architectural risk: one frontend page, no backend/schema/auth-logic change, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>-verifiable here. The familiar sandbox caveat applies — the live both-path device render (390×844 / 430×932) is handed to Andrew via "Looks Good."</div>
+      </div>
+    </div>
+
+    <!-- ── Implementation Options (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Implementation Options</div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-text" style="color:var(--gray);">Three ways to fix the flash. All three end with no-step-up users landing straight on settings and step-up users keeping the overlay + PIN prompt; they differ in how the interim "checking" state is modeled and what happens to the vestigial verify button. Tap one to select it; use the edit pencil on the selected card to tweak the approach before approving.</div>
+      </div>
+      <div class="option-group">
+
+        <div class="option-card selected">
+          <div class="option-header">
+            <span class="option-label">Option A</span>
+            <span class="option-rec">Recommended</span>
+          </div>
+          <div class="option-title">Distinct "checking" state + remove the dead button</div>
+          <div class="option-body">Add a dedicated interim flag (e.g. <code>checkingStepUp</code>, true until <code>hasPin()</code> resolves). While checking, render a <strong>neutral</strong> loading indicator — a plain spinner with no "verify your identity" framing. After it resolves: step-up users get the verification overlay + <code>promptPin('verify')</code> exactly as today; non-step-up users go straight to the loaded settings — never seeing the overlay, and PIN users never briefly seeing settings (no content leak either direction). Delete the now-unreachable "Verify Identity" button + <code>authenticateUser()</code> per the no-dead-code rule.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>satisfies AC-1/AC-3 cleanly (a real third state, not a guessed boolean); removes dead code (AC-5); smallest honest model; no content leak either way.</span></span>
+            <span class="meta-item">Cons: <span>introduces one new state flag + a neutral-loader template branch to maintain.</span></span>
+            <span class="meta-item">Risk: <span>Low — one frontend page, no behavior change for step-up users, no backend/auth-logic touch.</span></span>
+            <span class="meta-item">Estimate: <span>~1–2 hrs</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option B</span>
+          </div>
+          <div class="option-title">Reuse existing flags, keep the verify button wired</div>
+          <div class="option-body">Don't add a new state — instead flip the defaults so the verify overlay only renders once a <code>requiresStepUp</code> flag is set true (after <code>hasPin()</code> resolves), showing the existing <code>isAuthenticating</code> spinner as the neutral interim. Keep the "Verify Identity" button + <code>authenticateUser()</code> and re-wire them as a manual re-verify fallback rather than deleting them.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>no new field; smaller TS diff; retains a manual verify affordance.</span></span>
+            <span class="meta-item">Cons: <span>overloads existing booleans (harder to reason about the three views); the verify button simulates nothing real, so re-wiring it is busywork and AC-5 flags it as dead-ish.</span></span>
+            <span class="meta-item">Risk: <span>Low–Medium — flag overloading invites a content-leak edge case; keeps a do-nothing passkey stub in the codebase.</span></span>
+            <span class="meta-item">Estimate: <span>~1–2 hrs</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option C</span>
+          </div>
+          <div class="option-title">Single "ready" gate before first paint</div>
+          <div class="option-body">Hide the entire content behind one <code>ready</code> boolean: compute <code>hasPin()</code> first, render only a neutral skeleton until it resolves, then show either the verify overlay or settings. Simplest template, but one boolean can't cleanly distinguish "checking" from "verify," so it risks either a blank flash or — if mistimed — a settings content-leak for PIN users.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>fewest template branches; conceptually simple.</span></span>
+            <span class="meta-item">Cons: <span>weakest on AC-3's explicit "distinct checking state" requirement; a single gate is the most likely to leak content one direction or blank-flash the other.</span></span>
+            <span class="meta-item">Risk: <span>Medium — collapsing checking and verify into one flag is exactly the ambiguity AC-3 asks us to avoid.</span></span>
+            <span class="meta-item">Estimate: <span>~1 hr</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Triage Findings (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Triage Findings</div>
+      <div class="card">
+
+        <div class="story-section">
+          <div class="story-header">FRED-199 — Skip step-up auth section when not enabled</div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">In Scope</div>
+            <ul class="triage-list">
+              <li>Add a distinct interim "checking" state so the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.auth-overlay</code> Security Verification view renders <strong>only</strong> for step-up users; during the async <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code> check show a neutral, non-"verify" loading indicator (AC-1, AC-3).</li>
+              <li>No step-up (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code>→false): never show the verify overlay; land directly on the loaded security settings (AC-1).</li>
+              <li>Step-up enabled (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code>→true): verification section + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">promptPin('verify')</code> behave exactly as today — success loads settings, cancel/fail routes back to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/tabs/tab3</code>; no regression (AC-2).</li>
+              <li>No content leak either direction: PIN users never briefly see settings before the prompt, non-PIN users never see the verify overlay (AC-3).</li>
+              <li>Post-gate behavior preserved: once the gate passes, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadSessions()</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">syncAlpacaAccountNumber()</code> still populate Trusted Devices + Alpaca account (AC-4).</li>
+              <li>Remove the now-unreachable "Verify Identity" button (HTML L27–30) + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">authenticateUser()</code> (TS L160–167) per the no-dead-code rule, plus any orphaned imports (AC-5; see Q2).</li>
+              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> exits 0, no new SCSS/TS warnings; both paths spot-checked at 430×932 / 390×844 (AC-6).</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">Potentially Out of Scope</div>
+            <ul class="triage-list">
+              <li>Hardening <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code>'s fail-open-on-network-error behavior — leave as-is unless Andrew wants it now (see Q1).</li>
+              <li>Any restyle of the verify overlay visuals or the PIN modal itself — this is gating/state only, no redesign.</li>
+              <li>Changes to App Lock, the Step-Up toggle logic, or any other settings page (FRED-194's shared <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.blue-hero-header</code> just landed — leave it intact).</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">UX Considerations</div>
+            <ul class="triage-list">
+              <li><strong>Three states, one honest path</strong> — checking (neutral spinner) → verify overlay (step-up only) → settings. The interim indicator must NOT use the "verify your identity / Verifying…" framing — that's the whole bug.</li>
+              <li><strong>It's a network call</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code> hits <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">GET /user/pin/status</code>; keep the interim state honest and avoid flashing settings content for PIN users (content-leak both directions).</li>
+              <li><strong>Error path</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code> currently fails open (network error → treated as no-PIN). Preserve unless Andrew says harden (Q1).</li>
+              <li><strong>Mobile-first</strong> — verify both paths at 390×844 and 430×932; no overlay clip, no layout shift between the checking spinner and the loaded settings.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Questions For Andrew (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Questions For Andrew</div>
+      <div class="card">
+
+        <div class="question-item">
+          <div class="question-text">
+            From the story (a): <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code> currently <strong>fails open</strong> on a network error — a failed PIN-status call is treated as "no PIN," so during an outage a step-up user could slip past the gate. Preserve that fail-open behavior (default, safer for availability), or harden it to fail-closed (block / retry on error)? My recommendation: <strong>preserve fail-open</strong> — a transient status error shouldn't lock a user out of their own settings.
+            <span class="required-badge">Required</span>
+          </div>
+          <textarea class="question-input" data-required="true" placeholder="Preserve fail-open — safer for availability; a transient PIN-status error shouldn't lock a user out of their own settings."></textarea>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text">
+            From the story (b): the "Verify Identity" button (HTML L27–30) + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">authenticateUser()</code> (TS L160–167) are vestigial — a 1.5s <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">setTimeout</code> passkey simulation that never runs in the real flow. OK to delete them as part of this story (no-dead-code rule)? My recommendation: <strong>yes, delete</strong> — they're unreachable and simulate nothing real.
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Yes — delete the vestigial button and authenticateUser(); they're unreachable and simulate nothing real."></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Suggested Execution Order (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Suggested Execution Order</div>
+      <div class="card">
+
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-body" contenteditable="false"><strong>Trace the paint order</strong> — Confirm in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ngOnInit</code> that <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isAuthenticated=false</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isAuthenticating=true</code> defaults render the verify overlay during the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">await hasPin()</code> window for non-PIN users.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-body" contenteditable="false"><strong>Introduce the checking state</strong> — Add a distinct flag (e.g. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">checkingStepUp</code>, true until <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code> resolves); template renders a neutral loader while checking, the verify overlay only when step-up is enabled, settings only after the gate passes.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-body" contenteditable="false"><strong>Wire both paths</strong> — non-PIN → straight to settings (no overlay); PIN → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">promptPin('verify')</code> exactly as today (success loads, cancel routes to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/tabs/tab3</code>); ensure <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadSessions()</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">syncAlpacaAccountNumber()</code> still fire post-gate.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-body" contenteditable="false"><strong>Remove dead code</strong> — Per your Q2 answer, delete the vestigial "Verify Identity" button + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">authenticateUser()</code> and drop any now-unused imports.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">5</div>
+          <div class="step-body" contenteditable="false"><strong>Verify + hand off</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> (exits 0) and the scoped build (no new warnings); run the verifier over the A/C manifest. Hand the live both-path device render (390×844 / 430×932) to Andrew via "Looks Good" — the sandbox can't drive a real device.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Tomorrow's Likely Pick (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Tomorrow's Likely Pick</div>
+      <div class="card">
+        <ul class="tomorrow-list">
+          <li><strong>FRED-200</strong> — Always-loaded tab3 stat strip via a signals service — the other A/C-ready Tier-1 story; a 3hr+ pilot of Angular signals + a user-scoped localStorage snapshot for instant cold-launch. The natural next pick once FRED-199 lands and the sandbox-buildable Tier-1 queue is otherwise drained.</li>
+          <li><strong>FRED-189</strong> — Fix bank-account subtype always showing "Checking" — Easy, a user-facing field-case bug (frontend reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code> but the backend returns <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code>); pure code, Tier 2 (needs A/C confirmed).</li>
+          <li><strong>FRED-188</strong> — Add a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> guard to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> — Easy, a parked quick win mirroring the guard already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code>. Tier 2 bug-density win.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── Completion Section (completed state only) ── -->
+    <div class="section-group section-intermediary-only" id="completion-section">
+      <div class="section-label">WHAT GOT DONE</div>
+      <div class="card" id="completion-content">
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-199 — Skip step-up auth section when not enabled</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Replaced the Account Security page's two-state first-paint model (which flashed the "Security Verification / Please verify your identity / Verifying…" overlay at <em>everyone</em> during the async PIN-status check) with a distinct three-state model: a neutral <code>checkingStepUp</code> spinner while <code>hasPin()</code> resolves, then either the verify overlay + PIN prompt (step-up users only) or straight into the loaded settings (non-step-up users) — no overlay flash, no content leak either direction. Removed the vestigial "Verify Identity" button and the <code>authenticateUser()</code> stub. Per your Q1 answer, hardened the fail-open hole: a per-user <code>stepUpEnabled:&lt;userId&gt;</code> marker is saved to localStorage so a failed PIN-status call now fails <strong>closed</strong> (still prompts) instead of silently letting a step-up user past the gate; the marker is wiped on PIN-off and on logout/user-switch. Files: <code>security-settings.page.{ts,html,scss}</code>, <code>pin.service.ts</code>, <code>jwt-token.utils.ts</code>, plus 19 new unit specs.</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>No step-up auth: verify overlay never shown — lands directly on loaded settings (device render → your "Looks Good").</li>
+            <li>Step-up enabled: verification section + <code>promptPin('verify')</code> behave exactly as today; cancel/fail routes back to <code>/tabs/tab3</code> (device render → your "Looks Good").</li>
+            <li>Distinct interim "checking" state — no misleading flash, no content leak either direction.</li>
+            <li>Post-gate behavior preserved: <code>loadSessions()</code> + <code>syncAlpacaAccountNumber()</code> still populate Trusted Devices + Alpaca account.</li>
+            <li>No new dead code: "Verify Identity" button + <code>authenticateUser()</code> + orphaned <code>isAuthenticating</code>/<code>fingerprint</code> removed.</li>
+            <li><code>npx tsc --noEmit</code> exits 0; 19/19 unit specs green; CI <code>backend-frontend</code> passed and squash-merged to develop.</li>
+            <li>Fail-open hardened to fail-closed via the localStorage step-up marker (your Q1 directive).</li>
+          </ul>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Readiness 77 → 78: removed a misleading flash on the most security-sensitive surface and closed a real fail-open auth bypass — a status-call network error can no longer be used to skip a user's step-up PIN.</p>
+        </div>
+      </div>
+      <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
+        Looks Good &#10003;
+      </button>
+
+      <!-- Request Changes — rework the same story with feedback -->
+      <div id="rework-block" style="margin-top:14px;">
+        <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The neutral checking spinner is too prominent — make it subtler. And confirm the PIN modal still routes back to tab3 on cancel."></textarea>
+        <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
+      </div>
+    </div>
+
+    <!-- ── Anything Else For the Execution Agent (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Anything Else For the Execution Agent?</div>
+      <div class="card">
+        <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Reuse the existing ion-spinner for the neutral checking state, don't introduce a new loader component..."></textarea>
+      </div>
+    </div>
+
+    <!-- ── Add to Backlog (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Add to Backlog</div>
+      <div class="card">
+        <div class="revision-label" style="margin-bottom:14px;">Thought of something while reviewing? Add it to the backlog without leaving this page.</div>
+        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Add a confirmation step before deleting a beneficiary..." style="min-height:80px;margin-bottom:12px;"></textarea>
+        <button class="btn-dark" id="backlog-btn" onclick="handleAddBacklog()">Add to Backlog</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Fixed Approve Bar ─── -->
+  <div id="approve-bar">
+    <div id="approve-status">Complete all required fields to unlock approval</div>
+    <button id="approve-btn" onclick="handleApprove()">Approve / Get To Work</button>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

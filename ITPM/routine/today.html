@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="looks_good">
+  <div id="dashboard" data-populated="true" data-state="planning">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -65,10 +65,10 @@
 
         <div class="metric-card">
           <div class="metric-label">Backlog Burn-Down</div>
-          <div class="metric-value warning">36.1%</div>
-          <div class="metric-sublabel">35 of 97 stories done</div>
-          <div class="metric-trend positive">&#8593; +4 done vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:36.1%"></div></div>
+          <div class="metric-value warning">37.1%</div>
+          <div class="metric-sublabel">36 of 97 stories done</div>
+          <div class="metric-trend positive">&#8593; +5 done vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:37.1%"></div></div>
         </div>
 
         <div class="metric-card">
@@ -89,26 +89,26 @@
 
         <div class="metric-card">
           <div class="metric-label">Prod Readiness</div>
-          <div class="metric-value warning">77</div>
+          <div class="metric-value warning">78</div>
           <div class="metric-sublabel">Score out of 100</div>
-          <div class="metric-trend positive">&#8593; +5 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77%"></div></div>
+          <div class="metric-trend positive">&#8593; +6 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:78%"></div></div>
         </div>
 
         <div class="metric-card">
           <div class="metric-label">Days Since Blocker</div>
-          <div class="metric-value positive">18</div>
+          <div class="metric-value positive">19</div>
           <div class="metric-sublabel">No active production blockers</div>
-          <div class="metric-trend positive">&#8593; +9 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:60%"></div></div>
+          <div class="metric-trend positive">&#8593; +10 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:63%"></div></div>
         </div>
 
         <div class="metric-card">
           <div class="metric-label">Launch Readiness</div>
-          <div class="metric-value warning">66.7%</div>
+          <div class="metric-value warning">67.2%</div>
           <div class="metric-sublabel">Composite estimate</div>
-          <div class="metric-trend positive">&#8593; +2.4 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:66.7%"></div></div>
+          <div class="metric-trend positive">&#8593; +2.9 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:67.2%"></div></div>
         </div>
 
       </div>
@@ -125,9 +125,9 @@
         </label>
         <div class="priority-badge">#1</div>
         <div class="priority-body">
-          <div class="priority-title">FRED-199 — Skip the step-up auth section when it isn't enabled</div>
-          <div class="priority-desc">On the Account Security page, users <strong>without</strong> Step-Up Authentication still see the "Security Verification" overlay flash (shield + <em>"Please verify your identity…"</em> + <em>"Verifying…"</em>) during the async PIN-status check before the page loads. They should skip it entirely and land directly on the loaded security settings. Users <strong>with</strong> step-up keep the overlay and PIN prompt exactly as today. Root cause confirmed in-code: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">security-settings.page.ts</code> defaults to the unauthenticated overlay at first paint (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isAuthenticated=false</code>), then <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">await</code>s <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pinService.hasPin()</code> before it knows whether step-up is even on — so the verify overlay paints for everyone in that window. <strong>Tier 1 — acceptance criteria already in the backlog.</strong></div>
-          <span class="diff-chip diff-medium">Medium</span>
+          <div class="priority-title">FRED-200 — Always-loaded tab3 stat strip via a signals service</div>
+          <div class="priority-desc">The tab3 Freedom stat strip (<em>Freedom date / Freedom age / To go</em>) re-runs three separate fetches on <strong>every</strong> cold load — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">getUserProgress()</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">getPortfolioDashboard()</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">getKycData()</code> — coordinated in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadStatStrip()</code>. It shows <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">—</code> dashes until all three settle, caches nothing across tab navigation, and doesn't reflect a My Profile edit until the component is recreated. Move the data + the freedom-date/age/dollars-away math into a dedicated singleton <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FreedomStatsService</code> built on Angular signals (the app's first signals usage — an intentional, approved pilot), kept warm across navigation and hydrated instantly from a user-scoped <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">localStorage</code> snapshot on cold launch, auto-updating when an input changes. <strong>Tier 1 — full acceptance criteria already in the backlog, with Andy's approach decisions recorded.</strong></div>
+          <span class="diff-chip diff-hard">Hard</span>
         </div>
       </div>
     </div>
@@ -136,7 +136,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Why I Picked This</div>
       <div class="card">
-        <div class="card-text"><strong>FRED-199 is the strongest Tier-1 story that can ship and verify in this sandbox today.</strong> Of the four A/C-ready READY stories, two stay gated exactly as before: FRED-191 (load-perf) needs a running Capacitor build on a real device this sandbox can't provide, and FRED-195 (pig avatars) needs SVGs from the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PersonalTypeshit/FRED&nbsp;Logo</code> sibling directory — I re-checked this morning, still not on disk. That leaves FRED-199 and FRED-200, both build-ready here. I picked <strong>FRED-199</strong> over FRED-200 on the Decision Framework's quick-win + guaranteed-completion rule and the difficulty bias: FRED-199 is a focused, single-page loading/gating fix I confirmed in-code (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ngOnInit</code> paints the verify overlay during the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">await hasPin()</code> window), whereas FRED-200 is a 3hr+ epic that introduces Angular signals for the first time plus a localStorage snapshot — higher architectural risk, better as tomorrow's pick. <strong>Tier 1</strong>, full acceptance criteria in the backlog, no triage gap.</div>
+        <div class="card-text"><strong>FRED-200 is now the only build-ready Tier-1 story left for this sandbox — and it was flagged as today's likely pick yesterday.</strong> Of the three A/C-ready READY stories: FRED-191 (load-perf) stays gated — it needs a real-device Capacitor build the sandbox can't run; and <strong>FRED-195 (pig avatars) is already fully implemented and merged to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">develop</code></strong> — the 5 <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pig-range-*.svg</code> assets are in place, the old <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pig-level-*</code> art is deleted, and the shared <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">EquityPigUtils</code> helper now feeds the tab3 link avatar, the My Profile avatar, and the MFU achievement (every AC wired). It just was never checkmarked, so it still sits in READY — <strong>it needs closing out, not building</strong> (see Tomorrow's Pick). That leaves FRED-200. Difficulty bias allows it: readiness is 78 (&gt; 75), so Hard work is now in tolerance, and FRED-200 has Andy's approach already decided (dedicated service + signals + a localStorage snapshot), so it's well-shaped. <strong>Tier 1</strong>, no triage gap.</div>
       </div>
     </div>
 
@@ -144,7 +144,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
-        <div class="card-text">The vision calls for a <em>calm, premium, trustworthy</em> surface with <em>complete loading/error states and no misleading UX</em>. A security page that flashes "verify your identity / Verifying…" at a user who has no step-up auth — then silently drops them into settings a moment later — is exactly the kind of confusing, low-trust seam to remove before private beta. Security surfaces are where polish matters most for confidence.</div>
+        <div class="card-text">The vision demands a <em>calm, premium, instant</em> surface with <em>complete loading states and no placeholder UX</em>. The Freedom stat strip is the emotional core of tab3 — it's the user's "when am I free?" number — and today it greets them with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">—</code> dashes on every cold launch and again on each tab re-entry. Making it instant (and self-updating after a My Profile edit) directly serves retention and trust, the top two business priorities. It also lands a deliberate, well-bounded signals pilot that informs the app's future reactive direction.</div>
       </div>
     </div>
 
@@ -152,7 +152,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
-        <div class="card-text">This lifts the <strong>error/loading-state coverage</strong> side of readiness directly — it replaces a misleading interim flash with an honest, distinct "checking" state and removes vestigial dead code (the unreachable "Verify Identity" button + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">authenticateUser()</code> stub). Low architectural risk: one frontend page, no backend/schema/auth-logic change, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>-verifiable here. The familiar sandbox caveat applies — the live both-path device render (390×844 / 430×932) is handed to Andrew via "Looks Good."</div>
+        <div class="card-text">This lifts <strong>loading-state coverage and perceived performance</strong> on the most-visited surface: no dash-flash on cold launch (hydrated from a snapshot), no second cold round on re-entry, and a strip that reflects edits without a manual reload. Risk is contained — one new singleton service plus a tab3 refactor, frontend-only, no backend/schema/auth change, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>-verifiable here. The first-signals-usage is the one architectural watch-item, mitigated by scoping it to a single bounded service. Sandbox caveat applies: the live cold-launch / re-entry / post-edit device render (390×844 / 430×932) is handed to Andrew via "Looks Good."</div>
       </div>
     </div>
 
@@ -160,7 +160,7 @@
     <div class="section-group section-planning-only hide-on-skip">
       <div class="section-label">Implementation Options</div>
       <div class="card" style="margin-bottom:16px;">
-        <div class="card-text" style="color:var(--gray);">Three ways to fix the flash. All three end with no-step-up users landing straight on settings and step-up users keeping the overlay + PIN prompt; they differ in how the interim "checking" state is modeled and what happens to the vestigial verify button. Tap one to select it; use the edit pencil on the selected card to tweak the approach before approving.</div>
+        <div class="card-text" style="color:var(--gray);">Andy already decided the core approach on this story — a dedicated <code>FreedomStatsService</code>, Angular signals as the reactive primitive, plus a user-scoped <code>localStorage</code> snapshot for instant cold-launch. So these options vary on what's still genuinely open: how much to ship in one pass, and whether to honor the signals decision. Tap one to select it; use the edit pencil on the selected card to tweak before approving.</div>
       </div>
       <div class="option-group">
 
@@ -169,13 +169,13 @@
             <span class="option-label">Option A</span>
             <span class="option-rec">Recommended</span>
           </div>
-          <div class="option-title">Distinct "checking" state + remove the dead button</div>
-          <div class="option-body">Add a dedicated interim flag (e.g. <code>checkingStepUp</code>, true until <code>hasPin()</code> resolves). While checking, render a <strong>neutral</strong> loading indicator — a plain spinner with no "verify your identity" framing. After it resolves: step-up users get the verification overlay + <code>promptPin('verify')</code> exactly as today; non-step-up users go straight to the loaded settings — never seeing the overlay, and PIN users never briefly seeing settings (no content leak either direction). Delete the now-unreachable "Verify Identity" button + <code>authenticateUser()</code> per the no-dead-code rule.</div>
+          <div class="option-title">Full build to the A/C — signals service + cold-launch snapshot</div>
+          <div class="option-body">Build exactly what Andy decided. A new singleton <code>FreedomStatsService</code> owns the three fetches and the freedom-date/age/dollars-away math (preserved byte-for-byte from <code>loadStatStrip()</code>): <code>toSignal(userProgress$)</code> bridges progress, writable signals hold equity + birth-year, a <code>computed()</code> derives the stats plus a loading signal. The service is warm across navigation (instant re-entry) and persists a <strong>user-scoped</strong> snapshot of the displayed values to <code>localStorage</code> so cold launch paints real numbers immediately, then background-refreshes. My Profile saves auto-update it; FRED-196's KYC retry is preserved; the old <code>loadStatStrip()</code> machinery is deleted, not commented.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>satisfies AC-1/AC-3 cleanly (a real third state, not a guessed boolean); removes dead code (AC-5); smallest honest model; no content leak either way.</span></span>
-            <span class="meta-item">Cons: <span>introduces one new state flag + a neutral-loader template branch to maintain.</span></span>
-            <span class="meta-item">Risk: <span>Low — one frontend page, no behavior change for step-up users, no backend/auth-logic touch.</span></span>
-            <span class="meta-item">Estimate: <span>~1–2 hrs</span></span>
+            <span class="meta-item">Pros: <span>satisfies all 9 ACs in one pass; matches Andy's recorded decisions exactly; cold-launch + re-entry both instant; one self-contained, reviewable pilot.</span></span>
+            <span class="meta-item">Cons: <span>largest single diff; introduces the signals pattern and a persistence path together.</span></span>
+            <span class="meta-item">Risk: <span>Medium — first signals usage; mitigated by bounding it to one service and keeping the math identical.</span></span>
+            <span class="meta-item">Estimate: <span>~3–4 hrs</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -184,13 +184,13 @@
           <div class="option-header">
             <span class="option-label">Option B</span>
           </div>
-          <div class="option-title">Reuse existing flags, keep the verify button wired</div>
-          <div class="option-body">Don't add a new state — instead flip the defaults so the verify overlay only renders once a <code>requiresStepUp</code> flag is set true (after <code>hasPin()</code> resolves), showing the existing <code>isAuthenticating</code> spinner as the neutral interim. Keep the "Verify Identity" button + <code>authenticateUser()</code> and re-wire them as a manual re-verify fallback rather than deleting them.</div>
+          <div class="option-title">Phase it — signals service now, cold-launch snapshot as a fast-follow</div>
+          <div class="option-body">Ship the signals <code>FreedomStatsService</code> with the warm in-memory cache, the My Profile auto-update, and the FRED-196 retry now (ACs 1–7, 9) — proving the signals pattern in isolation — but defer the <code>localStorage</code> cold-launch snapshot (AC-8) to an immediate follow-up story once signals are confirmed working on device.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>no new field; smaller TS diff; retains a manual verify affordance.</span></span>
-            <span class="meta-item">Cons: <span>overloads existing booleans (harder to reason about the three views); the verify button simulates nothing real, so re-wiring it is busywork and AC-5 flags it as dead-ish.</span></span>
-            <span class="meta-item">Risk: <span>Low–Medium — flag overloading invites a content-leak edge case; keeps a do-nothing passkey stub in the codebase.</span></span>
-            <span class="meta-item">Estimate: <span>~1–2 hrs</span></span>
+            <span class="meta-item">Pros: <span>smaller first diff; isolates the new signals pattern from the persistence path; lands sooner; easier to verify in two stages.</span></span>
+            <span class="meta-item">Cons: <span>does NOT fully satisfy AC-8 this run — cold launch still shows dashes until the follow-up; splits one story into two.</span></span>
+            <span class="meta-item">Risk: <span>Low–Medium — less in one pass, but the headline "instant on cold launch" win slips to the follow-up.</span></span>
+            <span class="meta-item">Estimate: <span>~2–3 hrs (snapshot follow-up ~1 hr)</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -199,13 +199,13 @@
           <div class="option-header">
             <span class="option-label">Option C</span>
           </div>
-          <div class="option-title">Single "ready" gate before first paint</div>
-          <div class="option-body">Hide the entire content behind one <code>ready</code> boolean: compute <code>hasPin()</code> first, render only a neutral skeleton until it resolves, then show either the verify overlay or settings. Simplest template, but one boolean can't cleanly distinguish "checking" from "verify," so it risks either a blank flash or — if mistimed — a settings content-leak for PIN users.</div>
+          <div class="option-title">Same service, but stay on BehaviorSubject (no signals)</div>
+          <div class="option-body">Build the dedicated <code>FreedomStatsService</code> with the warm cache and snapshot, but keep the existing <code>BehaviorSubject</code> convention instead of signals — zero new reactive pattern in the app.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>fewest template branches; conceptually simple.</span></span>
-            <span class="meta-item">Cons: <span>weakest on AC-3's explicit "distinct checking state" requirement; a single gate is the most likely to leak content one direction or blank-flash the other.</span></span>
-            <span class="meta-item">Risk: <span>Medium — collapsing checking and verify into one flag is exactly the ambiguity AC-3 asks us to avoid.</span></span>
-            <span class="meta-item">Estimate: <span>~1 hr</span></span>
+            <span class="meta-item">Pros: <span>stays on the documented convention; no new-pattern risk; familiar to maintain.</span></span>
+            <span class="meta-item">Cons: <span>directly contradicts Andy's explicit decision to pilot signals here (AC-2 names signals as the primitive); loses the intended pattern-exploration value.</span></span>
+            <span class="meta-item">Risk: <span>Low technically, but it ignores a recorded product decision — not the brief Andy approved.</span></span>
+            <span class="meta-item">Estimate: <span>~3 hrs</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -219,37 +219,41 @@
       <div class="card">
 
         <div class="story-section">
-          <div class="story-header">FRED-199 — Skip step-up auth section when not enabled</div>
+          <div class="story-header">FRED-200 — Always-loaded tab3 stat strip via signals service</div>
 
           <div class="triage-group">
             <div class="triage-group-title">In Scope</div>
             <ul class="triage-list">
-              <li>Add a distinct interim "checking" state so the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.auth-overlay</code> Security Verification view renders <strong>only</strong> for step-up users; during the async <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code> check show a neutral, non-"verify" loading indicator (AC-1, AC-3).</li>
-              <li>No step-up (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code>→false): never show the verify overlay; land directly on the loaded security settings (AC-1).</li>
-              <li>Step-up enabled (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code>→true): verification section + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">promptPin('verify')</code> behave exactly as today — success loads settings, cancel/fail routes back to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/tabs/tab3</code>; no regression (AC-2).</li>
-              <li>No content leak either direction: PIN users never briefly see settings before the prompt, non-PIN users never see the verify overlay (AC-3).</li>
-              <li>Post-gate behavior preserved: once the gate passes, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadSessions()</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">syncAlpacaAccountNumber()</code> still populate Trusted Devices + Alpaca account (AC-4).</li>
-              <li>Remove the now-unreachable "Verify Identity" button (HTML L27–30) + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">authenticateUser()</code> (TS L160–167) per the no-dead-code rule, plus any orphaned imports (AC-5; see Q2).</li>
-              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> exits 0, no new SCSS/TS warnings; both paths spot-checked at 430×932 / 390×844 (AC-6).</li>
+              <li>New <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/src/app/services/freedom-stats.service.ts</code> (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">providedIn:'root'</code>) owning the three fetches + the freedom-date/age/dollars-away math currently inlined in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadStatStrip()</code>; math preserved exactly — 4% target (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">retirementIncome / 0.04</code>, $1.5M default), client-side freedom-year projection, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">freedomAge = freedomYear − birthYear</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">dollarsAway = max(0, target − equity)</code> — identical displayed numbers (AC-1).</li>
+              <li>Signals as the reactive primitive: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">toSignal(authService.userProgress$)</code> via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@angular/core/rxjs-interop</code>; writable signals for equity + birth-year set via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.set()</code>; a <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">computed()</code> for the stats + a loading signal; tab3 renders from the signal. A short comment marks the first signals usage / approved deviation from the BehaviorSubject convention (AC-2).</li>
+              <li>Delete the old orchestration from tab3 — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">progressDone/portfolioDone/kycDone</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tryRender()</code>, the manual <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">subscribe</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">takeUntil</code> for the strip — removed, not commented (AC-2, AC-9).</li>
+              <li>Always loaded across navigation: the singleton holds the computed stats, so leaving and returning to tab3 shows the last values instantly — no <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">—</code> dashes, no second cold round of three fetches (AC-3; re-entry refresh policy — see Q1).</li>
+              <li>Auto-update on My Profile save: after <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">saveChanges()</code> succeeds, the strip reflects new monthly-investment / retirement-income values with no manual reload — via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadUserProgress()</code> → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userProgress$</code> → the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">toSignal</code> bridge (and/or an explicit <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">refresh()</code>) (AC-4).</li>
+              <li>Preserve FRED-196 resilience verbatim: the KYC fetch keeps <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">timeout(10_000)</code> + bounded transient-only <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">retry</code> (TimeoutError / status 0 / status ≥ 500, never 401/403/404); Freedom Age degrades honestly; Freedom Date + To Go render independent of the KYC outcome (AC-5).</li>
+              <li>User-scoped <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">localStorage</code> snapshot of the displayed values; cold launch hydrates and paints real numbers immediately, then a background refresh corrects them; keyed/validated to the current user; cleared on logout alongside the JWT/data clear; a missing/corrupt/foreign snapshot falls back to the normal <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">—</code> loading state. Stores derived display values only — no tokens or new PII (AC-8).</li>
+              <li>Keep feeding <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">liveEquity</code> — the FRED-195 pig-avatar input on tab3 — unbroken (AC-7).</li>
+              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> exits 0, scoped build passes, no orphaned imports / dead <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">destroy$</code> plumbing (AC-9).</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">Potentially Out of Scope</div>
             <ul class="triage-list">
-              <li>Hardening <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code>'s fail-open-on-network-error behavior — leave as-is unless Andrew wants it now (see Q1).</li>
-              <li>Any restyle of the verify overlay visuals or the PIN modal itself — this is gating/state only, no redesign.</li>
-              <li>Changes to App Lock, the Step-Up toggle logic, or any other settings page (FRED-194's shared <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.blue-hero-header</code> just landed — leave it intact).</li>
+              <li>Migrating any <em>other</em> BehaviorSubjects to signals — this is a single-service, bounded pilot only; don't spread the pattern this run.</li>
+              <li>The MFU contribution-based projection — kept intentionally separate from tab3's income-based freedom year (AC-6); do not read or converge it.</li>
+              <li>Reworking the FRED-195 pig-avatar wiring — just keep <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">liveEquity</code> fed; no refactor.</li>
+              <li>A CONTEXT.md "signals convention" rewrite — note the pilot in a code comment; leave any doc/standards change for a follow-up once the pattern is proven.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">UX Considerations</div>
             <ul class="triage-list">
-              <li><strong>Three states, one honest path</strong> — checking (neutral spinner) → verify overlay (step-up only) → settings. The interim indicator must NOT use the "verify your identity / Verifying…" framing — that's the whole bug.</li>
-              <li><strong>It's a network call</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code> hits <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">GET /user/pin/status</code>; keep the interim state honest and avoid flashing settings content for PIN users (content-leak both directions).</li>
-              <li><strong>Error path</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code> currently fails open (network error → treated as no-PIN). Preserve unless Andrew says harden (Q1).</li>
-              <li><strong>Mobile-first</strong> — verify both paths at 390×844 and 430×932; no overlay clip, no layout shift between the checking spinner and the loaded settings.</li>
+              <li><strong>Cold launch (snapshot present)</strong> — real numbers paint immediately, no <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">—</code>; the background refresh swaps fresh values in quietly with no visible flicker.</li>
+              <li><strong>First-ever load (no snapshot)</strong> — the loading signal shows the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">—</code> placeholder; never NaN / undefined.</li>
+              <li><strong>Error / empty</strong> — null or zero equity → To Go falls back via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">max(0, …)</code>; a failed userProgress or portfolio fetch degrades gracefully (no crash, no user eject, no raw error string).</li>
+              <li><strong>User safety</strong> — a logged-out or switched user must never see another user's figures; the snapshot is keyed to / validated against the current <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> and cleared on logout (mind the FRED-199 ordering lesson: clear the snapshot BEFORE <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> is wiped).</li>
+              <li><strong>Mobile-first</strong> — verify at 390×844 and 430×932; the three tiles must not shift between snapshot hydration and fresh data (keep the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">min-height</code>).</li>
             </ul>
           </div>
         </div>
@@ -264,18 +268,18 @@
 
         <div class="question-item">
           <div class="question-text">
-            From the story (a): <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code> currently <strong>fails open</strong> on a network error — a failed PIN-status call is treated as "no PIN," so during an outage a step-up user could slip past the gate. Preserve that fail-open behavior (default, safer for availability), or harden it to fail-closed (block / retry on error)? My recommendation: <strong>preserve fail-open</strong> — a transient status error shouldn't lock a user out of their own settings.
+            <strong>Re-entry refresh policy.</strong> AC-3 says returning to tab3 shows the cached values instantly with "no second cold round of three fetches" (no dashes). Should the service <em>silently background-refresh</em> on re-entry (stale-while-revalidate — show cached instantly, refetch quietly, swap when fresh data returns) so equity stays current after an investment runs — or NOT refetch on re-entry at all until something explicitly changes (e.g. a My Profile save)? My recommendation: <strong>silent background refresh</strong> — instant cached paint, quiet revalidate, never a dash on re-entry.
             <span class="required-badge">Required</span>
           </div>
-          <textarea class="question-input" data-required="true" placeholder="Preserve fail-open — safer for availability; a transient PIN-status error shouldn't lock a user out of their own settings."></textarea>
+          <textarea class="question-input" data-required="true" placeholder="Silent background refresh on re-entry — show cached instantly, revalidate quietly, swap when fresh data returns; never flash dashes on re-entry."></textarea>
         </div>
 
         <div class="question-item">
           <div class="question-text">
-            From the story (b): the "Verify Identity" button (HTML L27–30) + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">authenticateUser()</code> (TS L160–167) are vestigial — a 1.5s <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">setTimeout</code> passkey simulation that never runs in the real flow. OK to delete them as part of this story (no-dead-code rule)? My recommendation: <strong>yes, delete</strong> — they're unreachable and simulate nothing real.
+            <strong>Snapshot staleness cap.</strong> On cold launch the strip hydrates from the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">localStorage</code> snapshot, then background-refreshes. Should the snapshot have a max age beyond which it's ignored (fall back to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">—</code> instead of showing a stale number) — or always hydrate then immediately revalidate regardless of age? My recommendation: <strong>no hard TTL</strong> — always hydrate then refresh right away; a stale value is corrected within seconds, and offline a slightly-stale real number beats dashes.
             <span class="optional-badge">Optional</span>
           </div>
-          <textarea class="question-input" placeholder="Yes — delete the vestigial button and authenticateUser(); they're unreachable and simulate nothing real."></textarea>
+          <textarea class="question-input" placeholder="No hard TTL — always hydrate from the snapshot then immediately background-refresh; a stale value self-corrects in seconds and beats showing dashes offline."></textarea>
         </div>
 
       </div>
@@ -288,31 +292,37 @@
 
         <div class="step-item">
           <div class="step-num">1</div>
-          <div class="step-body" contenteditable="false"><strong>Trace the paint order</strong> — Confirm in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ngOnInit</code> that <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isAuthenticated=false</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isAuthenticating=true</code> defaults render the verify overlay during the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">await hasPin()</code> window for non-PIN users.</div>
+          <div class="step-body" contenteditable="false"><strong>Build the service shell</strong> — Create <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FreedomStatsService</code>; port the exact freedom-date/age/dollars-away math out of tab3 <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadStatStrip()</code>; expose <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">toSignal(userProgress$)</code>, writable equity/birth-year signals, a <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">computed()</code> stats signal + loading signal. Add the "first signals usage, approved deviation" comment.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">2</div>
-          <div class="step-body" contenteditable="false"><strong>Introduce the checking state</strong> — Add a distinct flag (e.g. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">checkingStepUp</code>, true until <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hasPin()</code> resolves); template renders a neutral loader while checking, the verify overlay only when step-up is enabled, settings only after the gate passes.</div>
+          <div class="step-body" contenteditable="false"><strong>Move the fetches in</strong> — Port the three calls into the service; apply FRED-196's transient-only retry block verbatim on the KYC call; settle the loading signal on each outcome so the render gate can never hang.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">3</div>
-          <div class="step-body" contenteditable="false"><strong>Wire both paths</strong> — non-PIN → straight to settings (no overlay); PIN → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">promptPin('verify')</code> exactly as today (success loads, cancel routes to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/tabs/tab3</code>); ensure <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadSessions()</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">syncAlpacaAccountNumber()</code> still fire post-gate.</div>
+          <div class="step-body" contenteditable="false"><strong>Add the snapshot</strong> — Persist the displayed values to a user-scoped <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">localStorage</code> key on compute; hydrate on construct (validate against the current <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code>); fall back to the loading state on missing/corrupt/foreign; clear it in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">clearJwtData()</code> BEFORE <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> is removed (FRED-199 ordering lesson).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">4</div>
-          <div class="step-body" contenteditable="false"><strong>Remove dead code</strong> — Per your Q2 answer, delete the vestigial "Verify Identity" button + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">authenticateUser()</code> and drop any now-unused imports.</div>
+          <div class="step-body" contenteditable="false"><strong>Refactor tab3</strong> — Render the strip from the signal; delete <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadStatStrip()</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tryRender()</code>, the done-flags, and the manual <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">subscribe</code>+<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">takeUntil</code> for the strip; keep <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">liveEquity</code> feeding the FRED-195 pig avatar. Wire the re-entry refresh policy from your Q1 answer.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">5</div>
-          <div class="step-body" contenteditable="false"><strong>Verify + hand off</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> (exits 0) and the scoped build (no new warnings); run the verifier over the A/C manifest. Hand the live both-path device render (390×844 / 430×932) to Andrew via "Looks Good" — the sandbox can't drive a real device.</div>
+          <div class="step-body" contenteditable="false"><strong>Wire My Profile</strong> — On <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">saveChanges()</code> success, ensure the strip updates (the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userProgress$</code> bridge auto-updates; add an explicit <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">refresh()</code> for equity/KYC if needed) with no manual reload.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">6</div>
+          <div class="step-body" contenteditable="false"><strong>Verify + hand off</strong> — Add specs; run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> (exits 0) and the scoped build (no new warnings); run the verifier over the A/C manifest. Hand the live device render — instant on cold launch, instant on re-entry, updates after a My Profile edit, at 390×844 / 430×932 — to Andrew via "Looks Good."</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
@@ -324,32 +334,18 @@
       <div class="section-label">Tomorrow's Likely Pick</div>
       <div class="card">
         <ul class="tomorrow-list">
-          <li><strong>FRED-200</strong> — Always-loaded tab3 stat strip via a signals service — the other A/C-ready Tier-1 story; a 3hr+ pilot of Angular signals + a user-scoped localStorage snapshot for instant cold-launch. The natural next pick once FRED-199 lands and the sandbox-buildable Tier-1 queue is otherwise drained.</li>
-          <li><strong>FRED-189</strong> — Fix bank-account subtype always showing "Checking" — Easy, a user-facing field-case bug (frontend reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code> but the backend returns <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code>); pure code, Tier 2 (needs A/C confirmed).</li>
-          <li><strong>FRED-188</strong> — Add a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> guard to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> — Easy, a parked quick win mirroring the guard already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code>. Tier 2 bug-density win.</li>
+          <li><strong>Data hygiene — close out FRED-195.</strong> Its full implementation (the 5 <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pig-range-*.svg</code> assets, the deleted <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pig-level-*</code> art, the shared <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">EquityPigUtils</code> helper, and the tab3 + My Profile + MFU avatar wiring) is already merged to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">develop</code>, but it still sits in READY uncheckmarked. Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done=FRED-195</code> so it isn't re-picked and the burndown count is honest.</li>
+          <li><strong>FRED-189</strong> — Fix bank-account subtype always showing "Checking" — Easy, a user-facing field-case bug (frontend reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code>, backend returns <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code>); pure code. Tier 2 (needs A/C confirmed).</li>
+          <li><strong>FRED-188</strong> — Add a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> guard to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> — Easy, mirrors the guard already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code>. Tier 2 bug-density quick win. (FRED-191 stays sandbox-gated — real-device Capacitor build.)</li>
         </ul>
       </div>
     </div>
 
     <!-- ── Completion Section (completed state only) ── -->
-    <div class="section-group section-intermediary-only" id="completion-section">
+    <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
-        <div style="margin-bottom:16px;">
-          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-199 — Skip step-up auth section when not enabled</p>
-          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Replaced the Account Security page's two-state first-paint model (which flashed the "Security Verification / Please verify your identity / Verifying…" overlay at <em>everyone</em> during the async PIN-status check) with a distinct three-state model: a neutral <code>checkingStepUp</code> spinner while <code>hasPin()</code> resolves, then either the verify overlay + PIN prompt (step-up users only) or straight into the loaded settings (non-step-up users) — no overlay flash, no content leak either direction. Removed the vestigial "Verify Identity" button and the <code>authenticateUser()</code> stub. Per your Q1 answer, hardened the fail-open hole: a per-user <code>stepUpEnabled:&lt;userId&gt;</code> marker is saved to localStorage so a failed PIN-status call now fails <strong>closed</strong> (still prompts) instead of silently letting a step-up user past the gate; the marker is wiped on PIN-off and on logout/user-switch. Files: <code>security-settings.page.{ts,html,scss}</code>, <code>pin.service.ts</code>, <code>jwt-token.utils.ts</code>, plus 19 new unit specs.</p>
-          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
-          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
-            <li>No step-up auth: verify overlay never shown — lands directly on loaded settings (device render → your "Looks Good").</li>
-            <li>Step-up enabled: verification section + <code>promptPin('verify')</code> behave exactly as today; cancel/fail routes back to <code>/tabs/tab3</code> (device render → your "Looks Good").</li>
-            <li>Distinct interim "checking" state — no misleading flash, no content leak either direction.</li>
-            <li>Post-gate behavior preserved: <code>loadSessions()</code> + <code>syncAlpacaAccountNumber()</code> still populate Trusted Devices + Alpaca account.</li>
-            <li>No new dead code: "Verify Identity" button + <code>authenticateUser()</code> + orphaned <code>isAuthenticating</code>/<code>fingerprint</code> removed.</li>
-            <li><code>npx tsc --noEmit</code> exits 0; 19/19 unit specs green; CI <code>backend-frontend</code> passed and squash-merged to develop.</li>
-            <li>Fail-open hardened to fail-closed via the localStorage step-up marker (your Q1 directive).</li>
-          </ul>
-          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Readiness 77 → 78: removed a misleading flash on the most security-sensitive surface and closed a real fail-open auth bypass — a status-call network error can no longer be used to skip a user's step-up PIN.</p>
-        </div>
+        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
       </div>
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;
@@ -358,7 +354,7 @@
       <!-- Request Changes — rework the same story with feedback -->
       <div id="rework-block" style="margin-top:14px;">
         <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
-        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The neutral checking spinner is too prominent — make it subtler. And confirm the PIN modal still routes back to tab3 on cancel."></textarea>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The strip flickers when the background refresh swaps in fresh numbers — make the swap seamless. And confirm the snapshot clears on logout."></textarea>
         <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
       </div>
     </div>
@@ -368,7 +364,7 @@
       <div class="section-label">Anything Else For the Execution Agent?</div>
       <div class="card">
         <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
-        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Reuse the existing ion-spinner for the neutral checking state, don't introduce a new loader component..."></textarea>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Reuse the canonical loadUserProgress() retry block verbatim for the KYC call; keep the stat-tile min-height so the strip never shifts..."></textarea>
       </div>
     </div>
 
