@@ -50,8 +50,12 @@ import { ToastService } from '../../services/toast.service';
   ]
 })
 export class SecuritySettingsPage implements OnInit {
+  // Three distinct states:
+  //   checkingStepUp=true  → neutral loading spinner (neither overlay nor settings)
+  //   checkingStepUp=false, isAuthenticated=false → step-up verify overlay
+  //   checkingStepUp=false, isAuthenticated=true  → loaded settings
+  checkingStepUp = true;
   isAuthenticated = false;
-  isAuthenticating = true;
 
   // Settings State
   appLockEnabled = false;
@@ -88,23 +92,27 @@ export class SecuritySettingsPage implements OnInit {
     // Sync App Lock state
     this.appLockEnabled = this.appLockService.isEnabled();
 
-    // Check if PIN is set (Sensitive Auth Enabled)
+    // Check if PIN is set (Sensitive Auth / step-up enabled).
+    // checkingStepUp=true while this resolves — the template shows only a
+    // neutral spinner during this window, preventing any flash of either the
+    // verify overlay or the settings content.
     this.sensitiveAuthEnabled = await this.pinService.hasPin();
 
-    // If Sensitive Auth is enabled, require PIN to enter this page
     if (this.sensitiveAuthEnabled) {
+      // Step-up is enabled: show verify overlay + prompt for PIN.
+      this.checkingStepUp = false;
       const verified = await this.pinService.promptPin('verify');
       if (!verified) {
-        // User cancelled or failed PIN -> Go back
-        this.router.navigate(['/tabs/tab3']); // Or wherever back is
+        // User cancelled or failed PIN — route back without loading settings.
+        this.router.navigate(['/tabs/tab3']);
         return;
       }
+    } else {
+      // No step-up PIN — go straight to settings, never showing the overlay.
+      this.checkingStepUp = false;
     }
 
-    // No pre-authentication required to view settings (or already passed PIN)
     this.isAuthenticated = true;
-    this.isAuthenticating = false;
-
     this.loadSessions();
     this.syncAlpacaAccountNumber();
   }
@@ -157,15 +165,6 @@ export class SecuritySettingsPage implements OnInit {
     }
   }
 
-  async authenticateUser() {
-    this.isAuthenticating = true;
-    // Simulate API delay for Passkey prompt
-    setTimeout(() => {
-      this.isAuthenticating = false;
-      this.isAuthenticated = true;
-    }, 1500);
-  }
-
   toggleAppLock() {
     this.appLockService.setEnabled(this.appLockEnabled);
     console.log('App lock toggled:', this.appLockEnabled);
@@ -176,6 +175,9 @@ export class SecuritySettingsPage implements OnInit {
       // User turned it ON
       const success = await this.pinService.promptPin('create');
       if (success) {
+        // PIN was created — set the localStorage marker so hasPin() is
+        // fail-closed even if the next network call errors.
+        this.pinService.markStepUpEnabled();
         this.presentToast('Sensitive Action PIN enabled.');
       } else {
         // Creation cancelled
@@ -184,6 +186,7 @@ export class SecuritySettingsPage implements OnInit {
     } else {
       // User turned it OFF
       await this.pinService.deletePin();
+      // deletePin() already clears the marker internally.
       this.presentToast('Sensitive Action PIN disabled.');
     }
   }

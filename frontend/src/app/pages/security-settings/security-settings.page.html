@@ -12,22 +12,24 @@
 
 <ion-content class="security-content">
 
-  <!-- Authentication Overlay -->
-  <div class="auth-overlay" *ngIf="!isAuthenticated">
+  <!-- Neutral checking spinner: shown only while hasPin() is resolving.
+       No "verify your identity" framing here — this is an indeterminate load state. -->
+  <div class="checking-overlay" *ngIf="checkingStepUp">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <!-- Step-up verification overlay: shown only after checking resolves AND user has a PIN.
+       Security Verification framing is appropriate here because we know they need to verify. -->
+  <div class="auth-overlay" *ngIf="!checkingStepUp && !isAuthenticated">
     <div class="auth-card">
       <span class="material-symbols-outlined auth-icon">shield</span>
       <h2 class="auth-title">Security Verification</h2>
       <p class="auth-desc">Please verify your identity to access security settings.</p>
 
-      <div class="auth-spinner" *ngIf="isAuthenticating">
+      <div class="auth-spinner">
         <ion-spinner name="crescent"></ion-spinner>
         <span>Verifying...</span>
       </div>
-
-      <button *ngIf="!isAuthenticating" class="cta-btn" (click)="authenticateUser()">
-        <span class="material-symbols-outlined">fingerprint</span>
-        Verify Identity
-      </button>
     </div>
   </div>
 

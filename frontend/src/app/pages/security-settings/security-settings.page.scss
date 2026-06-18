@@ -21,7 +21,19 @@ ion-content { --background: #f8fafc; }
   gap: 14px;
 }
 
-// Auth overlay
+// Neutral checking spinner — shown while hasPin() resolves.
+// No identity-framing; this is an indeterminate loading state.
+.checking-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+}
+
+// Auth overlay — shown only for step-up users after checking resolves.
 .auth-overlay {
   position: fixed;
   inset: 0;
@@ -300,25 +312,3 @@ ion-content { --background: #f8fafc; }
   }
 }
 
-.cta-btn {
-  width: 100%;
-  height: 52px;
-  border-radius: 12px;
-  border: none;
-  background: #2563EB;
-  color: white;
-  font-family: 'Manrope', sans-serif;
-  font-size: 16px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
-  transition: all 0.15s ease;
-
-  .material-symbols-outlined { font-size: 20px; }
-
-  &:active { transform: scale(0.99); }
-}
