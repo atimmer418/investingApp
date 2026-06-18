@@ -90,9 +90,16 @@ export class JwtTokenUtils {
   }
 
   /**
-   * Clear all JWT-related data from localStorage
+   * Clear all JWT-related data from localStorage, including the step-up PIN
+   * marker so a logged-out or switched user is never falsely gated.
    */
   static clearJwtData(): void {
+    // Derive and clear the per-user step-up marker BEFORE removing userId,
+    // since the marker key is scoped to the current userId.
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      localStorage.removeItem(`stepUpEnabled:${userId}`);
+    }
     localStorage.removeItem('jwtToken');
     localStorage.removeItem('jwtExpiration');
     localStorage.removeItem('userId');

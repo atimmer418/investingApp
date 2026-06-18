@@ -31,11 +31,46 @@ export class PinService {
     });
   }
 
+  // ── Step-up PIN marker helpers ────────────────────────────────────────────
+  // Stores a per-user, non-sensitive boolean marker in localStorage so that if
+  // the /user/pin/status call fails (network error), we still gate the user who
+  // has a step-up PIN (fail-closed), while genuine no-PIN users pass straight
+  // through. Only a boolean marker is stored — never the raw PIN.
+
+  private static stepUpMarkerKey(): string | null {
+    const userId = localStorage.getItem('userId');
+    return userId ? `stepUpEnabled:${userId}` : null;
+  }
+
+  markStepUpEnabled(): void {
+    const key = PinService.stepUpMarkerKey();
+    if (key) localStorage.setItem(key, 'true');
+  }
+
+  clearStepUpMarker(): void {
+    const key = PinService.stepUpMarkerKey();
+    if (key) localStorage.removeItem(key);
+  }
+
+  private getStepUpMarker(): boolean {
+    const key = PinService.stepUpMarkerKey();
+    return key ? localStorage.getItem(key) === 'true' : false;
+  }
+
   async hasPin(): Promise<boolean> {
     try {
-      return await firstValueFrom(this.http.get<boolean>(`${this.apiUrl}/status`, { headers: this.getHeaders() }));
+      const result = await firstValueFrom(this.http.get<boolean>(`${this.apiUrl}/status`, { headers: this.getHeaders() }));
+      // Keep the marker in sync with the authoritative backend response.
+      if (result) {
+        this.markStepUpEnabled();
+      } else {
+        this.clearStepUpMarker();
+      }
+      return result;
     } catch (e) {
-      return false;
+      // Network error: fall back to localStorage marker so a step-up user is
+      // still gated (fail-closed). A genuine no-PIN user has no marker → false.
+      return this.getStepUpMarker();
     }
   }
 
@@ -58,9 +93,13 @@ export class PinService {
   }
 
   async deletePin(): Promise<PinResponse> {
-    return await firstValueFrom(
+    const result = await firstValueFrom(
       this.http.delete<PinResponse>(`${this.apiUrl}/delete`, { headers: this.getHeaders() })
     );
+    // PIN is now gone — clear the localStorage marker so hasPin() fail-open
+    // logic no longer gates this user.
+    this.clearStepUpMarker();
+    return result;
   }
 
   /**
