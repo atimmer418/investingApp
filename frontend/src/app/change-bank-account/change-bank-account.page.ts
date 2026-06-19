@@ -223,13 +223,10 @@ export class ChangeBankAccountPage implements OnInit, OnDestroy {
     });
   }
 
-  formatAccountDisplay(): string {
-    if (!this.currentBankAccount) {
-      return 'No bank account connected';
-    }
-    
-    const name = this.currentBankAccount.institutionName || 'Bank Account';
-    const subType = this.currentBankAccount.accountSubType || 'Checking';
-    return `${name} (${subType})`;
+  formatAccountSubtype(): string {
+    const rawSubtype = this.currentBankAccount?.accountSubtype;
+    return rawSubtype
+      ? rawSubtype.charAt(0).toUpperCase() + rawSubtype.slice(1).toLowerCase()
+      : 'Account';
   }
 }
