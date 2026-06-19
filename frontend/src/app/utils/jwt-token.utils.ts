@@ -94,11 +94,14 @@ export class JwtTokenUtils {
    * marker so a logged-out or switched user is never falsely gated.
    */
   static clearJwtData(): void {
-    // Derive and clear the per-user step-up marker BEFORE removing userId,
-    // since the marker key is scoped to the current userId.
+    // Derive and clear per-user scoped keys BEFORE removing userId,
+    // since their keys are scoped to the current userId (FRED-199 ordering).
     const userId = localStorage.getItem('userId');
     if (userId) {
       localStorage.removeItem(`stepUpEnabled:${userId}`);
+      // FRED-200: clear the stat strip snapshot so a logged-out or switched user
+      // never sees another user's freedom figures.
+      localStorage.removeItem(`fred.statStrip.v1.${userId}`);
     }
     localStorage.removeItem('jwtToken');
     localStorage.removeItem('jwtExpiration');
