@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="verifying-in-ci">
+  <div id="dashboard" data-populated="true" data-state="completed">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -342,10 +342,23 @@
     </div>
 
     <!-- ── Completion Section (completed state only) ── -->
-    <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
+    <div class="section-group section-intermediary-only" id="completion-section">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
-        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-189 — Fix bank account subtype always showing "Checking"</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">The Change Bank Account page now shows the real account subtype instead of always "Checking". The visible bug lived in the template, not the TypeScript: <code>change-bank-account.page.html:37</code> (the "Current Account" card) bound <code>{{ currentBankAccount.accountSubtype || 'Checking' }}</code> — lowercase value with an always-"Checking" fallback. Added <code>formatAccountSubtype()</code> in <code>change-bank-account.page.ts</code> (reads the backend's lowercase <code>accountSubtype</code>, title-cases it, falls back to a neutral "Account" when truly missing), bound line 37 to it, and fixed the same expression in the commented hero-peek (line 12). Removed the dead <code>formatAccountDisplay()</code> (capital-T <code>accountSubType</code>, zero callers) that the first build had mistakenly targeted. Frontend-only — no backend, schema, or auth changes.</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>AC-1 — The visible subtype binding reads the backend's <code>accountSubtype</code> (lowercase t); a Savings account shows its real subtype, never always "Checking".</li>
+            <li>AC-2 — The subtype is title-cased for display ("savings" → "Savings").</li>
+            <li>AC-3 — A genuinely missing subtype falls back to a neutral "Account" — never a falsely asserted "Checking" or an empty "()".</li>
+            <li>AC-4 — No capital-T <code>accountSubType</code> reference remains anywhere in <code>frontend/src</code>; <code>plaid.service.ts</code> untouched; no dead method left behind.</li>
+            <li>AC-5 — Frontend-only diff (two files); <code>tsc --noEmit</code> introduces no new errors.</li>
+            <li>AC-6 — The "Current Account" card now displays the correct title-cased subtype (verified by static inspection of the live template binding).</li>
+          </ul>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Readiness 79 → 80 — closes a real user-facing correctness bug and tidies a loose thread on the FRED-124 change-bank-account overhaul. Independently verified (2 passes); CI green; squash-merged to develop via PR #95.</p>
+        </div>
       </div>
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;
