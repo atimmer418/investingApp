@@ -77,6 +77,15 @@
 **Blockers active:** none (BLOCKED holds FRED-173/175/179, all external-dependency stories, not production blockers)
 **Data-hygiene (carried from 06-18):** FRED-195 still sits uncheckmarked in READY despite being fully shipped on `develop` — recommend `triage --done=FRED-195` (not mutated in this unattended planning run).
 **Notes:** Exclusion set: FRED-100 (skipped 06-15, 7-day window through ~06-22) — not eligible, wasn't the pick. No other skips in the last 7 days. Two genuine Questions for Andrew, both Optional with predictive placeholders on the only real forks in a one-line fix: (Q1) display casing — title-case "Savings" vs raw lowercase [predicted: title-case]; (Q2) null-subtype fallback — keep "Checking" vs neutral "Account" [predicted: neutral "Account"]. Tomorrow's likely picks: close out FRED-195 (data hygiene), FRED-188 (chat null guard), FRED-186 (debounce + switchMap); FRED-191 stays sandbox-gated.
-**Status:** Pending approval from Andrew
+
+**APPROVED + SHIPPED (06-19):** Andrew approved Option A and confirmed BOTH predicted answers verbatim — Q1 title-case ("Savings"/"Checking"), Q2 neutral "Account" fallback. Approved A/C (AC-1..AC-6) written back into `backlog.md` before building.
+- **What shipped:** `frontend/src/app/change-bank-account/change-bank-account.page.{ts,html}`. The real render path was the TEMPLATE, not TS: `change-bank-account.page.html:37` (active "Current Account" card) bound `{{ currentBankAccount.accountSubtype || 'Checking' }}` — lowercase value + always-"Checking" fallback. Added `formatAccountSubtype()` (reads lowercase `accountSubtype`, title-cases via `charAt(0).toUpperCase()+slice(1).toLowerCase()`, neutral `'Account'` fallback), bound line 37 to it, and fixed the same expression in the commented hero-peek (line 12). Removed the dead `formatAccountDisplay()` (capital-T `accountSubType`, zero callers).
+- **Verifier go-back (1 of 2 used):** Pass #1 REVISION REQUIRED — builder first fixed `formatAccountDisplay()`, which is DEAD CODE (0 callers); AC-6 failed because the visible template binding still had the bug. Pass #2 APPROVED after the fix moved onto the live template render path. AC-1..AC-6 all pass; `tsc --noEmit` clean (only pre-existing TS5101/TS5107 deprecation warnings); no backend/schema/auth change.
+- **Readiness:** 79 → 80 (a real user-facing correctness bug closed; tidies the FRED-124 change-bank-account overhaul).
+- **Days since last blocker:** 22 (no blocker today; +1 clean day vs 06-19 brief's 21).
+- **Lessons:**
+  - **Fix the LIVE render path, not the first matching method.** A field-case display bug can live in a template inline binding (`{{ x.foo || 'default' }}`) while a same-named TS helper is dead code (0 callers). Grep callers BEFORE editing a display method — verify the thing you change actually drives rendered output.
+  - Backend `PlaidController.java:177` and `plaid.service.ts:80-82` both use lowercase `accountSubtype` — the capital-T `accountSubType` in the page was the lone outlier. Single-source the field name across consumers when diagnosing case-mismatch bugs.
+**Status:** Complete
 
 ---
