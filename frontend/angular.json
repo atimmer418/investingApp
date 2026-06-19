@@ -75,7 +75,7 @@
               "sourceMap": true,
               "namedChunks": true,
               "define": {
-                "FRED_BUILD": "\"v2\""
+                "FRED_BUILD": "\"v3\""
               }
             },
             "dev": {
