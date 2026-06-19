@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="verifying-in-ci">
+  <div id="dashboard" data-populated="true" data-state="completed">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -342,10 +342,26 @@
     </div>
 
     <!-- ── Completion Section (completed state only) ── -->
-    <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
+    <div class="section-group section-intermediary-only" id="completion-section">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
-        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-200 — Always-loaded tab3 stat strip via a signals service</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Built a new singleton <code>FreedomStatsService</code> (<code>frontend/src/app/services/freedom-stats.service.ts</code>) — the app's first Angular signals usage. It owns the three fetches (userProgress bridged via <code>toSignal</code>, portfolio equity + KYC birth-year in writable signals) and the freedom-date/age/dollars-away math, ported byte-for-byte from the old <code>loadStatStrip()</code>. A <code>computed()</code> derives the stats + a loading signal; tab3 now renders straight from the signal. The service stays warm across navigation and persists a user-scoped <code>localStorage</code> snapshot so cold launch paints real numbers instantly, then silently background-refreshes (no dashes on re-entry, no hard TTL — per your two decisions). The old <code>loadStatStrip()</code>/<code>tryRender()</code> machinery and done-flags were deleted; <code>liveEquity</code> still feeds the FRED-195 pig avatar; FRED-196's KYC retry is preserved; My Profile saves auto-update the strip; the snapshot clears on logout before the userId is wiped.</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>AC-1 — dedicated service owns the three fetches + the math, preserved exactly (byte-for-byte: 0.04 SWR, $1.5M default, freedomAge, max(0,…)).</li>
+            <li>AC-2 — signals are the primitive (<code>toSignal</code> + writable signals + <code>computed()</code>); old orchestration removed; deviation comment added.</li>
+            <li>AC-3 — instant on re-entry, no second cold round; silent stale-while-revalidate refresh (never a dash).</li>
+            <li>AC-4 — auto-updates after a My Profile save with no manual reload.</li>
+            <li>AC-5 — FRED-196 bounded transient-only KYC retry preserved; Freedom Age degrades honestly.</li>
+            <li>AC-6 — tab3 income-based projection stays separate from the MFU contribution-based one.</li>
+            <li>AC-7 — loading / null-equity / fetch-failure paths degrade gracefully; <code>liveEquity</code> preserved.</li>
+            <li>AC-8 — user-scoped cold-launch snapshot, validated against userId, cleared before logout, no TTL.</li>
+            <li>AC-9 — old machinery deleted (not commented), no orphaned imports, <code>tsc --noEmit</code> clean; 22 + 4 unit tests pass.</li>
+          </ul>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Verifier APPROVED with 0 in-scope failures; merged to develop via the CI-gated verify/FRED-200 PR (#94). Makes tab3's "when am I free?" number instant on cold launch and on every re-entry, and self-updating — readiness 78 → 79. Note: the live 430×932 device render is the one thing the sandbox couldn't drive — give it a look before pressing "Looks Good."</p>
+        </div>
       </div>
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;
