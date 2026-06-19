@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Subject, takeUntil, filter, take, timeout, retry, timer, throwError } from 'rxjs';
+import { Subject, takeUntil, filter, take } from 'rxjs';
 import {
   IonHeader,
   IonContent,
@@ -41,14 +41,12 @@ import {
 } from 'ionicons/icons';
 import { SettingsService, UserPreferences, RecurringInvestment } from '../services/settings.service';
 import { PlaidService } from '../services/plaid.service';
-import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
 import { MonthlyFreedomUpdateComponent } from '../components/monthly-freedom-update/monthly-freedom-update.component';
 import { MonthlyFreedomUpdateService } from '../services/monthly-freedom-update.service';
 import { AppLockService } from '../services/app-lock.service';
 import { AccountStatusService } from '../services/account-status.service';
-import { PortfolioService } from '../services/portfolio.service';
-import { AlpacaService } from '../services/alpaca.service';
+import { FreedomStatsService } from '../services/freedom-stats.service';
 import { Observable } from 'rxjs';
 import { EquityPigUtils } from '../utils/equity-pig.utils';
 
@@ -89,23 +87,12 @@ export class Tab3Page implements OnInit, OnDestroy {
   public hasMfuPeriod: boolean = false;
   public profileActionRequired$: Observable<boolean>;
 
-  // --- Stat strip (freedom date, freedom age, dollars away) ---
-  public statStripLoading: boolean = true;
-  public freedomYear: string = '—';
-  public freedomAge: string = '—';
-  public dollarsAway: string = '—';
-
-  // --- Profile avatar (live equity-based pig) ---
+  // --- Profile avatar (live equity-based pig, fed from the stats service) ---
   public liveEquity: number = 0;
 
   get pigAvatarSrc(): string {
     return EquityPigUtils.pigSrcFromEquity(this.liveEquity);
   }
-
-  // Assumed annual return for the live freedom-year projection.
-  // Mirrors MonthlyFreedomUpdateService.ASSUMED_ANNUAL_RETURN on the backend so
-  // the header matches what the Monthly Freedom Update would compute.
-  private readonly ASSUMED_ANNUAL_RETURN = 0.10;
 
   public settingSections: SettingSection[] = [
     {
@@ -206,16 +193,21 @@ export class Tab3Page implements OnInit, OnDestroy {
     private router: Router,
     private settingsService: SettingsService,
     private plaidService: PlaidService,
-    private authService: AuthService,
     private toastService: ToastService,
     private modalController: ModalController,
     private mfuService: MonthlyFreedomUpdateService,
     private appLockService: AppLockService,
     private accountStatusService: AccountStatusService,
-    private portfolioService: PortfolioService,
-    private alpacaService: AlpacaService
+    public freedomStatsService: FreedomStatsService
   ) {
     this.profileActionRequired$ = this.accountStatusService.actionRequired$;
+
+    // Keep liveEquity in sync with the service equity signal so the FRED-195
+    // pig avatar always reflects the latest portfolio value.
+    effect(() => {
+      this.liveEquity = this.freedomStatsService.equity() ?? 0;
+    });
+
     addIcons({
       settingsOutline,
       walletOutline,
@@ -267,14 +259,15 @@ export class Tab3Page implements OnInit, OnDestroy {
       .subscribe(investment => {
         this.recurringInvestment = investment;
       });
-
-    // Load freedom stat strip data (additive — does not alter existing logic above)
-    this.loadStatStrip();
   }
 
   ionViewWillEnter() {
-    // Re-check MFU availability each time the tab is visited
+    // Re-check MFU availability each time the tab is visited.
     this.checkMfuAvailability();
+
+    // Silent stale-while-revalidate refresh: show cached stats instantly,
+    // then quietly background-refresh. Never flashes '—' on re-entry.
+    this.freedomStatsService.refresh();
   }
 
   ngOnDestroy() {
@@ -282,212 +275,8 @@ export class Tab3Page implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadStatStrip() {
-    const SAFE_WITHDRAWAL_RATE = 0.04;
-    let retirementIncomeAnnual: number | null = null;
-    let monthlyContribution: number | null = null;
-    let currentEquity: number | null = null;
-    let birthYear: number | null = null;
-
-    // Track how many of the two async calls have completed so we know when to render.
-    let progressDone = false;
-    let portfolioDone = false;
-    let kycDone = false;
-
-    const tryRender = () => {
-      if (!progressDone || !portfolioDone || !kycDone) return;
-
-      // FI target (the user's "freedom number") = retirementIncome / SWR — the income-
-      // based 4% rule, defaulting to $1.5M when no retirement income is on file.
-      // NOTE: intentionally kept SEPARATE from the Monthly Freedom Update, which uses a
-      // contribution-based target (monthlyInvestment × 300) specific to that flow. tab3
-      // and the MFU are meant to diverge here; do not "converge" them.
-      const targetPortfolio: number =
-        (retirementIncomeAnnual != null && retirementIncomeAnnual > 0)
-          ? retirementIncomeAnnual / SAFE_WITHDRAWAL_RATE
-          : 1_500_000;
-
-      // tab3's freedom year is ALWAYS the income-based projection, computed live. It
-      // deliberately IGNORES the persisted currentFreedomEstimate (the MFU's
-      // contribution-based number) so the two stay split — otherwise the header would
-      // snap back to the MFU value after the first monthly update. Needs at least
-      // equity or a contribution to be meaningful; otherwise the tiles stay '—'.
-      let resolvedFreedomYear: number | null = null;
-      const hasLiveInputs =
-        (currentEquity != null && currentEquity > 0) ||
-        (monthlyContribution != null && monthlyContribution > 0);
-      if (hasLiveInputs) {
-        resolvedFreedomYear = this.calculateFreedomYearClientSide(
-          currentEquity ?? 0,
-          monthlyContribution ?? 0,
-          targetPortfolio
-        );
-      }
-
-      // Freedom date
-      this.freedomYear = resolvedFreedomYear != null ? String(resolvedFreedomYear) : '—';
-
-      // Freedom age
-      if (resolvedFreedomYear != null && birthYear != null) {
-        const age = resolvedFreedomYear - birthYear;
-        this.freedomAge = age > 0 ? String(age) : '—';
-      } else {
-        this.freedomAge = '—';
-      }
-
-      // Dollars away — gap to the same FI target used for the projection above.
-      if (hasLiveInputs && currentEquity != null) {
-        const gap = Math.max(0, targetPortfolio - currentEquity);
-        this.dollarsAway = this.formatCompactCurrency(gap);
-      } else {
-        this.dollarsAway = '—';
-      }
-
-      this.statStripLoading = false;
-    };
-
-    // 1. UserProgress: freedom estimate + retirement income
-    this.authService.getUserProgress()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (progress) => {
-          if (progress) {
-            retirementIncomeAnnual = progress.retirementIncome ?? null;
-            monthlyContribution = progress.monthlyInvestment ?? null;
-          }
-          progressDone = true;
-          tryRender();
-        },
-        error: () => {
-          progressDone = true;
-          tryRender();
-        }
-      });
-
-    // 2. Portfolio dashboard: current equity
-    this.portfolioService.getPortfolioDashboard()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data) => {
-          if (data && data.summary) {
-            currentEquity = data.summary.equity ?? 0;
-          } else {
-            currentEquity = 0;
-          }
-          // Expose live equity for the profile avatar pig
-          this.liveEquity = currentEquity ?? 0;
-          portfolioDone = true;
-          tryRender();
-        },
-        error: () => {
-          currentEquity = 0;
-          this.liveEquity = 0;
-          portfolioDone = true;
-          tryRender();
-        }
-      });
-
-    // 3. KYC data: date of birth for freedom age.
-    // GET /account/kyc returns the raw nested Alpaca payload ({ contact, identity,
-    // disclosures }) with snake_case keys, so the DOB is at identity.date_of_birth
-    // (YYYY-MM-DD) — matching how the kyc-verification component reads it.
-    // Wrapped with a bounded transient-only retry (mirrors loadUserProgress in
-    // auth.service.ts): retries on TimeoutError / status 0 / status ≥ 500 only,
-    // never on 401/403/404. Error handler still sets kycDone + calls tryRender so
-    // the render gate can never hang on a permanently-failing KYC call.
-    this.alpacaService.getKycData()
-      .pipe(
-        timeout(10_000),
-        retry({
-          count: 2,
-          delay: (err: any, attempt: number) => {
-            const status = err?.status ?? 0;
-            const isTimeout = err?.name === 'TimeoutError';
-            const transient = isTimeout || status === 0 || status >= 500;
-            if (!transient) return throwError(() => err);
-            return timer(400 * Math.pow(2, attempt - 1)); // 400ms, 800ms
-          }
-        }),
-        takeUntil(this.destroy$)
-      )
-      .subscribe({
-        next: (kyc) => {
-          const dob: string | undefined = kyc?.identity?.date_of_birth;
-          if (dob) {
-            const parsed = parseInt(dob.substring(0, 4), 10);
-            birthYear = isNaN(parsed) ? null : parsed;
-          }
-          kycDone = true;
-          tryRender();
-        },
-        error: () => {
-          kycDone = true;
-          tryRender();
-        }
-      });
-  }
-
-  /** Format a dollar amount compactly for the narrow strip tile. */
-  private formatCompactCurrency(value: number): string {
-    if (!isFinite(value) || isNaN(value)) return '—';
-    if (value === 0) return '$0';
-    if (value >= 1_000_000) {
-      const m = value / 1_000_000;
-      // Hundredth-place precision so e.g. $2,250,000 reads "$2.25M", not "$2.3M".
-      return '$' + (m % 1 === 0 ? m.toFixed(0) : m.toFixed(2)) + 'M';
-    }
-    if (value >= 1_000) {
-      const k = value / 1_000;
-      return '$' + (k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)) + 'K';
-    }
-    return '$' + Math.round(value).toLocaleString();
-  }
-
-  /**
-   * Project the calendar year the user reaches financial freedom.
-   * Mirrors MonthlyFreedomUpdateService.calculateFreedomYear so the header can show
-   * a value before the first Monthly Freedom Update has populated currentFreedomEstimate.
-   */
-  private calculateFreedomYearClientSide(currentEquity: number, monthlyContribution: number, targetPortfolio: number): number {
-    const months = this.calculateMonthsToTarget(currentEquity, monthlyContribution, targetPortfolio);
-    const years = Math.ceil(months / 12);
-    const currentYear = new Date().getFullYear();
-    return Math.min(currentYear + years, currentYear + 100);
-  }
-
-  /**
-   * Months to reach the target portfolio with compound growth and monthly contributions.
-   * Formula: FV = PV*(1+r)^n + PMT*((1+r)^n - 1)/r, solved for n.
-   * Mirrors MonthlyFreedomUpdateService.calculateMonthsToTarget (600 = "never" sentinel).
-   */
-  private calculateMonthsToTarget(currentEquity: number, monthlyContribution: number, targetPortfolio: number): number {
-    if (currentEquity >= targetPortfolio) return 0;
-    if (currentEquity <= 0 && monthlyContribution <= 0) return 600;
-
-    const r = this.ASSUMED_ANNUAL_RETURN / 12;
-    const PV = currentEquity;
-    const FV = targetPortfolio;
-    const PMT = monthlyContribution;
-
-    if (PMT <= 0) {
-      // Growth only, no contributions
-      if (PV <= 0) return 600;
-      const months = Math.log(FV / PV) / Math.log(1 + r);
-      if (isNaN(months) || !isFinite(months) || months < 0) return 600;
-      return months;
-    }
-
-    const numerator = Math.log((FV + PMT / r) / (PV + PMT / r));
-    const denominator = Math.log(1 + r);
-    if (denominator === 0 || isNaN(numerator) || !isFinite(numerator)) return 600;
-    const months = numerator / denominator;
-    if (isNaN(months) || !isFinite(months) || months < 0) return 600;
-    return months;
-  }
-
   private initializeSettingSections() {
-    // This method will be called to set up the settings sections
-    // The settingSections property is already defined as a static array above
+    // The settingSections property is already defined as a static array above.
   }
 
   private checkMfuAvailability() {

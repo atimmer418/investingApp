@@ -22,15 +22,15 @@
     <div class="stat-strip">
       <div class="stat-tile">
         <span class="stat-label">Freedom date</span>
-        <span class="stat-value">{{ statStripLoading ? '—' : freedomYear }}</span>
+        <span class="stat-value">{{ freedomStatsService.isLoading() ? '—' : freedomStatsService.stats().freedomYear }}</span>
       </div>
       <div class="stat-tile">
         <span class="stat-label">Freedom age</span>
-        <span class="stat-value">{{ statStripLoading ? '—' : freedomAge }}</span>
+        <span class="stat-value">{{ freedomStatsService.isLoading() ? '—' : freedomStatsService.stats().freedomAge }}</span>
       </div>
       <div class="stat-tile">
         <span class="stat-label">To go</span>
-        <span class="stat-value">{{ statStripLoading ? '—' : dollarsAway }}</span>
+        <span class="stat-value">{{ freedomStatsService.isLoading() ? '—' : freedomStatsService.stats().dollarsAway }}</span>
       </div>
     </div>
   </div>
