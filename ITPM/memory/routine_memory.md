@@ -89,3 +89,18 @@
 **Status:** Complete
 
 ---
+
+### 2026-06-20 (Morning Brief) — Add null userId guard to processChat (FRED-188)
+
+**Priorities selected:** FRED-188 — Add a null `userId` guard to `ChatService.processChat()` (backend crash-class bug on the non-streaming Ask Fred path).
+**Tier:** 2 (no A/C block in backlog) — generated proposed acceptance criteria (AC-1..AC-5) in the dashboard's A/C Proposal Mode for Andrew to approve/edit; the execute agent writes the confirmed A/C back into `backlog.md` before building.
+**Rationale:** FRED-189 shipped 06-19 and was closed out to `looks_good` (now 38/97 done, ✓ in DONE) → guard passed → fresh brief. **Tier 1 remains exhausted for this sandbox:** FRED-191 (load-perf) stays sandbox-gated (real-device Capacitor cold-start the sandbox can't run); FRED-195 (pig avatars) is already fully implemented + merged to `develop` (needs `triage --done`, not building). With no build-ready Tier-1 story left, picked yesterday's named #2 next-pick: FRED-188 — a latent crash-class bug **ground-truthed in code this morning**: `ChatService.java:85` calls `userRepository.findById(request.userId())` with NO null guard (Spring Data `findById(null)` throws `InvalidDataAccessApiUsageException`), while the sibling `streamChat()` already guards the identical call at `ChatService.java:215` (`request.userId() != null ? findById(...).orElse(null) : null`). Easy, guaranteed completion, backend-only, `./gradlew build -x test`-verifiable in-sandbox, with a proven sibling to mirror. Not a UI overhaul → standard A/B/C: A mirror streamChat's exact ternary guard [rec]; B explicit early null-branch (same effect, diverges from the sibling idiom); C extract a shared `loadUserOrNull()` helper used by both methods (DRY, but edits the working streamChat — wider blast radius).
+**Metrics:** Readiness 80/100, Piggy 77.5% (31/40), Pages 76%, Burndown 39.2% (38/97), Launch 68.2%
+**Trends (vs ~7 days ago / 06-13 brief baseline):** Burndown ↑ +6 done (32→38; % 36.0→39.2), Readiness ↑ +6 (74→80), Days-since-blocker ↑ +10 (13→23), Launch ↑ +2.3 (65.9→68.2), Pages → no change (76%), Piggy → no change (77.5%).
+**Days since last blocker:** 23 (06-19 post-ship recorded 22; FRED-189 shipped clean, no blocker logged → +1 clean day)
+**Blockers active:** none (BLOCKED holds FRED-173/175/179, all external-dependency stories, not production blockers)
+**Data-hygiene (carried from 06-18/06-19):** FRED-195 still sits uncheckmarked in READY despite being fully shipped on `develop` — recommend `triage --done=FRED-195` (not mutated in this unattended planning run).
+**Notes:** Exclusion set: FRED-100 (skipped 06-15, 7-day window through ~06-22) — not eligible, wasn't the pick. No other skips in the last 7 days. One genuine Question for Andrew, Optional with a predictive placeholder, on the only real fork: should a null-`userId` chat proceed as a guest (mirror streamChat) or be rejected [predicted: proceed as guest, match streamChat]. Tomorrow's likely picks: close out FRED-195 (data hygiene), FRED-186 (debounce + switchMap), DEV-198/DEV-190 (dev-tooling cleanup); FRED-191 stays sandbox-gated.
+**Status:** Pending approval from Andrew
+
+---

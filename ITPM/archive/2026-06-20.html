@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRED ITPM Daily Brief</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- ════════════════════════════════════════════════════════════════════
+       ITPM DASHBOARD CONTENT — agents may rewrite ONLY the content inside
+       #dashboard below. Do NOT add <style> or <script> here; styling lives
+       in /styles.css and logic in /app.js. Keep the <link>/<script src> in
+       <head> intact.
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <!-- ─── Lock Overlay ─── -->
+  <div id="lock-overlay">
+    <div class="lock-card">
+      <div class="lock-wordmark">FRED</div>
+      <div class="lock-heading">FRED ITPM Daily Brief</div>
+      <div class="lock-subtext">Today's priorities, options, and approval workflow.</div>
+      <div class="date-chip" id="overlay-date">Loading...</div>
+      <button id="reveal-btn" onclick="revealPassword()">Reveal Password Field</button>
+      <div id="password-section">
+        <input type="password" id="password-input" placeholder="Enter today's password" autocomplete="off" />
+        <button id="unlock-btn" onclick="attemptUnlock()">Unlock Dashboard</button>
+        <div id="error-msg">Incorrect password. Try again.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Dashboard ─── -->
+  <div id="dashboard" data-populated="true" data-state="looks_good">
+
+    <!-- ─── Failure Banner ─── -->
+    <div id="failure-banner">
+      <h3>Execution hit a blocker</h3>
+      <p id="failure-detail"></p>
+    </div>
+
+    <!-- ─── Intermediary Banner ─── -->
+    <div id="intermediary-banner" style="display:none; background:#dbeafe; border:1px solid #93c5fd; border-radius:14px; padding:16px 20px; margin-bottom:20px;">
+      <p style="font-size:14px; font-weight:700; color:#1e40af; margin:0 0 4px;">Plan approved — execution queued</p>
+      <p style="font-size:13px; color:#1e40af; margin:0;">Execution started. You'll receive a push notification when the build is complete.</p>
+      <a id="routine-link" href="#" target="_blank" style="display:none; margin-top:10px; font-size:12px; font-weight:700; color:#1e40af; text-decoration:underline; text-underline-offset:2px;">Watch the run live &rarr;</a>
+    </div>
+
+    <div class="dashboard-header">
+      <div class="header-left">
+        <div class="header-wordmark">FRED</div>
+        <div class="itpm-badge">ITPM</div>
+      </div>
+      <div class="header-date" id="header-date">Loading...</div>
+    </div>
+
+    <!-- ── Scoreboard (always visible) ── -->
+    <div class="section-group">
+      <div class="section-label">Routine Success Criteria</div>
+      <div class="scoreboard">
+
+        <div class="metric-card">
+          <div class="metric-label">Backlog Burn-Down</div>
+          <div class="metric-value warning">38.1%</div>
+          <div class="metric-sublabel">37 of 97 stories done</div>
+          <div class="metric-trend positive">&#8593; +5 done vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:38.1%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Piggy Tier Done</div>
+          <div class="metric-value warning">77.5%</div>
+          <div class="metric-sublabel">31 of 40 core stories complete</div>
+          <div class="metric-trend neutral">&#8594; no change vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77.5%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Pages Migrated</div>
+          <div class="metric-value warning">76%</div>
+          <div class="metric-sublabel">Settings hub unified; ~10 non-settings pages remain</div>
+          <div class="metric-trend neutral">&#8594; no change vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:76%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Prod Readiness</div>
+          <div class="metric-value warning">79</div>
+          <div class="metric-sublabel">Score out of 100</div>
+          <div class="metric-trend positive">&#8593; +5 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:79%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Days Since Blocker</div>
+          <div class="metric-value positive">21</div>
+          <div class="metric-sublabel">No active production blockers</div>
+          <div class="metric-trend positive">&#8593; +8 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:70%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Launch Readiness</div>
+          <div class="metric-value warning">67.7%</div>
+          <div class="metric-sublabel">Composite estimate</div>
+          <div class="metric-trend positive">&#8593; +1.8 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:67.7%"></div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Today's Priorities (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Today's Priorities</div>
+
+      <div class="priority-card">
+        <label class="priority-skip-label" title="Check to skip this story and regenerate">
+          <input type="checkbox" class="priority-skip-cb" onchange="handlePrioritySkip(this)" />
+          <span class="priority-skip-text">Skip</span>
+        </label>
+        <div class="priority-badge">#1</div>
+        <div class="priority-body">
+          <div class="priority-title">FRED-189 — Fix bank account subtype always showing "Checking"</div>
+          <div class="priority-desc">The Change Bank Account page always displays the linked account's subtype as <strong>"Checking"</strong> — even when it's a Savings (or other) account. I ground-truthed it in the code this morning: the backend <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">GET /api/plaid/primary-bank-account</code> returns the field <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code> (lowercase <em>t</em>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PlaidController.java:177</code>), but <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">formatAccountDisplay()</code> reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">this.currentBankAccount.accountSubType</code> (capital <em>T</em>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">change-bank-account.page.ts:232</code>) — always <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">undefined</code>, so it falls back to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'Checking'</code>. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">plaid.service.ts:80-82</code> already reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code> correctly. Pre-existing, user-facing; finishes a loose thread on the FRED-124 change-bank-account overhaul. <strong>Tier 2 — no acceptance-criteria block in the backlog yet, so proposed A/C is below for your approval before the build runs.</strong></div>
+          <span class="diff-chip diff-easy">Easy</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Why I Picked This (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Why I Picked This</div>
+      <div class="card">
+        <div class="card-text"><strong>Tier 1 is exhausted for this sandbox, so I dropped to Tier 2 and picked the strongest quick win.</strong> Of the two A/C-ready READY stories: FRED-191 (load-perf) stays gated — it needs a real-device Capacitor cold-start the sandbox can't run; and <strong>FRED-195 (pig avatars) is already fully implemented and merged to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">develop</code></strong> — it only needs closing out (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done=FRED-195</code>), not building. With no build-ready Tier-1 story left, I picked <strong>FRED-189</strong>: a confirmed, user-facing correctness bug I verified directly in the code this morning (backend returns <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code>, the page reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code>). Easy, guaranteed completion, frontend-only, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>-verifiable here, and it tidies the freshly-overhauled change-bank-account page. <strong>Tier 2</strong> — proposed acceptance criteria below for your approval; the build won't start until they're confirmed.</div>
+      </div>
+    </div>
+
+    <!-- ── Strategic Alignment (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Strategic Alignment</div>
+      <div class="card">
+        <div class="card-text">The mission is production readiness — <em>bug-free core flows, no placeholder UX</em>. Showing every linked account as "Checking" regardless of its real type is exactly the kind of small, trust-eroding inaccuracy that undermines a fintech app right before private beta. Fixing it makes the just-overhauled change-bank-account page tell the truth on a money-movement surface, reinforcing <strong>trust and clarity</strong> — top business priorities.</div>
+      </div>
+    </div>
+
+    <!-- ── Production Readiness Impact (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Production Readiness Impact</div>
+      <div class="card">
+        <div class="card-text">Closes a confirmed user-facing data-accuracy bug on a sensitive surface (the linked bank account). Tiny and contained — one display method, frontend-only, no backend / schema / auth change, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>-verifiable in-sandbox — so it lifts correctness with effectively zero regression risk. Sandbox caveat: the live render confirmation (a Savings account showing "Savings" at 390×844) is handed to you via "Looks Good."</div>
+      </div>
+    </div>
+
+    <!-- ── Proposed Acceptance Criteria (Tier 2 — planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Proposed Acceptance Criteria — approve or edit</div>
+      <div class="card">
+        <div class="card-text" style="color:var(--gray);margin-bottom:14px;">FRED-189 has no acceptance-criteria block in the backlog yet, so this is a <strong>Tier 2</strong> story. Below is the A/C I'd build to — review the checklist and edit anything in the note. <strong>The build won't start until you confirm these.</strong> On approval, the execution agent writes the final A/C back into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> before coding.</div>
+        <div class="triage-group">
+          <ul class="triage-list" style="list-style:none;padding-left:0;">
+            <li><label><input type="checkbox" checked /> <strong>AC-1</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">formatAccountDisplay()</code> reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code> (lowercase <em>t</em>) at <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">change-bank-account.page.ts:232</code> to match the backend field, so the real subtype (Checking, Savings, etc.) is shown — never always "Checking".</label></li>
+            <li><label><input type="checkbox" checked /> <strong>AC-2</strong> — The displayed subtype is normalized for presentation (e.g. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">"savings" &rarr; "Savings"</code>) so it reads cleanly and matches the title-cased fallback (see Q1).</label></li>
+            <li><label><input type="checkbox" checked /> <strong>AC-3</strong> — When the subtype is genuinely missing/null, the display uses a sensible fallback (see Q2) and never an empty or broken string.</label></li>
+            <li><label><input type="checkbox" checked /> <strong>AC-4</strong> — No other surviving reference to the capital-T <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code> remains (grep clean); <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">plaid.service.ts</code> (already correct) is untouched.</label></li>
+            <li><label><input type="checkbox" checked /> <strong>AC-5</strong> — No backend, schema, or auth changes. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> exits 0.</label></li>
+            <li><label><input type="checkbox" checked /> <strong>AC-6</strong> — Verified: a Savings-linked account displays "… (Savings)", not "… (Checking)", at 390×844 (device render handed to you via "Looks Good").</label></li>
+          </ul>
+        </div>
+        <div class="revision-label" style="margin-top:10px;">Edit / add / remove acceptance criteria:</div>
+        <textarea class="revision-textarea" id="ac-proposal-note" placeholder="e.g. AC-2 is fine — title-case it. Also: if you ever surface the Plaid account 'type' (depository) elsewhere, confirm it's not affected by this fix."></textarea>
+      </div>
+    </div>
+
+    <!-- ── Implementation Options (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Implementation Options</div>
+      <div class="option-group">
+
+        <div class="option-card selected">
+          <div class="option-header">
+            <span class="option-label">Option A</span>
+            <span class="option-rec">Recommended</span>
+          </div>
+          <div class="option-title">Correct the field + normalize the value for display</div>
+          <div class="option-body">Change line 232 to read <code>accountSubtype</code> (lowercase <em>t</em>) so the real subtype flows through, and title-case the value for display (<code>"savings" &rarr; "Savings"</code>) so it's consistent with the existing <code>'Checking'</code> fallback. One method (<code>formatAccountDisplay()</code>), frontend-only, no logic change anywhere else.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>fully fixes the bug AND produces clean, consistent output ("Chase (Savings)"); tiny, contained diff; zero regression surface.</span></span>
+            <span class="meta-item">Cons: <span>a few lines more than the bare rename (the normalization helper).</span></span>
+            <span class="meta-item">Risk: <span>Very low — single display method, frontend-only, tsc-verifiable here.</span></span>
+            <span class="meta-item">Estimate: <span>~20–30 min</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option B</span>
+          </div>
+          <div class="option-title">Bare-minimum field-case rename only</div>
+          <div class="option-body">Just change <code>accountSubType</code> &rarr; <code>accountSubtype</code> and render whatever Plaid returns verbatim (likely lowercase, e.g. <code>"savings"</code>). Smallest possible diff — one character.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>absolute minimum change; one character.</span></span>
+            <span class="meta-item">Cons: <span>display casing becomes inconsistent — real types render lowercase ("Chase (savings)") while the null fallback stays title-cased ("Checking"); looks half-finished.</span></span>
+            <span class="meta-item">Risk: <span>Low technically, but ships a cosmetic inconsistency on a polished surface.</span></span>
+            <span class="meta-item">Estimate: <span>~10 min</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option C</span>
+          </div>
+          <div class="option-title">Fix + a typed <code>BankAccount</code> interface</div>
+          <div class="option-body">Same fix as A, plus replace the untyped <code>currentBankAccount</code> with a typed <code>BankAccount</code> interface so a field-name mismatch like this is caught by the compiler in future, not at runtime.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>prevents this whole class of typo bug recurring; small hardening win.</span></span>
+            <span class="meta-item">Cons: <span>larger diff than the bug warrants; touches typing/imports beyond the one bug; mild scope creep on a quick win.</span></span>
+            <span class="meta-item">Risk: <span>Low, but wider blast radius than a one-method fix.</span></span>
+            <span class="meta-item">Estimate: <span>~45–60 min</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Triage Findings (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Triage Findings</div>
+      <div class="card">
+
+        <div class="story-section">
+          <div class="story-header">FRED-189 — Fix bank account subtype always showing "Checking"</div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">In Scope</div>
+            <ul class="triage-list">
+              <li>Fix the field-case mismatch in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">change-bank-account.page.ts:232</code>: read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">this.currentBankAccount.accountSubtype</code> (lowercase <em>t</em>) to match the backend field set in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PlaidController.java:177</code>.</li>
+              <li>Normalize the value for display (title-case <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">"savings" &rarr; "Savings"</code>) so it's consistent with the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'Checking'</code> fallback — backend stores the Plaid subtype lowercase (confirmed by <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">plaid.service.ts:81-82</code> comparing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">=== 'checking' / 'savings'</code>).</li>
+              <li>Decide the null/missing-subtype fallback (Q2) — keep <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'Checking'</code> or a neutral label.</li>
+              <li>Grep-confirm no other capital-T <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code> reference survives anywhere in the frontend.</li>
+              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> exits 0; scoped build clean.</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">Potentially Out of Scope</div>
+            <ul class="triage-list">
+              <li>Multi-account management (list / set-default / remove) — explicitly out of FRED-124's reskin scope and not part of this bug.</li>
+              <li>Any backend change to how the subtype is stored or cased — the backend field is correct; this is a frontend read bug only.</li>
+              <li>The broader typed-<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">BankAccount</code>-interface hardening — only if you pick Option C; otherwise leave for a follow-up.</li>
+              <li>Surfacing the Plaid account <em>type</em> ("depository") anywhere new — not requested.</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">UX Considerations</div>
+            <ul class="triage-list">
+              <li><strong>Correctness</strong> — a Savings account must read "Savings", a checking account "Checking"; the user should never be told the wrong account type on a money-movement screen.</li>
+              <li><strong>Casing consistency</strong> — title-case the real value so it matches the title-cased fallback; avoid the half-finished "Chase (savings)" look.</li>
+              <li><strong>Null / empty</strong> — if Plaid returned no subtype, show a sensible fallback (Q2), never an empty string or "undefined".</li>
+              <li><strong>Mobile-first</strong> — verify the display line still fits cleanly at 390×844 and 430×932 (no wrap regression on longer institution + type strings).</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Questions For Andrew (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Questions For Andrew</div>
+      <div class="card">
+
+        <div class="question-item">
+          <div class="question-text">
+            <strong>Display casing.</strong> The backend stores the Plaid subtype lowercase (e.g. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">"savings"</code>). Should I title-case it for display (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">"Savings"</code>, consistent with the existing "Checking" fallback) — or render it exactly as Plaid returns it? My recommendation: <strong>title-case it</strong> for a clean, consistent line.
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Title-case it — show 'Savings' / 'Checking' so it's consistent with the fallback; don't ship a lowercase 'savings'."></textarea>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text">
+            <strong>Null-subtype fallback.</strong> When Plaid genuinely returns no subtype, the current code defaults to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'Checking'</code> — which is the very assumption that caused this bug. Keep <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'Checking'</code>, or use a neutral label like <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'Account'</code> so we never assert a type we don't actually know? My recommendation: <strong>neutral "Account"</strong> for the unknown case.
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Use a neutral 'Account' when the subtype is unknown — don't keep falsely defaulting to 'Checking'."></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Suggested Execution Order (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Suggested Execution Order</div>
+      <div class="card">
+
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-body" contenteditable="false"><strong>Confirm the contract</strong> — Re-grep <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PlaidController.java:177</code> (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code>) and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">plaid.service.ts:80-82</code> (lowercase values) to lock the field name and value casing before touching anything.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-body" contenteditable="false"><strong>Fix the read</strong> — In <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">formatAccountDisplay()</code> (line 232), read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code> (lowercase <em>t</em>); apply the Q1 display normalization (title-case) and the Q2 null fallback.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-body" contenteditable="false"><strong>Sweep for stragglers</strong> — Grep the frontend for any remaining capital-T <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code>; if Option C, add the typed <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">BankAccount</code> interface and replace the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">any</code>.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-body" contenteditable="false"><strong>Verify + hand off</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> (exits 0); verifier over the approved A/C. Hand the live render (a Savings account showing "Savings" at 390×844 / 430×932) to Andrew via "Looks Good."</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Tomorrow's Likely Pick (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Tomorrow's Likely Pick</div>
+      <div class="card">
+        <ul class="tomorrow-list">
+          <li><strong>Data hygiene — close out FRED-195.</strong> Its full implementation (the 5 <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pig-range-*.svg</code> assets, the deleted <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pig-level-*</code> art, the shared <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">EquityPigUtils</code> helper, and the tab3 + My Profile + MFU avatar wiring) is already merged to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">develop</code>, but it still sits in READY uncheckmarked. Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done=FRED-195</code> so it isn't re-picked and the burndown stays honest.</li>
+          <li><strong>FRED-188</strong> — Add a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> guard to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code>, mirroring the guard already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> — Easy, backend bug-density quick win. Tier 2.</li>
+          <li><strong>FRED-186</strong> — Move API searches to debounce + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code> — Easy/Medium, frontend. Tier 2. (FRED-191 stays sandbox-gated — real-device Capacitor build.)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── Completion Section (completed state only) ── -->
+    <div class="section-group section-intermediary-only" id="completion-section">
+      <div class="section-label">WHAT GOT DONE</div>
+      <div class="card" id="completion-content">
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-189 — Fix bank account subtype always showing "Checking"</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">The Change Bank Account page now shows the real account subtype instead of always "Checking". The visible bug lived in the template, not the TypeScript: <code>change-bank-account.page.html:37</code> (the "Current Account" card) bound <code>{{ currentBankAccount.accountSubtype || 'Checking' }}</code> — lowercase value with an always-"Checking" fallback. Added <code>formatAccountSubtype()</code> in <code>change-bank-account.page.ts</code> (reads the backend's lowercase <code>accountSubtype</code>, title-cases it, falls back to a neutral "Account" when truly missing), bound line 37 to it, and fixed the same expression in the commented hero-peek (line 12). Removed the dead <code>formatAccountDisplay()</code> (capital-T <code>accountSubType</code>, zero callers) that the first build had mistakenly targeted. Frontend-only — no backend, schema, or auth changes.</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>AC-1 — The visible subtype binding reads the backend's <code>accountSubtype</code> (lowercase t); a Savings account shows its real subtype, never always "Checking".</li>
+            <li>AC-2 — The subtype is title-cased for display ("savings" → "Savings").</li>
+            <li>AC-3 — A genuinely missing subtype falls back to a neutral "Account" — never a falsely asserted "Checking" or an empty "()".</li>
+            <li>AC-4 — No capital-T <code>accountSubType</code> reference remains anywhere in <code>frontend/src</code>; <code>plaid.service.ts</code> untouched; no dead method left behind.</li>
+            <li>AC-5 — Frontend-only diff (two files); <code>tsc --noEmit</code> introduces no new errors.</li>
+            <li>AC-6 — The "Current Account" card now displays the correct title-cased subtype (verified by static inspection of the live template binding).</li>
+          </ul>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Readiness 79 → 80 — closes a real user-facing correctness bug and tidies a loose thread on the FRED-124 change-bank-account overhaul. Independently verified (2 passes); CI green; squash-merged to develop via PR #95.</p>
+        </div>
+      </div>
+      <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
+        Looks Good &#10003;
+      </button>
+
+      <!-- Request Changes — rework the same story with feedback -->
+      <div id="rework-block" style="margin-top:14px;">
+        <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. A Savings account still reads 'Checking' on my device — re-check the field name and value casing."></textarea>
+        <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
+      </div>
+    </div>
+
+    <!-- ── Anything Else For the Execution Agent (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Anything Else For the Execution Agent?</div>
+      <div class="card">
+        <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Keep the fix to formatAccountDisplay() only; don't refactor the rest of the page..."></textarea>
+      </div>
+    </div>
+
+    <!-- ── Add to Backlog (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Add to Backlog</div>
+      <div class="card">
+        <div class="revision-label" style="margin-bottom:14px;">Thought of something while reviewing? Add it to the backlog without leaving this page.</div>
+        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Add a confirmation step before deleting a beneficiary..." style="min-height:80px;margin-bottom:12px;"></textarea>
+        <button class="btn-dark" id="backlog-btn" onclick="handleAddBacklog()">Add to Backlog</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Fixed Approve Bar ─── -->
+  <div id="approve-bar">
+    <div id="approve-status">Complete all required fields to unlock approval</div>
+    <button id="approve-btn" onclick="handleApprove()">Approve / Get To Work</button>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

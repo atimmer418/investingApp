@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="looks_good">
+  <div id="dashboard" data-populated="true" data-state="planning">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -65,10 +65,10 @@
 
         <div class="metric-card">
           <div class="metric-label">Backlog Burn-Down</div>
-          <div class="metric-value warning">38.1%</div>
-          <div class="metric-sublabel">37 of 97 stories done</div>
-          <div class="metric-trend positive">&#8593; +5 done vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:38.1%"></div></div>
+          <div class="metric-value warning">39.2%</div>
+          <div class="metric-sublabel">38 of 97 stories done</div>
+          <div class="metric-trend positive">&#8593; +6 done vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:39.2%"></div></div>
         </div>
 
         <div class="metric-card">
@@ -89,26 +89,26 @@
 
         <div class="metric-card">
           <div class="metric-label">Prod Readiness</div>
-          <div class="metric-value warning">79</div>
+          <div class="metric-value warning">80</div>
           <div class="metric-sublabel">Score out of 100</div>
-          <div class="metric-trend positive">&#8593; +5 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:79%"></div></div>
+          <div class="metric-trend positive">&#8593; +6 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:80%"></div></div>
         </div>
 
         <div class="metric-card">
           <div class="metric-label">Days Since Blocker</div>
-          <div class="metric-value positive">21</div>
+          <div class="metric-value positive">23</div>
           <div class="metric-sublabel">No active production blockers</div>
-          <div class="metric-trend positive">&#8593; +8 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:70%"></div></div>
+          <div class="metric-trend positive">&#8593; +10 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:76%"></div></div>
         </div>
 
         <div class="metric-card">
           <div class="metric-label">Launch Readiness</div>
-          <div class="metric-value warning">67.7%</div>
+          <div class="metric-value warning">68.2%</div>
           <div class="metric-sublabel">Composite estimate</div>
-          <div class="metric-trend positive">&#8593; +1.8 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:67.7%"></div></div>
+          <div class="metric-trend positive">&#8593; +2.3 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:68.2%"></div></div>
         </div>
 
       </div>
@@ -125,8 +125,8 @@
         </label>
         <div class="priority-badge">#1</div>
         <div class="priority-body">
-          <div class="priority-title">FRED-189 — Fix bank account subtype always showing "Checking"</div>
-          <div class="priority-desc">The Change Bank Account page always displays the linked account's subtype as <strong>"Checking"</strong> — even when it's a Savings (or other) account. I ground-truthed it in the code this morning: the backend <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">GET /api/plaid/primary-bank-account</code> returns the field <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code> (lowercase <em>t</em>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PlaidController.java:177</code>), but <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">formatAccountDisplay()</code> reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">this.currentBankAccount.accountSubType</code> (capital <em>T</em>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">change-bank-account.page.ts:232</code>) — always <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">undefined</code>, so it falls back to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'Checking'</code>. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">plaid.service.ts:80-82</code> already reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code> correctly. Pre-existing, user-facing; finishes a loose thread on the FRED-124 change-bank-account overhaul. <strong>Tier 2 — no acceptance-criteria block in the backlog yet, so proposed A/C is below for your approval before the build runs.</strong></div>
+          <div class="priority-title">FRED-188 — Add null <code style="font-size:13px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> guard to <code style="font-size:13px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code></div>
+          <div class="priority-desc">The non-streaming Ask&nbsp;Fred path can throw a server error on a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code>. I ground-truthed it in the code this morning: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.processChat()</code> loads the user with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userRepository.findById(request.userId())</code> at <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.java:85</code> with <strong>no null guard</strong> — and Spring Data's <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">findById(null)</code> throws <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">InvalidDataAccessApiUsageException</code>. The sibling method <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> already guards it correctly at <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.java:215</code> (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">request.userId() != null ? userRepository.findById(...).orElse(null) : null</code>). The fix is to mirror that exact guard in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code>. Backend-only, ~1 line. <strong>Tier 2 — no acceptance-criteria block in the backlog yet, so proposed A/C is below for your approval before the build runs.</strong></div>
           <span class="diff-chip diff-easy">Easy</span>
         </div>
       </div>
@@ -136,7 +136,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Why I Picked This</div>
       <div class="card">
-        <div class="card-text"><strong>Tier 1 is exhausted for this sandbox, so I dropped to Tier 2 and picked the strongest quick win.</strong> Of the two A/C-ready READY stories: FRED-191 (load-perf) stays gated — it needs a real-device Capacitor cold-start the sandbox can't run; and <strong>FRED-195 (pig avatars) is already fully implemented and merged to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">develop</code></strong> — it only needs closing out (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done=FRED-195</code>), not building. With no build-ready Tier-1 story left, I picked <strong>FRED-189</strong>: a confirmed, user-facing correctness bug I verified directly in the code this morning (backend returns <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code>, the page reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code>). Easy, guaranteed completion, frontend-only, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>-verifiable here, and it tidies the freshly-overhauled change-bank-account page. <strong>Tier 2</strong> — proposed acceptance criteria below for your approval; the build won't start until they're confirmed.</div>
+        <div class="card-text"><strong>Tier 1 is exhausted for this sandbox, so I dropped to Tier 2 and picked the strongest quick win.</strong> The two A/C-ready READY stories are both unavailable as builds: FRED-191 (load-perf) stays gated — it needs a real-device Capacitor cold-start the sandbox can't run; and <strong>FRED-195 (pig avatars) is already fully implemented and merged to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">develop</code></strong>, so it only needs closing out (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done=FRED-195</code>), not building. With no build-ready Tier-1 story left, I picked <strong>FRED-188</strong> — yesterday's named #2 next-pick — a latent crash-class bug I verified directly in the code this morning: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> calls <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">findById(request.userId())</code> unguarded while <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> already guards the identical call. Easy, guaranteed completion, backend-only, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code>-verifiable here, with a proven sibling to mirror. <strong>Tier 2</strong> — proposed acceptance criteria below for your approval; the build won't start until they're confirmed.</div>
       </div>
     </div>
 
@@ -144,7 +144,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
-        <div class="card-text">The mission is production readiness — <em>bug-free core flows, no placeholder UX</em>. Showing every linked account as "Checking" regardless of its real type is exactly the kind of small, trust-eroding inaccuracy that undermines a fintech app right before private beta. Fixing it makes the just-overhauled change-bank-account page tell the truth on a money-movement surface, reinforcing <strong>trust and clarity</strong> — top business priorities.</div>
+        <div class="card-text">The mission is production readiness — <em>bug-free core flows</em>. Ask&nbsp;Fred is a core surface, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">POST /api/chat</code> is the documented fallback for the SSE stream (FRED-183). A null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> reaching that fallback would surface as a 500 instead of a graceful guest answer — exactly the kind of latent failure you don't want discovered in private beta. Hardening it reinforces <strong>trust and reliability</strong> on the chat experience.</div>
       </div>
     </div>
 
@@ -152,7 +152,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
-        <div class="card-text">Closes a confirmed user-facing data-accuracy bug on a sensitive surface (the linked bank account). Tiny and contained — one display method, frontend-only, no backend / schema / auth change, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>-verifiable in-sandbox — so it lifts correctness with effectively zero regression risk. Sandbox caveat: the live render confirmation (a Savings account showing "Savings" at 390×844) is handed to you via "Looks Good."</div>
+        <div class="card-text">Closes a latent crash-class defect on the chat fallback path (bug-density lever) by mirroring an already-shipped, already-verified guard from the sibling method. Tiny and contained — one statement in one backend file, no schema / API-contract / frontend change, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code>-verifiable in-sandbox — so it lifts correctness with effectively zero regression risk and is fully verifiable here without a device.</div>
       </div>
     </div>
 
@@ -160,19 +160,18 @@
     <div class="section-group section-planning-only hide-on-skip">
       <div class="section-label">Proposed Acceptance Criteria — approve or edit</div>
       <div class="card">
-        <div class="card-text" style="color:var(--gray);margin-bottom:14px;">FRED-189 has no acceptance-criteria block in the backlog yet, so this is a <strong>Tier 2</strong> story. Below is the A/C I'd build to — review the checklist and edit anything in the note. <strong>The build won't start until you confirm these.</strong> On approval, the execution agent writes the final A/C back into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> before coding.</div>
+        <div class="card-text" style="color:var(--gray);margin-bottom:14px;">FRED-188 has no acceptance-criteria block in the backlog yet, so this is a <strong>Tier 2</strong> story. Below is the A/C I'd build to — review the checklist and edit anything in the note. <strong>The build won't start until you confirm these.</strong> On approval, the execution agent writes the final A/C back into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> before coding.</div>
         <div class="triage-group">
           <ul class="triage-list" style="list-style:none;padding-left:0;">
-            <li><label><input type="checkbox" checked /> <strong>AC-1</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">formatAccountDisplay()</code> reads <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code> (lowercase <em>t</em>) at <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">change-bank-account.page.ts:232</code> to match the backend field, so the real subtype (Checking, Savings, etc.) is shown — never always "Checking".</label></li>
-            <li><label><input type="checkbox" checked /> <strong>AC-2</strong> — The displayed subtype is normalized for presentation (e.g. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">"savings" &rarr; "Savings"</code>) so it reads cleanly and matches the title-cased fallback (see Q1).</label></li>
-            <li><label><input type="checkbox" checked /> <strong>AC-3</strong> — When the subtype is genuinely missing/null, the display uses a sensible fallback (see Q2) and never an empty or broken string.</label></li>
-            <li><label><input type="checkbox" checked /> <strong>AC-4</strong> — No other surviving reference to the capital-T <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code> remains (grep clean); <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">plaid.service.ts</code> (already correct) is untouched.</label></li>
-            <li><label><input type="checkbox" checked /> <strong>AC-5</strong> — No backend, schema, or auth changes. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> exits 0.</label></li>
-            <li><label><input type="checkbox" checked /> <strong>AC-6</strong> — Verified: a Savings-linked account displays "… (Savings)", not "… (Checking)", at 390×844 (device render handed to you via "Looks Good").</label></li>
+            <li><label><input type="checkbox" checked /> <strong>AC-1</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> guards the user load at <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.java:85</code> exactly as <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> does at line 215: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null</code>. A null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> no longer reaches <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">findById</code>.</label></li>
+            <li><label><input type="checkbox" checked /> <strong>AC-2</strong> — On a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> the method proceeds with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">user == null</code> (guest/anonymous), reaching the same downstream code as today — no thrown exception, a normal generic answer returned (matching <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat</code>'s behavior).</label></li>
+            <li><label><input type="checkbox" checked /> <strong>AC-3</strong> — Behavior for a valid <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> is unchanged: the same <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">User</code> is loaded and the same response produced.</label></li>
+            <li><label><input type="checkbox" checked /> <strong>AC-4</strong> — The existing null-userId guards already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> (analytics at lines 75 &amp; 150) are untouched; only the user-load at line 85 is hardened. No unrelated refactor.</label></li>
+            <li><label><input type="checkbox" checked /> <strong>AC-5</strong> — No schema, API-contract, or frontend changes. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd backend &amp;&amp; ./gradlew build -x test</code> exits 0.</label></li>
           </ul>
         </div>
         <div class="revision-label" style="margin-top:10px;">Edit / add / remove acceptance criteria:</div>
-        <textarea class="revision-textarea" id="ac-proposal-note" placeholder="e.g. AC-2 is fine — title-case it. Also: if you ever surface the Plaid account 'type' (depository) elsewhere, confirm it's not affected by this fix."></textarea>
+        <textarea class="revision-textarea" id="ac-proposal-note" placeholder="e.g. AC-2 is right — proceed as guest, same as streamChat. Don't add a unit test for this one-liner."></textarea>
       </div>
     </div>
 
@@ -186,13 +185,13 @@
             <span class="option-label">Option A</span>
             <span class="option-rec">Recommended</span>
           </div>
-          <div class="option-title">Correct the field + normalize the value for display</div>
-          <div class="option-body">Change line 232 to read <code>accountSubtype</code> (lowercase <em>t</em>) so the real subtype flows through, and title-case the value for display (<code>"savings" &rarr; "Savings"</code>) so it's consistent with the existing <code>'Checking'</code> fallback. One method (<code>formatAccountDisplay()</code>), frontend-only, no logic change anywhere else.</div>
+          <div class="option-title">Mirror <code>streamChat()</code>'s exact guard</div>
+          <div class="option-body">Replace the unguarded two-line <code>Optional&lt;User&gt; userOpt = userRepository.findById(request.userId()); … User user = userOpt.orElse(null);</code> at <code>ChatService.java:85–88</code> with the same ternary <code>streamChat()</code> uses at line 215: <code>User user = request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null;</code>. One backend file, byte-for-byte consistent with the proven sibling.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>fully fixes the bug AND produces clean, consistent output ("Chase (Savings)"); tiny, contained diff; zero regression surface.</span></span>
-            <span class="meta-item">Cons: <span>a few lines more than the bare rename (the normalization helper).</span></span>
-            <span class="meta-item">Risk: <span>Very low — single display method, frontend-only, tsc-verifiable here.</span></span>
-            <span class="meta-item">Estimate: <span>~20–30 min</span></span>
+            <span class="meta-item">Pros: <span>smallest correct diff; identical to an already-verified guard; the two chat methods read the same; zero regression surface.</span></span>
+            <span class="meta-item">Cons: <span>leaves the guard duplicated across the two methods (addressed by Option C).</span></span>
+            <span class="meta-item">Risk: <span>Very low — one statement, backend-only, gradle-verifiable here.</span></span>
+            <span class="meta-item">Estimate: <span>~10–15 min</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -201,13 +200,13 @@
           <div class="option-header">
             <span class="option-label">Option B</span>
           </div>
-          <div class="option-title">Bare-minimum field-case rename only</div>
-          <div class="option-body">Just change <code>accountSubType</code> &rarr; <code>accountSubtype</code> and render whatever Plaid returns verbatim (likely lowercase, e.g. <code>"savings"</code>). Smallest possible diff — one character.</div>
+          <div class="option-title">Explicit early null-branch</div>
+          <div class="option-body">Keep the <code>Optional</code> shape but wrap it: <code>User user = null; if (request.userId() != null) { user = userRepository.findById(request.userId()).orElse(null); }</code>. Same effect, a touch more verbose, arguably clearer intent — but diverges from <code>streamChat()</code>'s idiom.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>absolute minimum change; one character.</span></span>
-            <span class="meta-item">Cons: <span>display casing becomes inconsistent — real types render lowercase ("Chase (savings)") while the null fallback stays title-cased ("Checking"); looks half-finished.</span></span>
-            <span class="meta-item">Risk: <span>Low technically, but ships a cosmetic inconsistency on a polished surface.</span></span>
-            <span class="meta-item">Estimate: <span>~10 min</span></span>
+            <span class="meta-item">Pros: <span>explicit and readable; same runtime behavior as A.</span></span>
+            <span class="meta-item">Cons: <span>the two chat methods now guard the same call in two different styles — minor inconsistency on identical logic.</span></span>
+            <span class="meta-item">Risk: <span>Very low.</span></span>
+            <span class="meta-item">Estimate: <span>~10–15 min</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -216,13 +215,13 @@
           <div class="option-header">
             <span class="option-label">Option C</span>
           </div>
-          <div class="option-title">Fix + a typed <code>BankAccount</code> interface</div>
-          <div class="option-body">Same fix as A, plus replace the untyped <code>currentBankAccount</code> with a typed <code>BankAccount</code> interface so a field-name mismatch like this is caught by the compiler in future, not at runtime.</div>
+          <div class="option-title">Extract a shared <code>loadUserOrNull(request)</code> helper</div>
+          <div class="option-body">Same fix as A, but pull the guarded load into one private helper used by <em>both</em> <code>processChat()</code> and <code>streamChat()</code>, removing the duplicated guard entirely. DRY/hardening win that prevents the two from drifting again.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>prevents this whole class of typo bug recurring; small hardening win.</span></span>
-            <span class="meta-item">Cons: <span>larger diff than the bug warrants; touches typing/imports beyond the one bug; mild scope creep on a quick win.</span></span>
-            <span class="meta-item">Risk: <span>Low, but wider blast radius than a one-method fix.</span></span>
-            <span class="meta-item">Estimate: <span>~45–60 min</span></span>
+            <span class="meta-item">Pros: <span>single source for the guard; the two methods can't diverge in future.</span></span>
+            <span class="meta-item">Cons: <span>also edits <code>streamChat()</code> (currently correct) — wider blast radius than a one-bug quick win warrants.</span></span>
+            <span class="meta-item">Risk: <span>Low, but touches a working method for a refactor that isn't the bug.</span></span>
+            <span class="meta-item">Estimate: <span>~25–35 min</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -236,36 +235,34 @@
       <div class="card">
 
         <div class="story-section">
-          <div class="story-header">FRED-189 — Fix bank account subtype always showing "Checking"</div>
+          <div class="story-header">FRED-188 — Add null <code style="font-size:13px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> guard to <code style="font-size:13px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code></div>
 
           <div class="triage-group">
             <div class="triage-group-title">In Scope</div>
             <ul class="triage-list">
-              <li>Fix the field-case mismatch in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">change-bank-account.page.ts:232</code>: read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">this.currentBankAccount.accountSubtype</code> (lowercase <em>t</em>) to match the backend field set in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PlaidController.java:177</code>.</li>
-              <li>Normalize the value for display (title-case <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">"savings" &rarr; "Savings"</code>) so it's consistent with the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'Checking'</code> fallback — backend stores the Plaid subtype lowercase (confirmed by <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">plaid.service.ts:81-82</code> comparing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">=== 'checking' / 'savings'</code>).</li>
-              <li>Decide the null/missing-subtype fallback (Q2) — keep <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'Checking'</code> or a neutral label.</li>
-              <li>Grep-confirm no other capital-T <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code> reference survives anywhere in the frontend.</li>
-              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> exits 0; scoped build clean.</li>
+              <li>Replace the unguarded user load at <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.java:85</code> with the null-guarded form, mirroring <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> at line 215.</li>
+              <li>Confirm the downstream <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">user</code> variable (the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userOpt.orElse(null)</code> consumer) still compiles and behaves — Option A collapses <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userOpt</code> directly into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">user</code>.</li>
+              <li>Grep the chat services for any other unguarded <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">findById(request.userId())</code> to confirm line 85 is the lone outlier.</li>
+              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd backend &amp;&amp; ./gradlew build -x test</code> exits 0.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">Potentially Out of Scope</div>
             <ul class="triage-list">
-              <li>Multi-account management (list / set-default / remove) — explicitly out of FRED-124's reskin scope and not part of this bug.</li>
-              <li>Any backend change to how the subtype is stored or cased — the backend field is correct; this is a frontend read bug only.</li>
-              <li>The broader typed-<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">BankAccount</code>-interface hardening — only if you pick Option C; otherwise leave for a follow-up.</li>
-              <li>Surfacing the Plaid account <em>type</em> ("depository") anywhere new — not requested.</li>
+              <li>The two chat-analytics calls (already guarded at lines 75 &amp; 150) — no change needed.</li>
+              <li>DRY-ing the two methods into a shared helper — only if you pick Option C; otherwise leave for a follow-up.</li>
+              <li>Any frontend or API-contract change to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">POST /api/chat</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">GET /api/chat/stream</code>.</li>
+              <li>The product question of whether truly anonymous users should be able to chat at all — separate decision; this fix just makes the existing guest path not crash.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">UX Considerations</div>
             <ul class="triage-list">
-              <li><strong>Correctness</strong> — a Savings account must read "Savings", a checking account "Checking"; the user should never be told the wrong account type on a money-movement screen.</li>
-              <li><strong>Casing consistency</strong> — title-case the real value so it matches the title-cased fallback; avoid the half-finished "Chase (savings)" look.</li>
-              <li><strong>Null / empty</strong> — if Plaid returned no subtype, show a sensible fallback (Q2), never an empty string or "undefined".</li>
-              <li><strong>Mobile-first</strong> — verify the display line still fits cleanly at 390×844 and 430×932 (no wrap regression on longer institution + type strings).</li>
+              <li><strong>No UI surface</strong> — backend correctness only. The user-visible effect: the non-streaming chat fallback no longer 500s on a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code>; it answers as a generic/guest user, matching <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code>.</li>
+              <li><strong>Error path</strong> — what was an <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">InvalidDataAccessApiUsageException</code> (server error) degrades to a graceful generic answer.</li>
+              <li><strong>Consistency</strong> — both chat entry points (streamed + fallback) handle a missing user identically after this change.</li>
             </ul>
           </div>
         </div>
@@ -280,18 +277,10 @@
 
         <div class="question-item">
           <div class="question-text">
-            <strong>Display casing.</strong> The backend stores the Plaid subtype lowercase (e.g. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">"savings"</code>). Should I title-case it for display (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">"Savings"</code>, consistent with the existing "Checking" fallback) — or render it exactly as Plaid returns it? My recommendation: <strong>title-case it</strong> for a clean, consistent line.
+            <strong>Guest behavior on null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code>.</strong> The fix mirrors <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code>: a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> proceeds as a guest (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">user = null</code>) and still gets a generic answer. The alternative would be to reject the request with an error instead. My recommendation: <strong>proceed as guest</strong>, so the two chat paths behave the same.
             <span class="optional-badge">Optional</span>
           </div>
-          <textarea class="question-input" placeholder="Title-case it — show 'Savings' / 'Checking' so it's consistent with the fallback; don't ship a lowercase 'savings'."></textarea>
-        </div>
-
-        <div class="question-item">
-          <div class="question-text">
-            <strong>Null-subtype fallback.</strong> When Plaid genuinely returns no subtype, the current code defaults to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'Checking'</code> — which is the very assumption that caused this bug. Keep <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'Checking'</code>, or use a neutral label like <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">'Account'</code> so we never assert a type we don't actually know? My recommendation: <strong>neutral "Account"</strong> for the unknown case.
-            <span class="optional-badge">Optional</span>
-          </div>
-          <textarea class="question-input" placeholder="Use a neutral 'Account' when the subtype is unknown — don't keep falsely defaulting to 'Checking'."></textarea>
+          <textarea class="question-input" placeholder="Proceed as guest — match streamChat exactly. Don't start rejecting null-userId chats; that's a separate product decision."></textarea>
         </div>
 
       </div>
@@ -304,25 +293,25 @@
 
         <div class="step-item">
           <div class="step-num">1</div>
-          <div class="step-body" contenteditable="false"><strong>Confirm the contract</strong> — Re-grep <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PlaidController.java:177</code> (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code>) and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">plaid.service.ts:80-82</code> (lowercase values) to lock the field name and value casing before touching anything.</div>
+          <div class="step-body" contenteditable="false"><strong>Confirm the contract</strong> — Re-read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.java:85</code> (unguarded) against the proven guard at line 215 (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code>) to lock the exact mirror before editing.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">2</div>
-          <div class="step-body" contenteditable="false"><strong>Fix the read</strong> — In <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">formatAccountDisplay()</code> (line 232), read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubtype</code> (lowercase <em>t</em>); apply the Q1 display normalization (title-case) and the Q2 null fallback.</div>
+          <div class="step-body" contenteditable="false"><strong>Apply the guard</strong> — Replace the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">Optional</code> block at lines 85–88 with the ternary form so <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">user</code> is null when <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> is null (Option A), or the chosen variant.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">3</div>
-          <div class="step-body" contenteditable="false"><strong>Sweep for stragglers</strong> — Grep the frontend for any remaining capital-T <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">accountSubType</code>; if Option C, add the typed <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">BankAccount</code> interface and replace the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">any</code>.</div>
+          <div class="step-body" contenteditable="false"><strong>Sweep for stragglers</strong> — Grep the chat services for any other unguarded <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">findById(request.userId())</code>; if Option C, extract the shared <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadUserOrNull()</code> helper and route both methods through it.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">4</div>
-          <div class="step-body" contenteditable="false"><strong>Verify + hand off</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd frontend &amp;&amp; npx tsc --noEmit</code> (exits 0); verifier over the approved A/C. Hand the live render (a Savings account showing "Savings" at 390×844 / 430×932) to Andrew via "Looks Good."</div>
+          <div class="step-body" contenteditable="false"><strong>Verify + hand off</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd backend &amp;&amp; ./gradlew build -x test</code> (exits 0); verifier over the approved A/C, including a null-userId path check that no exception is thrown.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
@@ -334,31 +323,18 @@
       <div class="section-label">Tomorrow's Likely Pick</div>
       <div class="card">
         <ul class="tomorrow-list">
-          <li><strong>Data hygiene — close out FRED-195.</strong> Its full implementation (the 5 <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pig-range-*.svg</code> assets, the deleted <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pig-level-*</code> art, the shared <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">EquityPigUtils</code> helper, and the tab3 + My Profile + MFU avatar wiring) is already merged to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">develop</code>, but it still sits in READY uncheckmarked. Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done=FRED-195</code> so it isn't re-picked and the burndown stays honest.</li>
-          <li><strong>FRED-188</strong> — Add a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> guard to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code>, mirroring the guard already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> — Easy, backend bug-density quick win. Tier 2.</li>
-          <li><strong>FRED-186</strong> — Move API searches to debounce + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code> — Easy/Medium, frontend. Tier 2. (FRED-191 stays sandbox-gated — real-device Capacitor build.)</li>
+          <li><strong>Data hygiene — close out FRED-195.</strong> Its full implementation (the 5 <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pig-range-*.svg</code> assets, deleted <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pig-level-*</code> art, the shared <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">EquityPigUtils</code> helper, and the tab3 + My Profile + MFU avatar wiring) is already merged to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">develop</code>, but it still sits in READY uncheckmarked. Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done=FRED-195</code> so it isn't re-picked and the burndown stays honest.</li>
+          <li><strong>FRED-186</strong> — Move API searches to debounce + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code> — Easy/Medium, frontend, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>-verifiable here. Tier 2; needs a quick scope on which searches are in.</li>
+          <li><strong>DEV-198 / DEV-190</strong> — dev-tooling cleanup (lockfile <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">libc</code>-field churn / the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@capacitor</code> peer conflict). Lower user-facing value. FRED-191 stays sandbox-gated (real-device Capacitor build).</li>
         </ul>
       </div>
     </div>
 
     <!-- ── Completion Section (completed state only) ── -->
-    <div class="section-group section-intermediary-only" id="completion-section">
+    <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
-        <div style="margin-bottom:16px;">
-          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-189 — Fix bank account subtype always showing "Checking"</p>
-          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">The Change Bank Account page now shows the real account subtype instead of always "Checking". The visible bug lived in the template, not the TypeScript: <code>change-bank-account.page.html:37</code> (the "Current Account" card) bound <code>{{ currentBankAccount.accountSubtype || 'Checking' }}</code> — lowercase value with an always-"Checking" fallback. Added <code>formatAccountSubtype()</code> in <code>change-bank-account.page.ts</code> (reads the backend's lowercase <code>accountSubtype</code>, title-cases it, falls back to a neutral "Account" when truly missing), bound line 37 to it, and fixed the same expression in the commented hero-peek (line 12). Removed the dead <code>formatAccountDisplay()</code> (capital-T <code>accountSubType</code>, zero callers) that the first build had mistakenly targeted. Frontend-only — no backend, schema, or auth changes.</p>
-          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
-          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
-            <li>AC-1 — The visible subtype binding reads the backend's <code>accountSubtype</code> (lowercase t); a Savings account shows its real subtype, never always "Checking".</li>
-            <li>AC-2 — The subtype is title-cased for display ("savings" → "Savings").</li>
-            <li>AC-3 — A genuinely missing subtype falls back to a neutral "Account" — never a falsely asserted "Checking" or an empty "()".</li>
-            <li>AC-4 — No capital-T <code>accountSubType</code> reference remains anywhere in <code>frontend/src</code>; <code>plaid.service.ts</code> untouched; no dead method left behind.</li>
-            <li>AC-5 — Frontend-only diff (two files); <code>tsc --noEmit</code> introduces no new errors.</li>
-            <li>AC-6 — The "Current Account" card now displays the correct title-cased subtype (verified by static inspection of the live template binding).</li>
-          </ul>
-          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Readiness 79 → 80 — closes a real user-facing correctness bug and tidies a loose thread on the FRED-124 change-bank-account overhaul. Independently verified (2 passes); CI green; squash-merged to develop via PR #95.</p>
-        </div>
+        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
       </div>
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;
@@ -367,7 +343,7 @@
       <!-- Request Changes — rework the same story with feedback -->
       <div id="rework-block" style="margin-top:14px;">
         <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
-        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. A Savings account still reads 'Checking' on my device — re-check the field name and value casing."></textarea>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. A null userId still 500s — re-check the guard mirrors streamChat exactly."></textarea>
         <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
       </div>
     </div>
@@ -377,7 +353,7 @@
       <div class="section-label">Anything Else For the Execution Agent?</div>
       <div class="card">
         <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
-        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Keep the fix to formatAccountDisplay() only; don't refactor the rest of the page..."></textarea>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Keep the fix to processChat() only; don't refactor streamChat()..."></textarea>
       </div>
     </div>
 
