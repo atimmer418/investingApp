@@ -40,3 +40,4 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 - FRED-116 — Prompt users for review after first MFU
 - FRED-117 — First-time tour ending with what's your story
 - FRED-2028 — Update app calculator to net-income yield model
+- FRED-188 — Add null userId guard to processChat

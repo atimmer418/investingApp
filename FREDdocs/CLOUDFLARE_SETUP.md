@@ -45,16 +45,17 @@ User Browser → Cloudflare Edge → Tunnel → Your Local Services
 # Terminal 1: Start backend
 cd backend && ./gradlew bootRun
 
-# Terminal 2: Start frontend  
-cd frontend && npm run servlocal
+# Terminal 2: Start frontend
+#   `servlocal` is a shell alias for the command below — run either one.
+cd frontend && ng serve --configuration=local
 
-# Terminal 3: Start tunnel (or use script)
-./start-with-tunnel.sh
+# Terminal 3: Start the Cloudflare tunnel (reads ~/.cloudflared/config.yml)
+cloudflared tunnel run fredvested-local
 ```
 
 ### Check Status
 ```bash
-./check-status.sh
+cloudflared tunnel info fredvested-local
 ```
 
 ### Stop Tunnel
@@ -70,6 +71,59 @@ pkill cloudflared
 - **No port forwarding** - Bypasses router/firewall restrictions
 - **Automatic HTTPS** - SSL termination at Cloudflare edge
 - **Global CDN** - Fast access from anywhere
+
+---
+
+## Dev cache / blank-screen (NG0200) troubleshooting
+
+### Symptom
+The iOS app (or a browser) loads `https://local.fredvested.com` to an **all-blank white screen**, and
+the console shows:
+
+```
+NG0200: Circular dependency in DI detected for _StandaloneService
+```
+
+The router renders no route (the `ion-router-outlet` stays empty). Classic tell: it happens on the
+**iPhone only while the laptop works fine**, and it can persist for hours.
+
+### Root cause
+This is **not** an app code bug — it is a **stale client cache**. In dev, the Angular entry files are
+**non-content-hashed** (`main.js`, `polyfills.js`). Cloudflare was applying its default **Browser
+Cache TTL of 4 hours** (`Cache-Control: max-age=14400`) to those files, while `index.html` stays
+`no-cache`. When a mid-session Vite re-optimization changes `main.js`'s *contents* (the URL is
+unchanged), the iOS WKWebView keeps serving its **4-hour-cached old `main.js`** next to the fresh
+`index.html` — loading two mismatched copies of Angular, which trips `_StandaloneService` and blanks
+the screen. (The error names Angular's *internal* service, not a FRED service — the signature of a
+duplicated runtime, i.e. a cache problem, not a DI bug.)
+
+### Recovery (get unstuck right now)
+Attach Safari **Web Inspector** to the device webview (Safari → Develop → [device] →
+`local.fredvested.com`), open the **Network** tab, tick **Disable Cache**, then reload. The webview
+re-fetches a fresh, consistent bundle and routes normally.
+
+### Prevention — Cloudflare cache hardening (one-time)
+Scope **every** rule below to **hostname `local.fredvested.com` only** so production
+(`today.fredvested.com`, future app domains on this zone) keeps normal caching.
+
+1. **Purge** the currently-cached assets: Caching → Configuration → Purge Cache → **Custom Purge** →
+   Hostname `local.fredvested.com` (or **Purge Everything**).
+2. **Cache Rule** (Caching → Cache Rules → **Create rule**): if `Hostname equals
+   local.fredvested.com` → **Bypass cache**. Stops the edge from caching dev assets.
+3. **Response Header Transform Rule** (Rules → Transform Rules → Modify Response Header →
+   **Create rule**): if `Hostname equals local.fredvested.com` → **Set static**
+   `Cache-Control: no-store`. Overrides the 4-hour browser TTL so the device never stores dev assets.
+
+Verify:
+```bash
+curl -sSI https://local.fredvested.com/main.js   # expect: cache-control: no-store, cf-cache-status: DYNAMIC/BYPASS
+curl -sSI https://today.fredvested.com/          # prod unaffected (normal caching headers)
+```
+
+> Note: these persist (unlike Caching → Configuration → **Development Mode**, which bypasses cache for
+> only 3 hours). The first request after a `git pull` that adds a new dependency still triggers a Vite
+> re-optimization — restarting `ng serve` before reconnecting the phone avoids serving a half-rebuilt
+> bundle.
 
 ---
 

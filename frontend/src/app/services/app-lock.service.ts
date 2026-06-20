@@ -27,14 +27,19 @@ export class AppLockService {
   private readonly LOCK_ENABLED_KEY = 'app_lock_enabled';
 
   /**
-   * How recently the user must have interacted to be considered "active"
-   * for token refresh purposes. If user hasn't touched the app in 5 min,
-   * we stop refreshing — letting the JWT expire naturally (which triggers the lock).
+   * Hard idle cap: how long the user may go with ZERO physical interaction before
+   * we stop refreshing and let the JWT expire (which triggers the lock). While the
+   * app is foreground and the user has interacted within this window, the token keeps
+   * refreshing — so reading a screen without tapping keeps the session alive up to the
+   * cap. Measured against lastInteractionTime (physical input only, never HTTP traffic).
    */
-  private readonly REFRESH_ACTIVITY_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+  private readonly REFRESH_IDLE_CAP_MS = 30 * 60 * 1000; // 30 minutes
   
-  private lastActiveTime: number = Date.now();
+  /** Updated ONLY by genuine physical interaction (see registerUserInteraction). */
+  private lastInteractionTime: number = Date.now();
   private lastUnlockTime: number = 0;
+  /** True while the app is in the foreground; gates token refresh to "app is open". */
+  private isForeground = true;
   private isModalOpen = false;
   private checkInterval: any;
   private failedLockRetries = 0;
@@ -114,21 +119,25 @@ export class AppLockService {
   }
 
   /**
-   * Proactively refresh the JWT if user was active within the last 5 minutes
-   * AND the token is within 15 minutes of expiry. This keeps the token alive
-   * while the user is actively using the app.
+   * Keep the JWT alive while the user is on the app. Refreshes when ALL hold:
+   *  - the app is in the foreground ("app is open"), AND
+   *  - the user has physically interacted within the idle cap — reading without
+   *    tapping still counts as alive up to REFRESH_IDLE_CAP_MS, AND
+   *  - the token has entered its refresh window (≤30 min to expiry).
    *
-   * Once the user stops interacting, the token stops refreshing and will
-   * eventually expire — which triggers the lock screen.
+   * After the idle cap of zero interaction, refreshing stops and the token
+   * eventually expires — which triggers the lock screen.
    */
   private checkTokenRefresh() {
     if (!JwtTokenUtils.getValidJwtToken()) return;
 
-    const now = Date.now();
-    const recentlyActive = (now - this.lastActiveTime) < this.REFRESH_ACTIVITY_THRESHOLD_MS;
+    // On native, only refresh while foreground. On web there is no app-state signal
+    // (and the timer only runs in a live tab anyway), so treat as always foreground.
+    const foreground = this.platform.is('capacitor') ? this.isForeground : true;
+    const withinIdleCap = (Date.now() - this.lastInteractionTime) < this.REFRESH_IDLE_CAP_MS;
 
-    if (recentlyActive && JwtTokenUtils.shouldRefreshToken()) {
-      this.getAuthService().refreshToken().subscribe();
+    if (foreground && withinIdleCap && JwtTokenUtils.shouldRefreshToken()) {
+      this.getAuthService().refreshToken().subscribe({ error: () => {} });
     }
   }
 
@@ -150,8 +159,9 @@ export class AppLockService {
     return !!localStorage.getItem('userId');
   }
 
-  public updateLastActiveTime() {
-    this.lastActiveTime = Date.now();
+  /** Call on genuine physical interaction only (taps/scroll/keys), never on HTTP. */
+  public registerUserInteraction() {
+    this.lastInteractionTime = Date.now();
   }
 
   private async handleAppStateChange(state: AppState) {
@@ -168,8 +178,9 @@ export class AppLockService {
       if (!this.isModalOpen && !withinUnlockGrace) {
         this.showAppCover();
       }
-      this.lastActiveTime = Date.now();
+      this.isForeground = false;
     } else {
+      this.isForeground = true;
       this.lockWasShownThisResume = false;
       await this.checkLockOnResume();
       if (!this.lockWasShownThisResume) {
@@ -249,6 +260,15 @@ export class AppLockService {
     } else if (jwtExpired) {
       // Token expired while backgrounded → full passkey reauth to issue a new JWT.
       await this.lockApp(true);
+    } else {
+      // Token still valid on resume. iOS suspends setInterval while backgrounded, so
+      // refresh immediately (rather than waiting up to 60s for the next tick) when the
+      // token is near expiry and the user is still within the idle cap. Fire-and-forget:
+      // this branch never locks, so it can't race the modal/cover choreography.
+      const withinIdleCap = (Date.now() - this.lastInteractionTime) < this.REFRESH_IDLE_CAP_MS;
+      if (withinIdleCap && JwtTokenUtils.shouldRefreshToken()) {
+        this.getAuthService().refreshToken().subscribe({ error: () => {} });
+      }
     }
   }
 
@@ -320,7 +340,8 @@ export class AppLockService {
 
   private unlockApp() {
     this.isLockedSubject.next(false);
-    this.lastActiveTime = Date.now();
+    // A completed reauth is genuine presence — reset the idle cap.
+    this.lastInteractionTime = Date.now();
     this.lastUnlockTime = Date.now();
   }
 

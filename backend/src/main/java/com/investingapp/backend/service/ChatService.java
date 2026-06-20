@@ -81,11 +81,8 @@ public class ChatService {
             }
         }
 
-        // 2. Load User
-        Optional<User> userOpt = userRepository.findById(request.userId());
-        // Handle guest/anonymous or error if needed. For now, assume user exists or
-        // treat as generic.
-        User user = userOpt.orElse(null);
+        // 2. Load User (guard null userId for guest/anonymous, matching streamChat)
+        User user = request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null;
 
         // 3. Load System Prompt
         String systemPrompt = FredConstitution.SYSTEM_PROMPT;

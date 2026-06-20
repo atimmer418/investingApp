@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap, catchError, of, lastValueFrom, timeout, retry, timer, throwError } from 'rxjs';
+import { Observable, BehaviorSubject, tap, catchError, of, lastValueFrom, timeout, retry, timer, throwError, finalize } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
 import { DeviceIdService } from './device-id.service';
@@ -349,8 +349,9 @@ export class AuthService {
 
   /**
    * Proactively refresh the JWT token before it expires.
-   * Called by AppLockService when user is active and token is within 10 min of expiry.
-   * Returns true if refresh succeeded.
+   * Called by AppLockService while the user is on the app and the token is within
+   * its 30-min refresh window. Self-healing: a hung or failed request clears the
+   * in-progress latch (via finalize) so the next tick can retry cleanly.
    */
   refreshToken(): Observable<boolean> {
     if (this.tokenRefreshInProgress || !this.isAuthenticated()) {
@@ -362,17 +363,22 @@ export class AuthService {
     return this.http.post<any>(`${BACKEND_API_URL}/auth/refresh`, {}, {
       headers: this.getAuthHeaders()
     }).pipe(
+      // Cap the request so a hung /auth/refresh can't wedge tokenRefreshInProgress
+      // forever (which would permanently disable all future refreshes). 15s is well
+      // under the 60s refresh tick, so the latch always clears before the next attempt.
+      timeout(15000),
       tap(response => {
         if (response?.success && response.jwtToken) {
           JwtTokenUtils.storeJwtToken(response.jwtToken, response.id, response.email);
         }
-        this.tokenRefreshInProgress = false;
       }),
       catchError(err => {
         console.error('[AuthService] Token refresh failed:', err);
-        this.tokenRefreshInProgress = false;
         return of(false);
-      })
+      }),
+      // finalize is the single guaranteed reset point — it runs on success, error,
+      // timeout, and unsubscribe, so the latch can never get permanently stuck.
+      finalize(() => { this.tokenRefreshInProgress = false; })
     ) as Observable<boolean>;
   }
 

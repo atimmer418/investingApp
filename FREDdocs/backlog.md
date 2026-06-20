@@ -15,8 +15,8 @@ update all api searches to use debounce and switchMap
 ## FRED-187 — Investigate Plaid paycheck-triggered investment flow
 check on if its possible to trigger an investment when the user's paycheck is seen via Plaid
 
-## FRED-188 — Add null userId guard to processChat
-`ChatService.java` `processChat()` calls `userRepository.findById(request.userId())` without a null guard. Add the same guard that was added to `streamChat()`: `request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null`.
+## FRED-189 — Fix bank account subtype always showing Checking
+Backend `GET /api/plaid/primary-bank-account` returns the field `accountSubtype` (lowercase t) at `PlaidController.java:177`. The frontend `change-bank-account.page.ts` stores the raw response (`this.currentBankAccount = response`, line 85), then `formatAccountDisplay()` reads `this.currentBankAccount.accountSubType` (capital T, line 232) — always undefined, so the displayed subtype always falls back to 'Checking' regardless of the user's real account type (Savings, etc.). Fix: read `accountSubtype` (lowercase t) at `change-bank-account.page.ts:232` to match the backend; `plaid.service.ts:80-82` already reads it correctly. Pre-existing, user-facing; related to FRED-124.
 
 ## DEV-190 — Resolve @capacitor peer conflict (drop --legacy-peer-deps)
 `@capacitor/push-notifications@8.1.1` requires `@capacitor/core@>=8`, but the repo pins `@capacitor/core@7.2.0` (the rest of `@capacitor/*` is on 7.x). A plain `npm install` ERESOLVE-fails and only succeeds with `--legacy-peer-deps`, which silences all peer-dependency checks and can mask real breakage. Fix: either downgrade `@capacitor/push-notifications` to a 7.x-compatible release, or upgrade the whole `@capacitor/*` suite to 8.x together.
@@ -54,6 +54,68 @@ Decisions (Andy): profile avatars use LIVE equity; old pig-level art fully repla
 
 ## DEV-198 — Eliminate package-lock.json libc-field churn in diffs
 npm writes platform-specific `libc`/`os`/`cpu` fields into `package-lock.json` that differ between environments (the itpm routine cloud sandbox vs local vs GitHub Actions CI), producing noisy lockfile diffs that have to be reverted to keep PRs clean. Find a stable fix so `package-lock.json` stays identical across the routine sandbox, CI, and local — e.g. an `.npmrc` setting, pinning the npm version used everywhere, a normalize/commit-hook step, or omitting the optional-deps platform fields. Surfaced by the verifier during an itpm run on 2026-06-15.
+
+## FRED-201 — Keep loading screen up during cold-start reauth nav
+add story for painting the loading screen while navigation is happening instead of just showing an all blank white screen after a cold start with reauth. the loading screen should stay until the page underneath it is ready to appear and then it should disappear. this only happens on cold starts and after a reauth so that workflow should be the only one adjusted/modified to receive this fix
+
+### Summary
+On a cold start that requires reauth, after the passkey ceremony succeeds the app shows an all-blank white screen during navigation instead of the loading cover. Keep the existing loading cover (the `coin-drop` Lottie over white — `#app-resume-cover` in `index.html`) painted continuously through the cold-start → reauth → navigate sequence, and only hide it once the destination page underneath has actually rendered. Scope is strictly the cold-start + reauth workflow.
+
+### Acceptance Criteria
+1. Cold start (app fully terminated, not a resume) with reauth required (JWT expired and/or App Lock on) → after passkey success, no all-blank white screen during navigation; the loading cover (coin-drop Lottie over white) stays painted.
+2. The loading cover remains continuously visible from native-splash hide → passkey reauth → route navigation, with no intermediate white frame.
+3. The cover is hidden only after the destination routed view has actually painted beneath it — "page ready" detection is strengthened beyond `preloadAssetsForRoute`'s font/image preload + rAF (e.g. await the routed component's view being present/stable in the DOM) so the cover never hides over a blank view.
+4. Scope limited to cold-start + reauth only: the background-resume path, the normal cold-start-without-reauth path, and the dev `?devPage=` path keep their current cover timing (no regressions).
+5. Safety nets intact: the 12s `hideAllCovers()` watchdog in `ngOnInit`, the 20s `index.html` backstop, and `forceRecovery()` still force-hide the cover so a user is never permanently trapped behind it.
+6. Clean single handoff: no new white flash, no double-hide, no cover flicker at the cover→page transition.
+7. `npx tsc --noEmit` exits 0; verified on a local Capacitor iOS build (or 430×932 webview) by reproducing the cold-start + reauth flow and confirming a seamless cover-to-page handoff.
+
+## FRED-202 — Standardize input fields to onboarding styling (except profile)
+except for my profile, standardize all text and character input fields to be like how the onboarding's are in terms of styling. [Confirmed: the onboarding input styling = the `.field-input` / `.field-label` pattern, defined in kyc-verification and investment-schedule. surveyinitial uses range sliders, stockselection uses an ion-searchbar, investmentconfirmation uses TOS checkboxes, get-started/linkplaid have no inputs.]
+
+### Summary
+Make every text/character form input in the app look like the onboarding's fields — the `.field-input` / `.field-label` Manrope underline style (Manrope 17px/500 text, 11px/700 uppercase #6b7280 label, transparent bg, 2px #2563EB bottom-border, red error state). Replicate that style into one shared SCSS source for the non-onboarding pages and apply it there. Onboarding, My Profile, recovery, and authfinalize are finalized/excluded and must not be touched.
+
+### Acceptance Criteria
+1. A shared SCSS source of truth replicating the onboarding `.field-label` + `.field-input` underline style (new `theme/_form-fields.scss` imported via `global.scss`, or equivalent) is created for the non-onboarding pages. The onboarding component SCSS is NOT modified — the shared partial mirrors the canonical values (intentional duplication is acceptable to avoid touching finalized onboarding).
+2. Every text/character form input that is NOT in My Profile, NOT in onboarding, and NOT already-finalized (recovery, authfinalize) is restyled to match: add-beneficiary (12), retirement-planning (6), lump-sum-investment (2), change-email (2), portfolio-customize (1), recurring-investments (1), sell-withdraw (1) — 25 fields across 7 files.
+3. Labels, placeholders, focus state, and error/validation state on those fields all match the onboarding pattern (uppercase #6b7280 label, blue underline, red error treatment).
+4. Left completely untouched: My Profile; ALL onboarding components (kyc-verification, investment-schedule, surveyinitial, stockselection, investmentconfirmation, get-started, linkplaid); recovery; authfinalize.
+5. No visual regression on any untouched surface (onboarding, My Profile, recovery, authfinalize).
+6. Not restyled as form fields (documented exclusions): the `document-upload` `type="file"` control; and — pending Andy's call — the `<ion-searchbar>` search fields and the `ai-chat` `<ion-textarea>` composer.
+7. `npx tsc --noEmit` exits 0; `ng build` succeeds within budget; every restyled field verified at 430×932 (and 390×844) with no broken alignment, clipped labels, or lost validation.
+
+Open questions (Andy to confirm): (a) are the `<ion-searchbar>` search fields and ai-chat `<ion-textarea>` composer in scope? (recommend exclude); (b) convert `<ion-input>` → native `<input class="field-input">` for a pixel match, or approximate via Ionic CSS vars? (recommend convert).
+
+## FRED-203 — KYC edit page blue header + part-1 gating
+make the update/edit KYC page linked to from security-settings have the blue header that security settings has for both parts of the kyc update. also, a user should not be able to proceed from part 1 to part 2 in kyc if the data in part 1 has not been updated from its current values. make sure that the kyc page only has the blue ion header in editMode and not the 'Identity Verification' onboarding flow step
+
+### Summary
+The KYC component serves two flows: onboarding "Identity Verification" (`editMode = false`) and the edit-KYC page from security-settings (`editMode = true`). EditMode-only: (1) give the edit flow the shared blue hero header security-settings uses, on both step 1 and step 2; (2) keep the blue header out of onboarding (keeps its plain header); (3) block advancing part 1 → part 2 until the user changes at least one step-1 field from its current on-file value.
+
+### Acceptance Criteria
+1. In editMode, the page renders the shared blue hero header (blue gradient + concave white cutout + centered white title + back button), the same `blue-hero-header` security-settings uses, on BOTH step 1 and step 2.
+2. The blue header renders ONLY in editMode; onboarding mode (`editMode = false`, "Identity Verification") keeps its existing non-blue header, and the blue-hero styles do NOT leak into onboarding (the partial must be scoped since one component serves both modes).
+3. The editMode header reuses the `theme/_blue-hero-header.scss` partial via `@use` (not a re-implemented copy); back button calls existing `goBack()`; title is "Edit Identity".
+4. In editMode, the user cannot proceed part 1 → part 2 unless at least one step-1 field changed from its on-file value: the continue button is disabled AND `proceedToStep2()` is a no-op while step 1 still equals the prefilled values.
+5. "Changed" = current step-1 form value vs a snapshot of the Alpaca-prefilled values captured after the prefill HTTP resolves (re-typing the same value is not a change); existing `!step1Valid` validation still applies.
+6. Gating applies only in editMode; onboarding step 1 → step 2 is unaffected.
+7. The existing localStorage step-1 draft restore and step-transition animation still work; a restored draft equal to on-file values counts as "not changed."
+8. `npx tsc --noEmit` exits 0; verified at 430×932: editMode blue header on both steps, onboarding original header, part-1 gate enables/disables correctly.
+
+## FRED-204 — Fix white flash in static→Lottie reauth transition
+on a cold start and reauth is needed. when the static transitions into the lottie, there is a very brief white screen that displays (im talking like 0.1s like its just a slight flash) that we do not want to see. we want this transition to be seamless
+
+### Summary
+On a cold start (most visible when reauth keeps the cover up), the loading cover swaps its static fallback image for the coin-drop Lottie and a ~0.1s white flash shows through. Cause: `index.html` hides the static `#app-resume-cover-fallback` synchronously the instant `lottie.loadAnimation()` returns — before the Lottie paints its first frame — exposing the white `#app-resume-cover` background. Fix: hide the static fallback only after the Lottie's first frame renders, so the handoff is seamless.
+
+### Acceptance Criteria
+1. On cold start, no white flash between the static fallback image (`#app-resume-cover-fallback`) and the coin-drop Lottie — the white `#app-resume-cover` background is never visible in the gap.
+2. The static fallback is hidden only AFTER the Lottie renders its first frame (driven by a lottie-web render event, e.g. `DOMLoaded` / first `enterFrame`), not synchronously right after `loadAnimation()` returns (current `index.html` line 70).
+3. Seamless transition: no white gap, no flicker, no double-image (a short cross-fade is acceptable but optional).
+4. Fallback safety preserved: if the Lottie fails to load (404 / parse error / no render event), the static fallback stays visible — it is removed only on a confirmed first render.
+5. No change to the cover show/hide lifecycle (`showAppCover`/`hideAllCovers`, the 20s `index.html` backstop, `_fredCoverAnim.play()` on resume) beyond the fallback-hide timing.
+6. Verified on a cold start (app fully terminated) with reauth required, on a local Capacitor iOS build (or 430×932 webview): no white flash during the static→Lottie transition.
 
 
 # 💤 SLEEPING — Backlog (not yet started)
@@ -675,16 +737,8 @@ Note: JWT must be passed as query param (EventSource doesn't support custom head
 ## FRED-185 — ✓ Update app calculator to net-income yield model
 Update the in-app calculator to use the same net-income-based model: (monthly net income × 12) / 0.04 = target portfolio value. Use 10% average annual rate with compound interest and DRIP reinvestment to determine time to reach that portfolio value based on the user's monthly investable income input.
 
-## FRED-189 — ✓ Fix bank account subtype always showing Checking
-Backend `GET /api/plaid/primary-bank-account` returns the field `accountSubtype` (lowercase t) at `PlaidController.java:177`. The frontend `change-bank-account.page.ts` stores the raw response (`this.currentBankAccount = response`, line 85), then `formatAccountDisplay()` reads `this.currentBankAccount.accountSubType` (capital T, line 232) — always undefined, so the displayed subtype always falls back to 'Checking' regardless of the user's real account type (Savings, etc.). Fix: read `accountSubtype` (lowercase t) at `change-bank-account.page.ts:232` to match the backend; `plaid.service.ts:80-82` already reads it correctly. Pre-existing, user-facing; related to FRED-124.
-
-### Acceptance Criteria
-1. `formatAccountDisplay()` reads `accountSubtype` (lowercase t) at `change-bank-account.page.ts:232` to match the backend field, so the real subtype (Checking, Savings, etc.) is shown — never always "Checking".
-2. The displayed subtype is title-cased for presentation (e.g. `"savings" → "Savings"`) so it reads cleanly and matches the title-cased fallback.
-3. When the subtype is genuinely missing/null, the display uses a neutral `"Account"` fallback — never an empty/broken string and never a falsely asserted "Checking".
-4. No other surviving reference to the capital-T `accountSubType` remains (grep clean); `plaid.service.ts` (already correct) is untouched.
-5. No backend, schema, or auth changes. `cd frontend && npx tsc --noEmit` exits 0.
-6. Verified: a Savings-linked account displays "… (Savings)", not "… (Checking)", at 390×844.
+## FRED-188 — ✓ Add null userId guard to processChat
+`ChatService.java` `processChat()` calls `userRepository.findById(request.userId())` without a null guard. Add the same guard that was added to `streamChat()`: `request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null`.
 
 ## FRED-192 — ✓ Redesign tab3 settings page UI (keep blue header)
 redesign the UI of tab3 (settings) page. we want to keep the blue header with the my profile and welcome and "FRED" but we kinda want a cleaner design. refer to the FRED UI Style Guide for how to come up with more designs for tab3 while still keeping that blue header idea. there should be 3-5 options for how it could look

@@ -50,7 +50,7 @@ export class AppComponent implements OnInit {
     this.userActivity$.pipe(
       throttleTime(60000) // limit to once every 60 seconds
     ).subscribe(() => {
-      this.appLockService.updateLastActiveTime();
+      this.appLockService.registerUserInteraction();
     });
 
     this.initializeApp();
