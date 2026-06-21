@@ -95,22 +95,47 @@ jobs:
           # (the verifier already runs `ng test --include=<changed>.spec.ts`).
           npx ng test --include='**/jwt-token.utils.spec.ts' --watch=false --browsers=ChromeHeadless
 
-      # Phase A: render the calibration refs + tab3 in a headless mobile browser to
-      # prove the ci build + serve + Playwright + devPage chain works. (Phase B adds
-      # the vision judge + the story route.) Runs only on routine PRs.
-      - name: Design-fidelity render (Phase A — artifact only)
+      # Design-fidelity gate: render the changed route + calibration refs in a headless
+      # mobile browser, then a Claude-vision judge compares the render to the approved
+      # mockup. Runs only on routine PRs that captured a design-ref. A fail turns the job
+      # red → no auto-merge → the routine's fix-loop gets the drift notes. With no
+      # ANTHROPIC_API_KEY set it SKIPS (warns) so the routine is never blocked before the
+      # secret is added; once the secret exists the gate enforces automatically.
+      - name: Design-fidelity (render + vision judge)
         if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'verify/')
-        working-directory: frontend
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
+          STORY="${GITHUB_HEAD_REF#verify/}"
+          MOCKUP=$(ls "ITPM/verify/design-ref/$STORY".* 2>/dev/null | head -1 || true)
+          if [ -z "$MOCKUP" ]; then echo "no design-ref for $STORY — skipping design-fidelity"; exit 0; fi
+          ROUTE=$(cat "ITPM/verify/route-$STORY.txt" 2>/dev/null || true)
+          if [ -z "$ROUTE" ]; then echo "no route-$STORY.txt — skipping design-fidelity"; exit 0; fi
+          if [ -z "$ANTHROPIC_API_KEY" ]; then echo "::warning::ANTHROPIC_API_KEY not set — skipping design-fidelity (add the repo secret to enable the gate)"; exit 0; fi
+
+          cd frontend
           npx ng build --configuration=ci
           npx serve www -l 4200 >/tmp/serve.log 2>&1 &
           for i in $(seq 1 30); do curl -sf http://localhost:4200 >/dev/null && break; sleep 1; done
           curl -sf http://localhost:4200 >/dev/null || { echo "serve failed"; cat /tmp/serve.log; exit 1; }
           npx playwright install --with-deps chromium
           mkdir -p /tmp/shots
+
+          # mockup → png if it's HTML
+          MOCKUP_PNG="../$MOCKUP"
+          case "$MOCKUP" in *.html) node scripts/visual/render-file.mjs "../$MOCKUP" /tmp/shots/mockup.png; MOCKUP_PNG=/tmp/shots/mockup.png;; esac
+
+          # calibration references + the story route
           SETTINGS_ROUTE=$(node -e "console.log(require('./scripts/visual/refs.json').calibration[1].route)")
           node scripts/visual/render.mjs http://localhost:4200 /tabs/tab3 /tmp/shots/ref-tab3.png
           node scripts/visual/render.mjs http://localhost:4200 "$SETTINGS_ROUTE" /tmp/shots/ref-settings.png
+          node scripts/visual/render.mjs http://localhost:4200 "$ROUTE" /tmp/shots/render.png
+
+          node scripts/visual/design-judge.mjs \
+            --render=/tmp/shots/render.png \
+            --mockup="$MOCKUP_PNG" \
+            --ref=/tmp/shots/ref-tab3.png \
+            --ref=/tmp/shots/ref-settings.png
 
       - name: Upload render artifacts
         if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'verify/')
