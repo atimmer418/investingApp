@@ -1,18 +1,22 @@
 PODS:
-  - Capacitor (7.2.0):
+  - Capacitor (8.4.1):
     - CapacitorCordova
-  - CapacitorApp (7.0.1):
+  - CapacitorApp (8.1.0):
     - Capacitor
-  - CapacitorCordova (7.2.0)
-  - CapacitorDevice (7.0.3):
+  - CapacitorCordova (8.4.1)
+  - CapacitorDevice (8.0.2):
     - Capacitor
-  - CapacitorHaptics (7.0.1):
+  - CapacitorHaptics (8.0.2):
     - Capacitor
-  - CapacitorKeyboard (7.0.1):
+  - CapacitorKeyboard (8.0.5):
     - Capacitor
-  - CapacitorSplashScreen (7.0.1):
+  - CapacitorPushNotifications (8.1.1):
     - Capacitor
-  - CapacitorStatusBar (7.0.1):
+  - CapacitorShare (8.0.1):
+    - Capacitor
+  - CapacitorSplashScreen (8.0.1):
+    - Capacitor
+  - CapacitorStatusBar (8.0.2):
     - Capacitor
   - lottie-ios (4.6.0)
 
@@ -23,6 +27,8 @@ DEPENDENCIES:
   - "CapacitorDevice (from `../../node_modules/@capacitor/device`)"
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
   - "CapacitorKeyboard (from `../../node_modules/@capacitor/keyboard`)"
+  - "CapacitorPushNotifications (from `../../node_modules/@capacitor/push-notifications`)"
+  - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
   - lottie-ios
@@ -44,22 +50,28 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/haptics"
   CapacitorKeyboard:
     :path: "../../node_modules/@capacitor/keyboard"
+  CapacitorPushNotifications:
+    :path: "../../node_modules/@capacitor/push-notifications"
+  CapacitorShare:
+    :path: "../../node_modules/@capacitor/share"
   CapacitorSplashScreen:
     :path: "../../node_modules/@capacitor/splash-screen"
   CapacitorStatusBar:
     :path: "../../node_modules/@capacitor/status-bar"
 
 SPEC CHECKSUMS:
-  Capacitor: 03bc7cbdde6a629a8b910a9d7d78c3cc7ed09ea7
-  CapacitorApp: febecbb9582cb353aed037e18ec765141f880fe9
-  CapacitorCordova: 5967b9ba03915ef1d585469d6e31f31dc49be96f
-  CapacitorDevice: b64654eb4d404373e733c01d835055ba59286e5c
-  CapacitorHaptics: 1f1e17041f435d8ead9ff2a34edd592c6aa6a8d6
-  CapacitorKeyboard: 09fd91dcde4f8a37313e7f11bde553ad1ed52036
-  CapacitorSplashScreen: 1d67815a422a9b61539c94f283c08ed56667c0fc
-  CapacitorStatusBar: 6e7af040d8fc4dd655999819625cae9c2d74c36f
+  Capacitor: 35242afe195b1e53c58ca1b827d1b444c5e6602b
+  CapacitorApp: 449ffe26375e96f8aaaee625ac6e01e5c57c8650
+  CapacitorCordova: eebe6bcf807b1b06f3f48237650f96bbcd0eef09
+  CapacitorDevice: 14cba6f88d1c3074cbf825fea977c8c526453ff8
+  CapacitorHaptics: 296f771ecd89c7a1bd92a7b6826a7d268e2e70f5
+  CapacitorKeyboard: b6b0744890cdb1d9a96e2cafcc9253fdcc55de3b
+  CapacitorPushNotifications: ec08d589c226a2c0db7c032ec1bf5b044ec85f8e
+  CapacitorShare: 0c58305114538568059bfc07111f22dcb9cb2a82
+  CapacitorSplashScreen: 4b46c72298db552b3c57ce021ef028b6dc7f1fa7
+  CapacitorStatusBar: 01d5763b4ed720de5ce2edbc938de6a98f4c8f32
   lottie-ios: 8f959969761e9c45d70353667d00af0e5b9cadb3
 
-PODFILE CHECKSUM: 8f30555664c2b40bf42b080e1ee6b0b44d8d0d61
+PODFILE CHECKSUM: c0c36c40adaa1a272c399a7214191f44fc3d23b3
 
 COCOAPODS: 1.16.2
