@@ -95,6 +95,31 @@ jobs:
           # (the verifier already runs `ng test --include=<changed>.spec.ts`).
           npx ng test --include='**/jwt-token.utils.spec.ts' --watch=false --browsers=ChromeHeadless
 
+      # Phase A: render the calibration refs + tab3 in a headless mobile browser to
+      # prove the ci build + serve + Playwright + devPage chain works. (Phase B adds
+      # the vision judge + the story route.) Runs only on routine PRs.
+      - name: Design-fidelity render (Phase A — artifact only)
+        if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'verify/')
+        working-directory: frontend
+        run: |
+          npx ng build --configuration=ci
+          npx serve www -l 4200 >/tmp/serve.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:4200 >/dev/null && break; sleep 1; done
+          curl -sf http://localhost:4200 >/dev/null || { echo "serve failed"; cat /tmp/serve.log; exit 1; }
+          npx playwright install --with-deps chromium
+          mkdir -p /tmp/shots
+          SETTINGS_ROUTE=$(node -e "console.log(require('./scripts/visual/refs.json').calibration[1].route)")
+          node scripts/visual/render.mjs http://localhost:4200 /tabs/tab3 /tmp/shots/ref-tab3.png
+          node scripts/visual/render.mjs http://localhost:4200 "$SETTINGS_ROUTE" /tmp/shots/ref-settings.png
+
+      - name: Upload render artifacts
+        if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'verify/')
+        uses: actions/upload-artifact@v4
+        with:
+          name: design-render-shots
+          path: /tmp/shots/
+          if-no-files-found: ignore
+
       # Squash-merge the routine's verify/<story> PR to develop once everything
       # above is green. Runs ONLY for verify/* PRs (the itpm routine) — a PR you
       # open yourself is NOT auto-merged. This step only executes if every
