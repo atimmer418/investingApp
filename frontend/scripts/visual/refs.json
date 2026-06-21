@@ -1,0 +1,6 @@
+{
+  "calibration": [
+    { "name": "tab3", "route": "/tabs/tab3" },
+    { "name": "settings", "route": "/my-profile" }
+  ]
+}
