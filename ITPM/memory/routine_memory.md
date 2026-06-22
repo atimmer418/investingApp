@@ -101,6 +101,23 @@
 **Blockers active:** none (BLOCKED holds FRED-173/175/179, all external-dependency stories, not production blockers)
 **Data-hygiene (carried from 06-18/06-19):** FRED-195 still sits uncheckmarked in READY despite being fully shipped on `develop` — recommend `triage --done=FRED-195` (not mutated in this unattended planning run).
 **Notes:** Exclusion set: FRED-100 (skipped 06-15, 7-day window through ~06-22) — not eligible, wasn't the pick. No other skips in the last 7 days. One genuine Question for Andrew, Optional with a predictive placeholder, on the only real fork: should a null-`userId` chat proceed as a guest (mirror streamChat) or be rejected [predicted: proceed as guest, match streamChat]. Tomorrow's likely picks: close out FRED-195 (data hygiene), FRED-186 (debounce + switchMap), DEV-198/DEV-190 (dev-tooling cleanup); FRED-191 stays sandbox-gated.
-**Status:** Pending approval from Andrew
+**Skipped:** FRED-188 (2026-06-22) — Andrew skipped today's story via the dashboard and asked for a different single story. (Note: FRED-188 was also independently marked ✓ DONE in `backlog.md` by the time this revision ran — so the skip is consistent; it's a hard exclusion either way, 7-day window through ~2026-06-29.)
+**Status:** Skipped → revised (see 2026-06-22 revision entry below)
+
+---
+
+### 2026-06-22 (Plan Revision) — Swap skipped FRED-188 → FRED-203 (KYC edit blue header + part-1 gating)
+
+**Trigger:** Andrew skipped 06-20's pick FRED-188 (null userId guard) on the dashboard and asked to "pick a different single story and regenerate the full plan." No specific replacement story named → re-pick under the exclusion set.
+**Exclusion set:** FRED-188 (today's skip; also already ✓ DONE in backlog), FRED-100 (skipped 06-15, 7-day window still open through ~06-22). FRED-189 + FRED-195 effectively done (shipped/merged) but sit uncheckmarked in READY (data-hygiene lag) — not picked.
+**New pick:** FRED-203 — KYC edit page blue header + part-1 gating.
+**Tier:** 1 (full 8-point A/C already in `backlog.md` — build-ready, no proposal needed).
+**Rationale:** With the backlog freshly grown (FRED-201..204 added), Tier 1 is no longer exhausted. The two genuinely Tier-1, sandbox-buildable READY candidates are FRED-202 (standardize input fields — 25 fields/7 files, two open questions, higher regression risk) and FRED-203. Picked FRED-203 as the cleaner, lower-risk, guaranteed-completion win: it reuses the proven single-source `_blue-hero-header.scss` partial (shipped FRED-194), is bounded to one component (`components/kyc-verification`), editMode-scoped, frontend-only, `tsc`/`ng build`-verifiable in-sandbox, and directly advances strategic priority #1 (UI overhaul / pages migrated) while closing a small correctness gap (no-op KYC "updates" re-submitting unchanged data to Alpaca). FRED-191/201/204 need real-device Capacitor verification (sandbox-gated). Ground-truthed the component this morning: `@Input() editMode` (L86), `currentStep:1|2` (L92), `step1Form`/`step2Form`, `prefillFromAlpacaData()` (on-file baseline), draft restore (L274), `get step1Valid()` (L306), `goBack()` already handles editMode step2→step1 (L407), `proceedToStep2()` only checks `!step1Valid` (L417) — so the gate is an additive `step1Changed` snapshot-diff. Not a UI overhaul (header is a fixed shared pattern) → standard A/B/C: A reuse partial via `@use` + `*ngIf="editMode"` header swap + Alpaca-prefill value-snapshot diff [rec]; B gate via form `dirty` (rejected — violates AC-5: re-typing same value / restored draft both mark dirty); C extract a reusable `<app-blue-hero-header>` component (scope creep).
+**Metrics:** Readiness 80/100, Piggy 77.5% (31/40), Pages 76%, Burndown 38.6% (39/101), Launch 68.0%. (No code shipped — revision only re-plans; metrics carry from 06-20 with denominator regrown 97→101 as FRED-201..204 were added.)
+**Trends (vs ~7 days ago / 06-13 brief baseline):** Burndown ↑ +7 done (32→39; % 36.0→38.6 as denominator grew 89→101), Readiness ↑ +6 (74→80), Days-since-blocker ↑ +12 (13→25), Launch ↑ +2.1 (65.9→68.0), Pages → no change (76%), Piggy → no change (77.5%).
+**Days since last blocker:** 25 (06-20 brief recorded 23; +2 clean days, no blocker, FRED-188 was skipped not built).
+**Blockers active:** none.
+**Data-hygiene (carried):** FRED-189 (shipped 06-19) and FRED-195 (shipped+merged) both still sit uncheckmarked in READY — recommend `triage --done` on both so burndown stays honest.
+**Status:** Pending approval from Andrew (revised plan)
 
 ---

@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="intermediary">
+  <div id="dashboard" data-populated="true" data-state="planning">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -65,10 +65,10 @@
 
         <div class="metric-card">
           <div class="metric-label">Backlog Burn-Down</div>
-          <div class="metric-value warning">39.2%</div>
-          <div class="metric-sublabel">38 of 97 stories done</div>
-          <div class="metric-trend positive">&#8593; +6 done vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:39.2%"></div></div>
+          <div class="metric-value warning">38.6%</div>
+          <div class="metric-sublabel">39 of 101 stories done</div>
+          <div class="metric-trend positive">&#8593; +7 done vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:38.6%"></div></div>
         </div>
 
         <div class="metric-card">
@@ -97,18 +97,18 @@
 
         <div class="metric-card">
           <div class="metric-label">Days Since Blocker</div>
-          <div class="metric-value positive">23</div>
+          <div class="metric-value positive">25</div>
           <div class="metric-sublabel">No active production blockers</div>
-          <div class="metric-trend positive">&#8593; +10 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:76%"></div></div>
+          <div class="metric-trend positive">&#8593; +12 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:85%"></div></div>
         </div>
 
         <div class="metric-card">
           <div class="metric-label">Launch Readiness</div>
-          <div class="metric-value warning">68.2%</div>
+          <div class="metric-value warning">68.0%</div>
           <div class="metric-sublabel">Composite estimate</div>
-          <div class="metric-trend positive">&#8593; +2.3 vs last week</div>
-          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:68.2%"></div></div>
+          <div class="metric-trend positive">&#8593; +2.1 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:68.0%"></div></div>
         </div>
 
       </div>
@@ -125,9 +125,9 @@
         </label>
         <div class="priority-badge">#1</div>
         <div class="priority-body">
-          <div class="priority-title">FRED-188 — Add null <code style="font-size:13px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> guard to <code style="font-size:13px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code></div>
-          <div class="priority-desc">The non-streaming Ask&nbsp;Fred path can throw a server error on a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code>. I ground-truthed it in the code this morning: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.processChat()</code> loads the user with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userRepository.findById(request.userId())</code> at <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.java:85</code> with <strong>no null guard</strong> — and Spring Data's <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">findById(null)</code> throws <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">InvalidDataAccessApiUsageException</code>. The sibling method <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> already guards it correctly at <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.java:215</code> (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">request.userId() != null ? userRepository.findById(...).orElse(null) : null</code>). The fix is to mirror that exact guard in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code>. Backend-only, ~1 line. <strong>Tier 2 — no acceptance-criteria block in the backlog yet, so proposed A/C is below for your approval before the build runs.</strong></div>
-          <span class="diff-chip diff-easy">Easy</span>
+          <div class="priority-title">FRED-203 — KYC edit page: blue hero header + part-1 gating</div>
+          <div class="priority-desc"><strong>Revised pick</strong> — you skipped FRED-188 (the null-<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> chat guard), so I regenerated the plan around a different single story. The <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">kyc-verification</code> component serves two flows: the onboarding "Identity Verification" step (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">editMode = false</code>) and the edit-KYC page reached from <strong>security-settings</strong> (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">editMode = true</code>). This story, editMode-only: (1) give the edit flow the shared blue hero header that security-settings uses (on both step 1 and step 2), (2) keep that header <em>out</em> of onboarding, and (3) block advancing part 1 → part 2 until the user actually changes a step-1 field from its on-file value — so a no-op "update" can't re-submit unchanged data to Alpaca. I ground-truthed the component this morning: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@Input() editMode</code> (L86), <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">currentStep:1|2</code> (L92), <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">step1Form</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">step2Form</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">prefillFromAlpacaData()</code> (the on-file baseline), <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">goBack()</code> already handles editMode step2→step1 (L407), and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">proceedToStep2()</code> currently only checks <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">!step1Valid</code> (L417). Frontend-only, reuses the proven shared header partial, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code>-verifiable here. <strong>Tier 1 — full acceptance criteria already in the backlog; no A/C approval needed, just pick an option.</strong></div>
+          <span class="diff-chip diff-medium">Medium</span>
         </div>
       </div>
     </div>
@@ -136,7 +136,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Why I Picked This</div>
       <div class="card">
-        <div class="card-text"><strong>Tier 1 is exhausted for this sandbox, so I dropped to Tier 2 and picked the strongest quick win.</strong> The two A/C-ready READY stories are both unavailable as builds: FRED-191 (load-perf) stays gated — it needs a real-device Capacitor cold-start the sandbox can't run; and <strong>FRED-195 (pig avatars) is already fully implemented and merged to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">develop</code></strong>, so it only needs closing out (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done=FRED-195</code>), not building. With no build-ready Tier-1 story left, I picked <strong>FRED-188</strong> — yesterday's named #2 next-pick — a latent crash-class bug I verified directly in the code this morning: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> calls <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">findById(request.userId())</code> unguarded while <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> already guards the identical call. Easy, guaranteed completion, backend-only, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code>-verifiable here, with a proven sibling to mirror. <strong>Tier 2</strong> — proposed acceptance criteria below for your approval; the build won't start until they're confirmed.</div>
+        <div class="card-text"><strong>You skipped FRED-188, so I regenerated the full plan around a different single story (FRED-188 is excluded; so is FRED-100, still inside its 7-day skip window).</strong> The backlog has since grown with new build-ready stories, so Tier 1 is no longer exhausted. The two genuinely Tier-1, sandbox-buildable READY candidates are <strong>FRED-202</strong> (standardize input fields — but 25 fields across 7 files, two open design questions, higher visual-regression risk) and <strong>FRED-203</strong>. I picked <strong>FRED-203</strong> as the cleaner, lower-risk, guaranteed-completion win: it reuses the proven single-source <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">_blue-hero-header.scss</code> partial (shipped in FRED-194), is bounded to one component (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">components/kyc-verification</code>), editMode-scoped, frontend-only, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code>-verifiable here. FRED-191/201/204 stay sandbox-gated (they need a real-device Capacitor cold-start the sandbox can't run); FRED-189 and FRED-195 are effectively done (shipped/merged) but still sit uncheckmarked in READY — data-hygiene to close out, not build. <strong>Tier 1</strong> — the story already has a full 8-point acceptance-criteria block in the backlog, so there's nothing to approve there; just choose an implementation option below.</div>
       </div>
     </div>
 
@@ -144,7 +144,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
-        <div class="card-text">The mission is production readiness — <em>bug-free core flows</em>. Ask&nbsp;Fred is a core surface, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">POST /api/chat</code> is the documented fallback for the SSE stream (FRED-183). A null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> reaching that fallback would surface as a 500 instead of a graceful guest answer — exactly the kind of latent failure you don't want discovered in private beta. Hardening it reinforces <strong>trust and reliability</strong> on the chat experience.</div>
+        <div class="card-text">Strategic priority #1 right now is <em>completing the UI overhaul on all remaining pages</em>. This brings the edit-KYC page — a settings surface reached from security-settings — onto the canonical <strong>blue-hero-header</strong> pattern, extending the settings-header unification finished in FRED-194 (the shared <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">_blue-hero-header.scss</code> single source). It also tightens KYC editing: gating part 1 → part 2 on a real change means an "update" can't silently re-submit unchanged data to Alpaca — reinforcing <strong>trust and correctness</strong> on a regulated flow.</div>
       </div>
     </div>
 
@@ -152,26 +152,27 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
-        <div class="card-text">Closes a latent crash-class defect on the chat fallback path (bug-density lever) by mirroring an already-shipped, already-verified guard from the sibling method. Tiny and contained — one statement in one backend file, no schema / API-contract / frontend change, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./gradlew build -x test</code>-verifiable in-sandbox — so it lifts correctness with effectively zero regression risk and is fully verifiable here without a device.</div>
+        <div class="card-text">Advances the UI-coverage lever (a settings-linked page onto the unified header) and closes a small correctness/data-integrity gap (no-op KYC "updates"). Contained and reuse-heavy — one component, the header reuses the existing shared partial via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@use</code> (no gradient duplication, passes the "literal count == 1" guard), the gate is an additive <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">step1Changed</code> snapshot-diff that leaves the onboarding path untouched. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> verifiable in-sandbox; the live 430×932 render of both steps is handed to you to confirm via "Looks Good."</div>
       </div>
     </div>
 
-    <!-- ── Proposed Acceptance Criteria (Tier 2 — planning only) ── -->
+    <!-- ── Acceptance Criteria (Tier 1 — reference, planning only) ── -->
     <div class="section-group section-planning-only hide-on-skip">
-      <div class="section-label">Proposed Acceptance Criteria — approve or edit</div>
+      <div class="section-label">Acceptance Criteria (already in backlog)</div>
       <div class="card">
-        <div class="card-text" style="color:var(--gray);margin-bottom:14px;">FRED-188 has no acceptance-criteria block in the backlog yet, so this is a <strong>Tier 2</strong> story. Below is the A/C I'd build to — review the checklist and edit anything in the note. <strong>The build won't start until you confirm these.</strong> On approval, the execution agent writes the final A/C back into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> before coding.</div>
+        <div class="card-text" style="color:var(--gray);margin-bottom:14px;">FRED-203 is a <strong>Tier 1</strong> story — it already has a full acceptance-criteria block in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code>, so there's nothing to approve here. Shown for reference; the build verifies against these.</div>
         <div class="triage-group">
-          <ul class="triage-list" style="list-style:none;padding-left:0;">
-            <li><label><input type="checkbox" checked /> <strong>AC-1</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> guards the user load at <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.java:85</code> exactly as <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> does at line 215: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null</code>. A null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> no longer reaches <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">findById</code>.</label></li>
-            <li><label><input type="checkbox" checked /> <strong>AC-2</strong> — On a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> the method proceeds with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">user == null</code> (guest/anonymous), reaching the same downstream code as today — no thrown exception, a normal generic answer returned (matching <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat</code>'s behavior).</label></li>
-            <li><label><input type="checkbox" checked /> <strong>AC-3</strong> — Behavior for a valid <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> is unchanged: the same <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">User</code> is loaded and the same response produced.</label></li>
-            <li><label><input type="checkbox" checked /> <strong>AC-4</strong> — The existing null-userId guards already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code> (analytics at lines 75 &amp; 150) are untouched; only the user-load at line 85 is hardened. No unrelated refactor.</label></li>
-            <li><label><input type="checkbox" checked /> <strong>AC-5</strong> — No schema, API-contract, or frontend changes. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd backend &amp;&amp; ./gradlew build -x test</code> exits 0.</label></li>
+          <ul class="triage-list">
+            <li><strong>AC-1</strong> — In editMode the page renders the shared blue hero header (blue gradient + concave white cutout + centered white title + back button) — the same <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">blue-hero-header</code> security-settings uses — on <strong>both</strong> step 1 and step 2.</li>
+            <li><strong>AC-2</strong> — The blue header renders <strong>only</strong> in editMode; onboarding mode (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">editMode = false</code>, "Identity Verification") keeps its existing non-blue header, and the blue-hero styles do not leak into onboarding.</li>
+            <li><strong>AC-3</strong> — The editMode header reuses <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/_blue-hero-header.scss</code> via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@use</code> (not a re-implemented copy); back button calls existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">goBack()</code>; title is "Edit Identity".</li>
+            <li><strong>AC-4</strong> — In editMode the user cannot proceed part 1 → part 2 unless at least one step-1 field changed from its on-file value: the continue button is disabled AND <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">proceedToStep2()</code> is a no-op while step 1 still equals the prefilled values.</li>
+            <li><strong>AC-5</strong> — "Changed" = current step-1 form value vs a snapshot of the Alpaca-prefilled values captured after the prefill HTTP resolves (re-typing the same value is not a change); existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">!step1Valid</code> validation still applies.</li>
+            <li><strong>AC-6</strong> — Gating applies only in editMode; onboarding step 1 → step 2 is unaffected.</li>
+            <li><strong>AC-7</strong> — The existing localStorage step-1 draft restore and step-transition animation still work; a restored draft equal to on-file values counts as "not changed."</li>
+            <li><strong>AC-8</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0; verified at 430×932: editMode blue header on both steps, onboarding original header, part-1 gate enables/disables correctly.</li>
           </ul>
         </div>
-        <div class="revision-label" style="margin-top:10px;">Edit / add / remove acceptance criteria:</div>
-        <textarea class="revision-textarea" id="ac-proposal-note" placeholder="e.g. AC-2 is right — proceed as guest, same as streamChat. Don't add a unit test for this one-liner."></textarea>
       </div>
     </div>
 
@@ -185,13 +186,13 @@
             <span class="option-label">Option A</span>
             <span class="option-rec">Recommended</span>
           </div>
-          <div class="option-title">Mirror <code>streamChat()</code>'s exact guard</div>
-          <div class="option-body">Replace the unguarded two-line <code>Optional&lt;User&gt; userOpt = userRepository.findById(request.userId()); … User user = userOpt.orElse(null);</code> at <code>ChatService.java:85–88</code> with the same ternary <code>streamChat()</code> uses at line 215: <code>User user = request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null;</code>. One backend file, byte-for-byte consistent with the proven sibling.</div>
+          <div class="option-title">Reuse the shared partial via <code>@use</code> + <code>*ngIf="editMode"</code> header swap + prefill-snapshot gate</div>
+          <div class="option-body">In the template, wrap a new <code>.blue-hero-header</code> block (matching security-settings' markup — <code>hero-nav</code> / <code>back-btn</code> / centered <code>header-title</code> "Edit Identity" / <code>back-btn-spacer</code>) in <code>*ngIf="editMode"</code>, rendered above <strong>both</strong> step 1 and step 2; keep the existing onboarding header for <code>!editMode</code>. SCSS does <code>@use '../../theme/blue-hero-header'</code> — because the class only exists in the editMode branch it's naturally scoped, so no styles leak into onboarding. For the gate: capture <code>step1Snapshot = JSON.stringify(step1Form.value)</code> right after the Alpaca prefill resolves (the on-file baseline), add a <code>get step1Changed()</code> that compares the live value to it, and in editMode disable the continue button (<code>[disabled]="!step1Valid || !step1Changed"</code>) and early-return from <code>proceedToStep2()</code> when <code>editMode && !step1Changed</code>.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>smallest correct diff; identical to an already-verified guard; the two chat methods read the same; zero regression surface.</span></span>
-            <span class="meta-item">Cons: <span>leaves the guard duplicated across the two methods (addressed by Option C).</span></span>
-            <span class="meta-item">Risk: <span>Very low — one statement, backend-only, gradle-verifiable here.</span></span>
-            <span class="meta-item">Estimate: <span>~10–15 min</span></span>
+            <span class="meta-item">Pros: <span>reuses the single-source header partial (no gradient duplication — passes the "literal count == 1" guard); naturally scoped to editMode; small additive TS; mirrors the proven security-settings header; onboarding path untouched.</span></span>
+            <span class="meta-item">Cons: <span>correctness depends on capturing the snapshot at the right moment (after the Alpaca prefill resolves, not after the localStorage draft restore).</span></span>
+            <span class="meta-item">Risk: <span>Low — frontend-only, <code>tsc</code>/<code>ng build</code>-verifiable here; live 430×932 render confirmed by you.</span></span>
+            <span class="meta-item">Estimate: <span>~1–2 hr</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -200,13 +201,13 @@
           <div class="option-header">
             <span class="option-label">Option B</span>
           </div>
-          <div class="option-title">Explicit early null-branch</div>
-          <div class="option-body">Keep the <code>Optional</code> shape but wrap it: <code>User user = null; if (request.userId() != null) { user = userRepository.findById(request.userId()).orElse(null); }</code>. Same effect, a touch more verbose, arguably clearer intent — but diverges from <code>streamChat()</code>'s idiom.</div>
+          <div class="option-title">Same header, but gate on the form's <code>dirty</code> state</div>
+          <div class="option-body">Identical header work as A, but detect "changed" with Angular's built-in <code>step1Form.dirty</code> / <code>pristine</code> instead of a value snapshot.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>explicit and readable; same runtime behavior as A.</span></span>
-            <span class="meta-item">Cons: <span>the two chat methods now guard the same call in two different styles — minor inconsistency on identical logic.</span></span>
-            <span class="meta-item">Risk: <span>Very low.</span></span>
-            <span class="meta-item">Estimate: <span>~10–15 min</span></span>
+            <span class="meta-item">Pros: <span>less code — no snapshot to capture or compare.</span></span>
+            <span class="meta-item">Cons: <span><strong>fails AC-5/AC-7.</strong> <code>dirty</code> flips on any keystroke even if the user re-types the same value back, and the localStorage draft restore (<code>patchValue</code>) also marks the form dirty — so a no-op edit or a restored on-file draft would wrongly unlock the gate.</span></span>
+            <span class="meta-item">Risk: <span>Medium — subtly wrong; violates the "re-typing the same value is not a change" requirement.</span></span>
+            <span class="meta-item">Estimate: <span>~1 hr</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -215,13 +216,13 @@
           <div class="option-header">
             <span class="option-label">Option C</span>
           </div>
-          <div class="option-title">Extract a shared <code>loadUserOrNull(request)</code> helper</div>
-          <div class="option-body">Same fix as A, but pull the guarded load into one private helper used by <em>both</em> <code>processChat()</code> and <code>streamChat()</code>, removing the duplicated guard entirely. DRY/hardening win that prevents the two from drifting again.</div>
+          <div class="option-title">Extract a reusable <code>&lt;app-blue-hero-header&gt;</code> component + snapshot gate</div>
+          <div class="option-body">Same snapshot gate as A, but wrap the header in a small shared <code>&lt;app-blue-hero-header [title]&gt;</code> component (driven by the partial) that KYC editMode consumes — and that other settings pages could adopt later.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>single source for the guard; the two methods can't diverge in future.</span></span>
-            <span class="meta-item">Cons: <span>also edits <code>streamChat()</code> (currently correct) — wider blast radius than a one-bug quick win warrants.</span></span>
-            <span class="meta-item">Risk: <span>Low, but touches a working method for a refactor that isn't the bug.</span></span>
-            <span class="meta-item">Estimate: <span>~25–35 min</span></span>
+            <span class="meta-item">Pros: <span>cleanest call-site; a reusable header component for future pages.</span></span>
+            <span class="meta-item">Cons: <span>new component is wider scope than this one-page story needs; the SCSS partial is already the single source, so a component wrapper adds indirection — mild scope creep.</span></span>
+            <span class="meta-item">Risk: <span>Low–Medium (scope creep beyond the story).</span></span>
+            <span class="meta-item">Estimate: <span>~2–3 hr</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -235,34 +236,37 @@
       <div class="card">
 
         <div class="story-section">
-          <div class="story-header">FRED-188 — Add null <code style="font-size:13px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> guard to <code style="font-size:13px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">processChat()</code></div>
+          <div class="story-header">FRED-203 — KYC edit page: blue hero header + part-1 gating</div>
 
           <div class="triage-group">
             <div class="triage-group-title">In Scope</div>
             <ul class="triage-list">
-              <li>Replace the unguarded user load at <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.java:85</code> with the null-guarded form, mirroring <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code> at line 215.</li>
-              <li>Confirm the downstream <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">user</code> variable (the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userOpt.orElse(null)</code> consumer) still compiles and behaves — Option A collapses <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userOpt</code> directly into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">user</code>.</li>
-              <li>Grep the chat services for any other unguarded <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">findById(request.userId())</code> to confirm line 85 is the lone outlier.</li>
-              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd backend &amp;&amp; ./gradlew build -x test</code> exits 0.</li>
+              <li>Add the shared blue hero header (via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@use 'theme/blue-hero-header'</code>) to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">kyc-verification</code> in <strong>editMode only</strong>, on <strong>both</strong> step 1 and step 2; title "Edit Identity", back button → existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">goBack()</code>.</li>
+              <li>Scope the header so it does <strong>not</strong> leak into onboarding mode (one component serves both flows) — gate via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">*ngIf="editMode"</code> so the class only exists when editing.</li>
+              <li>Capture a snapshot of step-1 values <em>after the Alpaca prefill resolves</em> (the on-file baseline); add a <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">step1Changed</code> diff.</li>
+              <li>Block part 1 → part 2 in editMode until a step-1 field changes: disable the continue button AND make <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">proceedToStep2()</code> a no-op while unchanged (existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">!step1Valid</code> still applies).</li>
+              <li>Preserve the localStorage step-1 draft restore + step-transition animation; a restored draft equal to on-file counts as "not changed."</li>
+              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> within budget.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">Potentially Out of Scope</div>
             <ul class="triage-list">
-              <li>The two chat-analytics calls (already guarded at lines 75 &amp; 150) — no change needed.</li>
-              <li>DRY-ing the two methods into a shared helper — only if you pick Option C; otherwise leave for a follow-up.</li>
-              <li>Any frontend or API-contract change to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">POST /api/chat</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">GET /api/chat/stream</code>.</li>
-              <li>The product question of whether truly anonymous users should be able to chat at all — separate decision; this fix just makes the existing guest path not crash.</li>
+              <li>Changing the onboarding ("Identity Verification") header in any way — it keeps its existing non-blue header.</li>
+              <li>Restyling the KYC <em>input fields</em> themselves (that's FRED-202 territory) — this story is the header + the gate only.</li>
+              <li>Any change to the Alpaca PATCH submit logic / KYC update API contract.</li>
+              <li>Extracting a reusable header <em>component</em> — only if you pick Option C; otherwise the shared SCSS partial is enough.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">UX Considerations</div>
             <ul class="triage-list">
-              <li><strong>No UI surface</strong> — backend correctness only. The user-visible effect: the non-streaming chat fallback no longer 500s on a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code>; it answers as a generic/guest user, matching <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code>.</li>
-              <li><strong>Error path</strong> — what was an <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">InvalidDataAccessApiUsageException</code> (server error) degrades to a graceful generic answer.</li>
-              <li><strong>Consistency</strong> — both chat entry points (streamed + fallback) handle a missing user identically after this change.</li>
+              <li><strong>EditMode header</strong> — blue gradient + concave white cutout, centered "Edit Identity", back button on the left, consistent on both step 1 and step 2; matches security-settings / my-profile.</li>
+              <li><strong>Gate / disabled state</strong> — the continue button reads clearly disabled (greyed) until a real change is made, including while the Alpaca prefill is still in flight (no baseline yet). Onboarding's continue is unaffected.</li>
+              <li><strong>Onboarding unchanged</strong> — verify no blue-header bleed and identical onboarding step 1 → step 2 behavior.</li>
+              <li><strong>Mobile-first</strong> — verify at 390×844 and 430×932: header cutout aligns, title centered, no clipped labels.</li>
             </ul>
           </div>
         </div>
@@ -277,10 +281,18 @@
 
         <div class="question-item">
           <div class="question-text">
-            <strong>Guest behavior on null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code>.</strong> The fix mirrors <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code>: a null <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> proceeds as a guest (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">user = null</code>) and still gets a generic answer. The alternative would be to reject the request with an error instead. My recommendation: <strong>proceed as guest</strong>, so the two chat paths behave the same.
+            <strong>Gate when the prefill is slow or fails.</strong> The "changed" check needs the Alpaca-prefilled on-file values as a baseline. If that prefill is still loading — or fails — there's no baseline to diff against. My recommendation: keep the continue button disabled in editMode until the baseline is captured; if the prefill <em>fails</em>, fall back to the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">step1Valid</code>-only gate so the user is never permanently stuck.
             <span class="optional-badge">Optional</span>
           </div>
-          <textarea class="question-input" placeholder="Proceed as guest — match streamChat exactly. Don't start rejecting null-userId chats; that's a separate product decision."></textarea>
+          <textarea class="question-input" placeholder="Yes — disabled until the baseline loads; if prefill fails, fall back to the step1Valid-only gate so the user isn't stuck."></textarea>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text">
+            <strong>Which step-1 fields count as "changed."</strong> Diff the <em>entire</em> step-1 form value against the post-prefill snapshot (any step-1 field edit unlocks the gate), or only the subset Alpaca prefilled? My recommendation: diff the whole <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">step1Form.value</code> — simplest and matches "at least one step-1 field changed."
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Diff the whole step1Form value — any step-1 field change counts. No need to restrict to just the Alpaca-prefilled subset."></textarea>
         </div>
 
       </div>
@@ -293,25 +305,25 @@
 
         <div class="step-item">
           <div class="step-num">1</div>
-          <div class="step-body" contenteditable="false"><strong>Confirm the contract</strong> — Re-read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ChatService.java:85</code> (unguarded) against the proven guard at line 215 (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">streamChat()</code>) to lock the exact mirror before editing.</div>
+          <div class="step-body" contenteditable="false"><strong>Confirm the contract</strong> — Re-read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">kyc-verification.component.{ts,html,scss}</code>: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">editMode</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">currentStep</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">step1Form</code>, where <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">prefillFromAlpacaData()</code> resolves, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">proceedToStep2()</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">goBack()</code>; and read security-settings' header markup + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/_blue-hero-header.scss</code>.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">2</div>
-          <div class="step-body" contenteditable="false"><strong>Apply the guard</strong> — Replace the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">Optional</code> block at lines 85–88 with the ternary form so <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">user</code> is null when <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userId</code> is null (Option A), or the chosen variant.</div>
+          <div class="step-body" contenteditable="false"><strong>Add the blue header (editMode only)</strong> — Render the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.blue-hero-header</code> block inside <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">*ngIf="editMode"</code> above both step 1 and step 2 (title "Edit Identity", back → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">goBack()</code>); <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@use</code> the partial; confirm onboarding's header is untouched and no styles leak.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">3</div>
-          <div class="step-body" contenteditable="false"><strong>Sweep for stragglers</strong> — Grep the chat services for any other unguarded <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">findById(request.userId())</code>; if Option C, extract the shared <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadUserOrNull()</code> helper and route both methods through it.</div>
+          <div class="step-body" contenteditable="false"><strong>Add the part-1 gate</strong> — Snapshot step-1 values after the Alpaca prefill resolves; add <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">step1Changed</code>; disable the continue button and no-op <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">proceedToStep2()</code> in editMode until changed; ensure a restored draft equal to on-file counts as "not changed." Onboarding path unaffected.</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">4</div>
-          <div class="step-body" contenteditable="false"><strong>Verify + hand off</strong> — Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cd backend &amp;&amp; ./gradlew build -x test</code> (exits 0); verifier over the approved A/C, including a null-userId path check that no exception is thrown.</div>
+          <div class="step-body" contenteditable="false"><strong>Verify + hand off</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> within budget; verifier over AC-1..AC-8. Live 430×932 render of both editMode steps + onboarding header handed to you to confirm via "Looks Good."</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
@@ -323,9 +335,9 @@
       <div class="section-label">Tomorrow's Likely Pick</div>
       <div class="card">
         <ul class="tomorrow-list">
-          <li><strong>Data hygiene — close out FRED-195.</strong> Its full implementation (the 5 <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pig-range-*.svg</code> assets, deleted <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pig-level-*</code> art, the shared <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">EquityPigUtils</code> helper, and the tab3 + My Profile + MFU avatar wiring) is already merged to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">develop</code>, but it still sits in READY uncheckmarked. Run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done=FRED-195</code> so it isn't re-picked and the burndown stays honest.</li>
-          <li><strong>FRED-186</strong> — Move API searches to debounce + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code> — Easy/Medium, frontend, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>-verifiable here. Tier 2; needs a quick scope on which searches are in.</li>
-          <li><strong>DEV-198 / DEV-190</strong> — dev-tooling cleanup (lockfile <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">libc</code>-field churn / the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@capacitor</code> peer conflict). Lower user-facing value. FRED-191 stays sandbox-gated (real-device Capacitor build).</li>
+          <li><strong>FRED-202</strong> — Standardize input fields to onboarding styling (the runner-up today). Tier 1, frontend, advances the UI overhaul across 7 non-settings pages — but worth answering its two open questions first (are searchbar/ai-chat composer in scope; convert <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-input</code> → native input vs. CSS-var approximation).</li>
+          <li><strong>FRED-203 follow-on / FRED-186</strong> — If FRED-203 lands clean, FRED-186 (debounce + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code> on API searches) is an Easy/Medium <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>-verifiable Tier-2 pick; needs a quick scope on which searches are in.</li>
+          <li><strong>Data hygiene</strong> — close out FRED-189 (shipped 06-19) and FRED-195 (shipped+merged) with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done</code> so they aren't re-picked and burndown stays honest. FRED-191/201/204 stay sandbox-gated (real-device Capacitor verification).</li>
         </ul>
       </div>
     </div>
@@ -343,7 +355,7 @@
       <!-- Request Changes — rework the same story with feedback -->
       <div id="rework-block" style="margin-top:14px;">
         <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
-        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. A null userId still 500s — re-check the guard mirrors streamChat exactly."></textarea>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The blue header is leaking into the onboarding KYC step — scope it to editMode only."></textarea>
         <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
       </div>
     </div>
@@ -353,7 +365,7 @@
       <div class="section-label">Anything Else For the Execution Agent?</div>
       <div class="card">
         <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
-        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Keep the fix to processChat() only; don't refactor streamChat()..."></textarea>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Reuse the shared _blue-hero-header.scss partial — don't re-implement the gradient; keep the onboarding header exactly as-is..."></textarea>
       </div>
     </div>
 
