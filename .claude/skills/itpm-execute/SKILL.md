@@ -151,6 +151,7 @@ squash-merges to `develop` when green. The dashboard (`today.html`) + memory sti
 First capture the design-fidelity inputs:
 - Copy the chosen UI mockup (from the approval `content` / today.html) to `ITPM/verify/design-ref/<story-id>.png` (or `.html`).
 - Write the route the story changes to `ITPM/verify/route-<story-id>.txt` — a single line, the Angular route the rendered page lives at (e.g. `/change-bank-account` or `/tabs/tab3`). CI renders this route and compares it to the mockup. If the story has no single user-facing route, skip this file (the design-fidelity check then skips too).
+- Write Andrew's design feedback for this story — the additions / deletions / changes he included when selecting the option on today.fredvested.com (from the approval `content`, the same "UI mockup design feedback" you pass to the builder) — to `ITPM/verify/design-notes-<story-id>.txt`. This tells the vision judge which intentional deviations from the raw mockup to expect, so Andrew's requested changes are NOT flagged as drift. If he accepted the option as-is with no changes, skip this file.
 
 Push the branch (do NOT run `gh pr create` / a create-PR MCP tool — the Action does that):
 ```bash

@@ -131,9 +131,13 @@ jobs:
           node scripts/visual/render.mjs http://localhost:4200 "$SETTINGS_ROUTE" /tmp/shots/ref-settings.png
           node scripts/visual/render.mjs http://localhost:4200 "$ROUTE" /tmp/shots/render.png
 
+          # pass Andrew's per-selection design feedback (if any) so the judge treats the mockup as amended
+          NOTES_ARG=""
+          [ -f "../ITPM/verify/design-notes-$STORY.txt" ] && NOTES_ARG="--notes=../ITPM/verify/design-notes-$STORY.txt"
           node scripts/visual/design-judge.mjs \
             --render=/tmp/shots/render.png \
             --mockup="$MOCKUP_PNG" \
+            $NOTES_ARG \
             --ref=/tmp/shots/ref-tab3.png \
             --ref=/tmp/shots/ref-settings.png
 

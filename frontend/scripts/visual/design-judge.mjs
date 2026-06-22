@@ -1,12 +1,13 @@
 // Judge a rendered screenshot against the approved mockup + known-good references
 // using the Claude vision API. Exits 0 (pass) / 1 (fail) / 2 (error). Prints the verdict.
-// Usage: node scripts/visual/design-judge.mjs --render=<png> --mockup=<png> --ref=<png> [--ref=<png>...]
+// Usage: node scripts/visual/design-judge.mjs --render=<png> --mockup=<png> [--notes=<txt>] --ref=<png> [--ref=<png>...]
 import { readFileSync } from 'node:fs';
 
 const args = process.argv.slice(2);
 const vals = (k) => args.filter((a) => a.startsWith(`--${k}=`)).map((a) => a.slice(k.length + 3));
 const renderPath = vals('render')[0];
 const mockupPath = vals('mockup')[0];
+const notesPath = vals('notes')[0]; // optional: the user's design feedback for this story
 const refPaths = vals('ref');
 if (!renderPath || !mockupPath) { console.error('need --render and --mockup'); process.exit(2); }
 
@@ -26,15 +27,23 @@ const content = [
   ...refPaths.map(img),
   { type: 'text', text: 'APPROVED MOCKUP — the design the builder was asked to implement for this story:' },
   img(mockupPath),
+  ...(notesPath
+    ? [{ type: 'text', text:
+        'USER-REQUESTED CHANGES — when approving this mockup the user explicitly asked for these ' +
+        'additions / deletions / changes:\n' + readFileSync(notesPath, 'utf8').trim() + '\n' +
+        'Treat the mockup AS AMENDED by these requests. A render that correctly reflects one of these ' +
+        'user-requested changes is CORRECT, not drift — even though it differs from the raw mockup image.' }]
+    : []),
   { type: 'text', text: 'ACTUAL RENDER — what the app produced on an iPhone-sized viewport:' },
   img(renderPath),
   { type: 'text', text:
-    'Judge the ACTUAL RENDER. It must (a) match the APPROVED MOCKUP and (b) fit the established design ' +
-    'language and notch/safe-area spacing shown in the references. Fail ONLY on clear, describable drift — ' +
-    'wrong spacing, color, font, radius, alignment, missing/extra elements, content overflow/clipping, or ' +
-    'header/notch spacing that is obviously off. Do not fail on subjective taste or sub-pixel differences. ' +
-    'Return verdict "pass" or "fail", a one-line summary, and a list of concrete, builder-actionable drift ' +
-    'items (empty when pass).' },
+    'Judge the ACTUAL RENDER against the APPROVED MOCKUP as amended by any USER-REQUESTED CHANGES above. ' +
+    'It must (a) match that amended design and (b) fit the established design language and notch/safe-area ' +
+    'spacing shown in the references. Fail ONLY on clear, describable drift — wrong spacing, color, font, ' +
+    'radius, alignment, missing/extra elements, content overflow/clipping, or header/notch spacing that is ' +
+    'obviously off. A difference from the raw mockup that matches a user-requested change is NOT drift. Do ' +
+    'not fail on subjective taste or sub-pixel differences. Return verdict "pass" or "fail", a one-line ' +
+    'summary, and a list of concrete, builder-actionable drift items (empty when pass).' },
 ];
 
 const SCHEMA = {
