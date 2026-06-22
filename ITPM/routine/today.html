@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="intermediary">
+  <div id="dashboard" data-populated="true" data-state="completed">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -343,10 +343,25 @@
     </div>
 
     <!-- ── Completion Section (completed state only) ── -->
-    <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
+    <div class="section-group section-intermediary-only" id="completion-section">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
-        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
+      <div style="margin-bottom:16px;">
+        <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-203 — KYC edit page: blue hero header + part-1 gating</p>
+        <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Frontend-only change to <code>components/kyc-verification</code> (.ts/.html/.scss). The edit-KYC flow (editMode) now renders the shared blue hero header on both steps via <code>@use '../../theme/blue-hero-header'</code> + an <code>*ngIf="editMode"</code> header swap, while onboarding keeps its original "Identity Verification" header (no style leak). Added a part-1 gate: a snapshot of the Alpaca-prefilled values is captured after the prefill resolves, a <code>step1Changed</code> getter diffs the whole live step-1 form against it, and both the continue button (<code>[disabled]</code>) and <code>proceedToStep2()</code> are blocked until at least one step-1 field changes — with a fail-open fallback to the existing <code>step1Valid</code>-only gate if the prefill fails so the user is never stuck.</p>
+        <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+        <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+          <li>editMode renders the shared blue hero header (gradient + concave cutout + centered white "Edit Identity" title + back button) on BOTH step 1 and step 2.</li>
+          <li>Blue header renders ONLY in editMode; onboarding keeps its non-blue header and no blue-hero styles leak in.</li>
+          <li>Header reuses <code>_blue-hero-header.scss</code> via <code>@use</code> (not re-implemented); back button calls <code>goBack()</code>; title is "Edit Identity".</li>
+          <li>In editMode the user cannot advance part 1 → part 2 unless a step-1 field changed — continue button disabled AND <code>proceedToStep2()</code> is a no-op.</li>
+          <li>"Changed" = live step-1 value vs a snapshot captured after the Alpaca prefill resolves; re-typing the same value is not a change; <code>!step1Valid</code> still applies.</li>
+          <li>Gating applies only in editMode; onboarding step 1 → step 2 is unaffected.</li>
+          <li>localStorage draft restore + step animation still work; a restored draft equal to on-file values counts as "not changed"; prefill-fail → fall back to <code>step1Valid</code>-only gate.</li>
+          <li><code>npx tsc --noEmit</code> clean (only pre-existing deprecation warnings); verifier APPROVED on pass #1, all 8 checks pass, 0 go-backs.</li>
+        </ul>
+        <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Readiness 80 → 81 — another page migrated to the shared blue-hero header (UI-overhaul priority #1) and a real correctness gap closed: no-op KYC "updates" can no longer re-submit unchanged identity data to Alpaca. Verified statically (sandbox can't render editMode live); a 430×932 device check is yours to confirm with "Looks Good".</p>
+      </div>
       </div>
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;

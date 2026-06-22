@@ -95,6 +95,10 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
   isLoadingKycData = false;
   keyboardHeight = 0;
   spacerHeight = 0;
+
+  // Prefill snapshot for editMode part-1 gating
+  private step1Snapshot: string | null = null;
+  private prefillFailed = false;
   readonly states = US_STATES;
   readonly fundingSources = [
     { value: 'employment_income', label: 'Salary' },
@@ -182,11 +186,15 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
         next: (data: any) => {
           this.isLoadingKycData = false;
           this.prefillFromAlpacaData(data);
+          // Capture baseline snapshot AFTER Alpaca prefill resolves
+          this.step1Snapshot = JSON.stringify(this.step1Form.value);
           this.cdr.detectChanges();
         },
         error: async () => {
           this.isLoadingKycData = false;
-          // Fall back to local data if fetch fails
+          // Fall back to local data if fetch fails; set prefillFailed so
+          // the user is never permanently stuck on the part-1 gate
+          this.prefillFailed = true;
           this.prefillUserData();
           const toast = await this.toastController.create({
             message: 'Could not load current KYC data. Please fill in your information.',
@@ -307,6 +315,18 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
     return this.step1Form.valid;
   }
 
+  // True when the user has changed at least one step-1 field from the on-file baseline.
+  // In onboarding (editMode=false) always returns true so the gate is a no-op.
+  // Before the prefill resolves (snapshot is null), returns false to keep the button
+  // disabled until we have a baseline — unless the prefill failed, in which case
+  // returns true so the user is never permanently stuck.
+  get step1Changed(): boolean {
+    if (!this.editMode) return true;
+    if (this.prefillFailed) return true;
+    if (this.step1Snapshot === null) return false;
+    return JSON.stringify(this.step1Form.value) !== this.step1Snapshot;
+  }
+
   get step2Valid(): boolean {
     return this.step2Form.get('agreementsChecked')?.value === true;
   }
@@ -417,6 +437,9 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
   async proceedToStep2() {
     if (!this.step1Valid) {
       this.step1Form.markAllAsTouched();
+      return;
+    }
+    if (this.editMode && !this.step1Changed) {
       return;
     }
     this.saveStep1Draft();
