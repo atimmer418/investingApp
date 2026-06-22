@@ -84,22 +84,6 @@ Make every text/character form input in the app look like the onboarding's field
 
 Open questions (Andy to confirm): (a) are the `<ion-searchbar>` search fields and ai-chat `<ion-textarea>` composer in scope? (recommend exclude); (b) convert `<ion-input>` → native `<input class="field-input">` for a pixel match, or approximate via Ionic CSS vars? (recommend convert).
 
-## FRED-203 — KYC edit page blue header + part-1 gating
-make the update/edit KYC page linked to from security-settings have the blue header that security settings has for both parts of the kyc update. also, a user should not be able to proceed from part 1 to part 2 in kyc if the data in part 1 has not been updated from its current values. make sure that the kyc page only has the blue ion header in editMode and not the 'Identity Verification' onboarding flow step
-
-### Summary
-The KYC component serves two flows: onboarding "Identity Verification" (`editMode = false`) and the edit-KYC page from security-settings (`editMode = true`). EditMode-only: (1) give the edit flow the shared blue hero header security-settings uses, on both step 1 and step 2; (2) keep the blue header out of onboarding (keeps its plain header); (3) block advancing part 1 → part 2 until the user changes at least one step-1 field from its current on-file value.
-
-### Acceptance Criteria
-1. In editMode, the page renders the shared blue hero header (blue gradient + concave white cutout + centered white title + back button), the same `blue-hero-header` security-settings uses, on BOTH step 1 and step 2.
-2. The blue header renders ONLY in editMode; onboarding mode (`editMode = false`, "Identity Verification") keeps its existing non-blue header, and the blue-hero styles do NOT leak into onboarding (the partial must be scoped since one component serves both modes).
-3. The editMode header reuses the `theme/_blue-hero-header.scss` partial via `@use` (not a re-implemented copy); back button calls existing `goBack()`; title is "Edit Identity".
-4. In editMode, the user cannot proceed part 1 → part 2 unless at least one step-1 field changed from its on-file value: the continue button is disabled AND `proceedToStep2()` is a no-op while step 1 still equals the prefilled values.
-5. "Changed" = current step-1 form value vs a snapshot of the Alpaca-prefilled values captured after the prefill HTTP resolves (re-typing the same value is not a change); existing `!step1Valid` validation still applies.
-6. Gating applies only in editMode; onboarding step 1 → step 2 is unaffected.
-7. The existing localStorage step-1 draft restore and step-transition animation still work; a restored draft equal to on-file values counts as "not changed."
-8. `npx tsc --noEmit` exits 0; verified at 430×932: editMode blue header on both steps, onboarding original header, part-1 gate enables/disables correctly.
-
 ## FRED-204 — Fix white flash in static→Lottie reauth transition
 on a cold start and reauth is needed. when the static transitions into the lottie, there is a very brief white screen that displays (im talking like 0.1s like its just a slight flash) that we do not want to see. we want this transition to be seamless
 
@@ -737,6 +721,11 @@ Update the in-app calculator to use the same net-income-based model: (monthly ne
 ## FRED-188 — ✓ Add null userId guard to processChat
 `ChatService.java` `processChat()` calls `userRepository.findById(request.userId())` without a null guard. Add the same guard that was added to `streamChat()`: `request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null`.
 
+## DEV-190 — ✓ Resolve @capacitor peer conflict (drop --legacy-peer-deps)
+`@capacitor/push-notifications@8.1.1` requires `@capacitor/core@>=8`, but the repo pins `@capacitor/core@7.2.0` (the rest of `@capacitor/*` is on 7.x). A plain `npm install` ERESOLVE-fails and only succeeds with `--legacy-peer-deps`, which silences all peer-dependency checks and can mask real breakage. Fix: either downgrade `@capacitor/push-notifications` to a 7.x-compatible release, or upgrade the whole `@capacitor/*` suite to 8.x together.
+
+**OBE (Overcome By Events) — 2026-06-21.** Closed without dedicated work; resolved by other dependency changes. Marked done per Andy.
+
 ## FRED-192 — ✓ Redesign tab3 settings page UI (keep blue header)
 redesign the UI of tab3 (settings) page. we want to keep the blue header with the my profile and welcome and "FRED" but we kinda want a cleaner design. refer to the FRED UI Style Guide for how to come up with more designs for tab3 while still keeping that blue header idea. there should be 3-5 options for how it could look
 
@@ -835,7 +824,18 @@ Move the tab3 stat strip's data and its freedom date/age/dollars-away math out o
 
 Decisions (Andy): Option 2 (dedicated service) + Angular signals as the reactive primitive (first signals usage in the app, approved); plus a persisted user-scoped localStorage snapshot for instant cold-launch (folded in from Option 3). Est. 3hr+, [code].
 
-## DEV-190 — ✓ Resolve @capacitor peer conflict (drop --legacy-peer-deps)
-`@capacitor/push-notifications@8.1.1` requires `@capacitor/core@>=8`, but the repo pins `@capacitor/core@7.2.0` (the rest of `@capacitor/*` is on 7.x). A plain `npm install` ERESOLVE-fails and only succeeds with `--legacy-peer-deps`, which silences all peer-dependency checks and can mask real breakage. Fix: either downgrade `@capacitor/push-notifications` to a 7.x-compatible release, or upgrade the whole `@capacitor/*` suite to 8.x together.
+## FRED-203 — ✓ KYC edit page blue header + part-1 gating
+make the update/edit KYC page linked to from security-settings have the blue header that security settings has for both parts of the kyc update. also, a user should not be able to proceed from part 1 to part 2 in kyc if the data in part 1 has not been updated from its current values. make sure that the kyc page only has the blue ion header in editMode and not the 'Identity Verification' onboarding flow step
 
-**OBE (Overcome By Events) — 2026-06-21.** Closed without dedicated work; resolved by other dependency changes. Marked done per Andy.
+### Summary
+The KYC component serves two flows: onboarding "Identity Verification" (`editMode = false`) and the edit-KYC page from security-settings (`editMode = true`). EditMode-only: (1) give the edit flow the shared blue hero header security-settings uses, on both step 1 and step 2; (2) keep the blue header out of onboarding (keeps its plain header); (3) block advancing part 1 → part 2 until the user changes at least one step-1 field from its current on-file value.
+
+### Acceptance Criteria
+1. In editMode, the page renders the shared blue hero header (blue gradient + concave white cutout + centered white title + back button), the same `blue-hero-header` security-settings uses, on BOTH step 1 and step 2.
+2. The blue header renders ONLY in editMode; onboarding mode (`editMode = false`, "Identity Verification") keeps its existing non-blue header, and the blue-hero styles do NOT leak into onboarding (the partial must be scoped since one component serves both modes).
+3. The editMode header reuses the `theme/_blue-hero-header.scss` partial via `@use` (not a re-implemented copy); back button calls existing `goBack()`; title is "Edit Identity".
+4. In editMode, the user cannot proceed part 1 → part 2 unless at least one step-1 field changed from its on-file value: the continue button is disabled AND `proceedToStep2()` is a no-op while step 1 still equals the prefilled values.
+5. "Changed" = current step-1 form value vs a snapshot of the Alpaca-prefilled values captured after the prefill HTTP resolves (re-typing the same value is not a change); existing `!step1Valid` validation still applies.
+6. Gating applies only in editMode; onboarding step 1 → step 2 is unaffected.
+7. The existing localStorage step-1 draft restore and step-transition animation still work; a restored draft equal to on-file values counts as "not changed."
+8. `npx tsc --noEmit` exits 0; verified at 430×932: editMode blue header on both steps, onboarding original header, part-1 gate enables/disables correctly.
