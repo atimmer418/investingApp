@@ -18,9 +18,6 @@ check on if its possible to trigger an investment when the user's paycheck is se
 ## FRED-189 — Fix bank account subtype always showing Checking
 Backend `GET /api/plaid/primary-bank-account` returns the field `accountSubtype` (lowercase t) at `PlaidController.java:177`. The frontend `change-bank-account.page.ts` stores the raw response (`this.currentBankAccount = response`, line 85), then `formatAccountDisplay()` reads `this.currentBankAccount.accountSubType` (capital T, line 232) — always undefined, so the displayed subtype always falls back to 'Checking' regardless of the user's real account type (Savings, etc.). Fix: read `accountSubtype` (lowercase t) at `change-bank-account.page.ts:232` to match the backend; `plaid.service.ts:80-82` already reads it correctly. Pre-existing, user-facing; related to FRED-124.
 
-## DEV-190 — Resolve @capacitor peer conflict (drop --legacy-peer-deps)
-`@capacitor/push-notifications@8.1.1` requires `@capacitor/core@>=8`, but the repo pins `@capacitor/core@7.2.0` (the rest of `@capacitor/*` is on 7.x). A plain `npm install` ERESOLVE-fails and only succeeds with `--legacy-peer-deps`, which silences all peer-dependency checks and can mask real breakage. Fix: either downgrade `@capacitor/push-notifications` to a 7.x-compatible release, or upgrade the whole `@capacitor/*` suite to 8.x together.
-
 ## FRED-191 — Measure and optimize app loading performance
 use network waterfall and core web vitals to measure loading time for app and then optimize initial loading time and other timings that could be optimized
 
@@ -837,3 +834,8 @@ Move the tab3 stat strip's data and its freedom date/age/dollars-away math out o
 9. No new debt; compiles clean: old `loadStatStrip()` machinery is deleted (not commented out); no orphaned imports or dead `destroy$` plumbing. `cd frontend && npx tsc --noEmit` exits 0 and the scoped build passes with no new TS/SCSS warnings. Stat strip verified at 430×932 — instant on cold launch from snapshot, instant on re-entry, and updates after a My Profile edit.
 
 Decisions (Andy): Option 2 (dedicated service) + Angular signals as the reactive primitive (first signals usage in the app, approved); plus a persisted user-scoped localStorage snapshot for instant cold-launch (folded in from Option 3). Est. 3hr+, [code].
+
+## DEV-190 — ✓ Resolve @capacitor peer conflict (drop --legacy-peer-deps)
+`@capacitor/push-notifications@8.1.1` requires `@capacitor/core@>=8`, but the repo pins `@capacitor/core@7.2.0` (the rest of `@capacitor/*` is on 7.x). A plain `npm install` ERESOLVE-fails and only succeeds with `--legacy-peer-deps`, which silences all peer-dependency checks and can mask real breakage. Fix: either downgrade `@capacitor/push-notifications` to a 7.x-compatible release, or upgrade the whole `@capacitor/*` suite to 8.x together.
+
+**OBE (Overcome By Events) — 2026-06-21.** Closed without dedicated work; resolved by other dependency changes. Marked done per Andy.
