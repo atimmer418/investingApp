@@ -133,3 +133,18 @@
 **Status:** Complete
 
 ---
+
+### 2026-06-22 (Morning Brief) — Standardize input fields to onboarding styling (FRED-202)
+
+**Priorities selected:** FRED-202 — Standardize all non-onboarding text/character inputs to the onboarding `.field-input`/`.field-label` underline style (25 fields across 7 files).
+**Tier:** 1 (full 7-point A/C already in `backlog.md` — build-ready, no proposal needed).
+**Rationale:** FRED-203 (KYC edit blue header) shipped 06-22 and was closed out to `looks_good` (now 40/101 done, ✓ in DONE) → guard passed → fresh brief. With the backlog freshly grown (FRED-201..204), Tier 1 is not exhausted. Picked FRED-202 — the exact runner-up named in the 06-22 brief once FRED-203 landed — as the strongest build-ready, sandbox-verifiable READY story: frontend-only, `tsc`/`ng build`-verifiable here, directly advances strategic priority #1 (UI overhaul / design-system consistency across 7 more pages). FRED-191/201/204 stay sandbox-gated (real-device Capacitor cold-start); FRED-189 + FRED-195 are effectively done (shipped/merged) but sit uncheckmarked in READY (data-hygiene, not build). Ground-truthed this morning: canonical `.field-label` (kyc-verification.component.scss L251) + `.field-input` (L261) use component-scoped `--kyc-primary`/`--kyc-text` vars → shared partial must mirror values with FRED palette literals, NOT reuse the scoped vars; target dirs confirmed present (add-beneficiary=`src/app/beneficiaries`, etc.). Not a UI overhaul (fixed target style, no new visual direction) → standard A/B/C on implementation approach: A new shared `theme/_form-fields.scss` applied SCOPED + convert ion-input→native input (pixel match) [rec]; B keep ion-input, approximate via Ionic CSS vars (less churn, risks AC-3 fidelity); C blanket-global via global.scss — REJECTED because My Profile uses `.field-label` (div + SCSS L292) and onboarding defines both classes, so a global rule would bleed into out-of-scope surfaces (AC-4/AC-5).
+**Metrics:** Readiness 81/100, Piggy 77.5% (31/40), Pages 77%, Burndown 39.6% (40/101), Launch 68.8%
+**Trends (vs ~7 days ago / 06-13 brief baseline):** Burndown ↑ +8 done (32→40; % 36.0→39.6), Readiness ↑ +7 (74→81), Days-since-blocker ↑ +15 (13→28), Launch ↑ +2.9 (65.9→68.8), Pages ↑ +1 (76→77), Piggy → no change (77.5%).
+**Days since last blocker:** 28 (06-22 ship recorded 27; +1 clean day, FRED-203 shipped clean, no blocker).
+**Blockers active:** none (BLOCKED holds FRED-173/175/179, all external-dependency stories, not production blockers).
+**Data-hygiene (carried):** FRED-189 (shipped 06-19) and FRED-195 (shipped+merged) both still sit uncheckmarked in READY — recommend `triage --done` on both so burndown stays honest.
+**Notes:** Exclusion set: FRED-188 (skipped 06-22, 7-day window through ~06-29), FRED-100 (skipped 06-15, window ~06-22) — neither is the pick. Two Questions for Andrew with predictive placeholders: (Q1, Required) are the `<ion-searchbar>` + ai-chat `<ion-textarea>` composer in scope [predicted: exclude both per AC-6]; (Q2, Optional) confirm scoped application over a blanket global rule given My Profile/onboarding reuse the classes [predicted: yes, scope it]. Tomorrow's likely picks: FRED-186 (debounce + switchMap), data-hygiene close-out of FRED-189/195, FRED-187/DEV-198; FRED-191/201/204 stay sandbox-gated.
+**Status:** Pending approval from Andrew
+
+---
