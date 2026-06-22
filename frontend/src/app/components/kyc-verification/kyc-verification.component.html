@@ -1,12 +1,23 @@
-<ion-header class="ion-no-border">
+<!-- Onboarding header (editMode=false) — original design, untouched -->
+<ion-header *ngIf="!editMode" class="ion-no-border">
   <ion-toolbar>
-    <div class="header-inner" [class.has-back]="editMode">
-      <button *ngIf="editMode" class="back-btn" type="button" (click)="goBack()">
-        <span class="material-symbols-outlined">arrow_back_ios</span>
-      </button>
-      <h2 class="header-title">{{ editMode ? 'Edit Identity' : 'Identity Verification' }}</h2>
+    <div class="header-inner">
+      <h2 class="header-title">Identity Verification</h2>
     </div>
   </ion-toolbar>
+</ion-header>
+
+<!-- Edit-mode header — blue hero, shared partial, renders on BOTH step 1 and step 2 -->
+<ion-header *ngIf="editMode" class="ion-no-border">
+  <div class="blue-hero-header">
+    <div class="hero-nav">
+      <button class="back-btn" type="button" (click)="goBack()">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      </button>
+      <h2 class="header-title">Edit Identity</h2>
+      <div class="back-btn-spacer"></div>
+    </div>
+  </div>
 </ion-header>
 
 <ion-content class="kyc-content" (focusin)="scrollFocusedInputIntoView($event)">
@@ -214,10 +225,10 @@
   </div>
 </ion-content>
 
-<!-- Footer: Step 1 — continue button fades in when form is valid -->
+<!-- Footer: Step 1 — continue button fades in when form is valid (and changed in editMode) -->
 <ion-footer *ngIf="currentStep === 1" class="ion-no-border">
   <div class="cta-footer">
-    <button class="cta-btn" type="button" (click)="proceedToStep2()" [disabled]="!step1Valid || exitingStep1" [class.btn-visible]="step1Valid">
+    <button class="cta-btn" type="button" (click)="proceedToStep2()" [disabled]="!step1Valid || exitingStep1 || (editMode && !step1Changed)" [class.btn-visible]="step1Valid && (!editMode || step1Changed)">
       <ng-container *ngIf="!exitingStep1">
         <span>Continue</span>
         <span class="material-symbols-outlined">arrow_forward</span>

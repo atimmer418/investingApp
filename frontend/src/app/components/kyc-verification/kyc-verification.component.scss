@@ -1,3 +1,20 @@
+// ─── Blue Hero Header (shared partial — editMode only) ────────────────────────
+// The partial emits bare selectors. The KYC component's own rules (below) take
+// cascade precedence over the partial's; two scoped overrides re-apply white
+// colour inside .blue-hero-header so the editMode nav looks correct.
+@use '../../theme/blue-hero-header';
+
+// Scoped overrides: restore white text inside the blue hero nav
+// (the component's .back-btn and .header-title rules are dark; these win inside
+// the editMode branch where the blue background requires white foreground)
+.blue-hero-header .back-btn {
+  color: #ffffff;
+}
+
+.blue-hero-header .header-title {
+  color: #ffffff;
+}
+
 // --- Force light mode regardless of system theme ---
 :host {
   --kyc-primary: #2563EB;
