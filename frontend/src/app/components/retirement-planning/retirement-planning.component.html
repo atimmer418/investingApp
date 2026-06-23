@@ -82,10 +82,10 @@
 
         <!-- Essential Expenses Input (Annuity + Growth only) -->
         <div *ngIf="selectedStrategy === 'annuity-growth'" class="conditional-input-compact">
-          <ion-item lines="none">
-            <ion-label position="stacked">Essential Annual Expenses</ion-label>
-            <ion-input type="number" [(ngModel)]="essentialExpenses" placeholder="40,000"></ion-input>
-          </ion-item>
+          <div class="form-field-group">
+            <label class="field-label">Essential Annual Expenses</label>
+            <input class="field-input" type="number" [(ngModel)]="essentialExpenses" placeholder="40000">
+          </div>
           <small class="helper-text success" *ngIf="essentialExpenses && portfolioValue">
             <ion-icon name="calculator-outline"></ion-icon>
             Annuitize {{ formatPercent(getRecommendedAnnuityPercentage()) }} → {{ formatCurrency(getAnnuityIncome())
@@ -124,29 +124,25 @@
 
             <!-- SBLOC Config -->
             <div *ngIf="selectedStrategy === 'sbloc'">
-              <ion-item>
-                <ion-label position="stacked">Borrowing Rate</ion-label>
-                <ion-input type="number" [(ngModel)]="sblocInterestRate" placeholder="0.055"></ion-input>
-              </ion-item>
+              <div class="form-field-group">
+                <label class="field-label">Borrowing Rate</label>
+                <input class="field-input" type="number" [(ngModel)]="sblocInterestRate" placeholder="0.055">
+              </div>
               <small class="helper-text">Interest rate charged on SBLOC margin loan (e.g. 0.055 for 5.5%)</small>
             </div>
 
             <!-- Guardrails Config -->
             <div *ngIf="selectedStrategy === 'dynamic-guardrails'">
-              <ion-row>
-                <ion-col size="6">
-                  <ion-item>
-                    <ion-label position="stacked">Lower Guardrail</ion-label>
-                    <ion-input type="number" [(ngModel)]="guardrailLower" placeholder="0.04"></ion-input>
-                  </ion-item>
-                </ion-col>
-                <ion-col size="6">
-                  <ion-item>
-                    <ion-label position="stacked">Upper Guardrail</ion-label>
-                    <ion-input type="number" [(ngModel)]="guardrailUpper" placeholder="0.06"></ion-input>
-                  </ion-item>
-                </ion-col>
-              </ion-row>
+              <div class="guardrails-row">
+                <div class="form-field-group">
+                  <label class="field-label">Lower Guardrail</label>
+                  <input class="field-input" type="number" [(ngModel)]="guardrailLower" placeholder="0.04">
+                </div>
+                <div class="form-field-group">
+                  <label class="field-label">Upper Guardrail</label>
+                  <input class="field-input" type="number" [(ngModel)]="guardrailUpper" placeholder="0.06">
+                </div>
+              </div>
               <small class="helper-text">Adjust spending when withdrawal rate hits these limits.</small>
             </div>
           </div>
@@ -194,21 +190,21 @@
         <!-- Portfolio Value -->
         <div class="custom-input-container">
           <div class="label-row">
-            <label>Portfolio Value</label>
+            <label class="field-label">Portfolio Value</label>
             <ion-icon name="sync-outline" class="fetch-icon" (click)="fetchPortfolioValue()" title="Use My Portfolio"></ion-icon>
           </div>
-          <div class="input-box">
+          <div class="currency-input-wrap">
             <span class="prefix">$</span>
-            <ion-input type="number" [(ngModel)]="portfolioValue" placeholder="1,200,000"></ion-input>
+            <input class="field-input currency-field-input" type="number" [(ngModel)]="portfolioValue" placeholder="1200000">
           </div>
         </div>
 
         <!-- Annual Spend -->
         <div class="custom-input-container">
-          <label class="label-row">Annual Spend</label>
-          <div class="input-box">
+          <label class="field-label">Annual Spend</label>
+          <div class="currency-input-wrap">
             <span class="prefix">$</span>
-            <ion-input type="number" [(ngModel)]="annualWithdrawal" placeholder="48,000"></ion-input>
+            <input class="field-input currency-field-input" type="number" [(ngModel)]="annualWithdrawal" placeholder="48000">
           </div>
         </div>
       </div>

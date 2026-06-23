@@ -22,12 +22,12 @@
 
       <div class="form-group">
         <label class="field-label">Current Email</label>
-        <ion-input class="form-input form-input--readonly" [value]="currentEmail" readonly="true"></ion-input>
+        <input class="field-input field-input--readonly" [value]="currentEmail" readonly>
       </div>
 
       <div class="form-group form-group--last">
         <label class="field-label">New Email</label>
-        <ion-input class="form-input" [(ngModel)]="newEmail" type="email" placeholder="Enter new email"></ion-input>
+        <input class="field-input" [(ngModel)]="newEmail" type="email" placeholder="Enter new email">
       </div>
     </div>
 

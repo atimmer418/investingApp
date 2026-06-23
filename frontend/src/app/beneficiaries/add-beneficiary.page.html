@@ -34,24 +34,32 @@
 
       <div class="form-group">
         <label class="field-label">First Name<span class="required-star">*</span></label>
-        <ion-input class="form-input" [(ngModel)]="beneficiary.firstName" placeholder="Enter first name" type="text" maxlength="100"></ion-input>
+        <input
+          class="field-input"
+          [(ngModel)]="beneficiary.firstName"
+          placeholder="Enter first name"
+          type="text"
+          maxlength="100">
       </div>
 
       <div class="form-group">
         <label class="field-label">Last Name<span class="required-star">*</span></label>
-        <ion-input class="form-input" [(ngModel)]="beneficiary.lastName" placeholder="Enter last name" type="text" maxlength="100"></ion-input>
+        <input
+          class="field-input"
+          [(ngModel)]="beneficiary.lastName"
+          placeholder="Enter last name"
+          type="text"
+          maxlength="100">
       </div>
 
       <div class="form-group">
         <label class="field-label">Date of Birth<span class="required-star">*</span></label>
-        <ion-input
-          class="form-input form-input--readonly"
+        <input
+          class="field-input field-input--readonly"
           id="open-dob-modal"
-          [value]="beneficiary.dateOfBirth | date:'mediumDate'"
-          readonly="true"
+          [value]="beneficiary.dateOfBirth ? (beneficiary.dateOfBirth | date:'mediumDate') : ''"
+          readonly
           placeholder="Select date">
-          <ion-icon name="calendar-outline" slot="end" color="medium"></ion-icon>
-        </ion-input>
 
         <ion-modal #dobModal trigger="open-dob-modal" [keepContentsMounted]="true" style="--height: auto; --width: auto; --border-radius: 16px;">
           <ng-template>
@@ -73,7 +81,13 @@
 
       <div class="form-group">
         <label class="field-label">Social Security Number<span class="required-star">*</span></label>
-        <ion-input class="form-input" [(ngModel)]="beneficiary.socialSecurityNumber" placeholder="XXX-XX-XXXX" type="text" maxlength="11" (ionInput)="formatSSN($event)"></ion-input>
+        <input
+          class="field-input"
+          [value]="beneficiary.socialSecurityNumber || ''"
+          placeholder="XXX-XX-XXXX"
+          type="text"
+          maxlength="11"
+          (input)="formatSSN($event)">
       </div>
 
       <div class="form-group">
@@ -89,7 +103,14 @@
 
       <div class="form-group form-group--last">
         <label class="field-label">Allocation Percentage<span class="required-star">*</span></label>
-        <ion-input class="form-input" [(ngModel)]="beneficiary.percentageAllocation" placeholder="0.00" type="number" min="0.01" max="100" step="0.01"></ion-input>
+        <input
+          class="field-input"
+          [(ngModel)]="beneficiary.percentageAllocation"
+          placeholder="0.00"
+          type="number"
+          min="0.01"
+          max="100"
+          step="0.01">
       </div>
     </div>
 
@@ -102,12 +123,23 @@
 
       <div class="form-group">
         <label class="field-label">Email</label>
-        <ion-input class="form-input" [(ngModel)]="beneficiary.email" placeholder="email@example.com" type="email" maxlength="255"></ion-input>
+        <input
+          class="field-input"
+          [(ngModel)]="beneficiary.email"
+          placeholder="email@example.com"
+          type="email"
+          maxlength="255">
       </div>
 
       <div class="form-group form-group--last">
         <label class="field-label">Phone Number</label>
-        <ion-input class="form-input" [(ngModel)]="beneficiary.phone" placeholder="(555) 123-4567" type="tel" maxlength="14" (ionInput)="formatPhone($event)"></ion-input>
+        <input
+          class="field-input"
+          [value]="beneficiary.phone || ''"
+          placeholder="(555) 123-4567"
+          type="tel"
+          maxlength="14"
+          (input)="formatPhone($event)">
       </div>
     </div>
 
@@ -120,27 +152,52 @@
 
       <div class="form-group">
         <label class="field-label">Address Line 1</label>
-        <ion-input class="form-input" [(ngModel)]="beneficiary.addressLine1" placeholder="123 Main Street" type="text" maxlength="255"></ion-input>
+        <input
+          class="field-input"
+          [(ngModel)]="beneficiary.addressLine1"
+          placeholder="123 Main Street"
+          type="text"
+          maxlength="255">
       </div>
 
       <div class="form-group">
         <label class="field-label">Address Line 2</label>
-        <ion-input class="form-input" [(ngModel)]="beneficiary.addressLine2" placeholder="Apt 123" type="text" maxlength="255"></ion-input>
+        <input
+          class="field-input"
+          [(ngModel)]="beneficiary.addressLine2"
+          placeholder="Apt 123"
+          type="text"
+          maxlength="255">
       </div>
 
       <div class="form-group">
         <label class="field-label">City</label>
-        <ion-input class="form-input" [(ngModel)]="beneficiary.city" placeholder="New York" type="text" maxlength="100"></ion-input>
+        <input
+          class="field-input"
+          [(ngModel)]="beneficiary.city"
+          placeholder="New York"
+          type="text"
+          maxlength="100">
       </div>
 
       <div class="form-row">
         <div class="form-group form-group--last">
           <label class="field-label">State</label>
-          <ion-input class="form-input" [(ngModel)]="beneficiary.state" placeholder="NY" type="text" maxlength="2"></ion-input>
+          <input
+            class="field-input"
+            [(ngModel)]="beneficiary.state"
+            placeholder="NY"
+            type="text"
+            maxlength="2">
         </div>
         <div class="form-group form-group--last">
           <label class="field-label">ZIP Code</label>
-          <ion-input class="form-input" [(ngModel)]="beneficiary.postalCode" placeholder="12345" type="text" maxlength="10"></ion-input>
+          <input
+            class="field-input"
+            [(ngModel)]="beneficiary.postalCode"
+            placeholder="12345"
+            type="text"
+            maxlength="10">
         </div>
       </div>
     </div>

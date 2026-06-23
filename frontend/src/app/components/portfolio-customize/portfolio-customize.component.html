@@ -81,14 +81,13 @@
                 <div class="stock-name">{{ stock.name }}</div>
               </div>
               <div class="alloc-input-wrap" slot="end">
-                <ion-input
+                <input
+                  class="field-input alloc-input"
                   type="number"
                   [value]="stock.percentage"
-                  (ionInput)="updateAllocation(stock, $event)"
-                  class="alloc-input"
+                  (input)="updateAllocation(stock, $event)"
                   min="0"
                   max="100">
-                </ion-input>
                 <span class="percent-sign">%</span>
               </div>
             </ion-item>

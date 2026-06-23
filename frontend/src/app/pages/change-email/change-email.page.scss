@@ -1,5 +1,7 @@
 // ─── Blue Hero Header (shared partial) ────────────────────────────────────────
 @use '../../../theme/blue-hero-header';
+// ─── Shared form field styles (scoped — NOT global) ───────────────────────────
+@use '../../../theme/form-fields' as ff;
 
 :host {
   --ion-background-color: #f8fafc;
@@ -7,6 +9,9 @@
   --ion-toolbar-color: #ffffff;
   --ion-text-color: #0f172a;
   --ion-color-primary: #2563EB;
+
+  // Apply canonical field styles scoped to this page's host
+  @include ff.form-fields-scoped();
 }
 
 ion-content {
@@ -78,38 +83,10 @@ ion-content {
   margin-bottom: 6px;
 }
 
-ion-input.form-input {
-  --background: #f8fafc;
-  --color: #0f172a;
-  --placeholder-color: #cbd5e1;
-  --padding-start: 12px;
-  --padding-end: 12px;
-  --padding-top: 10px;
-  --padding-bottom: 10px;
-  --border-width: 0;
-  --box-shadow: none;
-  border-radius: 10px;
-  border: 1.5px solid #e5e7eb;
-  font-family: 'Manrope', sans-serif;
-  font-size: 15px;
-  font-weight: 500;
-  transition: border-color 0.15s;
-
-  &::part(native) {
-    border: none !important;
-    box-shadow: none !important;
-  }
-
-  &.ion-focused {
-    border-color: #2563EB;
-    --background: white;
-  }
-
-  &.form-input--readonly {
-    --background: #f1f5f9;
-    --color: #64748b;
-    pointer-events: none;
-  }
+// Readonly override for current-email field
+.field-input--readonly {
+  color: #64748b;
+  pointer-events: none;
 }
 
 .cta-btn {

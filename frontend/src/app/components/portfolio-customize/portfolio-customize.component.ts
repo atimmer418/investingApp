@@ -13,7 +13,7 @@ import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import {
   IonHeader, IonToolbar, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonReorderGroup,
-  IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge
+  IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonBadge
 } from '@ionic/angular/standalone';
 
 
@@ -78,7 +78,7 @@ interface Stock {
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonContent, IonButton, IonIcon,
     IonList, IonItem, IonLabel, IonReorderGroup,
-    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonInput, IonBadge
+    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonBadge
   ],
   animations: [
     trigger('deleteAnimation', [
@@ -429,7 +429,7 @@ export class PortfolioCustomizeComponent implements OnInit {
 
   // Update stock allocation
   updateAllocation(stock: Stock, event: any) {
-    const val = event.detail.value;
+    const val = event.detail?.value ?? (event.target as HTMLInputElement)?.value;
     
     // If cleared, set to null (so it shows as empty)
     if (val === '' || val === null) {

@@ -6,7 +6,7 @@ import { NavController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
 import {
   IonHeader, IonToolbar, IonContent,
-  IonInput, IonSpinner
+  IonSpinner
 } from '@ionic/angular/standalone';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
@@ -27,7 +27,7 @@ import { firstValueFrom } from 'rxjs';
   imports: [
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonContent,
-    IonInput, IonSpinner
+    IonSpinner
   ]
 })
 export class ChangeEmailPage implements OnInit {
