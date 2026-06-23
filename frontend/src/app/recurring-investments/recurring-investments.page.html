@@ -74,12 +74,16 @@
 
         <div class="edit-row">
           <div class="edit-field">
-            <div class="field-label">Investment Amount</div>
+            <label class="field-label">Investment Amount</label>
             <div class="currency-input-wrap">
               <span class="currency-sym">$</span>
-              <ion-input type="number" [(ngModel)]="editedInvestment.investmentAmount" (ionBlur)="onAmountChange()"
-                placeholder="0" class="amount-input" min="1">
-              </ion-input>
+              <input
+                class="field-input currency-field-input"
+                type="number"
+                [(ngModel)]="editedInvestment.investmentAmount"
+                (blur)="onAmountChange()"
+                placeholder="0"
+                min="1">
             </div>
           </div>
 

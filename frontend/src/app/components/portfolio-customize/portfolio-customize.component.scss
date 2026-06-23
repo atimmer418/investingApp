@@ -1,5 +1,7 @@
 // ─── Blue Hero Header (shared partial) ────────────────────────────────────────
 @use '../../../theme/blue-hero-header';
+// ─── Shared form field styles (scoped — NOT global) ───────────────────────────
+@use '../../../theme/form-fields' as ff;
 
 :host {
   --ion-background-color: #f8fafc;
@@ -7,6 +9,9 @@
   --ion-toolbar-color: #ffffff;
   --ion-text-color: #0f172a;
   --ion-color-primary: #2563EB;
+
+  // Apply canonical field styles scoped to this component's host
+  @include ff.form-fields-scoped();
 }
 
 ion-content {
@@ -245,20 +250,15 @@ ion-content {
       gap: 2px;
       padding-right: 8px;
 
-      ion-input.alloc-input {
-        --background: transparent;
-        --color: #2563EB;
-        --padding-start: 4px;
-        --padding-end: 0;
-        --padding-top: 0;
-        --padding-bottom: 0;
-        --border-width: 0;
-        --box-shadow: none;
-        font-family: 'Manrope', sans-serif;
+      // Native .field-input overrides for inline allocation input
+      input.alloc-input {
+        color: #2563EB;
         font-size: 17px;
         font-weight: 700;
         text-align: right;
         width: 52px;
+        padding: 4px 0;
+        border-bottom-color: #2563EB;
       }
 
       .percent-sign {

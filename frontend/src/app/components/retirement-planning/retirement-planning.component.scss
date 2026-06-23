@@ -1,10 +1,15 @@
 // Retirement Planning Styles
+// ─── Shared form field styles (scoped — NOT global) ───────────────────────────
+@use '../../../theme/form-fields' as ff;
 
 :host {
   --portfolio-background: var(--app-background);
   --portfolio-card-background: var(--app-card-background);
   --portfolio-text-primary: var(--app-gray-900);
   --portfolio-text-secondary: var(--app-gray-400);
+
+  // Apply canonical field styles scoped to this component's host
+  @include ff.form-fields-scoped();
 }
 
 .retirement-content {
@@ -336,15 +341,7 @@ ion-item {
   ion-card-content {
     padding: var(--app-spacing-md);
 
-    .field-label {
-      font-family: 'Manrope', sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #6b7280;
-      margin: 0 0 10px 0;
-    }
+    // .field-label is provided by ff.form-fields-scoped() mixin — no override needed here
 
     .select-wrapper {
       position: relative;
@@ -385,6 +382,19 @@ ion-item {
       font-size: var(--app-font-size-sm);
       color: var(--app-gray-600);
       line-height: 1.5;
+    }
+
+    // Native field groups used in strategy config
+    .form-field-group {
+      margin-bottom: var(--app-spacing-sm);
+    }
+
+    // Two-column guardrail row
+    .guardrails-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: var(--app-spacing-xs);
     }
 
     .conditional-input-compact {
@@ -1680,8 +1690,9 @@ ion-item {
         justify-content: space-between;
         align-items: center;
         margin-bottom: 8px;
-        
-        label {
+
+        // When label-row wraps a .field-label, remove its bottom margin
+        .field-label {
           margin-bottom: 0;
         }
     }
@@ -1694,46 +1705,29 @@ ion-item {
         &:hover { opacity: 1; }
     }
 
-    label {
-      font-size: 14px;
-      color: #6b7280;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .input-box {
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 4px 12px;
+    // Currency-prefix underline wrapper
+    .currency-input-wrap {
       display: flex;
       align-items: center;
-      background: #fff;
-      transition: all 0.2s ease;
-      height: 48px;
-
-      &:focus-within {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-      }
+      border-bottom: 2px solid #2563EB;
+      padding-bottom: 4px;
 
       .prefix {
-        color: #6b7280;
-        font-weight: 500;
+        font-family: 'Manrope', sans-serif;
+        font-size: 17px;
+        font-weight: 600;
+        color: #2563EB;
         margin-right: 4px;
-        font-size: 16px;
+        flex-shrink: 0;
       }
 
-      ion-input {
-        --padding-start: 0;
-        --padding-end: 0;
-        --padding-top: 0;
-        --padding-bottom: 0;
-        --background: transparent;
+      // Override .field-input border so it doesn't double-underline
+      .currency-field-input {
+        border-bottom: none;
+        padding: 4px 0;
+        flex: 1;
         font-size: 18px;
         font-weight: 600;
-        color: #111827;
-        --placeholder-color: #9ca3af;
-        --placeholder-opacity: 1;
       }
     }
   }

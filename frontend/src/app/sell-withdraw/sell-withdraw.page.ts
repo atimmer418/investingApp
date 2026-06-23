@@ -9,7 +9,6 @@ import {
   IonToolbar,
   IonContent,
   IonSpinner,
-  IonInput,
   IonRange,
   IonToggle,
   IonPopover,
@@ -54,7 +53,6 @@ import { PasskeyPromptComponent } from '../components/passkey-prompt/passkey-pro
     IonToolbar,
     IonContent,
     IonSpinner,
-    IonInput,
     IonRange,
     IonToggle,
     IonPopover

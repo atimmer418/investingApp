@@ -197,14 +197,13 @@
           </div>
           <div class="currency-input-wrap">
             <span class="currency-sym">$</span>
-            <ion-input
+            <input
+              class="field-input currency-field-input"
               type="number"
               [(ngModel)]="withdrawAmount"
               [min]="1"
               [max]="maxWithdrawAmount"
-              placeholder="0.00"
-              class="amount-input">
-            </ion-input>
+              placeholder="0.00">
           </div>
 
           <div class="quick-amounts">

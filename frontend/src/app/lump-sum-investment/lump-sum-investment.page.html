@@ -112,18 +112,17 @@
 
       <!-- Amount Input -->
       <div class="form-group">
-        <div class="field-label">Investment Amount</div>
+        <label class="field-label">Investment Amount</label>
         <div class="currency-input-wrap">
           <span class="currency-sym">$</span>
-          <ion-input
+          <input
+            class="field-input currency-field-input"
             type="number"
             [(ngModel)]="investmentAmount"
-            (ionInput)="validateInvestmentAmount($event)"
-            (ionBlur)="onAmountChange()"
+            (input)="validateInvestmentAmount($event)"
+            (blur)="onAmountChange()"
             placeholder="0"
-            class="amount-input"
             min="1">
-          </ion-input>
         </div>
         <p class="helper-hint">Enter the amount you want to invest in {{ getInvestmentTarget() }}</p>
       </div>
@@ -187,7 +186,7 @@
 
         <div class="form-group">
           <div class="acct-label-row">
-            <div class="field-label" style="margin-bottom: 0;">Account Number</div>
+            <label class="field-label" style="margin-bottom: 0;">Account Number</label>
             <button id="acats-tooltip-lump" class="tooltip-btn">
               <span class="material-symbols-outlined">info</span>
             </button>
@@ -199,9 +198,11 @@
               </ng-template>
             </ion-popover>
           </div>
-          <div class="text-input-wrap">
-            <ion-input type="text" [(ngModel)]="transferAccountNumber" placeholder="Enter account number" class="account-input"></ion-input>
-          </div>
+          <input
+            class="field-input"
+            type="text"
+            [(ngModel)]="transferAccountNumber"
+            placeholder="Enter account number">
         </div>
 
         <button class="cta-btn cta-btn--dark" (click)="submitAcatsTransfer()"

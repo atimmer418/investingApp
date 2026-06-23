@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { NavController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +10,6 @@ import {
   IonButton,
   IonIcon,
   IonButtons,
-  IonInput,
   IonModal,
   IonDatetime
 } from '@ionic/angular/standalone';
@@ -39,9 +38,9 @@ import { ToastService } from '../services/toast.service';
     FormsModule,
     IonHeader, IonToolbar, IonContent, IonButton,
     IonIcon, IonButtons,
-    IonInput,
     IonModal, IonDatetime
-  ]
+  ],
+  providers: [DatePipe]
 })
 export class AddBeneficiaryPage implements OnInit {
   
@@ -407,23 +406,27 @@ export class AddBeneficiaryPage implements OnInit {
     return undefined;
   }
 
-  formatSSN(event: any) {
-    let value = event.detail.value.replace(/\D/g, '');
+  formatSSN(event: Event) {
+    const raw = (event.target as HTMLInputElement).value;
+    let value = raw.replace(/\D/g, '');
     if (value.length >= 6) {
       value = value.replace(/(\d{3})(\d{2})(\d{0,4})/, '$1-$2-$3');
     } else if (value.length >= 4) {
       value = value.replace(/(\d{3})(\d{0,2})/, '$1-$2');
     }
     this.beneficiary.socialSecurityNumber = value;
+    (event.target as HTMLInputElement).value = value;
   }
 
-  formatPhone(event: any) {
-    let value = event.detail.value.replace(/\D/g, '');
+  formatPhone(event: Event) {
+    const raw = (event.target as HTMLInputElement).value;
+    let value = raw.replace(/\D/g, '');
     if (value.length >= 7) {
       value = value.replace(/(\d{3})(\d{3})(\d{0,4})/, '($1) $2-$3');
     } else if (value.length >= 4) {
       value = value.replace(/(\d{3})(\d{0,3})/, '($1) $2');
     }
     this.beneficiary.phone = value;
+    (event.target as HTMLInputElement).value = value;
   }
 }

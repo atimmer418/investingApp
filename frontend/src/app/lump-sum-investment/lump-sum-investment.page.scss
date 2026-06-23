@@ -1,5 +1,7 @@
 // ─── Blue Hero Header (shared partial) ────────────────────────────────────────
 @use '../../theme/blue-hero-header';
+// ─── Shared form field styles (scoped — NOT global) ───────────────────────────
+@use '../../theme/form-fields' as ff;
 
 :host {
   --ion-background-color: #f8fafc;
@@ -7,6 +9,9 @@
   --ion-toolbar-color: #ffffff;
   --ion-text-color: #0f172a;
   --ion-color-primary: #2563EB;
+
+  // Apply canonical field styles scoped to this page's host
+  @include ff.form-fields-scoped();
 }
 
 ion-content { --background: #f8fafc; }
@@ -230,22 +235,21 @@ ion-searchbar.fred-searchbar {
     margin-right: 4px;
   }
 
-  ion-input.amount-input {
-    --background: transparent;
-    --color: #0f172a;
-    --placeholder-color: #cbd5e1;
-    --padding-start: 0;
-    --padding-end: 0;
-    --padding-top: 4px;
-    --padding-bottom: 4px;
-    --border-width: 0;
-    --box-shadow: none;
-    font-family: 'Manrope', sans-serif;
-    font-weight: 600;
-    font-size: 17px;
+  // Native .field-input inside the currency wrap: suppress its own border-bottom
+  // so the parent wrap's single underline shows
+  .currency-field-input {
+    border-bottom: none;
+    padding: 4px 0;
     flex: 1;
+    font-size: 17px;
+    font-weight: 600;
+
+    &:focus {
+      border-bottom: none;
+    }
   }
 }
+
 
 .projection-card {
   background: #f8fafc;

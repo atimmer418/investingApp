@@ -1,0 +1,85 @@
+// ─── Shared Form Field Styles ────────────────────────────────────────────────
+// Mirrors the canonical onboarding .field-label / .field-input underline style
+// from kyc-verification.component.scss (lines 251–287).
+//
+// USAGE: @use '…/theme/form-fields' as ff;
+//        then inside the page root selector:  @include ff.form-fields-scoped();
+//
+// Uses FRED palette LITERALS — NOT --kyc-* vars — so this partial is fully
+// independent of the onboarding scope.
+// DO NOT import/use this in global.scss or any globally-imported sheet.
+
+@mixin form-fields-scoped() {
+  .field-label {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b7280;
+    margin: 0 0 10px 0;
+    display: block;
+
+    // Error state: label turns red
+    &.field-label--error {
+      color: #dc2626;
+    }
+  }
+
+  .field-input {
+    font-family: 'Manrope', sans-serif;
+    font-size: 17px;
+    font-weight: 500;
+    color: #0f172a;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid #2563EB;
+    border-radius: 0;
+    padding: 6px 0;
+    outline: none;
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+
+    &::placeholder {
+      color: #cbd5e1;
+      font-weight: 400;
+    }
+
+    &:focus {
+      border-bottom-color: #2563EB;
+    }
+
+    // Error state: underline turns red
+    &.field-input--error {
+      border-bottom-color: #dc2626;
+    }
+
+    // Date inputs: force light colour-scheme so the native date picker
+    // renders correctly regardless of system dark mode
+    &[type='date'] {
+      color-scheme: light;
+    }
+
+    // Number inputs: suppress browser spin buttons
+    &[type='number'] {
+      -moz-appearance: textfield;
+
+      &::-webkit-inner-spin-button,
+      &::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+      }
+    }
+
+    // Readonly / disabled field
+    &[readonly],
+    &:disabled {
+      color: #64748b;
+      cursor: default;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+}

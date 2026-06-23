@@ -9,7 +9,6 @@ import {
   IonToolbar,
   IonContent,
   IonButton,
-  IonInput,
   IonButtons,
   IonDatetime,
   IonModal,
@@ -50,7 +49,6 @@ interface InvestmentFrequencyOption {
     IonToolbar,
     IonContent,
     IonButton,
-    IonInput,
     IonButtons,
     IonDatetime,
     IonModal
