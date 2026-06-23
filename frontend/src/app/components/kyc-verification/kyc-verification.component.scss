@@ -2,7 +2,7 @@
 // The partial emits bare selectors. The KYC component's own rules (below) take
 // cascade precedence over the partial's; two scoped overrides re-apply white
 // colour inside .blue-hero-header so the editMode nav looks correct.
-@use '../../theme/blue-hero-header';
+@use '../../../theme/blue-hero-header';
 
 // Scoped overrides: restore white text inside the blue hero nav
 // (the component's .back-btn and .header-title rules are dark; these win inside
