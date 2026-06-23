@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="verifying-in-ci">
+  <div id="dashboard" data-populated="true" data-state="completed">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -342,10 +342,24 @@
     </div>
 
     <!-- ── Completion Section (completed state only) ── -->
-    <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
+    <div class="section-group section-intermediary-only" id="completion-section">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
-        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-202 — Standardize input fields to onboarding styling (except My Profile)</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Created a shared <code>theme/_form-fields.scss</code> scoped mixin mirroring the canonical onboarding <code>.field-label</code>/<code>.field-input</code> underline style with FRED palette literals (<code>#2563EB</code> / <code>#0f172a</code> / <code>#6b7280</code> / error <code>#dc2626</code>), and converted <strong>25 form fields across 7 pages</strong> to native <code>&lt;label class="field-label"&gt; + &lt;input class="field-input"&gt;</code>, each <code>@use</code>+<code>@include</code>-ing the mixin scoped under the page's own <code>:host</code>: add-beneficiary (12), retirement-planning (6), lump-sum-investment (2), change-email (2), portfolio-customize (1), recurring-investments (1), sell-withdraw (1). Field bindings, placeholders, and validation preserved; add-beneficiary's SSN/phone formatters migrated from the Ionic event to the native input event. Verifier-APPROVED with zero in-scope failures; PR #100 squash-merged to develop. <em>Heads-up:</em> a pre-existing build-break on develop (a bad SCSS import path in kyc-verification from FRED-203) was found and fixed so the app compiles again.</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>AC-1 — shared <code>_form-fields.scss</code> source of truth created with FRED literals; onboarding SCSS not modified.</li>
+            <li>AC-2 — all 25 in-scope fields across the 7 files restyled to the canonical classes.</li>
+            <li>AC-3 — labels, placeholders, focus + error/validation states match the onboarding pattern.</li>
+            <li>AC-4 — My Profile, all onboarding components, recovery, authfinalize left completely untouched.</li>
+            <li>AC-5 — no global bleed: zero <code>.field-input</code>/<code>.field-label</code> rules in <code>global.scss</code>; partial applied scoped per page.</li>
+            <li>AC-6 — documented exclusions (ion-searchbar, ai-chat textarea, document-upload file) not restyled.</li>
+            <li>AC-7 — <code>tsc --noEmit</code> and <code>ng build --configuration=ci</code> both exit 0.</li>
+          </ul>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Production readiness 81 → 82 — 7 more pages brought onto the canonical onboarding field style (strategic priority #1: UI-overhaul / design-system consistency), and a P0 develop build regression closed. Live device look at 430×932 / 390×844 is the one item to eyeball before "Looks Good."</p>
+        </div>
       </div>
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;
