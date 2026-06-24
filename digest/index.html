@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Digest — 2026-06-23</title>
+  <title>Claude Digest — 2026-06-24</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#0f1117;color:#e8eaf0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.6;padding:48px 24px 80px}
@@ -45,7 +45,7 @@
       <span class="wordmark-text">Claude Daily Digest</span>
     </div>
     <h1>What's new in Claude</h1>
-    <span class="date-label">Tuesday, June 23, 2026</span>
+    <span class="date-label">Wednesday, June 24, 2026</span>
   </header>
   <hr />
 
@@ -53,16 +53,12 @@
     <div class="section-head"><span>📦</span><span class="section-title">New Releases</span></div>
     <div class="card">
       <div class="item">
+        <div class="meta"><span class="version">v2.1.187</span><span class="ts">June 23, 2026</span></div>
+        <div class="body">Added <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">sandbox.credentials</code> setting to block sandboxed commands from reading credential files and secret environment variables; also includes fixes for structured output, MCP tool timeouts, and multiple UI/stability improvements.</div>
+      </div>
+      <div class="item">
         <div class="meta"><span class="version">v2.1.186</span><span class="ts">June 22, 2026</span></div>
-        <div class="body">Added <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">claude mcp login/logout</code> CLI commands for MCP server auth without interactive menus; <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">!</code>-prefixed bash commands now auto-trigger Claude responses. Also: <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">f</code> key to filter by status in /workflows, iTerm2 teammate mode support, and fixes for post-sleep streaming errors.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="version">v2.1.185</span><span class="ts">June 20, 2026</span></div>
-        <div class="body">Updated stream-stall hint messaging and adjusted retry timing from 10s to 20s of silence before triggering, reducing false-positive retries on slow network connections.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="version">v2.1.183</span><span class="ts">June 19, 2026</span></div>
-        <div class="body">Improved auto mode safety: destructive git commands and infrastructure-destroy operations are now blocked unless explicitly requested, preventing accidental data loss during autonomous runs.</div>
+        <div class="body">Added <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">claude mcp login/logout</code> CLI commands for MCP server authentication without interactive menus; MCP OAuth browser styling improvements; fixes for subagent management, permission prompts, and background session handling.</div>
       </div>
     </div>
   </section>
@@ -72,11 +68,11 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="tag">Week 24 · June 8–12, 2026 · v2.1.166–v2.1.176</span></div>
-        <div class="body"><strong style="color:#e8eaf0">/cd command:</strong> Move the current session to a new working directory mid-conversation without rebuilding the prompt cache — useful when switching between repos in a long session.</div>
+        <div class="body"><strong style="color:#e8eaf0">/cd command:</strong> Move the current session to a new working directory mid-conversation without rebuilding the prompt cache — useful when switching between repos in a long session. (Week 26 digest not yet published.)</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span></div>
-        <div class="body"><strong style="color:#e8eaf0">Sub-agents can spawn sub-agents:</strong> Background chains are now supported up to five levels deep, enabling more complex multi-agent orchestration patterns out of the box.</div>
+        <div class="body"><strong style="color:#e8eaf0">Sub-agents can spawn sub-agents:</strong> Background chains now supported up to five levels deep, enabling more complex multi-agent orchestration patterns out of the box.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span></div>
@@ -84,7 +80,7 @@
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 24 · June 8–12, 2026</span></div>
-        <div class="body"><strong style="color:#e8eaf0">fallbackModel config:</strong> Configure up to three fallback models tried in order when your primary model is unavailable or rate-limited, keeping long runs from failing silently.</div>
+        <div class="body"><strong style="color:#e8eaf0">fallbackModel config:</strong> Configure up to three fallback models tried in order when your primary model is unavailable or rate-limited, keeping long-running sessions from failing silently.</div>
       </div>
     </div>
   </section>
@@ -94,15 +90,15 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="tag">June 15, 2026</span></div>
-        <div class="body"><strong style="color:#e8eaf0">Model retirements:</strong> Claude Sonnet 4 (<code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">claude-sonnet-4-20250514</code>) and Claude Opus 4 (<code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">claude-opus-4-20250514</code>) are retired — all requests now return an error. Upgrade to Sonnet 4.6 or Opus 4.8 respectively.</div>
+        <div class="body"><strong style="color:#e8eaf0">Model retirements:</strong> Claude Sonnet 4 (<code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">claude-sonnet-4-20250514</code>) and Claude Opus 4 (<code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">claude-opus-4-20250514</code>) are retired — all requests now return an error. Upgrade to Claude Sonnet 4.6 or Claude Opus 4.8 respectively.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">June 11, 2026</span></div>
-        <div class="body"><strong style="color:#e8eaf0">Tool updates:</strong> Code execution tool now supports <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">code_execution_20260521</code> with explicit 90s per-cell time limit. Web search and web fetch tools add a <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">response_inclusion</code> parameter to drop consumed result blocks from API responses for agentic workflows. No beta header required for either.</div>
+        <div class="body"><strong style="color:#e8eaf0">Tool version updates:</strong> Code execution tool adds <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">code_execution_20260521</code> with an explicit 90-second per-cell time limit. Web search and web fetch add <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">response_inclusion</code> to drop consumed result blocks in agentic API responses. No beta header required for either.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">June 9, 2026</span></div>
-        <div class="body"><strong style="color:#e8eaf0">Claude Fable 5 launched:</strong> Most capable widely-released model — 1M token context, 128k max output, always-on adaptive thinking, and a new tokenizer (~30% more tokens vs. pre-Opus 4.7). Requires 30-day data retention; not available under ZDR. Claude Mythos 5 also launched for Project Glasswing participants.</div>
+        <div class="body"><strong style="color:#e8eaf0">Claude Fable 5 launched:</strong> Most capable widely-released model — 1M token context window, 128k max output tokens, always-on adaptive thinking, and a new tokenizer (~30% more tokens vs. pre-Opus 4.7 models). Requires 30-day data retention; not available under zero data retention. Claude Mythos 5 also launched for Project Glasswing participants.</div>
       </div>
     </div>
   </section>
@@ -111,20 +107,20 @@
     <div class="section-head"><span>𝕏</span><span class="section-title">From the Team</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">Recent</span></div>
-        <div class="body">Claude Code Artifacts is live for Team and Enterprise plans — turns any Claude Code session into a live, shareable HTML page (dashboards, PR walkthroughs, release checklists). Also shipped: flexible prompt-time config commands and new macOS sandbox + notification controls.</div>
+        <div class="meta"><span class="handle">@claudeai</span><span class="ts">June 23, 2026</span></div>
+        <div class="body"><strong style="color:#e8eaf0">Claude Tag launched:</strong> Always-on AI teammate that lives in your Slack channels. Claude monitors assigned channels and intervenes proactively with reminders, summaries, or context — without waiting to be tagged. Available in beta for Team and Enterprise. Internally, 65% of Anthropic's product team's code is now written by their internal version of Claude Tag.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@claudeai</span><span class="ts">Recent</span></div>
-        <div class="body">Anthropic Artifacts update brings live, shared dashboards and interactive workspaces to enterprises. Plug in live code, multiple data sources, and surface work on an interactive URL directly from your Claude Code session.</div>
+        <div class="meta"><span class="handle">@trq212</span><span class="ts">June 23, 2026</span></div>
+        <div class="body">Thariq on Claude Tag: "Claude Tag is an incredible new form factor for agents." Also: Claude Code can now upload and edit HTML artifacts shareable with your team or other Claudes — starting with Team plans, coming to Pro and Max soon.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="handle">@bcherny</span><span class="ts">Recent</span></div>
-        <div class="body">Boris (Claude Code creator) on his setup: "Claude Code works great out of the box — I personally don't customize it much. There is no one correct way to use Claude Code." Also noted he hasn't written a line of code himself in 2026.</div>
+        <div class="body">Boris (Claude Code creator) on his setup: "Claude Code works great out of the box — there is no one correct way to use it." His #1 tip: turn on auto mode. "No more permission prompts — the key building block for multi-Clauding." Also noted he hasn't written a line of code himself in 2026.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@trq212</span><span class="ts">Recent</span></div>
-        <div class="body">Thariq shipped "Todos into Tasks" in Claude Code — upgrading the task system. Also posted about dynamic workflows: Claude now writes its own harness on the fly, custom-built for the task at hand, enabling dozens to hundreds of subagents from a single script.</div>
+        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">Recent</span></div>
+        <div class="body"><span class="quiet">Quiet in the last 48 hours. Latest activity: Claude Code Artifacts launched for Team and Enterprise — turns any session into a shareable live HTML page.</span></div>
       </div>
     </div>
   </section>
@@ -132,7 +128,7 @@
   <hr />
   <footer>
     <span><span class="dot"></span>digest.fredvested.com</span>
-    <span>Generated 2026-06-23 at 8:00 AM ET</span>
+    <span>Generated 2026-06-24 at 8:00 AM ET</span>
   </footer>
 </div>
 </body>
