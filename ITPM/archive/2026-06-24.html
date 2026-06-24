@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRED ITPM Daily Brief</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- ════════════════════════════════════════════════════════════════════
+       ITPM DASHBOARD CONTENT — agents may rewrite ONLY the content inside
+       #dashboard below. Do NOT add <style> or <script> here; styling lives
+       in /styles.css and logic in /app.js. Keep the <link>/<script src> in
+       <head> intact.
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <!-- ─── Lock Overlay ─── -->
+  <div id="lock-overlay">
+    <div class="lock-card">
+      <div class="lock-wordmark">FRED</div>
+      <div class="lock-heading">FRED ITPM Daily Brief</div>
+      <div class="lock-subtext">Today's priorities, options, and approval workflow.</div>
+      <div class="date-chip" id="overlay-date">Loading...</div>
+      <button id="reveal-btn" onclick="revealPassword()">Reveal Password Field</button>
+      <div id="password-section">
+        <input type="password" id="password-input" placeholder="Enter today's password" autocomplete="off" />
+        <button id="unlock-btn" onclick="attemptUnlock()">Unlock Dashboard</button>
+        <div id="error-msg">Incorrect password. Try again.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Dashboard ─── -->
+  <div id="dashboard" data-populated="true" data-state="looks_good">
+
+    <!-- ─── Failure Banner ─── -->
+    <div id="failure-banner">
+      <h3>Execution hit a blocker</h3>
+      <p id="failure-detail"></p>
+    </div>
+
+    <!-- ─── Intermediary Banner ─── -->
+    <div id="intermediary-banner" style="display:none; background:#dbeafe; border:1px solid #93c5fd; border-radius:14px; padding:16px 20px; margin-bottom:20px;">
+      <p style="font-size:14px; font-weight:700; color:#1e40af; margin:0 0 4px;">Plan approved — execution queued</p>
+      <p style="font-size:13px; color:#1e40af; margin:0;">Execution started. You'll receive a push notification when the build is complete.</p>
+      <a id="routine-link" href="#" target="_blank" style="display:none; margin-top:10px; font-size:12px; font-weight:700; color:#1e40af; text-decoration:underline; text-underline-offset:2px;">Watch the run live &rarr;</a>
+    </div>
+
+    <div class="dashboard-header">
+      <div class="header-left">
+        <div class="header-wordmark">FRED</div>
+        <div class="itpm-badge">ITPM</div>
+      </div>
+      <div class="header-date" id="header-date">Loading...</div>
+    </div>
+
+    <!-- ── Scoreboard (always visible) ── -->
+    <div class="section-group">
+      <div class="section-label">Routine Success Criteria</div>
+      <div class="scoreboard">
+
+        <div class="metric-card">
+          <div class="metric-label">Backlog Burn-Down</div>
+          <div class="metric-value warning">39.6%</div>
+          <div class="metric-sublabel">40 of 101 stories done</div>
+          <div class="metric-trend positive">&#8593; +8 done vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:39.6%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Piggy Tier Done</div>
+          <div class="metric-value warning">77.5%</div>
+          <div class="metric-sublabel">31 of 40 core stories complete</div>
+          <div class="metric-trend neutral">&#8594; no change vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77.5%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Pages Migrated</div>
+          <div class="metric-value warning">77%</div>
+          <div class="metric-sublabel">Settings hub + KYC edit unified; ~10 non-settings pages remain</div>
+          <div class="metric-trend positive">&#8593; +1 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Prod Readiness</div>
+          <div class="metric-value warning">81</div>
+          <div class="metric-sublabel">Score out of 100</div>
+          <div class="metric-trend positive">&#8593; +7 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:81%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Days Since Blocker</div>
+          <div class="metric-value positive">28</div>
+          <div class="metric-sublabel">No active production blockers</div>
+          <div class="metric-trend positive">&#8593; +15 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:90%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Launch Readiness</div>
+          <div class="metric-value warning">68.8%</div>
+          <div class="metric-sublabel">Composite estimate</div>
+          <div class="metric-trend positive">&#8593; +2.9 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:68.8%"></div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Today's Priorities (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Today's Priorities</div>
+
+      <div class="priority-card">
+        <label class="priority-skip-label" title="Check to skip this story and regenerate">
+          <input type="checkbox" class="priority-skip-cb" onchange="handlePrioritySkip(this)" />
+          <span class="priority-skip-text">Skip</span>
+        </label>
+        <div class="priority-badge">#1</div>
+        <div class="priority-body">
+          <div class="priority-title">FRED-202 — Standardize input fields to onboarding styling (except My Profile)</div>
+          <div class="priority-desc">Make every text/character form input in the app look like the onboarding's fields — the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-input</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-label</code> Manrope-underline style (17px/500 text, 11px/700 uppercase <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#6b7280</code> label, transparent background, 2px <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#2563EB</code> bottom-border, red error state). The story is precise: <strong>25 fields across 7 files</strong> — add-beneficiary (12), retirement-planning (6), lump-sum-investment (2), change-email (2), portfolio-customize (1), recurring-investments (1), sell-withdraw (1). I ground-truthed the canonical style this morning: it's defined in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">kyc-verification.component.scss</code> (L251 <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-label</code>, L261 <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-input</code>) and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">investment-schedule.component.scss</code>, using component-scoped <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">--kyc-primary</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">--kyc-text</code> vars — so the shared source must mirror the values with FRED palette literals rather than reuse those scoped vars. <strong>Onboarding, My Profile, recovery, and authfinalize are finalized/excluded and must not be touched.</strong> This is the strongest remaining Tier-1, sandbox-buildable READY story (the runner-up I named yesterday after FRED-203 shipped) — frontend-only, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code>-verifiable here. <strong>Tier 1 — full 7-point acceptance criteria already in the backlog; no A/C approval needed, just pick an option and confirm the two scope questions.</strong></div>
+          <span class="diff-chip diff-medium">Medium</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Why I Picked This (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Why I Picked This</div>
+      <div class="card">
+        <div class="card-text"><strong>FRED-203 (KYC edit blue header) shipped and was closed out to "Looks Good," so this is a fresh brief for the next single story.</strong> Operating in <strong>Tier 1</strong>: FRED-202 has a full 7-point acceptance-criteria block already in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code>, so nothing to propose — just pick an option. Of the READY candidates, FRED-191 / FRED-201 / FRED-204 stay <strong>sandbox-gated</strong> (they need a real-device Capacitor cold-start the sandbox can't run), and FRED-189 + FRED-195 are effectively done (shipped/merged) but still sit uncheckmarked in READY — data-hygiene to close out, not build. That leaves FRED-202 as the strongest build-ready, sandbox-verifiable pick — and the exact runner-up I named in yesterday's brief once FRED-203 landed. It directly advances strategic priority #1 (complete the UI overhaul on remaining pages) by extending the design-system consistency work onto 7 more pages, and it's frontend-only and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code>-verifiable in-sandbox. Difficulty Medium (25 fields, real visual-regression surface) is acceptable now that readiness is 81 (&gt; 75). No exclusions apply: FRED-188 (skipped 06-22) and FRED-100 (skipped 06-15) are the only active skips, neither is this story.</div>
+      </div>
+    </div>
+
+    <!-- ── Strategic Alignment (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Strategic Alignment</div>
+      <div class="card">
+        <div class="card-text">Strategic priority #1 is <em>completing the UI overhaul on all remaining pages</em>, and a core design-consistency rule is to <em>prefer the existing design system and eliminate duplicated patterns</em>. This brings 25 ad-hoc form inputs across 7 pages onto the single canonical onboarding field style — the same consolidation discipline that made <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">_blue-hero-header.scss</code> the one header source (FRED-194). Consistent, premium inputs across add-beneficiary, retirement-planning, sell/withdraw and the rest reinforce the calm, polished fintech feel that drives <strong>trust and retention</strong>.</div>
+      </div>
+    </div>
+
+    <!-- ── Production Readiness Impact (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Production Readiness Impact</div>
+      <div class="card">
+        <div class="card-text">Advances the UI-coverage lever (7 more pages brought to the design system) and removes a class of "placeholder UX" — inconsistent inputs — that the production-readiness mission explicitly targets. The main risk to manage is <strong>visual/behavioral regression</strong>: 25 fields, and the canonical classes (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-input</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-label</code>) are <em>also</em> used by out-of-scope surfaces (My Profile uses <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-label</code>; onboarding defines both) — so the new style must be applied in a scoped way, never as a blanket global rule. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> verifiable in-sandbox; the live 390×844 / 430×932 render of each restyled field — and confirmation that My Profile/onboarding are untouched — is handed to you via "Looks Good."</div>
+      </div>
+    </div>
+
+    <!-- ── Acceptance Criteria (Tier 1 — reference, planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Acceptance Criteria (already in backlog)</div>
+      <div class="card">
+        <div class="card-text" style="color:var(--gray);margin-bottom:14px;">FRED-202 is a <strong>Tier 1</strong> story — it already has a full acceptance-criteria block in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code>, so there's nothing to approve here. Shown for reference; the build verifies against these.</div>
+        <div class="triage-group">
+          <ul class="triage-list">
+            <li><strong>AC-1</strong> — A shared SCSS source of truth replicating the onboarding <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-label</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-input</code> underline style (new <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/_form-fields.scss</code> or equivalent) is created for the non-onboarding pages. The onboarding component SCSS is NOT modified — the shared partial mirrors the canonical values (intentional duplication is acceptable to avoid touching finalized onboarding).</li>
+            <li><strong>AC-2</strong> — Every text/character input NOT in My Profile, onboarding, recovery, or authfinalize is restyled: add-beneficiary (12), retirement-planning (6), lump-sum-investment (2), change-email (2), portfolio-customize (1), recurring-investments (1), sell-withdraw (1) — 25 fields across 7 files.</li>
+            <li><strong>AC-3</strong> — Labels, placeholders, focus state, and error/validation state on those fields all match the onboarding pattern (uppercase <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#6b7280</code> label, blue underline, red error treatment).</li>
+            <li><strong>AC-4</strong> — Left completely untouched: My Profile; ALL onboarding components (kyc-verification, investment-schedule, surveyinitial, stockselection, investmentconfirmation, get-started, linkplaid); recovery; authfinalize.</li>
+            <li><strong>AC-5</strong> — No visual regression on any untouched surface (onboarding, My Profile, recovery, authfinalize).</li>
+            <li><strong>AC-6</strong> — Not restyled as form fields (documented exclusions): the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">document-upload</code> <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">type="file"</code> control; and — pending your call — the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">&lt;ion-searchbar&gt;</code> search fields and the ai-chat <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">&lt;ion-textarea&gt;</code> composer.</li>
+            <li><strong>AC-7</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> succeeds within budget; every restyled field verified at 430×932 (and 390×844) with no broken alignment, clipped labels, or lost validation.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Implementation Options (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Implementation Options</div>
+      <div class="option-group">
+
+        <div class="option-card selected">
+          <div class="option-header">
+            <span class="option-label">Option A</span>
+            <span class="option-rec">Recommended</span>
+          </div>
+          <div class="option-title">New shared <code>theme/_form-fields.scss</code> partial, applied <em>scoped</em>, with <code>&lt;ion-input&gt;</code> converted to native <code>&lt;input class="field-input"&gt;</code></div>
+          <div class="option-body">Create a single <code>theme/_form-fields.scss</code> that mirrors the canonical onboarding <code>.field-label</code> / <code>.field-input</code> values using FRED palette <em>literals</em> (<code>#2563EB</code>, <code>#0f172a</code>, <code>#6b7280</code>, red error) — not the kyc-scoped <code>--kyc-*</code> vars. On each of the 7 target pages, convert the inputs to native <code>&lt;label class="field-label"&gt;</code> + <code>&lt;input class="field-input"&gt;</code> for a true pixel match, and <code>@use</code> the partial <strong>scoped under each page's root selector</strong> (not a blanket global rule) so My Profile's <code>.field-label</code> div and the onboarding components are provably untouched. Carry over focus + error/validation treatment to match onboarding.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>true pixel match to onboarding; single shared source (AC-1); scoped application provably can't bleed into My Profile/onboarding (AC-4/AC-5); native inputs make label/placeholder/error states match exactly (AC-3).</span></span>
+            <span class="meta-item">Cons: <span>most markup churn — 25 fields converted from Ionic to native, so each page's form bindings (<code>ngModel</code>/validation/value events) must be re-verified.</span></span>
+            <span class="meta-item">Risk: <span>Medium — wide surface (25 fields), but frontend-only and <code>tsc</code>/<code>ng build</code>-verifiable; live render confirmed by you.</span></span>
+            <span class="meta-item">Estimate: <span>~3–4 hr</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option B</span>
+          </div>
+          <div class="option-title">Same shared partial, but keep <code>&lt;ion-input&gt;</code> and approximate via Ionic CSS variables</div>
+          <div class="option-body">Author the shared partial against Ionic's form primitives — set <code>--background</code>, <code>--border-width</code>/<code>--border-color</code>, padding and the label slot via Ionic CSS custom properties — so the existing <code>&lt;ion-input&gt;</code>/<code>&lt;ion-item&gt;</code> markup stays and only styling changes.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>far less markup churn; preserves Ionic's built-in form behavior (validation, value events) so lower behavioral-regression risk.</span></span>
+            <span class="meta-item">Cons: <span>won't truly pixel-match — Ionic's internal padding, label float, and the underline rendering differ from the native onboarding fields, and matching the red error state through Ionic vars is fiddly; risks <strong>AC-3</strong> (focus/error parity) and <strong>AC-5</strong> (looks "close but off").</span></span>
+            <span class="meta-item">Risk: <span>Medium — visual fidelity gap vs the onboarding reference; may bounce on AC-3.</span></span>
+            <span class="meta-item">Estimate: <span>~2–3 hr</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option C</span>
+          </div>
+          <div class="option-title">Blanket-global the partial via <code>global.scss</code> (one import, no per-page wiring)</div>
+          <div class="option-body">Define <code>.field-input</code> / <code>.field-label</code> once and import globally in <code>global.scss</code> so every page picks it up automatically, with no per-page <code>@use</code>.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>least wiring — one import, fields styled everywhere by class.</span></span>
+            <span class="meta-item">Cons: <span><strong>rejected — breaks AC-4/AC-5.</strong> Ground-truthed this morning: My Profile uses <code>&lt;div class="field-label"&gt;</code> (+ its own <code>.field-label</code> SCSS at L292) and the onboarding components define <code>.field-input</code>/<code>.field-label</code> — a global rule would bleed into both, restyling explicitly out-of-scope surfaces.</span></span>
+            <span class="meta-item">Risk: <span>High — silent regressions on My Profile / onboarding.</span></span>
+            <span class="meta-item">Estimate: <span>~2 hr (but non-compliant)</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Triage Findings (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Triage Findings</div>
+      <div class="card">
+
+        <div class="story-section">
+          <div class="story-header">FRED-202 — Standardize input fields to onboarding styling (except My Profile)</div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">In Scope</div>
+            <ul class="triage-list">
+              <li>Create one shared SCSS source (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/_form-fields.scss</code>) mirroring the onboarding <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-input</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-label</code> values with FRED palette literals (the onboarding SCSS itself is NOT modified).</li>
+              <li>Restyle <strong>25 fields across 7 files</strong>: add-beneficiary (12), retirement-planning (6), lump-sum-investment (2), change-email (2), portfolio-customize (1), recurring-investments (1), sell-withdraw (1).</li>
+              <li>Match label, placeholder, focus, and error/validation treatment to the onboarding pattern.</li>
+              <li>Apply the style <strong>scoped</strong> so it cannot reach My Profile / onboarding / recovery / authfinalize.</li>
+              <li><code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> within budget; verify each field at 390×844 and 430×932.</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">Potentially Out of Scope</div>
+            <ul class="triage-list">
+              <li>Touching My Profile, any onboarding component, recovery, or authfinalize in any way (explicitly excluded — AC-4).</li>
+              <li>The <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">document-upload</code> <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">type="file"</code> control (documented exclusion — AC-6).</li>
+              <li>The <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">&lt;ion-searchbar&gt;</code> search fields and the ai-chat <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">&lt;ion-textarea&gt;</code> composer — pending your call (Q1; I recommend excluding both).</li>
+              <li>Range sliders (surveyinitial) and TOS checkboxes (investmentconfirmation) — not text inputs, not in scope.</li>
+              <li>Consolidating onboarding's component-scoped copy into the shared partial (would touch finalized onboarding — intentional duplication is accepted by AC-1).</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">UX Considerations</div>
+            <ul class="triage-list">
+              <li><strong>Error/validation parity</strong> — the red error state must trigger on the same conditions as today on each page; converting Ionic → native (Option A) means re-wiring the visual error class to the existing validation signal.</li>
+              <li><strong>No out-of-scope bleed</strong> — confirm My Profile's <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-label</code> rows and all onboarding fields render byte-identical after the change.</li>
+              <li><strong>Mobile-first</strong> — verify at 390×844 and 430×932: labels not clipped, underline aligns, inputs don't shift the layout; date/number inputs keep their keyboards.</li>
+              <li><strong>Focus state</strong> — blue underline on focus, calm and consistent across all 25 fields.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Questions For Andrew (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Questions For Andrew</div>
+      <div class="card">
+
+        <div class="question-item">
+          <div class="question-text">
+            <strong>From the story — are the search + chat inputs in scope?</strong> AC-6 leaves two controls pending your call: the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">&lt;ion-searchbar&gt;</code> search fields (e.g. stock selection) and the ai-chat <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">&lt;ion-textarea&gt;</code> composer. They're a search control and a chat composer, not data-entry form fields, so my recommendation is to <strong>exclude both</strong> — restyling them as underline fields would look wrong and risk regressions outside the 25-field set.
+            <span class="required-badge">Required</span>
+          </div>
+          <textarea class="question-input" data-required="true" placeholder="Exclude both — leave the ion-searchbar and the ai-chat textarea composer as they are. Just the 25 form fields across the 7 listed pages."></textarea>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text">
+            <strong>Scoped application vs a blanket global rule.</strong> The canonical classes (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-input</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-label</code>) are also used by out-of-scope surfaces — I confirmed My Profile uses <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-label</code> and onboarding defines both. So Option A applies the shared partial <em>scoped to the 7 target pages</em> rather than as a one-line global import (Option C), to provably keep My Profile/onboarding untouched. Confirming you're fine trading a little extra per-page wiring for that safety.
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Yes — apply it scoped to the 7 pages, don't make it global. Keeping My Profile and onboarding provably untouched is worth the extra wiring."></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Suggested Execution Order (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Suggested Execution Order</div>
+      <div class="card">
+
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-body" contenteditable="false"><strong>Lift the canonical values</strong> — Read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">kyc-verification.component.scss</code> (L251 <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-label</code>, L261 <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-input</code>) and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">investment-schedule.component.scss</code>; build <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/_form-fields.scss</code> mirroring them with FRED palette literals (resolve <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">--kyc-*</code> → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#2563EB</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#0f172a</code>), incl. focus + error states.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-body" contenteditable="false"><strong>Restyle page-by-page (scoped)</strong> — Work through the 7 files in order of field count (add-beneficiary 12 → retirement-planning 6 → lump-sum 2 → change-email 2 → portfolio-customize 1 → recurring-investments 1 → sell-withdraw 1), converting inputs to native <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-input</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-label</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@use</code>-ing the partial scoped under each page root. Re-verify each page's <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ngModel</code>/validation bindings.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-body" contenteditable="false"><strong>Prove no bleed</strong> — Confirm My Profile (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-label</code> rows) and every onboarding field render identically to before; grep that no global <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-input</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.field-label</code> rule was added to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">global.scss</code>.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-body" contenteditable="false"><strong>Verify + hand off</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> within budget; verifier over AC-1..AC-7. Live 390×844 / 430×932 render of the 25 restyled fields + a no-regression check on My Profile/onboarding handed to you to confirm via "Looks Good."</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Tomorrow's Likely Pick (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Tomorrow's Likely Pick</div>
+      <div class="card">
+        <ul class="tomorrow-list">
+          <li><strong>FRED-186</strong> — Update API searches to use debounce + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code>. Tier 2 (no A/C yet), Easy/Medium, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>-verifiable; needs a quick scope on which searches are in. A clean follow-on if FRED-202 lands.</li>
+          <li><strong>Data hygiene</strong> — close out FRED-189 (shipped 06-19) and FRED-195 (shipped+merged) with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done</code> so they aren't re-picked and burndown stays honest.</li>
+          <li><strong>FRED-187 / DEV-198</strong> — Plaid paycheck-trigger investigation (research spike) or the package-lock libc-churn dev-tooling fix; both Tier 2, both sandbox-doable. FRED-191/201/204 stay sandbox-gated (real-device Capacitor verification).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── Completion Section (completed state only) ── -->
+    <div class="section-group section-intermediary-only" id="completion-section">
+      <div class="section-label">WHAT GOT DONE</div>
+      <div class="card" id="completion-content">
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-202 — Standardize input fields to onboarding styling (except My Profile)</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Created a shared <code>theme/_form-fields.scss</code> scoped mixin mirroring the canonical onboarding <code>.field-label</code>/<code>.field-input</code> underline style with FRED palette literals (<code>#2563EB</code> / <code>#0f172a</code> / <code>#6b7280</code> / error <code>#dc2626</code>), and converted <strong>25 form fields across 7 pages</strong> to native <code>&lt;label class="field-label"&gt; + &lt;input class="field-input"&gt;</code>, each <code>@use</code>+<code>@include</code>-ing the mixin scoped under the page's own <code>:host</code>: add-beneficiary (12), retirement-planning (6), lump-sum-investment (2), change-email (2), portfolio-customize (1), recurring-investments (1), sell-withdraw (1). Field bindings, placeholders, and validation preserved; add-beneficiary's SSN/phone formatters migrated from the Ionic event to the native input event. Verifier-APPROVED with zero in-scope failures; PR #100 squash-merged to develop. <em>Heads-up:</em> a pre-existing build-break on develop (a bad SCSS import path in kyc-verification from FRED-203) was found and fixed so the app compiles again.</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>AC-1 — shared <code>_form-fields.scss</code> source of truth created with FRED literals; onboarding SCSS not modified.</li>
+            <li>AC-2 — all 25 in-scope fields across the 7 files restyled to the canonical classes.</li>
+            <li>AC-3 — labels, placeholders, focus + error/validation states match the onboarding pattern.</li>
+            <li>AC-4 — My Profile, all onboarding components, recovery, authfinalize left completely untouched.</li>
+            <li>AC-5 — no global bleed: zero <code>.field-input</code>/<code>.field-label</code> rules in <code>global.scss</code>; partial applied scoped per page.</li>
+            <li>AC-6 — documented exclusions (ion-searchbar, ai-chat textarea, document-upload file) not restyled.</li>
+            <li>AC-7 — <code>tsc --noEmit</code> and <code>ng build --configuration=ci</code> both exit 0.</li>
+          </ul>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Production readiness 81 → 82 — 7 more pages brought onto the canonical onboarding field style (strategic priority #1: UI-overhaul / design-system consistency), and a P0 develop build regression closed. Live device look at 430×932 / 390×844 is the one item to eyeball before "Looks Good."</p>
+        </div>
+      </div>
+      <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
+        Looks Good &#10003;
+      </button>
+
+      <!-- Request Changes — rework the same story with feedback -->
+      <div id="rework-block" style="margin-top:14px;">
+        <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The restyle bled into My Profile's label rows — scope the partial to the 7 target pages only."></textarea>
+        <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
+      </div>
+    </div>
+
+    <!-- ── Anything Else For the Execution Agent (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Anything Else For the Execution Agent?</div>
+      <div class="card">
+        <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Don't add a global .field-input rule — scope it to the 7 pages; leave My Profile and onboarding exactly as-is..."></textarea>
+      </div>
+    </div>
+
+    <!-- ── Add to Backlog (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Add to Backlog</div>
+      <div class="card">
+        <div class="revision-label" style="margin-bottom:14px;">Thought of something while reviewing? Add it to the backlog without leaving this page.</div>
+        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Add a confirmation step before deleting a beneficiary..." style="min-height:80px;margin-bottom:12px;"></textarea>
+        <button class="btn-dark" id="backlog-btn" onclick="handleAddBacklog()">Add to Backlog</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Fixed Approve Bar ─── -->
+  <div id="approve-bar">
+    <div id="approve-status">Complete all required fields to unlock approval</div>
+    <button id="approve-btn" onclick="handleApprove()">Approve / Get To Work</button>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
