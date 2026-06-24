@@ -67,23 +67,6 @@ On a cold start that requires reauth, after the passkey ceremony succeeds the ap
 6. Clean single handoff: no new white flash, no double-hide, no cover flicker at the cover→page transition.
 7. `npx tsc --noEmit` exits 0; verified on a local Capacitor iOS build (or 430×932 webview) by reproducing the cold-start + reauth flow and confirming a seamless cover-to-page handoff.
 
-## FRED-202 — Standardize input fields to onboarding styling (except profile)
-except for my profile, standardize all text and character input fields to be like how the onboarding's are in terms of styling. [Confirmed: the onboarding input styling = the `.field-input` / `.field-label` pattern, defined in kyc-verification and investment-schedule. surveyinitial uses range sliders, stockselection uses an ion-searchbar, investmentconfirmation uses TOS checkboxes, get-started/linkplaid have no inputs.]
-
-### Summary
-Make every text/character form input in the app look like the onboarding's fields — the `.field-input` / `.field-label` Manrope underline style (Manrope 17px/500 text, 11px/700 uppercase #6b7280 label, transparent bg, 2px #2563EB bottom-border, red error state). Replicate that style into one shared SCSS source for the non-onboarding pages and apply it there. Onboarding, My Profile, recovery, and authfinalize are finalized/excluded and must not be touched.
-
-### Acceptance Criteria
-1. A shared SCSS source of truth replicating the onboarding `.field-label` + `.field-input` underline style (new `theme/_form-fields.scss` imported via `global.scss`, or equivalent) is created for the non-onboarding pages. The onboarding component SCSS is NOT modified — the shared partial mirrors the canonical values (intentional duplication is acceptable to avoid touching finalized onboarding).
-2. Every text/character form input that is NOT in My Profile, NOT in onboarding, and NOT already-finalized (recovery, authfinalize) is restyled to match: add-beneficiary (12), retirement-planning (6), lump-sum-investment (2), change-email (2), portfolio-customize (1), recurring-investments (1), sell-withdraw (1) — 25 fields across 7 files.
-3. Labels, placeholders, focus state, and error/validation state on those fields all match the onboarding pattern (uppercase #6b7280 label, blue underline, red error treatment).
-4. Left completely untouched: My Profile; ALL onboarding components (kyc-verification, investment-schedule, surveyinitial, stockselection, investmentconfirmation, get-started, linkplaid); recovery; authfinalize.
-5. No visual regression on any untouched surface (onboarding, My Profile, recovery, authfinalize).
-6. Not restyled as form fields (documented exclusions): the `document-upload` `type="file"` control; and — pending Andy's call — the `<ion-searchbar>` search fields and the `ai-chat` `<ion-textarea>` composer.
-7. `npx tsc --noEmit` exits 0; `ng build` succeeds within budget; every restyled field verified at 430×932 (and 390×844) with no broken alignment, clipped labels, or lost validation.
-
-Open questions (Andy to confirm): (a) are the `<ion-searchbar>` search fields and ai-chat `<ion-textarea>` composer in scope? (recommend exclude); (b) convert `<ion-input>` → native `<input class="field-input">` for a pixel match, or approximate via Ionic CSS vars? (recommend convert).
-
 ## FRED-204 — Fix white flash in static→Lottie reauth transition
 on a cold start and reauth is needed. when the static transitions into the lottie, there is a very brief white screen that displays (im talking like 0.1s like its just a slight flash) that we do not want to see. we want this transition to be seamless
 
@@ -823,6 +806,23 @@ Move the tab3 stat strip's data and its freedom date/age/dollars-away math out o
 9. No new debt; compiles clean: old `loadStatStrip()` machinery is deleted (not commented out); no orphaned imports or dead `destroy$` plumbing. `cd frontend && npx tsc --noEmit` exits 0 and the scoped build passes with no new TS/SCSS warnings. Stat strip verified at 430×932 — instant on cold launch from snapshot, instant on re-entry, and updates after a My Profile edit.
 
 Decisions (Andy): Option 2 (dedicated service) + Angular signals as the reactive primitive (first signals usage in the app, approved); plus a persisted user-scoped localStorage snapshot for instant cold-launch (folded in from Option 3). Est. 3hr+, [code].
+
+## FRED-202 — ✓ Standardize input fields to onboarding styling (except profile)
+except for my profile, standardize all text and character input fields to be like how the onboarding's are in terms of styling. [Confirmed: the onboarding input styling = the `.field-input` / `.field-label` pattern, defined in kyc-verification and investment-schedule. surveyinitial uses range sliders, stockselection uses an ion-searchbar, investmentconfirmation uses TOS checkboxes, get-started/linkplaid have no inputs.]
+
+### Summary
+Make every text/character form input in the app look like the onboarding's fields — the `.field-input` / `.field-label` Manrope underline style (Manrope 17px/500 text, 11px/700 uppercase #6b7280 label, transparent bg, 2px #2563EB bottom-border, red error state). Replicate that style into one shared SCSS source for the non-onboarding pages and apply it there. Onboarding, My Profile, recovery, and authfinalize are finalized/excluded and must not be touched.
+
+### Acceptance Criteria
+1. A shared SCSS source of truth replicating the onboarding `.field-label` + `.field-input` underline style (new `theme/_form-fields.scss` imported via `global.scss`, or equivalent) is created for the non-onboarding pages. The onboarding component SCSS is NOT modified — the shared partial mirrors the canonical values (intentional duplication is acceptable to avoid touching finalized onboarding).
+2. Every text/character form input that is NOT in My Profile, NOT in onboarding, and NOT already-finalized (recovery, authfinalize) is restyled to match: add-beneficiary (12), retirement-planning (6), lump-sum-investment (2), change-email (2), portfolio-customize (1), recurring-investments (1), sell-withdraw (1) — 25 fields across 7 files.
+3. Labels, placeholders, focus state, and error/validation state on those fields all match the onboarding pattern (uppercase #6b7280 label, blue underline, red error treatment).
+4. Left completely untouched: My Profile; ALL onboarding components (kyc-verification, investment-schedule, surveyinitial, stockselection, investmentconfirmation, get-started, linkplaid); recovery; authfinalize.
+5. No visual regression on any untouched surface (onboarding, My Profile, recovery, authfinalize).
+6. Not restyled as form fields (documented exclusions): the `document-upload` `type="file"` control; and — pending Andy's call — the `<ion-searchbar>` search fields and the `ai-chat` `<ion-textarea>` composer.
+7. `npx tsc --noEmit` exits 0; `ng build` succeeds within budget; every restyled field verified at 430×932 (and 390×844) with no broken alignment, clipped labels, or lost validation.
+
+Open questions (Andy to confirm): (a) are the `<ion-searchbar>` search fields and ai-chat `<ion-textarea>` composer in scope? (recommend exclude); (b) convert `<ion-input>` → native `<input class="field-input">` for a pixel match, or approximate via Ionic CSS vars? (recommend convert).
 
 ## FRED-203 — ✓ KYC edit page blue header + part-1 gating
 make the update/edit KYC page linked to from security-settings have the blue header that security settings has for both parts of the kyc update. also, a user should not be able to proceed from part 1 to part 2 in kyc if the data in part 1 has not been updated from its current values. make sure that the kyc page only has the blue ion header in editMode and not the 'Identity Verification' onboarding flow step
