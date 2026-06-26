@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { NavController } from '@ionic/angular';
@@ -10,6 +10,8 @@ import { ToastService } from '../../services/toast.service';
 import { PasskeyService } from '../../services/passkey.service';
 import { PinService } from '../../services/pin.service';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, forkJoin, of, takeUntil } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import {
   IonHeader, IonToolbar, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonReorderGroup,
@@ -89,8 +91,10 @@ interface Stock {
     ])
   ]
 })
-export class PortfolioCustomizeComponent implements OnInit {
-  
+export class PortfolioCustomizeComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  searchInput$ = new Subject<string>();
+
   // Current portfolio
   portfolio: Stock[] = [];
   
@@ -128,13 +132,85 @@ export class PortfolioCustomizeComponent implements OnInit {
   ngOnInit() {
     console.log('[PortfolioCustomizeComponent] Initializing portfolio customization');
     // Force recompile
-    
+
     // Check if this is the initial setup flow
     this.route.queryParamMap.subscribe(params => {
       this.showExplanation = params.get('initial') === 'true';
     });
 
     this.loadCurrentPortfolio();
+
+    // Debounced stock search pipe
+    this.searchInput$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(term => {
+        if (!term || term.length < 2) {
+          this.searchResults = [];
+          this.isSearching = false;
+          return of(null);
+        }
+        this.isSearching = true;
+        const equity$ = this.http.get<AlpacaAsset[]>(
+          `${environment.backendApiUrl}/alpaca/assets`,
+          {
+            headers: this.getAuthHeaders(),
+            params: { search: term, asset_class: 'us_equity', status: 'active' }
+          }
+        ).pipe(catchError(() => of([] as AlpacaAsset[])));
+        const etf$ = this.http.get<AlpacaAsset[]>(
+          `${environment.backendApiUrl}/alpaca/assets`,
+          {
+            headers: this.getAuthHeaders(),
+            params: { search: term, asset_class: 'etf', status: 'active' }
+          }
+        ).pipe(catchError(() => of([] as AlpacaAsset[])));
+        return forkJoin([equity$, etf$]).pipe(
+          catchError(() => of([[] as AlpacaAsset[], [] as AlpacaAsset[]]))
+        );
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe(result => {
+      this.isSearching = false;
+      if (result === null) {
+        return;
+      }
+      const [stocksResponse, etfsResponse] = result as [AlpacaAsset[], AlpacaAsset[]];
+      const allResults = [...stocksResponse, ...etfsResponse];
+      if (allResults.length > 0) {
+        const term = this.searchTerm;
+        const termUpper = term.toUpperCase();
+        let filteredResults = allResults.filter(asset =>
+          asset.tradable &&
+          asset.status === 'active' &&
+          (asset.symbol.includes(termUpper) || asset.name.toUpperCase().includes(termUpper))
+        );
+        filteredResults.sort((a, b) => {
+          const aExactSymbol = a.symbol === termUpper ? 1 : 0;
+          const bExactSymbol = b.symbol === termUpper ? 1 : 0;
+          if (aExactSymbol !== bExactSymbol) return bExactSymbol - aExactSymbol;
+          const aSymbolStart = a.symbol.startsWith(termUpper) ? 1 : 0;
+          const bSymbolStart = b.symbol.startsWith(termUpper) ? 1 : 0;
+          if (aSymbolStart !== bSymbolStart) return bSymbolStart - aSymbolStart;
+          const aSymbolContains = a.symbol.includes(termUpper) ? 1 : 0;
+          const bSymbolContains = b.symbol.includes(termUpper) ? 1 : 0;
+          if (aSymbolContains !== bSymbolContains) return bSymbolContains - aSymbolContains;
+          const aNameContains = a.name.toLowerCase().includes(term.toLowerCase()) ? 1 : 0;
+          const bNameContains = b.name.toLowerCase().includes(term.toLowerCase()) ? 1 : 0;
+          if (aNameContains !== bNameContains) return bNameContains - aNameContains;
+          return a.symbol.localeCompare(b.symbol);
+        });
+        this.searchResults = filteredResults.slice(0, 50);
+      } else {
+        this.searchResults = [];
+      }
+      console.log(`[PortfolioCustomizeComponent] Search for "${this.searchTerm}" returned ${this.searchResults.length} results`);
+    });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private getAuthHeaders(): HttpHeaders {
@@ -213,108 +289,10 @@ export class PortfolioCustomizeComponent implements OnInit {
     this.originalPortfolio = JSON.parse(JSON.stringify(this.portfolio));
   }
 
-  // Search stocks using Alpaca API with enhanced search
-  async searchStocks(searchTerm?: string): Promise<void> {
-    const term = searchTerm || this.searchTerm;
-    if (!term || term.length < 2) {
-      this.searchResults = [];
-      return;
-    }
-
-    console.log(`[PortfolioCustomizeComponent] Starting search for: "${term}"`);
-    console.log(`[PortfolioCustomizeComponent] Backend URL: ${environment.backendApiUrl}`);
-    console.log(`[PortfolioCustomizeComponent] Auth headers:`, this.getAuthHeaders().keys());
-    this.isSearching = true;
-    try {
-      console.log(`[PortfolioCustomizeComponent] Searching stocks with URL: ${environment.backendApiUrl}/alpaca/assets`);
-      
-      // First search for US equity stocks
-      const stocksResponse = await this.http.get<AlpacaAsset[]>(
-        `${environment.backendApiUrl}/alpaca/assets`,
-        { 
-          headers: this.getAuthHeaders(),
-          params: { 
-            search: term,
-            asset_class: 'us_equity',
-            status: 'active'
-          }
-        }
-      ).toPromise();
-
-      console.log(`[PortfolioCustomizeComponent] Stocks response:`, stocksResponse);
-
-      // Then search for ETFs
-      const etfsResponse = await this.http.get<AlpacaAsset[]>(
-        `${environment.backendApiUrl}/alpaca/assets`,
-        { 
-          headers: this.getAuthHeaders(),
-          params: { 
-            search: term,
-            asset_class: 'etf',
-            status: 'active'
-          }
-        }
-      ).toPromise();
-
-      console.log(`[PortfolioCustomizeComponent] ETFs response:`, etfsResponse);
-      
-      // Combine results
-      let allResults: AlpacaAsset[] = [];
-      if (stocksResponse) {
-        allResults = allResults.concat(stocksResponse);
-      }
-      if (etfsResponse) {
-        allResults = allResults.concat(etfsResponse);
-      }
-      
-      if (allResults.length > 0) {
-        const termUpper = term.toUpperCase();
-        
-        // Filter for tradable assets only AND ensure strict relevance to search term
-        let filteredResults = allResults.filter(asset => 
-          asset.tradable && 
-          asset.status === 'active' &&
-          (asset.symbol.includes(termUpper) || asset.name.toUpperCase().includes(termUpper))
-        );
-
-        // Enhanced search: prioritize exact symbol matches, then partial symbol matches, then name matches
-        
-        // Sort results by relevance
-        filteredResults.sort((a, b) => {
-          // Exact symbol match gets highest priority
-          const aExactSymbol = a.symbol === termUpper ? 1 : 0;
-          const bExactSymbol = b.symbol === termUpper ? 1 : 0;
-          if (aExactSymbol !== bExactSymbol) return bExactSymbol - aExactSymbol;
-          
-          // Symbol starts with search term
-          const aSymbolStart = a.symbol.startsWith(termUpper) ? 1 : 0;
-          const bSymbolStart = b.symbol.startsWith(termUpper) ? 1 : 0;
-          if (aSymbolStart !== bSymbolStart) return bSymbolStart - aSymbolStart;
-          
-          // Symbol contains search term
-          const aSymbolContains = a.symbol.includes(termUpper) ? 1 : 0;
-          const bSymbolContains = b.symbol.includes(termUpper) ? 1 : 0;
-          if (aSymbolContains !== bSymbolContains) return bSymbolContains - aSymbolContains;
-          
-          // Name contains search term (case insensitive)
-          const aNameContains = a.name.toLowerCase().includes(term.toLowerCase()) ? 1 : 0;
-          const bNameContains = b.name.toLowerCase().includes(term.toLowerCase()) ? 1 : 0;
-          if (aNameContains !== bNameContains) return bNameContains - aNameContains;
-          
-          // Alphabetical by symbol as final sort
-          return a.symbol.localeCompare(b.symbol);
-        });
-
-        this.searchResults = filteredResults.slice(0, 50); // Increased limit for better search results
-      }
-      
-      console.log(`[PortfolioCustomizeComponent] Search for "${term}" returned ${this.searchResults.length} results`);
-    } catch (error) {
-      console.error('[PortfolioCustomizeComponent] Error searching stocks:', error);
-      this.searchResults = [];
-    } finally {
-      this.isSearching = false;
-    }
+  // Input handler: feed the debounced search Subject
+  onSearchInput(event: any): void {
+    const value: string = event.target?.value ?? '';
+    this.searchInput$.next(value);
   }
 
   // Pin formatter for ion-range

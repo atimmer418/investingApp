@@ -6,7 +6,8 @@ import { NavController } from '@ionic/angular';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged, switchMap, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import {
   IonHeader,
   IonToolbar,
@@ -72,6 +73,7 @@ interface AlpacaAsset {
 })
 export class LumpSumInvestmentPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  searchInput$ = new Subject<string>();
 
   // Investment data
   investmentAmount: number | null = null;
@@ -136,6 +138,67 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
     });
 
     this.loadPortfolioData();
+
+    // Debounced stock search pipe
+    this.searchInput$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(term => {
+        if (!term || term.length < 2) {
+          this.searchResults = [];
+          this.isSearching = false;
+          return of(null);
+        }
+        this.isSearching = true;
+        const equity$ = this.http.get<AlpacaAsset[]>(
+          `${environment.backendApiUrl}/alpaca/assets`,
+          {
+            headers: this.getAuthHeaders(),
+            params: { search: term, asset_class: 'us_equity', status: 'active' }
+          }
+        ).pipe(catchError(() => of([] as AlpacaAsset[])));
+        const etf$ = this.http.get<AlpacaAsset[]>(
+          `${environment.backendApiUrl}/alpaca/assets`,
+          {
+            headers: this.getAuthHeaders(),
+            params: { search: term, asset_class: 'etf', status: 'active' }
+          }
+        ).pipe(catchError(() => of([] as AlpacaAsset[])));
+        return forkJoin([equity$, etf$]).pipe(
+          catchError(() => of([[] as AlpacaAsset[], [] as AlpacaAsset[]]))
+        );
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe(result => {
+      this.isSearching = false;
+      if (result === null) {
+        return;
+      }
+      const [stocksResponse, etfsResponse] = result as [AlpacaAsset[], AlpacaAsset[]];
+      const allResults = [...stocksResponse, ...etfsResponse];
+      if (allResults.length > 0) {
+        const term = this.searchTerm;
+        const termUpper = term.toUpperCase();
+        let filteredResults = allResults.filter(asset =>
+          asset.tradable &&
+          asset.status === 'active' &&
+          (asset.symbol.toUpperCase().includes(termUpper) ||
+            asset.name.toUpperCase().includes(termUpper))
+        );
+        filteredResults.sort((a, b) => {
+          const aSymbolExact = a.symbol.toUpperCase() === termUpper ? 1 : 0;
+          const bSymbolExact = b.symbol.toUpperCase() === termUpper ? 1 : 0;
+          if (aSymbolExact !== bSymbolExact) return bSymbolExact - aSymbolExact;
+          const aSymbolPartial = a.symbol.toUpperCase().includes(termUpper) ? 1 : 0;
+          const bSymbolPartial = b.symbol.toUpperCase().includes(termUpper) ? 1 : 0;
+          if (aSymbolPartial !== bSymbolPartial) return bSymbolPartial - aSymbolPartial;
+          return a.symbol.localeCompare(b.symbol);
+        });
+        this.searchResults = filteredResults.slice(0, 50);
+      } else {
+        this.searchResults = [];
+      }
+    });
   }
 
   loadPortfolioData() {
@@ -225,86 +288,10 @@ export class LumpSumInvestmentPage implements OnInit, OnDestroy {
     }
   }
 
-  // Search stocks using Alpaca API (same as portfolio-customize)
-  async searchStocks(searchTerm?: string): Promise<void> {
-    const term = searchTerm || this.searchTerm;
-    if (!term || term.length < 2) {
-      this.searchResults = [];
-      return;
-    }
-
-    this.isSearching = true;
-    try {
-      // Search for US equity stocks
-      const stocksResponse = await this.http.get<AlpacaAsset[]>(
-        `${environment.backendApiUrl}/alpaca/assets`,
-        {
-          headers: this.getAuthHeaders(),
-          params: {
-            search: term,
-            asset_class: 'us_equity',
-            status: 'active'
-          }
-        }
-      ).toPromise();
-
-      // Search for ETFs
-      const etfsResponse = await this.http.get<AlpacaAsset[]>(
-        `${environment.backendApiUrl}/alpaca/assets`,
-        {
-          headers: this.getAuthHeaders(),
-          params: {
-            search: term,
-            asset_class: 'etf',
-            status: 'active'
-          }
-        }
-      ).toPromise();
-
-      // Combine results
-      let allResults: AlpacaAsset[] = [];
-      if (stocksResponse) {
-        allResults = allResults.concat(stocksResponse);
-      }
-      if (etfsResponse) {
-        allResults = allResults.concat(etfsResponse);
-      }
-
-      if (allResults.length > 0) {
-        // Filter for tradable assets only and strict string matching
-        const termUpper = term.toUpperCase();
-        let filteredResults = allResults.filter(asset =>
-          asset.tradable &&
-          asset.status === 'active' &&
-          (asset.symbol.toUpperCase().includes(termUpper) ||
-            asset.name.toUpperCase().includes(termUpper))
-        );
-
-        // Sort results: exact symbol matches first, then partial matches, then name matches
-        filteredResults.sort((a, b) => {
-          const aSymbolExact = a.symbol.toUpperCase() === termUpper ? 1 : 0;
-          const bSymbolExact = b.symbol.toUpperCase() === termUpper ? 1 : 0;
-
-          if (aSymbolExact !== bSymbolExact) return bSymbolExact - aSymbolExact;
-
-          const aSymbolPartial = a.symbol.toUpperCase().includes(termUpper) ? 1 : 0;
-          const bSymbolPartial = b.symbol.toUpperCase().includes(termUpper) ? 1 : 0;
-
-          if (aSymbolPartial !== bSymbolPartial) return bSymbolPartial - aSymbolPartial;
-
-          return a.symbol.localeCompare(b.symbol);
-        });
-
-        this.searchResults = filteredResults.slice(0, 50); // Limit to 50 results
-      } else {
-        this.searchResults = [];
-      }
-    } catch (error) {
-      console.error('Error searching stocks:', error);
-      this.searchResults = [];
-    } finally {
-      this.isSearching = false;
-    }
+  // Input handler: feed the debounced search Subject
+  onSearchInput(event: any): void {
+    const value: string = event.target?.value ?? '';
+    this.searchInput$.next(value);
   }
 
   selectStock(asset: AlpacaAsset) {
