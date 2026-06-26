@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="verifying-in-ci">
+  <div id="dashboard" data-populated="true" data-state="completed">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -347,10 +347,26 @@
     </div>
 
     <!-- ── Completion Section (completed state only) ── -->
-    <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
+    <div class="section-group section-intermediary-only" id="completion-section">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
-        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-186 — Update API searches to use debounce and switchMap</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Converted all three as-you-type stock searches — <strong>lump-sum-investment</strong>, <strong>portfolio-customize</strong>, and <strong>stockselection</strong> — to a debounced, cancellable RxJS pipe: each input now feeds a <code>Subject&lt;string&gt;</code> piped through <code>debounceTime(300)</code> → <code>distinctUntilChanged()</code> → <code>switchMap(forkJoin equity+ETF)</code> → <code>takeUntil(destroy$)</code>, so one debounced request fires after you stop typing and a slower earlier response can never overwrite a newer one (the stale-result race is fixed). Per your call, <strong>stockselection</strong> was additionally converted from an in-memory client-side filter to a backend-only <code>/alpaca/assets</code> search, and the <strong>my-profile referral validator was left untouched</strong> (out of scope). Errors are caught inside the stream so a failed request never breaks the next keystroke; the native <code>debounce</code> attribute was removed from each searchbar so the pipe owns the 300ms window. 6 files changed (+257/−302).</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>lump-sum + portfolio-customize searches use the <code>Subject</code> → <code>debounceTime(300)</code> → <code>distinctUntilChanged</code> → <code>switchMap</code> pipe (AC-1)</li>
+            <li>equity + ETF <code>/alpaca/assets</code> calls folded into one cancellable <code>forkJoin</code> inside the switchMap (AC-2)</li>
+            <li>stockselection converted to a backend-only <code>/alpaca/assets</code> search — in-memory <code>allAssets</code> filter + preload removed (AC-3)</li>
+            <li><code>switchMap</code> cancels in-flight requests → stale-result race fixed on all three (AC-4)</li>
+            <li>≥2-char + empty-input guards preserved; exactly <code>debounceTime(300)</code> (AC-5)</li>
+            <li>loading / empty / error states intact; <code>catchError</code> inside the stream keeps the pipe alive (AC-6)</li>
+            <li>subscriptions cleaned up via <code>takeUntil(this.destroy$)</code>; no leaks (AC-7)</li>
+            <li>my-profile referral validator left unchanged — out of scope (AC-8)</li>
+            <li><code>tsc --noEmit</code> clean and <code>ng build</code> succeeds; verifier APPROVED, CI green, PR #101 squash-merged to develop (AC-9)</li>
+          </ul>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Closes a real correctness bug on the app's primary stock-picking surfaces (no more stale results overwriting newer ones) — frontend-only, no schema/auth change. Readiness 82 → 83.</p>
+        </div>
       </div>
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;
