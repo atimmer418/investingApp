@@ -13,37 +13,28 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <!-- Loading state for initial asset loading -->
-  <div *ngIf="isLoadingAssets" class="ion-text-center ion-padding">
+  <ion-searchbar
+    [(ngModel)]="searchTerm"
+    (ionInput)="onSearchInput($event)"
+    placeholder="Search for stocks (e.g., AAPL)"
+    [disabled]="isProcessing">
+  </ion-searchbar>
+
+  <div *ngIf="isSearching" class="ion-text-center ion-padding">
     <ion-spinner name="crescent"></ion-spinner>
-    <p>Loading available stocks...</p>
   </div>
 
-  <div *ngIf="!isLoadingAssets">
-    <ion-searchbar
-      [(ngModel)]="searchTerm"
-      (ionInput)="searchStocks($event)"
-      placeholder="Search for stocks (e.g., AAPL)"
-      debounce="300"
-      [disabled]="isProcessing">
-    </ion-searchbar>
+  <ion-list *ngIf="searchResults.length > 0 && !isSearching">
+    <ion-item *ngFor="let stock of searchResults" (click)="selectStock(stock)" button detail="false">
+      <ion-label>
+        <h2>{{ stock.symbol }}</h2>
+        <p>{{ stock.name }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
 
-    <div *ngIf="isSearching" class="ion-text-center ion-padding">
-      <ion-spinner name="crescent"></ion-spinner>
-    </div>
-
-    <ion-list *ngIf="searchResults.length > 0 && !isSearching">
-      <ion-item *ngFor="let stock of searchResults" (click)="selectStock(stock)" button detail="false">
-        <ion-label>
-          <h2>{{ stock.symbol }}</h2>
-          <p>{{ stock.name }}</p>
-        </ion-label>
-      </ion-item>
-    </ion-list>
-
-    <div *ngIf="searchTerm && searchResults.length === 0 && !isSearching" class="ion-text-center ion-padding">
-      <p>No stocks found matching "{{ searchTerm }}"</p>
-    </div>
+  <div *ngIf="searchTerm && searchResults.length === 0 && !isSearching" class="ion-text-center ion-padding">
+    <p>No stocks found matching "{{ searchTerm }}"</p>
   </div>
 
   <div *ngIf="selectedStocks.length > 0" class="ion-padding-top">
@@ -54,10 +45,10 @@
         <ion-icon
           name="close-circle"
           (click)="!isProcessing && removeStock(stock)"
-          [class.icon-disabled]="isProcessing"         
-          role="button"                                
-          [attr.aria-disabled]="isProcessing"          
-          tabindex="{{isProcessing ? -1 : 0}}"         
+          [class.icon-disabled]="isProcessing"
+          role="button"
+          [attr.aria-disabled]="isProcessing"
+          tabindex="{{isProcessing ? -1 : 0}}"
         ></ion-icon>
       </ion-chip>
     </div>
