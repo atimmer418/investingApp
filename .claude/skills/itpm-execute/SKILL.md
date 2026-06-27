@@ -90,7 +90,11 @@ git commit -m "itpm: manifest for <story-id>" && git push origin develop
 
 ### Step C — Implement
 
-4. Invoke **builder-agent** with a complete spec:
+4. Invoke **builder-agent** with a complete spec. **CRITICAL — autonomous mode:** this is an unattended cloud routine; nobody is watching to answer questions. The spec you pass MUST open with this directive, verbatim:
+
+   > **AUTONOMOUS MODE — DO NOT call AskUserQuestion. There is no human watching this session; calling it will hang the routine forever.** When you hit a decision point that would normally make you stop and ask (ambiguous spec, an edge case the A/C didn't cover, an out-of-scope temptation, etc.): make the most reasonable, lowest-risk call that satisfies the acceptance criteria and the FRED conventions, implement it, and record the decision + your reasoning in your implementation-notes file for the verifier and Andy to review. The ONE exception is a genuine HARD BLOCKER — something that makes the build impossible to complete correctly (a Hard Rule would be violated: auth/JWT change required, DB schema change required, or the spec is fundamentally contradictory). In that case do NOT guess and do NOT ask — stop, and report back to me (the execute routine) exactly what blocks you and why, so I can surface it as a failed-state blocker to Andy.
+
+   Then the rest of the spec:
    - Story ID and title
    - The approved approach (edited description verbatim)
    - Execution order from the approval, if provided — follow it exactly
@@ -99,9 +103,11 @@ git commit -m "itpm: manifest for <story-id>" && git push origin develop
    - Relevant file paths in the codebase
    - Design constraints from fred_vision.md
    - Any UI mockup design feedback
-   - Any additional context from Andrew
+   - Any additional context from Andrew (this includes his answers to the dashboard questions — the predicted/confirmed placeholders ARE his answers; treat them as decisions already made, not open questions)
    - The path to the Acceptance Check Manifest (`.claude/agent-memory/manifest-<story-id>.md`)
      — instruct the builder to work manifest-first and self-fill the checks it can verify
+
+   If the builder reports a HARD BLOCKER instead of completing, jump to the Hard Blocker handling below (set `failed`, populate `#failure-detail`, notify Andy) — do not retry blindly.
 5. PushNotification — title `FRED ITPM — Verifying`, message: builder done, verifier starting.
 6. Invoke **verifier-agent** with the diff + the manifest path. It executes every
    manifest Check, attaches Evidence, and returns: a verdict (APPROVED / REVISION
