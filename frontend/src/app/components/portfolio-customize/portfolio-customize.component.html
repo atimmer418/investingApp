@@ -111,11 +111,10 @@
 
       <ion-searchbar
         [(ngModel)]="searchTerm"
-        (ionInput)="searchStocks()"
+        (ionInput)="onSearchInput($event)"
         placeholder="Symbol or Name"
         show-cancel-button="focus"
         animated="true"
-        debounce="300"
         maxlength="80"
         class="fred-searchbar">
       </ion-searchbar>
