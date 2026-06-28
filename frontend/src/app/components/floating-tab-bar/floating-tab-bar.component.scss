@@ -1,0 +1,135 @@
+:host {
+  --ftb-blue: #2563eb;
+  --ftb-icon-inactive: #6b7280;
+  --ftb-height-full: 64px;
+  --ftb-height-compact: 52px;
+  --ftb-icon-full: 28px;
+  --ftb-icon-compact: 24px;
+  --ftb-side-margin: 14px;
+  --ftb-inner-pad: 6px;
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+  z-index: 20;
+  display: block;
+  pointer-events: none; // side margins ignore taps; .ftb re-enables
+}
+
+.ftb {
+  pointer-events: auto;
+  margin: 0 var(--ftb-side-margin);
+  height: var(--ftb-height-full);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transition: height 220ms ease, background-color 220ms ease;
+
+  &--compact {
+    height: var(--ftb-height-compact);
+    background: rgba(255, 255, 255, 0.72);
+  }
+}
+
+.ftb__inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 var(--ftb-inner-pad);
+}
+
+.ftb__indicator {
+  position: absolute;
+  top: 50%;
+  left: var(--ftb-inner-pad);
+  width: calc((100% - (2 * var(--ftb-inner-pad))) / 4); // one cell
+  height: 44px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.12);
+  // translateX is relative to the element's own width (= one cell),
+  // so index * 100% lands exactly over cell `index`. No JS measurement.
+  transform: translate(calc(var(--active-index, 0) * 100%), -50%);
+  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1), height 220ms ease;
+}
+
+.ftb--compact .ftb__indicator {
+  height: 38px;
+}
+
+.ftb__cell {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 120ms ease;
+
+  &--disabled {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  &:active:not(.ftb__cell--disabled) {
+    transform: scale(0.95);
+  }
+}
+
+.ftb__icon-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ftb__icon {
+  font-size: var(--ftb-icon-full);
+  color: var(--ftb-icon-inactive);
+  transition: color 200ms ease, font-size 220ms ease;
+}
+
+.ftb--compact .ftb__icon {
+  font-size: var(--ftb-icon-compact);
+}
+
+.ftb__cell--active .ftb__icon {
+  color: var(--ftb-blue);
+}
+
+.ftb__badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ftb,
+  .ftb__indicator,
+  .ftb__icon,
+  .ftb__cell {
+    transition: none !important;
+  }
+}

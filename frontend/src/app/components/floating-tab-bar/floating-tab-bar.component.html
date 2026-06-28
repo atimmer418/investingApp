@@ -1,0 +1,29 @@
+<nav
+  class="ftb"
+  [class.ftb--compact]="compact()"
+  [style.--active-index]="activeIndex()"
+  role="tablist"
+  aria-label="Main navigation"
+>
+  <div class="ftb__inner">
+    <div class="ftb__indicator" aria-hidden="true"></div>
+
+    <button
+      *ngFor="let t of tabs"
+      type="button"
+      class="ftb__cell"
+      role="tab"
+      [attr.aria-label]="t.label"
+      [attr.aria-selected]="isActive(t)"
+      [class.ftb__cell--active]="isActive(t)"
+      [class.ftb__cell--disabled]="isDisabled(t)"
+      [disabled]="isDisabled(t)"
+      (click)="onTap(t)"
+    >
+      <span class="ftb__icon-wrap">
+        <ion-icon [name]="t.icon" class="ftb__icon" aria-hidden="true"></ion-icon>
+        <span class="ftb__badge" *ngIf="t.tab === 'tab3' && badge">{{ badge }}</span>
+      </span>
+    </button>
+  </div>
+</nav>
