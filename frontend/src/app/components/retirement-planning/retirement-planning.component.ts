@@ -26,6 +26,7 @@ import { ToastService } from '../../services/toast.service';
 import Chart from 'chart.js/auto';
 import { addIcons } from 'ionicons';
 import { diceOutline, schoolOutline, calculatorOutline } from 'ionicons/icons';
+import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
 
 
 
@@ -53,7 +54,8 @@ import { diceOutline, schoolOutline, calculatorOutline } from 'ionicons/icons';
     IonList,
     IonToggle,
     IonBadge,
-    IonRange
+    IonRange,
+    KeyboardAvoidDirective
   ]
 })
 export class RetirementPlanningComponent implements OnInit {

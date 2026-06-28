@@ -12,6 +12,7 @@ import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import { AlpacaAsset } from '../../services/alpaca.service';
+import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
 
 export interface StockAsset {
   symbol: string;
@@ -25,7 +26,8 @@ export interface StockAsset {
   standalone: true,
   imports: [
     CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonFooter,
-    IonSearchbar, IonList, IonItem, IonLabel, IonButton, IonSpinner, IonChip, IonIcon, IonButtons
+    IonSearchbar, IonList, IonItem, IonLabel, IonButton, IonSpinner, IonChip, IonIcon, IonButtons,
+    KeyboardAvoidDirective
   ]
 })
 export class StockSelectionComponent implements OnInit, OnDestroy {

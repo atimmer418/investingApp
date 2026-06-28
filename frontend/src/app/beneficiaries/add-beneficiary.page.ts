@@ -23,6 +23,7 @@ import {
   phonePortraitOutline,
   locationOutline
 } from 'ionicons/icons';
+import { KeyboardAvoidDirective } from '../directives/keyboard-avoid.directive';
 import { BeneficiaryService, Beneficiary } from '../services/beneficiary.service';
 import { PasskeyService } from '../services/passkey.service';
 import { PinService } from '../services/pin.service';
@@ -38,7 +39,8 @@ import { ToastService } from '../services/toast.service';
     FormsModule,
     IonHeader, IonToolbar, IonContent, IonButton,
     IonIcon, IonButtons,
-    IonModal, IonDatetime
+    IonModal, IonDatetime,
+    KeyboardAvoidDirective
   ],
   providers: [DatePipe]
 })

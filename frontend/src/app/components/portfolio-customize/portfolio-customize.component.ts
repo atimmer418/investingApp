@@ -12,6 +12,7 @@ import { PinService } from '../../services/pin.service';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, forkJoin, of, takeUntil } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
 import {
   IonHeader, IonToolbar, IonContent, IonButton, IonIcon,
   IonList, IonItem, IonLabel, IonReorderGroup,
@@ -80,7 +81,8 @@ interface Stock {
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonContent, IonButton, IonIcon,
     IonList, IonItem, IonLabel, IonReorderGroup,
-    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonBadge
+    IonItemSliding, IonItemOptions, IonItemOption, IonSpinner, IonSearchbar, IonBadge,
+    KeyboardAvoidDirective
   ],
   animations: [
     trigger('deleteAnimation', [

@@ -10,6 +10,7 @@ import {
 import { addIcons } from 'ionicons';
 import { personCircleOutline, helpCircleOutline, lockClosed } from 'ionicons/icons';
 import { environment } from '../../../environments/environment';
+import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
 
 // --- NEW IMPORTS ---
 import { PasskeyService } from '../../services/passkey.service';
@@ -26,7 +27,8 @@ import { create } from '@github/webauthn-json';
     CommonModule,
     FormsModule, ReactiveFormsModule, RouterLink,
     IonHeader, IonToolbar, IonContent, IonInput,
-    IonSpinner, IonFooter
+    IonSpinner, IonFooter,
+    KeyboardAvoidDirective
   ]
 })
 export class AuthFinalizeComponent implements OnInit, OnDestroy {

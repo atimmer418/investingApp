@@ -10,7 +10,7 @@
   </div>
 </ion-header>
 
-<ion-content class="lump-sum-content">
+<ion-content class="lump-sum-content" appKeyboardAvoid>
   <div class="content-inner">
 
     <!-- Lump Sum Card -->
@@ -59,6 +59,7 @@
         <div class="field-label">Select Stock</div>
 
         <ion-searchbar
+          mode="md"
           [(ngModel)]="searchTerm"
           (ionInput)="onSearchInput($event)"
           placeholder="Symbol or Name"

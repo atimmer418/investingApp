@@ -16,6 +16,7 @@ import { MonthlyFreedomUpdateService } from '../../services/monthly-freedom-upda
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { EquityPigUtils } from '../../utils/equity-pig.utils';
+import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
 
 @Component({
   selector: 'app-my-profile',
@@ -24,7 +25,8 @@ import { EquityPigUtils } from '../../utils/equity-pig.utils';
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    IonContent, IonHeader, IonToolbar, IonIcon, IonAvatar
+    IonContent, IonHeader, IonToolbar, IonIcon, IonAvatar,
+    KeyboardAvoidDirective
   ]
 })
 export class MyProfilePage implements OnInit {
