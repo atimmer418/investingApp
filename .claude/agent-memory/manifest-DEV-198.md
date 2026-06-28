@@ -53,7 +53,11 @@ evidence (verified 2026-06-28, sandbox npm 10.9.7 / Node v22.22.2).
             line 95 and `ng build` at line 123 — pin precedes both. auto-pr.yml: setup-node
             at line 27, "Pin npm version" at lines 30-31; no `npm ci` in this workflow
             (acceptable — future-proofing). Pin precedes every npm ci.
-- Status:   pass
+- Status:   pass (verified locally) — BUT NOT SHIPPED: the workflow-file changes could
+            not be pushed. PAT lacks GitHub `workflow` scope and the GitHub App returns
+            403 "Resource not accessible by integration" on `.github/workflows/*`. The two
+            pins are handed to Andrew as a manual follow-up (diff in today.html). Grant the
+            routine PAT the `workflow` scope to unblock future CI-touching stories.
 
 ## AC-5: Regenerating the lockfile in-sandbox yields no os/cpu/libc diff
 - Type:     backend-unit
