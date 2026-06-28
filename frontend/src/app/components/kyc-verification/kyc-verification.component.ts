@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -7,7 +7,7 @@ import {
   IonHeader, IonToolbar, IonContent,
   IonFooter, IonSpinner, NavController, ToastController
 } from '@ionic/angular/standalone';
-import { Keyboard } from '@capacitor/keyboard';
+import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
 import { AuthService } from '../../services/auth.service';
 import { AlpacaService, CreateAlpacaAccountRequest, UpdateKycRequest } from '../../services/alpaca.service';
 import { JwtTokenUtils } from '../../utils/jwt-token.utils';
@@ -78,23 +78,19 @@ function dateOfBirthValidator(control: AbstractControl): ValidationErrors | null
     CommonModule,
     ReactiveFormsModule,
     IonHeader, IonToolbar, IonContent,
-    IonFooter, IonSpinner
+    IonFooter, IonSpinner,
+    KeyboardAvoidDirective
   ]
 })
 export class KycVerificationComponent implements OnInit, OnDestroy {
-  @ViewChild(IonContent) private content!: IonContent;
   @Input() editMode = false;
 
   private destroy$ = new Subject<void>();
-  private kbShowListener: any;
-  private kbHideListener: any;
 
   currentStep: 1 | 2 = 1;
   exitingStep1 = false;
   isLoading = false;
   isLoadingKycData = false;
-  keyboardHeight = 0;
-  spacerHeight = 0;
 
   // Prefill snapshot for editMode part-1 gating
   private step1Snapshot: string | null = null;
@@ -166,16 +162,6 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
       }
     }
 
-    this.kbShowListener = Keyboard.addListener('keyboardWillShow', info => {
-      this.keyboardHeight = info.keyboardHeight;
-      this.spacerHeight = info.keyboardHeight + 16 - 100;
-      this.cdr.detectChanges();
-    });
-    this.kbHideListener = Keyboard.addListener('keyboardWillHide', () => {
-      this.keyboardHeight = 0;
-      this.spacerHeight = 0;
-      this.cdr.detectChanges();
-    });
   }
 
   private loadKycDataForEdit() {
@@ -250,20 +236,6 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
       isPoliticallyExposed: disclosures.is_politically_exposed ?? false,
       immediateFamilyExposed: disclosures.immediate_family_exposed ?? false
     });
-  }
-
-  async scrollFocusedInputIntoView(event: FocusEvent) {
-    const el = event.target as HTMLElement;
-    if (!el.matches('input, select, textarea')) return;
-    await new Promise(r => setTimeout(r, 300));
-    if (!this.keyboardHeight) return;
-    const fieldEl = (el.closest('.form-field') as HTMLElement) ?? el;
-    const rect = fieldEl.getBoundingClientRect();
-    const visibleBottom = window.innerHeight - this.keyboardHeight - 8;
-    const overshoot = rect.bottom - visibleBottom;
-    if (overshoot > 0) {
-      (this.content as any).scrollByPoint(0, overshoot, 150);
-    }
   }
 
   private get kycDraftKey(): string {
@@ -574,7 +546,5 @@ export class KycVerificationComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
-    this.kbShowListener?.then((h: any) => h.remove());
-    this.kbHideListener?.then((h: any) => h.remove());
   }
 }

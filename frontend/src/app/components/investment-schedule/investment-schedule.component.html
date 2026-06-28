@@ -6,7 +6,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="schedule-content" (focusin)="scrollFocusedInputIntoView($event)">
+<ion-content class="schedule-content" [appKeyboardAvoid]="'.field-row'">
   <div class="content-inner">
 
     <!-- Hero -->
@@ -147,7 +147,6 @@
 
       </div>
     </div>
-    <div [style.height.px]="spacerHeight"></div>
   </div>
 </ion-content>
 

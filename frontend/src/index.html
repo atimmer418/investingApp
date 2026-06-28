@@ -37,13 +37,16 @@
   </div>
   <script>
     (function() {
-      // Emergency backstop: if Angular never bootstraps (e.g. main.js 404s during a
-      // dev-server rebuild), hide the cover after 20 s so the user isn't permanently
-      // trapped. In production Angular always loads; this never fires there.
+      // Emergency backstop for the ONE case Angular can't handle itself: Angular never
+      // bootstraps at all (e.g. main.js can't download over a dead dev connection). Hide
+      // the cover after 45 s so the user isn't permanently trapped. Angular cancels this
+      // timer the instant it boots (window._cancelCoverHideTimer) and takes over cover
+      // ownership — so on every normal load, including slow ones, this never fires. In
+      // production Angular always loads instantly from the local bundle; never fires there.
       var _coverHideTimer = setTimeout(function() {
         var cover = document.getElementById('app-resume-cover');
         if (cover && cover.style.display !== 'none') cover.style.display = 'none';
-      }, 20000);
+      }, 45000);
 
       // Expose a cancel hook so AppComponent can cancel the timer once Angular is up.
       window._cancelCoverHideTimer = function() { clearTimeout(_coverHideTimer); };

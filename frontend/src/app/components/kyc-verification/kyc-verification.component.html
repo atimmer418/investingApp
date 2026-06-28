@@ -20,7 +20,7 @@
   </div>
 </ion-header>
 
-<ion-content class="kyc-content" (focusin)="scrollFocusedInputIntoView($event)">
+<ion-content class="kyc-content" [appKeyboardAvoid]="'.form-field'">
   <div class="content-inner">
 
     <!-- Hero — top-pinned -->
@@ -221,7 +221,6 @@
       </div>
 
     </div>
-    <div [style.height.px]="spacerHeight"></div>
   </div>
 </ion-content>
 

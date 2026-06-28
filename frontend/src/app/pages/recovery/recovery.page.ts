@@ -13,6 +13,7 @@ import { JwtTokenUtils } from '../../utils/jwt-token.utils';
 import { ToastService } from '../../services/toast.service';
 import { PasskeyService } from '../../services/passkey.service';
 import { AuthService } from '../../services/auth.service';
+import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
 import { create } from '@github/webauthn-json';
 
 @Component({
@@ -23,7 +24,8 @@ import { create } from '@github/webauthn-json';
   imports: [
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonContent, IonInput, IonButton,
-    IonIcon, IonSpinner
+    IonIcon, IonSpinner,
+    KeyboardAvoidDirective
   ]
 })
 export class RecoveryPage implements OnInit {

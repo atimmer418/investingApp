@@ -41,6 +41,7 @@ import { ToastService } from '../services/toast.service';
 import { PasskeyService } from '../services/passkey.service';
 import { PinService } from '../services/pin.service';
 import { PasskeyPromptComponent } from '../components/passkey-prompt/passkey-prompt.component';
+import { KeyboardAvoidDirective } from '../directives/keyboard-avoid.directive';
 
 @Component({
   selector: 'app-sell-withdraw',
@@ -55,7 +56,8 @@ import { PasskeyPromptComponent } from '../components/passkey-prompt/passkey-pro
     IonSpinner,
     IonRange,
     IonToggle,
-    IonPopover
+    IonPopover,
+    KeyboardAvoidDirective
   ]
 })
 export class SellWithdrawPage implements OnInit, OnDestroy {

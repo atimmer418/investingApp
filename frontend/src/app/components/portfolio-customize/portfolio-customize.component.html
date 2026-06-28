@@ -10,7 +10,7 @@
   </div>
 </ion-header>
 
-<ion-content class="portfolio-content">
+<ion-content class="portfolio-content" appKeyboardAvoid>
   <div class="content-inner">
 
     <!-- Philosophy Card -->
@@ -110,6 +110,7 @@
       </div>
 
       <ion-searchbar
+        mode="md"
         [(ngModel)]="searchTerm"
         (ionInput)="onSearchInput($event)"
         placeholder="Symbol or Name"

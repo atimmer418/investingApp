@@ -10,7 +10,7 @@
   </div>
 </ion-header>
 
-<ion-content class="lump-sum-content">
+<ion-content class="lump-sum-content" appKeyboardAvoid>
   <div class="content-inner">
 
     <!-- Lump Sum Card -->
@@ -59,6 +59,7 @@
         <div class="field-label">Select Stock</div>
 
         <ion-searchbar
+          mode="md"
           [(ngModel)]="searchTerm"
           (ionInput)="onSearchInput($event)"
           placeholder="Symbol or Name"
@@ -156,9 +157,7 @@
     </div>
 
     <!-- ACATS Transfer Card -->
-    <div class="section-card acats-card"
-         style="overflow: hidden; transition: height 0.3s ease;"
-         [style.height]="showTransferOptions ? '414px' : '104px'">
+    <div class="section-card acats-card">
 
       <div class="acats-header" (click)="showTransferOptions = !showTransferOptions">
         <div class="card-header-row" style="margin-bottom: 2px;">

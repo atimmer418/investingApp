@@ -27,6 +27,7 @@ import Chart from 'chart.js/auto';
 import { addIcons } from 'ionicons';
 import { diceOutline, schoolOutline, calculatorOutline } from 'ionicons/icons';
 import { TabBarScrollDirective } from '../../directives/tab-bar-scroll.directive';
+import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
 
 
 
@@ -55,7 +56,8 @@ import { TabBarScrollDirective } from '../../directives/tab-bar-scroll.directive
     IonToggle,
     IonBadge,
     IonRange,
-    TabBarScrollDirective
+    TabBarScrollDirective,
+    KeyboardAvoidDirective
   ]
 })
 export class RetirementPlanningComponent implements OnInit {

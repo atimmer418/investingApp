@@ -31,6 +31,7 @@ import {
   swapHorizontalOutline
 } from 'ionicons/icons';
 import { InvestmentService } from '../services/investment.service';
+import { KeyboardAvoidDirective } from '../directives/keyboard-avoid.directive';
 import { PortfolioService, AccountSummary } from '../services/portfolio.service';
 import { PasskeyService } from '../services/passkey.service';
 import { PinService } from '../services/pin.service';
@@ -66,7 +67,8 @@ interface AlpacaAsset {
     IonItem,
     IonSpinner,
     IonNote,
-    IonPopover
+    IonPopover,
+    KeyboardAvoidDirective
   ],
   templateUrl: './lump-sum-investment.page.html',
   styleUrls: ['./lump-sum-investment.page.scss']

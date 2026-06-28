@@ -31,6 +31,7 @@ import { PasskeyService } from '../services/passkey.service';
 import { PinService } from '../services/pin.service';
 import { ToastService } from '../services/toast.service';
 import { AccountStatusService } from '../services/account-status.service';
+import { KeyboardAvoidDirective } from '../directives/keyboard-avoid.directive';
 
 interface InvestmentFrequencyOption {
   value: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'SEMI_MONTHLY';
@@ -51,7 +52,8 @@ interface InvestmentFrequencyOption {
     IonButton,
     IonButtons,
     IonDatetime,
-    IonModal
+    IonModal,
+    KeyboardAvoidDirective
   ],
   templateUrl: './recurring-investments.page.html',
   styleUrls: ['./recurring-investments.page.scss']
