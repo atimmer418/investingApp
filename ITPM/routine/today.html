@@ -351,18 +351,23 @@
       <div class="card" id="completion-content">
         <div style="margin-bottom:16px;">
           <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">DEV-198 — Eliminate package-lock.json libc-field churn in diffs</p>
-          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Pinned <strong>npm@10.9.7</strong> (the node-22 default) across all three environments. Added <code>"packageManager": "npm@10.9.7"</code> to the root <code>package.json</code> and <code>frontend/package.json</code> (Corepack-enforced), added a "Pin npm version" step to <code>.github/workflows/verify.yml</code> and <code>auto-pr.yml</code> before <code>npm ci</code>, and regenerated both lockfiles under the pinned npm (one-time cleanup removed 26 <code>"libc"</code> lines from <code>frontend/package-lock.json</code>). New <code>CONTRIBUTING.md</code> documents the pin + Corepack so contributors stay aligned. No application code touched.</p>
-          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Pinned <strong>npm@10.9.7</strong> (the node-22 default). Added <code>"packageManager": "npm@10.9.7"</code> to the root <code>package.json</code> and <code>frontend/package.json</code> (Corepack-enforced) and regenerated both lockfiles under the pinned npm — the one-time cleanup removed 26 <code>"libc"</code> lines from <code>frontend/package-lock.json</code>. New <code>CONTRIBUTING.md</code> documents the pin + Corepack. No application code touched. Shipped via PR #102 (auto-verifies + squash-merges to develop on green).</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria — 6 of 7 shipped, all 7 verified locally:</p>
           <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
-            <li>Root cause confirmed &amp; written up: npm-version drift (CI ran unpinned npm) caused the differing os/cpu/libc emission.</li>
-            <li>Single stable mechanism applied — <code>packageManager: "npm@10.9.7"</code> pins npm identically everywhere.</li>
-            <li>Both lockfiles covered: <code>frontend/package-lock.json</code> and root <code>./package-lock.json</code>.</li>
-            <li>CI updated: <code>verify.yml</code> + <code>auto-pr.yml</code> pin npm@10.9.7 before install.</li>
-            <li>Demonstrated determinism: a fresh regen on top of the new lockfiles produced byte-identical output (zero churn) in both.</li>
-            <li>No dependency-resolution change: <code>npm ci --legacy-peer-deps</code> clean, rollup/esbuild native binaries resolve, <code>tsc --noEmit</code> and <code>ng build --configuration=ci</code> both pass.</li>
-            <li>Documented in <code>CONTRIBUTING.md</code> for future contributors.</li>
+            <li>✅ Root cause confirmed &amp; written up: npm-version drift (CI ran unpinned npm) caused the differing os/cpu/libc emission.</li>
+            <li>✅ Single stable mechanism applied — <code>packageManager: "npm@10.9.7"</code> pins npm identically everywhere.</li>
+            <li>✅ Both lockfiles covered: <code>frontend/package-lock.json</code> and root <code>./package-lock.json</code>.</li>
+            <li>⚠️ CI workflow pins (<code>verify.yml</code> + <code>auto-pr.yml</code>) — written &amp; verified locally, but <strong>could not be pushed</strong>: the routine's git credentials lack GitHub's <code>workflow</code> scope. <strong>Needs you to apply</strong> — see "Action needed" below.</li>
+            <li>✅ Demonstrated determinism: a fresh regen on top of the new lockfiles produced byte-identical output (zero churn) in both.</li>
+            <li>✅ No dependency-resolution change: <code>npm ci --legacy-peer-deps</code> clean, rollup/esbuild native binaries resolve, <code>tsc --noEmit</code> and <code>ng build --configuration=ci</code> both pass.</li>
+            <li>✅ Documented in <code>CONTRIBUTING.md</code> for future contributors.</li>
           </ul>
-          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Production-readiness: hardens the build/CI pipeline — deterministic, reproducible lockfiles across sandbox, CI, and local remove recurring hand-revert toil from every routine PR. Verifier independently confirmed all 7 criteria pass.</p>
+          <p style="font-size:13px;font-weight:700;color:#b45309;margin:0 0 4px;">⚠️ Action needed from you (1 follow-up)</p>
+          <p style="font-size:13px;color:var(--gray);line-height:1.6;margin:0 0 8px;">The two CI workflow pins are the only piece the routine couldn't ship — GitHub rejects pushes that touch <code>.github/workflows/*</code> unless the token has the <code>workflow</code> scope, which neither the PAT nor the GitHub App in this sandbox has. From a local checkout (where your account has <code>workflow</code> scope), add this step right after the <code>actions/setup-node@v4</code> step in <strong>both</strong> <code>.github/workflows/verify.yml</code> and <code>.github/workflows/auto-pr.yml</code>, then commit:</p>
+          <pre style="font-size:12px;background:#f3f4f6;border-radius:8px;padding:10px;overflow-x:auto;margin:0 0 8px;"><code>- name: Pin npm version
+  run: npm install -g npm@10.9.7</code></pre>
+          <p style="font-size:13px;color:var(--gray);line-height:1.6;margin:0 0 12px;">(In <code>auto-pr.yml</code> the <code>setup-node@v4</code> step is added alongside it, since that workflow had none.) Until then the determinism still holds in practice — the <code>packageManager</code> field + regenerated lockfiles are the primary mechanism, and CI uses <code>npm ci</code> (which never rewrites the lockfile). The workflow pin is belt-and-suspenders for any future <code>npm install</code> step in CI.</p>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Production-readiness: hardens the build/CI pipeline — deterministic, reproducible lockfiles across sandbox, CI, and local remove recurring hand-revert toil from every routine PR. Verifier independently confirmed all 7 criteria pass locally; 6 shipped to develop, the 7th awaits your one-line workflow edit above.</p>
         </div>
       </div>
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
