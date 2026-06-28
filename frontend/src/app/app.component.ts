@@ -135,16 +135,23 @@ export class AppComponent implements OnInit {
       requestAnimationFrame(() => this.checkSurveyStatusAndNavigate());
     });
 
-    // Emergency safety net: if the cover is still visible after 12 s (e.g. the dev
-    // server restarted and loadUserProgress() timed out before the timeout operator was
-    // introduced, or any other stuck-cover edge case) force-hide it so the user is
-    // never permanently trapped behind a white screen. Skip if the app is locked
-    // (passkey modal is up) — that modal owns the screen intentionally.
+    // Angular has booted, so hand cover-ownership over to it: cancel the pre-bootstrap
+    // backstop timer in index.html so it can't strip the cover while Angular is in charge.
+    (window as any)._cancelCoverHideTimer?.();
+
+    // Last-resort un-trap. The cover is normally removed by navigateBasedOnProgress() once
+    // progress loads — guaranteed within ~31s by loadUserProgress's timeout+retry+fallback
+    // chain — so it rides the Lottie until the real screen is ready, never a blank flash.
+    // This 40s net only fires if navigation somehow never happened despite progress having
+    // emitted; it RE-DRIVES navigation (rather than blind-hiding) so we still land on a real
+    // screen, not white. Skip if locked (the passkey modal owns the screen intentionally).
     setTimeout(() => {
-      if (!this.appLockService.isCurrentlyLocked()) {
-        this.appLockService.hideAllCovers();
+      const cover = document.getElementById('app-resume-cover');
+      const coverVisible = !!cover && cover.style.display !== 'none';
+      if (coverVisible && !this.appLockService.isCurrentlyLocked()) {
+        this.checkSurveyStatusAndNavigate();
       }
-    }, 12_000);
+    }, 40_000);
 
     // Set up the single navigation subscription
     this.setupNavigationLogic();
@@ -299,8 +306,34 @@ export class AppComponent implements OnInit {
 
   private hideCoversWhenReady(targetRoute?: string): void {
     const route = (targetRoute ?? this.router.url).split('?')[0].split('#')[0];
-    this.preloadAssetsForRoute(route).then(() => {
-      requestAnimationFrame(() => this.appLockService.hideAllCovers());
+    this.preloadAssetsForRoute(route)
+      .then(() => this.waitForRoutePainted())
+      .then(() => this.appLockService.hideAllCovers());
+  }
+
+  /**
+   * Resolve once the destination route has actually laid out its first frame, so the
+   * cover is never removed over a not-yet-painted lazy route. Routes are lazy-loaded
+   * (loadComponent) and their Ionic web-components (ion-content etc.) upgrade
+   * asynchronously AFTER navigation resolves — without this wait the cover lifts a beat
+   * before the page paints, showing a blank-white flash (worse on slow devices/links,
+   * e.g. tab1 → portfolio-dashboard). Bounded by a safety timeout so the cover can never
+   * hang waiting for a route that never paints.
+   */
+  private waitForRoutePainted(): Promise<void> {
+    return new Promise<void>(resolve => {
+      let settled = false;
+      const finish = () => { if (!settled) { settled = true; resolve(); } };
+      const check = () => {
+        if (settled) return;
+        // The route's ion-content exists and has a non-zero layout box => it has upgraded
+        // and painted. The launch cover lives outside ion-router-outlet, so it's excluded.
+        const content = document.querySelector('ion-router-outlet ion-content') as HTMLElement | null;
+        if (content && content.offsetHeight > 0) { finish(); return; }
+        requestAnimationFrame(check);
+      };
+      requestAnimationFrame(check);
+      setTimeout(finish, 2000); // safety bound — never hang the cover on a route that won't paint
     });
   }
 
