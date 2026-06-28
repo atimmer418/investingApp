@@ -26,6 +26,7 @@ import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
 import { arrowUpCircle, menuOutline, addOutline, refreshOutline } from 'ionicons/icons';
+import { TabBarScrollDirective } from '../../directives/tab-bar-scroll.directive';
 
 @Component({
   selector: 'app-ai-chat',
@@ -50,7 +51,8 @@ import { arrowUpCircle, menuOutline, addOutline, refreshOutline } from 'ionicons
     IonLabel,
     IonMenuToggle,
     IonMenuButton,
-    IonChip
+    IonChip,
+    TabBarScrollDirective
   ]
 })
 export class AiChatPage implements OnInit, AfterViewInit {

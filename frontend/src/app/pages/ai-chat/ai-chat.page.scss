@@ -217,6 +217,7 @@ ion-footer {
   background: var(--app-background, #f2f2f7) !important;
   --background: var(--app-background, #f2f2f7) !important;
   border-top: none;
+  padding-bottom: var(--fred-tabbar-clearance);
 }
 
 .input-bar {

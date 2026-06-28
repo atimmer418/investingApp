@@ -49,6 +49,7 @@ import { AccountStatusService } from '../services/account-status.service';
 import { FreedomStatsService } from '../services/freedom-stats.service';
 import { Observable } from 'rxjs';
 import { EquityPigUtils } from '../utils/equity-pig.utils';
+import { TabBarScrollDirective } from '../directives/tab-bar-scroll.directive';
 
 interface SettingSection {
   title: string;
@@ -75,7 +76,8 @@ interface SettingItem {
     IonContent,
     IonIcon,
     IonAvatar,
-    IonBadge
+    IonBadge,
+    TabBarScrollDirective
   ],
 })
 export class Tab3Page implements OnInit, OnDestroy {

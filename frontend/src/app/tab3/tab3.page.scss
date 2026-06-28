@@ -208,6 +208,7 @@ ion-header {
   height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--fred-tabbar-clearance);
   background-color: #f8fafc;
 
   background-image: linear-gradient(90deg, #2a5ae0, #1d4ed8);
