@@ -52,7 +52,7 @@ Rejected alternatives:
 - `tabs.page.ts` gets `@ViewChild(IonTabs)` and passes the ref (or a `select(tab)` callback) to the bar; the bar calls `ionTabs.select(tabName)` for navigation so Ionic preserves stacks.
 - Active tab tracked via `<ion-tabs (ionTabsDidChange)="onTabChange($event)">` (`$event.tab`), plus an initial read from the current route on load.
 
-**Verification risk (must confirm during build, do not assume):** whether `IonTabs.select()` works without a slotted `<ion-tab-bar>`. If Ionic requires the buttons to exist, fallback is to keep a `display:none` `<ion-tab-bar>` purely as the routing driver while the custom bar handles all visuals and calls `select()`. The implementation plan must include an explicit check of this before building out styling.
+**Risk RESOLVED (confirmed against Ionic 8.5 source, `@ionic/angular/.../navigation/tabs.mjs`):** `IonTabs.select(tab)` works with **no** `ion-tab-bar`. In router mode (`hasTab === false`, which FRED uses) `select()` only touches `this.outlet` (the always-present `ion-router-outlet` inside `ion-tabs`) and `navCtrl` — it computes `\`${outlet.tabsPrefix}/${tab}\`` and navigates, **preserving per-tab stacks** via `outlet.getLastRouteView(tab)`. `ionTabsDidChange` still fires on every switch (`onStackDidChange` emits `{tab}`; its `if (this.tabBar)` line simply no-ops when the bar is absent). `getSelected()` returns `outlet.getActiveStackId()`. → No hidden `ion-tab-bar` fallback is needed.
 
 ### 3.2 Visual spec — capsule (light mode)
 - Shape: `border-radius: 999px`; side margins ~14px; bottom margin = `env(safe-area-inset-bottom) + 10px`.
@@ -89,8 +89,13 @@ Rejected alternatives:
 - **Safe area:** capsule respects `env(safe-area-inset-bottom)`.
 
 ### 3.6 Layout / content clearance
-- The bar floats over content. Each tab's scrollable content gets bottom clearance (`--fred-tabbar-clearance` ≈ 96px, accounting for full-size bar height + margins + safe area) so content isn't hidden behind the floating bar.
-- Remove/replace the current fixed `ion-router-outlet { bottom: calc(56px + safe-area) }` offset accordingly.
+- The bar floats over content (Instagram effect — content scrolls *behind* the translucent capsule on the scrollable tabs). Remove the current fixed `ion-router-outlet { bottom: calc(56px + safe-area) }` offset so content fills the full height.
+- A global clearance token: `--fred-tabbar-clearance: calc(64px + env(safe-area-inset-bottom, 0px) + 20px)` (full-size bar height + bottom margin + buffer).
+- Per-tab clearance so nothing important hides behind the bar:
+  - `tab1` `ion-content`: `--padding-bottom: var(--fred-tabbar-clearance)`.
+  - `tab2` inner `ion-content.retirement-content`: `--padding-bottom: var(--fred-tabbar-clearance)`.
+  - `tab3` `div.content-scroll`: `padding-bottom: var(--fred-tabbar-clearance)`.
+  - `chat` (**special — has a docked `<ion-footer>` input bar**): the bar must NOT cover the input. Add `padding-bottom: var(--fred-tabbar-clearance)` to the chat `ion-footer`/`.input-bar` so the input sits above the floating capsule; the capsule floats over the footer's background strip. (Verify no other tab has a docked footer that collides; tab1/tab2/tab3 are scroll containers without bottom-docked controls.)
 
 ### 3.7 Accessibility & motion
 - Each cell is a `<button>` with `aria-label` and `aria-selected`.
