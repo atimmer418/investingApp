@@ -1,17 +1,19 @@
 :host {
   --ftb-blue: #2563eb;
   --ftb-icon-inactive: #6b7280;
-  --ftb-height-full: 64px;
-  --ftb-height-compact: 52px;
+  --ftb-height-full: 56px;
+  --ftb-height-compact: 48px;
   --ftb-icon-full: 28px;
   --ftb-icon-compact: 24px;
   --ftb-side-margin: 14px;
+  --ftb-side-margin-compact: 40px; // pull the capsule in horizontally when shrunk
   --ftb-inner-pad: 6px;
 
   position: absolute;
   left: 0;
   right: 0;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+  // Sit tight to the bottom (just above the home indicator), like Instagram.
+  bottom: max(8px, calc(env(safe-area-inset-bottom, 0px) - 14px));
   z-index: 20;
   display: block;
   pointer-events: none; // side margins ignore taps; .ftb re-enables
@@ -27,10 +29,11 @@
   backdrop-filter: blur(20px);
   border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  transition: height 220ms ease, background-color 220ms ease;
+  transition: height 220ms ease, margin 220ms ease, background-color 220ms ease;
 
   &--compact {
     height: var(--ftb-height-compact);
+    margin: 0 var(--ftb-side-margin-compact); // narrower capsule when shrunk
     background: rgba(255, 255, 255, 0.72);
   }
 }
