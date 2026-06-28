@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="intermediary">
+  <div id="dashboard" data-populated="true" data-state="completed">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -346,10 +346,24 @@
     </div>
 
     <!-- ── Completion Section (completed state only) ── -->
-    <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
+    <div class="section-group section-intermediary-only" id="completion-section">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
-        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">DEV-198 — Eliminate package-lock.json libc-field churn in diffs</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Pinned <strong>npm@10.9.7</strong> (the node-22 default) across all three environments. Added <code>"packageManager": "npm@10.9.7"</code> to the root <code>package.json</code> and <code>frontend/package.json</code> (Corepack-enforced), added a "Pin npm version" step to <code>.github/workflows/verify.yml</code> and <code>auto-pr.yml</code> before <code>npm ci</code>, and regenerated both lockfiles under the pinned npm (one-time cleanup removed 26 <code>"libc"</code> lines from <code>frontend/package-lock.json</code>). New <code>CONTRIBUTING.md</code> documents the pin + Corepack so contributors stay aligned. No application code touched.</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>Root cause confirmed &amp; written up: npm-version drift (CI ran unpinned npm) caused the differing os/cpu/libc emission.</li>
+            <li>Single stable mechanism applied — <code>packageManager: "npm@10.9.7"</code> pins npm identically everywhere.</li>
+            <li>Both lockfiles covered: <code>frontend/package-lock.json</code> and root <code>./package-lock.json</code>.</li>
+            <li>CI updated: <code>verify.yml</code> + <code>auto-pr.yml</code> pin npm@10.9.7 before install.</li>
+            <li>Demonstrated determinism: a fresh regen on top of the new lockfiles produced byte-identical output (zero churn) in both.</li>
+            <li>No dependency-resolution change: <code>npm ci --legacy-peer-deps</code> clean, rollup/esbuild native binaries resolve, <code>tsc --noEmit</code> and <code>ng build --configuration=ci</code> both pass.</li>
+            <li>Documented in <code>CONTRIBUTING.md</code> for future contributors.</li>
+          </ul>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Production-readiness: hardens the build/CI pipeline — deterministic, reproducible lockfiles across sandbox, CI, and local remove recurring hand-revert toil from every routine PR. Verifier independently confirmed all 7 criteria pass.</p>
+        </div>
       </div>
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;
