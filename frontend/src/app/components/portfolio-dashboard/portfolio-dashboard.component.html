@@ -18,7 +18,7 @@
   </div>
 </ion-header>
 
-<ion-content class="portfolio-content" [class.scroll-disabled]="selectedTab === 'overview'">
+<ion-content class="portfolio-content" [class.scroll-disabled]="selectedTab === 'overview'" appTabBarScroll [style.--padding-bottom]="'var(--fred-tabbar-clearance)'">
   <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" [disabled]="loading || isRefreshing">
     <ion-refresher-content refreshingSpinner="crescent" pullingText="Pull to Refresh" pullingIcon="chevron-down-circle-outline"></ion-refresher-content>
   </ion-refresher>

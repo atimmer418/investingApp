@@ -43,7 +43,7 @@
 
 swiper-container {
     width: 100%;
-    height: calc(100% - 50px); // Subtract height for fixed pagination container
+    height: calc(100% - 50px - var(--fred-tabbar-clearance)); // pagination (50px) + floating tab bar clearance
     display: block;
 
     swiper-slide {
@@ -59,7 +59,7 @@ swiper-container {
 
 .pagination-container {
     position: fixed;
-    top: 740px; // Position at 740px from top
+    bottom: var(--fred-tabbar-clearance); // sit above the floating tab bar (was fragile hardcoded top: 740px)
     left: 0;
     right: 0;
     height: 50px;
@@ -100,7 +100,7 @@ swiper-container {
 .slide-content {
     flex: 1;
     padding: var(--app-spacing-md);
-    padding-bottom: var(--app-spacing-md); // Normal padding since pagination is external
+    padding-bottom: calc(var(--app-spacing-md) + var(--fred-tabbar-clearance));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 

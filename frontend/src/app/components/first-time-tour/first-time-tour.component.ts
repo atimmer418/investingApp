@@ -24,7 +24,7 @@ const TOUR_STEPS: TourStep[] = [
   {
     step: 3,
     label: 'Your settings and referral code are here.',
-    targetSelector: 'ion-tab-button[tab="tab3"]'
+    targetSelector: '[data-tour="tab3"]'
   },
   {
     step: 4,

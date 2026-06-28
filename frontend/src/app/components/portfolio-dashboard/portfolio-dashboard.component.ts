@@ -10,6 +10,7 @@ import { MonthlyFreedomUpdateComponent } from '../monthly-freedom-update/monthly
 import { AppLockService } from '../../services/app-lock.service';
 import { Router } from '@angular/router';
 import { filter, take, Subject, takeUntil } from 'rxjs';
+import { TabBarScrollDirective } from '../../directives/tab-bar-scroll.directive';
 import { PortfolioChartComponent, PortfolioDataPoint } from '../portfolio-chart/portfolio-chart.component';
 import {
   IonHeader, IonToolbar, IonTitle, IonButton, IonIcon, IonContent,
@@ -29,7 +30,8 @@ import {
     PortfolioChartComponent,
     IonHeader, IonToolbar, IonTitle, IonButton, IonIcon, IonContent,
     IonRefresher, IonRefresherContent,
-    IonSpinner, IonSegment, IonSegmentButton
+    IonSpinner, IonSegment, IonSegmentButton,
+    TabBarScrollDirective
   ]
 })
 export class PortfolioDashboardComponent implements OnInit, OnDestroy {

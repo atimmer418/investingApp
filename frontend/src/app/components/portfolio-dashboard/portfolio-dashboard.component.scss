@@ -12,8 +12,7 @@
   --background: var(--portfolio-background);
   --padding-start: 0;
   --padding-end: 0;
-  /* Force explicit height to ensure scrollbar ends at top of tab switcher */
-  height: calc(100% - (var(--ion-tab-bar-height, 56px) + env(safe-area-inset-bottom) + 36px));
+  height: 100%;
 
   ion-refresher-content {
     --spinner-color: var(--portfolio-primary);

@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { IonContent } from '@ionic/angular/standalone';
 import { PortfolioDashboardComponent } from '../components/portfolio-dashboard/portfolio-dashboard.component';
-import { TabBarScrollDirective } from '../directives/tab-bar-scroll.directive';
 import { AuthService } from '../services/auth.service';
 import { FirstTimeTourService } from '../services/first-time-tour.service';
 import { Subscription } from 'rxjs';
@@ -11,7 +10,7 @@ import { filter, take } from 'rxjs/operators';
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss'],
-  imports: [IonContent, PortfolioDashboardComponent, TabBarScrollDirective],
+  imports: [IonContent, PortfolioDashboardComponent],
 })
 export class Tab1Page implements OnInit, OnDestroy {
 

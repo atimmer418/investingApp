@@ -16,8 +16,7 @@
   --background: var(--portfolio-background);
   --padding-start: 0;
   --padding-end: 0;
-  /* Force explicit height with extra 10px buffer to ensure no overlap */
-  height: calc(100% - (var(--ion-tab-bar-height, 56px) + env(safe-area-inset-bottom) + 36px));
+  height: 100%;
   --padding-bottom: var(--app-spacing-xl);
 
 
