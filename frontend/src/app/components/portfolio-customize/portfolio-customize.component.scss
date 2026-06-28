@@ -17,6 +17,9 @@
 ion-content {
   --background: #f8fafc;
   --keyboard-offset: 0px !important;
+  // Beat the global `.portfolio-content { --padding-top: 8px !important }`
+  // (global.scss) so content sits flush (2px) like the sibling settings pages.
+  --padding-top: 2px !important;
 
   &::part(scroll) {
     scrollbar-gutter: stable;
@@ -25,7 +28,7 @@ ion-content {
 }
 
 .content-inner {
-  padding: 12px 18px 40px;
+  padding: 0px 18px 10px;
   font-family: 'Manrope', sans-serif;
   display: flex;
   flex-direction: column;
@@ -271,27 +274,35 @@ ion-content {
   }
 }
 
-// Search
+// Search — matches the standard .field-input underline (transparent bg, 2px blue underline, no box)
 ion-searchbar.fred-searchbar {
-  --background: #f8fafc;
-  --border-radius: 10px;
+  --background: transparent;
+  --border-radius: 0;
   --box-shadow: none;
   --color: #0f172a;
-  --placeholder-color: #6b7280;
+  --placeholder-color: #cbd5e1;
+  --placeholder-font-weight: 400;
+  --placeholder-opacity: 1;
   --icon-color: #6b7280;
   --clear-button-color: #6b7280;
   --cancel-button-color: #2563EB;
   padding: 0;
   margin-bottom: 8px;
   font-family: 'Manrope', sans-serif;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 500;
+  border-bottom: 2px solid #2563EB;
 }
 
 .results-list {
   border-radius: 10px;
-  overflow: hidden;
   border: 1px solid #e5e7eb;
+  // Cap the dropdown at ~5 stocks tall and scroll internally instead of
+  // stretching the page out with the full result set.
+  max-height: 340px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 
   ion-item {
     --background: white;
