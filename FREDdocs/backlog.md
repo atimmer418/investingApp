@@ -9,23 +9,6 @@ _No status marker. These are the candidates the ITPM routine should pick from fi
 ## LPFRED-184 — Update LP calculator to net-income yield model
 Update the landing page calculator so it calculates based on a net income per month (instead of yearly pre-tax salary). Logic: multiply desired monthly net income by 12 → divide by 0.04 (4% tax-exempt yield) to get target portfolio value. Then use 10% annual growth with compound interest and DRIP to calculate how long it takes to reach that value given the user's monthly investable income.
 
-## FRED-186 — Update API searches to use debounce and switchMap
-update all api searches to use debounce and switchMap
-
-### Summary
-Convert the app's as-you-type stock searches to a debounced, cancellable RxJS pipe (`Subject<string>` → `debounceTime(300)` → `distinctUntilChanged()` → `switchMap(term => request)` → `takeUntil(destroy$)`), mirroring the existing `app.component.ts` idiom, so each search fires one debounced, cancellable backend request instead of one per keystroke — fixing the stale-result race where a slow earlier response can overwrite a newer one. Scope confirmed by Andrew's 2026-06-25 approval: the **lump-sum-investment** stock search, the **portfolio-customize** stock search, and the **stockselection** search. The stockselection search is additionally converted from a client-side filter over a pre-loaded asset list to a **backend `/alpaca/assets` search with no frontend filtering** (Andrew: this was the original expectation of that code). The **my-profile referral validator is explicitly out of scope** (Andrew: "not applicable for these changes").
-
-### Acceptance Criteria
-1. The `lump-sum-investment` and `portfolio-customize` stock searches are converted to a `Subject<string>` fed by the `(ionInput)`/input handler via `.next(value)` (no longer calling the async search directly), subscribed once in `ngOnInit` with `debounceTime(300)` → `distinctUntilChanged()` → `switchMap(term => request)` → `takeUntil(this.destroy$)`; result assignment moves into the subscription.
-2. For both stock searches, the equity + ETF `/alpaca/assets` calls are folded into a single `forkJoin` inside the `switchMap` so both in-flight requests are cancelled together when a newer keystroke arrives.
-3. The `stockselection` search is converted from the in-memory `allAssets` filter to a backend `/alpaca/assets` search using the same debounced `switchMap` pipe; the client-side filtering and the `loadAssets()` / `allAssets` preload are removed — it searches the backend only and maps results into its `StockAsset` shape.
-4. `switchMap` cancels any in-flight request when a newer keystroke arrives, so a slow earlier response can never overwrite a newer result (stale-result race fixed) on all three searches.
-5. Existing guards preserved: stock searches require ≥2 chars; empty/too-short input clears results and fires no request; the ~300ms debounce matches the existing `app.component.ts` value.
-6. Loading / empty / error states behave as today: the `isSearching` spinner toggles correctly across the async boundary, and a failed request is caught *inside* the stream so the pipe survives — the next keystroke still searches.
-7. Subscriptions are cleaned up via the existing `takeUntil(this.destroy$)` pattern; no leaks introduced.
-8. The `my-profile` referral validator (`onReferralCodeInput`) is left unchanged (out of scope per Andrew).
-9. `npx tsc --noEmit` exits 0 and `ng build` succeeds within budget.
-
 ## FRED-187 — Investigate Plaid paycheck-triggered investment flow
 check on if its possible to trigger an investment when the user's paycheck is seen via Plaid
 
@@ -714,6 +697,23 @@ Note: JWT must be passed as query param (EventSource doesn't support custom head
 
 ## FRED-185 — ✓ Update app calculator to net-income yield model
 Update the in-app calculator to use the same net-income-based model: (monthly net income × 12) / 0.04 = target portfolio value. Use 10% average annual rate with compound interest and DRIP reinvestment to determine time to reach that portfolio value based on the user's monthly investable income input.
+
+## FRED-186 — ✓ Update API searches to use debounce and switchMap
+update all api searches to use debounce and switchMap
+
+### Summary
+Convert the app's as-you-type stock searches to a debounced, cancellable RxJS pipe (`Subject<string>` → `debounceTime(300)` → `distinctUntilChanged()` → `switchMap(term => request)` → `takeUntil(destroy$)`), mirroring the existing `app.component.ts` idiom, so each search fires one debounced, cancellable backend request instead of one per keystroke — fixing the stale-result race where a slow earlier response can overwrite a newer one. Scope confirmed by Andrew's 2026-06-25 approval: the **lump-sum-investment** stock search, the **portfolio-customize** stock search, and the **stockselection** search. The stockselection search is additionally converted from a client-side filter over a pre-loaded asset list to a **backend `/alpaca/assets` search with no frontend filtering** (Andrew: this was the original expectation of that code). The **my-profile referral validator is explicitly out of scope** (Andrew: "not applicable for these changes").
+
+### Acceptance Criteria
+1. The `lump-sum-investment` and `portfolio-customize` stock searches are converted to a `Subject<string>` fed by the `(ionInput)`/input handler via `.next(value)` (no longer calling the async search directly), subscribed once in `ngOnInit` with `debounceTime(300)` → `distinctUntilChanged()` → `switchMap(term => request)` → `takeUntil(this.destroy$)`; result assignment moves into the subscription.
+2. For both stock searches, the equity + ETF `/alpaca/assets` calls are folded into a single `forkJoin` inside the `switchMap` so both in-flight requests are cancelled together when a newer keystroke arrives.
+3. The `stockselection` search is converted from the in-memory `allAssets` filter to a backend `/alpaca/assets` search using the same debounced `switchMap` pipe; the client-side filtering and the `loadAssets()` / `allAssets` preload are removed — it searches the backend only and maps results into its `StockAsset` shape.
+4. `switchMap` cancels any in-flight request when a newer keystroke arrives, so a slow earlier response can never overwrite a newer result (stale-result race fixed) on all three searches.
+5. Existing guards preserved: stock searches require ≥2 chars; empty/too-short input clears results and fires no request; the ~300ms debounce matches the existing `app.component.ts` value.
+6. Loading / empty / error states behave as today: the `isSearching` spinner toggles correctly across the async boundary, and a failed request is caught *inside* the stream so the pipe survives — the next keystroke still searches.
+7. Subscriptions are cleaned up via the existing `takeUntil(this.destroy$)` pattern; no leaks introduced.
+8. The `my-profile` referral validator (`onReferralCodeInput`) is left unchanged (out of scope per Andrew).
+9. `npx tsc --noEmit` exits 0 and `ng build` succeeds within budget.
 
 ## FRED-188 — ✓ Add null userId guard to processChat
 `ChatService.java` `processChat()` calls `userRepository.findById(request.userId())` without a null guard. Add the same guard that was added to `streamChat()`: `request.userId() != null ? userRepository.findById(request.userId()).orElse(null) : null`.
