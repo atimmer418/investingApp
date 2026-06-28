@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRED ITPM Daily Brief</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- ════════════════════════════════════════════════════════════════════
+       ITPM DASHBOARD CONTENT — agents may rewrite ONLY the content inside
+       #dashboard below. Do NOT add <style> or <script> here; styling lives
+       in /styles.css and logic in /app.js. Keep the <link>/<script src> in
+       <head> intact.
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <!-- ─── Lock Overlay ─── -->
+  <div id="lock-overlay">
+    <div class="lock-card">
+      <div class="lock-wordmark">FRED</div>
+      <div class="lock-heading">FRED ITPM Daily Brief</div>
+      <div class="lock-subtext">Today's priorities, options, and approval workflow.</div>
+      <div class="date-chip" id="overlay-date">Loading...</div>
+      <button id="reveal-btn" onclick="revealPassword()">Reveal Password Field</button>
+      <div id="password-section">
+        <input type="password" id="password-input" placeholder="Enter today's password" autocomplete="off" />
+        <button id="unlock-btn" onclick="attemptUnlock()">Unlock Dashboard</button>
+        <div id="error-msg">Incorrect password. Try again.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Dashboard ─── -->
+  <div id="dashboard" data-populated="true" data-state="looks_good">
+
+    <!-- ─── Failure Banner ─── -->
+    <div id="failure-banner">
+      <h3>Execution hit a blocker</h3>
+      <p id="failure-detail"></p>
+    </div>
+
+    <!-- ─── Intermediary Banner ─── -->
+    <div id="intermediary-banner" style="display:none; background:#dbeafe; border:1px solid #93c5fd; border-radius:14px; padding:16px 20px; margin-bottom:20px;">
+      <p style="font-size:14px; font-weight:700; color:#1e40af; margin:0 0 4px;">Plan approved — execution queued</p>
+      <p style="font-size:13px; color:#1e40af; margin:0;">Execution started. You'll receive a push notification when the build is complete.</p>
+      <a id="routine-link" href="#" target="_blank" style="display:none; margin-top:10px; font-size:12px; font-weight:700; color:#1e40af; text-decoration:underline; text-underline-offset:2px;">Watch the run live &rarr;</a>
+    </div>
+
+    <div class="dashboard-header">
+      <div class="header-left">
+        <div class="header-wordmark">FRED</div>
+        <div class="itpm-badge">ITPM</div>
+      </div>
+      <div class="header-date" id="header-date">Loading...</div>
+    </div>
+
+    <!-- ── Scoreboard (always visible) ── -->
+    <div class="section-group">
+      <div class="section-label">Routine Success Criteria</div>
+      <div class="scoreboard">
+
+        <div class="metric-card">
+          <div class="metric-label">Backlog Burn-Down</div>
+          <div class="metric-value warning">40.6%</div>
+          <div class="metric-sublabel">41 of 101 stories done</div>
+          <div class="metric-trend positive">&#8593; +4 done vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:40.6%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Piggy Tier Done</div>
+          <div class="metric-value warning">77.5%</div>
+          <div class="metric-sublabel">31 of 40 core stories complete</div>
+          <div class="metric-trend neutral">&#8594; no change vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77.5%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Pages Migrated</div>
+          <div class="metric-value warning">77%</div>
+          <div class="metric-sublabel">Settings hub + KYC edit + 7 input-field pages unified; ~10 non-settings pages remain</div>
+          <div class="metric-trend positive">&#8593; +1 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Prod Readiness</div>
+          <div class="metric-value warning">82</div>
+          <div class="metric-sublabel">Score out of 100</div>
+          <div class="metric-trend positive">&#8593; +3 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:82%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Days Since Blocker</div>
+          <div class="metric-value positive">30</div>
+          <div class="metric-sublabel">No active production blockers</div>
+          <div class="metric-trend positive">&#8593; +10 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:95%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Launch Readiness</div>
+          <div class="metric-value warning">69.3%</div>
+          <div class="metric-sublabel">Composite estimate</div>
+          <div class="metric-trend positive">&#8593; +1.6 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:69.3%"></div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Today's Priorities (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Today's Priorities</div>
+
+      <div class="priority-card">
+        <label class="priority-skip-label" title="Check to skip this story and regenerate">
+          <input type="checkbox" class="priority-skip-cb" onchange="handlePrioritySkip(this)" />
+          <span class="priority-skip-text">Skip</span>
+        </label>
+        <div class="priority-badge">#1</div>
+        <div class="priority-body">
+          <div class="priority-title">FRED-186 — Update API searches to use debounce and switchMap</div>
+          <div class="priority-desc">Make the app's as-you-type searches that hit the backend fire <strong>one debounced, cancellable request</strong> instead of one per keystroke. I ground-truthed this morning that three search inputs call the network on every keystroke with <em>no</em> debounce and <em>no</em> cancellation, so a slow earlier response can land after a newer one and overwrite it (a stale-result race), and each keystroke spams the API:
+            <br>&nbsp;&nbsp;• <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">lump-sum-investment</code> stock search — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">(ionInput)="searchStocks()"</code> → two <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/alpaca/assets</code> calls (equity + ETF) per keystroke, Promise-based, no cancel.
+            <br>&nbsp;&nbsp;• <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">portfolio-customize</code> stock search — same double <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/alpaca/assets</code> pattern per keystroke.
+            <br>&nbsp;&nbsp;• <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">my-profile</code> referral-code validator — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">(input)="onReferralCodeInput(...)"</code> → raw <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.subscribe</code> on <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/user/referral/validate</code>, no debounce / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">distinctUntilChanged</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code>. Notably, <strong>FRED-114's AC-1 already specified this exact validator should use <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">distinctUntilChanged + switchMap</code></strong> — so this is closing a documented gap, not new design.
+            <br>The fourth searchbar — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">stockselection</code> — filters a <em>pre-loaded</em> in-memory asset list (no network call), so <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code> doesn't apply there; that's the one open scope question below. <strong>Tier 2 — no acceptance criteria in the backlog yet, so I've drafted them below for you to approve or edit; the build won't start until they're confirmed.</strong></div>
+          <span class="diff-chip diff-medium">Medium</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Why I Picked This (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Why I Picked This</div>
+      <div class="card">
+        <div class="card-text"><strong>FRED-202 (standardize input fields) shipped 06-23 and was closed out to "Looks Good," so this is a fresh brief for the next single story.</strong> Operating in <strong>Tier 2</strong>: FRED-186 has no acceptance-criteria block in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code>, so I've generated proposed A/C below for you to approve or edit. The Tier-1 READY stories that remain — FRED-191 (load perf), FRED-201 (cold-start reauth cover), FRED-204 (static→Lottie white flash) — all stay <strong>sandbox-gated</strong>: their acceptance criteria require reproducing a real-device Capacitor cold-start + reauth, which this sandbox can't run and which is too pixel-timing-sensitive to touch blind. FRED-189 + FRED-195 are effectively done (shipped/merged) but still sit uncheckmarked in READY — data-hygiene to close out, not build. That leaves FRED-186 as the strongest build-ready, sandbox-verifiable pick — and the exact next-pick I named in yesterday's brief. It's frontend-only, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code>-verifiable here, a guaranteed completion, and it closes a genuine correctness bug (stale-result races) rather than cosmetic polish. Difficulty Medium is acceptable now that readiness is 82 (&gt; 75). No exclusions apply: FRED-188 (skipped 06-22, window through ~06-29) is already done and isn't this story; FRED-100's skip window (06-15) has expired.</div>
+      </div>
+    </div>
+
+    <!-- ── Strategic Alignment (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Strategic Alignment</div>
+      <div class="card">
+        <div class="card-text">The production-readiness mission lists <em>bug-free core flows</em> and <em>no placeholder UX</em> explicitly. A stale-result race on the referral validator can show "valid" for the wrong code, and stock searches that flash older results read as buggy — both erode <strong>trust</strong>, FRED's primary business driver after retention. Debounced, switch-mapped searches feel instant and correct, and they cut needless load on the Alpaca-backed <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/alpaca/assets</code> endpoint. This also reuses an RxJS pattern already present in the codebase (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app.component.ts</code> uses <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">debounceTime(300)</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">distinctUntilChanged</code>), keeping the design system consistent rather than inventing a new approach.</div>
+      </div>
+    </div>
+
+    <!-- ── Production Readiness Impact (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Production Readiness Impact</div>
+      <div class="card">
+        <div class="card-text">Closes a class of latent correctness bugs (stale-result races + request spam) on three user-facing search inputs, advancing the "bug-free core flows" lever of the readiness score. The main risk to manage is <strong>behavioral regression</strong> at the async boundary: converting Promise-based <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">searchStocks()</code> calls into RxJS streams means the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isSearching</code> spinner, empty-state clearing, and min-length guards must keep behaving exactly as today, and a failed request must not kill the stream for the next keystroke. Frontend-only, no backend/schema/auth change; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code>-verifiable in-sandbox. The live device check — that a single request fires after typing stops and stale results never flash — is handed to you at 390×844 / 430×932 via "Looks Good."</div>
+      </div>
+    </div>
+
+    <!-- ── Proposed Acceptance Criteria (Tier 2 — approve or edit, planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Proposed Acceptance Criteria — approve or edit</div>
+      <div class="card">
+        <div class="card-text" style="color:var(--gray);margin-bottom:14px;">FRED-186 is a <strong>Tier 2</strong> story — it has no acceptance criteria in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> yet. These are my proposed criteria; <strong>the build won't start until you confirm them</strong> (submit as-is to accept, or edit in the note below). The execution agent will write the confirmed A/C back into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> before building.</div>
+        <div class="triage-group">
+          <ul class="triage-list">
+            <li><strong>AC-1</strong> — The three per-keystroke <em>network</em> searches are converted to a debounced, switch-mapped RxJS pipe: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">lump-sum-investment</code> <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">searchStocks</code> (the equity + ETF <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/alpaca/assets</code> calls), <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">portfolio-customize</code> <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">searchStocks</code>, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">my-profile</code> <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">onReferralCodeInput</code>. Each input event feeds a <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">Subject&lt;string&gt;</code>; the stream applies <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">debounceTime(300)</code> → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">distinctUntilChanged()</code> → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap(term =&gt; request)</code>.</li>
+            <li><strong>AC-2</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code> cancels any in-flight request when a newer keystroke arrives, so a slow earlier response can never overwrite a newer result — fixing the stale-result race (notably on the referral validator's <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isCodeValid</code>).</li>
+            <li><strong>AC-3</strong> — Existing guards preserved: min query length (stock searches ≥2 chars, referral ≥3 chars); empty/too-short input clears results and fires no request; the ~300ms debounce matches the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app.component.ts</code> value.</li>
+            <li><strong>AC-4</strong> — Loading / empty / error states behave exactly as today: the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isSearching</code> spinner toggles correctly across the async boundary, and a failed request is caught <em>inside</em> the stream so it doesn't terminate the pipe — the next keystroke still searches.</li>
+            <li><strong>AC-5</strong> — The <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">stockselection</code> searchbar (in-memory filter over pre-loaded <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">allAssets</code>, no network call) is out of scope for <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code>; left as-is (pending Q1).</li>
+            <li><strong>AC-6</strong> — Subscriptions cleaned up via the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">takeUntil(this.destroy$)</code> pattern; no leaks introduced.</li>
+            <li><strong>AC-7</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> succeeds within budget; verified at 390×844 / 430×932 that exactly one request fires after typing stops and stale results never flash.</li>
+          </ul>
+        </div>
+        <div class="revision-label" style="margin-top:14px;margin-bottom:8px;">Edit the criteria (optional) — leave blank to accept as proposed:</div>
+        <textarea class="revision-textarea" id="ac-edit-textarea" placeholder="e.g. Drop AC-5 and also add a small render-only debounce to stockselection; or tighten the debounce to 200ms."></textarea>
+      </div>
+    </div>
+
+    <!-- ── Implementation Options (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Implementation Options</div>
+      <div class="option-group">
+
+        <div class="option-card selected">
+          <div class="option-header">
+            <span class="option-label">Option A</span>
+            <span class="option-rec">Recommended</span>
+          </div>
+          <div class="option-title">Per-component RxJS pipe — a <code>Subject</code> per search, <code>debounceTime(300)</code> → <code>distinctUntilChanged</code> → <code>switchMap</code>, mirroring the app's existing pattern</div>
+          <div class="option-body">In each of the three components add a <code>searchInput$ = new Subject&lt;string&gt;()</code>; the <code>(ionInput)</code>/<code>(input)</code> handler calls <code>.next(value)</code> instead of invoking the async search directly. Subscribe once in <code>ngOnInit</code> with <code>debounceTime(300)</code> → <code>distinctUntilChanged()</code> → <code>switchMap(term =&gt; httpCall)</code> → <code>takeUntil(destroy$)</code>, moving result assignment into the subscription. For the two stock searches, fold the equity + ETF <code>/alpaca/assets</code> calls into a single <code>forkJoin</code> inside the <code>switchMap</code> so both are cancelled together. Catch errors inside the inner observable so the stream survives. This is the same idiom already in <code>app.component.ts</code> and the one FRED-114 specified for the referral validator.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>fixes the stale-result race correctly (switchMap cancellation, AC-2); reuses an in-codebase pattern (design consistency); minimal blast radius — three localized components; frontend-only, fully <code>tsc</code>/<code>ng build</code>-verifiable here.</span></span>
+            <span class="meta-item">Cons: <span>each component's Promise-based <code>searchStocks</code> becomes stream-based, so the spinner/empty-state wiring must be moved into the subscription and re-verified per page.</span></span>
+            <span class="meta-item">Risk: <span>Low–Medium — well-understood RxJS; main risk is missing an <code>isSearching</code>/empty-state edge, caught by static review + live check.</span></span>
+            <span class="meta-item">Estimate: <span>~2–3 hr</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option B</span>
+          </div>
+          <div class="option-title">Shared search utility / directive applied across all the searches</div>
+          <div class="option-body">Extract a single reusable helper (an operator factory <code>debouncedSearch(fn)</code> or a small directive) that wraps the <code>debounceTime</code> → <code>distinctUntilChanged</code> → <code>switchMap</code> chain, then apply it at each call site so the pipe lives in one place.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>DRY — the pipe is defined once; future searches get it for free.</span></span>
+            <span class="meta-item">Cons: <span>over-engineering for three call sites with slightly different request shapes (single validate call vs forkJoin of two asset calls); adds an abstraction the vision explicitly warns against ("never introduce unnecessary abstraction"); harder to read than the inline idiom already used in <code>app.component.ts</code>.</span></span>
+            <span class="meta-item">Risk: <span>Medium — the shared abstraction has to flex for both request shapes; more design surface than the problem needs.</span></span>
+            <span class="meta-item">Estimate: <span>~3–4 hr</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option C</span>
+          </div>
+          <div class="option-title">Debounce only — add <code>debounceTime</code>, keep the Promise-based calls (no <code>switchMap</code>)</div>
+          <div class="option-body">Wrap the existing <code>searchStocks()</code> / validator in a debounce timer so it fires less often, but leave the underlying <code>await ... toPromise()</code> / <code>.subscribe</code> calls as-is.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>smallest diff; cuts request volume.</span></span>
+            <span class="meta-item">Cons: <span><strong>rejected — doesn't fix the core bug.</strong> Without <code>switchMap</code> cancellation, two debounced requests can still overlap and the slower-but-older one can overwrite the newer result (the stale-result race). It also fails the story's explicit "switchMap" requirement.</span></span>
+            <span class="meta-item">Risk: <span>High (of being wrong) — leaves the actual race condition in place.</span></span>
+            <span class="meta-item">Estimate: <span>~1–2 hr (but non-compliant)</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Triage Findings (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Triage Findings</div>
+      <div class="card">
+
+        <div class="story-section">
+          <div class="story-header">FRED-186 — Update API searches to use debounce and switchMap</div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">In Scope</div>
+            <ul class="triage-list">
+              <li>Convert the three network-hitting searches to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">Subject</code> → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">debounceTime(300)</code> → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">distinctUntilChanged</code> → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code>: lump-sum-investment stock search, portfolio-customize stock search, my-profile referral validator.</li>
+              <li>Fold each stock search's equity + ETF <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/alpaca/assets</code> calls into one cancellable inner observable (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">forkJoin</code>).</li>
+              <li>Preserve min-length guards, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isSearching</code> spinner, empty-state clearing, and error handling exactly as today.</li>
+              <li>Clean up via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">takeUntil(this.destroy$)</code>; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> clean; verify at 390×844 / 430×932.</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">Potentially Out of Scope</div>
+            <ul class="triage-list">
+              <li>The <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">stockselection</code> searchbar — it filters a pre-loaded in-memory list, no API call, so <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code> is N/A (Q1; recommend leaving as-is, with at most a small render-only debounce).</li>
+              <li>Any backend / endpoint change to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/alpaca/assets</code> or <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/user/referral/validate</code> — this is purely a frontend request-orchestration fix.</li>
+              <li>Non-search debounce opportunities (e.g. window-resize, scroll) — not "API searches," not in scope.</li>
+              <li>Broader RxJS refactor of the affected components beyond the search pipe.</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">UX Considerations</div>
+            <ul class="triage-list">
+              <li><strong>Perceived speed</strong> — 300ms debounce should feel instant; results appear once after the user pauses, not mid-type flicker.</li>
+              <li><strong>No stale flash</strong> — with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code>, an abandoned query's late response is discarded; the list only ever shows the latest term's results.</li>
+              <li><strong>Spinner correctness</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isSearching</code> turns on when a request starts and off when its result (or error) lands, even when an earlier request was cancelled.</li>
+              <li><strong>Error resilience</strong> — a failed request shows the existing empty/error treatment but must not break the stream for subsequent keystrokes.</li>
+              <li><strong>Mobile-first</strong> — verify at 390×844 and 430×932: searchbar keyboard behavior unchanged, results list scrolls as before.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Questions For Andrew (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Questions For Andrew</div>
+      <div class="card">
+
+        <div class="question-item">
+          <div class="question-text">
+            <strong>Is the in-memory <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">stockselection</code> searchbar in scope?</strong> It filters a pre-loaded asset list client-side (no network request), so <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code> cancellation doesn't apply. The story says "API searches," and this isn't one — my recommendation is to <strong>leave it as-is</strong> (at most a tiny render-only debounce if the 7,000-asset filter ever feels laggy, but no <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code>).
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Leave stockselection as-is — it's a client-side filter, not an API search, so switchMap doesn't apply. Just the three network searches."></textarea>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text">
+            <strong>Confirm the search set and debounce window.</strong> I'm treating the complete set of network searches as exactly three — lump-sum stock search, portfolio-customize stock search, and the my-profile referral validator — with a <strong>300ms</strong> debounce to match the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app.component.ts</code> value. Flag here if you know of another as-you-type backend search I should fold in, or want a snappier window.
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Those three are the full set, and 300ms is good — keep it consistent with app.component.ts."></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Suggested Execution Order (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Suggested Execution Order</div>
+      <div class="card">
+
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-body" contenteditable="false"><strong>Referral validator first (smallest, documented)</strong> — In <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">my-profile.page.ts</code>, replace <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">onReferralCodeInput</code>'s raw <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.subscribe</code> with a <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">Subject</code> → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">debounceTime(300)</code> → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">distinctUntilChanged</code> → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap(validateReferralCode)</code> pipe (the pattern FRED-114 AC-1 specified); the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">(input)</code> handler just calls <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.next()</code>. Establish the idiom here.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-body" contenteditable="false"><strong>lump-sum-investment stock search</strong> — Add <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">searchInput$</code>; move the equity + ETF <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/alpaca/assets</code> calls into a <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">forkJoin</code> inside <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">switchMap</code>; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">(ionInput)</code> → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.next(value)</code>. Preserve the ≥2-char guard, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isSearching</code>, empty-state, and result merge/dedupe.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-body" contenteditable="false"><strong>portfolio-customize stock search</strong> — Apply the identical pipe (same forkJoin shape). Keep its existing result handling and selected-allocation logic untouched beyond the search trigger.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-body" contenteditable="false"><strong>Verify + hand off</strong> — Confirm <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">stockselection</code> left as-is; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> within budget; verifier over AC-1..AC-7. Live 390×844 / 430×932 check (one request after typing stops, no stale flash) handed to you via "Looks Good."</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Tomorrow's Likely Pick (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Tomorrow's Likely Pick</div>
+      <div class="card">
+        <ul class="tomorrow-list">
+          <li><strong>Data hygiene</strong> — close out FRED-189 (shipped 06-19) and FRED-195 (shipped+merged) with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done</code> so they aren't re-picked and burndown stays honest. They've sat uncheckmarked in READY for days.</li>
+          <li><strong>DEV-198</strong> — Eliminate <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">package-lock.json</code> libc-field churn. Tier 2, dev-tooling, sandbox-doable (it's literally about this sandbox's own lockfile noise).</li>
+          <li><strong>FRED-187</strong> — Plaid paycheck-trigger investigation (a research spike, Tier 2). FRED-191 / FRED-201 / FRED-204 stay sandbox-gated (real-device Capacitor cold-start verification).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── Completion Section (completed state only) ── -->
+    <div class="section-group section-intermediary-only" id="completion-section">
+      <div class="section-label">WHAT GOT DONE</div>
+      <div class="card" id="completion-content">
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-186 — Update API searches to use debounce and switchMap</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Converted all three as-you-type stock searches — <strong>lump-sum-investment</strong>, <strong>portfolio-customize</strong>, and <strong>stockselection</strong> — to a debounced, cancellable RxJS pipe: each input now feeds a <code>Subject&lt;string&gt;</code> piped through <code>debounceTime(300)</code> → <code>distinctUntilChanged()</code> → <code>switchMap(forkJoin equity+ETF)</code> → <code>takeUntil(destroy$)</code>, so one debounced request fires after you stop typing and a slower earlier response can never overwrite a newer one (the stale-result race is fixed). Per your call, <strong>stockselection</strong> was additionally converted from an in-memory client-side filter to a backend-only <code>/alpaca/assets</code> search, and the <strong>my-profile referral validator was left untouched</strong> (out of scope). Errors are caught inside the stream so a failed request never breaks the next keystroke; the native <code>debounce</code> attribute was removed from each searchbar so the pipe owns the 300ms window. 6 files changed (+257/−302).</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>lump-sum + portfolio-customize searches use the <code>Subject</code> → <code>debounceTime(300)</code> → <code>distinctUntilChanged</code> → <code>switchMap</code> pipe (AC-1)</li>
+            <li>equity + ETF <code>/alpaca/assets</code> calls folded into one cancellable <code>forkJoin</code> inside the switchMap (AC-2)</li>
+            <li>stockselection converted to a backend-only <code>/alpaca/assets</code> search — in-memory <code>allAssets</code> filter + preload removed (AC-3)</li>
+            <li><code>switchMap</code> cancels in-flight requests → stale-result race fixed on all three (AC-4)</li>
+            <li>≥2-char + empty-input guards preserved; exactly <code>debounceTime(300)</code> (AC-5)</li>
+            <li>loading / empty / error states intact; <code>catchError</code> inside the stream keeps the pipe alive (AC-6)</li>
+            <li>subscriptions cleaned up via <code>takeUntil(this.destroy$)</code>; no leaks (AC-7)</li>
+            <li>my-profile referral validator left unchanged — out of scope (AC-8)</li>
+            <li><code>tsc --noEmit</code> clean and <code>ng build</code> succeeds; verifier APPROVED, CI green, PR #101 squash-merged to develop (AC-9)</li>
+          </ul>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Closes a real correctness bug on the app's primary stock-picking surfaces (no more stale results overwriting newer ones) — frontend-only, no schema/auth change. Readiness 82 → 83.</p>
+        </div>
+      </div>
+      <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
+        Looks Good &#10003;
+      </button>
+
+      <!-- Request Changes — rework the same story with feedback -->
+      <div id="rework-block" style="margin-top:14px;">
+        <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The spinner stays spinning after a cancelled search — make sure isSearching clears when switchMap drops the prior request."></textarea>
+        <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
+      </div>
+    </div>
+
+    <!-- ── Anything Else For the Execution Agent (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Anything Else For the Execution Agent?</div>
+      <div class="card">
+        <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Use forkJoin for the two asset calls so they cancel together; keep the 300ms debounce consistent with app.component.ts..."></textarea>
+      </div>
+    </div>
+
+    <!-- ── Add to Backlog (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Add to Backlog</div>
+      <div class="card">
+        <div class="revision-label" style="margin-bottom:14px;">Thought of something while reviewing? Add it to the backlog without leaving this page.</div>
+        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Add a 'no results' empty state with a suggestion to check the symbol spelling..." style="min-height:80px;margin-bottom:12px;"></textarea>
+        <button class="btn-dark" id="backlog-btn" onclick="handleAddBacklog()">Add to Backlog</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Fixed Approve Bar ─── -->
+  <div id="approve-bar">
+    <div id="approve-status">Complete all required fields to unlock approval</div>
+    <button id="approve-btn" onclick="handleApprove()">Approve / Get To Work</button>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
