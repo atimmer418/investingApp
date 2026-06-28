@@ -121,7 +121,9 @@ ion-back-button {
 /* iOS-inspired design variables */
 :root {
   /* Floating tab bar: space content must leave at the bottom so it clears the bar. */
-  --fred-tabbar-clearance: calc(64px + env(safe-area-inset-bottom, 0px) + 20px);
+  /* Vertical space the floating tab bar occupies from the screen bottom + a small gap.
+     = bar bottom-inset max(8px, safe-area - 14px) + bar height 56px + 10px gap. */
+  --fred-tabbar-clearance: calc(max(8px, env(safe-area-inset-bottom, 0px) - 14px) + 66px);
 
   /* Core iOS-style colors */
   --app-primary: #007aff;

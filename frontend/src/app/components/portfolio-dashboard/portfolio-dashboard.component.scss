@@ -6,13 +6,26 @@
   --portfolio-success: var(--app-success);
   --portfolio-danger: var(--app-danger);
   --portfolio-primary: var(--app-primary);
+
+  /* No ion-page wraps the header + content here (nested ion-content), so flex
+     them ourselves: header takes its height, content fills the rest. Without
+     this, .portfolio-content height:100% ignores the header and overflows the
+     screen bottom (content cut off behind the floating tab bar). */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .portfolio-content {
   --background: var(--portfolio-background);
   --padding-start: 0;
   --padding-end: 0;
-  height: 100%;
+  /* Fill the space below the header (flex child), not 100% of the whole host. */
+  flex: 1 1 auto;
+  min-height: 0;
+  /* Bottom scroll padding so the last row clears the floating bar, while the
+     viewport stays full-height (content scrolls *behind* the translucent bar). */
+  --padding-bottom: var(--fred-tabbar-clearance);
 
   ion-refresher-content {
     --spinner-color: var(--portfolio-primary);

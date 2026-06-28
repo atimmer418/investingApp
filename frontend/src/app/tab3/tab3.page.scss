@@ -208,7 +208,6 @@ ion-header {
   height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: var(--fred-tabbar-clearance);
   background-color: #f8fafc;
 
   background-image: linear-gradient(90deg, #2a5ae0, #1d4ed8);
@@ -220,6 +219,11 @@ ion-header {
 .scroll-inner {
   background: #f8fafc;
   min-height: 100%;
+  /* Clearance so the last row clears the floating bar. border-box makes
+     min-height:100% include this padding, so short content doesn't force
+     over-scroll — content still scrolls *behind* the translucent bar. */
+  padding-bottom: var(--fred-tabbar-clearance);
+  box-sizing: border-box;
 }
 
 /* =============================================================================
