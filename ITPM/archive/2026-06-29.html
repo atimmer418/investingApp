@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRED ITPM Daily Brief</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- ════════════════════════════════════════════════════════════════════
+       ITPM DASHBOARD CONTENT — agents may rewrite ONLY the content inside
+       #dashboard below. Do NOT add <style> or <script> here; styling lives
+       in /styles.css and logic in /app.js. Keep the <link>/<script src> in
+       <head> intact.
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <!-- ─── Lock Overlay ─── -->
+  <div id="lock-overlay">
+    <div class="lock-card">
+      <div class="lock-wordmark">FRED</div>
+      <div class="lock-heading">FRED ITPM Daily Brief</div>
+      <div class="lock-subtext">Today's priorities, options, and approval workflow.</div>
+      <div class="date-chip" id="overlay-date">Loading...</div>
+      <button id="reveal-btn" onclick="revealPassword()">Reveal Password Field</button>
+      <div id="password-section">
+        <input type="password" id="password-input" placeholder="Enter today's password" autocomplete="off" />
+        <button id="unlock-btn" onclick="attemptUnlock()">Unlock Dashboard</button>
+        <div id="error-msg">Incorrect password. Try again.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Dashboard ─── -->
+  <div id="dashboard" data-populated="true" data-state="looks_good">
+
+    <!-- ─── Failure Banner ─── -->
+    <div id="failure-banner">
+      <h3>Execution hit a blocker</h3>
+      <p id="failure-detail"></p>
+    </div>
+
+    <!-- ─── Intermediary Banner ─── -->
+    <div id="intermediary-banner" style="display:none; background:#dbeafe; border:1px solid #93c5fd; border-radius:14px; padding:16px 20px; margin-bottom:20px;">
+      <p style="font-size:14px; font-weight:700; color:#1e40af; margin:0 0 4px;">Plan approved — execution queued</p>
+      <p style="font-size:13px; color:#1e40af; margin:0;">Execution started. You'll receive a push notification when the build is complete.</p>
+      <a id="routine-link" href="#" target="_blank" style="display:none; margin-top:10px; font-size:12px; font-weight:700; color:#1e40af; text-decoration:underline; text-underline-offset:2px;">Watch the run live &rarr;</a>
+    </div>
+
+    <div class="dashboard-header">
+      <div class="header-left">
+        <div class="header-wordmark">FRED</div>
+        <div class="itpm-badge">ITPM</div>
+      </div>
+      <div class="header-date" id="header-date">Loading...</div>
+    </div>
+
+    <!-- ── Scoreboard (always visible) ── -->
+    <div class="section-group">
+      <div class="section-label">Routine Success Criteria</div>
+      <div class="scoreboard">
+
+        <div class="metric-card">
+          <div class="metric-label">Backlog Burn-Down</div>
+          <div class="metric-value warning">41.6%</div>
+          <div class="metric-sublabel">42 of 101 stories done</div>
+          <div class="metric-trend positive">&#8593; +2 done vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:41.6%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Piggy Tier Done</div>
+          <div class="metric-value warning">77.5%</div>
+          <div class="metric-sublabel">31 of 40 core stories complete</div>
+          <div class="metric-trend neutral">&#8594; no change vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77.5%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Pages Migrated</div>
+          <div class="metric-value warning">77%</div>
+          <div class="metric-sublabel">Settings hub + KYC edit + 7 input-field pages unified; ~10 non-settings pages remain</div>
+          <div class="metric-trend neutral">&#8594; no change vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Prod Readiness</div>
+          <div class="metric-value warning">83</div>
+          <div class="metric-sublabel">Score out of 100</div>
+          <div class="metric-trend positive">&#8593; +2 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:83%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Days Since Blocker</div>
+          <div class="metric-value positive">32</div>
+          <div class="metric-sublabel">No active production blockers</div>
+          <div class="metric-trend positive">&#8593; +4 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:96%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Launch Readiness</div>
+          <div class="metric-value warning">69.8%</div>
+          <div class="metric-sublabel">Composite estimate</div>
+          <div class="metric-trend positive">&#8593; +1.0 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:69.8%"></div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Today's Priorities (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Today's Priorities</div>
+
+      <div class="priority-card">
+        <label class="priority-skip-label" title="Check to skip this story and regenerate">
+          <input type="checkbox" class="priority-skip-cb" onchange="handlePrioritySkip(this)" />
+          <span class="priority-skip-text">Skip</span>
+        </label>
+        <div class="priority-badge">#1</div>
+        <div class="priority-body">
+          <div class="priority-title">DEV-198 — Eliminate package-lock.json libc-field churn in diffs</div>
+          <div class="priority-desc">Stop <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">package-lock.json</code> from producing noisy, environment-specific diffs that have to be hand-reverted to keep PRs clean. npm writes platform metadata — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">os</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cpu</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">libc</code> — into the optional-dependency blocks of the lockfile, and the emitted lines differ across the three environments that touch it: this <strong>itpm routine cloud sandbox</strong>, <strong>local</strong>, and <strong>GitHub Actions CI</strong>. I ground-truthed this morning:
+            <br>&nbsp;&nbsp;• <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/package-lock.json</code> has <strong>266</strong> <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">os</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cpu</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">libc</code> entries (26 of them <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">libc</code>); the root <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./package-lock.json</code> has 16.
+            <br>&nbsp;&nbsp;• This sandbox runs <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm 10.9.7</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">node 22.22.2</code>. CI (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">verify.yml</code>) uses <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">actions/setup-node@v4</code> with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">node-version: '22'</code> but <strong>no pinned npm version</strong>, then runs <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm ci --legacy-peer-deps</code>. Neither <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">package.json</code> declares <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">engines</code> or <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">packageManager</code>. So the leading root cause is <strong>npm-version drift</strong> across environments emitting these fields differently.
+            <br>This is dev-tooling hygiene that affects the routine's own PRs (the verifier flagged it on 2026-06-15). <strong>Tier 2 — no acceptance criteria in the backlog yet, so I've drafted them below for you to approve or edit; the build won't start until they're confirmed.</strong></div>
+          <span class="diff-chip diff-easy">Easy</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Why I Picked This (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Why I Picked This</div>
+      <div class="card">
+        <div class="card-text"><strong>FRED-186 (debounce + switchMap on API searches) shipped and was closed out to "Looks Good," so this is a fresh brief for the next single story.</strong> Operating in <strong>Tier 2</strong>: DEV-198 has no acceptance-criteria block in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code>, so I've generated proposed A/C below for you to approve or edit. <strong>Tier 1 is exhausted for this sandbox:</strong> the Tier-1 READY stories that remain — FRED-191 (load perf), FRED-201 (cold-start reauth cover), FRED-204 (static→Lottie white flash) — all require reproducing a real-device Capacitor cold-start + reauth this sandbox can't run, and they're too pixel-timing-sensitive to touch blind. FRED-189 and FRED-195 are effectively done (shipped/merged) but still sit uncheckmarked in READY — that's data-hygiene to close out, not build work. That leaves DEV-198 as the strongest build-ready, <strong>fully sandbox-shippable AND sandbox-verifiable</strong> pick — it's literally about this sandbox's own lockfile noise — an Easy, guaranteed-completion quick win that removes recurring revert toil from every future routine PR. No exclusions apply: FRED-188's skip window (06-22) and FRED-100's (06-15) don't touch this pick.</div>
+      </div>
+    </div>
+
+    <!-- ── Strategic Alignment (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Strategic Alignment</div>
+      <div class="card">
+        <div class="card-text">A deterministic, reproducible build is an app-store launch-readiness criterion and a trust signal for investor/diligence review. Right now every routine run risks a noisy lockfile diff that has to be manually reverted before a PR is clean — friction that slows the ITPM pipeline and invites mistakes. Fixing it once makes <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm ci</code> emit a byte-identical lockfile across the sandbox, CI, and local, which keeps PRs honest and the build reproducible-from-repo — directly in line with FRED's "nothing one-off, everything reproducible from source control" principle.</div>
+      </div>
+    </div>
+
+    <!-- ── Production Readiness Impact (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Production Readiness Impact</div>
+      <div class="card">
+        <div class="card-text">Indirect but real: deterministic lockfiles harden the build/CI pipeline (reproducible builds are a launch-readiness lever) and remove a recurring source of human error in the release flow. No application code is touched, so user-facing risk is near zero. The one technical risk to manage is <strong>optional native-binary resolution</strong> — rollup/esbuild ship platform-specific binaries as optional deps, so the fix must NOT simply strip or omit optional deps; it must keep <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm ci --legacy-peer-deps</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> working. Fully <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code>-verifiable in-sandbox, plus a direct proof: regenerate the lockfile here and confirm zero <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">os</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cpu</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">libc</code> churn.</div>
+      </div>
+    </div>
+
+    <!-- ── Proposed Acceptance Criteria (Tier 2 — approve or edit, planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Proposed Acceptance Criteria — approve or edit</div>
+      <div class="card">
+        <div class="card-text" style="color:var(--gray);margin-bottom:14px;">DEV-198 is a <strong>Tier 2</strong> story — it has no acceptance criteria in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> yet. These are my proposed criteria; <strong>the build won't start until you confirm them</strong> (submit as-is to accept, or edit in the note below). The execution agent will write the confirmed A/C back into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> before building.</div>
+        <div class="triage-group">
+          <ul class="triage-list">
+            <li><strong>AC-1</strong> — Root cause confirmed and written up: identify exactly what makes the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">os</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cpu</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">libc</code> lines differ across the routine sandbox, CI, and local (npm-version drift is the leading hypothesis — verify it), documented before the fix.</li>
+            <li><strong>AC-2</strong> — A single stable mechanism is applied so <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm ci</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm install</code> produces an identical <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">package-lock.json</code> across the routine sandbox, GitHub Actions CI, and a local dev machine — no <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">os</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cpu</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">libc</code> churn.</li>
+            <li><strong>AC-3</strong> — Both lockfiles are covered: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/package-lock.json</code> and the root <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./package-lock.json</code> (pending Q1).</li>
+            <li><strong>AC-4</strong> — If the fix pins an npm version, CI (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">verify.yml</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">auto-pr.yml</code>) is updated to use that same version so CI stops re-introducing the churn (pending Q2).</li>
+            <li><strong>AC-5</strong> — Demonstrated: regenerating the lockfile in the sandbox after the fix produces <strong>no</strong> <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">os</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cpu</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">libc</code> diff against what's committed.</li>
+            <li><strong>AC-6</strong> — No dependency-resolution change: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm ci --legacy-peer-deps</code> still installs cleanly and the rollup/esbuild optional native binaries still resolve; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0 and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> succeeds.</li>
+            <li><strong>AC-7</strong> — The chosen mechanism is documented (a README/CONTRIBUTING note or code comment) so future contributors keep the same npm version / setup.</li>
+          </ul>
+        </div>
+        <div class="revision-label" style="margin-top:14px;margin-bottom:8px;">Edit the criteria (optional) — leave blank to accept as proposed:</div>
+        <textarea class="revision-textarea" id="ac-edit-textarea" placeholder="e.g. Skip the CI edit for now and only stabilize the sandbox/local emission; or also add a CI guard that fails a PR if the lockfile churns."></textarea>
+      </div>
+    </div>
+
+    <!-- ── Implementation Options (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Implementation Options</div>
+      <div class="option-group">
+
+        <div class="option-card selected">
+          <div class="option-header">
+            <span class="option-label">Option A</span>
+            <span class="option-rec">Recommended</span>
+          </div>
+          <div class="option-title">Pin one npm version across all three environments (sandbox, CI, local)</div>
+          <div class="option-body">Add <code>"packageManager": "npm@10.9.7"</code> to <code>package.json</code> (Corepack-enforced — the node-22 default npm), enable Corepack locally, and update <code>verify.yml</code> + <code>auto-pr.yml</code> to pin/enable the same npm before <code>npm ci</code> (e.g. <code>corepack enable</code> or <code>npm i -g npm@10.9.7</code>). Then regenerate both lockfiles once so they're emitted by the pinned version. This targets the <strong>root cause</strong>: identical npm everywhere → identical <code>os</code>/<code>cpu</code>/<code>libc</code> emission everywhere.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>fixes the root cause, not the symptom; no app-code or dependency change; reproducible builds everywhere; small, well-understood diff (package.json + 2 workflows); fully verifiable in-sandbox by regenerating the lockfile.</span></span>
+            <span class="meta-item">Cons: <span>requires editing the CI workflows (Q2) and standardizing on one npm version that local devs must match; Corepack npm support has occasional rough edges to confirm.</span></span>
+            <span class="meta-item">Risk: <span>Low — version pinning is standard practice; verified by a clean lockfile regen + <code>npm ci</code> + <code>ng build</code>.</span></span>
+            <span class="meta-item">Estimate: <span>~1–2 hr</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option B</span>
+          </div>
+          <div class="option-title">Repo <code>.npmrc</code> settings only (no CI edit)</div>
+          <div class="option-body">Add a committed <code>.npmrc</code> with stabilizing settings (e.g. <code>engine-strict</code> + a documented npm version, or optional-dep handling) to nudge consistent emission without touching the workflows.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>lightest touch; no workflow change; one small new file.</span></span>
+            <span class="meta-item">Cons: <span><code>.npmrc</code> does not directly govern <code>os</code>/<code>cpu</code>/<code>libc</code> field emission, so it may not fully eliminate the churn; the only <code>.npmrc</code> knob that removes the fields is omitting optional deps — which would break the rollup/esbuild native binaries (fails AC-6).</span></span>
+            <span class="meta-item">Risk: <span>Medium–High of not actually fixing it (the fields are version-driven, not config-driven), or of breaking native builds if optional deps are omitted.</span></span>
+            <span class="meta-item">Estimate: <span>~1 hr</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option C</span>
+          </div>
+          <div class="option-title">Normalize hook — a script that canonicalizes the lockfile after install</div>
+          <div class="option-body">Add a small script (run via a pre-commit hook and a CI check) that strips/canonicalizes the <code>os</code>/<code>cpu</code>/<code>libc</code> fields after every <code>npm install</code>, so the committed lockfile is stable regardless of which npm produced it.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>works no matter what npm version a contributor runs; can also gate PRs with a "lockfile is normalized" check.</span></span>
+            <span class="meta-item">Cons: <span>adds a new tooling/maintenance surface (a script + hook) the vision warns against ("never introduce unnecessary abstraction"); editing the lockfile out-of-band can drift from what npm would actually write and mask real changes; more moving parts than the problem needs.</span></span>
+            <span class="meta-item">Risk: <span>Medium — brittle long-term; a hand-edited lockfile can diverge from npm's source of truth.</span></span>
+            <span class="meta-item">Estimate: <span>~2–3 hr</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Triage Findings (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Triage Findings</div>
+      <div class="card">
+
+        <div class="story-section">
+          <div class="story-header">DEV-198 — Eliminate package-lock.json libc-field churn in diffs</div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">In Scope</div>
+            <ul class="triage-list">
+              <li>Diagnose and document why the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">os</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cpu</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">libc</code> lines differ across the sandbox, CI, and local.</li>
+              <li>Apply a single stable mechanism (recommended: pin the npm version) so the lockfile is emitted identically everywhere.</li>
+              <li>Cover both <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/package-lock.json</code> and the root <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./package-lock.json</code> (Q1).</li>
+              <li>If pinning a version, update <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">verify.yml</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">auto-pr.yml</code> to match (Q2); document the setup for future contributors.</li>
+              <li>Prove it: regenerate the lockfile → zero churn; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm ci --legacy-peer-deps</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> still pass.</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">Potentially Out of Scope</div>
+            <ul class="triage-list">
+              <li>Upgrading or changing any actual dependency version (this is metadata/emission hygiene, not a dependency bump).</li>
+              <li>Dropping <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">--legacy-peer-deps</code> (that's DEV-190, separately closed) or resolving peer-dependency conflicts.</li>
+              <li>Broader CI refactors beyond the npm-version pin (caching strategy, matrix builds, etc.).</li>
+              <li>Migrating off npm to pnpm/yarn — far larger change, not warranted for this.</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">UX Considerations</div>
+            <ul class="triage-list">
+              <li><strong>No user-facing surface</strong> — this is dev-tooling/CI; the "users" are the routine and contributors. The win is clean PR diffs and reproducible builds.</li>
+              <li><strong>Don't break native binaries</strong> — rollup/esbuild ship platform binaries as optional deps; the fix must not strip/omit optional deps, or local/CI installs break (AC-6).</li>
+              <li><strong>Reproducibility</strong> — the goal state is a byte-identical lockfile from <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm ci</code> on sandbox, CI, and local.</li>
+              <li><strong>Low blast radius</strong> — no app code, no schema, no auth; verifiable entirely in-sandbox.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Questions For Andrew (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Questions For Andrew</div>
+      <div class="card">
+
+        <div class="question-item">
+          <div class="question-text">
+            <strong>Both lockfiles in scope?</strong> The churn affects <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/package-lock.json</code> (266 platform-field lines) and the root <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">./package-lock.json</code> (16). My plan is to fix <strong>both</strong> so neither churns — flag if you'd rather scope it to just <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/</code> for now.
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Yes — fix both frontend/package-lock.json and the root ./package-lock.json so neither churns."></textarea>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text">
+            <strong>OK to pin the npm version in CI?</strong> The load-bearing half of the recommended fix is standardizing on one npm version (the node-22 default, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm@10.9.7</code>) and updating <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">verify.yml</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">auto-pr.yml</code> to use it — otherwise CI keeps re-emitting different fields. Confirm editing the workflows is fine, and that <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">10.9.7</code> is the version to standardize on (or name your local npm if it differs).
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Yes — pin npm@10.9.7 (node-22 default) and update both workflows to use it; that matches what I run locally."></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Suggested Execution Order (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Suggested Execution Order</div>
+      <div class="card">
+
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-body" contenteditable="false"><strong>Reproduce + diagnose</strong> — Regenerate the lockfile in the sandbox, capture exactly which <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">os</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cpu</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">libc</code> lines move, and confirm npm-version drift as the cause (compare emission under the sandbox npm vs the CI npm). Write up the finding (AC-1).</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-body" contenteditable="false"><strong>Pin the version</strong> — Add <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">"packageManager": "npm@10.9.7"</code> to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">package.json</code> (and the frontend one if it manages its own deps), then regenerate both lockfiles once with the pinned npm so they're canonical (AC-2, AC-3).</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-body" contenteditable="false"><strong>Pin CI</strong> — Update <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">verify.yml</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">auto-pr.yml</code> to enable Corepack / install the same npm before <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm ci --legacy-peer-deps</code>, so CI stops re-introducing the churn (AC-4).</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-body" contenteditable="false"><strong>Verify + document</strong> — Regenerate the lockfiles again → confirm zero <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">os</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">cpu</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">libc</code> diff (AC-5); run <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npm ci --legacy-peer-deps</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> (AC-6); add the README/CONTRIBUTING note (AC-7). Verifier over AC-1..AC-7.</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Tomorrow's Likely Pick (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Tomorrow's Likely Pick</div>
+      <div class="card">
+        <ul class="tomorrow-list">
+          <li><strong>Data hygiene</strong> — close out FRED-189 (shipped 06-19) and FRED-195 (shipped+merged) with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done</code> so they aren't re-picked and burndown stays honest. They've sat uncheckmarked in READY for days.</li>
+          <li><strong>FRED-187</strong> — Plaid paycheck-trigger investigation (a research spike, Tier 2). Core paycheck-automation feature; deliverable is a written feasibility + recommendation, doable in-sandbox.</li>
+          <li><strong>LPFRED-184</strong> — landing-page net-income calculator (Tier 2) if Andrew wants a marketing-side win. FRED-191 / FRED-201 / FRED-204 stay sandbox-gated (real-device Capacitor cold-start + reauth).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── Completion Section (completed state only) ── -->
+    <div class="section-group section-intermediary-only" id="completion-section">
+      <div class="section-label">WHAT GOT DONE</div>
+      <div class="card" id="completion-content">
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">DEV-198 — Eliminate package-lock.json libc-field churn in diffs</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Pinned <strong>npm@10.9.7</strong> (the node-22 default). Added <code>"packageManager": "npm@10.9.7"</code> to the root <code>package.json</code> and <code>frontend/package.json</code> (Corepack-enforced) and regenerated both lockfiles under the pinned npm — the one-time cleanup removed 26 <code>"libc"</code> lines from <code>frontend/package-lock.json</code>. New <code>CONTRIBUTING.md</code> documents the pin + Corepack. No application code touched. Shipped via PR #102 (auto-verifies + squash-merges to develop on green).</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria — 6 of 7 shipped, all 7 verified locally:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>✅ Root cause confirmed &amp; written up: npm-version drift (CI ran unpinned npm) caused the differing os/cpu/libc emission.</li>
+            <li>✅ Single stable mechanism applied — <code>packageManager: "npm@10.9.7"</code> pins npm identically everywhere.</li>
+            <li>✅ Both lockfiles covered: <code>frontend/package-lock.json</code> and root <code>./package-lock.json</code>.</li>
+            <li>⚠️ CI workflow pins (<code>verify.yml</code> + <code>auto-pr.yml</code>) — written &amp; verified locally, but <strong>could not be pushed</strong>: the routine's git credentials lack GitHub's <code>workflow</code> scope. <strong>Needs you to apply</strong> — see "Action needed" below.</li>
+            <li>✅ Demonstrated determinism: a fresh regen on top of the new lockfiles produced byte-identical output (zero churn) in both.</li>
+            <li>✅ No dependency-resolution change: <code>npm ci --legacy-peer-deps</code> clean, rollup/esbuild native binaries resolve, <code>tsc --noEmit</code> and <code>ng build --configuration=ci</code> both pass.</li>
+            <li>✅ Documented in <code>CONTRIBUTING.md</code> for future contributors.</li>
+          </ul>
+          <p style="font-size:13px;font-weight:700;color:#b45309;margin:0 0 4px;">⚠️ Action needed from you (1 follow-up)</p>
+          <p style="font-size:13px;color:var(--gray);line-height:1.6;margin:0 0 8px;">The two CI workflow pins are the only piece the routine couldn't ship — GitHub rejects pushes that touch <code>.github/workflows/*</code> unless the token has the <code>workflow</code> scope, which neither the PAT nor the GitHub App in this sandbox has. From a local checkout (where your account has <code>workflow</code> scope), add this step right after the <code>actions/setup-node@v4</code> step in <strong>both</strong> <code>.github/workflows/verify.yml</code> and <code>.github/workflows/auto-pr.yml</code>, then commit:</p>
+          <pre style="font-size:12px;background:#f3f4f6;border-radius:8px;padding:10px;overflow-x:auto;margin:0 0 8px;"><code>- name: Pin npm version
+  run: npm install -g npm@10.9.7</code></pre>
+          <p style="font-size:13px;color:var(--gray);line-height:1.6;margin:0 0 12px;">(In <code>auto-pr.yml</code> the <code>setup-node@v4</code> step is added alongside it, since that workflow had none.) Until then the determinism still holds in practice — the <code>packageManager</code> field + regenerated lockfiles are the primary mechanism, and CI uses <code>npm ci</code> (which never rewrites the lockfile). The workflow pin is belt-and-suspenders for any future <code>npm install</code> step in CI.</p>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Production-readiness: hardens the build/CI pipeline — deterministic, reproducible lockfiles across sandbox, CI, and local remove recurring hand-revert toil from every routine PR. Verifier independently confirmed all 7 criteria pass locally; 6 shipped to develop, the 7th awaits your one-line workflow edit above.</p>
+        </div>
+      </div>
+      <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
+        Looks Good &#10003;
+      </button>
+
+      <!-- Request Changes — rework the same story with feedback -->
+      <div id="rework-block" style="margin-top:14px;">
+        <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The lockfile still churns on my local — make sure the README note tells me which npm to install."></textarea>
+        <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
+      </div>
+    </div>
+
+    <!-- ── Anything Else For the Execution Agent (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Anything Else For the Execution Agent?</div>
+      <div class="card">
+        <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Don't omit optional deps — rollup/esbuild need their native binaries; pin npm and regenerate the lockfiles instead..."></textarea>
+      </div>
+    </div>
+
+    <!-- ── Add to Backlog (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Add to Backlog</div>
+      <div class="card">
+        <div class="revision-label" style="margin-bottom:14px;">Thought of something while reviewing? Add it to the backlog without leaving this page.</div>
+        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Add a CI guard that fails a PR when package-lock.json churns unexpectedly..." style="min-height:80px;margin-bottom:12px;"></textarea>
+        <button class="btn-dark" id="backlog-btn" onclick="handleAddBacklog()">Add to Backlog</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Fixed Approve Bar ─── -->
+  <div id="approve-bar">
+    <div id="approve-status">Complete all required fields to unlock approval</div>
+    <button id="approve-btn" onclick="handleApprove()">Approve / Get To Work</button>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
