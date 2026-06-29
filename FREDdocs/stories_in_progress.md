@@ -41,3 +41,4 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 - FRED-117 — First-time tour ending with what's your story
 - FRED-2028 — Update app calculator to net-income yield model
 - FRED-188 — Add null userId guard to processChat
+- DEV-198 — Eliminate package-lock.json libc-field churn in diffs (via itpm routine; not tracked in In Progress)

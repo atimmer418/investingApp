@@ -46,7 +46,7 @@ Copy the 5 non-B&W pig SVGs (one per total-equity range: $0–1k, $1k–10k, $10
 
 Decisions (Andy): profile avatars use LIVE equity; old pig-level art fully replaced; L5 & L6 → $1m+ (5 ranges only). Est. 1-3hr, [code].
 
-## DEV-198 — Eliminate package-lock.json libc-field churn in diffs
+## DEV-198 — ✓ Eliminate package-lock.json libc-field churn in diffs
 npm writes platform-specific `libc`/`os`/`cpu` fields into `package-lock.json` that differ between environments (the itpm routine cloud sandbox vs local vs GitHub Actions CI), producing noisy lockfile diffs that have to be reverted to keep PRs clean. Find a stable fix so `package-lock.json` stays identical across the routine sandbox, CI, and local — e.g. an `.npmrc` setting, pinning the npm version used everywhere, a normalize/commit-hook step, or omitting the optional-deps platform fields. Surfaced by the verifier during an itpm run on 2026-06-15.
 
 Acceptance criteria (confirmed by Andy 2026-06-28):
