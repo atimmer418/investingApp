@@ -46,20 +46,6 @@ Copy the 5 non-B&W pig SVGs (one per total-equity range: $0–1k, $1k–10k, $10
 
 Decisions (Andy): profile avatars use LIVE equity; old pig-level art fully replaced; L5 & L6 → $1m+ (5 ranges only). Est. 1-3hr, [code].
 
-## DEV-198 — ✓ Eliminate package-lock.json libc-field churn in diffs
-npm writes platform-specific `libc`/`os`/`cpu` fields into `package-lock.json` that differ between environments (the itpm routine cloud sandbox vs local vs GitHub Actions CI), producing noisy lockfile diffs that have to be reverted to keep PRs clean. Find a stable fix so `package-lock.json` stays identical across the routine sandbox, CI, and local — e.g. an `.npmrc` setting, pinning the npm version used everywhere, a normalize/commit-hook step, or omitting the optional-deps platform fields. Surfaced by the verifier during an itpm run on 2026-06-15.
-
-Acceptance criteria (confirmed by Andy 2026-06-28):
-1. Root cause confirmed and written up: identify exactly what makes the `os`/`cpu`/`libc` lines differ across the routine sandbox, CI, and local (npm-version drift is the leading hypothesis — verify it), documented before the fix.
-2. A single stable mechanism is applied so `npm ci`/`npm install` produces an identical `package-lock.json` across the routine sandbox, GitHub Actions CI, and a local dev machine — no `os`/`cpu`/`libc` churn.
-3. Both lockfiles are covered: `frontend/package-lock.json` and the root `./package-lock.json`.
-4. CI (`verify.yml`, `auto-pr.yml`) is updated to use the pinned npm version so CI stops re-introducing the churn.
-5. Demonstrated: regenerating the lockfile in the sandbox after the fix produces no `os`/`cpu`/`libc` diff against what's committed.
-6. No dependency-resolution change: `npm ci --legacy-peer-deps` still installs cleanly and the rollup/esbuild optional native binaries still resolve; `npx tsc --noEmit` exits 0 and `ng build --configuration=ci` succeeds.
-7. The chosen mechanism is documented (a README/CONTRIBUTING note or code comment) so future contributors keep the same npm version / setup.
-
-Decisions (Andy): Option A — pin `npm@10.9.7` (the node-22 default) via `"packageManager"` in `package.json`, Corepack-enforced; update both workflows; regenerate both lockfiles. Est. Easy, [code].
-
 ## FRED-201 — Keep loading screen up during cold-start reauth nav
 add story for painting the loading screen while navigation is happening instead of just showing an all blank white screen after a cold start with reauth. the loading screen should stay until the page underneath it is ready to appear and then it should disappear. this only happens on cold starts and after a reauth so that workflow should be the only one adjusted/modified to receive this fix
 
@@ -792,6 +778,20 @@ The tab3 stat strip's "Freedom Age" tile silently shows "—" whenever the Alpac
 4. Freedom Date and To Go are unaffected — they render from `/user/progress` + `/portfolio/dashboard` regardless of KYC outcome.
 5. The render gate still opens once all three calls settle — no hang on a permanently-failing KYC call.
 6. Happy path unchanged — with a valid DOB, Freedom Age = `resolvedFreedomYear − birthYear`. Est. 1-3hr, [code].
+
+## DEV-198 — ✓ Eliminate package-lock.json libc-field churn in diffs
+npm writes platform-specific `libc`/`os`/`cpu` fields into `package-lock.json` that differ between environments (the itpm routine cloud sandbox vs local vs GitHub Actions CI), producing noisy lockfile diffs that have to be reverted to keep PRs clean. Find a stable fix so `package-lock.json` stays identical across the routine sandbox, CI, and local — e.g. an `.npmrc` setting, pinning the npm version used everywhere, a normalize/commit-hook step, or omitting the optional-deps platform fields. Surfaced by the verifier during an itpm run on 2026-06-15.
+
+Acceptance criteria (confirmed by Andy 2026-06-28):
+1. Root cause confirmed and written up: identify exactly what makes the `os`/`cpu`/`libc` lines differ across the routine sandbox, CI, and local (npm-version drift is the leading hypothesis — verify it), documented before the fix.
+2. A single stable mechanism is applied so `npm ci`/`npm install` produces an identical `package-lock.json` across the routine sandbox, GitHub Actions CI, and a local dev machine — no `os`/`cpu`/`libc` churn.
+3. Both lockfiles are covered: `frontend/package-lock.json` and the root `./package-lock.json`.
+4. CI (`verify.yml`, `auto-pr.yml`) is updated to use the pinned npm version so CI stops re-introducing the churn.
+5. Demonstrated: regenerating the lockfile in the sandbox after the fix produces no `os`/`cpu`/`libc` diff against what's committed.
+6. No dependency-resolution change: `npm ci --legacy-peer-deps` still installs cleanly and the rollup/esbuild optional native binaries still resolve; `npx tsc --noEmit` exits 0 and `ng build --configuration=ci` succeeds.
+7. The chosen mechanism is documented (a README/CONTRIBUTING note or code comment) so future contributors keep the same npm version / setup.
+
+Decisions (Andy): Option A — pin `npm@10.9.7` (the node-22 default) via `"packageManager"` in `package.json`, Corepack-enforced; update both workflows; regenerate both lockfiles. Est. Easy, [code].
 
 ## FRED-199 — ✓ Skip step-up auth section when not enabled
 change the security settings loading animation for people without step up auth enabled to just load the security settings instead of showing that section; for people who do have step up auth, they should have that section still along with the prompting of the actual stepup auth pin entering
