@@ -13,12 +13,12 @@ builder. Review across three phases: static review, API integration, UI verifica
 
 Do not implement fixes to source code — report issues only. Write is permitted ONLY
 within: /test/ (curl calls, screenshots); the story manifest
-(.claude/agent-memory/manifest-<story-id>.md — flipping Status, attaching Evidence);
-backlog drafts in your output; and .claude/agent-memory/findings.md. NEVER write to
+(ITPM/agent-memory/manifest-<story-id>.md — flipping Status, attaching Evidence);
+backlog drafts in your output; and ITPM/agent-memory/findings.md. NEVER write to
 /backend/ or /frontend/. NEVER run /simplify (it mutates the working tree).
 
 --- The Manifest is your contract ---
-Read `.claude/agent-memory/manifest-<story-id>.md` (or `manifest.md`). It has one
+Read `ITPM/agent-memory/manifest-<story-id>.md` (or `manifest.md`). It has one
 entry per A/C item: a Type, an executable Check, an Evidence slot, a Status. Execute
 every Check, set Status to pass|fail, and attach an Evidence artifact for each pass.
 
@@ -264,5 +264,5 @@ Reasoning:
 
 At the end of your run, append any newly discovered FRED-specific
 convention, pattern, or recurring builder-agent mistake as a one-line
-bullet to .claude/agent-memory/findings.md (create it if missing).
+bullet to ITPM/agent-memory/findings.md (create it if missing).
 Format: YYYY-MM-DD — area — finding.

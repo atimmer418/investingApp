@@ -116,10 +116,34 @@
       suppressReloadUntil = (new Date().getTime()) + ms;
     }
 
+    // Extract a signature of the MEANINGFUL content from a fetched today.html —
+    // NOT the whole file. Hashing the whole file caused phantom reloads: any
+    // incidental byte change (a re-deploy, a date stamp, whitespace from an
+    // agent rewrite) flipped the hash even when nothing the user cares about
+    // changed. We key only on: dashboard state + populated flag + the priority
+    // title + the completion summary. If those are identical, do not reload.
+    function contentSignature(htmlText) {
+      try {
+        var doc = new DOMParser().parseFromString(htmlText, 'text/html');
+        var dash = doc.getElementById('dashboard');
+        var state = dash ? (dash.getAttribute('data-state') || '') : '';
+        var pop = dash ? (dash.getAttribute('data-populated') || '') : '';
+        var titleEl = doc.querySelector('.priority-title');
+        var title = titleEl ? titleEl.textContent.replace(/\s+/g, ' ').trim() : '';
+        var compEl = doc.getElementById('completion-content');
+        var comp = compEl ? compEl.textContent.replace(/\s+/g, ' ').trim() : '';
+        return hashString(state + '|' + pop + '|' + title + '|' + comp);
+      } catch (e) {
+        // Parsing failed — fall back to the whole-file hash so we still detect
+        // a genuine change rather than silently never reloading.
+        return hashString(htmlText);
+      }
+    }
+
     function startAutoRefresh() {
-      // Compare the live deployed file against itself on a poll. On the first
-      // tick we record the baseline; on every later tick, a different hash means
-      // a new version deployed → hard reload (deferred while suppressed).
+      // Compare the live deployed file's CONTENT SIGNATURE against the baseline
+      // on each poll. A different signature means the meaningful content changed
+      // → hard reload (deferred while suppressed).
       function poll() {
         // Poll the exact path the user is on (canonical is /today). Cache-bust
         // so we always read the freshly deployed file, never a cached copy.
@@ -128,15 +152,15 @@
           .then(function (r) { return r.ok ? r.text() : null; })
           .then(function (html) {
             if (!html) return;
-            var h = hashString(html);
+            var h = contentSignature(html);
             if (autoRefreshBaseline === null) {
               autoRefreshBaseline = h;          // first read — establish baseline
               return;
             }
-            if (h === autoRefreshBaseline) return;  // nothing changed
-            // File changed on the server. If we're still inside a suppress
-            // window, defer — but DO NOT adopt the new hash, so the reload still
-            // fires on a later tick once the window has elapsed.
+            if (h === autoRefreshBaseline) return;  // meaningful content unchanged
+            // Content changed on the server. If we're still inside a suppress
+            // window, defer — but DO NOT adopt the new signature, so the reload
+            // still fires on a later tick once the window has elapsed.
             if ((new Date().getTime()) < suppressReloadUntil) return;
             location.reload();
           })
@@ -421,7 +445,7 @@
         var skipBanner = document.getElementById('intermediary-banner');
         if (skipBanner) skipBanner.style.display = 'block';
 
-        suppressAutoRefresh(30000);   // smooth over the intermediary-state commit
+        suppressAutoRefresh(90000);  // cover Cloudflare deploy (~60-90s) so we don't reload to a pre-deploy planning state
         fetch('/trigger', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -516,7 +540,7 @@
       if (banner) banner.style.display = 'block';
 
       // POST to trigger
-      suppressAutoRefresh(30000);   // smooth over the intermediary-state commit
+      suppressAutoRefresh(90000);  // cover Cloudflare deploy (~60-90s) so we don't reload to a pre-deploy planning state
       fetch('/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -590,7 +614,7 @@
       if (banner) banner.style.display = 'block';
       applyStateUI();
 
-      suppressAutoRefresh(30000);   // smooth over the intermediary-state commit
+      suppressAutoRefresh(90000);  // cover Cloudflare deploy (~60-90s) so we don't reload to a pre-deploy planning state
       fetch('/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

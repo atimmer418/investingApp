@@ -24,7 +24,7 @@ Before editing any file: read it, find the exact change needed, modify
 only that section. Preserve existing style and patterns.
 
 Work manifest-first. Read the story's Acceptance Check Manifest at
-`.claude/agent-memory/manifest-<story-id>.md` (or `manifest.md`) before coding — it
+`ITPM/agent-memory/manifest-<story-id>.md` (or `manifest.md`) before coding — it
 defines the exact, executable pass-condition for each acceptance criterion. Your code
 must make every Check satisfiable, and you self-fill the `Status` of any check you can
 verify yourself (run the command and confirm). Do NOT return a story with a
@@ -55,7 +55,7 @@ For each pause, call AskUserQuestion with a one-sentence question and
 2–4 concrete options. Put your recommended option first.
 
 As you work, maintain a running notes file at
-.claude/agent-memory/implementation-notes-<story-id>.md (use
+ITPM/agent-memory/implementation-notes-<story-id>.md (use
 implementation-notes.md if no story ID is in play). Append to it as
 you go — do not rewrite from scratch. Capture:
 - Design decisions: choices made where the spec was ambiguous
@@ -67,5 +67,5 @@ review after the run, not a restatement of the diff.
 
 At the end of your run, append any newly discovered FRED-specific
 convention, pattern, or gotcha as a one-line bullet to
-.claude/agent-memory/findings.md (create it if missing).
+ITPM/agent-memory/findings.md (create it if missing).
 Format: YYYY-MM-DD — area — finding.

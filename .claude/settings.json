@@ -1,9 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "mcp__claude-in-chrome__tabs_context_mcp",
-      "Edit(.claude/agent-memory/**)",
-      "Write(.claude/agent-memory/**)"
+      "mcp__claude-in-chrome__tabs_context_mcp"
     ]
   }
 }

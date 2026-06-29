@@ -42,7 +42,7 @@ Andrew reviewed the plan and wants changes. The `content` field holds his feedba
 1. **Read Andrew's guidance FIRST.** The `content` may contain "Guidance for the new pick:" or "Additional context:" free-text. This is the most important input — read it before anything else and let it drive the whole revision:
    - **If Andrew named a specific story** (e.g. "pick FRED-117", "do the tax docs page", "I want FRED-109 next") — that is AUTHORITATIVE. Pick exactly that story. Do not re-score or second-guess it. The only reasons to refuse: the story doesn't exist, is already done, or is a hard-blocked story — in which case pick nothing, leave the page, and PushNotification explaining why.
    - If the guidance is a preference rather than a named story (e.g. "something quick", "prefer UI work"), use it to shape the pick.
-2. Read `.claude/skills/itpm/SKILL.md`, `ITPM/memory/fred_vision.md`, `FREDdocs/backlog.md`, `ITPM/memory/routine_memory.md`.
+2. Read (with the **Read tool**, never `cat`/`sed`/`grep` on `.claude/` — Bash-touching `.claude/` paths trips a self-mod guard that hangs this session): `.claude/skills/itpm/SKILL.md`, `ITPM/memory/fred_vision.md`, `FREDdocs/backlog.md`, `ITPM/memory/routine_memory.md`.
 3. **Parse the skipped story ID(s) from `content`** (e.g. "Andrew skipped today's story: FRED-100"). These are HARD EXCLUSIONS.
    - **Log the skip durably:** add `**Skipped:** FRED-XXX (YYYY-MM-DD)` to today's `routine_memory.md` entry. This is what stops the same story coming back.
    - Build the exclusion set: every story ID in today's skip + every story skipped in the last 7 days of memory entries.
@@ -82,9 +82,19 @@ Send an early PushNotification — title `FRED ITPM — Build Started`, message:
 2. Read `FREDdocs/backlog.md` for the story's acceptance criteria. **If this was a Tier-2 story** (A/C proposed in the dashboard), write the approved/edited acceptance criteria back into `backlog.md` under that story, commit, and push BEFORE building.
 3. Read `ITPM/memory/fred_vision.md` for design system context.
 
-**Generate the Acceptance Check Manifest** (after reading the A/C above, before dispatching the builder) at `.claude/agent-memory/manifest-<story-id>.md` from the story's acceptance criteria (format defined in `.claude/CONTEXT.md` → Agents → The Acceptance Check Manifest). One entry per A/C item: pick the right `Type` (backend-unit | frontend-unit | api-integration | ui-acceptance), write a concrete executable `Check`, leave `Evidence` empty and `Status: pending`. Commit it:
+**Generate the Acceptance Check Manifest** (after reading the A/C above, before dispatching the builder) at `ITPM/agent-memory/manifest-<story-id>.md` from the story's acceptance criteria. One entry per A/C item. The format is inlined below — **do NOT shell out to read `.claude/CONTEXT.md` or anything under `.claude/`; reading `.claude/` paths via Bash trips a self-modification guard that hangs this unattended session.** Use this exact format, one block per acceptance criterion:
+
+```
+## AC-1: <the acceptance criterion, restated>
+- Type:     backend-unit | frontend-unit | api-integration | ui-acceptance
+- Check:    <concrete, executable pass-condition>
+- Evidence: <leave empty — the verifier fills this: JUnit test name / curl assertion / screenshot path>
+- Status:   pending        # verifier flips to pass | fail
+```
+
+Picking `Type`: `backend-unit` → `cd backend && ./gradlew test --tests <FullyQualifiedClass>` (plain JUnit 5, no `@SpringBootTest`, no DB). `frontend-unit` → `cd frontend && ng test --include='**/<name>.spec.ts' --watch=false --browsers=ChromeHeadless` (always target the specific spec). `api-integration` → a curl assertion. `ui-acceptance` → a screenshot + network assertion. Leave every `Evidence` empty and `Status: pending`. Commit it:
 ```bash
-git add .claude/agent-memory/manifest-*.md
+git add ITPM/agent-memory/manifest-*.md
 git commit -m "itpm: manifest for <story-id>" && git push origin develop
 ```
 
@@ -104,7 +114,7 @@ git commit -m "itpm: manifest for <story-id>" && git push origin develop
    - Design constraints from fred_vision.md
    - Any UI mockup design feedback
    - Any additional context from Andrew (this includes his answers to the dashboard questions — the predicted/confirmed placeholders ARE his answers; treat them as decisions already made, not open questions)
-   - The path to the Acceptance Check Manifest (`.claude/agent-memory/manifest-<story-id>.md`)
+   - The path to the Acceptance Check Manifest (`ITPM/agent-memory/manifest-<story-id>.md`)
      — instruct the builder to work manifest-first and self-fill the checks it can verify
 
    If the builder reports a HARD BLOCKER instead of completing, jump to the Hard Blocker handling below (set `failed`, populate `#failure-detail`, notify Andy) — do not retry blindly.

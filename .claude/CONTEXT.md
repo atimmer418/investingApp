@@ -183,7 +183,7 @@ frontend/src/app/
 
 ### The Acceptance Check Manifest (shared contract)
 Every non-trivial story carries a manifest at
-`.claude/agent-memory/manifest-<story-id>.md` (use `manifest.md` if no story ID).
+`ITPM/agent-memory/manifest-<story-id>.md` (use `manifest.md` if no story ID).
 It is the single source of truth for "done": the orchestrator generates it, the
 builder satisfies it, the verifier executes it. One entry per acceptance criterion:
 
@@ -247,4 +247,4 @@ http://localhost:8100?devPage=/kyc-verification
 This logs in as `facebook@gmail.com`, bypasses the progress redirect, and lands directly on the specified page with a valid JWT. Works for any route — onboarding pages, tab pages, etc.
 
 ### Periodic Review
-Every ~10 stories, re-read `.claude/agents/*.md` and ask: which Hard Rule has never triggered? Which tool has never been used? Which step is the model now smart enough to skip? Prune ruthlessly. Also promote any accumulated items in `.claude/agent-memory/findings.md` into the relevant sections of CONTEXT.md.
+Every ~10 stories, re-read `.claude/agents/*.md` and ask: which Hard Rule has never triggered? Which tool has never been used? Which step is the model now smart enough to skip? Prune ruthlessly. Also promote any accumulated items in `ITPM/agent-memory/findings.md` into the relevant sections of CONTEXT.md.
