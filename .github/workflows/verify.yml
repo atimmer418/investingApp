@@ -52,6 +52,11 @@ jobs:
         with:
           node-version: '22'
 
+      # Pin npm to the node-22 default (DEV-198) so package-lock.json stays
+      # byte-identical across the routine sandbox, CI, and local — no libc churn.
+      - name: Pin npm version
+        run: npm install -g npm@10.9.7
+
       - name: Boot backend (ci profile)
         working-directory: backend
         run: |
