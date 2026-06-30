@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="intermediary">
+  <div id="dashboard" data-populated="true" data-state="planning">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -82,7 +82,7 @@
         <div class="metric-card">
           <div class="metric-label">Pages Migrated</div>
           <div class="metric-value warning">77%</div>
-          <div class="metric-sublabel">Settings hub + KYC edit + 7 input-field pages unified; ~10 non-settings pages remain</div>
+          <div class="metric-sublabel">Settings hub + KYC edit + 7 input-field pages unified; ~10 non-settings pages remain (Ask FRED is one)</div>
           <div class="metric-trend neutral">&#8594; no change vs last week</div>
           <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77%"></div></div>
         </div>
@@ -125,11 +125,11 @@
         </label>
         <div class="priority-badge">#1</div>
         <div class="priority-body">
-          <div class="priority-title">FRED-109 — Reframe the onboarding question to "When do you want work to be optional?"</div>
-          <div class="priority-desc"><strong>You skipped FRED-187 (the Plaid paycheck spike) — here's a fresh single story.</strong> Today the first onboarding survey asks <em>how much</em> you can invest and tells you <em>how long</em> it'll take. FRED-109 flips that to lead with the question FRED is really about: <strong>"When do you want work to be optional?"</strong> — make the freedom <em>timeline</em> the thing you set, and let FRED back-solve the monthly investment it takes to get there. I ground-truthed the screen this morning:
-            <br>&nbsp;&nbsp;• <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">components/surveyinitial/surveyinitial.component</code> currently has an <strong>"I Can Invest… $X/mo"</strong> slider (input) + an <strong>"I Want To Retire With… $X/mo"</strong> slider, and computes <strong>"Estimated Time to Goal" in years</strong> as the output.
-            <br>&nbsp;&nbsp;• The math is a clean FIRE formula (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">months = ln((target·rate/PMT)+1)/ln(1+rate)</code>, 10% return, 4% withdrawal) — and it <strong>inverts cleanly</strong>: given a target time, solve for the required monthly investment (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PMT = target·rate / ((1+rate)^months − 1)</code>).
-            <br>So this is a contained, frontend-only reframe of one onboarding component — no backend, schema, or auth. <strong>Tier 2 — no acceptance criteria in the backlog yet, so I've drafted them below for you to approve or edit; the build won't start until they're confirmed.</strong></div>
+          <div class="priority-title">FRED-167 — Redesign the Ask FRED chat UI (like Cloudflare's "Ask AI")</div>
+          <div class="priority-desc"><strong>You skipped FRED-109 (the work-optional onboarding reframe) — here's a fresh single story, and this one's a real, visible win.</strong> Ask FRED is one of the last pages still wearing the <em>old</em> look. I ground-truthed it this morning:
+            <br>&nbsp;&nbsp;• <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pages/ai-chat/ai-chat.page.html</code> is still on the plain <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-toolbar</code> header ("Ask FRED" + a hamburger that opens a right-side history menu) — <strong>not</strong> the FRED blue-hero design system every settings page now uses.
+            <br>&nbsp;&nbsp;• The chat itself works (avatar bubbles, "Try asking about…" suggestion chips, a typing indicator, a "Message FRED…" composer) but looks dated next to the rest of the app.
+            <br>This is the kind of <strong>remaining-page UI overhaul</strong> that is current priority #1. It's frontend-only (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.{html,scss}</code> + minimal <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.ts</code>) — no backend, schema, or auth. Because it's a UI overhaul, <strong>I've drawn three design directions as phone mockups below — pick one (and annotate it) rather than reading option text.</strong> <strong>Tier 2 — no acceptance criteria in the backlog yet, so I've drafted them below for you to approve or edit; the build won't start until they're confirmed.</strong></div>
           <span class="diff-chip diff-medium">Medium</span>
         </div>
       </div>
@@ -139,7 +139,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Why I Picked This</div>
       <div class="card">
-        <div class="card-text"><strong>You skipped today's pick FRED-187 (Plaid paycheck-trigger spike) and asked for a different single story, so I re-picked under the exclusion set</strong> (FRED-187 is now a hard exclusion through ~07-07). Operating in <strong>Tier 2</strong>: FRED-109 has no acceptance-criteria block in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code>, so I've generated proposed A/C below for you to approve or edit. <strong>The READY list is exhausted of on-priority, sandbox-buildable work:</strong> FRED-189 and FRED-195 are already shipped/merged (data-hygiene to close out, not build); FRED-191 / FRED-201 / FRED-204 all need a real-device Capacitor cold-start + reauth this sandbox can't run; and LPFRED-184 is landing-page/marketing — explicitly <em>not</em> the current priority (your vision doc deprioritizes growth/marketing). With nothing in READY fitting, I dropped to the strongest <em>on-mission</em> sleeping story: FRED-109. It reframes the very first onboarding question around FRED's core promise — trading time, not dollars — is fully frontend-only and verifiable in-sandbox (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code>), and is contained to a single component.</div>
+        <div class="card-text"><strong>You skipped the revised pick FRED-109 (work-optional onboarding reframe) and again asked for a different single story, so I re-picked under the exclusion set</strong> (FRED-109 and FRED-187 are now both hard exclusions through ~07-07). Operating in <strong>Tier 2</strong>: FRED-167 has no acceptance-criteria block in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code>, so I've generated proposed A/C below for you to approve or edit. <strong>The READY list is exhausted of on-priority, sandbox-buildable work:</strong> FRED-189 and FRED-195 are already shipped/merged (data-hygiene to close out, not build); FRED-191 / FRED-201 / FRED-204 all need a real-device Capacitor cold-start + reauth this sandbox can't run; and LPFRED-184 is landing-page/marketing — explicitly <em>not</em> the current priority. With nothing in READY fitting, I dropped to the strongest <em>on-mission</em> sleeping story: FRED-167, a genuine remaining-page UI overhaul that is fully frontend-only and verifiable in-sandbox (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code>). It also matches what you've consistently approved — UI overhauls of real pages (tab3, change-bank-account).</div>
       </div>
     </div>
 
@@ -147,7 +147,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
-        <div class="card-text">FRED exists for "people pursuing financial freedom — stopping the trade of time for money." The onboarding survey is the user's <em>first</em> interaction with the projection engine, and leading with a dollar amount ("how much can you invest?") frames FRED as a budgeting tool. Leading with <strong>"when do you want work to be optional?"</strong> frames it as a freedom engine — calmer, more aspirational, and truer to the mission and the calm/direct copy principle. It also directly advances current priority #1 (UI/UX overhaul of remaining surfaces) and sharpens a Piggy-Tier core flow.</div>
+        <div class="card-text">This is a direct hit on <strong>current priority #1 — "Complete UI overhaul on all remaining pages."</strong> Ask FRED is one of the last surfaces still on the old <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-toolbar</code> look, so migrating it onto the FRED design system (Manrope, the FRED palette, the shared blue-hero header) closes a visible gap and makes the app feel finished. Ask FRED is also the user's main conversational touchpoint with the product, so a calmer, more premium chat experience reinforces the "knowledgeable guide quietly handing you a plan" feel from the vision.</div>
       </div>
     </div>
 
@@ -155,7 +155,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
-        <div class="card-text">Sharpens a Piggy-Tier core surface (the onboarding projection survey) and improves first-run clarity — a small but real readiness lift (est. 83 → 84 on ship; held at 83 for this planning revision since no code shipped). Frontend-only and contained to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">surveyinitial</code> + the value it hands to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">fi-plan-results</code>, with no backend / schema / auth change, so user-facing risk is low and it is fully completable + verifiable in-sandbox (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc --noEmit</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code>).</div>
+        <div class="card-text">Migrates a remaining page onto the unified design system (nudges <strong>Pages Migrated</strong> upward) and polishes a high-visibility surface (est. Readiness 83 → 84 on ship; held at 83 for this planning revision since no code shipped). Frontend-only and contained to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.{html,scss}</code> + minimal <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.ts</code> with no backend / schema / auth change, so user-facing risk is low. Because the sandbox can't drive a live browser for a chat flow, the verifier reaches a static / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> floor and the live 390×844 / 430×932 render confirmation comes to you via "Looks Good."</div>
       </div>
     </div>
 
@@ -163,72 +163,128 @@
     <div class="section-group section-planning-only hide-on-skip">
       <div class="section-label">Proposed Acceptance Criteria — approve or edit</div>
       <div class="card">
-        <div class="card-text" style="color:var(--gray);margin-bottom:14px;">FRED-109 is a <strong>Tier 2</strong> story — it has no acceptance criteria in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> yet. These are my proposed criteria for the recommended <strong>full-inversion</strong> approach (Option A); <strong>the work won't start until you confirm them</strong> (submit as-is to accept, or edit in the note below). The execution agent will write the confirmed A/C back into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> before building.</div>
+        <div class="card-text" style="color:var(--gray);margin-bottom:14px;">FRED-167 is a <strong>Tier 2</strong> story — it has no acceptance criteria in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> yet. These criteria are <strong>direction-agnostic</strong> (they hold whichever mockup you pick below); <strong>the work won't start until you confirm them</strong> (submit as-is to accept, or edit in the note below). The execution agent will write the confirmed A/C back into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> before building.</div>
         <div class="triage-group">
           <ul class="triage-list">
-            <li><strong>AC-1</strong> — The onboarding survey (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">surveyinitial.component</code>) leads with a <strong>"When do you want work to be optional?"</strong> control — a years-to-freedom slider (input). The "I Can Invest… $X/mo" amount is no longer a user input.</li>
-            <li><strong>AC-2</strong> — Given the freedom-time input + the existing "I Want To Retire With… $X/mo" income slider, the screen <strong>back-solves and displays the required monthly investment</strong> using the inverse of the current formula: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PMT = (target·monthlyRate) / ((1+monthlyRate)^months − 1)</code>, reusing the same <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">AVG_MARKET_YIELD = 0.10</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">SAFE_WITHDRAWAL_RATE = 0.04</code> (no math/assumption drift).</li>
-            <li><strong>AC-3</strong> — The result area shows the <strong>required monthly investment</strong> as the headline output (replacing the old "Estimated Time to Goal" years readout, which is now the input); the target portfolio value stays visible.</li>
-            <li><strong>AC-4</strong> — Persistence + downstream contract preserved: the survey still saves <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthlyInvestment</code> (now the computed value) + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">retirementIncome</code> to localStorage + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userProgress</code>, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">viewMyPlan()</code> still navigates to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/fi-plan-results</code> with consistent <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">mI</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">rI</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">t</code> params.</li>
-            <li><strong>AC-5</strong> — Copy is calm + freedom-focused per the vision (hero text + labels reflect the "work optional" framing); FRED palette + Manrope only; layout verified at 390×844 and 430×932.</li>
-            <li><strong>AC-6</strong> — Edge handling: if the chosen freedom-time is short enough that the required monthly investment is very large, the screen shows the computed number clearly (with a gentle note) rather than breaking; sensible slider bounds chosen so the value stays legible.</li>
-            <li><strong>AC-7</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0 and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> succeeds.</li>
+            <li><strong>AC-1</strong> — The Ask FRED page (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.html/scss</code>) is rebuilt on the FRED design system: Manrope, the FRED palette only (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#2563EB</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#0f172a</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#6b7280</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#f8fafc</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#e5e7eb</code>), Material Symbols icons — matching the chosen mockup direction.</li>
+            <li><strong>AC-2</strong> — The header is migrated off the plain <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-toolbar</code> to the canonical look — reuse the shared <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/_blue-hero-header.scss</code> partial via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@use</code> rather than inlining a new gradient (pending Q3). Title reads "Ask FRED"; the history affordance stays reachable.</li>
+            <li><strong>AC-3</strong> — Empty / first-run state is designed (not a bare screen): a calm greeting + the suggestion chips (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">dailySuggestions</code>) when <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">messages.length &lt;= 1</code>, styled to the new direction.</li>
+            <li><strong>AC-4</strong> — Message states are all restyled and preserved: user vs. assistant bubbles, the FRED avatar, the multi-line answer rendering (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">formatMessage</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">innerHTML</code>), the typing/loading indicator, and the <strong>failed-message + inline retry</strong> path.</li>
+            <li><strong>AC-5</strong> — The composer (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-textarea</code> "Message FRED…" + send button) is restyled to the new look and keeps its current behavior: autogrow, Enter-to-send, disabled while empty / loading.</li>
+            <li><strong>AC-6</strong> — All existing wiring is intact: send / retry / suggestion-tap, the right-side history <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-menu</code> + new-chat + session load, and the first-time-tour story-chip hook (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FRED_STORY_TRIGGER</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isTourOnStep4</code>) still works — no behavior regressions, no removed features (pending Q2).</li>
+            <li><strong>AC-7</strong> — Layout verified at 390×844 and 430×932; safe-area insets respected (status bar + home indicator); scroll-to-latest still works.</li>
+            <li><strong>AC-8</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0 and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> succeeds.</li>
           </ul>
         </div>
         <div class="revision-label" style="margin-top:14px;margin-bottom:8px;">Edit the criteria (optional) — leave blank to accept as proposed:</div>
-        <textarea class="revision-textarea" id="ac-edit-textarea" placeholder="e.g. Keep the invest-amount slider too and just reword the screen (copy-only); or use a target AGE instead of years-to-freedom."></textarea>
+        <textarea class="revision-textarea" id="ac-edit-textarea" placeholder="e.g. Drop the right-side history menu and put a history button in the header instead; or keep the plain header and only restyle the bubbles + composer."></textarea>
       </div>
     </div>
 
-    <!-- ── Implementation Options (planning only) ── -->
+    <!-- ── Design Directions — Phone Mockups (planning only) ── -->
     <div class="section-group section-planning-only hide-on-skip">
-      <div class="section-label">Implementation Options</div>
-      <div class="option-group">
+      <div class="section-label">Design Directions — Pick One &amp; Annotate</div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-text" style="color:var(--gray);">Three real directions for the redesigned Ask FRED screen, all using the FRED palette + Manrope. Tap one to select it, and use the note under each to tell the builder what to keep or change (e.g. "build A, but take the answer-cards from B"). The recommended one is pre-selected.</div>
+      </div>
+      <div class="phone-options">
 
-        <div class="option-card selected">
-          <div class="option-header">
-            <span class="option-label">Option A</span>
-            <span class="option-rec">Recommended</span>
-          </div>
-          <div class="option-title">Full inversion — freedom-time is the input, required monthly investment is the output</div>
-          <div class="option-body">Swap the "I Can Invest… $X/mo" slider for a <strong>"When do you want work to be optional?"</strong> years-to-freedom slider, keep the "I Want To Retire With…" income slider, and compute the <strong>required monthly investment</strong> with the closed-form inverse of the existing FIRE formula, displaying it as the headline result. Contained entirely to <code>surveyinitial.component.{ts,html,scss}</code>; the saved values + the <code>fi-plan-results</code> hand-off stay identical, so nothing downstream changes.</div>
-          <div class="option-meta">
-            <span class="meta-item">Pros: <span>literally answers the story ("ask WHEN"); truest to the mission; reuses the exact same constants/formula (no assumption drift); one-component blast radius; fully sandbox-verifiable.</span></span>
-            <span class="meta-item">Cons: <span>requires inverting the math + reworking the slider/output bindings; need an edge-guard for very short freedom-times that demand a huge monthly amount.</span></span>
-            <span class="meta-item">Risk: <span>Low–Medium — bounded to one screen; the inverse is a standard annuity-PMT solve; main care is the persisted/nav contract and the large-value edge case.</span></span>
-            <span class="meta-item">Estimate: <span>~2–4 hr</span></span>
-          </div>
-          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        <!-- Option A — Ask-AI Hero Empty State -->
+        <div class="phone-option selected" onclick="selectPhoneOption(this)">
+          <div class="phone-frame"><div class="phone-screen">
+            <div style="height:100%;display:flex;flex-direction:column;background:#f8fafc;font-family:'Manrope',sans-serif;">
+              <div style="background:linear-gradient(90deg,#2a5ae0,#1d4ed8);padding:14px 10px 18px;position:relative;">
+                <div style="display:flex;align-items:center;justify-content:center;position:relative;">
+                  <span style="position:absolute;left:0;color:#cdddff;font-size:12px;" class="material-symbols-outlined">menu</span>
+                  <span style="color:#fff;font-weight:800;font-size:11px;letter-spacing:.2px;">Ask FRED</span>
+                  <span style="position:absolute;right:0;color:#cdddff;font-size:12px;" class="material-symbols-outlined">history</span>
+                </div>
+              </div>
+              <div style="background:#f8fafc;border-radius:14px 14px 0 0;margin-top:-8px;flex:1;padding:14px 12px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+                <div style="width:34px;height:34px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;margin-top:6px;"><span style="font-size:18px;">🐷</span></div>
+                <div style="font-weight:800;color:#0f172a;font-size:10px;margin-top:8px;">Hi, I'm FRED</div>
+                <div style="color:#6b7280;font-size:8px;line-height:1.5;margin-top:3px;max-width:90px;">Ask me anything about your path to financial freedom.</div>
+                <div style="width:100%;margin-top:12px;display:flex;flex-direction:column;gap:6px;">
+                  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:7px 8px;text-align:left;color:#0f172a;font-size:8px;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.04);">What's your story, FRED?</div>
+                  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:7px 8px;text-align:left;color:#0f172a;font-size:8px;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.04);">How does the 4% rule work?</div>
+                  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:7px 8px;text-align:left;color:#0f172a;font-size:8px;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.04);">Am I on track to retire early?</div>
+                </div>
+              </div>
+              <div style="padding:8px 10px 12px;background:#f8fafc;">
+                <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:6px 6px 6px 11px;box-shadow:0 1px 3px rgba(15,23,42,.05);">
+                  <span style="flex:1;color:#9aa3af;font-size:8px;">Message FRED…</span>
+                  <span style="width:20px;height:20px;border-radius:50%;background:#2563EB;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;" class="material-symbols-outlined">arrow_upward</span>
+                </div>
+              </div>
+            </div>
+          </div></div>
+          <div class="phone-option-label">Option A — Ask-AI Hero <span class="phone-option-rec">Recommended</span></div>
+          <div class="phone-option-note"><textarea placeholder="What do you like / want changed in this one? (e.g. love the centered greeting; make the chips 2-up)"></textarea></div>
         </div>
 
-        <div class="option-card">
-          <div class="option-header">
-            <span class="option-label">Option B</span>
-          </div>
-          <div class="option-title">Reframe copy + readout only — keep both existing inputs</div>
-          <div class="option-body">Leave the two existing input sliders (invest amount + retirement income) and the computed time-to-goal exactly as they are, but reword the screen around freedom — rename "Estimated Time to Goal" to <strong>"Work optional in"</strong>, and rewrite the hero/labels in freedom-focused language. Smallest possible change.</div>
-          <div class="option-meta">
-            <span class="meta-item">Pros: <span>minimal code + lowest risk; no math change; instant to verify; still nudges the framing toward "freedom."</span></span>
-            <span class="meta-item">Cons: <span>doesn't literally make WHEN the <em>input</em> as the story asks — the user still sets a dollar amount; reads as a relabel rather than the intended reframe.</span></span>
-            <span class="meta-item">Risk: <span>Low — but likely under-delivers on the story's intent.</span></span>
-            <span class="meta-item">Estimate: <span>~1 hr</span></span>
-          </div>
-          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        <!-- Option B — Answer Cards / Sectioned -->
+        <div class="phone-option" onclick="selectPhoneOption(this)">
+          <div class="phone-frame"><div class="phone-screen">
+            <div style="height:100%;display:flex;flex-direction:column;background:#f8fafc;font-family:'Manrope',sans-serif;">
+              <div style="background:linear-gradient(90deg,#2a5ae0,#1d4ed8);padding:13px 11px;display:flex;align-items:center;justify-content:space-between;">
+                <span style="color:#fff;font-weight:800;font-size:11px;">Ask FRED</span>
+                <span style="color:#cdddff;font-size:12px;" class="material-symbols-outlined">history</span>
+              </div>
+              <div style="flex:1;padding:10px 9px;overflow:hidden;">
+                <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+                  <div style="background:#2563EB;color:#fff;font-size:8px;font-weight:600;padding:6px 9px;border-radius:12px 12px 3px 12px;max-width:80%;">How does the 4% rule work?</div>
+                </div>
+                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:9px;box-shadow:0 1px 3px rgba(15,23,42,.05);">
+                  <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">
+                    <span style="width:14px;height:14px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:8px;">🐷</span>
+                    <span style="font-weight:800;color:#0f172a;font-size:8px;">FRED</span>
+                  </div>
+                  <div style="color:#0f172a;font-size:8px;line-height:1.6;">The 4% rule says you can withdraw 4% of your portfolio a year. So your target is <b>annual income ÷ 0.04</b>.</div>
+                  <div style="border-top:1px solid #f1f5f9;margin-top:7px;padding-top:5px;color:#6b7280;font-size:7px;">Based on FRED's strategy</div>
+                </div>
+                <div style="color:#6b7280;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin:11px 0 5px;">Keep exploring</div>
+                <div style="display:flex;flex-wrap:wrap;gap:5px;">
+                  <span style="background:#eff4ff;border:1px solid #cdddff;color:#1d4ed8;font-size:7px;font-weight:700;padding:4px 7px;border-radius:11px;">Am I on track?</span>
+                  <span style="background:#eff4ff;border:1px solid #cdddff;color:#1d4ed8;font-size:7px;font-weight:700;padding:4px 7px;border-radius:11px;">Best next move</span>
+                </div>
+              </div>
+              <div style="padding:8px 9px 12px;">
+                <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:6px 6px 6px 11px;">
+                  <span style="flex:1;color:#9aa3af;font-size:8px;">Message FRED…</span>
+                  <span style="width:20px;height:20px;border-radius:50%;background:#2563EB;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;" class="material-symbols-outlined">arrow_upward</span>
+                </div>
+              </div>
+            </div>
+          </div></div>
+          <div class="phone-option-label">Option B — Answer Cards</div>
+          <div class="phone-option-note"><textarea placeholder="What do you like / want changed in this one? (e.g. like the answer card + 'Based on FRED's strategy' footer)"></textarea></div>
         </div>
 
-        <div class="option-card">
-          <div class="option-header">
-            <span class="option-label">Option C</span>
-          </div>
-          <div class="option-title">Target-age inversion — "At what age should work be optional?"</div>
-          <div class="option-body">Like Option A, but phrase the input as a target <em>age</em> rather than a number of years. This needs the user's current age in the survey (DOB isn't collected until the later KYC step), then converts age→years and back-solves the monthly investment exactly as in A.</div>
-          <div class="option-meta">
-            <span class="meta-item">Pros: <span>arguably the most concrete, human framing ("retire at 52"); richest emotional hook.</span></span>
-            <span class="meta-item">Cons: <span>adds a new current-age input to an early onboarding screen (more scope + a new field to validate/persist); duplicates info KYC collects later.</span></span>
-            <span class="meta-item">Risk: <span>Medium — widens scope beyond one clean reframe; the extra input is the real cost.</span></span>
-            <span class="meta-item">Estimate: <span>~4–6 hr</span></span>
-          </div>
-          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        <!-- Option C — Minimal Thread -->
+        <div class="phone-option" onclick="selectPhoneOption(this)">
+          <div class="phone-frame"><div class="phone-screen">
+            <div style="height:100%;display:flex;flex-direction:column;background:#fff;font-family:'Manrope',sans-serif;">
+              <div style="padding:13px 11px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;position:relative;">
+                <span style="position:absolute;left:11px;color:#6b7280;font-size:11px;" class="material-symbols-outlined">history</span>
+                <span style="color:#0f172a;font-weight:800;font-size:10px;">Ask FRED</span>
+                <span style="position:absolute;right:11px;color:#2563EB;font-size:11px;" class="material-symbols-outlined">edit_square</span>
+              </div>
+              <div style="flex:1;padding:14px 12px;">
+                <div style="text-align:right;color:#2563EB;font-weight:700;font-size:8px;margin-bottom:12px;">How does the 4% rule work?</div>
+                <div style="color:#0f172a;font-size:8px;line-height:1.7;">The 4% rule means you withdraw 4% of your portfolio each year in retirement. Your target number is your desired annual income divided by 0.04.</div>
+                <div style="border-top:1px solid #f1f5f9;margin:14px 0;"></div>
+                <div style="color:#9aa3af;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px;">Try asking</div>
+                <div style="color:#2563EB;font-size:8px;font-weight:600;border-bottom:1px solid #e5e7eb;padding-bottom:6px;margin-bottom:6px;">What's your story, FRED?</div>
+                <div style="color:#2563EB;font-size:8px;font-weight:600;border-bottom:1px solid #e5e7eb;padding-bottom:6px;">Am I on track to retire early?</div>
+              </div>
+              <div style="padding:9px 12px;border-top:1px solid #e5e7eb;display:flex;align-items:center;gap:7px;">
+                <span style="flex:1;color:#9aa3af;font-size:8px;">Message FRED…</span>
+                <span style="color:#2563EB;font-size:14px;" class="material-symbols-outlined">arrow_circle_up</span>
+              </div>
+            </div>
+          </div></div>
+          <div class="phone-option-label">Option C — Minimal Thread</div>
+          <div class="phone-option-note"><textarea placeholder="What do you like / want changed in this one? (e.g. clean but maybe too plain — keep FRED's avatar)"></textarea></div>
         </div>
 
       </div>
@@ -240,35 +296,37 @@
       <div class="card">
 
         <div class="story-section">
-          <div class="story-header">FRED-109 — Change investment question to work-optional framing</div>
+          <div class="story-header">FRED-167 — Redesign Ask Fred UI like Cloudflare Ask AI</div>
 
           <div class="triage-group">
             <div class="triage-group-title">In Scope</div>
             <ul class="triage-list">
-              <li>Replace the "I Can Invest… $X/mo" input slider in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">surveyinitial.component</code> with a "When do you want work to be optional?" years-to-freedom slider.</li>
-              <li>Invert the existing FIRE math to back-solve the <strong>required monthly investment</strong> from the freedom-time + retirement-income inputs (same 10% / 4% constants), and surface it as the headline output.</li>
-              <li>Reword the hero text + labels into calm, freedom-focused copy; keep FRED palette + Manrope, layout intact at 390×844 / 430×932.</li>
-              <li>Preserve the persisted values (localStorage + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userProgress</code>) and the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">fi-plan-results</code> query-param hand-off so nothing downstream breaks.</li>
+              <li>Rebuild <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.html</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.scss</code> on the FRED design system, migrating the header off the plain <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-toolbar</code> to the shared blue-hero pattern.</li>
+              <li>Restyle every chat state: empty/first-run (greeting + suggestion chips), user &amp; assistant bubbles, the FRED avatar, the typing/loading indicator, and the failed-message + inline retry path.</li>
+              <li>Restyle the composer (textarea + send button) while keeping autogrow, Enter-to-send, and the empty/loading disabled state.</li>
+              <li>Keep all wiring working: send/retry/suggestion-tap, the right-side history menu + new-chat + session load, and the first-time-tour story-chip hook.</li>
+              <li>Minimal <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.ts</code> only if the chosen layout needs a binding/class hook — no behavior/logic changes.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">Potentially Out of Scope</div>
             <ul class="triage-list">
-              <li>Adding a current-age / DOB input (only needed if you pick Option C — pending Q2).</li>
-              <li>Changing the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">fi-plan-results</code> page itself or the SWR/SBLOC/Annuity downstream screens.</li>
-              <li>Touching the retirement-income slider's range/behavior, or any backend / projection-engine code.</li>
-              <li>Reworking the other onboarding survey steps (kyc-verification, investment-schedule, etc.).</li>
+              <li>Changing chat <em>behavior</em> — streaming, model, prompt, what FRED answers, or the suggestion-generation logic.</li>
+              <li>The RAG-focused suggested-questions rewrite (that's FRED-151) — restyle the chips, don't change their content.</li>
+              <li>Redesigning the side history menu's information architecture beyond restyling it to match (rename/relocate is a follow-up if you want it — Q2).</li>
+              <li>Any backend, schema, or auth change; touching other tabs/pages.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">UX Considerations</div>
             <ul class="triage-list">
-              <li><strong>Large-value edge case</strong> — a very short freedom-time can demand an enormous monthly investment; show the real number with a gentle note rather than letting it overflow or read as broken (AC-6).</li>
-              <li><strong>Slider bounds</strong> — pick a sensible years-to-freedom range (e.g. 5–40 yrs) so the computed amount stays legible and the control feels natural.</li>
-              <li><strong>Copy</strong> — calm + direct, freedom-focused, never pushy; the headline result should make the trade-off ("to be work-optional in N years, invest $X/mo") instantly clear.</li>
-              <li><strong>Loading / ready</strong> — the existing loading veil + asset-preload + the "Building your plan…" CTA spinner stay intact.</li>
+              <li><strong>Empty state</strong> — the first thing a user sees should feel inviting, not blank: a warm greeting + tappable suggestion chips (the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">dailySuggestions</code>).</li>
+              <li><strong>Error/retry</strong> — keep the failed-message styling + inline retry obvious; a calm, non-alarming treatment in the FRED palette.</li>
+              <li><strong>Loading</strong> — the 3-dot typing indicator restyled to read as "FRED is thinking."</li>
+              <li><strong>Safe areas + scroll</strong> — header respects the notch, composer respects the home indicator, and the view still auto-scrolls to the latest message. Verify at 390×844 and 430×932.</li>
+              <li><strong>Keyboard</strong> — the composer must stay visible above the keyboard (the page already uses <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">appKeyboardAvoid</code> / tab-bar scroll — preserve that).</li>
             </ul>
           </div>
         </div>
@@ -283,18 +341,26 @@
 
         <div class="question-item">
           <div class="question-text">
-            <strong>Full inversion, or just reframe the copy?</strong> My plan (Option A) actually makes <em>WHEN-work-is-optional</em> the input you set and computes the required monthly investment as the output — the literal ask of the story. The lighter alternative (Option B) keeps both existing inputs and just rewords the screen. Confirm you want the full inversion.
+            <strong>Which design direction?</strong> Pick one of the three mockups above (and annotate it in its note). My recommendation is <strong>Option A — the Ask-AI hero empty state</strong>: calm, centered, premium, and closest to the "Cloudflare Ask AI" feel you referenced. You can also mix ("build A but take the answer-cards from B").
             <span class="required-badge">Required</span>
           </div>
-          <textarea class="question-input" data-required="true" placeholder="Full inversion (Option A) — make 'when do you want work to be optional?' the input and back-solve the monthly investment. That's the whole point."></textarea>
+          <textarea class="question-input" data-required="true" placeholder="Option A — the Ask-AI hero empty state. Calm and centered is exactly the vibe; keep the suggestion chips."></textarea>
         </div>
 
         <div class="question-item">
           <div class="question-text">
-            <strong>Years-to-freedom, or a target age?</strong> I'm planning a "work optional in ___ years" slider (Option A) because it's the simplest and needs no new info. A target age (Option C — "work optional at 52") reads more concretely but requires asking the user's current age on this early survey screen, since DOB isn't collected until the later KYC step.
+            <strong>Keep the right-side history menu + new-chat as-is (just restyled)?</strong> The current chat-history drawer and "+" new-chat work — I'm planning to restyle them to match and leave the flow intact, not redesign how history works.
             <span class="optional-badge">Optional</span>
           </div>
-          <textarea class="question-input" placeholder="Years-to-freedom slider — keep it simple, no new age/DOB input this early in onboarding."></textarea>
+          <textarea class="question-input" placeholder="Yes — keep the history drawer + new-chat flow, just restyle them to match. No IA changes this round."></textarea>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text">
+            <strong>Reuse the shared blue-hero header partial for the top bar?</strong> Every settings page now <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@use</code>s <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/_blue-hero-header.scss</code> instead of inlining a gradient. I'd reuse it here too for consistency (it's the canonical pattern), unless you want the chat header to look distinct from settings.
+            <span class="optional-badge">Optional</span>
+          </div>
+          <textarea class="question-input" placeholder="Yes — reuse the shared _blue-hero-header partial; keep Ask FRED visually consistent with the rest of the app."></textarea>
         </div>
 
       </div>
@@ -307,25 +373,25 @@
 
         <div class="step-item">
           <div class="step-num">1</div>
-          <div class="step-body" contenteditable="false"><strong>Confirm the contract</strong> — Re-read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">surveyinitial.component.{ts,html,scss}</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">fi-plan-results</code> to lock down what's saved (localStorage + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userProgress</code>) and the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">mI</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">rI</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">t</code> query params it hands downstream (AC-4).</div>
+          <div class="step-body" contenteditable="false"><strong>Study the current page + reference patterns</strong> — Read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.{html,scss,ts}</code> to inventory every state (empty, user/assistant bubble, avatar, loading, failed+retry, history menu, tour hook), and study <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/_blue-hero-header.scss</code> + a shipped settings page so the new header matches exactly (AC-1, AC-2, AC-6).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">2</div>
-          <div class="step-body" contenteditable="false"><strong>Invert the math (.ts)</strong> — Add a <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">freedomYears</code> input, compute <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">requiredMonthlyInvestment</code> via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PMT = target·rate/((1+rate)^months − 1)</code> with the same constants, keep <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">retirementIncome</code>, and keep <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthlyInvestment</code> = the computed value for save/nav (AC-1, AC-2, AC-4).</div>
+          <div class="step-body" contenteditable="false"><strong>Header + shell</strong> — Replace the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-toolbar</code> header with the blue-hero header (via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@use</code> the shared partial — mind the SCSS import-path depth from <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pages/ai-chat/</code>), keep the history affordance reachable, and lay out content + composer regions to the chosen mockup (AC-2).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">3</div>
-          <div class="step-body" contenteditable="false"><strong>Rework the template + copy</strong> — Swap the invest slider for the years-to-freedom slider, move the required monthly investment into the headline output badge, reword the hero + labels into freedom framing, and add the large-value edge note (AC-3, AC-5, AC-6).</div>
+          <div class="step-body" contenteditable="false"><strong>Restyle the states</strong> — Empty/first-run (greeting + chips), user/assistant bubbles + avatar, typing indicator, failed+retry, and the composer — all in the FRED palette + Manrope, preserving every binding and the tour story-chip hook (AC-3, AC-4, AC-5, AC-6).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">4</div>
-          <div class="step-body" contenteditable="false"><strong>Verify</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exit 0 + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> succeeds; sanity-check the inverse against the old forward math (a given amount→time should round-trip), and confirm 390×844 layout. Verifier reviews AC-1..AC-7 (AC-5/AC-6 live-render confirmation goes to your "Looks Good") (AC-7).</div>
+          <div class="step-body" contenteditable="false"><strong>Verify</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exit 0 + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> succeeds (run it locally — SCSS <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@use</code> errors don't show in tsc); confirm safe-areas + scroll-to-latest, check 390×844 / 430×932. Verifier reviews AC-1..AC-8; the live chat-flow render confirmation goes to your "Looks Good" (AC-7, AC-8).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
@@ -338,8 +404,8 @@
       <div class="card">
         <ul class="tomorrow-list">
           <li><strong>Data hygiene</strong> — close out FRED-189 (shipped 06-19) and FRED-195 (shipped+merged) with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done</code> so they aren't re-picked and burndown stays honest. They've sat uncheckmarked in READY for days.</li>
-          <li><strong>FRED-177</strong> — remove the back button from 2 onboarding pages (small, clean onboarding-UI quick win), or <strong>FRED-149</strong> (fix star alignment in customize portfolio).</li>
-          <li><strong>FRED-187 follow-up</strong> — if you'd still like the Plaid paycheck-trigger spike, it can return next cycle once its 7-day skip window clears. FRED-191 / FRED-201 / FRED-204 stay sandbox-gated (real-device Capacitor cold-start + reauth).</li>
+          <li><strong>FRED-151</strong> — refresh Ask FRED's suggested questions to be RAG/philosophy-focused (natural follow-on to this redesign), or <strong>FRED-177</strong> (remove back button from 2 onboarding pages) / <strong>FRED-149</strong> (fix star alignment in customize portfolio) as small clean wins.</li>
+          <li><strong>Sandbox-gated, still waiting</strong> — FRED-191 / FRED-201 / FRED-204 need a real-device Capacitor cold-start + reauth. FRED-187 (Plaid spike) and FRED-109 (onboarding reframe) can return once their 7-day skip windows clear (~07-07).</li>
         </ul>
       </div>
     </div>
@@ -357,7 +423,7 @@
       <!-- Request Changes — rework the same story with feedback -->
       <div id="rework-block" style="margin-top:14px;">
         <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
-        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The 'work optional in N years' copy reads awkwardly — tighten it; or the required-monthly-investment number needs a clearer caption."></textarea>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The new header gradient is too heavy — lighten it; or the suggestion chips wrap awkwardly at 390px."></textarea>
         <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
       </div>
     </div>
@@ -367,7 +433,7 @@
       <div class="section-label">Anything Else For the Execution Agent?</div>
       <div class="card">
         <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
-        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Keep the years-to-freedom slider range tight (5–40 yrs); make the headline result read 'invest $X/mo to be work-optional in N years'..."></textarea>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Keep the FRED pig avatar prominent; make the empty-state greeting warm but short; match the change-bank-account header exactly..."></textarea>
       </div>
     </div>
 
@@ -376,7 +442,7 @@
       <div class="section-label">Add to Backlog</div>
       <div class="card">
         <div class="revision-label" style="margin-bottom:14px;">Thought of something while reviewing? Add it to the backlog without leaving this page.</div>
-        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Mirror the work-optional framing on the fi-plan-results page too; or add a 'show me the dollar amount' toggle..." style="min-height:80px;margin-bottom:12px;"></textarea>
+        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Add a 'copy answer' button on FRED's messages; or let users rename chat-history sessions..." style="min-height:80px;margin-bottom:12px;"></textarea>
         <button class="btn-dark" id="backlog-btn" onclick="handleAddBacklog()">Add to Backlog</button>
       </div>
     </div>
