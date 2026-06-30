@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="intermediary">
+  <div id="dashboard" data-populated="true" data-state="planning">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -97,7 +97,7 @@
 
         <div class="metric-card">
           <div class="metric-label">Days Since Blocker</div>
-          <div class="metric-value positive">33</div>
+          <div class="metric-value positive">34</div>
           <div class="metric-sublabel">No active production blockers</div>
           <div class="metric-trend positive">&#8593; +5 vs last week</div>
           <div class="metric-bar-track"><div class="metric-bar-fill" style="width:97%"></div></div>
@@ -125,11 +125,11 @@
         </label>
         <div class="priority-badge">#1</div>
         <div class="priority-body">
-          <div class="priority-title">FRED-187 — Investigate Plaid paycheck-triggered investment flow</div>
-          <div class="priority-desc">Can FRED trigger an investment the moment a user's paycheck actually <em>lands</em> in their bank — detected via Plaid — instead of relying only on the user-declared pay cadence? This is a <strong>research / feasibility spike</strong>: read the existing integration, study the Plaid mechanisms, and deliver a written verdict + recommendation + phased build outline. I ground-truthed the current state this morning:
-            <br>&nbsp;&nbsp;• Plaid is wired with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">AUTH</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">IDENTITY</code> products only (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PlaidService.java:57</code>) — purely bank-linking + ACH-relationship setup. There is <strong>no <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">TRANSACTIONS</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">INCOME</code> product and no Plaid webhook endpoint</strong> today.
-            <br>&nbsp;&nbsp;• Triggering is <strong>schedule-based</strong>: the 11:55 PM cron scans for schedules whose <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">nextInvestmentDate</code> is due (see <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">INVESTMENT_SCHEDULER.md</code>), and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PaydayNotificationService</code> already <em>predicts</em> "your paycheck hits tomorrow" off that stored cadence — it never observes the actual deposit.
-            <br>So this story is genuinely net-new capability research, not a tweak. <strong>Tier 2 — no acceptance criteria in the backlog yet, so I've drafted them below for you to approve or edit; the build won't start until they're confirmed.</strong></div>
+          <div class="priority-title">FRED-109 — Reframe the onboarding question to "When do you want work to be optional?"</div>
+          <div class="priority-desc"><strong>You skipped FRED-187 (the Plaid paycheck spike) — here's a fresh single story.</strong> Today the first onboarding survey asks <em>how much</em> you can invest and tells you <em>how long</em> it'll take. FRED-109 flips that to lead with the question FRED is really about: <strong>"When do you want work to be optional?"</strong> — make the freedom <em>timeline</em> the thing you set, and let FRED back-solve the monthly investment it takes to get there. I ground-truthed the screen this morning:
+            <br>&nbsp;&nbsp;• <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">components/surveyinitial/surveyinitial.component</code> currently has an <strong>"I Can Invest… $X/mo"</strong> slider (input) + an <strong>"I Want To Retire With… $X/mo"</strong> slider, and computes <strong>"Estimated Time to Goal" in years</strong> as the output.
+            <br>&nbsp;&nbsp;• The math is a clean FIRE formula (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">months = ln((target·rate/PMT)+1)/ln(1+rate)</code>, 10% return, 4% withdrawal) — and it <strong>inverts cleanly</strong>: given a target time, solve for the required monthly investment (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PMT = target·rate / ((1+rate)^months − 1)</code>).
+            <br>So this is a contained, frontend-only reframe of one onboarding component — no backend, schema, or auth. <strong>Tier 2 — no acceptance criteria in the backlog yet, so I've drafted them below for you to approve or edit; the build won't start until they're confirmed.</strong></div>
           <span class="diff-chip diff-medium">Medium</span>
         </div>
       </div>
@@ -139,7 +139,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Why I Picked This</div>
       <div class="card">
-        <div class="card-text"><strong>DEV-198 (lockfile churn) shipped and was closed out to "Looks Good," so this is a fresh brief for the next single story.</strong> Operating in <strong>Tier 2</strong>: FRED-187 has no acceptance-criteria block in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code>, so I've generated proposed A/C below for you to approve or edit. <strong>Tier 1 is exhausted for this sandbox:</strong> the Tier-1 READY stories that remain — FRED-191 (load perf), FRED-201 (cold-start reauth cover), FRED-204 (static→Lottie white flash) — all require reproducing a real-device Capacitor cold-start + reauth this sandbox can't run, and are too pixel-timing-sensitive to touch blind. FRED-189 and FRED-195 are effectively done (shipped/merged) but still sit uncheckmarked in READY — that's data-hygiene to close out, not build work. Of the two genuinely sandbox-doable Tier-2 candidates, FRED-187 beats LPFRED-184 (landing-page calculator) because LP work is marketing/growth — explicitly <em>not</em> the current priority — whereas FRED-187 advances FRED's <strong>core paycheck-automation feature</strong> (a Piggy-Tier pillar), is a guaranteed-completion research deliverable fully producible in-sandbox (code reading + Plaid/Alpaca doc review), and was the exact next-pick named in the 06-28 brief. No exclusions apply: FRED-188's skip window (06-22) and FRED-100's (06-15) don't touch this pick.</div>
+        <div class="card-text"><strong>You skipped today's pick FRED-187 (Plaid paycheck-trigger spike) and asked for a different single story, so I re-picked under the exclusion set</strong> (FRED-187 is now a hard exclusion through ~07-07). Operating in <strong>Tier 2</strong>: FRED-109 has no acceptance-criteria block in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code>, so I've generated proposed A/C below for you to approve or edit. <strong>The READY list is exhausted of on-priority, sandbox-buildable work:</strong> FRED-189 and FRED-195 are already shipped/merged (data-hygiene to close out, not build); FRED-191 / FRED-201 / FRED-204 all need a real-device Capacitor cold-start + reauth this sandbox can't run; and LPFRED-184 is landing-page/marketing — explicitly <em>not</em> the current priority (your vision doc deprioritizes growth/marketing). With nothing in READY fitting, I dropped to the strongest <em>on-mission</em> sleeping story: FRED-109. It reframes the very first onboarding question around FRED's core promise — trading time, not dollars — is fully frontend-only and verifiable in-sandbox (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code>), and is contained to a single component.</div>
       </div>
     </div>
 
@@ -147,7 +147,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
-        <div class="card-text">"FRED automates paycheck-based investing using Plaid and the user's pay schedule" is the product's central promise. Today that automation is <em>predicted</em> from a user-declared cadence; detecting the real deposit would make the automation feel genuinely alive — invest the day the money lands, not on a guessed date — which is a strong retention and trust lever (FRED's primary + secondary business priorities). This spike de-risks that build by settling feasibility, cost, and the right Plaid mechanism <em>before</em> any code is committed, so the eventual feature is scoped correctly rather than discovered mid-build.</div>
+        <div class="card-text">FRED exists for "people pursuing financial freedom — stopping the trade of time for money." The onboarding survey is the user's <em>first</em> interaction with the projection engine, and leading with a dollar amount ("how much can you invest?") frames FRED as a budgeting tool. Leading with <strong>"when do you want work to be optional?"</strong> frames it as a freedom engine — calmer, more aspirational, and truer to the mission and the calm/direct copy principle. It also directly advances current priority #1 (UI/UX overhaul of remaining surfaces) and sharpens a Piggy-Tier core flow.</div>
       </div>
     </div>
 
@@ -155,7 +155,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
-        <div class="card-text">Indirect this run — the deliverable is a decision document, not shipped feature code, so production-readiness score is unchanged (held at 83). The value is sequencing: a clear feasibility verdict turns a vague backlog line into either a well-scoped build story (or a documented "not worth it / defer") and prevents a half-built Plaid-detection path from becoming tech debt. No application code, schema, or auth is touched, so user-facing risk is zero. Fully completable in-sandbox.</div>
+        <div class="card-text">Sharpens a Piggy-Tier core surface (the onboarding projection survey) and improves first-run clarity — a small but real readiness lift (est. 83 → 84 on ship; held at 83 for this planning revision since no code shipped). Frontend-only and contained to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">surveyinitial</code> + the value it hands to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">fi-plan-results</code>, with no backend / schema / auth change, so user-facing risk is low and it is fully completable + verifiable in-sandbox (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc --noEmit</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code>).</div>
       </div>
     </div>
 
@@ -163,20 +163,20 @@
     <div class="section-group section-planning-only hide-on-skip">
       <div class="section-label">Proposed Acceptance Criteria — approve or edit</div>
       <div class="card">
-        <div class="card-text" style="color:var(--gray);margin-bottom:14px;">FRED-187 is a <strong>Tier 2</strong> story — it has no acceptance criteria in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> yet. These are my proposed criteria for a <strong>research spike</strong> (deliverable = a written feasibility doc, not production code); <strong>the work won't start until you confirm them</strong> (submit as-is to accept, or edit in the note below). The execution agent will write the confirmed A/C back into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> before starting.</div>
+        <div class="card-text" style="color:var(--gray);margin-bottom:14px;">FRED-109 is a <strong>Tier 2</strong> story — it has no acceptance criteria in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> yet. These are my proposed criteria for the recommended <strong>full-inversion</strong> approach (Option A); <strong>the work won't start until you confirm them</strong> (submit as-is to accept, or edit in the note below). The execution agent will write the confirmed A/C back into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> before building.</div>
         <div class="triage-group">
           <ul class="triage-list">
-            <li><strong>AC-1</strong> — Current-state write-up: document that Plaid is wired with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">AUTH</code>+<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">IDENTITY</code> only (no Transactions/Income product, no webhook), and that investment triggering is schedule-based (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">nextInvestmentDate</code> cron + predicted payday notifications).</li>
-            <li><strong>AC-2</strong> — Plaid mechanism survey: evaluate the candidate ways to <em>detect a paycheck</em> — Transactions <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/transactions/sync</code> + webhook, Recurring Transactions, and the dedicated Income/Payroll product — covering classification accuracy (identifying a payroll credit), detection latency, added consent/onboarding friction, and any extra Plaid product cost.</li>
-            <li><strong>AC-3</strong> — Trigger-to-investment path: describe exactly how a detected deposit would enqueue an <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">InvestmentExecution</code> and reconcile with the existing 11:55 PM schedule + 11:59 PM batch-funding crons — including idempotency/dedup so a paycheck never triggers a double ACH pull.</li>
-            <li><strong>AC-4</strong> — Risks + edge cases enumerated: detection lag (deposit posts before Plaid sees it), false positives (a non-payroll credit), variable/irregular pay, the new public webhook endpoint's security/verification, and failure/degradation behavior.</li>
-            <li><strong>AC-5</strong> — Clear verdict + recommendation: feasible or not, the recommended mechanism, and whether detection should <em>replace</em> or <em>augment</em> the current schedule model (pending Q2).</li>
-            <li><strong>AC-6</strong> — Phased build outline: if recommended, a concrete next-step story breakdown (backend product/webhook, detection→trigger wiring, frontend opt-in, testing in Plaid sandbox) with rough sizing — but <strong>no production code committed in this spike</strong> (pending Q1).</li>
-            <li><strong>AC-7</strong> — Deliverable committed as a doc under <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FREDdocs/</code> (e.g. <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FREDdocs/PLAID_PAYCHECK_TRIGGER_FEASIBILITY.md</code>) so it's reproducible from source control.</li>
+            <li><strong>AC-1</strong> — The onboarding survey (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">surveyinitial.component</code>) leads with a <strong>"When do you want work to be optional?"</strong> control — a years-to-freedom slider (input). The "I Can Invest… $X/mo" amount is no longer a user input.</li>
+            <li><strong>AC-2</strong> — Given the freedom-time input + the existing "I Want To Retire With… $X/mo" income slider, the screen <strong>back-solves and displays the required monthly investment</strong> using the inverse of the current formula: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PMT = (target·monthlyRate) / ((1+monthlyRate)^months − 1)</code>, reusing the same <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">AVG_MARKET_YIELD = 0.10</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">SAFE_WITHDRAWAL_RATE = 0.04</code> (no math/assumption drift).</li>
+            <li><strong>AC-3</strong> — The result area shows the <strong>required monthly investment</strong> as the headline output (replacing the old "Estimated Time to Goal" years readout, which is now the input); the target portfolio value stays visible.</li>
+            <li><strong>AC-4</strong> — Persistence + downstream contract preserved: the survey still saves <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthlyInvestment</code> (now the computed value) + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">retirementIncome</code> to localStorage + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userProgress</code>, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">viewMyPlan()</code> still navigates to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/fi-plan-results</code> with consistent <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">mI</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">rI</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">t</code> params.</li>
+            <li><strong>AC-5</strong> — Copy is calm + freedom-focused per the vision (hero text + labels reflect the "work optional" framing); FRED palette + Manrope only; layout verified at 390×844 and 430×932.</li>
+            <li><strong>AC-6</strong> — Edge handling: if the chosen freedom-time is short enough that the required monthly investment is very large, the screen shows the computed number clearly (with a gentle note) rather than breaking; sensible slider bounds chosen so the value stays legible.</li>
+            <li><strong>AC-7</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0 and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> succeeds.</li>
           </ul>
         </div>
         <div class="revision-label" style="margin-top:14px;margin-bottom:8px;">Edit the criteria (optional) — leave blank to accept as proposed:</div>
-        <textarea class="revision-textarea" id="ac-edit-textarea" placeholder="e.g. Skip the Income/Payroll product entirely — only evaluate Transactions-sync; or include a tiny Plaid-sandbox proof-of-concept stub, not just a doc."></textarea>
+        <textarea class="revision-textarea" id="ac-edit-textarea" placeholder="e.g. Keep the invest-amount slider too and just reword the screen (copy-only); or use a target AGE instead of years-to-freedom."></textarea>
       </div>
     </div>
 
@@ -190,13 +190,13 @@
             <span class="option-label">Option A</span>
             <span class="option-rec">Recommended</span>
           </div>
-          <div class="option-title">Spike centered on Plaid Transactions <code>/transactions/sync</code> + webhook detection</div>
-          <div class="option-body">Investigate adding the <code>TRANSACTIONS</code> product to the existing Link flow, a Plaid webhook endpoint that fires on <code>SYNC_UPDATES_AVAILABLE</code>, and classifying inbound payroll credits via <code>personal_finance_category</code> (<code>INCOME_WAGES</code>) / the recurring-transactions stream. The doc recommends this as the leading mechanism and sketches how a detected credit enqueues an <code>InvestmentExecution</code> through the existing batch-funding path with dedup. Most general (works for any linked bank) and reuses Plaid we already integrate.</div>
+          <div class="option-title">Full inversion — freedom-time is the input, required monthly investment is the output</div>
+          <div class="option-body">Swap the "I Can Invest… $X/mo" slider for a <strong>"When do you want work to be optional?"</strong> years-to-freedom slider, keep the "I Want To Retire With…" income slider, and compute the <strong>required monthly investment</strong> with the closed-form inverse of the existing FIRE formula, displaying it as the headline result. Contained entirely to <code>surveyinitial.component.{ts,html,scss}</code>; the saved values + the <code>fi-plan-results</code> hand-off stay identical, so nothing downstream changes.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>broadest bank coverage; builds on the Link flow we already own; no new vendor; clearest path to "invest the day the money lands"; deliverable fully producible in-sandbox.</span></span>
-            <span class="meta-item">Cons: <span>requires payroll-classification heuristics (false-positive risk) and a new public webhook endpoint to secure; detection lag between posting and Plaid visibility must be handled.</span></span>
-            <span class="meta-item">Risk: <span>Low for the spike itself (it's research); the heuristics/latency are the real risks the doc must quantify before any build.</span></span>
-            <span class="meta-item">Estimate: <span>~2–4 hr (write-up)</span></span>
+            <span class="meta-item">Pros: <span>literally answers the story ("ask WHEN"); truest to the mission; reuses the exact same constants/formula (no assumption drift); one-component blast radius; fully sandbox-verifiable.</span></span>
+            <span class="meta-item">Cons: <span>requires inverting the math + reworking the slider/output bindings; need an edge-guard for very short freedom-times that demand a huge monthly amount.</span></span>
+            <span class="meta-item">Risk: <span>Low–Medium — bounded to one screen; the inverse is a standard annuity-PMT solve; main care is the persisted/nav contract and the large-value edge case.</span></span>
+            <span class="meta-item">Estimate: <span>~2–4 hr</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -205,13 +205,13 @@
           <div class="option-header">
             <span class="option-label">Option B</span>
           </div>
-          <div class="option-title">Spike centered on Plaid's dedicated Income / Payroll product</div>
-          <div class="option-body">Investigate Plaid's purpose-built income detection (<code>/credit/bank_income</code> or the recurring-transactions income stream), which classifies recurring payroll for you rather than relying on home-grown heuristics. The doc would assess fit, accuracy, and onboarding/consent impact.</div>
+          <div class="option-title">Reframe copy + readout only — keep both existing inputs</div>
+          <div class="option-body">Leave the two existing input sliders (invest amount + retirement income) and the computed time-to-goal exactly as they are, but reword the screen around freedom — rename "Estimated Time to Goal" to <strong>"Work optional in"</strong>, and rewrite the hero/labels in freedom-focused language. Smallest possible change.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>far more reliable payroll classification out of the box; less custom heuristic code to maintain; designed exactly for this use case.</span></span>
-            <span class="meta-item">Cons: <span>likely an additional Plaid product cost and extra user consent/onboarding friction; may be heavier than needed if Transactions-sync already suffices — the spike must confirm availability + pricing before committing.</span></span>
-            <span class="meta-item">Risk: <span>Medium — recommending it commits FRED to a paid product and more onboarding steps; only worth it if classification accuracy clearly beats Option A.</span></span>
-            <span class="meta-item">Estimate: <span>~2–4 hr (write-up)</span></span>
+            <span class="meta-item">Pros: <span>minimal code + lowest risk; no math change; instant to verify; still nudges the framing toward "freedom."</span></span>
+            <span class="meta-item">Cons: <span>doesn't literally make WHEN the <em>input</em> as the story asks — the user still sets a dollar amount; reads as a relabel rather than the intended reframe.</span></span>
+            <span class="meta-item">Risk: <span>Low — but likely under-delivers on the story's intent.</span></span>
+            <span class="meta-item">Estimate: <span>~1 hr</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -220,13 +220,13 @@
           <div class="option-header">
             <span class="option-label">Option C</span>
           </div>
-          <div class="option-title">Spike centered on a "confirm-the-deposit" check layered on the existing schedule</div>
-          <div class="option-body">Don't move to true event-driven detection. Instead investigate a smaller change: on the user's already-predicted payday, do a one-shot Plaid transactions/balance lookback to <em>confirm</em> the paycheck actually landed before releasing the ACH pull — keeping the current schedule as the source of truth. The doc would weigh this lower-ambition path against A/B.</div>
+          <div class="option-title">Target-age inversion — "At what age should work be optional?"</div>
+          <div class="option-body">Like Option A, but phrase the input as a target <em>age</em> rather than a number of years. This needs the user's current age in the survey (DOB isn't collected until the later KYC step), then converts age→years and back-solves the monthly investment exactly as in A.</div>
           <div class="option-meta">
-            <span class="meta-item">Pros: <span>smallest eventual build; no webhook infrastructure; reuses the schedule model; directly reduces the "pulled before payroll posted" failure mode.</span></span>
-            <span class="meta-item">Cons: <span>not truly "triggered by the paycheck" as the story asks — it's confirmation, not detection; still depends on the user declaring a cadence.</span></span>
-            <span class="meta-item">Risk: <span>Low — but may under-deliver on the story's intent; best framed as a fallback/phase-1 the doc can recommend if A/B prove too heavy.</span></span>
-            <span class="meta-item">Estimate: <span>~2–3 hr (write-up)</span></span>
+            <span class="meta-item">Pros: <span>arguably the most concrete, human framing ("retire at 52"); richest emotional hook.</span></span>
+            <span class="meta-item">Cons: <span>adds a new current-age input to an early onboarding screen (more scope + a new field to validate/persist); duplicates info KYC collects later.</span></span>
+            <span class="meta-item">Risk: <span>Medium — widens scope beyond one clean reframe; the extra input is the real cost.</span></span>
+            <span class="meta-item">Estimate: <span>~4–6 hr</span></span>
           </div>
           <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
@@ -240,34 +240,35 @@
       <div class="card">
 
         <div class="story-section">
-          <div class="story-header">FRED-187 — Investigate Plaid paycheck-triggered investment flow</div>
+          <div class="story-header">FRED-109 — Change investment question to work-optional framing</div>
 
           <div class="triage-group">
             <div class="triage-group-title">In Scope</div>
             <ul class="triage-list">
-              <li>Document the current state: Plaid <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">AUTH</code>+<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">IDENTITY</code> only, schedule-based triggering, predicted-payday notifications.</li>
-              <li>Survey the Plaid detection mechanisms (Transactions-sync + webhook, Recurring Transactions, Income/Payroll) on accuracy, latency, friction, and cost.</li>
-              <li>Map how a detected deposit would feed the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">InvestmentExecution</code> + batch-funding path, with dedup/idempotency to avoid double-pulls.</li>
-              <li>Enumerate risks/edge cases and deliver a verdict + recommended mechanism + phased build outline, committed as a doc under <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FREDdocs/</code>.</li>
+              <li>Replace the "I Can Invest… $X/mo" input slider in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">surveyinitial.component</code> with a "When do you want work to be optional?" years-to-freedom slider.</li>
+              <li>Invert the existing FIRE math to back-solve the <strong>required monthly investment</strong> from the freedom-time + retirement-income inputs (same 10% / 4% constants), and surface it as the headline output.</li>
+              <li>Reword the hero text + labels into calm, freedom-focused copy; keep FRED palette + Manrope, layout intact at 390×844 / 430×932.</li>
+              <li>Preserve the persisted values (localStorage + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userProgress</code>) and the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">fi-plan-results</code> query-param hand-off so nothing downstream breaks.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">Potentially Out of Scope</div>
             <ul class="triage-list">
-              <li>Shipping any production code, schema change, webhook endpoint, or Plaid product change this run (this is a spike — pending Q1).</li>
-              <li>Building the actual detection→trigger feature — that becomes its own approved story if the verdict is "go."</li>
-              <li>Reworking the existing schedule/cron model or the ACH funding flow.</li>
-              <li>Negotiating or enabling paid Plaid products in the Plaid dashboard (a founder/account action, flagged in the doc if needed).</li>
+              <li>Adding a current-age / DOB input (only needed if you pick Option C — pending Q2).</li>
+              <li>Changing the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">fi-plan-results</code> page itself or the SWR/SBLOC/Annuity downstream screens.</li>
+              <li>Touching the retirement-income slider's range/behavior, or any backend / projection-engine code.</li>
+              <li>Reworking the other onboarding survey steps (kyc-verification, investment-schedule, etc.).</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">UX Considerations</div>
             <ul class="triage-list">
-              <li><strong>No user-facing surface this run</strong> — the deliverable is a decision doc. UX implications (an opt-in toggle, consent copy, "we detected your paycheck → investing $X" messaging) are described for the <em>future</em> build, not built now.</li>
-              <li><strong>Trust + clarity</strong> — detection-based investing must be transparent and predictable; the doc should note the messaging and opt-in needed so users are never surprised by an auto-pull.</li>
-              <li><strong>Failure degradation</strong> — if detection misses or lags, the doc should recommend falling back to the existing schedule so automation never silently stops.</li>
+              <li><strong>Large-value edge case</strong> — a very short freedom-time can demand an enormous monthly investment; show the real number with a gentle note rather than letting it overflow or read as broken (AC-6).</li>
+              <li><strong>Slider bounds</strong> — pick a sensible years-to-freedom range (e.g. 5–40 yrs) so the computed amount stays legible and the control feels natural.</li>
+              <li><strong>Copy</strong> — calm + direct, freedom-focused, never pushy; the headline result should make the trade-off ("to be work-optional in N years, invest $X/mo") instantly clear.</li>
+              <li><strong>Loading / ready</strong> — the existing loading veil + asset-preload + the "Building your plan…" CTA spinner stay intact.</li>
             </ul>
           </div>
         </div>
@@ -282,18 +283,18 @@
 
         <div class="question-item">
           <div class="question-text">
-            <strong>Research-only this run, or a small proof-of-concept too?</strong> My plan treats FRED-187 as a pure feasibility spike — a written verdict + recommendation + phased build outline, <strong>no production code</strong> — so the actual feature lands as a separate, properly-scoped story once you've read the verdict. Flag if you'd instead want a tiny Plaid-sandbox PoC stub alongside the doc.
+            <strong>Full inversion, or just reframe the copy?</strong> My plan (Option A) actually makes <em>WHEN-work-is-optional</em> the input you set and computes the required monthly investment as the output — the literal ask of the story. The lighter alternative (Option B) keeps both existing inputs and just rewords the screen. Confirm you want the full inversion.
             <span class="required-badge">Required</span>
           </div>
-          <textarea class="question-input" data-required="true" placeholder="Research-only — deliver the feasibility doc + recommendation; no production code until I approve a follow-up build story."></textarea>
+          <textarea class="question-input" data-required="true" placeholder="Full inversion (Option A) — make 'when do you want work to be optional?' the input and back-solve the monthly investment. That's the whole point."></textarea>
         </div>
 
         <div class="question-item">
           <div class="question-text">
-            <strong>Should detection replace the pay-cadence model, or augment it?</strong> The current model has users declare a cadence that drives the scheduler. I'm assuming paycheck-detection should <em>augment</em> that — keep the schedule as the backbone, use detection to trigger/confirm — rather than rip out the cadence entirely. That keeps a fallback if detection misses. Tell me if you'd rather aim for full detection-driven replacement.
+            <strong>Years-to-freedom, or a target age?</strong> I'm planning a "work optional in ___ years" slider (Option A) because it's the simplest and needs no new info. A target age (Option C — "work optional at 52") reads more concretely but requires asking the user's current age on this early survey screen, since DOB isn't collected until the later KYC step.
             <span class="optional-badge">Optional</span>
           </div>
-          <textarea class="question-input" placeholder="Augment, don't replace — keep the declared cadence as the backbone and fallback; use Plaid detection to trigger/confirm on top of it."></textarea>
+          <textarea class="question-input" placeholder="Years-to-freedom slider — keep it simple, no new age/DOB input this early in onboarding."></textarea>
         </div>
 
       </div>
@@ -306,25 +307,25 @@
 
         <div class="step-item">
           <div class="step-num">1</div>
-          <div class="step-body" contenteditable="false"><strong>Map current state</strong> — Read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PlaidService</code>, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">InvestmentScheduler</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">InvestmentExecutionService</code>, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PaydayNotificationService</code>; document that Plaid is AUTH+IDENTITY only and triggering is schedule-based (AC-1).</div>
+          <div class="step-body" contenteditable="false"><strong>Confirm the contract</strong> — Re-read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">surveyinitial.component.{ts,html,scss}</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">fi-plan-results</code> to lock down what's saved (localStorage + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">userProgress</code>) and the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">mI</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">rI</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">t</code> query params it hands downstream (AC-4).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">2</div>
-          <div class="step-body" contenteditable="false"><strong>Survey Plaid mechanisms</strong> — Study Transactions <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">/transactions/sync</code> + webhooks, Recurring Transactions, and the Income/Payroll product against the Plaid + Alpaca docs (see <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">REFERENCES.md</code>); compare accuracy, latency, friction, and cost (AC-2).</div>
+          <div class="step-body" contenteditable="false"><strong>Invert the math (.ts)</strong> — Add a <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">freedomYears</code> input, compute <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">requiredMonthlyInvestment</code> via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">PMT = target·rate/((1+rate)^months − 1)</code> with the same constants, keep <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">retirementIncome</code>, and keep <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">monthlyInvestment</code> = the computed value for save/nav (AC-1, AC-2, AC-4).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">3</div>
-          <div class="step-body" contenteditable="false"><strong>Design the trigger path + risks</strong> — Map detected-deposit → <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">InvestmentExecution</code> reconciled with the existing crons (dedup/idempotency, no double ACH pull), and enumerate edge cases — lag, false positives, irregular pay, webhook security, degradation (AC-3, AC-4).</div>
+          <div class="step-body" contenteditable="false"><strong>Rework the template + copy</strong> — Swap the invest slider for the years-to-freedom slider, move the required monthly investment into the headline output badge, reword the hero + labels into freedom framing, and add the large-value edge note (AC-3, AC-5, AC-6).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">4</div>
-          <div class="step-body" contenteditable="false"><strong>Write verdict + outline, commit the doc</strong> — Feasibility verdict, recommended mechanism, replace-vs-augment call, phased build story breakdown with sizing; commit as <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FREDdocs/PLAID_PAYCHECK_TRIGGER_FEASIBILITY.md</code> (AC-5, AC-6, AC-7). Verifier reviews AC-1..AC-7.</div>
+          <div class="step-body" contenteditable="false"><strong>Verify</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exit 0 + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> succeeds; sanity-check the inverse against the old forward math (a given amount→time should round-trip), and confirm 390×844 layout. Verifier reviews AC-1..AC-7 (AC-5/AC-6 live-render confirmation goes to your "Looks Good") (AC-7).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
@@ -337,8 +338,8 @@
       <div class="card">
         <ul class="tomorrow-list">
           <li><strong>Data hygiene</strong> — close out FRED-189 (shipped 06-19) and FRED-195 (shipped+merged) with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done</code> so they aren't re-picked and burndown stays honest. They've sat uncheckmarked in READY for days.</li>
-          <li><strong>FRED-187 follow-up</strong> — if today's spike returns a "go" verdict, the recommended phased build becomes its own scoped story.</li>
-          <li><strong>LPFRED-184</strong> — landing-page net-income calculator (Tier 2) if you want a marketing-side win; it would also bring the LP calc in line with the already-shipped in-app model (FRED-185). FRED-191 / FRED-201 / FRED-204 stay sandbox-gated (real-device Capacitor cold-start + reauth).</li>
+          <li><strong>FRED-177</strong> — remove the back button from 2 onboarding pages (small, clean onboarding-UI quick win), or <strong>FRED-149</strong> (fix star alignment in customize portfolio).</li>
+          <li><strong>FRED-187 follow-up</strong> — if you'd still like the Plaid paycheck-trigger spike, it can return next cycle once its 7-day skip window clears. FRED-191 / FRED-201 / FRED-204 stay sandbox-gated (real-device Capacitor cold-start + reauth).</li>
         </ul>
       </div>
     </div>
@@ -356,7 +357,7 @@
       <!-- Request Changes — rework the same story with feedback -->
       <div id="rework-block" style="margin-top:14px;">
         <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
-        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The verdict is too vague — give me a clearer go/no-go and a sharper estimate on the follow-up build."></textarea>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The 'work optional in N years' copy reads awkwardly — tighten it; or the required-monthly-investment number needs a clearer caption."></textarea>
         <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
       </div>
     </div>
@@ -366,7 +367,7 @@
       <div class="section-label">Anything Else For the Execution Agent?</div>
       <div class="card">
         <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
-        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Don't recommend a paid Plaid product unless Transactions-sync truly can't classify paychecks reliably; keep the existing schedule as a fallback..."></textarea>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Keep the years-to-freedom slider range tight (5–40 yrs); make the headline result read 'invest $X/mo to be work-optional in N years'..."></textarea>
       </div>
     </div>
 
@@ -375,7 +376,7 @@
       <div class="section-label">Add to Backlog</div>
       <div class="card">
         <div class="revision-label" style="margin-bottom:14px;">Thought of something while reviewing? Add it to the backlog without leaving this page.</div>
-        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Add a user-facing opt-in toggle + consent copy for paycheck-detected investing..." style="min-height:80px;margin-bottom:12px;"></textarea>
+        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Mirror the work-optional framing on the fi-plan-results page too; or add a 'show me the dollar amount' toggle..." style="min-height:80px;margin-bottom:12px;"></textarea>
         <button class="btn-dark" id="backlog-btn" onclick="handleAddBacklog()">Add to Backlog</button>
       </div>
     </div>
