@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Digest — 2026-06-30</title>
+  <title>Claude Digest — 2026-07-01</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#0f1117;color:#e8eaf0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.6;padding:48px 24px 80px}
@@ -45,25 +45,24 @@
       <span class="wordmark-text">Claude Daily Digest</span>
     </div>
     <h1>What's new in Claude</h1>
-    <span class="date-label">Tuesday, June 30, 2026</span>
+    <span class="date-label">Tuesday, July 1, 2026</span>
   </header>
   <hr />
 
   <section class="section">
     <div class="section-head"><span>📦</span><span class="section-title">New Releases</span></div>
     <div class="card">
-      <div class="empty">No new releases today. Most recent entries below.</div>
+      <div class="item">
+        <div class="meta"><span class="version">v2.1.197</span><span class="ts">June 30, 2026</span></div>
+        <div class="body">Claude Sonnet 5 is now the default model in Claude Code, bringing a native 1M-token context window and promotional pricing of $2/$10 per MTok through August 31, 2026.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="version">v2.1.196</span><span class="ts">June 29, 2026</span></div>
+        <div class="body">Organization default models (set by admins in the org console), readable session names at start, clickable file attachments via Cmd/Ctrl-click, and a security fix preventing untrusted workspace MCP servers from auto-spawning. Plus 20+ bug fixes including background agent reliability, PowerShell git diff, and rate-limit telemetry.</div>
+      </div>
       <div class="item">
         <div class="meta"><span class="version">v2.1.195</span><span class="ts">June 26, 2026</span></div>
-        <div class="body">Added <code>CLAUDE_CODE_DISABLE_MOUSE_CLICKS</code> env var to disable mouse interactions in fullscreen mode while keeping wheel scroll. Fixed hook matchers with hyphenated identifiers (e.g. <code>code-reviewer</code>) accidentally substring-matching — they now exact-match. Fixed voice dictation on macOS capturing silence after the default input device changes, and fixed auto-submit never firing for languages written without spaces (Japanese, Chinese, Thai).</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="version">v2.1.193</span><span class="ts">June 25, 2026</span></div>
-        <div class="body">Added <code>autoMode.classifyAllShell</code> setting to route all Bash/PowerShell commands through the auto-mode classifier, with denial reasons now surfaced in transcripts and <code>/permissions</code>. Added live file path autocomplete in bash mode (<code>!</code>). Added automatic memory-pressure reaping for idle background shell commands.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="version">v2.1.191</span><span class="ts">June 24, 2026</span></div>
-        <div class="body">Added <code>/rewind</code> support to resume a conversation from before <code>/clear</code> was run. Fixed scroll position jumping to the bottom while reading earlier output during a streaming response. Fixed background agents resurrecting after being stopped.</div>
+        <div class="body">Added <code>CLAUDE_CODE_DISABLE_MOUSE_CLICKS</code> for fullscreen mode, fixed voice dictation issues on macOS and for spaceless languages, improved Remote session startup with a provisioning checklist.</div>
       </div>
     </div>
   </section>
@@ -72,20 +71,20 @@
     <div class="section-head"><span>📰</span><span class="section-title">This Week</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="tag">Week 26 · June 22–26 (most recent)</span></div>
-        <div class="body"><strong>claude mcp login / logout</strong> — authenticate a configured MCP server directly from your shell without going through the interactive <code>/mcp</code> menu; clear stored credentials later with <code>claude mcp logout &lt;name&gt;</code>.</div>
+        <div class="meta"><span class="tag">Week 26 · June 22–26, 2026</span></div>
+        <div class="body"><strong>claude mcp login</strong> — authenticate a configured MCP server from your shell instead of the interactive /mcp menu, with <code>claude mcp logout</code> to clear credentials.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">Week 26 · June 22–26</span></div>
-        <div class="body"><strong>Shell mode responds to command output</strong> — running <code>! npm test</code> now triggers Claude to explain the output automatically without a second prompt. Set <code>respondToBashCommands: false</code> in settings.json to revert to the previous behavior.</div>
+        <div class="meta"><span class="tag">Week 26 · June 22–26, 2026</span></div>
+        <div class="body"><strong>Shell mode responds to command output</strong> — running <code>! npm test</code> now gets you an explanation automatically, without a follow-up prompt.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">Week 26 · June 22–26</span></div>
-        <div class="body"><strong>/rewind after /clear</strong> — resume a conversation from before you cleared it; Claude reloads the prior context window so nothing is truly lost.</div>
+        <div class="meta"><span class="tag">Week 26 · June 22–26, 2026</span></div>
+        <div class="body"><strong>/rewind across /clear</strong> — you can now rewind a conversation back to before <code>/clear</code> was run, recovering previously cleared context.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="tag">Week 26 · June 22–26</span></div>
-        <div class="body"><strong>Background subagents surface permission prompts</strong> — instead of auto-denying blocked actions, background agents now bubble the prompt up to the main session so you can approve in real time.</div>
+        <div class="meta"><span class="tag">Week 26 · June 22–26, 2026</span></div>
+        <div class="body"><strong>Background subagents surface permission prompts</strong> — instead of auto-denying, background subagents now bubble permission prompts up to the main session.</div>
       </div>
     </div>
   </section>
@@ -94,16 +93,24 @@
     <div class="section-head"><span>🔧</span><span class="section-title">Platform &amp; API</span></div>
     <div class="card">
       <div class="item">
+        <div class="meta"><span class="tag">June 30, 2026</span></div>
+        <div class="body"><strong>Claude Sonnet 5 launched</strong> (<code>claude-sonnet-5</code>) — introductory pricing $2/$10 per MTok through August 31, 1M token context, 128k max output. Adaptive thinking is now on by default; manual extended thinking removed. Note: uses a new tokenizer producing ~30% more tokens for the same text.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="tag">June 30, 2026</span></div>
+        <div class="body"><strong>Managed Agents session event streams</strong> now support event deltas — opt in with <code>event_deltas[]</code> on the stream endpoint to preview agent message text as it generates.</div>
+      </div>
+      <div class="item">
+        <div class="meta"><span class="tag">June 30, 2026</span></div>
+        <div class="body"><strong>Managed Agents session config override</strong> — pass <code>agent</code> with <code>type: "agent_with_overrides"</code> to replace model, system prompt, tools, MCP servers, or skills for a single session.</div>
+      </div>
+      <div class="item">
         <div class="meta"><span class="tag">June 29, 2026</span></div>
-        <div class="body"><strong>Fast mode removed for Claude Opus 4.6.</strong> Requests with <code>speed: "fast"</code> to <code>claude-opus-4-6</code> no longer run at fast speed or premium pricing — they now run at standard speed and are billed at standard rates. Migrate to fast mode on Claude Opus 4.8 to continue using fast mode.</div>
+        <div class="body"><strong>Fast mode removed for Claude Opus 4.6</strong> — requests to <code>claude-opus-4-6</code> with <code>speed: "fast"</code> now run at standard speed and standard rates. Migrate to Opus 4.8 to continue using fast mode.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">June 26, 2026</span></div>
-        <div class="body"><strong>API rate limits raised.</strong> Claude Sonnet and Haiku rate limits now match Claude Opus at every usage tier. Usage tiers consolidated into three: Start, Build, and Scale — most organizations move up, none move down. No action required; check current limits in the Claude Console.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="tag">June 18, 2026</span></div>
-        <div class="body"><strong>Code execution tool across all major SDKs.</strong> Python, TypeScript, Go, Java, Ruby, PHP, and C# now support <code>code_execution_20260120</code> with REPL state persistence. No beta header required. Available on Fable 5, Mythos 5, Opus 4.5+, Sonnet 4.5+.</div>
+        <div class="body"><strong>Rate limits raised across the Claude API</strong> — Sonnet and Haiku limits now match Opus at every tier. Usage tiers consolidated to Start, Build, and Scale; most orgs move up, none move down.</div>
       </div>
     </div>
   </section>
@@ -112,20 +119,20 @@
     <div class="section-head"><span>𝕏</span><span class="section-title">From the Team</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">~48h</span></div>
-        <div class="body"><strong>Claude Tag</strong> is in beta for Enterprise and Team plans — Claude Code made multiplayer, async, and proactive. Anthropic's internal product team is shipping 65% of their code using it, including the code that built Claude Tag itself.</div>
+        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">June 30, 2026</span></div>
+        <div class="body">Claude Sonnet 5 is here. Top-tier performance on coding and tool use at Sonnet pricing, with a 1M context window. It's the new default in Claude Code for Pro users, and available everywhere on the Claude Platform, including the API and Managed Agents.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@claudeai</span><span class="ts">~48h</span></div>
-        <div class="body"><span class="quiet">Quiet today.</span></div>
+        <div class="meta"><span class="handle">@claudeai</span><span class="ts">June 30, 2026</span></div>
+        <div class="body">Introducing Claude Sonnet 5, our most agentic Sonnet yet, making plans, using tools like browsers and terminals, and running autonomously.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@bcherny</span><span class="ts">~48h</span></div>
-        <div class="body">Sharing workflow tips: running 3–5 git worktrees simultaneously with separate Claude Code instances in parallel, shipping 20–30 PRs a day. Philosophy: update CLAUDE.md after every correction so Claude doesn't repeat mistakes. Also: PRDs are dead on the Claude Code team — prototypes replaced them.</div>
+        <div class="meta"><span class="handle">@bcherny</span><span class="ts">June 30, 2026</span></div>
+        <div class="body">You asked, we listened. Claude Desktop on Linux is here!</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@trq212</span><span class="ts">~48h</span></div>
-        <div class="body">Highlighted Dynamic Workflows (Claude writes its own orchestration harness on the fly), Claude Code Channels (control sessions via Telegram or Discord, message from your phone), and the new <code>/btw</code> command for side-chain conversations while Claude is working.</div>
+        <div class="meta"><span class="handle">@trq212</span><span class="ts">June 2, 2026</span></div>
+        <div class="body"><span class="quiet">Quiet this week — last post was June 2 on dynamic workflows: "A harness for every task: dynamic workflows in Claude Code" (Claude writes its own orchestration harness on the fly).</span></div>
       </div>
     </div>
   </section>
@@ -133,7 +140,7 @@
   <hr />
   <footer>
     <span><span class="dot"></span>digest.fredvested.com</span>
-    <span>Generated 2026-06-30 at 8:00 AM ET</span>
+    <span>Generated 2026-07-01 at 8:00 AM ET</span>
   </footer>
 </div>
 </body>
