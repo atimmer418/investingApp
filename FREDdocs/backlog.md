@@ -270,7 +270,19 @@ We don't:
 Signals integrity.
 
 ## FRED-167 — 💤 Redesign Ask Fred UI like Cloudflare Ask AI
-make ask fred look like cloudflare's ask AI
+Redesign the existing "Ask FRED" AI chat screen to adopt the clean, spacious layout and interaction pattern of Cloudflare's "Ask AI" — rendered in FRED's own design system (Manrope, FRED blue `#2563EB`, light mode), **not** Cloudflare's orange/cloud branding.
+Code: `frontend/src/app/pages/ai-chat/` (route `/tabs/chat`). **Full spec + annotated reference screenshots: `FREDdocs/specs/fred-167/`** (`README.md` + `reference/01-empty-state.png`, `02-reasoning-state.png`, `03-answer-state.png`). Any agent — remote itpm planning run OR local session — MUST open those three images before designing or generating mockups; they are the source of truth for the target look.
+
+### Acceptance Criteria
+1. Empty state redesigned to the reference pattern: centered FRED hero/mascot, time-based greeting (e.g. "Good evening."), subtitle, and a vertical stack of ≥3 tappable suggestion cards (icon + title + subtitle) wired to the existing `getDailySuggestions()` data; selecting one submits the prompt. FRED palette + Manrope, light mode.
+2. Composer restyled to the reference (rounded input, clear send affordance), preserving existing `sendMessage()`/streaming behavior.
+3. Message/answer bubbles restyled to the reference's card look; the streaming loading state matches the "Returning results…" treatment.
+4. No regression to existing send/receive, session history, retry, or the first-time-tour hook; the app builds and existing frontend tests pass.
+
+### Scope to confirm (see spec — decide before building, may be backend-blocked or split to follow-ups)
+- Reasoning disclosure ("see/hide reasoning", reference screen 2) — needs the chat backend to emit reasoning; `streamChat()` only yields tokens today.
+- Rich answer rendering (tables, inline code chips, reference screen 3) — needs a markdown renderer; today is basic bold/italic only.
+- Answer feedback row (👍/👎/copy, reference screen 3) — net-new.
 
 ## FRED-169 — 💤 Reduce free trial to 14 days
 make the fred free trial 14 days to allow for one automated paycheck investing and force them to make a decision
