@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="verifying-in-ci">
+  <div id="dashboard" data-populated="true" data-state="completed">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -309,10 +309,23 @@
     </div>
 
     <!-- ── Completion Section (completed state only) ── -->
-    <div class="section-group section-intermediary-only" id="completion-section" style="display:none;">
+    <div class="section-group section-intermediary-only" id="completion-section">
       <div class="section-label">WHAT GOT DONE</div>
       <div class="card" id="completion-content">
-        <p class="card-text" style="color:var(--gray);font-style:italic;">Completion summary will appear here once the execution agent finishes.</p>
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-204 — Fix white flash in static→Lottie reauth transition</p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">Implemented the approved Option A in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/src/index.html</code> (single file, 10 insertions / 1 deletion). Removed the synchronous <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">fallback.style.display='none'</code> that ran the instant <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">lottie.loadAnimation()</code> returned; the static <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">fred-logo.svg</code> now hides only inside a <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">_fredCoverAnim.addEventListener('DOMLoaded', …)</code> handler — so it holds until the coin-drop Lottie has actually painted its first frame, and the white <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#app-resume-cover</code> background is never exposed. The 45s backstop, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">_cancelCoverHideTimer</code>, and the resume <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.play()</code> reference are untouched.</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>AC-1 — the white cover background is never visible in the static→Lottie gap (hide moved off the synchronous path). <em>Live "flash gone" confirmation on device is your "Looks Good" (AC-6).</em></li>
+            <li>AC-2 — the fallback is hidden only after the Lottie's first-frame <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">DOMLoaded</code> render event, not synchronously after <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadAnimation()</code>.</li>
+            <li>AC-3 — seamless hard swap on the render event; no gap, flicker, or double-image (cross-fade correctly left optional).</li>
+            <li>AC-4 — fallback-safe by construction: a Lottie 404 / parse error means <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">DOMLoaded</code> never fires, so the static image simply stays up.</li>
+            <li>AC-5 — no change to the cover show/hide lifecycle or backstops; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc --noEmit</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> both clean.</li>
+            <li>AC-6 — cold-start + reauth "flash is gone" at 430×932: device-only, awaiting your confirmation below.</li>
+          </ul>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Closes a first-impression defect on the app's most-seen surface (the cold-start cover), advancing loading/transition states (priority #3). Verifier-APPROVED, 0 in-scope failures, first pass. Readiness 83 → 84. Shipped via PR #105 (CI green, squash-merged to develop).</p>
+        </div>
       </div>
       <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
         Looks Good &#10003;
