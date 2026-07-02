@@ -35,7 +35,7 @@
   </div>
 
   <!-- ─── Dashboard ─── -->
-  <div id="dashboard" data-populated="true" data-state="intermediary">
+  <div id="dashboard" data-populated="true" data-state="planning">
 
     <!-- ─── Failure Banner ─── -->
     <div id="failure-banner">
@@ -97,9 +97,9 @@
 
         <div class="metric-card">
           <div class="metric-label">Days Since Blocker</div>
-          <div class="metric-value positive">34</div>
+          <div class="metric-value positive">36</div>
           <div class="metric-sublabel">No active production blockers</div>
-          <div class="metric-trend positive">&#8593; +5 vs last week</div>
+          <div class="metric-trend positive">&#8593; +6 vs last week</div>
           <div class="metric-bar-track"><div class="metric-bar-fill" style="width:97%"></div></div>
         </div>
 
@@ -125,12 +125,12 @@
         </label>
         <div class="priority-badge">#1</div>
         <div class="priority-body">
-          <div class="priority-title">FRED-167 — Redesign the Ask FRED chat UI (like Cloudflare's "Ask AI")</div>
-          <div class="priority-desc"><strong>You skipped FRED-109 (the work-optional onboarding reframe) — here's a fresh single story, and this one's a real, visible win.</strong> Ask FRED is one of the last pages still wearing the <em>old</em> look. I ground-truthed it this morning:
-            <br>&nbsp;&nbsp;• <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pages/ai-chat/ai-chat.page.html</code> is still on the plain <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-toolbar</code> header ("Ask FRED" + a hamburger that opens a right-side history menu) — <strong>not</strong> the FRED blue-hero design system every settings page now uses.
-            <br>&nbsp;&nbsp;• The chat itself works (avatar bubbles, "Try asking about…" suggestion chips, a typing indicator, a "Message FRED…" composer) but looks dated next to the rest of the app.
-            <br>This is the kind of <strong>remaining-page UI overhaul</strong> that is current priority #1. It's frontend-only (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.{html,scss}</code> + minimal <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.ts</code>) — no backend, schema, or auth. Because it's a UI overhaul, <strong>I've drawn three design directions as phone mockups below — pick one (and annotate it) rather than reading option text.</strong> <strong>Tier 2 — no acceptance criteria in the backlog yet, so I've drafted them below for you to approve or edit; the build won't start until they're confirmed.</strong></div>
-          <span class="diff-chip diff-medium">Medium</span>
+          <div class="priority-title">FRED-204 — Fix the white flash in the static→Lottie reauth transition</div>
+          <div class="priority-desc"><strong>You skipped FRED-167 (the Ask FRED redesign) — here's a fresh single story, and this one's a small, concrete fix to a defect you reported yourself.</strong> On a cold start (most visible when reauth keeps the loading cover up), the cover swaps its static fallback image for the coin-drop Lottie and a brief (~0.1s) white flash shows through. I ground-truthed the exact cause this morning:
+            <br>&nbsp;&nbsp;• <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/src/index.html:73</code> hides the static fallback (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#app-resume-cover-fallback</code>) <em>synchronously</em> the instant <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">lottie.loadAnimation()</code> returns (line 65) — <strong>before</strong> the Lottie paints its first frame.
+            <br>&nbsp;&nbsp;• In that gap the white <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#app-resume-cover</code> background (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">background:#ffffff</code>, line 34) is exposed → the flash.
+            <br>The fix is a single event-ordering swap: hide the static fallback only <strong>after</strong> a lottie-web render event, so the static image holds until the animation is actually on screen. It's frontend-only (just <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">index.html</code>) — no backend, schema, or auth — and directly advances current priority #3 (loading / transition states). <strong>Tier 1 — the 6-point acceptance criteria are already in the backlog, so this is build-ready; pick an approach below.</strong></div>
+          <span class="diff-chip diff-easy">Easy</span>
         </div>
       </div>
     </div>
@@ -139,7 +139,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Why I Picked This</div>
       <div class="card">
-        <div class="card-text"><strong>You skipped the revised pick FRED-109 (work-optional onboarding reframe) and again asked for a different single story, so I re-picked under the exclusion set</strong> (FRED-109 and FRED-187 are now both hard exclusions through ~07-07). Operating in <strong>Tier 2</strong>: FRED-167 has no acceptance-criteria block in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code>, so I've generated proposed A/C below for you to approve or edit. <strong>The READY list is exhausted of on-priority, sandbox-buildable work:</strong> FRED-189 and FRED-195 are already shipped/merged (data-hygiene to close out, not build); FRED-191 / FRED-201 / FRED-204 all need a real-device Capacitor cold-start + reauth this sandbox can't run; and LPFRED-184 is landing-page/marketing — explicitly <em>not</em> the current priority. With nothing in READY fitting, I dropped to the strongest <em>on-mission</em> sleeping story: FRED-167, a genuine remaining-page UI overhaul that is fully frontend-only and verifiable in-sandbox (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code>). It also matches what you've consistently approved — UI overhauls of real pages (tab3, change-bank-account).</div>
+        <div class="card-text"><strong>You skipped FRED-167 (the Ask FRED redesign) and again asked for a different single story, so I re-picked under the exclusion set</strong> (FRED-167, FRED-109, and FRED-187 are all hard exclusions now — that's three skips in a row, all of them speculative or large). This time I did <em>not</em> have to drop to a sleeping story: I re-scoped a <strong>READY</strong> item the recent briefs had set aside as "sandbox-gated." <strong>Operating in Tier 1</strong> — FRED-204 already has a 6-point acceptance-criteria block in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code>, so it's build-ready with no proposal step. I picked it over the rest of the field because it's the most concrete, guaranteed win available: FRED-189 and FRED-195 are already shipped/merged (data-hygiene to close out, not build); FRED-149 (star alignment) is effectively resolved — the customize-portfolio page was already overhauled, no star exists; FRED-151 is coupled to unbuilt RAG chunks and touches the exact Ask FRED surface you just skipped; and LPFRED-184 / FRED-146 are marketing / dark-mode — explicitly not the current priority. <strong>Why FRED-204 is verifiable here despite the "sandbox-gated" label:</strong> its correctness is an <em>event-ordering</em> proof (hide the fallback on the Lottie's render event instead of synchronously), not a pixel measurement — I can prove the fix by reading the event flow. Only the final "flash is truly gone" confirmation needs a real device, which is exactly what your "Looks Good" is for.</div>
       </div>
     </div>
 
@@ -147,7 +147,7 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Strategic Alignment</div>
       <div class="card">
-        <div class="card-text">This is a direct hit on <strong>current priority #1 — "Complete UI overhaul on all remaining pages."</strong> Ask FRED is one of the last surfaces still on the old <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-toolbar</code> look, so migrating it onto the FRED design system (Manrope, the FRED palette, the shared blue-hero header) closes a visible gap and makes the app feel finished. Ask FRED is also the user's main conversational touchpoint with the product, so a calmer, more premium chat experience reinforces the "knowledgeable guide quietly handing you a plan" feel from the vision.</div>
+        <div class="card-text">This is a direct hit on <strong>current priority #3 — "Complete all loading / empty / error states."</strong> The loading cover is the very first thing a user sees on every cold start, so a visible white flash during reauth undercuts the "calm, premium, iOS-native done right" bar from the vision at the worst possible moment — the first impression. Fixing it makes the app feel finished and trustworthy exactly where polish matters most. It's a defect you flagged yourself ("we want this transition to be seamless"), so it's a real, felt improvement, not a speculative one.</div>
       </div>
     </div>
 
@@ -155,136 +155,59 @@
     <div class="section-group section-recap-only">
       <div class="section-label">Production Readiness Impact</div>
       <div class="card">
-        <div class="card-text">Migrates a remaining page onto the unified design system (nudges <strong>Pages Migrated</strong> upward) and polishes a high-visibility surface (est. Readiness 83 → 84 on ship; held at 83 for this planning revision since no code shipped). Frontend-only and contained to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.{html,scss}</code> + minimal <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.ts</code> with no backend / schema / auth change, so user-facing risk is low. Because the sandbox can't drive a live browser for a chat flow, the verifier reaches a static / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> floor and the live 390×844 / 430×932 render confirmation comes to you via "Looks Good."</div>
+        <div class="card-text">Closes a real first-impression defect on the app's most-seen surface (the cold-start cover), advancing the loading/transition-states bucket (est. Readiness 83 → 84 on ship; held at 83 for this planning revision since no code shipped). The change is tiny and contained to a single file (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/src/index.html</code>) — no backend / schema / auth — and the acceptance criteria explicitly require the fallback-safety net to stay intact (static image holds if the Lottie fails), so risk is low. The verifier proves the event-ordering fix by code-read + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code>; the live cold-start + reauth "flash is gone" confirmation comes to you via "Looks Good."</div>
       </div>
     </div>
 
-    <!-- ── Proposed Acceptance Criteria (Tier 2 — approve or edit, planning only) ── -->
+    <!-- ── Implementation Options (planning only) ── -->
     <div class="section-group section-planning-only hide-on-skip">
-      <div class="section-label">Proposed Acceptance Criteria — approve or edit</div>
-      <div class="card">
-        <div class="card-text" style="color:var(--gray);margin-bottom:14px;">FRED-167 is a <strong>Tier 2</strong> story — it has no acceptance criteria in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> yet. These criteria are <strong>direction-agnostic</strong> (they hold whichever mockup you pick below); <strong>the work won't start until you confirm them</strong> (submit as-is to accept, or edit in the note below). The execution agent will write the confirmed A/C back into <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code> before building.</div>
-        <div class="triage-group">
-          <ul class="triage-list">
-            <li><strong>AC-1</strong> — The Ask FRED page (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.html/scss</code>) is rebuilt on the FRED design system: Manrope, the FRED palette only (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#2563EB</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#0f172a</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#6b7280</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#f8fafc</code>/<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#e5e7eb</code>), Material Symbols icons — matching the chosen mockup direction.</li>
-            <li><strong>AC-2</strong> — The header is migrated off the plain <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-toolbar</code> to the canonical look — reuse the shared <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/_blue-hero-header.scss</code> partial via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@use</code> rather than inlining a new gradient (pending Q3). Title reads "Ask FRED"; the history affordance stays reachable.</li>
-            <li><strong>AC-3</strong> — Empty / first-run state is designed (not a bare screen): a calm greeting + the suggestion chips (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">dailySuggestions</code>) when <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">messages.length &lt;= 1</code>, styled to the new direction.</li>
-            <li><strong>AC-4</strong> — Message states are all restyled and preserved: user vs. assistant bubbles, the FRED avatar, the multi-line answer rendering (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">formatMessage</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">innerHTML</code>), the typing/loading indicator, and the <strong>failed-message + inline retry</strong> path.</li>
-            <li><strong>AC-5</strong> — The composer (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-textarea</code> "Message FRED…" + send button) is restyled to the new look and keeps its current behavior: autogrow, Enter-to-send, disabled while empty / loading.</li>
-            <li><strong>AC-6</strong> — All existing wiring is intact: send / retry / suggestion-tap, the right-side history <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-menu</code> + new-chat + session load, and the first-time-tour story-chip hook (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">FRED_STORY_TRIGGER</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">isTourOnStep4</code>) still works — no behavior regressions, no removed features (pending Q2).</li>
-            <li><strong>AC-7</strong> — Layout verified at 390×844 and 430×932; safe-area insets respected (status bar + home indicator); scroll-to-latest still works.</li>
-            <li><strong>AC-8</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exits 0 and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> succeeds.</li>
-          </ul>
-        </div>
-        <div class="revision-label" style="margin-top:14px;margin-bottom:8px;">Edit the criteria (optional) — leave blank to accept as proposed:</div>
-        <textarea class="revision-textarea" id="ac-edit-textarea" placeholder="e.g. Drop the right-side history menu and put a history button in the header instead; or keep the plain header and only restyle the bubbles + composer."></textarea>
-      </div>
-    </div>
+      <div class="section-label">Implementation Options</div>
+      <div class="option-group">
 
-    <!-- ── Design Directions — Phone Mockups (planning only) ── -->
-    <div class="section-group section-planning-only hide-on-skip">
-      <div class="section-label">Design Directions — Pick One &amp; Annotate</div>
-      <div class="card" style="margin-bottom:16px;">
-        <div class="card-text" style="color:var(--gray);">Three real directions for the redesigned Ask FRED screen, all using the FRED palette + Manrope. Tap one to select it, and use the note under each to tell the builder what to keep or change (e.g. "build A, but take the answer-cards from B"). The recommended one is pre-selected.</div>
-      </div>
-      <div class="phone-options">
-
-        <!-- Option A — Ask-AI Hero Empty State -->
-        <div class="phone-option selected" onclick="selectPhoneOption(this)">
-          <div class="phone-frame"><div class="phone-screen">
-            <div style="height:100%;display:flex;flex-direction:column;background:#f8fafc;font-family:'Manrope',sans-serif;">
-              <div style="background:linear-gradient(90deg,#2a5ae0,#1d4ed8);padding:14px 10px 18px;position:relative;">
-                <div style="display:flex;align-items:center;justify-content:center;position:relative;">
-                  <span style="position:absolute;left:0;color:#cdddff;font-size:12px;" class="material-symbols-outlined">menu</span>
-                  <span style="color:#fff;font-weight:800;font-size:11px;letter-spacing:.2px;">Ask FRED</span>
-                  <span style="position:absolute;right:0;color:#cdddff;font-size:12px;" class="material-symbols-outlined">history</span>
-                </div>
-              </div>
-              <div style="background:#f8fafc;border-radius:14px 14px 0 0;margin-top:-8px;flex:1;padding:14px 12px;display:flex;flex-direction:column;align-items:center;text-align:center;">
-                <div style="width:34px;height:34px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;margin-top:6px;"><span style="font-size:18px;">🐷</span></div>
-                <div style="font-weight:800;color:#0f172a;font-size:10px;margin-top:8px;">Hi, I'm FRED</div>
-                <div style="color:#6b7280;font-size:8px;line-height:1.5;margin-top:3px;max-width:90px;">Ask me anything about your path to financial freedom.</div>
-                <div style="width:100%;margin-top:12px;display:flex;flex-direction:column;gap:6px;">
-                  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:7px 8px;text-align:left;color:#0f172a;font-size:8px;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.04);">What's your story, FRED?</div>
-                  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:7px 8px;text-align:left;color:#0f172a;font-size:8px;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.04);">How does the 4% rule work?</div>
-                  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:7px 8px;text-align:left;color:#0f172a;font-size:8px;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.04);">Am I on track to retire early?</div>
-                </div>
-              </div>
-              <div style="padding:8px 10px 12px;background:#f8fafc;">
-                <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:6px 6px 6px 11px;box-shadow:0 1px 3px rgba(15,23,42,.05);">
-                  <span style="flex:1;color:#9aa3af;font-size:8px;">Message FRED…</span>
-                  <span style="width:20px;height:20px;border-radius:50%;background:#2563EB;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;" class="material-symbols-outlined">arrow_upward</span>
-                </div>
-              </div>
-            </div>
-          </div></div>
-          <div class="phone-option-label">Option A — Ask-AI Hero <span class="phone-option-rec">Recommended</span></div>
-          <div class="phone-option-note"><textarea placeholder="What do you like / want changed in this one? (e.g. love the centered greeting; make the chips 2-up)"></textarea></div>
+        <div class="option-card selected">
+          <div class="option-header">
+            <span class="option-label">Option A</span>
+            <span class="option-rec">Recommended</span>
+          </div>
+          <div class="option-title">Hide the static fallback on the Lottie's <code>DOMLoaded</code> render event</div>
+          <div class="option-body">In <code>index.html</code>'s cover script, remove the synchronous <code>if (fallback) fallback.style.display='none'</code> that runs right after <code>lottie.loadAnimation()</code> returns (line 73). Instead register <code>window._fredCoverAnim.addEventListener('DOMLoaded', function(){ fallback.style.display='none'; })</code>. <code>DOMLoaded</code> fires once lottie-web has actually built the animation's SVG in the DOM (first frame present), so the static <code>fred-logo.svg</code> holds until the coin-drop is on screen — the white <code>#app-resume-cover</code> background is never exposed. Fallback-safety is inherent: if the Lottie 404s or fails to parse, <code>DOMLoaded</code> never fires and the static image simply stays (AC-4). No change to the cover show/hide lifecycle. ~3 lines.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>smallest possible change; deterministic; fallback-safe <em>by construction</em> (the hide only ever runs inside the render handler); no timing guesswork; matches AC-2/AC-4 exactly.</span></span>
+            <span class="meta-item">Cons: <span>relies on lottie-web emitting <code>DOMLoaded</code> — it does for any valid animation; a pathological "loads but never emits" would keep the static up, which is the desired safe fallback anyway.</span></span>
+            <span class="meta-item">Risk: <span>Low — a pure event-ordering swap, no lifecycle or Angular change; correctness provable by reading the event flow.</span></span>
+            <span class="meta-item">Estimate: <span>~15–20 min</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
-        <!-- Option B — Answer Cards / Sectioned -->
-        <div class="phone-option" onclick="selectPhoneOption(this)">
-          <div class="phone-frame"><div class="phone-screen">
-            <div style="height:100%;display:flex;flex-direction:column;background:#f8fafc;font-family:'Manrope',sans-serif;">
-              <div style="background:linear-gradient(90deg,#2a5ae0,#1d4ed8);padding:13px 11px;display:flex;align-items:center;justify-content:space-between;">
-                <span style="color:#fff;font-weight:800;font-size:11px;">Ask FRED</span>
-                <span style="color:#cdddff;font-size:12px;" class="material-symbols-outlined">history</span>
-              </div>
-              <div style="flex:1;padding:10px 9px;overflow:hidden;">
-                <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-                  <div style="background:#2563EB;color:#fff;font-size:8px;font-weight:600;padding:6px 9px;border-radius:12px 12px 3px 12px;max-width:80%;">How does the 4% rule work?</div>
-                </div>
-                <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:9px;box-shadow:0 1px 3px rgba(15,23,42,.05);">
-                  <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">
-                    <span style="width:14px;height:14px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:8px;">🐷</span>
-                    <span style="font-weight:800;color:#0f172a;font-size:8px;">FRED</span>
-                  </div>
-                  <div style="color:#0f172a;font-size:8px;line-height:1.6;">The 4% rule says you can withdraw 4% of your portfolio a year. So your target is <b>annual income ÷ 0.04</b>.</div>
-                  <div style="border-top:1px solid #f1f5f9;margin-top:7px;padding-top:5px;color:#6b7280;font-size:7px;">Based on FRED's strategy</div>
-                </div>
-                <div style="color:#6b7280;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin:11px 0 5px;">Keep exploring</div>
-                <div style="display:flex;flex-wrap:wrap;gap:5px;">
-                  <span style="background:#eff4ff;border:1px solid #cdddff;color:#1d4ed8;font-size:7px;font-weight:700;padding:4px 7px;border-radius:11px;">Am I on track?</span>
-                  <span style="background:#eff4ff;border:1px solid #cdddff;color:#1d4ed8;font-size:7px;font-weight:700;padding:4px 7px;border-radius:11px;">Best next move</span>
-                </div>
-              </div>
-              <div style="padding:8px 9px 12px;">
-                <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:6px 6px 6px 11px;">
-                  <span style="flex:1;color:#9aa3af;font-size:8px;">Message FRED…</span>
-                  <span style="width:20px;height:20px;border-radius:50%;background:#2563EB;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;" class="material-symbols-outlined">arrow_upward</span>
-                </div>
-              </div>
-            </div>
-          </div></div>
-          <div class="phone-option-label">Option B — Answer Cards</div>
-          <div class="phone-option-note"><textarea placeholder="What do you like / want changed in this one? (e.g. like the answer card + 'Based on FRED's strategy' footer)"></textarea></div>
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option B</span>
+          </div>
+          <div class="option-title">Hide on the first <code>enterFrame</code> event (self-detaching handler)</div>
+          <div class="option-body">Same idea, but listen for the animation's first <code>enterFrame</code> (an actual paint tick) rather than <code>DOMLoaded</code>, then remove the listener after it fires once. This waits for a real rendered frame, not just the SVG being inserted into the DOM.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>fires on a genuine paint tick — marginally stronger "truly on screen" guarantee than DOM insertion.</span></span>
+            <span class="meta-item">Cons: <span><code>enterFrame</code> fires every frame, so the handler must detach itself after the first call (a touch more code); in practice <code>DOMLoaded</code> already means the SVG is in the DOM and about to paint, so the extra guarantee is mostly theoretical.</span></span>
+            <span class="meta-item">Risk: <span>Low.</span></span>
+            <span class="meta-item">Estimate: <span>~20 min</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
-        <!-- Option C — Minimal Thread -->
-        <div class="phone-option" onclick="selectPhoneOption(this)">
-          <div class="phone-frame"><div class="phone-screen">
-            <div style="height:100%;display:flex;flex-direction:column;background:#fff;font-family:'Manrope',sans-serif;">
-              <div style="padding:13px 11px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;position:relative;">
-                <span style="position:absolute;left:11px;color:#6b7280;font-size:11px;" class="material-symbols-outlined">history</span>
-                <span style="color:#0f172a;font-weight:800;font-size:10px;">Ask FRED</span>
-                <span style="position:absolute;right:11px;color:#2563EB;font-size:11px;" class="material-symbols-outlined">edit_square</span>
-              </div>
-              <div style="flex:1;padding:14px 12px;">
-                <div style="text-align:right;color:#2563EB;font-weight:700;font-size:8px;margin-bottom:12px;">How does the 4% rule work?</div>
-                <div style="color:#0f172a;font-size:8px;line-height:1.7;">The 4% rule means you withdraw 4% of your portfolio each year in retirement. Your target number is your desired annual income divided by 0.04.</div>
-                <div style="border-top:1px solid #f1f5f9;margin:14px 0;"></div>
-                <div style="color:#9aa3af;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px;">Try asking</div>
-                <div style="color:#2563EB;font-size:8px;font-weight:600;border-bottom:1px solid #e5e7eb;padding-bottom:6px;margin-bottom:6px;">What's your story, FRED?</div>
-                <div style="color:#2563EB;font-size:8px;font-weight:600;border-bottom:1px solid #e5e7eb;padding-bottom:6px;">Am I on track to retire early?</div>
-              </div>
-              <div style="padding:9px 12px;border-top:1px solid #e5e7eb;display:flex;align-items:center;gap:7px;">
-                <span style="flex:1;color:#9aa3af;font-size:8px;">Message FRED…</span>
-                <span style="color:#2563EB;font-size:14px;" class="material-symbols-outlined">arrow_circle_up</span>
-              </div>
-            </div>
-          </div></div>
-          <div class="phone-option-label">Option C — Minimal Thread</div>
-          <div class="phone-option-note"><textarea placeholder="What do you like / want changed in this one? (e.g. clean but maybe too plain — keep FRED's avatar)"></textarea></div>
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option C</span>
+          </div>
+          <div class="option-title">Cross-fade the static fallback out (belt-and-suspenders)</div>
+          <div class="option-body">Keep both layers; on the render event, add a short CSS opacity transition (~150ms) that fades the static fallback out, then set <code>display:none</code> on <code>transitionend</code> — so even a single-frame gap is masked by the fade. AC-3 explicitly says a short cross-fade is "acceptable but optional."</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>smoothest possible handoff; masks any residual sub-frame gap.</span></span>
+            <span class="meta-item">Cons: <span>more moving parts (a CSS transition + a <code>transitionend</code> handler + the <code>display:none</code>) for a defect the hard swap in A already fixes; if <code>transitionend</code> ever fails to fire, the layer lingers — needs its own guard. Over-engineered for a ~0.1s flash.</span></span>
+            <span class="meta-item">Risk: <span>Low–Medium — the extra transition machinery is more surface than the problem needs.</span></span>
+            <span class="meta-item">Estimate: <span>~30–40 min</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
       </div>
@@ -296,37 +219,34 @@
       <div class="card">
 
         <div class="story-section">
-          <div class="story-header">FRED-167 — Redesign Ask Fred UI like Cloudflare Ask AI</div>
+          <div class="story-header">FRED-204 — Fix white flash in static→Lottie reauth transition</div>
 
           <div class="triage-group">
             <div class="triage-group-title">In Scope</div>
             <ul class="triage-list">
-              <li>Rebuild <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.html</code> + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.scss</code> on the FRED design system, migrating the header off the plain <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-toolbar</code> to the shared blue-hero pattern.</li>
-              <li>Restyle every chat state: empty/first-run (greeting + suggestion chips), user &amp; assistant bubbles, the FRED avatar, the typing/loading indicator, and the failed-message + inline retry path.</li>
-              <li>Restyle the composer (textarea + send button) while keeping autogrow, Enter-to-send, and the empty/loading disabled state.</li>
-              <li>Keep all wiring working: send/retry/suggestion-tap, the right-side history menu + new-chat + session load, and the first-time-tour story-chip hook.</li>
-              <li>Minimal <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.ts</code> only if the chosen layout needs a binding/class hook — no behavior/logic changes.</li>
+              <li>The single fallback-hide timing change in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/src/index.html</code>: stop hiding <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#app-resume-cover-fallback</code> synchronously after <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadAnimation()</code>; hide it only once the Lottie emits a render event (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">DOMLoaded</code>).</li>
+              <li>Preserve fallback-safety: if the Lottie 404s / fails to parse / never renders, the static image must stay up (never hide on failure).</li>
+              <li>Keep the rest of the cover script untouched — the 45s backstop, the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">_cancelCoverHideTimer</code> hook, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">window._fredCoverAnim</code> (used by <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">showAppCover()</code> to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.play()</code>).</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">Potentially Out of Scope</div>
             <ul class="triage-list">
-              <li>Changing chat <em>behavior</em> — streaming, model, prompt, what FRED answers, or the suggestion-generation logic.</li>
-              <li>The RAG-focused suggested-questions rewrite (that's FRED-151) — restyle the chips, don't change their content.</li>
-              <li>Redesigning the side history menu's information architecture beyond restyling it to match (rename/relocate is a follow-up if you want it — Q2).</li>
-              <li>Any backend, schema, or auth change; touching other tabs/pages.</li>
+              <li>The broader FRED-201 "keep the loading cover painted through cold-start → reauth → navigate" work and its page-ready detection — a separate, larger story.</li>
+              <li>The cover show/hide lifecycle itself (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">showAppCover</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hideAllCovers</code> / the 12s watchdog / the 20s backstop) beyond the fallback-hide timing.</li>
+              <li>App-loading performance (FRED-191) and any Angular-side <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app.component.ts</code> cover logic.</li>
+              <li>Changing the fallback image or the Lottie asset; any backend, schema, or auth change.</li>
             </ul>
           </div>
 
           <div class="triage-group">
             <div class="triage-group-title">UX Considerations</div>
             <ul class="triage-list">
-              <li><strong>Empty state</strong> — the first thing a user sees should feel inviting, not blank: a warm greeting + tappable suggestion chips (the existing <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">dailySuggestions</code>).</li>
-              <li><strong>Error/retry</strong> — keep the failed-message styling + inline retry obvious; a calm, non-alarming treatment in the FRED palette.</li>
-              <li><strong>Loading</strong> — the 3-dot typing indicator restyled to read as "FRED is thinking."</li>
-              <li><strong>Safe areas + scroll</strong> — header respects the notch, composer respects the home indicator, and the view still auto-scrolls to the latest message. Verify at 390×844 and 430×932.</li>
-              <li><strong>Keyboard</strong> — the composer must stay visible above the keyboard (the page already uses <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">appKeyboardAvoid</code> / tab-bar scroll — preserve that).</li>
+              <li><strong>Seamless handoff</strong> — no white gap, no flicker, no double-image at the static→Lottie transition (a short cross-fade is acceptable but optional per AC-3).</li>
+              <li><strong>Failure safety</strong> — on a Lottie load/parse error or a missing render event, the static fallback must remain visible; the user must never be left staring at a blank white cover (AC-4).</li>
+              <li><strong>No lifecycle regressions</strong> — resume <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.play()</code>, the backstops, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">forceRecovery()</code> still behave exactly as today (AC-5).</li>
+              <li><strong>Device confirmation</strong> — the actual "flash is gone" check is a cold start (app fully terminated) with reauth required at 430×932; the sandbox can't reproduce that, so it comes to Andrew via "Looks Good" (AC-6).</li>
             </ul>
           </div>
         </div>
@@ -339,29 +259,7 @@
       <div class="section-label">Questions For Andrew</div>
       <div class="card">
 
-        <div class="question-item">
-          <div class="question-text">
-            <strong>Which design direction?</strong> Pick one of the three mockups above (and annotate it in its note). My recommendation is <strong>Option A — the Ask-AI hero empty state</strong>: calm, centered, premium, and closest to the "Cloudflare Ask AI" feel you referenced. You can also mix ("build A but take the answer-cards from B").
-            <span class="required-badge">Required</span>
-          </div>
-          <textarea class="question-input" data-required="true" placeholder="Option A — the Ask-AI hero empty state. Calm and centered is exactly the vibe; keep the suggestion chips."></textarea>
-        </div>
-
-        <div class="question-item">
-          <div class="question-text">
-            <strong>Keep the right-side history menu + new-chat as-is (just restyled)?</strong> The current chat-history drawer and "+" new-chat work — I'm planning to restyle them to match and leave the flow intact, not redesign how history works.
-            <span class="optional-badge">Optional</span>
-          </div>
-          <textarea class="question-input" placeholder="Yes — keep the history drawer + new-chat flow, just restyle them to match. No IA changes this round."></textarea>
-        </div>
-
-        <div class="question-item">
-          <div class="question-text">
-            <strong>Reuse the shared blue-hero header partial for the top bar?</strong> Every settings page now <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@use</code>s <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/_blue-hero-header.scss</code> instead of inlining a gradient. I'd reuse it here too for consistency (it's the canonical pattern), unless you want the chat header to look distinct from settings.
-            <span class="optional-badge">Optional</span>
-          </div>
-          <textarea class="question-input" placeholder="Yes — reuse the shared _blue-hero-header partial; keep Ask FRED visually consistent with the rest of the app."></textarea>
-        </div>
+        <div class="card-text" style="color:var(--gray);">No open decisions — the plan is unambiguous. The 6-point acceptance criteria fully specify the fix (hide the fallback only on a confirmed first render; keep the static up if the Lottie never renders), and the one real fork — a clean hard swap vs. an extra cross-fade for insurance — is captured in Options A vs C above. Approve as-is, or pick/annotate a different option.</div>
 
       </div>
     </div>
@@ -373,25 +271,25 @@
 
         <div class="step-item">
           <div class="step-num">1</div>
-          <div class="step-body" contenteditable="false"><strong>Study the current page + reference patterns</strong> — Read <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ai-chat.page.{html,scss,ts}</code> to inventory every state (empty, user/assistant bubble, avatar, loading, failed+retry, history menu, tour hook), and study <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">theme/_blue-hero-header.scss</code> + a shipped settings page so the new header matches exactly (AC-1, AC-2, AC-6).</div>
+          <div class="step-body" contenteditable="false"><strong>Study the cover script</strong> — Read the inline <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">index.html</code> cover script (the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadAnimation()</code> block + the synchronous <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">fallback.style.display='none'</code> on line 73) and how <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">window._fredCoverAnim</code> / the fallback interact; confirm the bundled lottie-web version exposes the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">DOMLoaded</code> event (AC-1, AC-2).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">2</div>
-          <div class="step-body" contenteditable="false"><strong>Header + shell</strong> — Replace the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ion-toolbar</code> header with the blue-hero header (via <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@use</code> the shared partial — mind the SCSS import-path depth from <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">pages/ai-chat/</code>), keep the history affordance reachable, and lay out content + composer regions to the chosen mockup (AC-2).</div>
+          <div class="step-body" contenteditable="false"><strong>Move the fallback-hide onto the render event</strong> — Remove the synchronous hide after <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadAnimation()</code> and instead hide the fallback inside a <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">_fredCoverAnim.addEventListener('DOMLoaded', …)</code> handler, so the static image holds until the first frame is in the DOM (AC-1, AC-2, AC-3).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">3</div>
-          <div class="step-body" contenteditable="false"><strong>Restyle the states</strong> — Empty/first-run (greeting + chips), user/assistant bubbles + avatar, typing indicator, failed+retry, and the composer — all in the FRED palette + Manrope, preserving every binding and the tour story-chip hook (AC-3, AC-4, AC-5, AC-6).</div>
+          <div class="step-body" contenteditable="false"><strong>Preserve fallback-safety</strong> — Ensure the fallback is hidden <em>only</em> in the render handler: if the Lottie fails to load/parse or never emits a render event, the static image stays visible. Leave the show/hide lifecycle, the backstops, and the resume <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.play()</code> untouched (AC-4, AC-5).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
         <div class="step-item">
           <div class="step-num">4</div>
-          <div class="step-body" contenteditable="false"><strong>Verify</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exit 0 + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> succeeds (run it locally — SCSS <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">@use</code> errors don't show in tsc); confirm safe-areas + scroll-to-latest, check 390×844 / 430×932. Verifier reviews AC-1..AC-8; the live chat-flow render confirmation goes to your "Looks Good" (AC-7, AC-8).</div>
+          <div class="step-body" contenteditable="false"><strong>Verify</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exit 0 + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> succeeds; verifier confirms the event-ordering by code-read (fallback hidden only after a confirmed first render, static kept on failure). The live cold-start + reauth "flash is gone" check at 430×932 goes to Andrew's "Looks Good" (AC-6).</div>
           <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
         </div>
 
@@ -403,9 +301,9 @@
       <div class="section-label">Tomorrow's Likely Pick</div>
       <div class="card">
         <ul class="tomorrow-list">
-          <li><strong>Data hygiene</strong> — close out FRED-189 (shipped 06-19) and FRED-195 (shipped+merged) with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done</code> so they aren't re-picked and burndown stays honest. They've sat uncheckmarked in READY for days.</li>
-          <li><strong>FRED-151</strong> — refresh Ask FRED's suggested questions to be RAG/philosophy-focused (natural follow-on to this redesign), or <strong>FRED-177</strong> (remove back button from 2 onboarding pages) / <strong>FRED-149</strong> (fix star alignment in customize portfolio) as small clean wins.</li>
-          <li><strong>Sandbox-gated, still waiting</strong> — FRED-191 / FRED-201 / FRED-204 need a real-device Capacitor cold-start + reauth. FRED-187 (Plaid spike) and FRED-109 (onboarding reframe) can return once their 7-day skip windows clear (~07-07).</li>
+          <li><strong>FRED-201</strong> — the natural follow-on: keep the loading cover painted continuously through the cold-start → reauth → navigate sequence (this fixes the flash <em>within</em> the transition; FRED-201 fixes the blank screen <em>after</em> it). Same cover subsystem, freshly in context.</li>
+          <li><strong>Data hygiene</strong> — close out FRED-189 (shipped 06-19) and FRED-195 (shipped+merged) with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done</code>, and flag FRED-149 (star alignment) as resolved by the customize-portfolio overhaul — so burndown stays honest and none get re-picked.</li>
+          <li><strong>Still parked</strong> — FRED-191 (load-perf) needs real-device profiling; FRED-167 (Ask FRED redesign), FRED-109 (onboarding reframe), and FRED-187 (Plaid spike) are all in their 7-day skip windows (FRED-187/109 clear ~07-07, FRED-167 ~07-09).</li>
         </ul>
       </div>
     </div>
@@ -423,7 +321,7 @@
       <!-- Request Changes — rework the same story with feedback -->
       <div id="rework-block" style="margin-top:14px;">
         <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
-        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. The new header gradient is too heavy — lighten it; or the suggestion chips wrap awkwardly at 390px."></textarea>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. I still see a faint flash on my device; or add the short cross-fade after all for extra smoothness."></textarea>
         <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
       </div>
     </div>
@@ -433,7 +331,7 @@
       <div class="section-label">Anything Else For the Execution Agent?</div>
       <div class="card">
         <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
-        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Keep the FRED pig avatar prominent; make the empty-state greeting warm but short; match the change-bank-account header exactly..."></textarea>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Go with the hard swap (no cross-fade); or also double-check the resume .play() path still works after the change..."></textarea>
       </div>
     </div>
 
@@ -442,7 +340,7 @@
       <div class="section-label">Add to Backlog</div>
       <div class="card">
         <div class="revision-label" style="margin-bottom:14px;">Thought of something while reviewing? Add it to the backlog without leaving this page.</div>
-        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Add a 'copy answer' button on FRED's messages; or let users rename chat-history sessions..." style="min-height:80px;margin-bottom:12px;"></textarea>
+        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Audit all other Lottie/cover transitions for the same synchronous-hide pattern; or add a cold-start cover visual regression check..." style="min-height:80px;margin-bottom:12px;"></textarea>
         <button class="btn-dark" id="backlog-btn" onclick="handleAddBacklog()">Add to Backlog</button>
       </div>
     </div>
