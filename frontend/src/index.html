@@ -70,7 +70,16 @@
           autoplay: true,
           rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
         });
-        if (fallback) fallback.style.display = 'none';
+        // Hide the static fallback only once lottie-web has actually built the
+        // animation's SVG in the DOM (first frame present). Hiding it synchronously
+        // here (before DOMLoaded) would expose the white #app-resume-cover
+        // background for a frame, causing a flash. If the Lottie fails to load or
+        // parse, DOMLoaded never fires and the fallback stays visible (by design).
+        if (fallback) {
+          window._fredCoverAnim.addEventListener('DOMLoaded', function() {
+            fallback.style.display = 'none';
+          });
+        }
       };
       document.head.appendChild(s);
     })();
