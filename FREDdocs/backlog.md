@@ -75,6 +75,23 @@ On a cold start (most visible when reauth keeps the cover up), the loading cover
 5. No change to the cover show/hide lifecycle (`showAppCover`/`hideAllCovers`, the 20s `index.html` backstop, `_fredCoverAnim.play()` on resume) beyond the fallback-hide timing.
 6. Verified on a cold start (app fully terminated) with reauth required, on a local Capacitor iOS build (or 430×932 webview): no white flash during the static→Lottie transition.
 
+## FRED-205 — Preload tab1 portfolio — hold splash for fresh data
+Eliminate the "Loading your portfolio…" spinner at tab1 first paint for onboarded users. Root cause: `waitForRoutePainted()` (app.component.ts:337-352) lifts the launch cover when `ion-content` has layout, NOT when portfolio data arrives, so the cover reveals the spinner while the 3 sequential portfolio GETs are still in flight. Phase 1 (tournament-selected, approved plan): (1) new `providedIn:'root'` `PortfolioStoreService` — in-memory single-flight cache, `prime()` (token-gated, fire-and-forget), `load$()`, and a `forkJoin` bundle (dashboard fatal; performance + history optional via catchError; timeout 10s) that parallelizes the 3 calls; (2) call `prime()` at app.component.ts:419 inside `tryOptimisticNav()`'s `hint==='complete'` block, before `navigateByUrl('/tabs/tab1')` — covers cold launch + passkey re-auth; (3) gate the tab1 cover-hide on portfolio data being painted (bounded by the existing ~2s safety cap; tab1 route only); (4) rewire `portfolio-dashboard.component.ts` `loadPortfolioData()` to consume `store.load$()` via an extracted `applyBundle()` that preserves the perf-sync money-math (lines 176-220) and history→chart→freedom→MFU ordering VERBATIM. No backend change. Result: fresh data at first paint, no stale, no spinner on normal networks; slow-network cap falls back to today's spinner (interim, removed by FRED-206). Top risk: perf-sync extraction must be verbatim. Plan: .claude/plans/we-want-to-add-ancient-cook.md. Effort S–M.
+
+### Summary
+Fetch tab1's portfolio data at app launch and hold the launch cover until it's painted, so an onboarded user sees their real portfolio at first paint with no "Loading your portfolio…" spinner. A new single-flight `PortfolioStoreService` parallelizes the three portfolio calls (`forkJoin`) and is primed from `tryOptimisticNav()`; the tab1 cover-hide waits (bounded by the existing ~2s cap) for the data before lifting, falling back to today's spinner only on slow networks. Frontend-only; no backend change; dollar figures unchanged.
+
+### Acceptance Criteria
+1. A `PortfolioStoreService` (`@Injectable({ providedIn: 'root' })`) exists at `frontend/src/app/services/portfolio-store.service.ts` exposing `prime()`, `load$(period, force)`, and `whenSettled(period, capMs)`, backed by an in-memory single-flight cache (60s TTL, keyed by `userId`) that returns the in-flight observable rather than issuing a second request.
+2. The three portfolio GETs execute in parallel via `forkJoin` (not three sequential `await`s): dashboard is fatal; performance and history are optional (`catchError`); the bundle is bounded by `timeout(10_000)`.
+3. `prime()` is invoked at `app.component.ts:419` inside `tryOptimisticNav()`'s `hint==='complete'` block, before `navigateByUrl('/tabs/tab1')`. It is a no-op with no JWT or a fresh cache, and cannot fire when the user is not routing to tab1 (existing gates preserved).
+4. On a normal network, cold-launching (and passkey re-auth) as a fully-onboarded user shows tab1's real portfolio — equity, chart, freedom badge — at first paint with **no** "Loading your portfolio…" spinner; the launch cover holds until the data is painted, then lifts onto it. Verified on a local Capacitor iOS build (or 430×932 webview).
+5. The tab1 cover-gate is bounded by the existing ~2s safety cap and branches only on `/tabs/tab1`; no other route's cover timing changes; the cover never hangs (slow network → cap → today's spinner; backend down → existing error card + "Try Again").
+6. `prime()` plus the component's own `load$()` produce exactly **one** set of the three GETs (single-flight join), not two — verified in the network panel; parallel, not serial.
+7. Dollar figures unchanged: `applyBundle()` preserves the perf-sync math (`portfolio-dashboard.component.ts:176-220`) and the history→chart→freedom→MFU ordering verbatim — the cover-revealed first frame and a subsequent pull-to-refresh show identical equity, total/period return, chart series, and freedom badge for the same account.
+8. Pull-to-refresh still works (`load$(force:true)`, `isRefreshing` spinner, `event.target.complete()`); no auth-race/navigation regression on cold launch, background/resume, locked vs unlocked (Face ID), or dev login.
+9. `ng build` (plain or `--configuration dev` — NOT `development`) passes AOT; lint clean; existing `portfolio-dashboard` / `tab1` specs pass; no new dead code or TODOs.
+
 
 # 💤 SLEEPING — Backlog (not yet started)
 _Queued but not prioritized. Promote to READY (remove the 💤) when ripe._
@@ -116,9 +133,6 @@ give claude a way to verify things like...
 
 ## FRED-105 — 💤 MCP setup for Railway and MySQL databases
 [MCP Setup]: add mcp for railway (user-scoped) and mysql (local-scoped)
-
-## FRED-109 — 💤 Change investment question to work-optional framing
-Instead of: "How much do you want to invest?", Ask: "When do you want work to be optional?"
 
 ## FRED-121 — 💤 Check for tax documents in Feb/March 2026
 check for tax documents in feb/march 2026
@@ -303,6 +317,24 @@ add 3 forms of piggy banks based on monte carlo simulation results (mint conditi
 
 ## FRED-197 — 💤 First-time tour highlights My Profile link
 update the first time tour to show the my profile icon on tab 3 as a link to a page (so it should darken the rest of the page while showing click here to access your profile); this can be put as sleeping for now and we can enrich it later
+
+## FRED-206 — 💤 tab1 preload — localStorage snapshot fallback
+Follow-up to FRED-205 (Phase 2). Add a per-user localStorage snapshot (key `fred.portfolioDash.v1.<userId>`, full view-model, `recentTransactions` stripped, userId-validated, quota-guarded — mirroring `FreedomStatsService` at the service layer) so even a slow cold launch never shows a spinner. Component `ngOnInit` does a synchronous `peekSnapshot()` before `loadPortfolioData()` (sets dashboard, recomputes chart, `loading=false`); guard `loading` and the error toast on `!this.dashboard` so a failed background revalidate never erases good data. Cover gate becomes fresh-first: hold for fresh up to the cap, else lift onto the snapshot with a mandatory subtle "Updating…/as of <time>" marker (Manrope, muted, light-mode). Purge the snapshot in `jwt-token.utils.ts` `clearJwtData()` BEFORE `userId` is removed (FRED-199 ordering). `firstApply` flag prevents MFU double-pop. Effort S.
+
+### Summary
+Add a per-user localStorage snapshot of the portfolio view-model so even a slow or offline cold launch paints tab1 instantly (no spinner), then silently revalidates. Builds on FRED-205: the component hydrates synchronously from the snapshot before the network load, the cover-gate falls back to the snapshot instead of the spinner when fresh data misses the cap, and a subtle "Updating…/as of <time>" marker signals staleness. Snapshot is userId-scoped and purged on logout. Depends on FRED-205.
+
+### Acceptance Criteria
+1. `PortfolioStoreService` gains `peekSnapshot()` (synchronous) and `persistSnapshot(vm)` using key `fred.portfolioDash.v1.<userId>`, storing the full view-model with `recentTransactions` stripped, validating `snapshot.userId === current userId` and a present `dashboard.summary`, wrapped in try/catch (quota / private-mode safe).
+2. On tab1 mount with a valid snapshot, `ngOnInit` hydrates **synchronously** before any network call — `dashboard`, `performanceData`, `freedomLabel`, `selectedPeriod` set, `chartData` recomputed from history, `loading = false` in the same change-detection tick — so the ready block renders on the first frame.
+3. Background revalidation is silent: `loading` is set true only when `!this.dashboard`, and `error`/the error toast surface only when `!this.dashboard`, so a failed revalidate never erases displayed snapshot data.
+4. Every successful load persists a fresh snapshot; on a normal network the fresh data silently replaces the snapshot within ~1s.
+5. Cover-gate is fresh-first: for `/tabs/tab1`, hold for fresh up to the cap; if the cap fires and a snapshot exists, lift onto the snapshot (never the spinner).
+6. A mandatory, subtle staleness affordance bound to `snapshotAsOf` shows "Updating…" while revalidating and "as of <time>" if revalidation fails offline; styled per the FRED design system (Manrope, muted, light-mode only).
+7. `clearJwtData()` removes `fred.portfolioDash.v1.<userId>` **before** `userId` is removed; logging out user A then logging in as user B never surfaces A's numbers.
+8. `firstApply` ensures a post-hydrate silent revalidate does not re-trigger the Monthly Freedom Update modal.
+9. Cold launch on a throttled/offline network **with** a prior snapshot shows the snapshot instantly with the marker and **no** spinner; **without** a snapshot, behavior is unchanged from FRED-205.
+10. Versioned key `v1` + `peekSnapshot` field-validation, with the "bump `v1` when `PortfolioDashboardData` shape changes" rule documented next to the key. `ng build` (plain or `--configuration dev`) / lint / existing specs pass; no new debt.
 
 
 # 🚫 BLOCKED — Waiting on Something
@@ -876,3 +908,8 @@ The KYC component serves two flows: onboarding "Identity Verification" (`editMod
 6. Gating applies only in editMode; onboarding step 1 → step 2 is unaffected.
 7. The existing localStorage step-1 draft restore and step-transition animation still work; a restored draft equal to on-file values counts as "not changed."
 8. `npx tsc --noEmit` exits 0; verified at 430×932: editMode blue header on both steps, onboarding original header, part-1 gate enables/disables correctly.
+
+## FRED-109 — ✓ Change investment question to work-optional framing
+Instead of: "How much do you want to invest?", Ask: "When do you want work to be optional?"
+
+**OBE (Overcome By Events) — 2026-06-30.** Marked OBE per Andy.

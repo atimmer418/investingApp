@@ -56,6 +56,19 @@ export class TabBarScrollService {
     }
   }
 
+  /**
+   * Chat-style scroller: never shrink the bar (downward scroll / auto-scroll to
+   * the newest message must not shrink it); restore full size once the user
+   * reaches the bottom of the scroll area.
+   */
+  reportNoShrink(scrollTop: number, atBottom: boolean): void {
+    this.lastY = Math.max(0, scrollTop);
+    this.accum = 0;
+    if (atBottom && this.compact()) {
+      this.compact.set(false);
+    }
+  }
+
   /** Reset to full size (e.g. on tab change). */
   reset(): void {
     this.lastY = 0;

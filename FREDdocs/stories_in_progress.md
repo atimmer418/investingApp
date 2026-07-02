@@ -20,6 +20,7 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 - FRED-176 — Connect email list opt-in checkbox to emailer (ONBOARDING)
 - FRED-178 — Research: Face ID-only app lock without passkey sheet
 - FRED-180 — Add time-to-freedom visual on profile page
+- FRED-205 — Preload tab1 portfolio — hold splash for fresh data
 
 ## Done
 

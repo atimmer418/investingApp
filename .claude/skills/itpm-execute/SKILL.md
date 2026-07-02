@@ -9,6 +9,18 @@ This skill is the EXECUTION brain. It runs only when there is a queued action. I
 
 ---
 
+## Step 0 — Sync the Checkout to Latest `develop`
+
+This is an unattended routine and the local checkout may be behind `origin/develop`. Sync FIRST, before consuming the action, so that everything downstream — the `action.json` you read, the code the builder builds against, and the `verify/<story>` branch you cut — starts from the latest `develop`. The working tree is clean at this point (no build has run yet), so this is a safe fast-forward/merge:
+
+```bash
+git pull --no-rebase origin develop
+```
+
+This single sync covers all three action types (`revision`, `approval`, `rework`). The other `git pull --no-rebase origin develop` calls later in the skill are pre-push guards (they prevent non-fast-forward rejections right before a commit is pushed); this one guarantees a fresh *starting* point.
+
+---
+
 ## Step 1 — Check for a Pending Action
 
 ```bash

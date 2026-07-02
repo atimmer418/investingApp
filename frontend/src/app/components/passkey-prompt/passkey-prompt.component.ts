@@ -20,6 +20,7 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
   @Input() userEmail?: string;
   @Input() jwtExpired = false;
   @Input() onLottieReady?: () => void;
+  @Input() onReauthSuccess?: () => void;
 
   @ViewChild('lottieContainer') lottieContainer!: ElementRef<HTMLElement>;
 
@@ -227,6 +228,12 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
                   finishResponse.userId,
                   finishResponse.email
                 );
+                // Re-raise the launch cover WHILE this modal still covers the screen, so there is
+                // no blank frame between the (instant, animated:false) modal dismiss and the
+                // destination route painting. lockApp() hid the launch cover to present this modal
+                // and nothing else restores it; the FRED-205 cover-gate then lifts it once the
+                // destination (tab1's portfolio) actually paints.
+                this.onReauthSuccess?.();
                 this.modalController.dismiss({ authenticated: true });
               } else {
                 this.showToast('Authentication failed: ' + finishResponse.message, 'danger');

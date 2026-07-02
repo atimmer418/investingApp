@@ -877,8 +877,9 @@ public class UserController {
         user.setEmail(newEmail);
         userRepository.save(user);
 
-        // Generate new JWT
-        String newJwt = jwtUtils.generateTokenFromUsername(newEmail);
+        // Generate new JWT — carry next-step hint so cold-start navigation remains fast
+        String nsEmail = (user.getUserProgress() != null) ? user.getUserProgress().getNextStep() : "get-started";
+        String newJwt = jwtUtils.generateTokenFromUsername(newEmail, nsEmail);
 
         logger.info("Updated email for user ID {} from {} to {}", user.getId(), currentEmail, newEmail);
 

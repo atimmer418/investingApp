@@ -128,8 +128,9 @@ public class AuthController {
                     /* ... error handling ... */ }
             } else {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                String jwt = jwtUtils.generateJwtToken(authentication);
-                logger.info("JWT generated for logged-in user (2FA not enabled): {}", loginRequest.getEmail());
+                String nsLogin = (user.getUserProgress() != null) ? user.getUserProgress().getNextStep() : "get-started";
+                String jwt = jwtUtils.generateJwtToken(authentication, nsLogin);
+                logger.info("JWT generated for logged-in user (2FA not enabled): {} (ns={})", loginRequest.getEmail(), nsLogin);
                 return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername()));
             }
         } catch (Exception e) { /* ... error handling ... */
@@ -144,15 +145,17 @@ public class AuthController {
     /**
      * Refresh JWT token endpoint.
      * Accepts a valid (not-yet-expired) JWT and returns a new one with a fresh expiration.
+     * The "ns" (next-step) hint from the incoming token is carried forward at zero DB cost —
+     * the "complete" case is monotone so it never goes stale-wrong across refreshes.
      * The frontend calls this proactively when the token is close to expiring and the user is active.
      */
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken() {
+    public ResponseEntity<?> refreshToken(jakarta.servlet.http.HttpServletRequest request) {
         // The request already passed through AuthTokenFilter, so if we get here
         // the user is authenticated with a valid JWT
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
-        if (authentication == null || !authentication.isAuthenticated() 
+
+        if (authentication == null || !authentication.isAuthenticated()
                 || "anonymousUser".equals(authentication.getPrincipal().toString())) {
             logger.warn("Token refresh attempted without valid authentication");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -160,7 +163,12 @@ public class AuthController {
         }
 
         String username = authentication.getName();
-        String newToken = jwtUtils.generateTokenFromUsername(username);
+
+        // Carry the ns hint forward from the incoming token (zero DB cost).
+        String oldToken = jwtUtils.parseJwt(request);
+        String ns = (oldToken != null) ? jwtUtils.getNextStepFromJwtToken(oldToken) : null;
+        String newToken = (ns != null) ? jwtUtils.generateTokenFromUsername(username, ns)
+                                       : jwtUtils.generateTokenFromUsername(username);
         
         // Look up user to include id and email in response
         User user = userService.getUserByEmail(username);

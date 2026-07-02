@@ -38,7 +38,7 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-content [fullscreen]="true" class="chat-content" appTabBarScroll>
+  <ion-content [fullscreen]="true" class="chat-content" appTabBarScroll tabBarNoShrink>
     <div class="messages-container">
       <div *ngFor="let msg of messages; let i = index" class="message-wrapper"
         [class.user-message]="msg.role === 'user'" [class.assistant-message]="msg.role === 'assistant'"

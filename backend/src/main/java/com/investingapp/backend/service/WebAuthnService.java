@@ -199,8 +199,9 @@ public class WebAuthnService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             logger.info("User {} authenticated via passkey registration and set in SecurityContext.", userEmail);
 
-            String jwt = jwtUtils.generateJwtToken(authentication);
-            logger.info("JWT generated for user {}.", userEmail);
+            String nsReg = (user.getUserProgress() != null) ? user.getUserProgress().getNextStep() : "get-started";
+            String jwt = jwtUtils.generateJwtToken(authentication, nsReg);
+            logger.info("JWT generated for user {} (ns={}).", userEmail, nsReg);
 
             return new RegistrationFinishResponse(
                     true, // Success is true because no exception was thrown and we saved the credential
@@ -363,14 +364,17 @@ public class WebAuthnService {
                     session.setId(-1L);
                 }
                 
+                // Compute next-step hint for the JWT "ns" claim
+                String ns = (user.getUserProgress() != null) ? user.getUserProgress().getNextStep() : "get-started";
+
                 // Generate JWT token
                 String jwt;
                 if (session.getId() != null && session.getId() != -1L) {
-                    jwt = jwtUtils.generateJwtToken(authentication, session.getId());
+                    jwt = jwtUtils.generateJwtToken(authentication, session.getId(), ns);
                 } else {
-                    jwt = jwtUtils.generateJwtToken(authentication);
+                    jwt = jwtUtils.generateJwtToken(authentication, ns);
                 }
-                logger.info("JWT generated for authenticated user: {}", user.getEmail());
+                logger.info("JWT generated for authenticated user: {} (ns={})", user.getEmail(), ns);
                 
                 return new AuthenticationFinishResponse(
                     true,

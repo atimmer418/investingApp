@@ -170,7 +170,8 @@ public class WebAuthnController {
                     userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String jwt = jwtUtils.generateJwtToken(authentication);
+            String nsSim = (user.getUserProgress() != null) ? user.getUserProgress().getNextStep() : "get-started";
+            String jwt = jwtUtils.generateJwtToken(authentication, nsSim);
 
             return ResponseEntity.ok(new RegistrationFinishResponse(
                     true,

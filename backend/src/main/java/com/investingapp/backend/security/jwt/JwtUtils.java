@@ -35,7 +35,6 @@ public class JwtUtils {
     public void init() {
         // CRITICAL LOGGING FOR DEBUGGING:
         logger.info("============================================================");
-        logger.info("JwtUtils initializing with jwt.secret: '{}'", jwtSecretString); // Log the raw string
         logger.info("JwtUtils jwt.expiration.ms: {}", jwtExpirationMs);
         logger.info("============================================================");
 
@@ -57,45 +56,65 @@ public class JwtUtils {
         logger.info("JwtUtils SecretKey initialized successfully.");
     }
 
+    /**
+     * Core token builder. All generate* methods funnel through here so the
+     * ns (next-step) claim is applied consistently.
+     *
+     * @param subject   JWT subject (user email)
+     * @param sessionId optional session ID claim; null to omit
+     * @param nextStep  optional "ns" next-step hint; null to omit
+     */
+    private String buildToken(String subject, Long sessionId, String nextStep) {
+        String jwtId = UUID.randomUUID().toString();
+        Date issuedAt = new Date();
+        Date expiration = new Date(issuedAt.getTime() + jwtExpirationMs);
+
+        JwtBuilder builder = Jwts.builder()
+                .setSubject(subject)
+                .setId(jwtId)
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiration)
+                .setIssuer("FRED");
+
+        if (sessionId != null) {
+            builder.claim("sessionId", sessionId);
+        }
+        if (nextStep != null && !nextStep.isEmpty()) {
+            builder.claim("ns", nextStep);
+        }
+
+        return builder.signWith(key, SignatureAlgorithm.HS256).compact();
+    }
+
     public String generateJwtToken(Authentication authentication) {
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
 
         logger.info("JwtUtils generateJwtToken - Using key object: {}", System.identityHashCode(this.key));
-        logger.info("JwtUtils generateJwtToken - Current jwtSecretString value: '{}'", this.jwtSecretString);
+        logger.info("JwtUtils generateJwtToken - for user: {}", userPrincipal.getUsername());
 
-        // Generate unique JWT ID for each token
-        String jwtId = UUID.randomUUID().toString();
-        Date issuedAt = new Date();
-        Date expiration = new Date(issuedAt.getTime() + jwtExpirationMs);
-        
-        logger.info("JwtUtils generateJwtToken - Generated JWT ID: {} for user: {}", jwtId, userPrincipal.getUsername());
+        return buildToken(userPrincipal.getUsername(), null, null);
+    }
 
-        return Jwts.builder()
-                .setSubject(userPrincipal.getUsername()) // User identifier (email)
-                .setId(jwtId) // Unique JWT ID - makes each token unique
-                .setIssuedAt(issuedAt) // When token was created
-                .setExpiration(expiration) // When token expires
-                .setIssuer("FRED") // Optional: identify the issuer
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
+    public String generateJwtToken(Authentication authentication, String nextStep) {
+        UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
+
+        logger.info("JwtUtils generateJwtToken(ns) - for user: {}, ns: {}", userPrincipal.getUsername(), nextStep);
+
+        return buildToken(userPrincipal.getUsername(), null, nextStep);
     }
 
     public String generateJwtToken(Authentication authentication, Long sessionId) {
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
 
-        String jwtId = UUID.randomUUID().toString();
-        Date issuedAt = new Date();
-        Date expiration = new Date(issuedAt.getTime() + jwtExpirationMs);
-        
-        return Jwts.builder()
-                .setSubject(userPrincipal.getUsername())
-                .claim("sessionId", sessionId)
-                .setId(jwtId)
-                .setIssuedAt(issuedAt)
-                .setExpiration(expiration)
-                .setIssuer("FRED")
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
+        return buildToken(userPrincipal.getUsername(), sessionId, null);
+    }
+
+    public String generateJwtToken(Authentication authentication, Long sessionId, String nextStep) {
+        UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
+
+        logger.info("JwtUtils generateJwtToken(sessionId, ns) - for user: {}, ns: {}", userPrincipal.getUsername(), nextStep);
+
+        return buildToken(userPrincipal.getUsername(), sessionId, nextStep);
     }
 
     public Long getSessionIdFromJwtToken(String token) {
@@ -109,21 +128,13 @@ public class JwtUtils {
     }
 
     public String generateTokenFromUsername(String username) {
-        // Generate unique JWT ID for each token
-        String jwtId = UUID.randomUUID().toString();
-        Date issuedAt = new Date();
-        Date expiration = new Date(issuedAt.getTime() + jwtExpirationMs);
-        
-        logger.info("JwtUtils generateTokenFromUsername - Generated JWT ID: {} for user: {}", jwtId, username);
-        
-        return Jwts.builder()
-                .setSubject(username) // User identifier (email)
-                .setId(jwtId) // Unique JWT ID - makes each token unique
-                .setIssuedAt(issuedAt) // When token was created
-                .setExpiration(expiration) // When token expires
-                .setIssuer("FRED") // Optional: identify the issuer
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
+        logger.info("JwtUtils generateTokenFromUsername - for user: {}", username);
+        return buildToken(username, null, null);
+    }
+
+    public String generateTokenFromUsername(String username, String nextStep) {
+        logger.info("JwtUtils generateTokenFromUsername(ns) - for user: {}, ns: {}", username, nextStep);
+        return buildToken(username, null, nextStep);
     }
 
     public String getUserNameFromJwtToken(String token) {
@@ -202,17 +213,25 @@ public class JwtUtils {
     }
 
     public String generateJwtTokenFromUsername(String username) {
-        String jwtId = UUID.randomUUID().toString();
-        Date issuedAt = new Date();
-        Date expiration = new Date(issuedAt.getTime() + jwtExpirationMs);
-        
-        return Jwts.builder()
-                .setSubject(username)
-                .setId(jwtId)
-                .setIssuedAt(issuedAt)
-                .setExpiration(expiration)
-                .setIssuer("FRED")
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
+        return buildToken(username, null, null);
+    }
+
+    public String generateJwtTokenFromUsername(String username, String nextStep) {
+        logger.info("JwtUtils generateJwtTokenFromUsername(ns) - for user: {}, ns: {}", username, nextStep);
+        return buildToken(username, null, nextStep);
+    }
+
+    /**
+     * Extract the next-step hint ("ns" claim) from a token.
+     * Returns null if the token is invalid or the claim is absent.
+     */
+    public String getNextStepFromJwtToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+            return claims.get("ns", String.class);
+        } catch (Exception e) {
+            logger.warn("Could not extract ns claim from token: {}", e.getMessage());
+            return null;
+        }
     }
 }

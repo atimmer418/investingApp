@@ -117,7 +117,33 @@ export class JwtTokenUtils {
     if (this.isJwtExpired()) {
       return null;
     }
-    
+
     return localStorage.getItem('jwtToken');
+  }
+
+  /**
+   * Full slug-to-route map for all onboarding next-step values.
+   * v1 acts only on "complete" → /tabs/tab1; the full map is defined here for v2.
+   */
+  static readonly NEXT_STEP_ROUTE_MAP: Record<string, string> = {
+    'get-started':           '/get-started',
+    'surveyinitial':         '/survey-initial',
+    'fi-plan-results':       '/fi-plan-results',
+    'authfinalize':          '/auth-finalize',
+    'kyc-verification':      '/kyc-verification',
+    'linkplaid':             '/link-bank',
+    'investment-schedule':   '/investment-schedule',
+    'investmentconfirmation': '/investment-confirmation',
+    'complete':              '/tabs/tab1',
+  };
+
+  /**
+   * Read the "ns" (next-step) hint from the currently stored valid JWT.
+   * Returns null if no valid token is stored or the claim is absent.
+   * Reads only from the JWT — no separate localStorage key.
+   */
+  static getNextStepHint(): string | null {
+    const t = this.getValidJwtToken();
+    return t ? (this.decodeJwtPayload(t)?.ns ?? null) : null;
   }
 }

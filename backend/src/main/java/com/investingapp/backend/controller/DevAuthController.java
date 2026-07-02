@@ -134,10 +134,12 @@ public class DevAuthController {
             // Load UserDetails to ensure we have the correct principal object for JwtUtils
             UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
 
-            // Generate JWT for this user (with session ID)
+            // Generate JWT for this user (with session ID and next-step hint)
+            String nsDev = (user.getUserProgress() != null) ? user.getUserProgress().getNextStep() : "get-started";
             String jwt = jwtUtils.generateJwtToken(
-                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()), 
-                session.getId()
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()),
+                session.getId(),
+                nsDev
             );
             logger.info("[DevAuthController] ✅ Successfully generated JWT for user: {} (ID: {})", user.getEmail(), user.getId());
             

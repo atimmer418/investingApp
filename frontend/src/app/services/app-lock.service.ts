@@ -304,7 +304,11 @@ export class AppLockService {
         onLottieReady: () => {
           clearTimeout(overlayFallback);
           this.hideNativeOverlay();
-        }
+        },
+        // Re-show the launch cover the instant reauth succeeds (before the modal dismisses),
+        // bridging the gap until the destination route paints. Without this, lockApp()'s
+        // hideAppCover() above leaves no cover to hold and tab1 flashes blank (FRED-205 reauth fix).
+        onReauthSuccess: () => this.showAppCover()
       },
       backdropDismiss: false,
       keyboardClose: false,

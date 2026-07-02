@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap, catchError, of, lastValueFrom, timeout, retry, timer, throwError, finalize } from 'rxjs';
+import { Observable, BehaviorSubject, Subject, tap, catchError, of, lastValueFrom, timeout, retry, timer, throwError, finalize } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
 import { DeviceIdService } from './device-id.service';
@@ -60,6 +60,14 @@ export class AuthService {
   private reAuthInProgressSubject = new BehaviorSubject<boolean>(false);
   public reAuthInProgress$ = this.reAuthInProgressSubject.asObservable();
   private tokenRefreshInProgress = false;
+
+  /**
+   * Emits once at the END of handleSuccessfulAuthentication so app.component
+   * can perform hint-based optimistic navigation after a successful auth/reauth.
+   * The Subject carries no payload — app.component reads getNextStepHint() itself.
+   */
+  private authSucceededSubject = new Subject<void>();
+  public authSucceeded$ = this.authSucceededSubject.asObservable();
 
   constructor(
     private http: HttpClient,
@@ -159,6 +167,10 @@ export class AuthService {
     } else {
       this.loadUserProgress();
     }
+
+    // Notify app.component so it can perform optimistic nav from the JWT hint.
+    // This fires AFTER the load chain is kicked off (additive — does not replace it).
+    this.authSucceededSubject.next();
   }
 
   logout(): void {

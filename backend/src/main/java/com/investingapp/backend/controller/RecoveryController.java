@@ -91,8 +91,9 @@ public class RecoveryController {
         user.getPasskeyCredentials().clear();
         userRepository.save(user);
 
-        // Issue token
-        String token = jwtUtils.generateJwtTokenFromUsername(user.getEmail());
+        // Issue token — include next-step hint so cold-start navigation can optimise
+        String nsRecovery = (user.getUserProgress() != null) ? user.getUserProgress().getNextStep() : "get-started";
+        String token = jwtUtils.generateJwtTokenFromUsername(user.getEmail(), nsRecovery);
 
         return ResponseEntity.ok(new RecoveryResponse(true, "Recovery successful. Please register a new passkey.", token));
     }

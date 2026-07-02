@@ -9,6 +9,8 @@ import { AuthService, UserProgress } from './services/auth.service';
 import { AppLockService } from './services/app-lock.service';
 import { PasskeyService } from './services/passkey.service';
 import { PushNotificationService } from './services/push-notification.service';
+import { JwtTokenUtils } from './utils/jwt-token.utils';
+import { PortfolioStoreService } from './services/portfolio-store.service';
 import { environment } from '../environments/environment';
 import { combineLatest, debounceTime, distinctUntilChanged, filter, Subject, throttleTime } from 'rxjs';
 import { addIcons } from 'ionicons';
@@ -42,7 +44,8 @@ export class AppComponent implements OnInit {
     private authService: AuthService,
     private appLockService: AppLockService,
     private passkeyService: PasskeyService,
-    private pushNotificationService: PushNotificationService
+    private pushNotificationService: PushNotificationService,
+    private portfolioStore: PortfolioStoreService
   ) {
     addIcons({ lockClosedOutline, fingerPrintOutline });
 
@@ -128,6 +131,19 @@ export class AppComponent implements OnInit {
       this.simulateUserLoginToPage('facebook@gmail.com', devPage);
       return;
     }
+
+    // COLD-START OPTIMISTIC NAV: if the stored JWT says this user is fully onboarded,
+    // navigate to /tabs/tab1 immediately — before GET /user/progress returns.
+    // GET /user/progress still runs and remains the sole routing authority (_source:'db').
+    // This only paints faster; it never sets isLoggedIn, calls completeStep, or gates KYC/bank/money.
+    this.tryOptimisticNav();
+
+    // POST-REAUTH optimistic nav: same logic after a successful passkey / auth ceremony.
+    // authSucceeded$ fires at the end of handleSuccessfulAuthentication, after the DB load
+    // chain is already in flight. The DB result will reconcile (same target → no flash).
+    this.authService.authSucceeded$.subscribe(() => {
+      this.tryOptimisticNav();
+    });
 
     // On background resume with no lock needed: re-check current route so
     // navigateBasedOnProgress() can hide the cover (same-route early return or navigation).
@@ -306,9 +322,40 @@ export class AppComponent implements OnInit {
 
   private hideCoversWhenReady(targetRoute?: string): void {
     const route = (targetRoute ?? this.router.url).split('?')[0].split('#')[0];
-    this.preloadAssetsForRoute(route)
-      .then(() => this.waitForRoutePainted())
-      .then(() => this.appLockService.hideAllCovers());
+    const painted = this.preloadAssetsForRoute(route).then(() => this.waitForRoutePainted());
+    const dataReady = route === '/tabs/tab1' ? this.waitForTab1DataPainted() : Promise.resolve();
+    Promise.all([painted, dataReady]).then(() => this.appLockService.hideAllCovers());
+  }
+
+  /**
+   * tab1-only data-readiness gate. Resolves when the portfolio dashboard has painted
+   * its NON-loading state (the .loading-container spinner wrapper is absent), meaning
+   * the real data block or the error card is on screen.
+   *
+   * Bounded by a 2s hard cap so the cover can never hang:
+   *  - slow network → cap fires → cover lifts onto the existing spinner
+   *  - backend down → cap fires → cover lifts onto the error card
+   */
+  private waitForTab1DataPainted(): Promise<void> {
+    return new Promise<void>(resolve => {
+      let settled = false;
+      const finish = () => { if (!settled) { settled = true; resolve(); } };
+      const check = () => {
+        if (settled) return;
+        // Scope to tab1's OWN portfolio content — <app-portfolio-dashboard> only exists on tab1,
+        // so this can never match the OUTGOING page's still-present ion-content during a cross-page
+        // transition (e.g. get-started → tab1 on reauth), which a generic 'ion-router-outlet
+        // ion-content' selector would, resolving the gate before tab1 actually paints.
+        const c = document.querySelector('app-portfolio-dashboard ion-content.portfolio-content') as HTMLElement | null;
+        if (c && c.offsetHeight > 0 && !c.querySelector('.loading-container')) {
+          finish();
+          return;
+        }
+        requestAnimationFrame(check);
+      };
+      requestAnimationFrame(check);
+      setTimeout(finish, 2000);
+    });
   }
 
   /**
@@ -365,12 +412,61 @@ export class AppComponent implements OnInit {
     const progress = this.authService.getCurrentProgress();
     if (!progress) {
       // Progress is still loading from backend (userProgress$ was reset to null by
-      // handleSuccessfulAuthentication). resumeNoLock$ already confirmed no lock is
-      // needed, so hide the cover now rather than waiting for setupNavigationLogic.
+      // handleSuccessfulAuthentication). resumeNoLock$ already confirmed no lock is needed.
+      //
+      // If the JWT says this user is fully onboarded, they are heading to /tabs/tab1 — whose
+      // cover-hide is DATA-GATED. Route through tryOptimisticNav so the cover WAITS for tab1's
+      // portfolio data instead of lifting on the current (non-tab1) route and revealing the
+      // "Loading your portfolio…" spinner (the cold-start-reauth race — FRED-205).
+      if (this.tryOptimisticNav()) return;
+      // Otherwise (mid-onboarding / not tab1-bound): hide the cover now on the current route —
+      // there is no tab1 data to wait for, and this prevents the cover getting stuck.
       this.hideCoversWhenReady();
       return;
     }
     this.navigateBasedOnProgress(progress);
+  }
+
+  /**
+   * Optimistic navigation based on the "ns" (next-step) hint embedded in the JWT.
+   *
+   * Gate conditions (ALL must hold):
+   *  - A valid JWT is present in localStorage
+   *  - App Lock is not enabled (user opted-in to Face ID lock)
+   *  - App is not currently showing the lock screen
+   *  - The current route is an onboarding / entry route (never yank a user off /my-profile)
+   *
+   * v1: acts only when ns === 'complete' (fully-onboarded user) → /tabs/tab1.
+   * The full slug→route map is defined in JwtTokenUtils.NEXT_STEP_ROUTE_MAP for v2.
+   *
+   * GET /user/progress still runs and remains the sole routing authority.
+   * This method only PAINTS FASTER — it is purely additive.
+   *
+   * @returns true when it navigated to /tabs/tab1 (and therefore OWNS the data-gated
+   *          cover-hide); false when no optimistic nav happened.
+   */
+  private tryOptimisticNav(): boolean {
+    if (!JwtTokenUtils.getValidJwtToken()) return false;
+    if (this.appLockService.isEnabled()) return false;
+    if (this.appLockService.isCurrentlyLocked()) return false;
+
+    const currentBaseUrl = this.router.url.split('?')[0].split('#')[0];
+    const onboardingEntryRoutes = [
+      '', '/', '/get-started', '/survey-initial', '/fi-plan-results',
+      '/auth-finalize', '/kyc-verification', '/link-bank',
+      '/investment-schedule', '/investment-confirmation',
+    ];
+    if (!onboardingEntryRoutes.includes(currentBaseUrl)) return false;
+
+    const hint = JwtTokenUtils.getNextStepHint();
+    if (hint === 'complete') {
+      this.portfolioStore.prime();
+      this.router.navigateByUrl('/tabs/tab1', { replaceUrl: true })
+        .finally(() => this.hideCoversWhenReady('/tabs/tab1'));
+      return true;
+    }
+    // Non-'complete' slugs: no optimistic nav in v1 — fall through to setupNavigationLogic.
+    return false;
   }
 
   /**

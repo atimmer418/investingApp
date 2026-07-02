@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService, PortfolioDashboardData, Position, PerformanceData, PortfolioHistory } from '../../services/portfolio.service';
+import { PortfolioStoreService, PortfolioBundle } from '../../services/portfolio-store.service';
 import { LoadingController, ModalController, createAnimation } from '@ionic/angular/standalone';
 import { ToastService } from '../../services/toast.service';
 import { AuthService } from '../../services/auth.service';
@@ -9,7 +10,7 @@ import { MonthlyFreedomUpdateService } from '../../services/monthly-freedom-upda
 import { MonthlyFreedomUpdateComponent } from '../monthly-freedom-update/monthly-freedom-update.component';
 import { AppLockService } from '../../services/app-lock.service';
 import { Router } from '@angular/router';
-import { filter, take, Subject, takeUntil } from 'rxjs';
+import { filter, firstValueFrom, take, Subject, takeUntil } from 'rxjs';
 import { TabBarScrollDirective } from '../../directives/tab-bar-scroll.directive';
 import { PortfolioChartComponent, PortfolioDataPoint } from '../portfolio-chart/portfolio-chart.component';
 import {
@@ -59,6 +60,7 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private portfolioService: PortfolioService,
+    private portfolioStore: PortfolioStoreService,
     private loadingController: LoadingController,
     private toastService: ToastService,
     private authService: AuthService,
@@ -160,84 +162,8 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
     this.error = null;
 
     try {
-      // Load dashboard data
-      const dashboardData = await this.portfolioService.getPortfolioDashboard().toPromise();
-      this.dashboard = dashboardData || null;
-      if (this.dashboard) {
-        this.generateBackgroundIcons();
-      }
-
-      // Load performance data - handle gracefully if endpoint doesn't exist
-      try {
-        const performanceData = await this.portfolioService.getPerformance().toPromise();
-        this.performanceData = Array.isArray(performanceData) ? performanceData : [];
-
-        // Sync performance data with dashboard summary for consistency
-        if (this.dashboard) {
-          // Sync 'Total' performance
-          let totalPerf = this.performanceData.find(p => p.period === 'Total');
-          if (!totalPerf) {
-            totalPerf = { period: 'Total', startValue: 0, endValue: 0, totalReturn: 0, totalReturnPercent: 0 };
-            this.performanceData.push(totalPerf);
-          }
-          // Use dashboard values as source of truth
-          totalPerf.startValue = this.dashboard.totalInvested;
-          totalPerf.endValue = this.dashboard.summary.portfolioValue;
-          totalPerf.totalReturn = this.dashboard.totalGainLoss;
-          totalPerf.totalReturnPercent = this.dashboard.totalGainLossPercent;
-
-          // Sync 'Today' performance
-          let todayPerf = this.performanceData.find(p => p.period === 'Today');
-          if (!todayPerf) {
-            todayPerf = { period: 'Today', startValue: 0, endValue: 0, totalReturn: 0, totalReturnPercent: 0 };
-            this.performanceData.push(todayPerf);
-          }
-
-          if (this.dashboard) {
-            todayPerf.endValue = this.dashboard.summary.portfolioValue;
-
-            // Use the sum of individual positions' Day G/L for Today's Performance
-            // This avoids issues where deposits/withdrawals are incorrectly counted as performance gains/losses
-            // in the overall account equity calculation.
-            let todayPL = 0;
-            if (this.dashboard.positions) {
-              todayPL = this.dashboard.positions.reduce((sum, pos) => sum + (pos.todayGainLoss || 0), 0);
-            }
-
-            todayPerf.totalReturn = todayPL;
-
-            // Calculate Start Value derived from the Return
-            // This creates a consistent "Apple to Apples" view of Portfolio Value Growth
-            todayPerf.startValue = todayPerf.endValue - todayPerf.totalReturn;
-
-            // Calculate Percent: Return / Start
-            if (todayPerf.startValue !== 0) {
-              todayPerf.totalReturnPercent = (todayPerf.totalReturn / todayPerf.startValue) * 100;
-            } else {
-              todayPerf.totalReturnPercent = 0;
-            }
-          }
-        }
-      } catch (perfError) {
-        console.warn('Performance endpoint not available:', perfError);
-        this.performanceData = [];
-      }
-
-      // Load initial chart data for the default period
-      if (this.dashboard) {
-        await this.loadHistoryForPeriod(this.selectedPeriod);
-      }
-
-      // Calculate financial freedom label
-      if (this.dashboard && this.dashboard.summary.equity > 0) {
-        this.updateFreedomLabel(this.dashboard.summary.equity);
-      }
-
-      // Check if Monthly Freedom Update should be shown (only on initial load)
-      if (!isRefresh && this.dashboard && this.dashboard.summary.equity > 0) {
-        this.checkMonthlyFreedomUpdate();
-      }
-
+      const bundle = await firstValueFrom(this.portfolioStore.load$(this.selectedPeriod, isRefresh));
+      this.applyBundle(bundle, isRefresh);
     } catch (error: any) {
       console.error('Error loading portfolio data:', error);
       this.error = error.error?.message || 'Failed to load portfolio data';
@@ -248,6 +174,82 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
       } else {
         this.loading = false;
       }
+    }
+  }
+
+  private applyBundle(bundle: PortfolioBundle, isRefresh: boolean): void {
+    this.dashboard = bundle.dashboard || null;
+    if (this.dashboard) {
+      this.generateBackgroundIcons();
+    }
+
+    this.performanceData = Array.isArray(bundle.performance) ? bundle.performance : [];
+
+    // Sync performance data with dashboard summary for consistency
+    if (this.dashboard) {
+      // Sync 'Total' performance
+      let totalPerf = this.performanceData.find(p => p.period === 'Total');
+      if (!totalPerf) {
+        totalPerf = { period: 'Total', startValue: 0, endValue: 0, totalReturn: 0, totalReturnPercent: 0 };
+        this.performanceData.push(totalPerf);
+      }
+      // Use dashboard values as source of truth
+      totalPerf.startValue = this.dashboard.totalInvested;
+      totalPerf.endValue = this.dashboard.summary.portfolioValue;
+      totalPerf.totalReturn = this.dashboard.totalGainLoss;
+      totalPerf.totalReturnPercent = this.dashboard.totalGainLossPercent;
+
+      // Sync 'Today' performance
+      let todayPerf = this.performanceData.find(p => p.period === 'Today');
+      if (!todayPerf) {
+        todayPerf = { period: 'Today', startValue: 0, endValue: 0, totalReturn: 0, totalReturnPercent: 0 };
+        this.performanceData.push(todayPerf);
+      }
+
+      if (this.dashboard) {
+        todayPerf.endValue = this.dashboard.summary.portfolioValue;
+
+        // Use the sum of individual positions' Day G/L for Today's Performance
+        // This avoids issues where deposits/withdrawals are incorrectly counted as performance gains/losses
+        // in the overall account equity calculation.
+        let todayPL = 0;
+        if (this.dashboard.positions) {
+          todayPL = this.dashboard.positions.reduce((sum, pos) => sum + (pos.todayGainLoss || 0), 0);
+        }
+
+        todayPerf.totalReturn = todayPL;
+
+        // Calculate Start Value derived from the Return
+        // This creates a consistent "Apple to Apples" view of Portfolio Value Growth
+        todayPerf.startValue = todayPerf.endValue - todayPerf.totalReturn;
+
+        // Calculate Percent: Return / Start
+        if (todayPerf.startValue !== 0) {
+          todayPerf.totalReturnPercent = (todayPerf.totalReturn / todayPerf.startValue) * 100;
+        } else {
+          todayPerf.totalReturnPercent = 0;
+        }
+      }
+    }
+
+    // Apply history from bundle → chart (mirrors what loadHistoryForPeriod does)
+    if (this.dashboard) {
+      if (bundle.history) {
+        this.dashboard.history = bundle.history;
+        this.chartData = this.processChartData(bundle.history);
+      } else {
+        this.chartData = [];
+      }
+    }
+
+    // Calculate financial freedom label
+    if (this.dashboard && this.dashboard.summary.equity > 0) {
+      this.updateFreedomLabel(this.dashboard.summary.equity);
+    }
+
+    // Check if Monthly Freedom Update should be shown (only on initial load)
+    if (!isRefresh && this.dashboard && this.dashboard.summary.equity > 0) {
+      this.checkMonthlyFreedomUpdate();
     }
   }
 
@@ -272,7 +274,7 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
     if (!this.dashboard) return;
 
     try {
-      const history = await this.portfolioService.getPortfolioHistory(period).toPromise();
+      const history = await firstValueFrom(this.portfolioService.getPortfolioHistory(period));
       if (history) {
         this.dashboard.history = history;
         this.chartData = this.processChartData(history);
