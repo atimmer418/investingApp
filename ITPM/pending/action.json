@@ -1,0 +1,5 @@
+{
+  "type": "approval",
+  "content": "Date: Thursday, July 2, 2026\n\nSelected Approach:\n- Hide the static fallback on the Lottie's DOMLoaded render event\n\nApproved implementation approach:\nIn index.html's cover script, remove the synchronous if (fallback) fallback.style.display='none' that runs right after lottie.loadAnimation() returns (line 73). Instead register window._fredCoverAnim.addEventListener('DOMLoaded', function(){ fallback.style.display='none'; }). DOMLoaded fires once lottie-web has actually built the animation's SVG in the DOM (first frame present), so the static fred-logo.svg holds until the coin-drop is on screen — the white #app-resume-cover background is never exposed. Fallback-safety is inherent: if the Lottie 404s or fails to parse, DOMLoaded never fires and the static image simply stays (AC-4). No change to the cover show/hide lifecycle. ~3 lines.\n\nProceed with implementation.",
+  "timestamp": "2026-07-02T04:33:23.002Z"
+}
