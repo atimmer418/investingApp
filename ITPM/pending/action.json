@@ -1,0 +1,5 @@
+{
+  "type": "rework",
+  "content": "Date: Thursday, July 2, 2026\n\nStory: FRED-204\n\nAndrew reviewed the completed build and is NOT satisfied. Rework the SAME story (do not re-pick or re-plan). His feedback:\nI still see the faint flash when testing on my device. Maybe we should implement option B from the choices where option B talked about using the enterFrame event and detaching from it since it fires all the time. This way we could guarantee no white flash would display",
+  "timestamp": "2026-07-03T00:06:42.482Z"
+}
