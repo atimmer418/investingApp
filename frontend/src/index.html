@@ -70,15 +70,21 @@
           autoplay: true,
           rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
         });
-        // Hide the static fallback only once lottie-web has actually built the
-        // animation's SVG in the DOM (first frame present). Hiding it synchronously
-        // here (before DOMLoaded) would expose the white #app-resume-cover
-        // background for a frame, causing a flash. If the Lottie fails to load or
-        // parse, DOMLoaded never fires and the fallback stays visible (by design).
+        // Hide the static fallback only once lottie-web has actually painted its
+        // first real frame. DOMLoaded (SVG inserted into the DOM) fires slightly
+        // before the browser paints, which still let a sub-frame white flash of
+        // #app-resume-cover through on-device. enterFrame fires on every genuine
+        // paint tick, so hiding on the FIRST enterFrame guarantees a rendered
+        // frame is already on screen before the fallback disappears. Since
+        // enterFrame fires continuously, the handler self-detaches (removeEventListener)
+        // after that first call so it only ever runs once. If the Lottie fails to
+        // load or parse, enterFrame never fires and the fallback stays visible (by design).
         if (fallback) {
-          window._fredCoverAnim.addEventListener('DOMLoaded', function() {
+          var onFirstEnterFrame = function() {
+            window._fredCoverAnim.removeEventListener('enterFrame', onFirstEnterFrame);
             fallback.style.display = 'none';
-          });
+          };
+          window._fredCoverAnim.addEventListener('enterFrame', onFirstEnterFrame);
         }
       };
       document.head.appendChild(s);
