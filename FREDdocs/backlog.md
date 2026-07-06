@@ -61,20 +61,6 @@ On a cold start that requires reauth, after the passkey ceremony succeeds the ap
 6. Clean single handoff: no new white flash, no double-hide, no cover flicker at the cover→page transition.
 7. `npx tsc --noEmit` exits 0; verified on a local Capacitor iOS build (or 430×932 webview) by reproducing the cold-start + reauth flow and confirming a seamless cover-to-page handoff.
 
-## FRED-204 — Fix white flash in static→Lottie reauth transition
-on a cold start and reauth is needed. when the static transitions into the lottie, there is a very brief white screen that displays (im talking like 0.1s like its just a slight flash) that we do not want to see. we want this transition to be seamless
-
-### Summary
-On a cold start (most visible when reauth keeps the cover up), the loading cover swaps its static fallback image for the coin-drop Lottie and a ~0.1s white flash shows through. Cause: `index.html` hides the static `#app-resume-cover-fallback` synchronously the instant `lottie.loadAnimation()` returns — before the Lottie paints its first frame — exposing the white `#app-resume-cover` background. Fix: hide the static fallback only after the Lottie's first frame renders, so the handoff is seamless.
-
-### Acceptance Criteria
-1. On cold start, no white flash between the static fallback image (`#app-resume-cover-fallback`) and the coin-drop Lottie — the white `#app-resume-cover` background is never visible in the gap.
-2. The static fallback is hidden only AFTER the Lottie renders its first frame (driven by a lottie-web render event, e.g. `DOMLoaded` / first `enterFrame`), not synchronously right after `loadAnimation()` returns (current `index.html` line 70).
-3. Seamless transition: no white gap, no flicker, no double-image (a short cross-fade is acceptable but optional).
-4. Fallback safety preserved: if the Lottie fails to load (404 / parse error / no render event), the static fallback stays visible — it is removed only on a confirmed first render.
-5. No change to the cover show/hide lifecycle (`showAppCover`/`hideAllCovers`, the 20s `index.html` backstop, `_fredCoverAnim.play()` on resume) beyond the fallback-hide timing.
-6. Verified on a cold start (app fully terminated) with reauth required, on a local Capacitor iOS build (or 430×932 webview): no white flash during the static→Lottie transition.
-
 ## FRED-205 — Preload tab1 portfolio — hold splash for fresh data
 Eliminate the "Loading your portfolio…" spinner at tab1 first paint for onboarded users. Root cause: `waitForRoutePainted()` (app.component.ts:337-352) lifts the launch cover when `ion-content` has layout, NOT when portfolio data arrives, so the cover reveals the spinner while the 3 sequential portfolio GETs are still in flight. Phase 1 (tournament-selected, approved plan): (1) new `providedIn:'root'` `PortfolioStoreService` — in-memory single-flight cache, `prime()` (token-gated, fire-and-forget), `load$()`, and a `forkJoin` bundle (dashboard fatal; performance + history optional via catchError; timeout 10s) that parallelizes the 3 calls; (2) call `prime()` at app.component.ts:419 inside `tryOptimisticNav()`'s `hint==='complete'` block, before `navigateByUrl('/tabs/tab1')` — covers cold launch + passkey re-auth; (3) gate the tab1 cover-hide on portfolio data being painted (bounded by the existing ~2s safety cap; tab1 route only); (4) rewire `portfolio-dashboard.component.ts` `loadPortfolioData()` to consume `store.load$()` via an extracted `applyBundle()` that preserves the perf-sync money-math (lines 176-220) and history→chart→freedom→MFU ordering VERBATIM. No backend change. Result: fresh data at first paint, no stale, no spinner on normal networks; slow-network cap falls back to today's spinner (interim, removed by FRED-206). Top risk: perf-sync extraction must be verbatim. Plan: .claude/plans/we-want-to-add-ancient-cook.md. Effort S–M.
 
@@ -91,7 +77,6 @@ Fetch tab1's portfolio data at app launch and hold the launch cover until it's p
 7. Dollar figures unchanged: `applyBundle()` preserves the perf-sync math (`portfolio-dashboard.component.ts:176-220`) and the history→chart→freedom→MFU ordering verbatim — the cover-revealed first frame and a subsequent pull-to-refresh show identical equity, total/period return, chart series, and freedom badge for the same account.
 8. Pull-to-refresh still works (`load$(force:true)`, `isRefreshing` spinner, `event.target.complete()`); no auth-race/navigation regression on cold launch, background/resume, locked vs unlocked (Face ID), or dev login.
 9. `ng build` (plain or `--configuration dev` — NOT `development`) passes AOT; lint clean; existing `portfolio-dashboard` / `tab1` specs pass; no new dead code or TODOs.
-
 
 ## FRED-207 — Refactor Monte Carlo simulator into fullscreen premium flow
 Full refactor of the tab2 simulator section (everything from the "Monte Carlo Retirement Simulator" heading down inside ion-content; header/tab-switcher and Education tab untouched). Replace the card-based UI with a premium fintech simulation experience — new all-blue-gradient FRED sub-theme, screens fading smoothly one after the other.
@@ -143,6 +128,7 @@ Rebuild tab2's education section in the FRED-207 premium style: a hero ("Make yo
 10. **History compatibility.** Previously saved history entries (old strategy key) never crash the landing or re-run: mapped to the new key or silently discarded via the versioned-schema tolerance — builder documents which. New entries save/re-run correctly with the renamed strategy.
 11. **Legacy removal.** Old education markup (edu-card-grid, edu-sheet backdrop/sheet) and TS (`strategyData`, `openStrategy`, `closeStrategy`, related fields) are removed; unused SCSS from this story's touched blocks pruned (pre-existing unrelated dead styles may stay per convention).
 12. **Quality gates.** `ng build` passes AOT (plain or `--configuration dev`, NEVER "development"); lint clean on touched files; `monte-carlo.service.spec.ts` updated for the rename and green via targeted `ng test --include`; Manrope + FRED palette + force light mode on the landing; `prefers-reduced-motion` degrades deck fades/snap animations; no TODOs or dead code introduced.
+
 
 # 💤 SLEEPING — Backlog (not yet started)
 _Queued but not prioritized. Promote to READY (remove the 💤) when ripe._
@@ -428,6 +414,11 @@ make it so that when a user signs up, check the localStorage to see if they had 
 6. If `pendingAcats` is absent at subscription completion, do nothing.
 7. Update `investment-schedule.component.ts` to also save `accountType` inside `pendingAcats` JSON.
 8. `./gradlew build -x test` exits 0; `npx tsc --noEmit` exits 0.
+
+## FRED-109 — ✓ Change investment question to work-optional framing
+Instead of: "How much do you want to invest?", Ask: "When do you want work to be optional?"
+
+**OBE (Overcome By Events) — 2026-06-30.** Marked OBE per Andy.
 
 ## FRED-110 — ✓ Overhaul tab 2 education with four strategies
 go fix and clean up tab 2 and its content so that it matches the 4 strategies we are educating on (yield-based income, dynamic guardrails, annuity, sbloc 4% borrowing in downturn combined with traditional 4% selling when market is up), also make the cards on the education page smaller so that all 4 can appear on one page (2 on top half, 2 on bottom half). add a slide on brief instructions for how to do each strategy
@@ -960,7 +951,16 @@ The KYC component serves two flows: onboarding "Identity Verification" (`editMod
 7. The existing localStorage step-1 draft restore and step-transition animation still work; a restored draft equal to on-file values counts as "not changed."
 8. `npx tsc --noEmit` exits 0; verified at 430×932: editMode blue header on both steps, onboarding original header, part-1 gate enables/disables correctly.
 
-## FRED-109 — ✓ Change investment question to work-optional framing
-Instead of: "How much do you want to invest?", Ask: "When do you want work to be optional?"
+## FRED-204 — ✓ Fix white flash in static→Lottie reauth transition
+on a cold start and reauth is needed. when the static transitions into the lottie, there is a very brief white screen that displays (im talking like 0.1s like its just a slight flash) that we do not want to see. we want this transition to be seamless
 
-**OBE (Overcome By Events) — 2026-06-30.** Marked OBE per Andy.
+### Summary
+On a cold start (most visible when reauth keeps the cover up), the loading cover swaps its static fallback image for the coin-drop Lottie and a ~0.1s white flash shows through. Cause: `index.html` hides the static `#app-resume-cover-fallback` synchronously the instant `lottie.loadAnimation()` returns — before the Lottie paints its first frame — exposing the white `#app-resume-cover` background. Fix: hide the static fallback only after the Lottie's first frame renders, so the handoff is seamless.
+
+### Acceptance Criteria
+1. On cold start, no white flash between the static fallback image (`#app-resume-cover-fallback`) and the coin-drop Lottie — the white `#app-resume-cover` background is never visible in the gap.
+2. The static fallback is hidden only AFTER the Lottie renders its first frame (driven by a lottie-web render event, e.g. `DOMLoaded` / first `enterFrame`), not synchronously right after `loadAnimation()` returns (current `index.html` line 70).
+3. Seamless transition: no white gap, no flicker, no double-image (a short cross-fade is acceptable but optional).
+4. Fallback safety preserved: if the Lottie fails to load (404 / parse error / no render event), the static fallback stays visible — it is removed only on a confirmed first render.
+5. No change to the cover show/hide lifecycle (`showAppCover`/`hideAllCovers`, the 20s `index.html` backstop, `_fredCoverAnim.play()` on resume) beyond the fallback-hide timing.
+6. Verified on a cold start (app fully terminated) with reauth required, on a local Capacitor iOS build (or 430×932 webview): no white flash during the static→Lottie transition.
