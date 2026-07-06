@@ -1,0 +1,324 @@
+<!-- Monte Carlo Flow — fullscreen modal. All steps share the blue gradient host. -->
+<div class="flow-host">
+
+  <!-- ── Top navigation bar ─────────────────────────────────────────────── -->
+  <div class="flow-top">
+    <button class="flow-back"
+            [class.show]="canGoBack && isInputStep()"
+            (click)="goBack()"
+            aria-label="Back">
+      <span class="material-symbols-outlined">arrow_back_ios_new</span>
+    </button>
+
+    <!-- Step dots (input steps only) -->
+    <div class="flow-dots" [style.opacity]="isInputStep() ? 1 : 0">
+      <span *ngFor="let i of dotsArray(); let idx = index"
+            class="dot"
+            [class.on]="idx === currentStepIndex"></span>
+    </div>
+
+    <button class="flow-x"
+            (click)="closeFlow()"
+            aria-label="Close">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
+
+  <!-- Info button (results only) -->
+  <button class="res-info"
+          [class.show]="isStep('results')"
+          (click)="openAssumptions()"
+          aria-label="Market assumptions">
+    <span class="material-symbols-outlined">info</span>
+  </button>
+
+  <!-- ── STEP: Portfolio ────────────────────────────────────────────────── -->
+  <div class="fscreen" [class.on]="isStep('portfolio')">
+    <div class="fs-eyebrow">Your starting point</div>
+    <h1 class="fs-h1">What are you<br>starting with?</h1>
+    <p class="fs-sub">Your invested portfolio on day one of retirement.</p>
+
+    <div class="fs-center">
+      <!-- Big dollar readout -->
+      <button *ngIf="!portfolioTyping()"
+              class="big-readout"
+              (click)="onPortfolioReadoutClick()"
+              aria-label="Tap to type exact amount">
+        {{ fmt$(portfolioValue()) }}
+      </button>
+      <input *ngIf="portfolioTyping()"
+             id="pfTypeInput"
+             class="big-input"
+             type="tel"
+             inputmode="numeric"
+             [(ngModel)]="portfolioTypingRaw"
+             (blur)="commitPortfolioTyping()"
+             (keydown)="onPortfolioTypingKeydown($event)">
+      <div class="readout-hint">Tap to type an exact amount</div>
+
+      <!-- Log-scale slider -->
+      <input type="range"
+             class="sim-range"
+             min="0" max="1000" step="1"
+             [value]="portfolioSliderRaw()"
+             [style.--track]="portfolioSliderStyle()"
+             (input)="onPortfolioSlider($event)">
+      <div class="range-ends"><span>$10k</span><span>$5M</span></div>
+
+      <!-- Use my portfolio chip -->
+      <button class="fetch-chip" [class.loading]="portfolioFetching()" (click)="fetchPortfolio()">
+        <span class="material-symbols-outlined">{{ portfolioFetching() ? 'sync' : 'sync' }}</span>
+        <span>{{ portfolioFetching() ? 'Fetching…' : 'Use my portfolio' }}</span>
+      </button>
+    </div>
+
+    <button class="fs-cta" [disabled]="!portfolioContinueEnabled" (click)="onContinueClick()">
+      Continue
+    </button>
+  </div>
+
+  <!-- ── STEP: Outside accounts ─────────────────────────────────────────── -->
+  <div class="fscreen" [class.on]="isStep('outside')">
+    <div class="fs-eyebrow">Outside accounts</div>
+    <h1 class="fs-h1">Count everything<br>you've built.</h1>
+    <p class="fs-sub">Balances you hold outside FRED — added to your starting portfolio.</p>
+
+    <div class="fs-center">
+      <div class="glass-field">
+        <label>401(k) balance</label>
+        <div class="gf-row">
+          <span class="gf-pre">$</span>
+          <input type="tel"
+                 inputmode="numeric"
+                 placeholder="250,000"
+                 [value]="k401Raw"
+                 (input)="onK401Input($event)">
+        </div>
+      </div>
+
+      <div class="glass-field">
+        <label>Roth IRA balance</label>
+        <div class="gf-row">
+          <span class="gf-pre">$</span>
+          <input type="tel"
+                 inputmode="numeric"
+                 placeholder="85,000"
+                 [value]="rothRaw"
+                 (input)="onRothInput($event)">
+        </div>
+      </div>
+
+      <div class="combined-line">
+        Simulating with <strong>{{ fmt$(combinedTotal) }}</strong>
+      </div>
+    </div>
+
+    <button class="fs-cta" (click)="onContinueClick()">Continue</button>
+  </div>
+
+  <!-- ── STEP: Monthly spend ────────────────────────────────────────────── -->
+  <div class="fscreen" [class.on]="isStep('spend')">
+    <div class="fs-eyebrow">Monthly spending</div>
+    <h1 class="fs-h1">What will you<br>spend each month?</h1>
+    <p class="fs-sub">Your retirement lifestyle, in today's dollars.</p>
+
+    <div class="fs-center">
+      <div class="big-readout" style="cursor:default">
+        {{ fmt$(monthlySpend()) }}<span class="unit"> /mo</span>
+      </div>
+      <div class="readout-hint">≈ {{ spendYearly }} a year · rises 2.5%/yr with inflation</div>
+
+      <input type="range"
+             class="sim-range"
+             min="500" max="20000" step="100"
+             [value]="monthlySpend()"
+             [style.--track]="spendSliderStyle()"
+             (input)="onSpendSlider($event)">
+      <div class="range-ends"><span>$500</span><span>$20k</span></div>
+    </div>
+
+    <button class="fs-cta" [disabled]="!spendContinueEnabled" (click)="onContinueClick()">
+      Continue
+    </button>
+  </div>
+
+  <!-- ── STEP: Duration ────────────────────────────────────────────────── -->
+  <div class="fscreen" [class.on]="isStep('duration')">
+    <div class="fs-eyebrow">Time horizon</div>
+    <h1 class="fs-h1">How long should<br>it last?</h1>
+    <p class="fs-sub">Years of retirement income your plan needs to cover.</p>
+
+    <div class="fs-center">
+      <div class="big-readout" style="cursor:default">
+        {{ yearsToLast() }}<span class="unit"> years</span>
+      </div>
+      <div class="readout-hint">{{ durationHint }}</div>
+
+      <input type="range"
+             class="sim-range"
+             min="10" max="70" step="1"
+             [value]="yearsToLast()"
+             [style.--track]="durationSliderStyle()"
+             (input)="onDurationSlider($event)">
+      <div class="range-ends"><span>10 yrs</span><span>70 yrs</span></div>
+    </div>
+
+    <button class="fs-cta" (click)="onContinueClick()">
+      <span class="material-symbols-outlined">play_arrow</span>
+      Run 1,000 markets
+    </button>
+  </div>
+
+  <!-- ── STEP: Calculating ─────────────────────────────────────────────── -->
+  <div class="fscreen" [class.on]="isStep('calc')">
+    <div class="calc-stage">
+      <div class="calc-rings">
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="calc-core">
+          <div class="calc-num">{{ calcCount() | number }}</div>
+          <div class="calc-of">of 1,000</div>
+        </div>
+      </div>
+      <div class="calc-line">{{ calcLine() }}</div>
+    </div>
+  </div>
+
+  <!-- ── STEP: Results ─────────────────────────────────────────────────── -->
+  <div class="fscreen results-fscreen" [class.on]="isStep('results')">
+    <div class="fs-eyebrow">{{ resultsEyebrow }}</div>
+    <h1 class="fs-h1">The showdown.</h1>
+    <p class="fs-sub">Five ways to withdraw — here's what held across 1,000 markets.</p>
+
+    <!-- Capture zone for share screenshot -->
+    <div class="results-scroll flow-results-capture">
+
+      <!-- Strategy showdown cards -->
+      <div class="showdown">
+        <div class="sd-card"
+             *ngFor="let s of strategyDefs; let i = index"
+             [class.in]="isStep('results')"
+             [style.transition-delay]="(120 + i * 110) + 'ms'">
+          <div class="sd-info">
+            <div class="sd-name">{{ s.name }}</div>
+            <div class="sd-tag">{{ s.tag }}</div>
+            <div class="sd-bar">
+              <i [class]="badge(successFor(s.key)).cls"
+                 [style.width]="isStep('results') ? successFor(s.key) + '%' : '0%'"></i>
+            </div>
+          </div>
+          <div class="sd-right">
+            <div class="sd-pct">{{ successFor(s.key) | number:'1.0-0' }}%</div>
+            <div class="sd-badge" [class]="badge(successFor(s.key)).cls">
+              {{ badge(successFor(s.key)).label }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pro panel (Pro = full unlock; Plus = locked veil) -->
+      <div class="pro-panel" *ngIf="isPlus || isPro">
+        <div class="pp-title">
+          <span>Plan it live</span>
+          <span class="pp-badge">PIGGY PRO</span>
+        </div>
+
+        <!-- Monthly contribution stepper -->
+        <div class="stepper-row">
+          <div class="stepper-lab">
+            <div class="sl-1">Monthly contribution</div>
+            <div class="sl-2">Until you retire</div>
+          </div>
+          <div class="stepper">
+            <button (click)="stepContrib(-100)" [disabled]="!isPro">−</button>
+            <span class="st-val">{{ fmt$(monthlyContrib()) }}</span>
+            <button (click)="stepContrib(100)" [disabled]="!isPro">+</button>
+          </div>
+        </div>
+
+        <!-- Retirement timing stepper -->
+        <div class="stepper-row">
+          <div class="stepper-lab">
+            <div class="sl-1">{{ retireDisplayLabel }}</div>
+            <div class="sl-2">{{ retireDisplaySub }}</div>
+          </div>
+          <div class="stepper">
+            <button (click)="stepRetirement(-1)" [disabled]="!isPro">−</button>
+            <span class="st-val">{{ retireAge }}</span>
+            <button (click)="stepRetirement(1)" [disabled]="!isPro">+</button>
+          </div>
+        </div>
+
+        <!-- Scenario flip -->
+        <div class="scenario-flip">
+          <button *ngFor="let s of SCENARIOS"
+                  [class.on]="scenario() === s.key"
+                  (click)="isPro ? flipScenario(s.key) : openNudge()">
+            {{ s.label }}
+          </button>
+        </div>
+
+        <!-- Withdrawal estimate (Pro) -->
+        <div class="estimate-line">
+          <span class="material-symbols-outlined">workspace_premium</span>
+          <div class="est-txt">
+            This plan supports <strong>~{{ fmt$(maxMonthlySpend()) }}/mo</strong> at 90% confidence.
+          </div>
+        </div>
+
+        <!-- Plus-tier veil (locks pro features for Plus users) -->
+        <div class="pro-veil" [class.on]="!isPro" (click)="openNudge()">
+          <span class="material-symbols-outlined">lock</span>
+          <div class="pv-1">Deeper projections are Piggy Pro</div>
+          <div class="pv-2">Scenarios · live adjusters · income estimates</div>
+        </div>
+      </div>
+
+    </div><!-- end results-scroll -->
+
+    <!-- Action row -->
+    <div class="results-actions">
+      <button class="ghost-btn" (click)="shareResults()">
+        <span class="material-symbols-outlined">ios_share</span>
+        Share
+      </button>
+      <button class="fs-cta done-btn" (click)="closeFlow()">Done</button>
+    </div>
+  </div>
+
+  <!-- ── Assumptions bottom sheet ─────────────────────────────────────── -->
+  <div class="sheet-backdrop" [class.on]="assumpSheetOpen()" (click)="closeAssumptions()"></div>
+  <div class="mc-sheet" [class.on]="assumpSheetOpen()">
+    <div class="sheet-handle"></div>
+    <h3>Market assumptions</h3>
+    <p class="s-sub">Every simulation draws yearly returns from these distributions, calibrated to S&amp;P 500 and Bloomberg bond data, 1926–2024.</p>
+    <div class="assump-table">
+      <div class="assump-row head">
+        <span>Scenario</span><span>Stocks</span><span>Bonds</span><span>Inflation</span>
+      </div>
+      <div class="assump-row"><span>Conservative</span><span>8% · 20% vol</span><span>3.5% · 5.5%</span><span>2.5%</span></div>
+      <div class="assump-row"><span>Expected</span><span>10% · 18% vol</span><span>4% · 5%</span><span>2.5%</span></div>
+      <div class="assump-row"><span>Aggressive</span><span>11.5% · 16% vol</span><span>4.5% · 4.5%</span><span>2.5%</span></div>
+    </div>
+    <p class="method-p"><strong>How it works.</strong> Each run generates 1,000 independent market paths for a 70/30 stock-bond portfolio. Your withdrawal rises 2.5% each year with inflation. A strategy "holds" in a path if money never runs out over your full horizon — its success rate is the share of the 1,000 paths that held.</p>
+    <div class="disclaimer">
+      <span class="material-symbols-outlined">info</span>
+      <span>Simulations are educational estimates based on historical data — not guarantees or investment advice. Future markets can behave unlike the past.</span>
+    </div>
+  </div>
+
+  <!-- ── Pro upgrade nudge sheet ─────────────────────────────────────── -->
+  <div class="sheet-backdrop" [class.on]="nudgeSheetOpen()" (click)="closeNudge()"></div>
+  <div class="mc-sheet" [class.on]="nudgeSheetOpen()">
+    <div class="sheet-handle"></div>
+    <div class="nudge-icon">
+      <span class="material-symbols-outlined">query_stats</span>
+    </div>
+    <h3 class="nudge-title">Go deeper with Piggy Pro</h3>
+    <p class="s-sub nudge-sub">Run conservative and aggressive scenarios, adjust contributions and retirement age on the fly, and see monthly withdrawal estimates in retirement.</p>
+    <button class="nudge-cta" (click)="upgradeClicked()">Upgrade to Pro</button>
+    <button class="nudge-later" (click)="closeNudge()">Maybe later</button>
+  </div>
+
+</div><!-- end flow-host -->

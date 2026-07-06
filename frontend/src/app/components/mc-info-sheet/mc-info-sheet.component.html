@@ -1,0 +1,52 @@
+<div class="sheet-body">
+  <div class="sheet-handle"></div>
+
+  <!-- Market assumptions & methodology -->
+  <ng-container *ngIf="mode === 'assumptions'">
+    <h3>Market Assumptions</h3>
+    <p class="assump-sub">FRED tests your plan using three market scenarios, each simulated 1,000 times.</p>
+    <div class="assump-table">
+      <div class="assump-row head">
+        <span>Scenario</span>
+        <span>Stocks</span>
+        <span>Bonds</span>
+        <span>Inflation</span>
+      </div>
+      <div class="assump-row">
+        <span>Conservative</span>
+        <span>8% / 20% vol</span>
+        <span>3.5% / 5.5%</span>
+        <span>2.5%</span>
+      </div>
+      <div class="assump-row">
+        <span>Expected</span>
+        <span>10% / 18% vol</span>
+        <span>4% / 5%</span>
+        <span>2.5%</span>
+      </div>
+      <div class="assump-row">
+        <span>Aggressive</span>
+        <span>11.5% / 16% vol</span>
+        <span>4.5% / 4.5%</span>
+        <span>2.5%</span>
+      </div>
+    </div>
+    <p class="method-p">Each of the 1,000 scenarios draws annual returns from normal distributions (Box-Muller) calibrated to S&amp;P 500 and Bloomberg Aggregate bond data, 1926–2024. Your withdrawal rises 2.5%/yr with inflation. A 70/30 stock/bond portfolio is used for the Traditional strategy; other strategies use their own allocations.</p>
+    <div class="assump-disclaimer">
+      <span class="material-symbols-outlined">info</span>
+      <span>Simulations are for educational purposes only and do not constitute investment advice.</span>
+    </div>
+    <button class="sheet-cta-btn" (click)="close()">Done</button>
+  </ng-container>
+
+  <!-- Piggy Pro upgrade nudge -->
+  <ng-container *ngIf="mode === 'nudge'">
+    <div class="nudge-icon">
+      <span class="material-symbols-outlined">query_stats</span>
+    </div>
+    <h3 class="nudge-title">Go deeper with Piggy Pro</h3>
+    <p class="assump-sub nudge-sub">Run conservative and aggressive scenarios, adjust contributions and retirement age on the fly, and see monthly withdrawal estimates in retirement.</p>
+    <button class="sheet-cta-btn nudge-cta-btn" (click)="upgrade()">Upgrade to Pro</button>
+    <button class="nudge-later" (click)="close()">Maybe later</button>
+  </ng-container>
+</div>

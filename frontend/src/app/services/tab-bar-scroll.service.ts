@@ -11,8 +11,21 @@ export class TabBarScrollService {
 
   private lastY = 0;
   private accum = 0;                    // travel accumulated in the current direction
+  private holdFull = false;            // when true (e.g. chat tab), never shrink from any scroller
   private readonly TOP_ZONE = 16;      // always full-size within this many px of the top
   private readonly FLIP_THRESHOLD = 28; // deliberate travel (px) needed to flip state
+
+  /**
+   * Hold the bar at full size regardless of scroll (used while the chat tab is
+   * active). Guarantees a stray cross-tab scroll — e.g. residual momentum from
+   * the tab you just left, firing during the transition — can't shrink the bar.
+   */
+  setHoldFull(hold: boolean): void {
+    this.holdFull = hold;
+    if (hold && this.compact()) {
+      this.compact.set(false);
+    }
+  }
 
   /**
    * Report the current scroll position of the active scroll container.
@@ -22,8 +35,30 @@ export class TabBarScrollService {
    * on direction change makes it immune to momentum/bounce after a finger-lift —
    * a small settle never flips the bar back.
    */
-  report(scrollTop: number): void {
+  report(scrollTop: number, atBottom = false): void {
     const y = Math.max(0, scrollTop);
+
+    // Chat (or any hold-full tab) active: never shrink, even from a stray
+    // cross-tab scroll event that lands here during a tab transition.
+    if (this.holdFull) {
+      this.lastY = y;
+      this.accum = 0;
+      if (this.compact()) {
+        this.compact.set(false);
+      }
+      return;
+    }
+
+    // At the very bottom of the content: return to full — there's nothing more
+    // to scroll, so the bar should come back to rest (mirrors the top-of-scroll rule).
+    if (atBottom) {
+      this.lastY = y;
+      this.accum = 0;
+      if (this.compact()) {
+        this.compact.set(false);
+      }
+      return;
+    }
 
     // Near the top: always full size.
     if (y <= this.TOP_ZONE) {

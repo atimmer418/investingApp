@@ -54,6 +54,8 @@ export class TabsPage implements OnInit {
   onTabsDidChange(ev: { tab: string }) {
     this.activeTab = ev.tab;
     this.scrollSvc.reset();
+    // Chat holds the bar full so no stray/cross-tab scroll can shrink it there.
+    this.scrollSvc.setHoldFull(ev.tab === 'chat');
   }
 
   /** Navigate via Ionic so per-tab nav stacks are preserved. */

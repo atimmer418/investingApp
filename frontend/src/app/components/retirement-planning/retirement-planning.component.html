@@ -22,449 +22,84 @@
 
   <!-- Monte Carlo Simulator Section -->
   <div *ngIf="isSimulatorSection()" class="simulator-section fade-in">
-    <div class="simulator-header">
-      <h2>
-        <ion-icon name="dice-outline" class="icon-enhanced primary"></ion-icon>
-        Monte Carlo Retirement Simulator
-      </h2>
-      <p>Test if your money will last through retirement using real market scenarios</p>
-    </div>
-
     <div class="mc-gate-wrapper">
       <div class="mc-content-wrapper" [class.mc-blurred]="isMonteCarloLocked">
 
-    <!-- Monte Carlo Explanation (Collapsible) -->
-    <ion-card class="quick-guide-card">
-      <div class="card-header-clickable" (click)="toggleGuideExpanded()">
-        <div class="header-left">
-          <ion-icon name="help-circle-outline" class="icon-enhanced primary"></ion-icon>
-          <span>What is Monte Carlo?</span>
+        <!-- Hero -->
+        <div class="mc-hero">
+          <div class="mc-eyebrow">Monte Carlo</div>
+          <h2>Will your money last?</h2>
+          <p>Stress-test your retirement against 1,000 simulated markets.</p>
         </div>
-        <ion-icon [name]="guideExpanded ? 'chevron-up' : 'chevron-down'"></ion-icon>
-      </div>
-      <div class="expandable-content" [class.expanded]="guideExpanded">
 
-        <p><strong>Monte Carlo simulation</strong> tests your retirement plan by running 1,000 different market
-          scenarios to
-          see if your money lasts.</p>
-        <ul class="compact-list">
-          <li>Each test uses different returns based on historical data</li>
-          <li>Your withdrawal increases 2.5% annually for inflation</li>
-          <li>Success rate = % of scenarios where money lasts full retirement</li>
-        </ul>
-      </div>
-    </ion-card>
+        <!-- Savings orb — tappable primary CTA; labels are part of the tap target.
+             Inline SVG (Material Symbols "savings", FILL 1): the app's icon font is
+             a static outlined subset, so the filled variation axis isn't available. -->
+        <div class="mc-orb-zone" (click)="openSimulatorFlow()">
+          <button class="mc-orb" type="button" aria-label="Run a simulation">
+            <svg class="mc-orb-icon" viewBox="0 -960 960 960" aria-hidden="true">
+              <path d="M668.5-531.5Q680-543 680-560t-11.5-28.5Q657-600 640-600t-28.5 11.5Q600-577 600-560t11.5 28.5Q623-520 640-520t28.5-11.5ZM320-620h200v-60H320v60ZM180-120q-34-114-67-227.5T80-580q0-92 64-156t156-64h200q29-38 70.5-59t89.5-21q25 0 42.5 17.5T720-820q0 5-5 23-4 11-7.5 22.5T702-751l91 91h87v279l-113 37-67 224H480v-80h-80v80H180Z"/>
+            </svg>
+          </button>
+          <p class="mc-orb-label">Run a simulation</p>
+          <p class="mc-orb-sub">About 30 seconds</p>
+        </div>
 
-    <!-- Strategy Selector Card (Compact) -->
-    <ion-card class="strategy-selector-card compact">
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="options-outline" class="icon-enhanced primary"></ion-icon>
-          Withdrawal Strategy
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div>
-          <p class="field-label">Withdrawal Strategy</p>
-          <div class="select-wrapper">
-            <select class="field-select" [(ngModel)]="selectedStrategy" (change)="onStrategyChange()">
-              <option value="" disabled>Select a strategy</option>
-              <option value="traditional">Traditional 4% Rule</option>
-              <option value="sbloc">SBLOC (Borrow in Downturns)</option>
-              <option value="annuity-growth">Annuity + Growth</option>
-              <option value="dynamic-guardrails">Dynamic Guardrails</option>
-              <option value="full-annuity">Full Annuity</option>
-            </select>
-            <span class="select-arrow material-symbols-outlined">expand_more</span>
+        <!-- Scenario + outside accounts config -->
+        <div class="mc-config-zone">
+          <p class="mc-zone-label">
+            Market scenario
+            <span class="mc-lockchip" *ngIf="!isPro"><span class="material-symbols-outlined">lock</span>Pro</span>
+          </p>
+          <div class="mc-chips" [class.pro-locked]="!isPro">
+            <button
+              *ngFor="let s of SCENARIOS"
+              [class.on]="selectedScenario === s.key"
+              (click)="isPro ? (selectedScenario = s.key) : openChipNudge()">
+              {{ s.label }}
+            </button>
           </div>
-        </div>
-        <p class="strategy-hint-compact">{{ getStrategyHintCompact() }}</p>
-
-        <!-- Essential Expenses Input (Annuity + Growth only) -->
-        <div *ngIf="selectedStrategy === 'annuity-growth'" class="conditional-input-compact">
-          <div class="form-field-group">
-            <label class="field-label">Essential Annual Expenses</label>
-            <input class="field-input" type="number" [(ngModel)]="essentialExpenses" placeholder="40000">
-          </div>
-          <small class="helper-text success" *ngIf="essentialExpenses && portfolioValue">
-            <ion-icon name="calculator-outline"></ion-icon>
-            Annuitize {{ formatPercent(getRecommendedAnnuityPercentage()) }} → {{ formatCurrency(getAnnuityIncome())
-            }}/yr
-            guaranteed
-          </small>
-        </div>
-
-        <!-- Advanced Options Toggle -->
-        <div class="advanced-toggle" (click)="toggleAdvancedOptions()">
-          <span>Advanced Options</span>
-          <ion-icon [name]="showAdvancedOptions ? 'chevron-up' : 'chevron-down'"></ion-icon>
-        </div>
-
-        <!-- Advanced: NTSX Toggle -->
-        <div class="expandable-content" [class.expanded]="showAdvancedOptions">
-          <ion-item lines="none">
-            <ion-label>
-              <h4>NTSX (90/60 Leveraged)</h4>
-              <p>Better risk-adjusted returns</p>
-            </ion-label>
-            <ion-toggle [(ngModel)]="useNTSX" (ionChange)="onNTSXChange()"></ion-toggle>
-          </ion-item>
-          <small class="helper-text" *ngIf="useNTSX">
-            <ion-icon name="information-circle"></ion-icon>
-            WisdomTree NTSX uses 1.5x leverage for 90% stocks + 60% bonds. More efficient than traditional portfolios,
-            but
-            carries leverage risk.
-          </small>
-
-
-          <!-- Strategy Configuration -->
-          <div class="strategy-config-compact"
-            style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--app-card-border);">
-            <h4>Configuration</h4>
-
-            <!-- SBLOC Config -->
-            <div *ngIf="selectedStrategy === 'sbloc'">
-              <div class="form-field-group">
-                <label class="field-label">Borrowing Rate</label>
-                <input class="field-input" type="number" [(ngModel)]="sblocInterestRate" placeholder="0.055">
-              </div>
-              <small class="helper-text">Interest rate charged on SBLOC margin loan (e.g. 0.055 for 5.5%)</small>
+          <div class="mc-toggle-row">
+            <div>
+              <div class="mc-t-label">Include outside accounts</div>
+              <div class="mc-t-sub">Add your 401(k) and Roth IRA to the simulation</div>
             </div>
+            <button class="mc-iosw" [class.on]="includeOutsideAccts"
+              (click)="includeOutsideAccts = !includeOutsideAccts"
+              aria-label="Include outside accounts"></button>
+          </div>
+        </div>
 
-            <!-- Guardrails Config -->
-            <div *ngIf="selectedStrategy === 'dynamic-guardrails'">
-              <div class="guardrails-row">
-                <div class="form-field-group">
-                  <label class="field-label">Lower Guardrail</label>
-                  <input class="field-input" type="number" [(ngModel)]="guardrailLower" placeholder="0.04">
-                </div>
-                <div class="form-field-group">
-                  <label class="field-label">Upper Guardrail</label>
-                  <input class="field-input" type="number" [(ngModel)]="guardrailUpper" placeholder="0.06">
-                </div>
+        <!-- Recent projections (from per-user localStorage history) -->
+        <div class="mc-history-zone">
+          <p class="mc-zone-label">Recent projections</p>
+          <div class="mc-hist-cards" *ngIf="recentHistory.length > 0">
+            <div class="mc-hist-card" *ngFor="let h of recentHistory" (click)="openSimulatorFlow(h)">
+              <div class="mc-hist-icon">
+                <span class="material-symbols-outlined">{{ scenarioIcon(h.scenario) }}</span>
               </div>
-              <small class="helper-text">Adjust spending when withdrawal rate hits these limits.</small>
+              <div class="mc-hist-mid">
+                <div class="mc-h-line1">{{ fmtShort(h.totalPortfolioValue) }} · {{ fmtDollar(h.monthlySpend) }}/mo · {{ h.yearsToLast }} yrs</div>
+                <div class="mc-h-line2">{{ relativeDate(h.timestamp) }} · {{ scenarioLabel(h.scenario) }}</div>
+              </div>
+              <span class="mc-hist-pill" [ngClass]="holdClass(h.results)">{{ holdCount(h.results) }} of 5 hold</span>
             </div>
           </div>
-
-          <!-- Return Assumptions (in Advanced) -->
-          <div class="assumptions-compact">
-            <h4>
-              <ion-icon name="trending-up-outline"></ion-icon>
-              Market Assumptions
-            </h4>
-            <div class="assumption-grid">
-              <div class="assumption-item">
-                <strong>Stocks</strong>
-                <span>10% avg, 18% vol</span>
-              </div>
-              <div class="assumption-item">
-                <strong>Bonds</strong>
-                <span>4% avg, 5% vol</span>
-              </div>
-              <div class="assumption-item" *ngIf="useNTSX">
-                <strong>NTSX</strong>
-                <span>10% avg, 15% vol</span>
-              </div>
-              <div class="assumption-item" *ngIf="!useNTSX">
-                <strong>70/30</strong>
-                <span>8.8% blended</span>
-              </div>
-            </div>
-            <small class="data-source">
-              <ion-icon name="shield-checkmark-outline"></ion-icon>
-              Based on S&P 500 & Bloomberg Bond data (1926-2024)
-            </small>
-          </div>
-        </div>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card class="financial-inputs-card">
-      <div class="card-title-row">
-        <ion-icon name="wallet-outline" class="header-icon"></ion-icon>
-        <h3>Financial Inputs</h3>
-      </div>
-
-      <div class="inputs-row">
-        <!-- Portfolio Value -->
-        <div class="custom-input-container">
-          <div class="label-row">
-            <label class="field-label">Portfolio Value</label>
-            <ion-icon name="sync-outline" class="fetch-icon" (click)="fetchPortfolioValue()" title="Use My Portfolio"></ion-icon>
-          </div>
-          <div class="currency-input-wrap">
-            <span class="prefix">$</span>
-            <input class="field-input currency-field-input" type="number" [(ngModel)]="portfolioValue" placeholder="1200000">
+          <div class="mc-hist-empty" *ngIf="recentHistory.length === 0">
+            <span class="material-symbols-outlined">query_stats</span>
+            <p>No projections yet.<br>Run your first simulation to see it here.</p>
           </div>
         </div>
 
-        <!-- Annual Spend -->
-        <div class="custom-input-container">
-          <label class="field-label">Annual Spend</label>
-          <div class="currency-input-wrap">
-            <span class="prefix">$</span>
-            <input class="field-input currency-field-input" type="number" [(ngModel)]="annualWithdrawal" placeholder="48000">
-          </div>
-        </div>
-      </div>
-
-      <!-- Duration Slider -->
-      <div class="slider-container">
-        <div class="slider-label-row">
-          <label>Duration</label>
-          <span class="highlight-value">{{ yearsToLast }} Years</span>
-        </div>
-        <ion-range min="10" max="60" step="1" [(ngModel)]="yearsToLast"></ion-range>
-      </div>
-    </ion-card>
-
-    <div class="action-buttons" style="display:flex; gap:16px;">
-      <ion-button expand="block" size="large" class="simulate-button" style="flex:1"
-        (click)="isComparisonMode = false; runSimulation()" [disabled]="isSimulating || portfolioValue <= 0">
-        <ion-icon name="play-circle-outline" slot="start"></ion-icon>
-        <span *ngIf="!isSimulating">Simulate</span>
-        <span *ngIf="isSimulating">Running...</span>
-      </ion-button>
-
-      <ion-button expand="block" size="large" fill="outline" style="flex:1" (click)="runComparison()"
-        [disabled]="isSimulating || portfolioValue <= 0">
-        <ion-icon name="stats-chart-outline" slot="start"></ion-icon>
-        Compare All
-      </ion-button>
-    </div>
-
-    <!-- Comparison Results -->
-    <div *ngIf="isComparisonMode && comparisonResults" class="results-section slide-up">
-      <ion-card class="comparison-card">
-        <ion-card-header>
-          <ion-card-title>Strategy Comparison</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <canvas id="comparisonChart" style="margin-bottom: 24px;"></canvas>
-
-          <div class="table-responsive">
-            <table class="comparison-table" style="width:100%; border-collapse: collapse;">
-              <thead>
-                <tr style="border-bottom: 2px solid var(--app-card-border);">
-                  <th style="text-align:left; padding:8px;">Strategy</th>
-                  <th style="text-align:center; padding:8px;">Success</th>
-                  <th style="text-align:right; padding:8px;">Median End Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let item of comparisonResults | keyvalue"
-                  style="border-bottom: 1px solid var(--app-card-border);">
-                  <td style="padding:12px 8px; font-weight:500;">{{ formatStrategyName(item.key) }}</td>
-                  <td style="text-align:center;">
-                    <ion-badge
-                      [color]="item.value.successProbability >= 90 ? 'success' : item.value.successProbability >= 75 ? 'warning' : 'danger'">
-                      {{ item.value.successProbability | number:'1.0-1' }}%
-                    </ion-badge>
-                  </td>
-                  <td style="text-align:right;">{{ item.value.medianEndValue | currency:'USD':'symbol':'1.0-0' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div style="margin-top:24px; display:flex; gap:16px;">
-            <ion-button fill="outline" size="small" (click)="exportToCSV()">
-              <ion-icon name="download-outline" slot="start"></ion-icon>
-              Export CSV
-            </ion-button>
-            <ion-button fill="outline" size="small" (click)="printReport()">
-              <ion-icon name="print-outline" slot="start"></ion-icon>
-              Print PDF
-            </ion-button>
-          </div>
-        </ion-card-content>
-      </ion-card>
-    </div>
-
-    <!-- Enhanced Simulation Results -->
-    <div *ngIf="simulationResult" class="results-section slide-up" #monteCarloResults>
-      <div class="share-row">
-        <ion-button fill="clear" size="small" (click)="shareMonteCarlo()" class="share-btn-mc">
-          <span class="material-symbols-outlined share-icon-mc">ios_share</span>
-          Share Results
-        </ion-button>
-      </div>
-      <!-- Main Success Rate Display -->
-      <ion-card class="result-metric">
-        <div class="result-icon">
-          <ion-icon [name]="getSuccessIcon()" [class]="'icon-enhanced ' + getSuccessColor()"></ion-icon>
-        </div>
-        <div class="success-percentage" [class]="'color-' + getSuccessColor()">
-          {{ formatPercent(simulationResult.successProbability) }}
-        </div>
-        <p><strong>Success Rate</strong></p>
-        <p class="result-explanation">
-          In {{ getSuccessfulScenarios() }} of 1,000 market scenarios,
-          your money lasted the full {{ yearsToLast }} years
-        </p>
-
-        <div class="performance-indicator">
-          <div class="indicator-item">
-            <ion-icon
-              [name]="simulationResult.successProbability >= 80 ? 'checkmark-circle' : simulationResult.successProbability >= 60 ? 'warning' : 'close-circle'"
-              [class]="simulationResult.successProbability >= 80 ? 'success' : simulationResult.successProbability >= 60 ? 'warning' : 'danger'">
-            </ion-icon>
-            <span>{{ getSuccessMessage() }}</span>
-          </div>
-        </div>
-      </ion-card>
-
-      <!-- What This Means for You -->
-      <ion-card class="explanation-card">
-        <ion-card-header>
-          <ion-card-title>
-            <ion-icon name="bulb-outline" class="icon-enhanced primary"></ion-icon>
-            What This Means for You
-          </ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <div *ngIf="simulationResult.successProbability >= 90" class="success-explanation">
-            <h4 class="color-success">
-              <ion-icon name="checkmark-circle" class="success"></ion-icon>
-              Excellent Plan Confidence
-            </h4>
-            <p>Your retirement plan looks very strong! With a {{ formatPercent(simulationResult.successProbability) }}
-              success rate, you can be confident your money will last through retirement, even in difficult market
-              conditions.</p>
-          </div>
-
-          <div *ngIf="simulationResult.successProbability >= 75 && simulationResult.successProbability < 90"
-            class="moderate-explanation">
-            <h4 class="color-warning">
-              <ion-icon name="warning" class="warning"></ion-icon>
-              Good Plan with Minor Adjustments
-            </h4>
-            <p>Your plan is solid but could benefit from small improvements. Consider reducing expenses slightly or
-              working 1-2 years longer to improve your success rate.</p>
-          </div>
-
-          <div *ngIf="simulationResult.successProbability < 75" class="risk-explanation">
-            <h4 class="color-danger">
-              <ion-icon name="alert-circle" class="danger"></ion-icon>
-              Plan Needs Significant Changes
-            </h4>
-            <p>Your current plan has significant risk of running out of money. Consider: reducing annual spending,
-              working longer, or increasing your portfolio before retirement.</p>
-          </div>
-        </ion-card-content>
-      </ion-card>
-
-      <!-- Practical Retirement Insights -->
-      <div class="scenario-summary">
-        <h3>
-          <ion-icon name="lightbulb-outline" class="icon-enhanced primary"></ion-icon>
-          Your Retirement Plan Breakdown
-        </h3>
-        <ion-list>
-          <ion-item>
-            <ion-label>
-              <h4>Monthly Income in Retirement</h4>
-              <p>{{ formatCurrency(annualWithdrawal / 12) }} per month (starting amount)</p>
-              <small>This grows to {{ formatCurrency(getFinalYearWithdrawal() / 12) }} per month by year {{
-                yearsToLast }} due to inflation</small>
-            </ion-label>
-          </ion-item>
-
-          <ion-item>
-            <ion-label>
-              <h4>Total Money You'll Withdraw</h4>
-              <p>{{ formatCurrency(getTotalWithdrawal()) }} over {{ yearsToLast }} years</p>
-              <small>This is {{ formatPercent((getTotalWithdrawal() / portfolioValue) * 100) }} of your starting
-                portfolio</small>
-            </ion-label>
-          </ion-item>
-
-          <ion-item>
-            <ion-label>
-              <h4>What Happens in a Typical Market</h4>
-              <p>You'd have {{ formatCurrency(simulationResult.medianEndValue) }} left over</p>
-              <small>In 50% of scenarios, you end up with more than this amount</small>
-            </ion-label>
-          </ion-item>
-
-          <ion-item>
-            <ion-label>
-              <h4>What Happens in Bad Markets</h4>
-              <p *ngIf="simulationResult.minimumEndValue > 0">Even in the worst 1% of scenarios, you'd have {{
-                formatCurrency(simulationResult.minimumEndValue) }} remaining</p>
-              <p *ngIf="simulationResult.minimumEndValue <= 0" class="color-danger">In the worst scenarios, you could
-                run out of money before year {{ yearsToLast }}</p>
-              <small *ngIf="simulationResult.minimumEndValue > 0">This shows your plan has good downside
-                protection</small>
-              <small *ngIf="simulationResult.minimumEndValue <= 0">Consider reducing spending or working longer to
-                protect against this risk</small>
-            </ion-label>
-          </ion-item>
-
-          <ion-item>
-            <ion-label>
-              <h4>Your Safety Margin</h4>
-              <p *ngIf="(annualWithdrawal / portfolioValue) <= 0.04" class="color-success">Conservative ({{
-                formatPercent((annualWithdrawal / portfolioValue) * 100) }} withdrawal rate)</p>
-              <p *ngIf="(annualWithdrawal / portfolioValue) > 0.04 && (annualWithdrawal / portfolioValue) <= 0.05"
-                class="color-warning">Moderate ({{ formatPercent((annualWithdrawal / portfolioValue) * 100) }}
-                withdrawal rate)</p>
-              <p *ngIf="(annualWithdrawal / portfolioValue) > 0.05" class="color-danger">Aggressive ({{
-                formatPercent((annualWithdrawal / portfolioValue) * 100) }} withdrawal rate)</p>
-              <small>The "4% rule" suggests withdrawing no more than 4% annually for safety</small>
-            </ion-label>
-          </ion-item>
-        </ion-list>
-      </div>
-    </div>
-
-    <!-- Actionable Recommendations -->
-    <ion-card *ngIf="simulationResult" class="recommendations-card">
-      <ion-card-header>
-        <ion-card-title>
-          <ion-icon name="bulb-outline" class="icon-enhanced primary"></ion-icon>
-          Specific Next Steps
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div *ngIf="simulationResult && simulationResult.successProbability >= 90">
-          <h4 class="color-success">Your Plan Looks Great! 🎉</h4>
-          <ul>
-            <li>Consider if you could retire earlier or increase your lifestyle</li>
-            <li>Review your plan every 2-3 years as markets change</li>
-            <li>Think about legacy planning - you may have significant assets left over</li>
-          </ul>
-        </div>
-
-        <div
-          *ngIf="simulationResult && simulationResult.successProbability >= 75 && simulationResult.successProbability < 90">
-          <h4 class="color-warning">Small Improvements Recommended</h4>
-          <ul>
-            <li><strong>Option 1:</strong> Reduce annual spending by {{ formatCurrency((annualWithdrawal * 0.1)) }}
-              (10%)</li>
-            <li><strong>Option 2:</strong> Work 2-3 more years to build a bigger cushion</li>
-            <li><strong>Option 3:</strong> Consider a slightly more aggressive investment allocation</li>
-          </ul>
-        </div>
-
-        <div *ngIf="simulationResult && simulationResult.successProbability < 75">
-          <h4 class="color-danger">Significant Changes Needed</h4>
-          <ul>
-            <li><strong>Reduce spending:</strong> Try {{ formatCurrency(portfolioValue * 0.04) }} annually (4% rule)
-            </li>
-            <li><strong>Work longer:</strong> Each extra year dramatically improves your odds</li>
-            <li><strong>Save more now:</strong> Increase portfolio to {{ formatCurrency(annualWithdrawal / 0.04) }}
-              for safety</li>
-            <li><strong>Consider part-time work</strong> in early retirement to reduce portfolio withdrawals</li>
-          </ul>
-        </div>
-      </ion-card-content>
-    </ion-card>
+        <!-- Assumptions link -->
+        <button class="mc-assump-link" (click)="openAssumptionsSheet()">
+          <span class="material-symbols-outlined">verified_user</span>
+          Market assumptions &amp; methodology
+        </button>
 
       </div><!-- end mc-content-wrapper -->
 
-      <!-- Lock overlay (only shown when locked) -->
+      <!-- Lock overlay (only shown when tier is below Plus) -->
       <div *ngIf="isMonteCarloLocked" class="mc-lock-overlay">
         <span class="material-symbols-outlined mc-lock-icon">lock</span>
         <p class="mc-lock-text">Available on Plus and Pro</p>
@@ -473,6 +108,9 @@
         </button>
       </div>
     </div><!-- end mc-gate-wrapper -->
+
+    <!-- Assumptions + Pro-nudge sheets are presented via ModalController
+         (McInfoSheetComponent) so they overlay the whole app on iOS. -->
   </div>
 
   <!-- Strategy Education Section -->

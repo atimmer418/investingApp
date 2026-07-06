@@ -1,5 +1,19 @@
+/* Cloudflare Ask AI-style canvas: soft off-white with a subtle dotted grid.
+   Painted once on the page container so it runs continuously behind the
+   toolbar, messages, and composer — those layers are transparent below. */
+:host {
+  --chat-canvas: #f7f7f8;
+  --chat-canvas-dot: rgba(17, 24, 39, 0.1);
+}
+
+#main-content {
+  background-color: var(--chat-canvas);
+  background-image: radial-gradient(circle, var(--chat-canvas-dot) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
 .chat-content {
-  --background: var(--app-background);
+  --background: transparent;
   /* Force explicit height to ensure scrollbar ends at top of input bar and tab switcher */
   /* 56px tab bar + safe area + 36px buffer + 50px message bar */
   height: calc(100% - (var(--ion-tab-bar-height, 56px) + env(safe-area-inset-bottom) + 36px + 50px));
@@ -12,7 +26,8 @@
   }
 }
 
-ion-content {
+/* History drawer keeps the standard app background */
+ion-menu ion-content {
   --background: var(--app-background);
 }
 
@@ -20,12 +35,12 @@ ion-content {
   padding-top: env(safe-area-inset-top);
 }
 
-ion-header {
-  --background: var(--app-background);
-  background: var(--app-background) !important;
+#main-content ion-header {
+  --background: transparent;
+  background: transparent !important;
 
   ion-toolbar {
-    --background: var(--app-background);
+    --background: transparent;
     --color: var(--app-text-primary);
     --border-width: 0;
   }
@@ -43,6 +58,12 @@ ion-header {
 .message-wrapper {
   display: flex;
   align-items: flex-end;
+
+  /* Streaming placeholder: an assistant message exists before its first token
+     arrives — keep it hidden so only the thinking row shows */
+  &.empty-message {
+    display: none;
+  }
   /* 
     Updated Logic:
     - Assistant messages: 0 padding on wrapper. 
@@ -83,23 +104,14 @@ ion-header {
       max-width: none;
     }
 
-    &.loading-bubble-wrapper {
-      align-items: center;
-      /* Specific centering for loading state */
-    }
   }
 }
 
 .avatar {
   flex-shrink: 0;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-
-  /* Fix for Safari/iOS rounded corner blurring/bleeding */
-  -webkit-mask-image: -webkit-radial-gradient(white, black);
-  mask-image: radial-gradient(white, black);
-  overflow: hidden;
+  width: 36px;
+  height: 36px;
+  /* Full-body pig SVG on transparent background — no circle mask/crop */
 
   /* Hardware acceleration for containment */
   transform: translateZ(0);
@@ -109,10 +121,7 @@ ion-header {
   .fred-avatar-img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-
-    /* apply text-rendering optimization to image which can help detail */
-    image-rendering: -webkit-optimize-contrast;
+    object-fit: contain;
   }
 }
 
@@ -141,94 +150,160 @@ ion-header {
   }
 }
 
-.loading-bubble {
-  padding: 0px;
-  min-width: 80px;
-  height: 48px;
-  /* Slightly shorter than avatar for better proportions */
+/* Thinking state — small pig + pig-themed phrase with a blue pulse sweeping
+   through the grey text (Cloudflare "Returning results…" treatment) */
+.thinking-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-}
+  gap: 10px;
+  padding-left: 4px;
 
-.typing-indicator {
-  display: flex;
-  gap: 4px;
+  .thinking-pig {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    animation: thinking-bob 1.6s ease-in-out infinite;
+  }
 
-  span {
-    width: 8px;
-    height: 8px;
-    background-color: #8e8e93;
-    border-radius: 50%;
-    animation: bounce 1.4s infinite ease-in-out both;
-
-    &:nth-child(1) {
-      animation-delay: -0.32s;
-    }
-
-    &:nth-child(2) {
-      animation-delay: -0.16s;
-    }
+  .thinking-text {
+    font-size: 15px;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--app-gray-400, #9ca3af); // fallback if background-clip:text unsupported
+    background: linear-gradient(90deg, #9ca3af 35%, #2563eb 50%, #9ca3af 65%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: thinking-shimmer 4.5s linear infinite;
   }
 }
 
-@keyframes bounce {
+@keyframes thinking-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes thinking-bob {
 
   0%,
-  80%,
   100% {
-    transform: scale(0);
+    transform: translateY(0);
   }
 
-  40% {
-    transform: scale(1);
+  50% {
+    transform: translateY(-3px);
   }
 }
 
-.suggestions-container {
-  padding: 0 16px;
-  margin-top: -8px; // Pull closer to greeting
-  margin-bottom: 8px;
+/* Empty state — Cloudflare Ask AI-style hero: pig, time greeting, suggestion cards */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1vh 20px 24px;
 
-  .suggestion-header {
-    font-size: 13px;
-    color: var(--ion-color-medium);
-    margin-bottom: 8px;
-    margin-left: 4px;
-    font-weight: 500;
+  .empty-hero {
+    width: 220px;
+    height: auto;
   }
 
-  .suggestion-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+  .empty-greeting {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--app-gray-900, #111827);
+    margin: 8px 0 0;
+  }
 
-    ion-chip {
-      margin: 0;
-      font-size: 13px;
-      --background: transparent;
-      --color: var(--app-primary, #007aff);
-      border-color: var(--app-primary, #007aff);
+  .empty-subtitle {
+    font-size: 17px;
+    color: var(--app-gray-500, #6b7280);
+    margin: 8px 0 0;
+  }
+
+  .suggestion-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 420px;
+    margin-top: 32px;
+  }
+
+  .suggestion-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--app-card-background, #ffffff);
+    border: 1px solid var(--app-card-border, #e5e5ea);
+    border-radius: 14px;
+    text-align: left;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+
+    &:active {
+      background: var(--app-gray-100, #f3f4f6);
+    }
+
+    .card-icon {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(37, 99, 235, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      ion-icon {
+        font-size: 20px;
+        color: var(--app-primary, #2563eb);
+      }
+    }
+
+    .card-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--app-gray-900, #111827);
+      line-height: 1.35;
     }
   }
 }
 
 ion-footer {
-  background: var(--app-background, #f2f2f7) !important;
-  --background: var(--app-background, #f2f2f7) !important;
+  background: transparent !important;
+  --background: transparent !important;
   border-top: none;
   padding-bottom: var(--fred-tabbar-clearance);
+  transition: transform 220ms ease, padding-bottom 220ms ease;
+  will-change: transform;
+
+  /* Native keyboard is overlay-mode (Capacitor resize:'none') — lift the composer
+     above it. --kb-offset is bound from the page TS on keyboardWillShow/Hide. */
+  &.kb-open {
+    transform: translateY(calc(-1 * var(--kb-offset, 0px)));
+    padding-bottom: 8px; // tab bar is under the keyboard; drop the clearance
+  }
 }
 
 .input-bar {
-  background: var(--app-background, #f2f2f7);
-  padding: 6px 8px;
+  background: transparent;
+  padding: 0 14px; // match --ftb-side-margin so the pill aligns with the floating tab bar
   width: 100%;
   box-sizing: border-box;
 }
 
 .input-container {
-  min-height: 38px !important;
+  min-height: 56px !important; // match --ftb-height-full
   height: auto !important;
   padding-top: 0 !important;
   padding-bottom: 0 !important;
@@ -239,36 +314,41 @@ ion-footer {
   align-items: flex-end !important;
   position: relative !important; // Anchor for absolute button
 
-  background: var(--app-background, #f2f2f7);
-  border-radius: 18px;
-  border: 1px solid var(--app-card-border, #e5e5ea);
+  // Same glass treatment as the floating tab bar capsule
+  background: rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-radius: 28px; // = 56px/2: pill when single-line, rounded rect when grown
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 
   // CONTAINER WRAPS CONTENT
   max-height: none !important;
   overflow: visible !important;
 
   flex-grow: 1;
-  padding-left: 12px;
+  padding-left: 18px;
   padding-right: 2px;
 
   ion-textarea {
-    --padding-top: 7px !important;
-    --padding-bottom: 7px !important;
+    // (56px pill - 22px line) / 2 = 17px: centers a single line in the pill
+    --padding-top: 17px !important;
+    --padding-bottom: 17px !important;
     --padding-start: 0;
 
     // Gutter for absolute button
-    --padding-end: 45px !important;
+    --padding-end: 52px !important;
 
-    min-height: 36px !important;
+    min-height: 56px !important;
     margin: 0 !important;
 
     border: none;
     padding: 0 !important;
 
     // CRITICAL: Host must respect max-height and scroll
-    // 9 lines * 22px line-height + 14px padding (7px top + 7px bottom) = 212px
+    // 8 lines * 22px line-height + 34px padding (17px top + 17px bottom) = 210px
     height: auto !important;
-    max-height: 212px !important;
+    max-height: 210px !important;
 
     // HOST HANDLES SCROLL
     overflow-y: auto !important;
@@ -279,6 +359,9 @@ ion-footer {
 
     --border-width: 0;
     --highlight-color-focused: none;
+    --highlight-color-valid: transparent;
+    --highlight-color-invalid: transparent;
+    --highlight-height: 0;
     flex: 1;
 
     // Scrollbar styling (Curve Fix)
@@ -305,10 +388,10 @@ ion-footer {
     }
 
     &::part(native) {
-      padding-top: 7px !important;
-      padding-bottom: 7px !important;
+      padding-top: 17px !important;
+      padding-bottom: 17px !important;
       margin-top: 0 !important;
-      min-height: 36px !important;
+      min-height: 56px !important;
 
       // NO INTERNAL SCROLL
       overflow: visible !important;
@@ -324,8 +407,8 @@ ion-footer {
 
     ::ng-deep .native-wrapper.native-wrapper::after {
       line-height: 22px !important;
-      padding-top: 7px !important;
-      padding-bottom: 7px !important;
+      padding-top: 17px !important;
+      padding-bottom: 17px !important;
       max-height: none !important;
     }
 
@@ -333,13 +416,13 @@ ion-footer {
       border: none !important;
       outline: none !important;
       box-shadow: none !important;
-      padding-top: 7px !important;
-      padding-bottom: 7px !important;
+      padding-top: 17px !important;
+      padding-bottom: 17px !important;
       padding-left: 0 !important;
       padding-right: 0 !important;
       margin: 0 !important;
       resize: none !important;
-      min-height: 36px !important;
+      min-height: 22px !important;
       line-height: 22px !important;
 
       // NO NATIVE SCROLL
@@ -349,17 +432,23 @@ ion-footer {
   }
 
   .send-button {
-    height: 30px !important;
-    min-height: 30px !important;
+    height: 40px !important;
+    min-height: 40px !important;
     margin: 0 !important;
 
-    // ABSOLUTE POSITIONING
+    // ABSOLUTE POSITIONING — hugs the bottom-right as the pill grows
     position: absolute !important;
-    bottom: 3px !important;
-    right: 5px !important;
+    bottom: 8px !important;
+    right: 8px !important;
 
-    width: 32px;
+    width: 40px;
     z-index: 20;
+
+    --border-radius: 50%;
+    --background: var(--app-primary, #2563eb);
+    --background-activated: #1d4ed8;
+    --background-hover: #1d4ed8;
+    --box-shadow: none;
 
     --padding-top: 0 !important;
     --padding-bottom: 0 !important;
@@ -367,12 +456,16 @@ ion-footer {
     --padding-end: 0;
 
     ion-icon {
-      font-size: 28px;
-      color: var(--app-primary, #007aff);
+      font-size: 20px;
+      color: #ffffff;
     }
 
-    &[disabled] ion-icon {
-      color: var(--app-gray-300, #c7c7cc);
+    &[disabled] {
+      --background: var(--app-gray-200, #e5e7eb);
+
+      ion-icon {
+        color: var(--app-gray-400, #9ca3af);
+      }
     }
   }
 }

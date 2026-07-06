@@ -21,6 +21,7 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 - FRED-178 — Research: Face ID-only app lock without passkey sheet
 - FRED-180 — Add time-to-freedom visual on profile page
 - FRED-205 — Preload tab1 portfolio — hold splash for fresh data
+- FRED-207 — Refactor Monte Carlo simulator into fullscreen premium flow
 
 ## Done
 

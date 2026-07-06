@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FRED-207 · Monte Carlo Refactor — Interactive Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..700,0..1,-50..200" rel="stylesheet">
+<style>
+/* ============================================================
+   FRED-207 prototype — presentation stage
+   ============================================================ */
+:root{
+  --primary:#2563EB;
+  --text:#0f172a;
+  --gray:#6b7280;
+  --bg:#f8fafc;
+  --border:#e5e7eb;
+  /* the new simulator sub-theme */
+  --sim-deep:#081c4e;
+  --sim-mid:#16309b;
+  --sim-primary:#2563EB;
+  --sim-bright:#3b82f6;
+  --glass:rgba(255,255,255,.09);
+  --glass-border:rgba(255,255,255,.16);
+  --mint:#34d399;
+  --amber:#fbbf24;
+  --coral:#f87171;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+html,body{height:100%;}
+body{
+  font-family:'Manrope',sans-serif;
+  background:#0d1220;
+  background-image:
+    radial-gradient(1200px 600px at 80% -10%, rgba(37,99,235,.16), transparent 60%),
+    radial-gradient(900px 500px at 10% 110%, rgba(37,99,235,.10), transparent 60%);
+  color:#e6eaf3;
+  display:flex;flex-direction:column;align-items:center;
+  overflow:hidden;
+}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;}
+
+/* ---------- proto chrome (outside the phone) ---------- */
+.proto-bar{
+  width:100%;max-width:1180px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:18px 28px 10px;flex-shrink:0;
+}
+.proto-title{display:flex;flex-direction:column;gap:2px;}
+.proto-title .kicker{font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#5b7bd6;}
+.proto-title h1{font-size:17px;font-weight:800;letter-spacing:-.01em;color:#f2f5fb;}
+.proto-controls{display:flex;align-items:center;gap:12px;}
+.tier-switch{display:flex;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:3px;}
+.tier-switch button{
+  border:none;background:transparent;color:#93a2c4;font-family:'Manrope';font-size:12px;font-weight:700;
+  padding:6px 14px;border-radius:8px;cursor:pointer;transition:all .18s ease;letter-spacing:.02em;
+}
+.tier-switch button.on{background:var(--primary);color:#fff;box-shadow:0 4px 12px -2px rgba(37,99,235,.5);}
+.proto-btn{
+  border:1px solid rgba(255,255,255,.12);background:transparent;color:#93a2c4;font-family:'Manrope';
+  font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer;transition:all .15s;
+}
+.proto-btn:hover{color:#fff;border-color:rgba(255,255,255,.3);}
+.proto-hint{font-size:11.5px;color:#5d6a89;font-weight:500;padding:0 28px 6px;flex-shrink:0;}
+.proto-hint strong{color:#8fa3d0;font-weight:700;}
+
+/* ---------- the phone ---------- */
+.stage{flex:1;display:flex;align-items:center;justify-content:center;width:100%;min-height:0;}
+.phone-wrap{transform-origin:center center;}
+.phone{
+  width:390px;height:844px;position:relative;border-radius:54px;
+  background:#000;padding:6px;
+  box-shadow:0 0 0 2px #1a2138,0 40px 100px -20px rgba(0,0,0,.8),0 0 120px -40px rgba(37,99,235,.35);
+}
+.screen-clip{
+  position:relative;width:100%;height:100%;border-radius:48px;overflow:hidden;background:var(--bg);
+}
+.island{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  width:118px;height:34px;background:#000;border-radius:20px;z-index:400;
+}
+.statusbar{
+  position:absolute;top:0;left:0;right:0;height:54px;z-index:390;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 30px 0;pointer-events:none;
+  font-size:14px;font-weight:700;color:var(--text);
+  transition:color .4s ease;
+}
+.statusbar .right{display:flex;gap:5px;align-items:center;}
+.statusbar .right .material-symbols-outlined{font-size:16px;}
+.statusbar.light-on-dark{color:#fff;}
+
+/* ---------- app chrome (untouched by story) ---------- */
+.app{position:absolute;inset:0;display:flex;flex-direction:column;}
+.app-header{flex-shrink:0;background:var(--bg);padding:58px 0 0;}
+.app-header .title{font-size:18px;font-weight:800;letter-spacing:-.015em;color:var(--text);text-align:center;}
+.switcher-row{display:flex;justify-content:center;padding:10px 0 8px;}
+.ios-switcher{display:flex;background:#e8ecf3;border-radius:12px;padding:3px;gap:2px;}
+.ios-switcher button{
+  border:none;background:transparent;width:64px;height:32px;border-radius:9px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;color:#8b94a7;transition:all .2s;
+}
+.ios-switcher button.on{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(15,23,42,.12);}
+.ios-switcher .material-symbols-outlined{font-size:19px;}
+.app-content{flex:1;overflow-y:auto;position:relative;background:var(--bg);scrollbar-width:none;}
+.app-content::-webkit-scrollbar{display:none;}
+.tabbar{
+  flex-shrink:0;height:82px;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+  border-top:1px solid #eef1f6;display:flex;justify-content:space-around;align-items:flex-start;padding-top:10px;
+}
+.tabbar .tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:#a2abbd;font-size:9.5px;font-weight:700;letter-spacing:.02em;}
+.tabbar .tab.on{color:var(--primary);}
+.tabbar .material-symbols-outlined{font-size:24px;}
+
+/* ============================================================
+   LANDING — the refactored simulator section
+   ============================================================ */
+.landing{padding:10px 18px 28px;display:flex;flex-direction:column;min-height:100%;}
+.landing-gate{position:relative;display:flex;flex-direction:column;flex:1;}
+.gate-inner{display:flex;flex-direction:column;flex:1;transition:filter .3s ease;}
+.gate-inner.blurred{filter:blur(9px);pointer-events:none;user-select:none;}
+
+.hero{text-align:center;padding:8px 6px 4px;flex-shrink:0;}
+.hero .eyebrow{font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--primary);}
+.hero h2{font-size:26px;font-weight:800;letter-spacing:-.025em;color:var(--text);margin-top:6px;line-height:1.15;}
+.hero p{font-size:13.5px;color:var(--gray);margin-top:7px;line-height:1.45;max-width:300px;margin-left:auto;margin-right:auto;}
+
+.orb-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:26px 0 8px;flex-shrink:0;}
+.orb{
+  position:relative;width:118px;height:118px;border-radius:50%;border:none;cursor:pointer;
+  background:radial-gradient(circle at 32% 28%, #60a5fa 0%, #2563EB 48%, #1d4ed8 100%);
+  box-shadow:
+    0 18px 40px -10px rgba(37,99,235,.55),
+    0 4px 14px -2px rgba(29,78,216,.4),
+    inset 0 -6px 16px rgba(13,42,148,.45),
+    inset 0 4px 10px rgba(255,255,255,.35);
+  display:flex;align-items:center;justify-content:center;
+  animation:breathe 4.5s ease-in-out infinite;
+  transition:transform .18s ease;
+}
+.orb:active{transform:scale(.95);}
+.orb .material-symbols-outlined{
+  font-size:54px;color:#fff;font-variation-settings:'FILL' 1,'wght' 500;
+  text-shadow:0 2px 10px rgba(13,42,148,.4);
+}
+.orb::before,.orb::after{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  border:1.5px solid rgba(37,99,235,.45);animation:ring 3.6s ease-out infinite;
+}
+.orb::after{animation-delay:1.8s;}
+@keyframes ring{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.75);opacity:0}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+.orb-label{margin-top:16px;font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.01em;}
+.orb-sub{margin-top:2px;font-size:11px;color:var(--gray);font-weight:500;}
+
+/* scenario chips + toggle */
+.config-zone{flex-shrink:0;padding:14px 0 0;}
+.zone-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.zone-label .lockchip{display:inline-flex;align-items:center;gap:3px;background:#eef2ff;color:#4553d8;font-size:9px;font-weight:800;letter-spacing:.08em;padding:2px 7px;border-radius:20px;}
+.zone-label .lockchip .material-symbols-outlined{font-size:10px;}
+.chips{display:flex;background:#eef1f6;border-radius:12px;padding:3px;gap:2px;position:relative;}
+.chips button{
+  flex:1;border:none;background:transparent;font-family:'Manrope';font-size:12px;font-weight:700;color:#8b94a7;
+  height:36px;border-radius:9px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:4px;
+}
+.chips button.on{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(15,23,42,.12);}
+.chips.pro-locked button{color:#b6bdcb;}
+.chips.pro-locked button.on{color:#9aa3b5;}
+.toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 2px 0;
+}
+.toggle-row .t-label{font-size:13.5px;font-weight:700;color:var(--text);letter-spacing:-.01em;}
+.toggle-row .t-sub{font-size:11px;color:var(--gray);margin-top:1px;font-weight:500;}
+.iosw{position:relative;width:46px;height:28px;border-radius:20px;background:#e2e6ee;cursor:pointer;transition:background .2s;flex-shrink:0;border:none;}
+.iosw::after{content:'';position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(15,23,42,.25);transition:transform .2s;}
+.iosw.on{background:var(--primary);}
+.iosw.on::after{transform:translateX(18px);}
+
+/* history */
+.history-zone{flex:1;padding-top:20px;display:flex;flex-direction:column;min-height:120px;}
+.hist-cards{display:flex;flex-direction:column;gap:8px;}
+.hist-card{
+  background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 14px;
+  display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .15s, box-shadow .15s;
+}
+.hist-card:active{transform:scale(.985);}
+.hist-icon{
+  width:36px;height:36px;border-radius:10px;background:#eef4ff;color:var(--primary);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.hist-icon .material-symbols-outlined{font-size:19px;}
+.hist-mid{flex:1;min-width:0;}
+.hist-mid .h-line1{font-size:13px;font-weight:800;color:var(--text);letter-spacing:-.01em;}
+.hist-mid .h-line2{font-size:11px;color:var(--gray);font-weight:600;margin-top:2px;}
+.hist-pill{font-size:10px;font-weight:800;letter-spacing:.03em;padding:4px 9px;border-radius:20px;flex-shrink:0;}
+.hist-pill.good{background:#dcfce7;color:#14532d;}
+.hist-pill.mid{background:#fef3c7;color:#92400e;}
+.hist-pill.bad{background:#fee2e2;color:#991b1b;}
+.hist-empty{
+  border:1.5px dashed #dde3ec;border-radius:14px;padding:20px 16px;text-align:center;
+}
+.hist-empty .material-symbols-outlined{font-size:22px;color:#c3cbd9;}
+.hist-empty p{font-size:12px;color:var(--gray);font-weight:600;margin-top:6px;line-height:1.5;}
+
+/* assumptions link */
+.assumptions-link{
+  margin-top:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:6px;
+  background:none;border:none;cursor:pointer;font-family:'Manrope';
+  font-size:11.5px;font-weight:700;color:var(--gray);padding:8px;width:100%;
+}
+.assumptions-link .material-symbols-outlined{font-size:15px;}
+.assumptions-link:active{color:var(--primary);}
+
+/* core lock overlay */
+.lock-overlay{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:50;opacity:0;pointer-events:none;transition:opacity .3s ease;
+}
+.lock-overlay.on{opacity:1;pointer-events:auto;}
+.lock-box{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 40px;}
+.lock-box .lock-ring{
+  width:64px;height:64px;border-radius:50%;background:#fff;border:1px solid var(--border);
+  box-shadow:0 12px 30px -8px rgba(15,23,42,.18);display:flex;align-items:center;justify-content:center;
+}
+.lock-box .lock-ring .material-symbols-outlined{font-size:28px;color:var(--text);}
+.lock-box h3{font-size:17px;font-weight:800;color:var(--text);margin-top:14px;letter-spacing:-.015em;}
+.lock-box p{font-size:12.5px;color:var(--gray);font-weight:500;margin-top:5px;line-height:1.5;}
+.lock-box button{
+  margin-top:16px;border:none;cursor:pointer;font-family:'Manrope';
+  background:#111827;color:#fff;font-size:13px;font-weight:700;
+  padding:12px 30px;border-radius:12px;box-shadow:0 8px 20px -4px rgba(0,0,0,.35);
+}
+
+/* ============================================================
+   THE FULLSCREEN FLOW — blue gradient world
+   ============================================================ */
+.flow{
+  position:absolute;inset:0;z-index:300;opacity:0;visibility:hidden;
+  transition:opacity .45s ease, visibility .45s;
+  background:
+    radial-gradient(140% 90% at 85% -15%, rgba(96,165,250,.35), transparent 55%),
+    radial-gradient(120% 70% at 0% 108%, rgba(59,130,246,.28), transparent 55%),
+    linear-gradient(168deg, var(--sim-deep) 0%, var(--sim-mid) 46%, var(--sim-primary) 100%);
+}
+.flow.open{opacity:1;visibility:visible;}
+.flow::before{ /* fine noise for depth */
+  content:'';position:absolute;inset:0;opacity:.05;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E");
+}
+.flow-top{
+  position:absolute;top:0;left:0;right:0;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:64px 20px 0;
+}
+.flow-x,.flow-back{
+  width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);transition:background .15s, opacity .25s;
+}
+.flow-x:active,.flow-back:active{background:rgba(255,255,255,.24);}
+.flow-back{visibility:hidden;opacity:0;}
+.flow-back.show{visibility:visible;opacity:1;}
+.flow-x .material-symbols-outlined,.flow-back .material-symbols-outlined{font-size:20px;}
+.dots{display:flex;gap:6px;}
+.dots span{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.28);transition:all .3s;}
+.dots span.on{background:#fff;width:18px;border-radius:4px;}
+
+.fscreen{
+  position:absolute;inset:0;padding:118px 26px 40px;
+  display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;transition:opacity .38s ease;
+}
+.fscreen.on{opacity:1;pointer-events:auto;}
+.fs-eyebrow{font-size:10px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.55);}
+.fs-h1{font-size:30px;font-weight:800;letter-spacing:-.03em;color:#fff;line-height:1.12;margin-top:8px;}
+.fs-sub{font-size:13.5px;color:rgba(255,255,255,.65);font-weight:500;margin-top:8px;line-height:1.5;}
+.fs-center{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;}
+
+.big-readout{
+  font-size:52px;font-weight:800;letter-spacing:-.04em;color:#fff;text-align:center;
+  cursor:pointer;line-height:1;text-shadow:0 6px 30px rgba(8,28,78,.45);
+  border:none;background:none;font-family:'Manrope';width:100%;
+}
+.big-readout .unit{font-size:20px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:-.01em;}
+.readout-hint{text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:10px;}
+.big-input{
+  font-size:52px;font-weight:800;letter-spacing:-.04em;color:#fff;text-align:center;width:100%;
+  background:transparent;border:none;outline:none;font-family:'Manrope';
+  border-bottom:2px solid rgba(255,255,255,.5);padding-bottom:4px;display:none;
+}
+
+.sim-range{margin-top:34px;-webkit-appearance:none;appearance:none;width:100%;height:36px;background:transparent;cursor:pointer;}
+.sim-range::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:var(--track,linear-gradient(to right,#fff 0%,#fff 50%,rgba(255,255,255,.22) 50%));}
+.sim-range::-webkit-slider-thumb{
+  -webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:#fff;margin-top:-12.5px;
+  box-shadow:0 4px 16px rgba(8,28,78,.5), inset 0 -3px 6px rgba(37,99,235,.18);border:none;
+}
+.range-ends{display:flex;justify-content:space-between;margin-top:8px;font-size:10.5px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.04em;}
+
+.fetch-chip{
+  margin:26px auto 0;display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff;
+  font-family:'Manrope';font-size:12.5px;font-weight:700;padding:10px 18px;border-radius:24px;cursor:pointer;
+  backdrop-filter:blur(8px);transition:background .15s;
+}
+.fetch-chip:active{background:rgba(255,255,255,.24);}
+.fetch-chip .material-symbols-outlined{font-size:16px;}
+.fetch-chip.loading .material-symbols-outlined{animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.fs-cta{
+  flex-shrink:0;height:54px;border:none;border-radius:14px;cursor:pointer;
+  background:#fff;color:#1d4ed8;font-family:'Manrope';font-size:15.5px;font-weight:800;letter-spacing:-.01em;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 10px 30px -6px rgba(8,28,78,.55);
+  transition:transform .15s, opacity .2s;
+}
+.fs-cta:active{transform:scale(.98);}
+.fs-cta:disabled{opacity:.35;pointer-events:none;}
+.fs-cta .material-symbols-outlined{font-size:20px;font-variation-settings:'FILL' 1;}
+
+/* outside accounts */
+.glass-field{
+  background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;
+  padding:14px 16px;backdrop-filter:blur(12px);margin-top:12px;
+}
+.glass-field label{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5);display:block;}
+.gf-row{display:flex;align-items:baseline;gap:4px;margin-top:6px;}
+.gf-row .pre{font-size:18px;font-weight:700;color:rgba(255,255,255,.55);}
+.gf-row input{
+  flex:1;background:transparent;border:none;outline:none;font-family:'Manrope';
+  font-size:24px;font-weight:800;color:#fff;letter-spacing:-.02em;min-width:0;
+}
+.gf-row input::placeholder{color:rgba(255,255,255,.28);}
+.combined-line{
+  margin-top:18px;text-align:center;font-size:13px;font-weight:600;color:rgba(255,255,255,.65);
+}
+.combined-line strong{color:#fff;font-weight:800;}
+
+/* calculating */
+.calc-stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.calc-rings{position:relative;width:170px;height:170px;display:flex;align-items:center;justify-content:center;}
+.calc-rings .ring{
+  position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);
+  animation:ring 2.4s ease-out infinite;
+}
+.calc-rings .ring:nth-child(2){animation-delay:.8s;}
+.calc-rings .ring:nth-child(3){animation-delay:1.6s;}
+.calc-core{
+  width:112px;height:112px;border-radius:50%;
+  background:rgba(255,255,255,.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 20px 50px -12px rgba(8,28,78,.6);
+}
+.calc-num{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+.calc-of{font-size:9px;font-weight:800;letter-spacing:.16em;color:rgba(255,255,255,.5);text-transform:uppercase;margin-top:2px;}
+.calc-line{margin-top:34px;font-size:13px;font-weight:600;color:rgba(255,255,255,.7);min-height:20px;text-align:center;transition:opacity .3s;}
+
+/* results */
+.results-scroll{flex:1;overflow-y:auto;margin:0 -26px;padding:0 26px 8px;scrollbar-width:none;min-height:0;}
+.results-scroll::-webkit-scrollbar{display:none;}
+.showdown{display:flex;flex-direction:column;gap:9px;margin-top:20px;}
+.sd-card{
+  background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;
+  padding:13px 15px;display:flex;align-items:center;gap:12px;backdrop-filter:blur(12px);
+  opacity:0;transform:translateY(14px);transition:opacity .45s ease, transform .45s ease;
+}
+.sd-card.in{opacity:1;transform:translateY(0);}
+.sd-info{flex:1;min-width:0;}
+.sd-name{font-size:13.5px;font-weight:800;color:#fff;letter-spacing:-.01em;}
+.sd-tag{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.55);margin-top:2px;}
+.sd-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.sd-pct{font-size:21px;font-weight:800;color:#fff;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+.sd-badge{font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:12px;display:flex;align-items:center;gap:3px;}
+.sd-badge.strong{background:rgba(52,211,153,.18);color:var(--mint);border:1px solid rgba(52,211,153,.35);}
+.sd-badge.moderate{background:rgba(251,191,36,.16);color:var(--amber);border:1px solid rgba(251,191,36,.35);}
+.sd-badge.risk{background:rgba(248,113,113,.16);color:var(--coral);border:1px solid rgba(248,113,113,.35);}
+.sd-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.14);margin-top:8px;overflow:hidden;}
+.sd-bar i{display:block;height:100%;border-radius:2px;background:#fff;width:0;transition:width .9s cubic-bezier(.2,.7,.2,1);}
+.sd-bar i.strong{background:var(--mint);}
+.sd-bar i.moderate{background:var(--amber);}
+.sd-bar i.risk{background:var(--coral);}
+
+/* pro panel on results */
+.pro-panel{
+  margin-top:18px;background:rgba(8,28,78,.35);border:1px solid var(--glass-border);
+  border-radius:18px;padding:16px;backdrop-filter:blur(14px);position:relative;overflow:hidden;
+}
+.pro-panel .pp-title{
+  font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.pp-badge{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#3d2c00;font-size:8.5px;font-weight:800;letter-spacing:.1em;padding:3px 8px;border-radius:10px;}
+.stepper-row{display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:10px;}
+.stepper-lab{min-width:0;}
+.stepper-lab .sl-1{font-size:12.5px;font-weight:700;color:#fff;letter-spacing:-.01em;}
+.stepper-lab .sl-2{font-size:10px;font-weight:600;color:rgba(255,255,255,.5);margin-top:1px;}
+.stepper{display:flex;align-items:center;gap:0;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:12px;flex-shrink:0;}
+.stepper button{
+  width:34px;height:34px;border:none;background:transparent;color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;font-family:'Manrope';
+}
+.stepper button:active{background:rgba(255,255,255,.15);}
+.stepper .st-val{min-width:74px;text-align:center;font-size:13px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;}
+.estimate-line{
+  margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);
+  display:flex;align-items:center;gap:9px;
+}
+.estimate-line .material-symbols-outlined{font-size:19px;color:var(--mint);}
+.estimate-line .est-txt{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.7);line-height:1.45;}
+.estimate-line .est-txt strong{color:#fff;font-weight:800;font-size:14px;}
+.scenario-flip{display:flex;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:11px;padding:3px;margin-top:14px;}
+.scenario-flip button{
+  flex:1;border:none;background:transparent;color:rgba(255,255,255,.55);font-family:'Manrope';
+  font-size:11px;font-weight:800;height:30px;border-radius:8px;cursor:pointer;transition:all .2s;letter-spacing:.02em;
+}
+.scenario-flip button.on{background:#fff;color:#1d4ed8;box-shadow:0 2px 8px rgba(8,28,78,.4);}
+
+/* pro lock veil (Plus tier) */
+.pro-veil{
+  position:absolute;inset:0;border-radius:18px;z-index:5;cursor:pointer;
+  background:rgba(10,25,66,.55);backdrop-filter:blur(3.5px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+}
+.pro-veil.on{display:flex;}
+.pro-veil .material-symbols-outlined{font-size:22px;color:#fff;}
+.pro-veil .pv-1{font-size:12.5px;font-weight:800;color:#fff;}
+.pro-veil .pv-2{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.6);}
+
+.results-actions{display:flex;gap:10px;margin-top:18px;flex-shrink:0;}
+.ghost-btn{
+  flex:1;height:50px;border-radius:13px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);
+  color:#fff;font-family:'Manrope';font-size:13.5px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;backdrop-filter:blur(8px);
+}
+.ghost-btn .material-symbols-outlined{font-size:18px;}
+.done-btn{flex:1.2;}
+
+/* info affordance on results */
+.res-info{
+  position:absolute;top:64px;right:70px;z-index:21;width:38px;height:38px;border-radius:50%;
+  border:none;background:rgba(255,255,255,.12);color:#fff;cursor:pointer;backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;
+}
+.res-info.show{display:flex;}
+.res-info .material-symbols-outlined{font-size:19px;}
+
+/* ---------- bottom sheet (assumptions / nudge) ---------- */
+.sheet-backdrop{
+  position:absolute;inset:0;background:rgba(8,15,35,.55);z-index:340;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.sheet-backdrop.on{opacity:1;pointer-events:auto;}
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;z-index:350;background:#fff;
+  border-radius:24px 24px 0 0;padding:14px 22px 40px;
+  transform:translateY(105%);transition:transform .38s cubic-bezier(.3,.9,.3,1);
+  max-height:72%;overflow-y:auto;
+}
+.sheet.on{transform:translateY(0);}
+.sheet-handle{width:38px;height:4.5px;border-radius:3px;background:#e2e6ee;margin:0 auto 16px;}
+.sheet h3{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.02em;}
+.sheet .s-sub{font-size:12.5px;color:var(--gray);font-weight:500;margin-top:5px;line-height:1.5;}
+.assump-table{margin-top:16px;border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.assump-row{display:flex;padding:11px 14px;border-bottom:1px solid #f1f5f9;align-items:center;}
+.assump-row:last-child{border-bottom:none;}
+.assump-row.head{background:#f8fafc;}
+.assump-row.head span{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);}
+.assump-row span{flex:1;font-size:12px;font-weight:600;color:var(--text);}
+.assump-row span:first-child{flex:1.2;font-weight:800;}
+.assump-row span:not(:first-child){text-align:center;}
+.method-p{font-size:12px;color:var(--gray);font-weight:500;line-height:1.6;margin-top:14px;}
+.method-p strong{color:var(--text);font-weight:700;}
+.disclaimer{
+  margin-top:14px;background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px 14px;
+  font-size:11px;color:var(--gray);font-weight:600;line-height:1.55;display:flex;gap:8px;align-items:flex-start;
+}
+.disclaimer .material-symbols-outlined{font-size:16px;color:var(--primary);flex-shrink:0;margin-top:1px;}
+/* upgrade nudge sheet */
+.nudge-icon{
+  width:56px;height:56px;border-radius:16px;margin:6px auto 0;
+  background:linear-gradient(135deg,#2563EB,#1d4ed8);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 24px -6px rgba(37,99,235,.5);
+}
+.nudge-icon .material-symbols-outlined{color:#fff;font-size:26px;}
+.nudge-cta{
+  width:100%;height:50px;margin-top:18px;border:none;border-radius:13px;cursor:pointer;
+  background:#111827;color:#fff;font-family:'Manrope';font-size:14.5px;font-weight:800;
+  box-shadow:0 8px 20px -4px rgba(0,0,0,.35);
+}
+.nudge-later{width:100%;background:none;border:none;font-family:'Manrope';font-size:12.5px;font-weight:700;color:var(--gray);margin-top:12px;cursor:pointer;padding:6px;}
+
+/* toast */
+.toast{
+  position:absolute;left:50%;bottom:110px;transform:translateX(-50%) translateY(16px);z-index:380;
+  background:rgba(15,23,42,.92);color:#fff;font-size:12px;font-weight:700;
+  padding:11px 18px;border-radius:24px;opacity:0;pointer-events:none;transition:all .3s;
+  white-space:nowrap;backdrop-filter:blur(8px);
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <div class="proto-title">
+    <span class="kicker">FRED-207 · Interactive Prototype</span>
+    <h1>Monte Carlo — fullscreen premium flow</h1>
+  </div>
+  <div class="proto-controls">
+    <div class="tier-switch" id="tierSwitch">
+      <button data-tier="core">Core</button>
+      <button data-tier="plus">Plus</button>
+      <button data-tier="pro" class="on">Pro</button>
+    </div>
+    <button class="proto-btn" id="clearHist">Clear history</button>
+  </div>
+</div>
+<div class="proto-hint">Everything works — tap the <strong>play orb</strong>, drag sliders, run the sim (real 1,000-path math), flip scenarios, use the steppers. Switch tiers above to see the <strong>Core lock</strong> and <strong>Plus upgrade nudges</strong>.</div>
+
+<div class="stage">
+  <div class="phone-wrap" id="phoneWrap">
+    <div class="phone">
+      <div class="screen-clip">
+        <div class="island"></div>
+        <div class="statusbar" id="statusbar">
+          <span>9:41</span>
+          <span class="right">
+            <span class="material-symbols-outlined">signal_cellular_alt</span>
+            <span class="material-symbols-outlined">wifi</span>
+            <span class="material-symbols-outlined">battery_full</span>
+          </span>
+        </div>
+
+        <!-- ================= APP (chrome untouched) ================= -->
+        <div class="app">
+          <div class="app-header">
+            <div class="title">Retirement</div>
+            <div class="switcher-row">
+              <div class="ios-switcher">
+                <button class="on"><span class="material-symbols-outlined">casino</span></button>
+                <button><span class="material-symbols-outlined">school</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="app-content">
+            <!-- ============ REFACTORED LANDING ============ -->
+            <div class="landing">
+              <div class="landing-gate">
+                <div class="gate-inner" id="gateInner">
+
+                  <div class="hero">
+                    <div class="eyebrow">Monte Carlo</div>
+                    <h2>Will your money last?</h2>
+                    <p>Stress-test your retirement against 1,000 simulated markets.</p>
+                  </div>
+
+                  <div class="orb-zone">
+                    <button class="orb" id="playOrb"><span class="material-symbols-outlined">savings</span></button>
+                    <div class="orb-label">Run a simulation</div>
+                    <div class="orb-sub">About 30 seconds</div>
+                  </div>
+
+                  <div class="config-zone">
+                    <div class="zone-label" id="scenarioLabel">Market scenario</div>
+                    <div class="chips" id="scenarioChips">
+                      <button data-sc="conservative">Conservative</button>
+                      <button data-sc="expected" class="on">Expected</button>
+                      <button data-sc="aggressive">Aggressive</button>
+                    </div>
+                    <div class="toggle-row">
+                      <div>
+                        <div class="t-label">Include outside accounts</div>
+                        <div class="t-sub">Add your 401(k) and Roth IRA to the simulation</div>
+                      </div>
+                      <button class="iosw" id="outsideToggle" aria-label="Include outside accounts"></button>
+                    </div>
+                  </div>
+
+                  <div class="history-zone">
+                    <div class="zone-label">Recent projections</div>
+                    <div class="hist-cards" id="histCards"></div>
+                  </div>
+
+                  <button class="assumptions-link" id="assumpLink">
+                    <span class="material-symbols-outlined">verified_user</span>
+                    Market assumptions &amp; methodology
+                  </button>
+                </div>
+
+                <!-- core lock -->
+                <div class="lock-overlay" id="lockOverlay">
+                  <div class="lock-box">
+                    <div class="lock-ring"><span class="material-symbols-outlined">lock</span></div>
+                    <h3>Available on Plus and Pro</h3>
+                    <p>Stress-test your retirement against 1,000 simulated markets.</p>
+                    <button>Upgrade</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tabbar">
+            <div class="tab"><span class="material-symbols-outlined">pie_chart</span>Portfolio</div>
+            <div class="tab on"><span class="material-symbols-outlined">savings</span>Retire</div>
+            <div class="tab"><span class="material-symbols-outlined">person</span>Profile</div>
+          </div>
+        </div>
+
+        <!-- ================= FULLSCREEN FLOW ================= -->
+        <div class="flow" id="flow">
+          <div class="flow-top">
+            <button class="flow-back" id="flowBack"><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
+            <div class="dots" id="dots"></div>
+            <button class="flow-x" id="flowX"><span class="material-symbols-outlined">close</span></button>
+          </div>
+          <button class="res-info" id="resInfo"><span class="material-symbols-outlined">info</span></button>
+
+          <!-- STEP: portfolio -->
+          <div class="fscreen" data-step="portfolio">
+            <div class="fs-eyebrow">Your starting point</div>
+            <div class="fs-h1">What are you<br>starting with?</div>
+            <div class="fs-sub">Your invested portfolio on day one of retirement.</div>
+            <div class="fs-center">
+              <button class="big-readout" id="pfReadout">$1,000,000</button>
+              <input class="big-input" id="pfInput" type="tel" inputmode="numeric">
+              <div class="readout-hint">Tap to type an exact amount</div>
+              <input type="range" class="sim-range" id="pfSlider" min="0" max="1000" value="590">
+              <div class="range-ends"><span>$10k</span><span>$5M</span></div>
+              <button class="fetch-chip" id="fetchChip">
+                <span class="material-symbols-outlined">sync</span>
+                <span id="fetchLabel">Use my portfolio</span>
+              </button>
+            </div>
+            <button class="fs-cta" data-next>Continue</button>
+          </div>
+
+          <!-- STEP: outside accounts -->
+          <div class="fscreen" data-step="outside">
+            <div class="fs-eyebrow">Outside accounts</div>
+            <div class="fs-h1">Count everything<br>you've built.</div>
+            <div class="fs-sub">Balances you hold outside FRED — added to your starting portfolio.</div>
+            <div class="fs-center">
+              <div class="glass-field">
+                <label>401(k) balance</label>
+                <div class="gf-row"><span class="pre">$</span><input id="k401" type="tel" inputmode="numeric" placeholder="250,000"></div>
+              </div>
+              <div class="glass-field">
+                <label>Roth IRA balance</label>
+                <div class="gf-row"><span class="pre">$</span><input id="roth" type="tel" inputmode="numeric" placeholder="85,000"></div>
+              </div>
+              <div class="combined-line" id="combinedLine">Simulating with <strong>$1,000,000</strong></div>
+            </div>
+            <button class="fs-cta" data-next>Continue</button>
+          </div>
+
+          <!-- STEP: spend -->
+          <div class="fscreen" data-step="spend">
+            <div class="fs-eyebrow">Monthly spending</div>
+            <div class="fs-h1">What will you<br>spend each month?</div>
+            <div class="fs-sub">Your retirement lifestyle, in today's dollars.</div>
+            <div class="fs-center">
+              <div class="big-readout" style="cursor:default" id="spendReadout">$4,000<span class="unit"> /mo</span></div>
+              <div class="readout-hint" id="spendYearly">≈ $48,000 a year · rises 2.5%/yr with inflation</div>
+              <input type="range" class="sim-range" id="spendSlider" min="500" max="20000" step="100" value="4000">
+              <div class="range-ends"><span>$500</span><span>$20k</span></div>
+            </div>
+            <button class="fs-cta" data-next>Continue</button>
+          </div>
+
+          <!-- STEP: duration -->
+          <div class="fscreen" data-step="duration">
+            <div class="fs-eyebrow">Time horizon</div>
+            <div class="fs-h1">How long should<br>it last?</div>
+            <div class="fs-sub">Years of retirement income your plan needs to cover.</div>
+            <div class="fs-center">
+              <div class="big-readout" style="cursor:default" id="durReadout">30<span class="unit"> years</span></div>
+              <div class="readout-hint" id="durHint">A 60-year-old retiree planning to age 90</div>
+              <input type="range" class="sim-range" id="durSlider" min="10" max="70" value="30">
+              <div class="range-ends"><span>10 yrs</span><span>70 yrs</span></div>
+            </div>
+            <button class="fs-cta" id="runBtn"><span class="material-symbols-outlined">play_arrow</span>Run 1,000 markets</button>
+          </div>
+
+          <!-- STEP: calculating -->
+          <div class="fscreen" data-step="calc">
+            <div class="calc-stage">
+              <div class="calc-rings">
+                <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+                <div class="calc-core">
+                  <div class="calc-num" id="calcNum">0</div>
+                  <div class="calc-of">of 1,000</div>
+                </div>
+              </div>
+              <div class="calc-line" id="calcLine">Testing market 1 of 1,000…</div>
+            </div>
+          </div>
+
+          <!-- STEP: results -->
+          <div class="fscreen" data-step="results">
+            <div class="fs-eyebrow" id="resEyebrow">Expected · $1.0M · $4,000/mo · 30 yrs</div>
+            <div class="fs-h1">The showdown.</div>
+            <div class="fs-sub">Five ways to withdraw — here's what held across 1,000 markets.</div>
+            <div class="results-scroll">
+              <div class="showdown" id="showdown"></div>
+
+              <div class="pro-panel" id="proPanel">
+                <div class="pp-title">Plan it live <span class="pp-badge">PIGGY PRO</span></div>
+                <div class="stepper-row">
+                  <div class="stepper-lab">
+                    <div class="sl-1">Monthly contribution</div>
+                    <div class="sl-2">Until you retire</div>
+                  </div>
+                  <div class="stepper">
+                    <button id="contribMinus">−</button>
+                    <span class="st-val" id="contribVal">$500</span>
+                    <button id="contribPlus">+</button>
+                  </div>
+                </div>
+                <div class="stepper-row">
+                  <div class="stepper-lab">
+                    <div class="sl-1" id="retireLab">Retire at age 60</div>
+                    <div class="sl-2" id="retireSub">Retiring now</div>
+                  </div>
+                  <div class="stepper">
+                    <button id="ageMinus">−</button>
+                    <span class="st-val" id="ageVal">60</span>
+                    <button id="agePlus">+</button>
+                  </div>
+                </div>
+                <div class="scenario-flip" id="scenarioFlip">
+                  <button data-sc="conservative">Conservative</button>
+                  <button data-sc="expected" class="on">Expected</button>
+                  <button data-sc="aggressive">Aggressive</button>
+                </div>
+                <div class="estimate-line">
+                  <span class="material-symbols-outlined">workspace_premium</span>
+                  <div class="est-txt">This plan supports <strong id="estVal">~$4,350/mo</strong> at 90% confidence.</div>
+                </div>
+                <!-- Plus-tier veil -->
+                <div class="pro-veil" id="proVeil">
+                  <span class="material-symbols-outlined">lock</span>
+                  <div class="pv-1">Deeper projections are Piggy Pro</div>
+                  <div class="pv-2">Scenarios · live adjusters · income estimates</div>
+                </div>
+              </div>
+            </div>
+            <div class="results-actions">
+              <button class="ghost-btn" id="shareBtn"><span class="material-symbols-outlined">ios_share</span>Share</button>
+              <button class="fs-cta done-btn" id="doneBtn">Done</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= SHEETS & TOAST ================= -->
+        <div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+        <div class="sheet" id="assumpSheet">
+          <div class="sheet-handle"></div>
+          <h3>Market assumptions</h3>
+          <p class="s-sub">Every simulation draws yearly returns from these distributions, calibrated to S&amp;P 500 and Bloomberg bond data, 1926–2024.</p>
+          <div class="assump-table">
+            <div class="assump-row head"><span>Scenario</span><span>Stocks</span><span>Bonds</span><span>Inflation</span></div>
+            <div class="assump-row"><span>Conservative</span><span>8% · 20% vol</span><span>3.5% · 5.5%</span><span>2.5%</span></div>
+            <div class="assump-row"><span>Expected</span><span>10% · 18% vol</span><span>4% · 5%</span><span>2.5%</span></div>
+            <div class="assump-row"><span>Aggressive</span><span>11.5% · 16% vol</span><span>4.5% · 4.5%</span><span>2.5%</span></div>
+          </div>
+          <p class="method-p"><strong>How it works.</strong> Each run generates 1,000 independent market paths for a 70/30 stock-bond portfolio. Your withdrawal rises 2.5% each year with inflation. A strategy "holds" in a path if money never runs out over your full horizon — its success rate is the share of the 1,000 paths that held.</p>
+          <div class="disclaimer">
+            <span class="material-symbols-outlined">info</span>
+            <span>Simulations are educational estimates based on historical data — not guarantees or investment advice. Future markets can behave unlike the past.</span>
+          </div>
+        </div>
+
+        <div class="sheet" id="nudgeSheet">
+          <div class="sheet-handle"></div>
+          <div class="nudge-icon"><span class="material-symbols-outlined">query_stats</span></div>
+          <h3 style="text-align:center;margin-top:14px;">Go deeper with Piggy Pro</h3>
+          <p class="s-sub" style="text-align:center;">Run conservative and aggressive scenarios, adjust contributions and retirement age on the fly, and see monthly withdrawal estimates in retirement.</p>
+          <button class="nudge-cta">Upgrade to Pro</button>
+          <button class="nudge-later" id="nudgeLater">Maybe later</button>
+        </div>
+
+        <div class="toast" id="toast"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Monte Carlo engine — faithful port of MonteCarloService,
+   extended with FRED-207 scenarios + two-phase + inverse solver
+   ============================================================ */
+const N = 1000, INFLATION = 0.025;
+const SCENARIOS = {
+  conservative:{ sr:.080, sv:.200, br:.035, bv:.055 },
+  expected:    { sr:.100, sv:.180, br:.040, bv:.050 },
+  aggressive:  { sr:.115, sv:.160, br:.045, bv:.045 }
+};
+function nrand(mean, sd){
+  const u1 = Math.random() || 1e-9, u2 = Math.random();
+  return Math.sqrt(-2*Math.log(u1)) * Math.cos(2*Math.PI*u2) * sd + mean;
+}
+function pret(sc){ const a = SCENARIOS[sc]; return .7*nrand(a.sr,a.sv) + .3*nrand(a.br,a.bv); }
+
+/* accumulation phase: grow start value with monthly contributions for y years */
+function accumulate(start, contribMo, years, sc){
+  let v = start;
+  for(let y=0; y<years; y++){
+    const r = pret(sc);
+    v = v*(1+r) + contribMo*12*(1+r/2);
+  }
+  return Math.max(v, 0);
+}
+function phase(p){ return p.yrsToRet > 0 ? accumulate(p.value, p.contribMo, p.yrsToRet, p.sc) : p.value; }
+
+function simTraditional(p){
+  let ok = 0;
+  for(let s=0; s<N; s++){
+    let v = phase(p), w = p.annual, alive = true;
+    for(let y=0; y<p.years; y++){
+      v *= (1+pret(p.sc)); w *= (1+INFLATION); v -= w;
+      if(v<=0){ alive=false; break; }
+    }
+    if(alive) ok++;
+  }
+  return ok/N*100;
+}
+function simSBLOC(p){
+  let ok = 0; const ir=.055, ltvMax=.70;
+  for(let s=0; s<N; s++){
+    let v = phase(p), w = p.annual, debt = 0, alive = true;
+    for(let y=0; y<p.years; y++){
+      const r = pret(p.sc);
+      v *= (1+r); w *= (1+INFLATION);
+      if(r < 0){ debt += w; debt *= (1+ir); }
+      else{
+        v -= w;
+        if(r > .12 && debt > 0){ const pay = Math.min(debt, v*.1); debt -= pay; v -= pay; }
+      }
+      if(v <= 0 || debt/v > ltvMax){ alive=false; break; }
+    }
+    if(alive) ok++;
+  }
+  return ok/N*100;
+}
+function simAnnuityGrowth(p){
+  let ok = 0;
+  for(let s=0; s<N; s++){
+    const start = phase(p);
+    const annAmt = Math.min(p.annual/.06, start);
+    const income = annAmt*.06;
+    let g = start-annAmt, w = p.annual, alive = true;
+    for(let y=0; y<p.years; y++){
+      g *= (1+pret(p.sc)); w *= (1+INFLATION);
+      g -= Math.max(0, w-income);
+      if(g<=0){ g=0; if(w>income){ alive=false; break; } }
+    }
+    if(alive) ok++;
+  }
+  return ok/N*100;
+}
+function simGuardrails(p){
+  let ok = 0;
+  for(let s=0; s<N; s++){
+    let v = phase(p), w = v*.05, alive = true;
+    for(let y=0; y<p.years; y++){
+      v *= (1+pret(p.sc));
+      const rate = w/v;
+      if(rate > .06) w *= .90; else if(rate < .04) w *= 1.10; else w *= (1+INFLATION);
+      v -= w;
+      if(v<=0){ alive=false; break; }
+    }
+    if(alive) ok++;
+  }
+  return ok/N*100;
+}
+function simFullAnnuity(p){
+  if(p.yrsToRet > 0){
+    let ok=0;
+    for(let s=0;s<N;s++){ if(phase(p)*.06 >= p.annual) ok++; }
+    return ok/N*100;
+  }
+  return p.value*.06 >= p.annual ? 100 : 0;
+}
+const STRATEGIES = [
+  { key:'traditional', name:'Traditional 4%',     tag:'Steady inflation-adjusted withdrawals', fn:simTraditional },
+  { key:'guardrails',  name:'Dynamic Guardrails', tag:'Spend more in good years, less in bad', fn:simGuardrails },
+  { key:'sbloc',       name:'SBLOC',              tag:'Borrow through downturns, never sell low', fn:simSBLOC },
+  { key:'annuity',     name:'Annuity + Growth',   tag:'Guarantee essentials, grow the rest',   fn:simAnnuityGrowth },
+  { key:'fullann',     name:'Full Annuity',       tag:'Convert everything to lifetime income', fn:simFullAnnuity }
+];
+function runAll(p){ const out={}; STRATEGIES.forEach(s => out[s.key] = s.fn(p)); return out; }
+function solveMonthly(p){ /* max monthly spend at >=90% success, Traditional */
+  let lo=200, hi=60000;
+  for(let i=0;i<11;i++){
+    const mid=(lo+hi)/2;
+    (simTraditional({...p, annual:mid*12}) >= 90) ? lo=mid : hi=mid;
+  }
+  return Math.round(lo/50)*50;
+}
+
+/* ============================================================
+   Prototype state & wiring
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const state = {
+  tier:'pro', scenario:'expected', outsideOn:false,
+  value:1000000, k401:0, roth:0, spendMo:4000, years:30,
+  contribMo:500, yrsToRet:0, baseAge:60, /* mock: derived from KYC birth year */
+  results:null, history:[]
+};
+const HKEY='fred207-proto-history';
+try{ state.history = JSON.parse(localStorage.getItem(HKEY)||'[]'); }catch(e){ state.history=[]; }
+
+const fmt$ = n => '$'+Math.round(n).toLocaleString('en-US');
+const fmtShort = n => n>=1e6 ? '$'+(n/1e6).toFixed(1).replace(/\.0$/,'')+'M' : '$'+Math.round(n/1e3)+'k';
+const scName = s => s.charAt(0).toUpperCase()+s.slice(1);
+
+/* ---------- tier ---------- */
+$('tierSwitch').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  [...$('tierSwitch').children].forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  state.tier = b.dataset.tier;
+  applyTier();
+});
+function applyTier(){
+  const core = state.tier==='core', plus = state.tier==='plus';
+  $('gateInner').classList.toggle('blurred', core);
+  $('lockOverlay').classList.toggle('on', core);
+  $('scenarioChips').classList.toggle('pro-locked', plus);
+  $('scenarioLabel').innerHTML = 'Market scenario' + (plus ? ' <span class="lockchip"><span class="material-symbols-outlined">lock</span>PRO</span>' : '');
+  $('proVeil').classList.toggle('on', plus);
+}
+
+/* ---------- landing config ---------- */
+$('scenarioChips').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  if(state.tier==='plus'){ openSheet('nudgeSheet'); return; }
+  setScenario(b.dataset.sc);
+});
+function setScenario(sc){
+  state.scenario = sc;
+  [...$('scenarioChips').children].forEach(x=>x.classList.toggle('on', x.dataset.sc===sc));
+  [...$('scenarioFlip').children].forEach(x=>x.classList.toggle('on', x.dataset.sc===sc));
+}
+$('outsideToggle').addEventListener('click', ()=>{
+  state.outsideOn = !state.outsideOn;
+  $('outsideToggle').classList.toggle('on', state.outsideOn);
+  buildDots();
+});
+
+/* ---------- history ---------- */
+function renderHistory(){
+  const box = $('histCards'); box.innerHTML='';
+  if(!state.history.length){
+    box.innerHTML = `<div class="hist-empty">
+      <span class="material-symbols-outlined">query_stats</span>
+      <p>No projections yet.<br>Run your first simulation to see it here.</p></div>`;
+    return;
+  }
+  state.history.forEach((h,i)=>{
+    const holds = Object.values(h.results).filter(v=>v>=75).length;
+    const cls = holds>=4 ? 'good' : holds>=2 ? 'mid' : 'bad';
+    const d = new Date(h.ts);
+    const el = document.createElement('div');
+    el.className='hist-card';
+    el.innerHTML = `
+      <div class="hist-icon"><span class="material-symbols-outlined">${h.scenario==='conservative'?'south_east':h.scenario==='aggressive'?'north_east':'trending_up'}</span></div>
+      <div class="hist-mid">
+        <div class="h-line1">${fmtShort(h.total)} · ${fmt$(h.spendMo)}/mo · ${h.years} yrs</div>
+        <div class="h-line2">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})} · ${scName(h.scenario)}</div>
+      </div>
+      <span class="hist-pill ${cls}">${holds} of 5 hold</span>`;
+    el.addEventListener('click', ()=> rerunFromHistory(h));
+    box.appendChild(el);
+  });
+}
+function saveHistory(){
+  const total = state.value + (state.outsideOn ? state.k401+state.roth : 0);
+  state.history.unshift({ ts:Date.now(), total, spendMo:state.spendMo, years:state.years,
+    scenario:state.scenario, results:state.results });
+  state.history = state.history.slice(0,3);
+  try{ localStorage.setItem(HKEY, JSON.stringify(state.history)); }catch(e){}
+  renderHistory();
+}
+$('clearHist').addEventListener('click', ()=>{
+  state.history=[]; try{ localStorage.removeItem(HKEY); }catch(e){}
+  renderHistory(); toast('History cleared — empty state shown');
+});
+function rerunFromHistory(h){
+  state.spendMo=h.spendMo; state.years=h.years; setScenario(h.scenario);
+  state.value = h.total; state.outsideOn=false; $('outsideToggle').classList.remove('on');
+  syncInputs(); openFlow(); showStep('calc',{instant:true}); startCalc(900);
+}
+
+/* ---------- sheets & toast ---------- */
+let openSheetId=null;
+function openSheet(id){ openSheetId=id; $('sheetBackdrop').classList.add('on'); $(id).classList.add('on'); }
+function closeSheets(){ $('sheetBackdrop').classList.remove('on');
+  ['assumpSheet','nudgeSheet'].forEach(i=>$(i).classList.remove('on')); openSheetId=null; }
+$('sheetBackdrop').addEventListener('click', closeSheets);
+$('nudgeLater').addEventListener('click', closeSheets);
+$('assumpLink').addEventListener('click', ()=>openSheet('assumpSheet'));
+$('resInfo').addEventListener('click', ()=>openSheet('assumpSheet'));
+let toastT=null;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),2200); }
+
+/* ---------- flow open/close & steps ---------- */
+const flow = $('flow');
+let stepOrder = [], curStep = null, calcTimer=null, flowLock=false;
+function buildDots(){
+  stepOrder = ['portfolio', ...(state.outsideOn?['outside']:[]), 'spend','duration'];
+  const d = $('dots'); d.innerHTML='';
+  stepOrder.forEach(()=>{ d.appendChild(document.createElement('span')); });
+}
+function openFlow(){
+  if(flowLock) return; flowLock=true; setTimeout(()=>flowLock=false,600);
+  buildDots(); flow.classList.add('open');
+  $('statusbar').classList.add('light-on-dark');
+  showStep('portfolio',{instant:true});
+}
+function closeFlow(){
+  clearInterval(calcTimer);
+  flow.classList.remove('open');
+  $('statusbar').classList.remove('light-on-dark');
+}
+$('flowX').addEventListener('click', closeFlow);
+$('playOrb').addEventListener('click', ()=>{ if(state.tier==='core') return; openFlow(); });
+
+function showStep(step, opts={}){
+  const prev = flow.querySelector('.fscreen.on');
+  const next = flow.querySelector(`.fscreen[data-step="${step}"]`);
+  if(prev===next) return;
+  curStep = step;
+  if(prev) prev.classList.remove('on');
+  opts.instant ? next.classList.add('on') : setTimeout(()=>next.classList.add('on'), 60);
+  /* dots + back */
+  const idx = stepOrder.indexOf(step);
+  [...$('dots').children].forEach((s,i)=>s.classList.toggle('on', i===idx));
+  $('dots').style.opacity = idx>=0 ? 1 : 0;
+  $('flowBack').classList.toggle('show', idx>0);
+  $('resInfo').classList.toggle('show', step==='results');
+  $('flowX').style.visibility = 'visible';
+}
+$('flowBack').addEventListener('click', ()=>{
+  const i = stepOrder.indexOf(curStep);
+  if(i>0) showStep(stepOrder[i-1]);
+});
+flow.addEventListener('click', e=>{
+  if(e.target.closest('[data-next]')){
+    const i = stepOrder.indexOf(curStep);
+    if(i < stepOrder.length-1) showStep(stepOrder[i+1]);
+  }
+});
+
+/* ---------- portfolio step ---------- */
+const SLIDER_MIN=10000, SLIDER_MAX=5000000;
+function sliderToVal(t){ /* log scale */
+  return Math.round(SLIDER_MIN * Math.pow(SLIDER_MAX/SLIDER_MIN, t/1000) /1000)*1000;
+}
+function valToSlider(v){
+  const c = Math.min(Math.max(v,SLIDER_MIN),SLIDER_MAX);
+  return Math.round(1000 * Math.log(c/SLIDER_MIN) / Math.log(SLIDER_MAX/SLIDER_MIN));
+}
+function paintRange(el){
+  const p = (el.value-el.min)/(el.max-el.min)*100;
+  el.style.setProperty('--track', `linear-gradient(to right,#fff 0%,#fff ${p}%,rgba(255,255,255,.22) ${p}%)`);
+}
+function syncInputs(){
+  $('pfReadout').textContent = fmt$(state.value);
+  $('pfSlider').value = valToSlider(state.value); paintRange($('pfSlider'));
+  $('spendReadout').innerHTML = fmt$(state.spendMo)+'<span class="unit"> /mo</span>';
+  $('spendYearly').textContent = `≈ ${fmt$(state.spendMo*12)} a year · rises 2.5%/yr with inflation`;
+  $('spendSlider').value = state.spendMo; paintRange($('spendSlider'));
+  $('durReadout').innerHTML = state.years+'<span class="unit"> years</span>';
+  $('durHint').textContent = `A ${state.baseAge}-year-old retiree planning to age ${state.baseAge + state.years}`;
+  $('durSlider').value = state.years; paintRange($('durSlider'));
+  updateCombined();
+}
+$('pfSlider').addEventListener('input', e=>{
+  state.value = sliderToVal(+e.target.value);
+  $('pfReadout').textContent = fmt$(state.value);
+  paintRange(e.target); updateCombined();
+});
+$('pfReadout').addEventListener('click', ()=>{
+  $('pfReadout').style.display='none';
+  const inp = $('pfInput'); inp.style.display='block'; inp.value = state.value.toLocaleString(); inp.focus(); inp.select();
+});
+$('pfInput').addEventListener('blur', commitPf);
+$('pfInput').addEventListener('keydown', e=>{ if(e.key==='Enter') e.target.blur(); });
+function commitPf(){
+  const inp=$('pfInput');
+  const v = parseInt(inp.value.replace(/[^0-9]/g,''),10);
+  if(!isNaN(v) && v>0) state.value = v;
+  inp.style.display='none'; $('pfReadout').style.display='block';
+  syncInputs();
+}
+$('fetchChip').addEventListener('click', ()=>{
+  const chip=$('fetchChip');
+  chip.classList.add('loading'); $('fetchLabel').textContent='Fetching…';
+  setTimeout(()=>{
+    chip.classList.remove('loading'); $('fetchLabel').textContent='Use my portfolio';
+    state.value = 132584; syncInputs();
+    toast('Live portfolio value applied');
+  }, 900);
+});
+
+/* ---------- outside accounts ---------- */
+function parseMoney(el){ const v=parseInt(el.value.replace(/[^0-9]/g,''),10); return isNaN(v)?0:v; }
+['k401','roth'].forEach(id=>{
+  $(id).addEventListener('input', e=>{
+    const raw = e.target.value.replace(/[^0-9]/g,'');
+    e.target.value = raw ? (+raw).toLocaleString('en-US') : '';
+    state[id==='k401'?'k401':'roth'] = raw ? +raw : 0;
+    updateCombined();
+  });
+});
+function updateCombined(){
+  const total = state.value + (state.outsideOn ? state.k401+state.roth : 0);
+  $('combinedLine').innerHTML = `Simulating with <strong>${fmt$(total)}</strong>`;
+}
+
+/* ---------- spend & duration ---------- */
+$('spendSlider').addEventListener('input', e=>{
+  state.spendMo = +e.target.value;
+  $('spendReadout').innerHTML = fmt$(state.spendMo)+'<span class="unit"> /mo</span>';
+  $('spendYearly').textContent = `≈ ${fmt$(state.spendMo*12)} a year · rises 2.5%/yr with inflation`;
+  paintRange(e.target);
+});
+$('durSlider').addEventListener('input', e=>{
+  state.years = +e.target.value;
+  $('durReadout').innerHTML = state.years+'<span class="unit"> years</span>';
+  $('durHint').textContent = `A ${state.baseAge}-year-old retiree planning to age ${state.baseAge + state.years}`;
+  paintRange(e.target);
+});
+
+/* ---------- calculating ---------- */
+const CALC_LINES = [
+  'Crashing the market on purpose…',
+  'Testing a 1970s-style inflation decade…',
+  'Compounding the good years…',
+  'Checking every withdrawal strategy…'
+];
+$('runBtn').addEventListener('click', ()=>{ showStep('calc'); startCalc(5500); });
+function swapCalcLine(txt){
+  const el = $('calcLine');
+  el.style.opacity = 0;
+  setTimeout(()=>{ el.textContent = txt; el.style.opacity = 1; }, 200);
+}
+function startCalc(dur){
+  const t0 = performance.now();
+  const rotate = dur >= 2000; /* short re-runs get one static line */
+  $('calcNum').textContent = '0';
+  let li = 0; $('calcLine').style.opacity = 1;
+  $('calcLine').textContent = rotate ? CALC_LINES[0] : 'Re-testing your plan…';
+  clearInterval(calcTimer);
+  calcTimer = setInterval(()=>{
+    const t = Math.min(1,(performance.now()-t0)/dur);
+    const eased = 1-Math.pow(1-t,3);
+    $('calcNum').textContent = Math.round(eased*1000).toLocaleString();
+    const ni = Math.min(CALC_LINES.length-1, Math.floor(t*CALC_LINES.length));
+    if(rotate && ni!==li){ li=ni; swapCalcLine(CALC_LINES[ni]); }
+    if(t>=1){
+      clearInterval(calcTimer);
+      computeResults();
+      setTimeout(()=>{ showStep('results'); renderResults(true); saveHistory(); }, 150);
+    }
+  }, 16);
+}
+
+/* ---------- results ---------- */
+function simParams(){
+  return {
+    value: state.value + (state.outsideOn ? state.k401+state.roth : 0),
+    annual: state.spendMo*12, years: state.years, sc: state.scenario,
+    contribMo: state.contribMo, yrsToRet: state.yrsToRet
+  };
+}
+function computeResults(){
+  state.results = runAll(simParams());
+  state.estimate = solveMonthly(simParams());
+}
+function badge(v){ return v>=90 ? ['strong','Strong'] : v>=75 ? ['moderate','Moderate'] : ['risk','At risk']; }
+function renderResults(animate){
+  const p = simParams();
+  $('resEyebrow').textContent =
+    `${scName(state.scenario)} · ${fmtShort(p.value)} · ${fmt$(state.spendMo)}/mo · ${state.years} yrs`;
+  const box = $('showdown');
+  if(!animate && box.children.length === STRATEGIES.length){
+    /* live re-run: update cards in place — no re-fade */
+    STRATEGIES.forEach((s,i)=>{
+      const v = state.results[s.key];
+      const [cls,txt] = badge(v);
+      const el = box.children[i];
+      el.querySelector('.sd-pct').textContent = v.toFixed(0)+'%';
+      const bdg = el.querySelector('.sd-badge');
+      bdg.className = 'sd-badge '+cls; bdg.textContent = txt;
+      const bar = el.querySelector('.sd-bar i');
+      bar.className = cls; bar.style.width = v+'%';
+    });
+  } else {
+    box.innerHTML='';
+    STRATEGIES.forEach((s,i)=>{
+      const v = state.results[s.key];
+      const [cls,txt] = badge(v);
+      const el = document.createElement('div');
+      el.className='sd-card';
+      el.innerHTML = `
+        <div class="sd-info">
+          <div class="sd-name">${s.name}</div>
+          <div class="sd-tag">${s.tag}</div>
+          <div class="sd-bar"><i class="${cls}"></i></div>
+        </div>
+        <div class="sd-right">
+          <div class="sd-pct">${v.toFixed(0)}%</div>
+          <div class="sd-badge ${cls}">${txt}</div>
+        </div>`;
+      box.appendChild(el);
+      const show = ()=>{ el.classList.add('in'); el.querySelector('.sd-bar i').style.width = v+'%'; };
+      setTimeout(show, 120+i*110);
+    });
+  }
+  $('estVal').textContent = `~${fmt$(state.estimate)}/mo`;
+  $('contribVal').textContent = fmt$(state.contribMo);
+  $('ageVal').textContent = state.baseAge + state.yrsToRet;
+  $('retireLab').textContent = `Retire at age ${state.baseAge + state.yrsToRet}`;
+  $('retireSub').textContent = state.yrsToRet===0 ? 'Retiring now' : `${state.yrsToRet} more working year${state.yrsToRet>1?'s':''}`;
+}
+function liveRerun(){ computeResults(); renderResults(false); }
+
+$('contribMinus').addEventListener('click', ()=>{ state.contribMo=Math.max(0,state.contribMo-100); liveRerun(); });
+$('contribPlus').addEventListener('click', ()=>{ state.contribMo=Math.min(10000,state.contribMo+100); liveRerun(); });
+$('ageMinus').addEventListener('click', ()=>{ state.yrsToRet=Math.max(0,state.yrsToRet-1); liveRerun(); });
+$('agePlus').addEventListener('click', ()=>{ state.yrsToRet=Math.min(40,state.yrsToRet+1); liveRerun(); });
+$('scenarioFlip').addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  setScenario(b.dataset.sc); liveRerun();
+});
+$('proVeil').addEventListener('click', ()=>openSheet('nudgeSheet'));
+$('shareBtn').addEventListener('click', ()=>toast('iOS share sheet opens here'));
+$('doneBtn').addEventListener('click', ()=>{ closeFlow(); state.yrsToRet=0; });
+
+/* ---------- fit phone to viewport ---------- */
+function fit(){
+  const avail = window.innerHeight - 150;
+  $('phoneWrap').style.transform = `scale(${Math.min(1, avail/880)})`;
+}
+window.addEventListener('resize', fit);
+
+/* ---------- init ---------- */
+buildDots(); syncInputs(); renderHistory(); applyTier(); fit();
+['pfSlider','spendSlider','durSlider'].forEach(id=>paintRange($(id)));
+</script>
+</body>
+</html>

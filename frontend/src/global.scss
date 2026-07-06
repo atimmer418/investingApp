@@ -734,6 +734,53 @@ ion-modal.full-screen-modal::part(content) {
   left: 0;
 }
 
+/* Monte Carlo fullscreen flow modal — dark blue gradient sub-theme fills the
+   entire screen with no card chrome or border radius. The solid --background
+   matches the gradient's deep base so the wrapper can never show through as
+   grey while the component paints (WKWebView). */
+ion-modal.mc-fullscreen-modal {
+  --width: 100%;
+  --height: 100%;
+  --max-width: 100%;
+  --max-height: 100%;
+  --border-radius: 0;
+  --background: #081c4e;
+  --box-shadow: none;
+  --backdrop-opacity: 0.5;
+}
+
+ion-modal.mc-fullscreen-modal::part(content) {
+  border-radius: 0;
+  box-shadow: none;
+  width: 100%;
+  height: 100%;
+}
+
+/* Monte Carlo landing bottom sheets (assumptions / Pro nudge) — auto-height
+   sheet presented via ModalController so it renders at the app root, above
+   the header and tab bar, instead of being contained by inner ion-content. */
+ion-modal.mc-bottom-sheet-modal {
+  --width: 100%;
+  --max-width: 100%;
+  --height: auto;
+  --max-height: 85vh;
+  --border-radius: 24px 24px 0 0;
+  --background: #ffffff;
+  --box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.12);
+  --backdrop-opacity: 0.4;
+  align-items: flex-end;
+}
+
+/* Auto-height recipe: Ionic marks the projected component .ion-page
+   (absolute inset 0), which defeats content-driven height — restore flow. */
+ion-modal.mc-bottom-sheet-modal .ion-page {
+  position: relative;
+  display: block;
+  contain: content;
+  overflow-y: auto;
+  max-height: 85vh;
+}
+
 /* Monthly Freedom Update modal - blurred backdrop
    To change blur: edit the blur() value below (e.g. 4px, 8px, 12px, 20px) */
 ion-modal.monthly-freedom-update-modal {

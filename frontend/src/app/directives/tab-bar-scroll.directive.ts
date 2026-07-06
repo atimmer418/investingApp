@@ -60,12 +60,12 @@ export class TabBarScrollDirective implements OnInit {
   }
 
   private dispatch(scrollTop: number, clientHeight: number, scrollHeight: number): void {
+    const atBottom =
+      scrollHeight > 0 && scrollTop + clientHeight >= scrollHeight - this.BOTTOM_ZONE;
     if (this.noShrink) {
-      const atBottom =
-        scrollHeight > 0 && scrollTop + clientHeight >= scrollHeight - this.BOTTOM_ZONE;
       this.scrollSvc.reportNoShrink(scrollTop, atBottom);
     } else {
-      this.scrollSvc.report(scrollTop);
+      this.scrollSvc.report(scrollTop, atBottom);
     }
   }
 }

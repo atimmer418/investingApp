@@ -141,20 +141,6 @@ export class TestUserSimulator {
       }
     }),
 
-    // User chose to pick stocks manually
-    needsStockSelection: () => this.simulateLoggedInUser({
-      email: 'stock.picker@test.com',
-      userId: 5,
-      progress: {
-        getStartedCompleted: true,
-        initialSurveyCompleted: true,
-        linkplaidCompleted: true,
-        investmentSurveyCompleted: true,
-        choseToPickStocks: true,
-        stockSelectionCompleted: false
-      }
-    }),
-
     // User chose guided investing, needs confirmation
     needsConfirmation: () => this.simulateLoggedInUser({
       email: 'needs.confirm@test.com',
@@ -215,7 +201,6 @@ export class TestUserSimulator {
     console.log('TestUserSimulator.scenarios.surveyCompleted()   - Completed survey, needs bank link');
     console.log('TestUserSimulator.scenarios.bankLinked()        - Bank linked, needs investment survey');
     console.log('TestUserSimulator.scenarios.atInvestmentSurvey() - Ready for investment setup');
-    console.log('TestUserSimulator.scenarios.needsStockSelection() - Chose manual stocks');
     console.log('TestUserSimulator.scenarios.needsConfirmation()  - Needs final confirmation');
     console.log('TestUserSimulator.scenarios.completedUser()     - All done, should see main app');
     console.log('TestUserSimulator.scenarios.expiringSoon()      - Session expires in 2 minutes');

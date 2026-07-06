@@ -1792,3 +1792,375 @@ ion-item {
     margin-right: 4px;
   }
 }
+
+/* =============================================================================
+   MONTE CARLO LANDING — ported 1:1 from the approved FRED-207 prototype
+   (ITPM/agent-memory/FRED-207-prototype.html)
+   ============================================================================= */
+
+// Hero
+.mc-hero {
+  text-align: center;
+  padding: 8px 6px 4px;
+
+  .mc-eyebrow {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #2563EB;
+  }
+
+  h2 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: #0f172a;
+    margin: 6px 0 0;
+    line-height: 1.15;
+  }
+
+  p {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: #6b7280;
+    margin: 7px auto 0;
+    line-height: 1.45;
+    max-width: 300px;
+  }
+}
+
+// Savings orb + pulse rings
+.mc-orb-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 26px 0 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active .mc-orb { transform: scale(0.95); }
+}
+
+.mc-orb {
+  position: relative;
+  width: 118px;
+  height: 118px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: radial-gradient(circle at 32% 28%, #60a5fa 0%, #2563EB 48%, #1d4ed8 100%);
+  box-shadow:
+    0 18px 40px -10px rgba(37, 99, 235, 0.55),
+    0 4px 14px -2px rgba(29, 78, 216, 0.4),
+    inset 0 -6px 16px rgba(13, 42, 148, 0.45),
+    inset 0 4px 10px rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: mc-breathe 4.5s ease-in-out infinite;
+  transition: transform 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid rgba(37, 99, 235, 0.45);
+    animation: mc-ring 3.6s ease-out infinite;
+  }
+
+  &::after { animation-delay: 1.8s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    &::before, &::after { animation: none; opacity: 0; }
+  }
+}
+
+@keyframes mc-ring {
+  0%   { transform: scale(1);    opacity: 0.7; }
+  100% { transform: scale(1.75); opacity: 0; }
+}
+
+@keyframes mc-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.035); }
+}
+
+.mc-orb-icon {
+  // Inline SVG (filled piggy) — the app's static icon-font subset has no
+  // FILL variation axis, which rendered a mangled outline on device.
+  width: 54px;
+  height: 54px;
+  fill: #fff;
+  filter: drop-shadow(0 2px 10px rgba(13, 42, 148, 0.4));
+}
+
+.mc-orb-label {
+  margin: 16px 0 0;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.mc-orb-sub {
+  margin: 2px 0 0;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+// Config zone — scenario chips + outside-accounts toggle
+.mc-config-zone {
+  padding: 14px 0 0;
+}
+
+.mc-zone-label {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mc-lockchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #eef2ff;
+  color: #4553d8;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: 20px;
+
+  .material-symbols-outlined { font-size: 10px; }
+}
+
+.mc-chips {
+  display: flex;
+  background: #eef1f6;
+  border-radius: 12px;
+  padding: 3px;
+  gap: 2px;
+
+  button {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #8b94a7;
+    height: 36px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+
+    &.on {
+      background: #fff;
+      color: #0f172a;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+    }
+  }
+
+  &.pro-locked button {
+    color: #b6bdcb;
+    &.on { color: #9aa3b5; }
+  }
+}
+
+.mc-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 2px 0;
+
+  .mc-t-label {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+
+  .mc-t-sub {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: #6b7280;
+    margin-top: 1px;
+  }
+}
+
+.mc-iosw {
+  position: relative;
+  width: 46px;
+  height: 28px;
+  border-radius: 20px;
+  background: #e2e6ee;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  border: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.25);
+    transition: transform 0.2s;
+  }
+
+  &.on {
+    background: #2563EB;
+    &::after { transform: translateX(18px); }
+  }
+}
+
+// Recent projections
+.mc-history-zone {
+  padding-top: 20px;
+}
+
+.mc-hist-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mc-hist-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active { transform: scale(0.985); }
+}
+
+.mc-hist-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #eef4ff;
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .material-symbols-outlined { font-size: 19px; }
+}
+
+.mc-hist-mid {
+  flex: 1;
+  min-width: 0;
+
+  .mc-h-line1 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+
+  .mc-h-line2 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+}
+
+.mc-hist-pill {
+  font-family: 'Manrope', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 4px 9px;
+  border-radius: 20px;
+  flex-shrink: 0;
+
+  &.good { background: #dcfce7; color: #14532d; }
+  &.mid  { background: #fef3c7; color: #92400e; }
+  &.bad  { background: #fee2e2; color: #991b1b; }
+}
+
+.mc-hist-empty {
+  border: 1.5px dashed #dde3ec;
+  border-radius: 14px;
+  padding: 20px 16px;
+  text-align: center;
+
+  .material-symbols-outlined {
+    font-size: 22px;
+    color: #c3cbd9;
+  }
+
+  p {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    margin: 6px 0 0;
+    line-height: 1.5;
+  }
+}
+
+// Assumptions link
+.mc-assump-link {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #6b7280;
+  padding: 8px;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+
+  .material-symbols-outlined { font-size: 15px; }
+
+  &:active { color: #2563EB; }
+}
+
+// Landing bottom sheets moved to McInfoSheetComponent (ModalController).

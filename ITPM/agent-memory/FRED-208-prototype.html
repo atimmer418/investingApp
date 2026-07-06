@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tab2 Education Refactor — Interactive Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..700,0..1,-50..200" rel="stylesheet">
+<style>
+:root{
+  --primary:#2563EB; --text:#0f172a; --gray:#6b7280; --bg:#f8fafc; --border:#e5e7eb;
+  --sim-deep:#081c4e; --sim-mid:#16309b; --sim-primary:#2563EB;
+  --glass:rgba(255,255,255,.09); --glass-border:rgba(255,255,255,.16);
+  --mint:#34d399; --amber:#fbbf24; --coral:#f87171;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+html,body{height:100%;}
+body{
+  font-family:'Manrope',sans-serif;background:#0d1220;
+  background-image:radial-gradient(1200px 600px at 80% -10%, rgba(37,99,235,.16), transparent 60%),
+    radial-gradient(900px 500px at 10% 110%, rgba(37,99,235,.10), transparent 60%);
+  color:#e6eaf3;display:flex;flex-direction:column;align-items:center;overflow:hidden;
+}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;}
+
+/* ---------- proto chrome ---------- */
+.proto-bar{width:100%;max-width:1180px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 28px 8px;flex-shrink:0;}
+.proto-title .kicker{font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#5b7bd6;}
+.proto-title h1{font-size:17px;font-weight:800;letter-spacing:-.01em;color:#f2f5fb;}
+.proto-hint{font-size:11.5px;color:#5d6a89;font-weight:500;padding:0 28px 4px;flex-shrink:0;}
+.proto-hint strong{color:#8fa3d0;font-weight:700;}
+
+/* ---------- phone ---------- */
+.stage{flex:1;display:flex;align-items:center;justify-content:center;width:100%;min-height:0;}
+.phone-wrap{transform-origin:center center;}
+.phone{width:390px;height:844px;position:relative;border-radius:54px;background:#000;padding:6px;
+  box-shadow:0 0 0 2px #1a2138,0 40px 100px -20px rgba(0,0,0,.8),0 0 120px -40px rgba(37,99,235,.35);}
+.screen-clip{position:relative;width:100%;height:100%;border-radius:48px;overflow:hidden;background:var(--bg);}
+.island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:118px;height:34px;background:#000;border-radius:20px;z-index:400;}
+.statusbar{position:absolute;top:0;left:0;right:0;height:54px;z-index:390;display:flex;align-items:center;justify-content:space-between;
+  padding:16px 30px 0;pointer-events:none;font-size:14px;font-weight:700;color:var(--text);transition:color .4s ease;}
+.statusbar .right{display:flex;gap:5px;align-items:center;}
+.statusbar .right .material-symbols-outlined{font-size:16px;}
+.statusbar.light-on-dark{color:#fff;}
+
+/* ---------- app chrome ---------- */
+.app{position:absolute;inset:0;display:flex;flex-direction:column;}
+.app-header{flex-shrink:0;background:var(--bg);padding:58px 0 0;}
+.app-header .title{font-size:18px;font-weight:800;letter-spacing:-.015em;color:var(--text);text-align:center;}
+.switcher-row{display:flex;justify-content:center;padding:10px 0 8px;}
+.ios-switcher{display:flex;background:#e8ecf3;border-radius:12px;padding:3px;gap:2px;}
+.ios-switcher button{border:none;background:transparent;width:64px;height:32px;border-radius:9px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;color:#8b94a7;transition:all .2s;}
+.ios-switcher button.on{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(15,23,42,.12);}
+.ios-switcher .material-symbols-outlined{font-size:19px;}
+.app-content{flex:1;overflow-y:auto;position:relative;background:var(--bg);scrollbar-width:none;display:flex;flex-direction:column;}
+.app-content::-webkit-scrollbar{display:none;}
+.tabbar{flex-shrink:0;height:82px;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+  border-top:1px solid #eef1f6;display:flex;justify-content:space-around;align-items:flex-start;padding-top:10px;}
+.tabbar .tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:#a2abbd;font-size:9.5px;font-weight:700;}
+.tabbar .tab.on{color:var(--primary);}
+.tabbar .material-symbols-outlined{font-size:24px;}
+
+/* ============================================================
+   EDUCATION LANDING — hero + 2x2 stretch grid
+   ============================================================ */
+.edu-landing{flex:1;display:none;flex-direction:column;padding:10px 18px 20px;min-height:0;}
+.edu-landing.show{display:flex;}
+.edu-hero{text-align:center;padding:8px 6px 4px;flex-shrink:0;}
+.edu-hero .eyebrow{font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--primary);}
+.edu-hero h2{font-size:26px;font-weight:800;letter-spacing:-.025em;color:var(--text);margin-top:6px;line-height:1.15;}
+.edu-hero p{font-size:13.5px;color:var(--gray);margin:7px auto 0;line-height:1.45;max-width:300px;}
+
+.edu-grid{
+  flex:1;min-height:0;margin-top:16px;
+  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;
+}
+.edu-card{
+  background:#fff;border:1px solid var(--border);border-radius:18px;
+  padding:16px 14px 14px;cursor:pointer;display:flex;flex-direction:column;
+  transition:transform .15s ease, box-shadow .15s ease;position:relative;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+.edu-card:active{transform:scale(.975);}
+.edu-tile{
+  width:44px;height:44px;border-radius:50%;flex-shrink:0;
+  background:radial-gradient(circle at 32% 28%, #60a5fa 0%, #2563EB 55%, #1d4ed8 100%);
+  box-shadow:0 8px 18px -6px rgba(37,99,235,.55), inset 0 -3px 8px rgba(13,42,148,.4), inset 0 2px 5px rgba(255,255,255,.35);
+  display:flex;align-items:center;justify-content:center;
+}
+.edu-tile .material-symbols-outlined{font-size:22px;color:#fff;font-variation-settings:'FILL' 1;}
+.edu-card-name{font-size:14.5px;font-weight:800;color:var(--text);letter-spacing:-.015em;line-height:1.2;margin-top:12px;}
+.edu-card-tag{font-size:11px;font-weight:500;color:var(--gray);line-height:1.4;margin-top:4px;flex:1;}
+.edu-card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+.edu-card-hint{font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa6ba;}
+.edu-card-arrow{width:26px;height:26px;border-radius:50%;background:#eef4ff;color:var(--primary);display:flex;align-items:center;justify-content:center;}
+.edu-card-arrow .material-symbols-outlined{font-size:15px;}
+
+/* ============================================================
+   SIM LANDING (from FRED-207 — abbreviated but functional)
+   ============================================================ */
+.landing{flex:1;display:none;flex-direction:column;padding:10px 18px 28px;}
+.landing.show{display:flex;}
+.hero{text-align:center;padding:8px 6px 4px;}
+.hero .eyebrow{font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--primary);}
+.hero h2{font-size:26px;font-weight:800;letter-spacing:-.025em;color:var(--text);margin-top:6px;line-height:1.15;}
+.hero p{font-size:13.5px;color:var(--gray);margin:7px auto 0;line-height:1.45;max-width:300px;}
+.orb-zone{display:flex;flex-direction:column;align-items:center;padding:26px 0 8px;}
+.orb{position:relative;width:118px;height:118px;border-radius:50%;border:none;cursor:pointer;
+  background:radial-gradient(circle at 32% 28%, #60a5fa 0%, #2563EB 48%, #1d4ed8 100%);
+  box-shadow:0 18px 40px -10px rgba(37,99,235,.55),0 4px 14px -2px rgba(29,78,216,.4),inset 0 -6px 16px rgba(13,42,148,.45),inset 0 4px 10px rgba(255,255,255,.35);
+  display:flex;align-items:center;justify-content:center;animation:breathe 4.5s ease-in-out infinite;transition:transform .18s ease;}
+.orb:active{transform:scale(.95);}
+.orb svg{width:54px;height:54px;fill:#fff;filter:drop-shadow(0 2px 10px rgba(13,42,148,.4));}
+.orb::before,.orb::after{content:'';position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(37,99,235,.45);animation:ring 3.6s ease-out infinite;}
+.orb::after{animation-delay:1.8s;}
+@keyframes ring{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.75);opacity:0}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+.orb-label{margin-top:16px;font-size:13px;font-weight:700;color:var(--text);}
+.orb-sub{margin-top:2px;font-size:11px;color:var(--gray);font-weight:500;}
+.sim-note{margin-top:26px;text-align:center;font-size:11.5px;color:#9aa6ba;font-weight:600;line-height:1.6;}
+.sim-note strong{color:var(--gray);}
+
+/* ============================================================
+   STRATEGY DECK — fullscreen swipeable slides (blue world)
+   ============================================================ */
+.deck{position:absolute;inset:0;z-index:300;opacity:0;visibility:hidden;transition:opacity .45s ease, visibility .45s;
+  background:radial-gradient(140% 90% at 85% -15%, rgba(96,165,250,.35), transparent 55%),
+    radial-gradient(120% 70% at 0% 108%, rgba(59,130,246,.28), transparent 55%),
+    linear-gradient(168deg, var(--sim-deep) 0%, var(--sim-mid) 46%, var(--sim-primary) 100%);}
+.deck.open{opacity:1;visibility:visible;}
+.deck::before{content:'';position:absolute;inset:0;opacity:.05;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E");}
+.deck-top{position:absolute;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:64px 20px 0;}
+.deck-x{width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,.12);color:#fff;
+  display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+.deck-x:active{background:rgba(255,255,255,.24);}
+.deck-x .material-symbols-outlined{font-size:20px;}
+.deck-dots{display:flex;gap:6px;}
+.deck-dots span{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.28);transition:all .3s;}
+.deck-dots span.on{background:#fff;width:18px;border-radius:4px;}
+.deck-spacer{width:38px;}
+
+.deck-scroll{
+  position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.deck-scroll::-webkit-scrollbar{display:none;}
+.slide{
+  flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always;
+  padding:118px 26px 40px;display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:none;
+}
+.slide::-webkit-scrollbar{display:none;}
+.sl-eyebrow{font-size:10px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.55);}
+.sl-h1{font-size:29px;font-weight:800;letter-spacing:-.03em;color:#fff;line-height:1.12;margin-top:8px;}
+.sl-body{font-size:14px;color:rgba(255,255,255,.75);font-weight:500;margin-top:14px;line-height:1.65;}
+.sl-body strong{color:#fff;font-weight:700;}
+.stat-chip{display:inline-flex;align-items:baseline;gap:7px;margin-top:22px;background:var(--glass);border:1px solid var(--glass-border);
+  border-radius:16px;padding:14px 18px;backdrop-filter:blur(10px);}
+.stat-chip .big{font-size:30px;font-weight:800;color:#fff;letter-spacing:-.02em;}
+.stat-chip .lab{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);}
+.step-row{display:flex;gap:13px;margin-top:12px;background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;padding:14px 15px;backdrop-filter:blur(10px);}
+.step-num{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;}
+.step-row .material-symbols-outlined{font-size:22px;color:#fff;flex-shrink:0;margin-top:1px;}
+.step-txt .st-1{font-size:13.5px;font-weight:800;color:#fff;letter-spacing:-.01em;}
+.step-txt .st-2{font-size:12px;font-weight:500;color:rgba(255,255,255,.65);margin-top:3px;line-height:1.5;}
+.warn-card{margin-top:14px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:14px;padding:12px 14px;
+  display:flex;gap:9px;align-items:flex-start;}
+.warn-card .material-symbols-outlined{font-size:18px;color:var(--amber);flex-shrink:0;}
+.warn-card p{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.75);line-height:1.55;}
+.recap-row{display:flex;gap:10px;align-items:flex-start;margin-top:12px;}
+.recap-row .material-symbols-outlined{font-size:18px;color:var(--mint);flex-shrink:0;margin-top:1px;}
+.recap-row p{font-size:13px;font-weight:600;color:rgba(255,255,255,.8);line-height:1.5;}
+.sl-cta{flex-shrink:0;height:54px;border:none;border-radius:14px;cursor:pointer;background:#fff;color:#1d4ed8;
+  font-family:'Manrope';font-size:15.5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 10px 30px -6px rgba(8,28,78,.55);margin-top:auto;transition:transform .15s;}
+.sl-cta:active{transform:scale(.98);}
+.sl-cta .material-symbols-outlined{font-size:20px;font-variation-settings:'FILL' 1;}
+.sl-ghost{height:46px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);border-radius:13px;color:#fff;
+  font-family:'Manrope';font-size:13px;font-weight:700;cursor:pointer;margin-top:10px;backdrop-filter:blur(8px);}
+.sl-spacer{flex:1;min-height:16px;}
+.swipe-hint{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:10px;font-weight:800;
+  letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);pointer-events:none;transition:opacity .4s;}
+.swipe-hint.gone{opacity:0;}
+
+/* toast */
+.toast{position:absolute;left:50%;bottom:110px;transform:translateX(-50%) translateY(16px);z-index:380;
+  background:rgba(15,23,42,.92);color:#fff;font-size:12px;font-weight:700;padding:11px 18px;border-radius:24px;
+  opacity:0;pointer-events:none;transition:all .3s;white-space:nowrap;backdrop-filter:blur(8px);}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <div class="proto-title">
+    <span class="kicker">Tab2 Education Refactor · Interactive Prototype</span>
+    <h1>Withdrawal Strategies — 2×2 cards + fullscreen decks</h1>
+  </div>
+</div>
+<div class="proto-hint">Tap a <strong>card</strong> to open its deck — <strong>swipe / scroll horizontally</strong> or <strong>click the right half</strong> to advance slides. The last slide's <strong>Stress-test</strong> button jumps to the simulator tab (orb landing). Switcher up top works both ways.</div>
+
+<div class="stage">
+  <div class="phone-wrap" id="phoneWrap">
+    <div class="phone">
+      <div class="screen-clip">
+        <div class="island"></div>
+        <div class="statusbar" id="statusbar">
+          <span>9:41</span>
+          <span class="right">
+            <span class="material-symbols-outlined">signal_cellular_alt</span>
+            <span class="material-symbols-outlined">wifi</span>
+            <span class="material-symbols-outlined">battery_full</span>
+          </span>
+        </div>
+
+        <div class="app">
+          <div class="app-header">
+            <div class="title">Retirement</div>
+            <div class="switcher-row">
+              <div class="ios-switcher">
+                <button id="swSim"><span class="material-symbols-outlined">casino</span></button>
+                <button id="swEdu" class="on"><span class="material-symbols-outlined">school</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="app-content">
+
+            <!-- ============ EDUCATION LANDING ============ -->
+            <div class="edu-landing show" id="eduLanding">
+              <div class="edu-hero">
+                <div class="eyebrow">Withdrawal Strategies</div>
+                <h2>Make your money last.</h2>
+                <p>Four proven ways to turn a portfolio into a paycheck.</p>
+              </div>
+
+              <div class="edu-grid" id="eduGrid"><!-- cards injected --></div>
+            </div>
+
+            <!-- ============ SIM LANDING (abbreviated) ============ -->
+            <div class="landing" id="simLanding">
+              <div class="hero">
+                <div class="eyebrow">Monte Carlo</div>
+                <h2>Will your money last?</h2>
+                <p>Stress-test your retirement against 1,000 simulated markets.</p>
+              </div>
+              <div class="orb-zone">
+                <button class="orb" id="playOrb" title="(flow not wired in this mockup)">
+                  <svg viewBox="0 -960 960 960"><path d="M668.5-531.5Q680-543 680-560t-11.5-28.5Q657-600 640-600t-28.5 11.5Q600-577 600-560t11.5 28.5Q623-520 640-520t28.5-11.5ZM320-620h200v-60H320v60ZM180-120q-34-114-67-227.5T80-580q0-92 64-156t156-64h200q29-38 70.5-59t89.5-21q25 0 42.5 17.5T720-820q0 5-5 23-4 11-7.5 22.5T702-751l91 91h87v279l-113 37-67 224H480v-80h-80v80H180Z"/></svg>
+                </button>
+                <div class="orb-label">Run a simulation</div>
+                <div class="orb-sub">About 30 seconds</div>
+              </div>
+              <p class="sim-note">Simulator landing as shipped in FRED-207 — with one change this story brings:<br>
+              the showdown's first strategy becomes <strong>Yield-Based Income</strong> (replacing Traditional 4%,<br>same survival math, funded through yield).</p>
+            </div>
+          </div>
+
+          <div class="tabbar">
+            <div class="tab"><span class="material-symbols-outlined">pie_chart</span>Portfolio</div>
+            <div class="tab on"><span class="material-symbols-outlined">savings</span>Retire</div>
+            <div class="tab"><span class="material-symbols-outlined">person</span>Profile</div>
+          </div>
+        </div>
+
+        <!-- ============ STRATEGY DECK ============ -->
+        <div class="deck" id="deck">
+          <div class="deck-top">
+            <div class="deck-spacer"></div>
+            <div class="deck-dots" id="deckDots"></div>
+            <button class="deck-x" id="deckX"><span class="material-symbols-outlined">close</span></button>
+          </div>
+          <div class="deck-scroll" id="deckScroll"><!-- slides injected --></div>
+          <div class="swipe-hint" id="swipeHint">Swipe to explore</div>
+        </div>
+
+        <div class="toast" id="toast"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+/* ============================================================
+   Strategy content — What / How / Why / Safely / Recap
+   ============================================================ */
+const STRATEGIES = [
+  {
+    key:'yield', icon:'payments', name:'Yield-Based Income',
+    tag:'Live off dividends and interest — never panic-sell',
+    hint:'5 slides · 3 min',
+    slides:{
+      whatH:'Get paid by what you own.',
+      what:`A portfolio built to <strong>pay you ~4% a year</strong> in dividends and interest. Your spending money arrives as income the portfolio generates — the shares themselves stay invested and keep compounding.`,
+      stat:['4%','target blended yield'],
+      how:[
+        ['payments','Build the income mix','Dividend stocks and ETFs, bond ladders, and REITs blended to a ~4% overall yield.'],
+        ['event_repeat','Income lands as cash','Dividends and interest arrive monthly and quarterly — that cash is your paycheck.'],
+        ['lock','Principal stays put','You spend the income, not the shares. In lean years, a small principal top-up bridges the gap.']
+      ],
+      why:[
+        ['trending_down','Crashes cut prices, not payouts','Market prices swing wildly; dividend and interest streams are historically far steadier.'],
+        ['psychology','It removes the hardest decision','No agonizing over when to sell — income arrives on schedule regardless of headlines.'],
+        ['all_inclusive','Principal keeps compounding','What you never sell can recover, grow, and eventually become your legacy.']
+      ],
+      safe:[
+        ['Diversify the income','No single stock over 5% of the portfolio — a dividend cut shouldn’t dent your lifestyle.'],
+        ['Don’t chase yield','Anything promising 6%+ usually carries hidden risk. High yield is a warning, not a gift.'],
+        ['Keep a cash buffer','Six months of spending in cash rides out dividend cuts without forced selling.'],
+        ['Check payout health','Favor companies paying out a sustainable share of earnings, not borrowing to pay you.']
+      ],
+      recap:['A ~4% blended yield becomes your paycheck','Shares stay invested and keep compounding','Buffer + diversification protect the income stream']
+    }
+  },
+  {
+    key:'guardrails', icon:'tune', name:'Dynamic Guardrails',
+    tag:'Spend more in good years, less in bad',
+    hint:'5 slides · 3 min',
+    slides:{
+      whatH:'Flexible beats fragile.',
+      what:`A withdrawal plan with <strong>built-in course correction</strong>. You start around 5% and adjust spending with simple rules when markets move — small trims in bad years, raises in good ones.`,
+      stat:['5%','starting withdrawal rate'],
+      how:[
+        ['play_arrow','Start at 5%','Withdraw about 5% of your portfolio in year one — more than the old 4% rule allows.'],
+        ['tune','Check once a year','If withdrawals exceed 6% of the current portfolio, cut spending 10%. Below 4%? Give yourself a 10% raise.'],
+        ['event_available','Otherwise, inflation bump','In normal years your spending simply rises with inflation. One check, once a year.']
+      ],
+      why:[
+        ['query_stats','Small trims, huge effect','A temporary 10% cut in a downturn dramatically extends how long money lasts — flexibility is the strongest lever in retirement math.'],
+        ['history','Battle-tested','Guardrails survived nearly every historical market, including retiring right into 2008.'],
+        ['sentiment_satisfied','Raises are part of the plan','Unlike rigid rules, good markets translate into real, guilt-free spending increases.']
+      ],
+      safe:[
+        ['Write the rules down','Pre-commit to the exact triggers — decisions made calmly beat decisions made in a crash.'],
+        ['Automate the annual check','Put it on the calendar after your yearly rebalance. One look, one adjustment.'],
+        ['Hold 2 years of cash','A cash cushion means trims never touch groceries — they trim the extras.'],
+        ['Don’t override the system','The rules only work if euphoria and panic can’t talk you out of them.']
+      ],
+      recap:['Start at 5%, adjust with two simple triggers','Temporary trims extend your money dramatically','Cash cushion keeps cuts comfortable']
+    }
+  },
+  {
+    key:'annuity', icon:'security', name:'Annuity',
+    tag:'Guaranteed income for life',
+    hint:'5 slides · 3 min',
+    slides:{
+      whatH:'Build your own pension.',
+      what:`Trade part of your portfolio for a <strong>guaranteed monthly check for life</strong>. An insurer takes on the market risk — your essentials get paid no matter what stocks do, for as long as you live.`,
+      stat:['40–60%','of portfolio annuitized'],
+      how:[
+        ['security','Cover the essentials','Annuitize enough that housing, food, and healthcare are paid by the guaranteed check alone.'],
+        ['trending_up','Invest the rest for growth','The remaining portfolio stays in stocks for lifestyle spending, inflation, and legacy.'],
+        ['event_repeat','Checks arrive for life','Every month, regardless of markets, headlines, or how long you live.']
+      ],
+      why:[
+        ['all_inclusive','You can’t outlive it','Longevity is retirement’s biggest unknown. Lifetime income turns it from a risk into a feature.'],
+        ['shield','Essentials are sequence-proof','A crash in year one can’t touch your rent money — the worst retirement risk, neutralized.'],
+        ['psychology','Permission to stay invested','With basics guaranteed, riding out volatility in the growth bucket gets emotionally easy.']
+      ],
+      safe:[
+        ['Only A-rated insurers','The guarantee is only as strong as the company — check AM Best ratings first.'],
+        ['Shop at least 3 quotes','Payouts for the same dollar vary surprisingly widely between insurers.'],
+        ['Know it’s (mostly) irreversible','Annuitizing is a one-way door. Start smaller if unsure — you can add later.'],
+        ['Never annuitize everything','Keep growth assets for inflation and flexibility. 100% annuity is 0% adaptability.']
+      ],
+      recap:['Guaranteed check covers all essentials','Growth bucket handles lifestyle and inflation','Rated insurers + multiple quotes, always']
+    }
+  },
+  {
+    key:'sbloc', icon:'account_balance', name:'SBLOC',
+    tag:'Borrow through downturns — never sell low',
+    hint:'5 slides · 3 min',
+    slides:{
+      whatH:'Never sell in a crash again.',
+      what:`A <strong>credit line backed by your portfolio</strong>. In normal years you sell shares to live. In crash years you borrow your living money instead — so you never lock in losses at the bottom.`,
+      stat:['<20%','max line vs portfolio'],
+      how:[
+        ['sell','Good years: sell as usual','Markets up? Sell ~4% for living expenses like any withdrawal plan.'],
+        ['account_balance','Bad years: draw the line','Portfolio down 10%+? Borrow living money against it instead of selling depressed shares.'],
+        ['undo','Recovery: repay first','When markets recover, sell enough to clear the loan, then resume normal withdrawals.']
+      ],
+      why:[
+        ['trending_down','Sequence risk is the killer','Selling through a crash early in retirement does permanent damage. Borrowing bridges the dip.'],
+        ['history','Dips have always recovered','Every major U.S. downturn has recovered — typically within a few years. The line buys that time.'],
+        ['payments','Cheap when used right','Interest on 1–2 crash-years of spending costs far less than selling 30% off your shares.']
+      ],
+      safe:[
+        ['Stay under 20%','Keep the line small relative to the portfolio — margin calls happen to the greedy.'],
+        ['Set it up before you retire','Approval needs a qualifying portfolio. Arrange the line while you don’t need it.'],
+        ['Model 6–8% rates','SBLOC rates float. If the math only works at 4%, it doesn’t work.'],
+        ['Repay aggressively','The line is a bridge, not a lifestyle. Clear it in the first recovery years — and know this is the most advanced strategy here.']
+      ],
+      recap:['Borrow in crashes, sell in recoveries','Line stays under 20% of portfolio','Most advanced strategy — rules are non-negotiable']
+    }
+  }
+];
+
+/* ---------- education cards ---------- */
+const grid = $('eduGrid');
+STRATEGIES.forEach((s, i) => {
+  const el = document.createElement('div');
+  el.className = 'edu-card';
+  el.innerHTML = `
+    <div class="edu-tile"><span class="material-symbols-outlined">${s.icon}</span></div>
+    <div class="edu-card-name">${s.name}</div>
+    <div class="edu-card-tag">${s.tag}</div>
+    <div class="edu-card-foot">
+      <span class="edu-card-hint">${s.hint}</span>
+      <span class="edu-card-arrow"><span class="material-symbols-outlined">arrow_forward</span></span>
+    </div>`;
+  el.addEventListener('click', () => openDeck(i));
+  grid.appendChild(el);
+});
+
+/* ---------- deck ---------- */
+const deck = $('deck'), deckScroll = $('deckScroll'), deckDots = $('deckDots');
+let hintShown = false;
+
+function slideShell(eyebrow, h1, inner, isLast, hasSpacer = true){
+  return `<div class="slide">
+    <div class="sl-eyebrow">${eyebrow}</div>
+    <div class="sl-h1">${h1}</div>
+    ${inner}
+    ${hasSpacer ? '<div class="sl-spacer"></div>' : ''}
+    ${isLast ? `<button class="sl-cta" id="stressBtn"><span class="material-symbols-outlined">play_arrow</span>Stress-test this strategy</button>
+                <button class="sl-ghost" id="deckDone">Done</button>` : ''}
+  </div>`;
+}
+
+function openDeck(i){
+  const s = STRATEGIES[i];
+  const up = s.name.toUpperCase();
+  const sl = s.slides;
+  deckScroll.innerHTML =
+    slideShell(`${up} · 1 OF 5`, sl.whatH,
+      `<p class="sl-body">${sl.what}</p>
+       <div class="stat-chip"><span class="big">${sl.stat[0]}</span><span class="lab">${sl.stat[1]}</span></div>`) +
+    slideShell(`${up} · 2 OF 5`, 'How it works.',
+      sl.how.map((h,n)=>`<div class="step-row"><div class="step-num">${n+1}</div>
+        <div class="step-txt"><div class="st-1">${h[1]}</div><div class="st-2">${h[2]}</div></div></div>`).join('')) +
+    slideShell(`${up} · 3 OF 5`, 'Why it works.',
+      sl.why.map(w=>`<div class="step-row"><span class="material-symbols-outlined">${w[0]}</span>
+        <div class="step-txt"><div class="st-1">${w[1]}</div><div class="st-2">${w[2]}</div></div></div>`).join('')) +
+    slideShell(`${up} · 4 OF 5`, 'Do it safely.',
+      sl.safe.map(r=>`<div class="step-row"><span class="material-symbols-outlined">verified_user</span>
+        <div class="step-txt"><div class="st-1">${r[0]}</div><div class="st-2">${r[1]}</div></div></div>`).join('') +
+      `<div class="warn-card"><span class="material-symbols-outlined">info</span>
+        <p>Educational content, not investment advice. Talk to a fiduciary advisor before acting on any strategy.</p></div>`) +
+    slideShell(`${up} · 5 OF 5`, 'The playbook.',
+      sl.recap.map(r=>`<div class="recap-row"><span class="material-symbols-outlined">check_circle</span><p>${r}</p></div>`).join(''),
+      true);
+
+  deckDots.innerHTML = '<span class="on"></span>' + '<span></span>'.repeat(4);
+  deckScroll.scrollLeft = 0;
+  deck.classList.add('open');
+  $('statusbar').classList.add('light-on-dark');
+  $('swipeHint').classList.toggle('gone', hintShown);
+
+  $('stressBtn').addEventListener('click', () => {
+    closeDeck();
+    setTimeout(() => { switchSection('sim'); toast('Simulator ready — tap the piggy'); }, 350);
+  });
+  $('deckDone').addEventListener('click', closeDeck);
+}
+function closeDeck(){
+  deck.classList.remove('open');
+  if (currentSection === 'edu') $('statusbar').classList.remove('light-on-dark');
+  else $('statusbar').classList.remove('light-on-dark');
+}
+$('deckX').addEventListener('click', closeDeck);
+
+/* dots sync + click-to-advance */
+deckScroll.addEventListener('scroll', () => {
+  const idx = Math.round(deckScroll.scrollLeft / deckScroll.clientWidth);
+  [...deckDots.children].forEach((d,i)=>d.classList.toggle('on', i===idx));
+  if (deckScroll.scrollLeft > 30 && !hintShown){ hintShown = true; $('swipeHint').classList.add('gone'); }
+});
+deckScroll.addEventListener('click', e => {
+  if (e.target.closest('button')) return;
+  const w = deckScroll.clientWidth;
+  const x = e.clientX - deckScroll.getBoundingClientRect().left;
+  const idx = Math.round(deckScroll.scrollLeft / w);
+  if (x > w * 0.5 && idx < 4) deckScroll.scrollTo({ left: (idx+1)*w, behavior:'smooth' });
+  else if (x < w * 0.22 && idx > 0) deckScroll.scrollTo({ left: (idx-1)*w, behavior:'smooth' });
+});
+
+/* ---------- section switcher ---------- */
+let currentSection = 'edu';
+function switchSection(which){
+  currentSection = which;
+  $('eduLanding').classList.toggle('show', which==='edu');
+  $('simLanding').classList.toggle('show', which==='sim');
+  $('swEdu').classList.toggle('on', which==='edu');
+  $('swSim').classList.toggle('on', which==='sim');
+}
+$('swEdu').addEventListener('click', ()=>switchSection('edu'));
+$('swSim').addEventListener('click', ()=>switchSection('sim'));
+$('playOrb').addEventListener('click', ()=>toast('Full sim flow lives in the FRED-207 build'));
+
+/* ---------- toast + fit ---------- */
+let toastT = null;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),2400); }
+function fit(){ $('phoneWrap').style.transform = `scale(${Math.min(1,(window.innerHeight-140)/880)})`; }
+window.addEventListener('resize', fit); fit();
+</script>
+</body>
+</html>

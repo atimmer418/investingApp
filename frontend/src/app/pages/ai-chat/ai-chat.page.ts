@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuController } from '@ionic/angular';
@@ -17,16 +17,17 @@ import {
   IonItem,
   IonLabel,
   IonMenuToggle,
-  IonMenuButton,
-  IonChip
+  IonMenuButton
 } from '@ionic/angular/standalone';
 import { ChatService, ChatMessage, ChatSession } from '../../services/chat.service';
 import { FirstTimeTourService } from '../../services/first-time-tour.service';
 import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
-import { arrowUpCircle, menuOutline, addOutline, refreshOutline } from 'ionicons/icons';
+import { arrowUp, menuOutline, addOutline, refreshOutline, sparklesOutline, trendingUpOutline, chatbubbleEllipsesOutline } from 'ionicons/icons';
 import { TabBarScrollDirective } from '../../directives/tab-bar-scroll.directive';
+import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
+import { Keyboard } from '@capacitor/keyboard';
 
 @Component({
   selector: 'app-ai-chat',
@@ -51,16 +52,21 @@ import { TabBarScrollDirective } from '../../directives/tab-bar-scroll.directive
     IonLabel,
     IonMenuToggle,
     IonMenuButton,
-    IonChip,
-    TabBarScrollDirective
+    TabBarScrollDirective,
+    KeyboardAvoidDirective
   ]
 })
-export class AiChatPage implements OnInit, AfterViewInit {
+export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(IonContent) content!: IonContent;
 
   readonly FRED_STORY_TRIGGER = "What's your story FRED?";
 
   private streamSubscription: Subscription | null = null;
+
+  /** Keyboard height (px) while the native keyboard is up — lifts the composer (resize:'none'). */
+  keyboardOffset = 0;
+  private kbShow?: Promise<any>;
+  private kbHide?: Promise<any>;
 
   messages: ChatMessage[] = [];
   sessions: ChatSession[] = [];
@@ -76,17 +82,68 @@ export class AiChatPage implements OnInit, AfterViewInit {
     private menuCtrl: MenuController,
     private tourService: FirstTimeTourService
   ) {
-    addIcons({ arrowUpCircle, menuOutline, addOutline, refreshOutline });
+    addIcons({ arrowUp, menuOutline, addOutline, refreshOutline, sparklesOutline, trendingUpOutline, chatbubbleEllipsesOutline });
   }
 
   get isTourOnStep4(): boolean {
     return this.tourService.currentStep === 4;
   }
 
+  /** Empty state = no user message yet in this chat (hero + suggestion cards shown) */
+  get isEmptyState(): boolean {
+    return !this.messages.some(m => m.role === 'user');
+  }
+
+  get timeGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning.';
+    if (hour < 17) return 'Good afternoon.';
+    return 'Good evening.';
+  }
+
+  private readonly suggestionIcons = ['sparkles-outline', 'trending-up-outline', 'chatbubble-ellipses-outline'];
+
+  suggestionIcon(index: number): string {
+    return this.suggestionIcons[index % this.suggestionIcons.length];
+  }
+
+  /** Pig-themed thinking phrases — one picked at random per response */
+  private readonly thinkingPhrases = [
+    'Snorting...',
+    'Rolling around in some mud...',
+    'Rooting through the numbers...',
+    'Counting coins in the trough...',
+    'Sniffing out an answer...',
+    'Filling the piggy bank...',
+    'Oinking at the market...'
+  ];
+  thinkingPhrase = this.thinkingPhrases[0];
+
+  private pickThinkingPhrase() {
+    this.thinkingPhrase = this.thinkingPhrases[Math.floor(Math.random() * this.thinkingPhrases.length)];
+  }
+
   ngOnInit() {
     this.loadSessions();
     this.syncBackendHistory();
     this.loadDailySuggestions();
+
+    // Native-only (plugin never fires on web — same pattern as KeyboardAvoidDirective)
+    this.kbShow = Keyboard.addListener('keyboardWillShow', info => {
+      this.keyboardOffset = info.keyboardHeight;
+      this.cdr.detectChanges();
+      this.scrollToBottom();
+    });
+    this.kbHide = Keyboard.addListener('keyboardWillHide', () => {
+      this.keyboardOffset = 0;
+      this.cdr.detectChanges();
+    });
+  }
+
+  ngOnDestroy() {
+    this.kbShow?.then(h => h.remove());
+    this.kbHide?.then(h => h.remove());
+    this.streamSubscription?.unsubscribe();
   }
 
   ngAfterViewInit() {
@@ -254,13 +311,8 @@ export class AiChatPage implements OnInit, AfterViewInit {
     this.messages = [];
     // Reload suggestions to ensure used ones are filtered out
     this.loadDailySuggestions();
-
-    // Add an initial greeting from FRED
-    this.addMessage({
-      role: 'assistant',
-      content: "Hello! I'm FRED. How can I help you with your investing journey today?",
-      timestamp: new Date()
-    }, false); // Don't save initial greeting to history yet
+    // No greeting bubble — the empty-state hero (pig + time greeting) takes its place
+    this.cdr.detectChanges();
   }
 
   loadSession(session: ChatSession) {
@@ -305,6 +357,7 @@ export class AiChatPage implements OnInit, AfterViewInit {
 
     this.newMessage = '';
     this.isLoading = true;
+    this.pickThinkingPhrase();
     this.scrollToBottom();
 
     // Check if we need to generate a title (first user message in session)

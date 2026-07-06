@@ -4,33 +4,35 @@ import { LinkPlaidComponent } from './components/linkplaid/linkplaid.component';
 export const routes: Routes = [
   {
     path: 'survey-initial',
-    loadComponent: () => import('./components/surveyinitial/surveyinitial.component').then(m => m.SurveyInitialComponent)
+    loadComponent: () => import('./components/surveyinitial/surveyinitial.component').then(m => m.SurveyInitialComponent),
+    data: { onboardingOnly: true }
   },
   {
     path: 'fi-plan-results',
-    loadComponent: () => import('./components/fi-plan-results/fi-plan-results.component').then(m => m.FiPlanResultsComponent)
+    loadComponent: () => import('./components/fi-plan-results/fi-plan-results.component').then(m => m.FiPlanResultsComponent),
+    data: { onboardingOnly: true }
   },
   {
     path: 'auth-finalize', // This is the route you navigate to
     loadComponent: () => import('./components/authfinalize/authfinalize.component').then(m => m.AuthFinalizeComponent)
     // Adjust path if you placed AuthFinalizeComponent elsewhere, e.g., directly under 'app/'
+    // Not onboardingOnly: AppLockService.forceRecovery() sends logged-in users here.
   },
   {
     path: 'kyc-verification',
     loadComponent: () => import('./components/kyc-verification/kyc-verification.component').then(m => m.KycVerificationComponent)
+    // Not onboardingOnly: Security Settings "Update KYC" (?edit=true) is a post-onboarding flow.
   },
   {
     path: 'recovery',
-    loadComponent: () => import('./pages/recovery/recovery.page').then(m => m.RecoveryPage)
+    loadComponent: () => import('./pages/recovery/recovery.page').then(m => m.RecoveryPage),
+    data: { onboardingOnly: true }
   },
   {
     path: 'investment-confirmation',
-    loadComponent: () => import('./components/investmentconfirmation/investmentconfirmation.component').then(m => m.InvestmentConfirmationComponent)
+    loadComponent: () => import('./components/investmentconfirmation/investmentconfirmation.component').then(m => m.InvestmentConfirmationComponent),
     // Or from './pages/investment-confirmation/investment-confirmation.page' if you use .page convention
-  },
-  {
-    path: 'stock-selection',
-    loadComponent: () => import('./components/stockselection/stockselection.component').then(m => m.StockSelectionComponent)
+    data: { onboardingOnly: true }
   },
   {
     path: 'link-bank',
@@ -38,7 +40,8 @@ export const routes: Routes = [
   },
   {
     path: 'investment-schedule',
-    loadComponent: () => import('./components/investment-schedule/investment-schedule.component').then(m => m.InvestmentScheduleComponent)
+    loadComponent: () => import('./components/investment-schedule/investment-schedule.component').then(m => m.InvestmentScheduleComponent),
+    data: { onboardingOnly: true }
   },
   {
     path: 'portfolio-customize',
@@ -62,9 +65,10 @@ export const routes: Routes = [
   },
   {
     path: 'get-started',
-    loadComponent: () => import('./components/get-started/get-started.component').then(m => m.GetStartedComponent)
+    loadComponent: () => import('./components/get-started/get-started.component').then(m => m.GetStartedComponent),
     // TODO: This route might need to be set as the initial app route for new users,
     // or integrated into a guard that redirects new users here.
+    data: { onboardingOnly: true }
   },
   {
     path: 'recurring-investments',

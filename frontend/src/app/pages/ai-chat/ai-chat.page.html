@@ -38,14 +38,15 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-content [fullscreen]="true" class="chat-content" appTabBarScroll tabBarNoShrink>
+  <ion-content [fullscreen]="true" class="chat-content" appTabBarScroll tabBarNoShrink appKeyboardAvoid>
     <div class="messages-container">
       <div *ngFor="let msg of messages; let i = index" class="message-wrapper"
         [class.user-message]="msg.role === 'user'" [class.assistant-message]="msg.role === 'assistant'"
-        [class.failed-message]="msg.failed" [id]="'chat-message-' + i">
+        [class.failed-message]="msg.failed" [class.empty-message]="msg.role === 'assistant' && !msg.content"
+        [id]="'chat-message-' + i">
 
         <div class="avatar" *ngIf="msg.role === 'assistant'">
-          <img src="assets/icon/pfp.png" class="fred-avatar-img" alt="FRED">
+          <img src="assets/images/pig-range-4.svg" class="fred-avatar-img" alt="FRED">
         </div>
 
         <!-- Retry button for failed messages (before bubble) -->
@@ -61,45 +62,40 @@
 
       </div>
 
-      <div *ngIf="messages.length <= 1 && dailySuggestions.length > 0" class="suggestions-container">
-        <p class="suggestion-header">Try asking about...</p>
-        <div class="suggestion-chips">
-          <ion-chip
-            *ngFor="let question of dailySuggestions"
+      <div *ngIf="isEmptyState" class="empty-state">
+        <img src="assets/images/pig-range-4.svg" class="empty-hero" alt="FRED piggy bank" />
+        <h1 class="empty-greeting">{{ timeGreeting }}</h1>
+        <p class="empty-subtitle">What are we doing today?</p>
+
+        <div class="suggestion-cards" *ngIf="dailySuggestions.length > 0">
+          <button
+            class="suggestion-card"
+            *ngFor="let question of dailySuggestions; let i = index"
             (click)="selectSuggestion(question)"
-            outline
-            color="primary"
             [class.tour-story-chip]="isTourOnStep4 && question === FRED_STORY_TRIGGER">
-            <ion-label>{{ question }}</ion-label>
-          </ion-chip>
+            <span class="card-icon"><ion-icon [name]="suggestionIcon(i)"></ion-icon></span>
+            <span class="card-text">{{ question }}</span>
+          </button>
         </div>
       </div>
 
-      <div *ngIf="isLoading" class="message-wrapper assistant-message loading-bubble-wrapper">
-        <div class="avatar">
-          <img src="assets/icon/pfp.png" class="fred-avatar-img" alt="FRED">
-        </div>
-        <div class="message-bubble loading-bubble">
-          <div class="typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
+      <div *ngIf="isLoading" class="thinking-row">
+        <img src="assets/images/pig-range-4.svg" class="thinking-pig" alt="" />
+        <span class="thinking-text">{{ thinkingPhrase }}</span>
       </div>
       <div id="scroll-anchor" style="height: 1px; width: 100%;"></div>
     </div>
   </ion-content>
 
-  <ion-footer class="ion-no-border">
+  <ion-footer class="ion-no-border" [class.kb-open]="keyboardOffset > 0" [style.--kb-offset.px]="keyboardOffset">
     <div class="input-bar">
       <div class="input-container">
         <ion-textarea [(ngModel)]="newMessage" placeholder="Message FRED..." autoGrow="true" rows="1"
           (keydown.enter)="$event.preventDefault(); sendMessage()" (ionInput)="onTextareaInput($event)">
         </ion-textarea>
-        <ion-button fill="clear" (click)="sendMessage()" [disabled]="!newMessage.trim() || isLoading"
+        <ion-button shape="round" (click)="sendMessage()" [disabled]="!newMessage.trim() || isLoading"
           class="send-button">
-          <ion-icon name="arrow-up-circle" slot="icon-only"></ion-icon>
+          <ion-icon name="arrow-up" slot="icon-only"></ion-icon>
         </ion-button>
       </div>
     </div>

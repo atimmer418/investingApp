@@ -142,6 +142,15 @@ export class AppComponent implements OnInit {
     // authSucceeded$ fires at the end of handleSuccessfulAuthentication, after the DB load
     // chain is already in flight. The DB result will reconcile (same target → no flash).
     this.authService.authSucceeded$.subscribe(() => {
+      // Warm the portfolio fetch the INSTANT reauth succeeds — this is the earliest point a
+      // valid JWT exists. Do NOT wait for tryOptimisticNav: it is blocked by isCurrentlyLocked()
+      // during the ceremony, and the iOS app-state resume that would otherwise kick the fetch can
+      // lag 1-2s after auth finishes. prime() is a token-gated read-only GET; single-flight means
+      // the tab1 component later joins this same in-flight request (no double fetch). Gated on the
+      // tab1-bound hint so a mid-onboarding reauth doesn't fetch a portfolio the user won't see.
+      if (JwtTokenUtils.getNextStepHint() === 'complete') {
+        this.portfolioStore.prime();
+      }
       this.tryOptimisticNav();
     });
 

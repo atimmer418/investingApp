@@ -27,6 +27,15 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
   isUnlocking = false;
   isFounder = false;
   private unlockButton: HTMLButtonElement | null = null;
+  // Bumped whenever a new fade takes over the button; in-flight rAF fade loops
+  // check it and stop, so opposing fades can never fight over opacity.
+  private fadeEpoch = 0;
+  private static readonly FADE_MS = 350;
+  // How long the cancelled passkey half-sheet takes to clear the button's
+  // position. A fade-in started before this plays underneath the sheet and is
+  // invisible. On-device (2026-07-03): 450 fades ✓, 350 and 0 don't ✗ — the
+  // real dismissal is somewhere in (350, 450]. Don't trim without retesting.
+  private static readonly SHEET_DISMISS_MS = 450;
 
   constructor(
     private modalController: ModalController,
@@ -98,63 +107,133 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
    * sidesteps that entirely.
    *
    * On subsequent calls (retry after another failed biometric), the existing
-   * button is re-enabled rather than re-created.
+   * button is re-enabled and faded back in rather than re-created.
+   *
+   * All fades go through the Web Animations API, not CSS transitions: WebKit
+   * won't arm a transition on an element that was never rendered at the start
+   * value, and the global reduced-motion rule (global.scss `transition-duration:
+   * 0.01ms !important`) zeroes CSS transitions outright. animate() has
+   * programmatic timing that neither can touch — and an opacity cross-fade is
+   * the reduced-motion-safe effect anyway.
    */
   private revealUnlockButton(): void {
     this.zone.run(() => {
       this.isUnlocking = false;
-      if (this.unlockButton) {
-        this.unlockButton.disabled = false;
-        this.unlockButton.style.opacity = '1';
-        this.unlockButton.textContent = 'Unlock';
-      } else {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = 'Unlock';
-        btn.style.cssText = [
-          'position:fixed',
-          'left:50%',
-          'top:70%',
-          'transform:translate(-50%,-50%)',
-          'z-index:2147483647',
-          'min-width:200px',
-          'height:52px',
-          'padding:0 32px',
-          'border:none',
-          'border-radius:999px',
-          'background:#2563EB',
-          'color:#ffffff',
-          "font-family:'Manrope',sans-serif",
-          'font-weight:600',
-          'font-size:1rem',
-          'display:inline-flex',
-          'align-items:center',
-          'justify-content:center',
-          'cursor:pointer',
-          'box-shadow:0 4px 12px rgba(37,99,235,0.25)',
-          '-webkit-tap-highlight-color:transparent',
-          '-webkit-user-select:none',
-          'user-select:none',
-        ].join(';');
-        btn.addEventListener('click', () => this.zone.run(() => this.authenticate()));
-        document.body.appendChild(btn);
-        this.unlockButton = btn;
-      }
+      const btn = this.unlockButton ?? this.createUnlockButton();
+      const epoch = ++this.fadeEpoch;
+      const reveal = () => {
+        if (this.unlockButton !== btn || this.fadeEpoch !== epoch) return;
+        btn.style.pointerEvents = 'auto';
+        btn.disabled = false;
+        console.log('[UnlockFade] reveal fired, starting rAF fade-in');
+        // Manual rAF-driven fade, NOT WAAPI/CSS: accelerated opacity animations
+        // that start from a never-painted opacity:0 state render nothing on
+        // this WKWebView intermittently — the animation "plays" but the button
+        // pops. Per-frame inline style writes cannot be skipped, and anchoring
+        // t=0 on the first delivered frame self-corrects if rendering is still
+        // paused while the passkey sheet dismisses.
+        this.zone.runOutsideAngular(() => {
+          let start: number | null = null;
+          let frames = 0;
+          const step = (ts: number) => {
+            if (this.unlockButton !== btn || this.fadeEpoch !== epoch) return;
+            if (start === null) {
+              start = ts;
+              console.log('[UnlockFade] first frame delivered');
+            }
+            frames++;
+            const t = Math.min((ts - start) / PasskeyPromptComponent.FADE_MS, 1);
+            btn.style.opacity = String(t * (2 - t)); // ease-out
+            if (t < 1) {
+              requestAnimationFrame(step);
+            } else {
+              console.log(`[UnlockFade] fade-in complete (${frames} frames)`);
+            }
+          };
+          requestAnimationFrame(step);
+        });
+      };
+      // The fade-in duration is FADE_MS, identical to the fade-out — but on
+      // native it cannot START until the sheet has uncovered the button's
+      // position (top:70%), or the whole animation plays hidden behind it
+      // (verified on-device 2026-07-03: no-delay reads as "no fade at all").
+      console.log('[UnlockFade] reveal scheduled, delay:', this.nativePasskeyService.isAvailable ? PasskeyPromptComponent.SHEET_DISMISS_MS : 0);
+      setTimeout(reveal, this.nativePasskeyService.isAvailable ? PasskeyPromptComponent.SHEET_DISMISS_MS : 0);
     });
   }
 
+  private createUnlockButton(): HTMLButtonElement {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Unlock';
+    btn.style.cssText = [
+      'position:fixed',
+      'left:50%',
+      'top:70%',
+      'transform:translate(-50%,-50%)',
+      'z-index:2147483647',
+      'min-width:200px',
+      'height:52px',
+      'padding:0 32px',
+      'border:none',
+      'border-radius:999px',
+      'background:#2563EB',
+      'color:#ffffff',
+      "font-family:'Manrope',sans-serif",
+      'font-weight:600',
+      'font-size:1rem',
+      'display:inline-flex',
+      'align-items:center',
+      'justify-content:center',
+      'cursor:pointer',
+      'box-shadow:0 4px 12px rgba(37,99,235,0.25)',
+      '-webkit-tap-highlight-color:transparent',
+      '-webkit-user-select:none',
+      'user-select:none',
+      'opacity:0',
+      'pointer-events:none',
+    ].join(';');
+    btn.addEventListener('click', () => this.zone.run(() => this.authenticate()));
+    document.body.appendChild(btn);
+    this.unlockButton = btn;
+    return btn;
+  }
+
   private destroyUnlockButton(): void {
-    this.unlockButton?.remove();
+    const btn = this.unlockButton;
     this.unlockButton = null;
+    this.fadeEpoch++; // halt any in-flight fade-in loop
+    if (!btn) return;
+    btn.disabled = true;
+    btn.style.pointerEvents = 'none';
+    const from = parseFloat(getComputedStyle(btn).opacity) || 0;
+    btn.style.opacity = '0';
+    if (from === 0) {
+      // Not visible (e.g. success right after tapping Unlock) — nothing to fade.
+      btn.remove();
+      return;
+    }
+    const remove = () => btn.remove();
+    btn.animate([{ opacity: from }, { opacity: 0 }], { duration: PasskeyPromptComponent.FADE_MS, easing: 'ease' }).onfinish = remove;
+    // onfinish can be swallowed (webview backgrounded mid-fade); the button
+    // outlives this component on document.body, so guarantee removal either way.
+    setTimeout(remove, PasskeyPromptComponent.FADE_MS + 250);
   }
 
   async authenticate() {
     if (this.isUnlocking) return;
     this.isUnlocking = true;
     if (this.unlockButton) {
-      this.unlockButton.disabled = true;
-      this.unlockButton.style.opacity = '0.7';
-      this.unlockButton.textContent = 'Unlocking…';
+      // Fade the button out while the passkey sheet is up. A cancel fades it
+      // back in via revealUnlockButton(); success removes it while invisible.
+      this.fadeEpoch++; // halt any in-flight fade-in loop
+      const btn = this.unlockButton;
+      btn.disabled = true;
+      btn.style.pointerEvents = 'none';
+      const from = parseFloat(getComputedStyle(btn).opacity) || 1;
+      btn.style.opacity = '0';
+      console.log('[UnlockFade] tap: WAAPI fade-out from', from);
+      btn.animate([{ opacity: from }, { opacity: 0 }], { duration: PasskeyPromptComponent.FADE_MS, easing: 'ease' });
     }
 
     // Always use the full FIDO2 ceremony (ASAuthorizationController on iOS, WebAuthn on web).
@@ -236,19 +315,19 @@ export class PasskeyPromptComponent implements AfterViewInit, OnDestroy {
                 this.onReauthSuccess?.();
                 this.modalController.dismiss({ authenticated: true });
               } else {
-                this.showToast('Authentication failed: ' + finishResponse.message, 'danger');
+                // this.showToast('Authentication failed: ' + finishResponse.message, 'danger');
                 this.revealUnlockButton();
               }
             },
             error: (err) => {
               console.error('Passkey finish error', err);
-              this.showToast('Authentication failed. Please try again.', 'danger');
+              // this.showToast('Authentication failed. Please try again.', 'danger');
               this.revealUnlockButton();
             }
           });
         } catch (error: any) {
           if (error?.message !== 'AUTH_TIMEOUT') {
-            this.showToast('Authentication failed. Please try again.', 'danger');
+            // this.showToast('Authentication failed. Please try again.', 'danger');
           }
           this.revealUnlockButton();
         }
