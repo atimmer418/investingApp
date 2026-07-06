@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRED ITPM Daily Brief</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@1,900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- ════════════════════════════════════════════════════════════════════
+       ITPM DASHBOARD CONTENT — agents may rewrite ONLY the content inside
+       #dashboard below. Do NOT add <style> or <script> here; styling lives
+       in /styles.css and logic in /app.js. Keep the <link>/<script src> in
+       <head> intact.
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <!-- ─── Lock Overlay ─── -->
+  <div id="lock-overlay">
+    <div class="lock-card">
+      <div class="lock-wordmark">FRED</div>
+      <div class="lock-heading">FRED ITPM Daily Brief</div>
+      <div class="lock-subtext">Today's priorities, options, and approval workflow.</div>
+      <div class="date-chip" id="overlay-date">Loading...</div>
+      <button id="reveal-btn" onclick="revealPassword()">Reveal Password Field</button>
+      <div id="password-section">
+        <input type="password" id="password-input" placeholder="Enter today's password" autocomplete="off" />
+        <button id="unlock-btn" onclick="attemptUnlock()">Unlock Dashboard</button>
+        <div id="error-msg">Incorrect password. Try again.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Dashboard ─── -->
+  <div id="dashboard" data-populated="true" data-state="looks_good">
+
+    <!-- ─── Failure Banner ─── -->
+    <div id="failure-banner">
+      <h3>Execution hit a blocker</h3>
+      <p id="failure-detail"></p>
+    </div>
+
+    <!-- ─── Intermediary Banner ─── -->
+    <div id="intermediary-banner" style="display:none; background:#dbeafe; border:1px solid #93c5fd; border-radius:14px; padding:16px 20px; margin-bottom:20px;">
+      <p style="font-size:14px; font-weight:700; color:#1e40af; margin:0 0 4px;">Plan approved — execution queued</p>
+      <p style="font-size:13px; color:#1e40af; margin:0;">Execution started. You'll receive a push notification when the build is complete.</p>
+      <a id="routine-link" href="#" target="_blank" style="display:none; margin-top:10px; font-size:12px; font-weight:700; color:#1e40af; text-decoration:underline; text-underline-offset:2px;">Watch the run live &rarr;</a>
+    </div>
+
+    <div class="dashboard-header">
+      <div class="header-left">
+        <div class="header-wordmark">FRED</div>
+        <div class="itpm-badge">ITPM</div>
+      </div>
+      <div class="header-date" id="header-date">Loading...</div>
+    </div>
+
+    <!-- ── Scoreboard (always visible) ── -->
+    <div class="section-group">
+      <div class="section-label">Routine Success Criteria</div>
+      <div class="scoreboard">
+
+        <div class="metric-card">
+          <div class="metric-label">Backlog Burn-Down</div>
+          <div class="metric-value warning">42.6%</div>
+          <div class="metric-sublabel">43 of 101 stories done</div>
+          <div class="metric-trend positive">&#8593; +3 done vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:42.6%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Piggy Tier Done</div>
+          <div class="metric-value warning">77.5%</div>
+          <div class="metric-sublabel">31 of 40 core stories complete</div>
+          <div class="metric-trend neutral">&#8594; no change vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77.5%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Pages Migrated</div>
+          <div class="metric-value warning">77%</div>
+          <div class="metric-sublabel">Settings hub + KYC edit + 7 input-field pages unified; ~10 non-settings pages remain (Ask FRED is one)</div>
+          <div class="metric-trend neutral">&#8594; no change vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:77%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Prod Readiness</div>
+          <div class="metric-value warning">83</div>
+          <div class="metric-sublabel">Score out of 100</div>
+          <div class="metric-trend positive">&#8593; +2 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:83%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Days Since Blocker</div>
+          <div class="metric-value positive">36</div>
+          <div class="metric-sublabel">No active production blockers</div>
+          <div class="metric-trend positive">&#8593; +6 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:97%"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">Launch Readiness</div>
+          <div class="metric-value warning">70.0%</div>
+          <div class="metric-sublabel">Composite estimate</div>
+          <div class="metric-trend positive">&#8593; +1.2 vs last week</div>
+          <div class="metric-bar-track"><div class="metric-bar-fill" style="width:70%"></div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Today's Priorities (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Today's Priorities</div>
+
+      <div class="priority-card">
+        <label class="priority-skip-label" title="Check to skip this story and regenerate">
+          <input type="checkbox" class="priority-skip-cb" onchange="handlePrioritySkip(this)" />
+          <span class="priority-skip-text">Skip</span>
+        </label>
+        <div class="priority-badge">#1</div>
+        <div class="priority-body">
+          <div class="priority-title">FRED-204 — Fix the white flash in the static→Lottie reauth transition</div>
+          <div class="priority-desc"><strong>You skipped FRED-167 (the Ask FRED redesign) — here's a fresh single story, and this one's a small, concrete fix to a defect you reported yourself.</strong> On a cold start (most visible when reauth keeps the loading cover up), the cover swaps its static fallback image for the coin-drop Lottie and a brief (~0.1s) white flash shows through. I ground-truthed the exact cause this morning:
+            <br>&nbsp;&nbsp;• <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/src/index.html:73</code> hides the static fallback (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#app-resume-cover-fallback</code>) <em>synchronously</em> the instant <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">lottie.loadAnimation()</code> returns (line 65) — <strong>before</strong> the Lottie paints its first frame.
+            <br>&nbsp;&nbsp;• In that gap the white <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#app-resume-cover</code> background (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">background:#ffffff</code>, line 34) is exposed → the flash.
+            <br>The fix is a single event-ordering swap: hide the static fallback only <strong>after</strong> a lottie-web render event, so the static image holds until the animation is actually on screen. It's frontend-only (just <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">index.html</code>) — no backend, schema, or auth — and directly advances current priority #3 (loading / transition states). <strong>Tier 1 — the 6-point acceptance criteria are already in the backlog, so this is build-ready; pick an approach below.</strong></div>
+          <span class="diff-chip diff-easy">Easy</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Why I Picked This (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Why I Picked This</div>
+      <div class="card">
+        <div class="card-text"><strong>You skipped FRED-167 (the Ask FRED redesign) and again asked for a different single story, so I re-picked under the exclusion set</strong> (FRED-167, FRED-109, and FRED-187 are all hard exclusions now — that's three skips in a row, all of them speculative or large). This time I did <em>not</em> have to drop to a sleeping story: I re-scoped a <strong>READY</strong> item the recent briefs had set aside as "sandbox-gated." <strong>Operating in Tier 1</strong> — FRED-204 already has a 6-point acceptance-criteria block in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">backlog.md</code>, so it's build-ready with no proposal step. I picked it over the rest of the field because it's the most concrete, guaranteed win available: FRED-189 and FRED-195 are already shipped/merged (data-hygiene to close out, not build); FRED-149 (star alignment) is effectively resolved — the customize-portfolio page was already overhauled, no star exists; FRED-151 is coupled to unbuilt RAG chunks and touches the exact Ask FRED surface you just skipped; and LPFRED-184 / FRED-146 are marketing / dark-mode — explicitly not the current priority. <strong>Why FRED-204 is verifiable here despite the "sandbox-gated" label:</strong> its correctness is an <em>event-ordering</em> proof (hide the fallback on the Lottie's render event instead of synchronously), not a pixel measurement — I can prove the fix by reading the event flow. Only the final "flash is truly gone" confirmation needs a real device, which is exactly what your "Looks Good" is for.</div>
+      </div>
+    </div>
+
+    <!-- ── Strategic Alignment (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Strategic Alignment</div>
+      <div class="card">
+        <div class="card-text">This is a direct hit on <strong>current priority #3 — "Complete all loading / empty / error states."</strong> The loading cover is the very first thing a user sees on every cold start, so a visible white flash during reauth undercuts the "calm, premium, iOS-native done right" bar from the vision at the worst possible moment — the first impression. Fixing it makes the app feel finished and trustworthy exactly where polish matters most. It's a defect you flagged yourself ("we want this transition to be seamless"), so it's a real, felt improvement, not a speculative one.</div>
+      </div>
+    </div>
+
+    <!-- ── Production Readiness Impact (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Production Readiness Impact</div>
+      <div class="card">
+        <div class="card-text">Closes a real first-impression defect on the app's most-seen surface (the cold-start cover), advancing the loading/transition-states bucket (est. Readiness 83 → 84 on ship; held at 83 for this planning revision since no code shipped). The change is tiny and contained to a single file (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/src/index.html</code>) — no backend / schema / auth — and the acceptance criteria explicitly require the fallback-safety net to stay intact (static image holds if the Lottie fails), so risk is low. The verifier proves the event-ordering fix by code-read + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code>; the live cold-start + reauth "flash is gone" confirmation comes to you via "Looks Good."</div>
+      </div>
+    </div>
+
+    <!-- ── Implementation Options (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Implementation Options</div>
+      <div class="option-group">
+
+        <div class="option-card selected">
+          <div class="option-header">
+            <span class="option-label">Option A</span>
+            <span class="option-rec">Recommended</span>
+          </div>
+          <div class="option-title">Hide the static fallback on the Lottie's <code>DOMLoaded</code> render event</div>
+          <div class="option-body">In <code>index.html</code>'s cover script, remove the synchronous <code>if (fallback) fallback.style.display='none'</code> that runs right after <code>lottie.loadAnimation()</code> returns (line 73). Instead register <code>window._fredCoverAnim.addEventListener('DOMLoaded', function(){ fallback.style.display='none'; })</code>. <code>DOMLoaded</code> fires once lottie-web has actually built the animation's SVG in the DOM (first frame present), so the static <code>fred-logo.svg</code> holds until the coin-drop is on screen — the white <code>#app-resume-cover</code> background is never exposed. Fallback-safety is inherent: if the Lottie 404s or fails to parse, <code>DOMLoaded</code> never fires and the static image simply stays (AC-4). No change to the cover show/hide lifecycle. ~3 lines.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>smallest possible change; deterministic; fallback-safe <em>by construction</em> (the hide only ever runs inside the render handler); no timing guesswork; matches AC-2/AC-4 exactly.</span></span>
+            <span class="meta-item">Cons: <span>relies on lottie-web emitting <code>DOMLoaded</code> — it does for any valid animation; a pathological "loads but never emits" would keep the static up, which is the desired safe fallback anyway.</span></span>
+            <span class="meta-item">Risk: <span>Low — a pure event-ordering swap, no lifecycle or Angular change; correctness provable by reading the event flow.</span></span>
+            <span class="meta-item">Estimate: <span>~15–20 min</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option B</span>
+          </div>
+          <div class="option-title">Hide on the first <code>enterFrame</code> event (self-detaching handler)</div>
+          <div class="option-body">Same idea, but listen for the animation's first <code>enterFrame</code> (an actual paint tick) rather than <code>DOMLoaded</code>, then remove the listener after it fires once. This waits for a real rendered frame, not just the SVG being inserted into the DOM.</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>fires on a genuine paint tick — marginally stronger "truly on screen" guarantee than DOM insertion.</span></span>
+            <span class="meta-item">Cons: <span><code>enterFrame</code> fires every frame, so the handler must detach itself after the first call (a touch more code); in practice <code>DOMLoaded</code> already means the SVG is in the DOM and about to paint, so the extra guarantee is mostly theoretical.</span></span>
+            <span class="meta-item">Risk: <span>Low.</span></span>
+            <span class="meta-item">Estimate: <span>~20 min</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <span class="option-label">Option C</span>
+          </div>
+          <div class="option-title">Cross-fade the static fallback out (belt-and-suspenders)</div>
+          <div class="option-body">Keep both layers; on the render event, add a short CSS opacity transition (~150ms) that fades the static fallback out, then set <code>display:none</code> on <code>transitionend</code> — so even a single-frame gap is masked by the fade. AC-3 explicitly says a short cross-fade is "acceptable but optional."</div>
+          <div class="option-meta">
+            <span class="meta-item">Pros: <span>smoothest possible handoff; masks any residual sub-frame gap.</span></span>
+            <span class="meta-item">Cons: <span>more moving parts (a CSS transition + a <code>transitionend</code> handler + the <code>display:none</code>) for a defect the hard swap in A already fixes; if <code>transitionend</code> ever fails to fire, the layer lingers — needs its own guard. Over-engineered for a ~0.1s flash.</span></span>
+            <span class="meta-item">Risk: <span>Low–Medium — the extra transition machinery is more surface than the problem needs.</span></span>
+            <span class="meta-item">Estimate: <span>~30–40 min</span></span>
+          </div>
+          <button class="option-edit-btn" onclick="toggleOptionEdit(event, this)" title="Edit approach"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Triage Findings (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Triage Findings</div>
+      <div class="card">
+
+        <div class="story-section">
+          <div class="story-header">FRED-204 — Fix white flash in static→Lottie reauth transition</div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">In Scope</div>
+            <ul class="triage-list">
+              <li>The single fallback-hide timing change in <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/src/index.html</code>: stop hiding <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#app-resume-cover-fallback</code> synchronously after <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadAnimation()</code>; hide it only once the Lottie emits a render event (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">DOMLoaded</code>).</li>
+              <li>Preserve fallback-safety: if the Lottie 404s / fails to parse / never renders, the static image must stay up (never hide on failure).</li>
+              <li>Keep the rest of the cover script untouched — the 45s backstop, the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">_cancelCoverHideTimer</code> hook, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">window._fredCoverAnim</code> (used by <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">showAppCover()</code> to <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.play()</code>).</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">Potentially Out of Scope</div>
+            <ul class="triage-list">
+              <li>The broader FRED-201 "keep the loading cover painted through cold-start → reauth → navigate" work and its page-ready detection — a separate, larger story.</li>
+              <li>The cover show/hide lifecycle itself (<code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">showAppCover</code> / <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">hideAllCovers</code> / the 12s watchdog / the 20s backstop) beyond the fallback-hide timing.</li>
+              <li>App-loading performance (FRED-191) and any Angular-side <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">app.component.ts</code> cover logic.</li>
+              <li>Changing the fallback image or the Lottie asset; any backend, schema, or auth change.</li>
+            </ul>
+          </div>
+
+          <div class="triage-group">
+            <div class="triage-group-title">UX Considerations</div>
+            <ul class="triage-list">
+              <li><strong>Seamless handoff</strong> — no white gap, no flicker, no double-image at the static→Lottie transition (a short cross-fade is acceptable but optional per AC-3).</li>
+              <li><strong>Failure safety</strong> — on a Lottie load/parse error or a missing render event, the static fallback must remain visible; the user must never be left staring at a blank white cover (AC-4).</li>
+              <li><strong>No lifecycle regressions</strong> — resume <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.play()</code>, the backstops, and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">forceRecovery()</code> still behave exactly as today (AC-5).</li>
+              <li><strong>Device confirmation</strong> — the actual "flash is gone" check is a cold start (app fully terminated) with reauth required at 430×932; the sandbox can't reproduce that, so it comes to Andrew via "Looks Good" (AC-6).</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Questions For Andrew (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Questions For Andrew</div>
+      <div class="card">
+
+        <div class="card-text" style="color:var(--gray);">No open decisions — the plan is unambiguous. The 6-point acceptance criteria fully specify the fix (hide the fallback only on a confirmed first render; keep the static up if the Lottie never renders), and the one real fork — a clean hard swap vs. an extra cross-fade for insurance — is captured in Options A vs C above. Approve as-is, or pick/annotate a different option.</div>
+
+      </div>
+    </div>
+
+    <!-- ── Suggested Execution Order (planning only) ── -->
+    <div class="section-group section-planning-only hide-on-skip">
+      <div class="section-label">Suggested Execution Order</div>
+      <div class="card">
+
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-body" contenteditable="false"><strong>Study the cover script</strong> — Read the inline <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">index.html</code> cover script (the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadAnimation()</code> block + the synchronous <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">fallback.style.display='none'</code> on line 73) and how <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">window._fredCoverAnim</code> / the fallback interact; confirm the bundled lottie-web version exposes the <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">DOMLoaded</code> event (AC-1, AC-2).</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-body" contenteditable="false"><strong>Move the fallback-hide onto the render event</strong> — Remove the synchronous hide after <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadAnimation()</code> and instead hide the fallback inside a <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">_fredCoverAnim.addEventListener('DOMLoaded', …)</code> handler, so the static image holds until the first frame is in the DOM (AC-1, AC-2, AC-3).</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-body" contenteditable="false"><strong>Preserve fallback-safety</strong> — Ensure the fallback is hidden <em>only</em> in the render handler: if the Lottie fails to load/parse or never emits a render event, the static image stays visible. Leave the show/hide lifecycle, the backstops, and the resume <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.play()</code> untouched (AC-4, AC-5).</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-body" contenteditable="false"><strong>Verify</strong> — <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">npx tsc --noEmit</code> exit 0 + <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build --configuration=ci</code> succeeds; verifier confirms the event-ordering by code-read (fallback hidden only after a confirmed first render, static kept on failure). The live cold-start + reauth "flash is gone" check at 430×932 goes to Andrew's "Looks Good" (AC-6).</div>
+          <button class="step-edit-btn" onclick="toggleStepEdit(this)" title="Edit step"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Tomorrow's Likely Pick (intermediary only) ── -->
+    <div class="section-group section-recap-only">
+      <div class="section-label">Tomorrow's Likely Pick</div>
+      <div class="card">
+        <ul class="tomorrow-list">
+          <li><strong>FRED-201</strong> — the natural follow-on: keep the loading cover painted continuously through the cold-start → reauth → navigate sequence (this fixes the flash <em>within</em> the transition; FRED-201 fixes the blank screen <em>after</em> it). Same cover subsystem, freshly in context.</li>
+          <li><strong>Data hygiene</strong> — close out FRED-189 (shipped 06-19) and FRED-195 (shipped+merged) with <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">triage --done</code>, and flag FRED-149 (star alignment) as resolved by the customize-portfolio overhaul — so burndown stays honest and none get re-picked.</li>
+          <li><strong>Still parked</strong> — FRED-191 (load-perf) needs real-device profiling; FRED-167 (Ask FRED redesign), FRED-109 (onboarding reframe), and FRED-187 (Plaid spike) are all in their 7-day skip windows (FRED-187/109 clear ~07-07, FRED-167 ~07-09).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── Completion Section (completed state only) ── -->
+    <div class="section-group section-intermediary-only" id="completion-section">
+      <div class="section-label">WHAT GOT DONE</div>
+      <div class="card" id="completion-content">
+        <div style="margin-bottom:16px;">
+          <p style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px;">FRED-204 — Fix white flash in static→Lottie reauth transition <span style="font-size:12px;font-weight:600;color:#2563eb;">(Reworked — Option B)</span></p>
+          <p style="font-size:14px;color:var(--gray);line-height:1.65;margin:0 0 12px;">You still saw the faint flash on your device with the first build's <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">DOMLoaded</code> approach, so I reworked it to <strong>Option B</strong> exactly as you asked. The root cause: <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">DOMLoaded</code> fires when lottie-web has <em>inserted</em> the animation's SVG into the DOM — which on-device is slightly <em>before</em> the browser actually paints, leaving a sub-frame white gap. The fix (single file, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">frontend/src/index.html</code>, 13 insertions / 7 deletions) now hides the static <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">fred-logo.svg</code> on the Lottie's first <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">enterFrame</code> — a genuine paint tick, so a real rendered frame is on screen before the fallback disappears and the white <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">#app-resume-cover</code> background is never exposed. Since <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">enterFrame</code> fires every frame, the handler is a self-detaching one-shot: a named <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">onFirstEnterFrame</code> that calls <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">removeEventListener('enterFrame', …)</code> before hiding, so it runs exactly once. The 45s backstop, <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">_cancelCoverHideTimer</code>, and the resume <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">.play()</code> reference are untouched.</p>
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:0 0 4px;">Acceptance criteria satisfied:</p>
+          <ul style="font-size:13px;color:var(--gray);padding-left:18px;margin:0 0 12px;">
+            <li>AC-1 — the white cover background is never visible in the static→Lottie gap (hide moved off the synchronous path, now gated on a real paint tick). <em>Live "flash gone" confirmation on device is your "Looks Good" (AC-6).</em></li>
+            <li>AC-2 — the fallback is hidden only on the Lottie's first <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">enterFrame</code> (a rendered frame), not synchronously after <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">loadAnimation()</code> and not on <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">DOMLoaded</code>. The listener self-detaches after firing once.</li>
+            <li>AC-3 — seamless hard swap on the first painted frame; no gap, flicker, or double-image (cross-fade correctly left optional).</li>
+            <li>AC-4 — fallback-safe by construction: a Lottie 404 / parse error means <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">enterFrame</code> never fires, so the static image simply stays up.</li>
+            <li>AC-5 — no change to the cover show/hide lifecycle or backstops; <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">tsc --noEmit</code> and <code style="font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:4px;">ng build</code> both clean.</li>
+            <li>AC-6 — cold-start + reauth "flash is gone" at 430×932: device-only, awaiting your confirmation below.</li>
+          </ul>
+          <p style="font-size:13px;font-weight:600;color:#059669;margin:0;">Corrects the technique to actually eliminate the on-device flash on the app's most-seen surface (the cold-start cover), advancing loading/transition states (priority #3). Verifier-APPROVED, 0 in-scope failures, first pass. Readiness holds at 84. Shipped via PR #106 (CI green, squash-merged to develop).</p>
+        </div>
+      </div>
+      <button class="btn-looks-good" id="looks-good-btn" onclick="handleLooksGood()" style="margin-top:16px;">
+        Looks Good &#10003;
+      </button>
+
+      <!-- Request Changes — rework the same story with feedback -->
+      <div id="rework-block" style="margin-top:14px;">
+        <div class="section-label" style="margin-bottom:8px;">Not quite right? Request changes</div>
+        <textarea class="revision-textarea" id="rework-textarea" placeholder="e.g. I still see a faint flash on my device; or add the short cross-fade after all for extra smoothness."></textarea>
+        <button class="btn-dark" id="rework-btn" onclick="handleRework()" style="margin-top:10px;">Request Changes</button>
+      </div>
+    </div>
+
+    <!-- ── Anything Else For the Execution Agent (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Anything Else For the Execution Agent?</div>
+      <div class="card">
+        <div class="revision-label">Optional. Any additional context, constraints, or preferences the execution agent should know about. This gets included with your approval.</div>
+        <textarea class="revision-textarea" id="revision-textarea" placeholder="e.g. Go with the hard swap (no cross-fade); or also double-check the resume .play() path still works after the change..."></textarea>
+      </div>
+    </div>
+
+    <!-- ── Add to Backlog (planning only) ── -->
+    <div class="section-group section-planning-only">
+      <div class="section-label">Add to Backlog</div>
+      <div class="card">
+        <div class="revision-label" style="margin-bottom:14px;">Thought of something while reviewing? Add it to the backlog without leaving this page.</div>
+        <textarea class="revision-textarea" id="backlog-input" placeholder="e.g. Audit all other Lottie/cover transitions for the same synchronous-hide pattern; or add a cold-start cover visual regression check..." style="min-height:80px;margin-bottom:12px;"></textarea>
+        <button class="btn-dark" id="backlog-btn" onclick="handleAddBacklog()">Add to Backlog</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Fixed Approve Bar ─── -->
+  <div id="approve-bar">
+    <div id="approve-status">Complete all required fields to unlock approval</div>
+    <button id="approve-btn" onclick="handleApprove()">Approve / Get To Work</button>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
