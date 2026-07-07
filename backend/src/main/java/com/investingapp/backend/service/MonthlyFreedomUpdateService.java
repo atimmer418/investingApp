@@ -29,6 +29,8 @@ public class MonthlyFreedomUpdateService {
     private static final Logger logger = LoggerFactory.getLogger(MonthlyFreedomUpdateService.class);
 
     private static final double ASSUMED_ANNUAL_RETURN = 0.10;
+    private static final double SAFE_WITHDRAWAL_RATE = 0.04;
+    private static final double DEFAULT_TARGET_PORTFOLIO = 1_500_000.0;
     private static final BigDecimal FIFTY_DOLLARS = new BigDecimal("50");
     private static final BigDecimal TWENTY_FIVE_DOLLARS = new BigDecimal("25");
 
@@ -272,16 +274,7 @@ public class MonthlyFreedomUpdateService {
 
         // --- Projection: Freedom Year ---
         BigDecimal monthlyContribution = calculateMonthlyEquivalent(investmentAmount, frequency);
-        Double targetPortfolio = user.getTargetPortfolio();
-        if (targetPortfolio == null || targetPortfolio <= 0) {
-            // Fallback: use retirementIncome / 0.04 (4% SWR)
-            Double retirementIncome = user.getRetirementIncome();
-            if (retirementIncome != null && retirementIncome > 0) {
-                targetPortfolio = retirementIncome / 0.04;
-            } else {
-                targetPortfolio = 1500000.0; // Default $1.5M
-            }
-        }
+        double targetPortfolio = resolveTargetPortfolio(user);
 
         int freedomYear = calculateFreedomYear(currentEquity, monthlyContribution, new BigDecimal(targetPortfolio));
         dto.setProjectedFreedomYear(freedomYear);
@@ -682,6 +675,21 @@ public class MonthlyFreedomUpdateService {
     }
 
     /**
+     * Resolve the FI target portfolio — live income-based 4% rule, $1.5M default.
+     * UNIFIED with the tab3 stat strip (frontend FreedomStatsService): both sides
+     * compute retirementIncome / SAFE_WITHDRAWAL_RATE from the user's CURRENT
+     * retirement income. The user.targetPortfolio signup snapshot is intentionally
+     * not read — it goes stale the moment the user edits their retirement income.
+     */
+    double resolveTargetPortfolio(User user) {
+        Double retirementIncome = user.getRetirementIncome();
+        if (retirementIncome != null && retirementIncome > 0) {
+            return retirementIncome / SAFE_WITHDRAWAL_RATE;
+        }
+        return DEFAULT_TARGET_PORTFOLIO;
+    }
+
+    /**
      * Calculate months to reach target portfolio with compound growth and monthly contributions.
      * Core formula: FV = PV*(1+r)^n + PMT*((1+r)^n - 1)/r
      * Solved for n.
@@ -718,8 +726,8 @@ public class MonthlyFreedomUpdateService {
      * Calculate time to reach target portfolio value.
      * Returns the projected year.
      */
-    private int calculateFreedomYear(BigDecimal currentEquity, BigDecimal monthlyContribution,
-                                      BigDecimal targetPortfolio) {
+    int calculateFreedomYear(BigDecimal currentEquity, BigDecimal monthlyContribution,
+                             BigDecimal targetPortfolio) {
         double months = calculateMonthsToTarget(currentEquity, monthlyContribution, targetPortfolio);
         int years = (int) Math.ceil(months / 12.0);
         return Math.min(LocalDate.now().getYear() + years, LocalDate.now().getYear() + 100);
