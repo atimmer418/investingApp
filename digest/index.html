@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Digest — 2026-07-06</title>
+  <title>Claude Digest — 2026-07-07</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#0f1117;color:#e8eaf0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.6;padding:48px 24px 80px}
@@ -45,7 +45,7 @@
       <span class="wordmark-text">Claude Daily Digest</span>
     </div>
     <h1>What's new in Claude</h1>
-    <span class="date-label">Monday, July 6, 2026</span>
+    <span class="date-label">Tuesday, July 7, 2026</span>
   </header>
   <hr />
 
@@ -53,16 +53,16 @@
     <div class="section-head"><span>📦</span><span class="section-title">New Releases</span></div>
     <div class="card">
       <div class="item">
+        <div class="meta"><span class="version">v2.1.202</span><span class="ts">July 6, 2026</span></div>
+        <div class="body">New "Dynamic workflow size" setting in <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">/config</code> (small/medium/large) controls how many subagents Claude spawns in workflows. Added <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">workflow.run_id</code> and <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">workflow.name</code> OpenTelemetry attributes for tracking workflow-spawned agents. Also fixed: inline history search crashes, <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">/rename</code> on background sessions, mTLS handshake failures, Remote Control command routing, image/file handling from mobile, voice dictation retry loops, and session resumption performance. <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">/review &lt;pr&gt;</code> reverts to fast single-pass; use <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">/code-review &lt;level&gt; &lt;pr#&gt;</code> for multi-agent review.</div>
+      </div>
+      <div class="item">
         <div class="meta"><span class="version">v2.1.201</span><span class="ts">July 3, 2026</span></div>
         <div class="body">Claude Sonnet 5 sessions no longer use the mid-conversation system role for harness reminders, reducing prompt noise in long-running sessions.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="version">v2.1.200</span><span class="ts">July 3, 2026</span></div>
-        <div class="body">AskUserQuestion dialogs no longer auto-continue by default (opt in via /config); the default permission mode is renamed to "Manual"; and numerous background session reliability fixes land — crash recovery, rate-limit handling, and subagent output stability.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="version">v2.1.199</span><span class="ts">July 2, 2026</span></div>
-        <div class="body">Stacked slash-skill invocations now load up to 5 leading skills. Also fixed: SSL certificate errors, streaming response discards, subagent rate-limiting, and background-agent daemon stability on Linux.</div>
+        <div class="body"><code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">AskUserQuestion</code> dialogs no longer auto-continue by default — Claude now waits for explicit confirmation. The default permission mode is renamed to "Manual" across all interfaces. Multiple background session reliability and MCP configuration fixes also land.</div>
       </div>
     </div>
   </section>
@@ -72,19 +72,19 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="tag">Week 26 · June 22–26, 2026 · v2.1.185–v2.1.193</span></div>
-        <div class="body"><strong>claude mcp login</strong>: authenticate a configured MCP server directly from your shell instead of the interactive /mcp menu; clear stored credentials with <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">claude mcp logout</code>.</div>
+        <div class="body"><strong>claude mcp login</strong>: authenticate a configured MCP server from your shell instead of the interactive <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">/mcp</code> menu; clear stored credentials later with <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">claude mcp logout</code>.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 26 · June 22–26, 2026</span></div>
-        <div class="body"><strong>Shell mode responds to command output</strong>: running <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">! npm test</code> now gets an explanation without a second prompt.</div>
+        <div class="body"><strong>Shell mode responds to command output</strong>: running <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">! npm test</code> now gets an inline explanation without needing a second prompt.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 26 · June 22–26, 2026</span></div>
-        <div class="body"><strong>/rewind can resume from before /clear</strong>: conversations can be picked back up from a point before the context was cleared.</div>
+        <div class="body"><strong>/rewind can resume from before /clear</strong>: conversations can now be wound back to a point before the context was cleared, recovering prior work without starting over.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 26 · June 22–26, 2026</span></div>
-        <div class="body"><strong>Background subagent permission prompts</strong> now surface in the main session instead of auto-denying, so long-running background work no longer silently stalls.</div>
+        <div class="body"><strong>Background subagent permission prompts</strong> now surface in the main session instead of auto-denying, so long-running background work no longer silently stalls waiting for approval.</div>
       </div>
     </div>
   </section>
@@ -94,19 +94,15 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="tag">July 1, 2026</span></div>
-        <div class="body">Anthropic restored access to <strong>Claude Fable 5</strong> and <strong>Claude Mythos 5</strong> after updated classifiers were deployed. Note: Fable 5 is expected to come off subscriptions after July 7 due to capacity constraints — Anthropic will restore it as soon as capacity allows.</div>
+        <div class="body">Anthropic restored access to <strong>Claude Fable 5</strong> and <strong>Claude Mythos 5</strong> following updated classifier deployment. Note: Fable 5 is expected to come off subscriptions after July 7 due to capacity constraints — Anthropic will restore it as soon as capacity allows.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">June 30, 2026</span></div>
-        <div class="body"><strong>Claude Sonnet 5</strong> (<code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">claude-sonnet-5</code>) launched with 1M token context and 128k max output at introductory pricing of $2/$10 per MTok through August 31 ($3/$15 thereafter). Adaptive thinking is on by default; manual extended thinking is removed; new tokenizer produces ~30% more tokens.</div>
+        <div class="body"><strong>Claude Sonnet 5</strong> (<code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">claude-sonnet-5</code>) launched with a 1M token context window and 128k max output at introductory pricing of $2/$10 per MTok through August 31, 2026 ($3/$15 thereafter). Adaptive thinking is on by default; manual extended thinking is removed; new tokenizer produces ~30% more tokens for the same text.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">June 30, 2026</span></div>
         <div class="body"><strong>Claude Managed Agents</strong> gains event deltas on session streams (preview agent text as it generates), backward pagination for session listing, per-session agent config overrides, vault injection location controls, and lifecycle webhooks for agent, deployment, and run events.</div>
-      </div>
-      <div class="item">
-        <div class="meta"><span class="tag">June 29, 2026</span></div>
-        <div class="body">Fast mode removed from <strong>Claude Opus 4.6</strong>. Requests with <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2130;padding:1px 4px;border-radius:3px">speed: "fast"</code> on Opus 4.6 now run at standard speed and billing with no error. Migrate to Opus 4.8 to continue using fast mode.</div>
       </div>
     </div>
   </section>
@@ -115,20 +111,20 @@
     <div class="section-head"><span>𝕏</span><span class="section-title">From the Team</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">July 2, 2026</span></div>
-        <div class="body">Claude Code weekly limits increased 50% through July 13 for all Pro, Max, Team, and Enterprise users. Also: <strong>Artifacts in Claude Code</strong> is now available on Pro and Max plans — Claude writes code, publishes it live to claude.ai, and updates it in real time as you work.</div>
+        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">~5 days ago</span></div>
+        <div class="body">Claude Code weekly limits increased 50% through July 13 for all Pro, Max, Team, and Enterprise users. Artifacts in Claude Code also expanded to Pro and Max plans — Claude writes code, publishes it live to claude.ai, and updates it in real time as you work.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@claudeai</span><span class="ts">July 2, 2026</span></div>
-        <div class="body">Announced <strong>"Built with Claude: Life Sciences"</strong> — a global virtual hackathon with a $100k prize pool in credits for building with Claude Science and Claude Code, in partnership with the Gladstone Institute. Registration open now.</div>
+        <div class="meta"><span class="handle">@claudeai</span><span class="ts">~5 days ago</span></div>
+        <div class="body">Announced the <strong>"Built with Claude: Life Sciences"</strong> virtual hackathon — $100k prize pool in credits for building with Claude and Claude Code, in partnership with the Gladstone Institute. Quiet today.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@bcherny</span><span class="ts">July 2, 2026</span></div>
-        <div class="body">"Artifacts in Claude Code have been life changing. Excited to expand to Pro and Max!" — Boris Cherny, creator of Claude Code, on the Artifacts expansion. He also shared that engineers love Claude Code's customizability: hooks, plugins, LSPs, MCPs, skills, custom agents, and status lines.</div>
+        <div class="meta"><span class="handle">@bcherny</span><span class="ts">Recent</span></div>
+        <div class="body">"Reflecting on what engineers love about Claude Code, one thing that jumps out is its customizability: hooks, plugins, LSPs, MCPs, skills, effort, custom agents, status lines, output styles — every engineer uses their tools differently. We built Claude Code from the ground up with great defaults and deep customizability."</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@trq212</span><span class="ts">Early July 2026</span></div>
-        <div class="body">Thariq noted that Claude Fable 5 will come off subscriptions after July 7 due to capacity constraints, and that Anthropic aims to restore it as a standard part of subscriptions as soon as capacity allows. Also launched @ClaudeDevs as the official channel for all Claude Code updates.</div>
+        <div class="meta"><span class="handle">@trq212</span><span class="ts">Recent</span></div>
+        <div class="body">"A harness for every task: dynamic workflows in Claude Code" — Thariq wrote about how Claude now writes its own workflow harness custom-built for each task, orchestrating dozens to hundreds of subagents. Also: been asking others at Anthropic how they stay in the loop on a fast-moving codebase.</div>
       </div>
     </div>
   </section>
@@ -136,7 +132,7 @@
   <hr />
   <footer>
     <span><span class="dot"></span>digest.fredvested.com</span>
-    <span>Generated 2026-07-06 at 8:00 AM ET</span>
+    <span>Generated 2026-07-07 at 8:00 AM ET</span>
   </footer>
 </div>
 </body>
