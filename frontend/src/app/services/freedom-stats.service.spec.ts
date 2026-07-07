@@ -52,9 +52,16 @@ const kycDataStub = { identity: { date_of_birth: '1990-05-15' } };
 // Factory helpers
 // ---------------------------------------------------------------------------
 
-function makeAuthServiceMock(progress = userProgressStub) {
+const scheduleStub = { investmentAmount: 500, frequency: 'MONTHLY', isPaused: false };
+
+function makeAuthServiceMock(
+  progress = userProgressStub,
+  scheduleObservable: Observable<any> = of(scheduleStub)
+) {
   return {
-    userProgress$: new BehaviorSubject(progress).asObservable()
+    userProgress$: new BehaviorSubject(progress).asObservable(),
+    getCurrentInvestmentSchedule: jasmine.createSpy('getCurrentInvestmentSchedule')
+      .and.returnValue(scheduleObservable)
   };
 }
 
@@ -412,8 +419,10 @@ describe('FreedomStatsService — FRED-200', () => {
         monthlyInvestment: 0,
         retirementIncome: 0
       };
+      // "No live inputs AT ALL" must also mean no schedule — otherwise the
+      // default $500 schedule stub would supply a live contribution.
       configureTestBed(
-        makeAuthServiceMock(progressNoInputs as any),
+        makeAuthServiceMock(progressNoInputs as any, of(null)),
         makePortfolioServiceMock(0)
       );
       const svc = getService();
@@ -507,8 +516,10 @@ describe('FreedomStatsService — FRED-200', () => {
         monthlyInvestment: 0,
         retirementIncome: 0
       };
+      // "No live inputs AT ALL" must also mean no schedule — otherwise the
+      // default $500 schedule stub would supply a live contribution.
       configureTestBed(
-        makeAuthServiceMock(progressNoInputs as any),
+        makeAuthServiceMock(progressNoInputs as any, of(null)),
         makePortfolioServiceMock(0)
       );
       const svc = getService();
@@ -562,6 +573,59 @@ describe('FreedomStatsService — FRED-200', () => {
       tick(10000);
     }));
 
+  });
+
+  // =========================================================================
+  // Unified contribution source (freedom date unification, 2026-07-07 spec)
+  // =========================================================================
+
+  describe('unified contribution source', () => {
+
+    it('uses the actual schedule monthly-equivalent when a schedule exists', fakeAsync(() => {
+      // weekly $100 → ×4.33 = $433/mo
+      configureTestBed(makeAuthServiceMock(userProgressStub,
+        of({ investmentAmount: 100, frequency: 'WEEKLY', isPaused: false })));
+      const svc = getService();
+      tick(0);
+
+      expect(svc.scheduleMonthly()).toBe(433);
+      expect(svc.isLoading()).toBeFalse();
+    }));
+
+    it('falls back to the survey monthlyInvestment when no schedule exists', fakeAsync(() => {
+      configureTestBed(makeAuthServiceMock(userProgressStub, of(null)));
+      const svc = getService();
+      tick(0);
+
+      expect(svc.scheduleMonthly()).toBe(0);
+      // survey $500/mo · equity $50k · target $1.5M → 319.56 months → 27 years
+      const expectedYear = String(new Date().getFullYear() + 27);
+      expect(svc.stats().freedomYear).toBe(expectedYear);
+    }));
+
+    it('falls back to the survey value and resolves the gate when the schedule fetch errors', fakeAsync(() => {
+      configureTestBed(makeAuthServiceMock(userProgressStub,
+        throwError(() => new Error('schedule down'))));
+      const svc = getService();
+      tick(0);
+
+      expect(svc.scheduleMonthly()).toBe(0);
+      expect(svc.isLoading()).toBeFalse();
+      expect(svc.stats().freedomYear).not.toBe('—');
+    }));
+
+    it('cross-stack parity fixture: $10k equity, $500/mo schedule, $60k income → currentYear + 32', fakeAsync(() => {
+      // PARITY: mirrored in MonthlyFreedomUpdateServiceTest.parityFixtureFreedomYear
+      // (backend). If you change one, change both.
+      configureTestBed(
+        makeAuthServiceMock(userProgressStub, of({ investmentAmount: 500, frequency: 'MONTHLY', isPaused: false })),
+        makePortfolioServiceMock(10000)
+      );
+      const svc = getService();
+      tick(0);
+
+      expect(svc.stats().freedomYear).toBe(String(new Date().getFullYear() + 32));
+    }));
   });
 
 });

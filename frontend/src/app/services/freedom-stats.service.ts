@@ -1,9 +1,9 @@
 /**
  * FreedomStatsService — FRED-200
  *
- * Singleton that owns the three data fetches (userProgress, portfolio equity,
- * KYC birth-year) and computes the freedom stat strip values (freedom year,
- * freedom age, dollars away) that tab3 displays.
+ * Singleton that owns the four data fetches (userProgress, portfolio equity,
+ * KYC birth-year, investment schedule) and computes the freedom stat strip
+ * values (freedom year, freedom age, dollars away) that tab3 displays.
  *
  * First signals usage in the app — intentional, approved deviation from the
  * BehaviorSubject convention (CONTEXT.md §Services).
@@ -15,6 +15,7 @@ import { timeout, retry, timer, throwError } from 'rxjs';
 import { AuthService, UserProgress } from './auth.service';
 import { PortfolioService } from './portfolio.service';
 import { AlpacaService } from './alpaca.service';
+import { InvestmentFrequencyUtils } from '../utils/investment-frequency.utils';
 
 /** Shape of the three computed stat-strip values. */
 export interface FreedomStats {
@@ -70,6 +71,12 @@ export class FreedomStatsService {
   readonly birthYear: WritableSignal<number | null> = signal(null);
 
   /**
+   * Monthly-equivalent of the user's ACTUAL investment schedule.
+   * `null` = not yet fetched; `0` = no schedule / fetch failed (survey fallback).
+   */
+  readonly scheduleMonthly: WritableSignal<number | null> = signal(null);
+
+  /**
    * Snapshot of last-known display values painted from localStorage on cold launch.
    * Cleared once real data arrives. `null` means no valid snapshot active.
    */
@@ -90,7 +97,7 @@ export class FreedomStatsService {
     // Loading gate: still loading when either fetch hasn't completed and
     // there is no snapshot to show in the meantime.
     this.isLoading = computed(() => {
-      const notReady = this.equity() === null || this.birthYear() === null;
+      const notReady = this.equity() === null || this.birthYear() === null || this.scheduleMonthly() === null;
       const hasSnap = this._snapshot() !== null;
       return notReady && !hasSnap;
     });
@@ -100,10 +107,11 @@ export class FreedomStatsService {
       const progress = this.userProgress();
       const equity = this.equity();
       const birthYear = this.birthYear();
+      const scheduleMonthly = this.scheduleMonthly();
       const snapshot = this._snapshot();
 
       // Still waiting for fetches — return snapshot values if we have them.
-      if (equity === null || birthYear === null) {
+      if (equity === null || birthYear === null || scheduleMonthly === null) {
         if (snapshot) {
           return {
             freedomYear: snapshot.freedomYear,
@@ -115,28 +123,31 @@ export class FreedomStatsService {
       }
 
       const retirementIncomeAnnual: number | null = progress?.retirementIncome ?? null;
-      const monthlyContribution: number | null = progress?.monthlyInvestment ?? null;
+
+      // Contribution — the ACTUAL investment schedule (monthly equivalent),
+      // falling back to the survey intent when no schedule exists yet.
+      // Mirrors the MFU, which reads the latest schedule (even when paused).
+      const surveyMonthly: number = progress?.monthlyInvestment ?? 0;
+      const monthlyContribution: number = scheduleMonthly > 0 ? scheduleMonthly : surveyMonthly;
 
       // FI target — income-based 4% rule, $1.5M default.
-      // NOTE: intentionally kept SEPARATE from the Monthly Freedom Update (MFU),
-      // which uses a contribution-based target (monthlyInvestment × 300). tab3 and
-      // the MFU diverge here by design — do not converge them.
+      // UNIFIED with the Monthly Freedom Update by design: both sides compute
+      // retirementIncome / 0.04 live (see MonthlyFreedomUpdateService
+      // .resolveTargetPortfolio). Keep the two implementations in lockstep.
       const targetPortfolio: number =
         (retirementIncomeAnnual != null && retirementIncomeAnnual > 0)
           ? retirementIncomeAnnual / this.SAFE_WITHDRAWAL_RATE
           : this.DEFAULT_TARGET;
 
       const currentEquity = equity ?? 0;
-      const hasLiveInputs =
-        currentEquity > 0 ||
-        (monthlyContribution != null && monthlyContribution > 0);
+      const hasLiveInputs = currentEquity > 0 || monthlyContribution > 0;
 
       // Freedom year — income-based projection, computed client-side.
       let resolvedFreedomYear: number | null = null;
       if (hasLiveInputs) {
         resolvedFreedomYear = this._calculateFreedomYearClientSide(
           currentEquity,
-          monthlyContribution ?? 0,
+          monthlyContribution,
           targetPortfolio
         );
       }
@@ -172,6 +183,7 @@ export class FreedomStatsService {
     // Start the initial fetches.
     this._fetchEquity();
     this._fetchBirthYear();
+    this._fetchSchedule();
   }
 
   /**
@@ -182,6 +194,7 @@ export class FreedomStatsService {
   refresh(): void {
     this._fetchEquity();
     this._fetchBirthYear();
+    this._fetchSchedule();
   }
 
   // ---------------------------------------------------------------------------
@@ -281,6 +294,22 @@ export class FreedomStatsService {
         error: () => {
           // KYC failed — freedom age will show '—'; other stats unaffected.
           this.birthYear.set(0);
+        }
+      });
+  }
+
+  private _fetchSchedule(): void {
+    this.authService.getCurrentInvestmentSchedule()
+      .subscribe({
+        next: (schedule: any) => {
+          const amount = Number(schedule?.investmentAmount) || 0;
+          this.scheduleMonthly.set(
+            InvestmentFrequencyUtils.toMonthlyEquivalent(amount, schedule?.frequency)
+          );
+        },
+        error: () => {
+          // No schedule reachable — survey fallback; gate must never hang.
+          this.scheduleMonthly.set(0);
         }
       });
   }
