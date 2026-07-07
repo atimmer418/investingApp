@@ -21,16 +21,12 @@ export interface InvestmentSchedule {
 export interface CreateInvestmentScheduleRequest {
   monthlyAmount: number;
   frequency: string;
-  targetPortfolio?: number;
-  timeToFI?: number;
 }
 
 export interface InvestmentScheduleResponse {
   id: number;
   monthlyAmount: number;
   frequency: string;
-  targetPortfolio?: number;
-  timeToFI?: number;
   achRequestId?: string;
   isPaused: boolean;
   createdAt: string;
@@ -51,8 +47,6 @@ export interface InvestmentScheduleResponse {
 export class InvestmentScheduleComponent implements OnInit, OnDestroy {
   // User's financial data from initial survey
   monthlyGoal: number = 0;
-  targetPortfolio: number = 0;
-  timeToFI: number = 0;
 
   isSubmitting: boolean = false;
   isReady: boolean = false;
@@ -197,34 +191,14 @@ export class InvestmentScheduleComponent implements OnInit, OnDestroy {
   }
 
   private setFinancialData(progress: any): void {
-    console.log('[InvestmentScheduleComponent] 🔥 setFinancialData called with data:', progress);
-    console.log('[InvestmentScheduleComponent] 🔥 monthlyInvestment value:', progress?.monthlyInvestment);
-    console.log('[InvestmentScheduleComponent] 🔥 Full progress object:', JSON.stringify(progress, null, 2));
-    
+    console.log('[InvestmentScheduleComponent] setFinancialData — monthlyInvestment:', progress?.monthlyInvestment);
+
     if (progress && progress.monthlyInvestment) {
       this.monthlyGoal = progress.monthlyInvestment;
       console.log('[InvestmentScheduleComponent] ✅ Loaded user monthly investment amount:', this.monthlyGoal);
     } else {
       console.log('[InvestmentScheduleComponent] ⚠️ No monthlyInvestment found in progress data.');
-      console.log('[InvestmentScheduleComponent] Progress exists:', !!progress);
-      console.log('[InvestmentScheduleComponent] Progress keys:', progress ? Object.keys(progress) : 'N/A');
-      // Set a default for testing
       this.monthlyGoal = 0;
-    }
-
-    // For now, we'll calculate these from the monthly investment
-    // In a real app, these might be stored separately or calculated server-side
-    if (this.monthlyGoal > 0) {
-      // Estimate target portfolio using 4% rule and monthly investment
-      // This is a simplified calculation - actual FI calculations are more complex
-      const annualInvestment = this.monthlyGoal * 12;
-      this.targetPortfolio = annualInvestment * 25; // Rough 4% rule estimate
-      this.timeToFI = 25; // Simplified estimate
-      console.log('[InvestmentScheduleComponent] ✅ Calculated financial goals:', {
-        monthlyGoal: this.monthlyGoal,
-        targetPortfolio: this.targetPortfolio,
-        timeToFI: this.timeToFI
-      });
     }
 
     this.calculateRecommendedAmount();
