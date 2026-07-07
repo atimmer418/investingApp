@@ -14,12 +14,16 @@ export class InvestmentFrequencyUtils {
     if (!amount || amount <= 0) return 0;
 
     const freq = (frequency ?? 'MONTHLY').toUpperCase();
-    let factor = 1;
-    if (freq === 'WEEKLY') factor = 4.33;
-    else if (freq === 'BIWEEKLY') factor = 2.17;
-    else if (freq === 'SEMI_MONTHLY' || freq === 'SEMIMONTHLY') factor = 2;
+    let factorHundredths = 100; // MONTHLY / unknown
+    if (freq === 'WEEKLY') factorHundredths = 433;
+    else if (freq === 'BIWEEKLY') factorHundredths = 217;
+    else if (freq === 'SEMI_MONTHLY' || freq === 'SEMIMONTHLY') factorHundredths = 200;
 
-    // Mirror the backend's setScale(2, RoundingMode.HALF_UP)
-    return Math.round(amount * factor * 100) / 100;
+    // Exact integer-cents arithmetic — reproduces the backend's
+    // BigDecimal setScale(2, HALF_UP) without binary floating-point drift
+    // (e.g. 15.5 × 4.33 = 67.115 must round UP to 67.12).
+    const cents = Math.round(amount * 100);
+    const monthlyCents = Math.floor((cents * factorHundredths + 50) / 100);
+    return monthlyCents / 100;
   }
 }
