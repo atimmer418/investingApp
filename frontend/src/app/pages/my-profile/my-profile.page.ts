@@ -17,6 +17,8 @@ import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { EquityPigUtils } from '../../utils/equity-pig.utils';
 import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
+import { FreedomStatsService } from '../../services/freedom-stats.service';
+import { InvestmentFrequencyUtils } from '../../utils/investment-frequency.utils';
 
 @Component({
   selector: 'app-my-profile',
@@ -76,9 +78,6 @@ export class MyProfilePage implements OnInit {
 
   selectedTier: string = '';
 
-  // Freedom Timeline
-  freedomYear: number | null = null;
-
   // State
   isDirty: boolean = false;
   isSubExpired: boolean = false;
@@ -104,6 +103,12 @@ export class MyProfilePage implements OnInit {
     return offers;
   }
 
+  // Freedom Timeline — live unified value (same signal tab3 renders).
+  get freedomYear(): number | null {
+    const year = parseInt(this.freedomStats.stats().freedomYear, 10);
+    return isNaN(year) ? null : year;
+  }
+
   get yearsToFreedom(): number | null {
     if (!this.freedomYear) return null;
     return this.freedomYear - new Date().getFullYear();
@@ -118,7 +123,8 @@ export class MyProfilePage implements OnInit {
     private mfuService: MonthlyFreedomUpdateService,
     private router: Router,
     private alertController: AlertController,
-    private navCtrl: NavController
+    private navCtrl: NavController,
+    public freedomStats: FreedomStatsService
   ) {
     addIcons({camera,walletOutline,timeOutline,shareOutline,ticketOutline,checkmarkCircleOutline,saveOutline});
     this.actionRequired$ = this.accountStatusService.actionRequired$;
@@ -185,11 +191,6 @@ export class MyProfilePage implements OnInit {
 
         if (progress.selectedTier) {
           this.selectedTier = progress.selectedTier;
-        }
-
-        // Freedom Timeline
-        if (progress.currentFreedomEstimate) {
-          this.freedomYear = progress.currentFreedomEstimate;
         }
 
         // Store originals for dirty check
@@ -396,14 +397,11 @@ export class MyProfilePage implements OnInit {
 
   private calculateCurrentScheduleYears() {
     if (this.currentScheduledInvestment > 0) {
-      // Re-approximating for dynamic update. 
-      let monthly = this.currentScheduledInvestment;
-      
-      // Use stored frequency code instead of parsing UI text
-      if (this.currentFrequency === 'weekly') monthly *= 4.33;
-      else if (this.currentFrequency === 'biweekly') monthly *= 2.16;
-      else if (this.currentFrequency === 'semi_monthly' || this.currentFrequency === 'semimonthly') monthly *= 2;
-      
+      // Shared conversion — same factors as the backend MFU projection
+      // (fixes the old inline biweekly 2.16 vs backend 2.17 drift).
+      const monthly = InvestmentFrequencyUtils.toMonthlyEquivalent(
+        this.currentScheduledInvestment, this.currentFrequency);
+
       this.currentMonthlyEquivalent = monthly;
       this.yearsToReachCurrent = this.calculateYears(monthly);
 
