@@ -83,7 +83,7 @@ export class FreedomStatsService {
   private readonly _snapshot: WritableSignal<StatSnapshot | null> = signal(null);
 
   /**
-   * True while equity or birthYear haven't resolved yet (and no snapshot is active).
+   * True while equity, birthYear, or scheduleMonthly haven't resolved yet (and no snapshot is active).
    */
   readonly isLoading: Signal<boolean>;
 
@@ -94,7 +94,7 @@ export class FreedomStatsService {
     // Bridge userProgress$ into signal space.
     this.userProgress = toSignal(this.authService.userProgress$, { initialValue: null });
 
-    // Loading gate: still loading when either fetch hasn't completed and
+    // Loading gate: still loading when any fetch hasn't completed and
     // there is no snapshot to show in the meantime.
     this.isLoading = computed(() => {
       const notReady = this.equity() === null || this.birthYear() === null || this.scheduleMonthly() === null;
@@ -187,7 +187,7 @@ export class FreedomStatsService {
   }
 
   /**
-   * Trigger a silent background refresh of equity + KYC data.
+   * Trigger a silent background refresh of equity, KYC, and schedule data.
    * Does NOT reset signals to null — so currently-displayed values stay visible
    * (stale-while-revalidate). Called by tab3 on re-entry and after profile saves.
    */

@@ -7,6 +7,8 @@
  * MonthlyFreedomUpdateService.calculateMonthlyEquivalent
  * (WEEKLY ×4.33, BIWEEKLY ×2.17, SEMI_MONTHLY ×2, MONTHLY ×1) —
  * the unified freedom date depends on both stacks converting identically.
+ * Assumes cents-quantized amounts (the DB stores investment_amount at scale=2);
+ * sub-cent inputs are quantized to cents before conversion.
  */
 export class InvestmentFrequencyUtils {
 

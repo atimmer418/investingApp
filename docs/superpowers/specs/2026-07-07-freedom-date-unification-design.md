@@ -25,7 +25,7 @@ Decision from 2026-07-06 discussion: unify on the income-based target (`retireme
 ## 2. Locked decisions
 
 1. **Target:** `retirementIncome × 25` everywhere (`retirementIncome` is stored annualized); `$1.5M` default when income is absent/zero. `user.targetPortfolio` is no longer read anywhere.
-2. **Contribution:** the actual investment schedule everywhere (converted to a monthly equivalent), falling back to survey `monthlyInvestment` when no schedule exists yet. MFU already behaves this way; tab3 adopts it.
+2. **Contribution:** the actual investment schedule everywhere (converted to a monthly equivalent), falling back to survey `monthlyInvestment` when no schedule exists yet. tab3 adopts it; the MFU gains the same survey fallback in this change (it previously projected $0/month when no schedule row existed).
 3. **my-profile:** Freedom Timeline card reads the live `FreedomStatsService` value (same signal as tab3). `currentFreedomEstimate` remains as MFU-persisted history only.
 4. **Architecture:** keep two mirrored calculators (backend Java + frontend TS) fed identical inputs, with a cross-stack parity test fixture pinning them together. No new endpoint.
 5. **No data migration.** `daysBoughtBack`, `freedomYearsChange`, and best-next-move recompute both comparison sides against the same in-request target, so persisted history is not corrupted by the target change. `currentFreedomEstimate` self-heals at the next MFU generation.
@@ -48,6 +48,8 @@ double targetPortfolio = (retirementIncome != null && retirementIncome > 0)
 New named constants on the service: `SAFE_WITHDRAWAL_RATE = 0.04`, `DEFAULT_TARGET_PORTFOLIO = 1_500_000.0` (names mirror `FreedomStatsService`). All downstream uses (projected freedom year, best-next-move, days bought back, quarterly compare) share the local variable, so no other backend logic changes.
 
 `user.targetPortfolio` keeps being **written** at registration (`WebAuthnService.startRegistrationFlow`) — removing it would touch the passkey auth flow for zero user benefit. It becomes a write-only signup snapshot. No schema change (ddl-auto).
+
+The projection contribution gains the same fallback via a package-private `resolveMonthlyContribution(scheduleMonthlyEquivalent, user)` — schedule when positive, else survey `monthlyInvestment`, else zero; display fields (`recurringInvestmentAmount`) are unaffected.
 
 ### 3.2 Frontend — `FreedomStatsService` contribution source
 
