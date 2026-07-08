@@ -36,8 +36,8 @@ Spec: docs/superpowers/specs/2026-07-07-freedom-date-unification-design.md
 - Check:    servlocal + backend bootRun (local profile); log in as facebook@gmail.com
             (uncomment simulateUserLogin in app.component.ts ~line 130 OR use ?devPage=).
             Visit tab3 → note freedom year; open MFU via reopen from FRED tab; open my-profile.
-- Evidence: screenshots of all three surfaces showing the identical year
-- Status:   pending — requires local stack (servlocal + backend bootRun); deferred to verifier agent with browser tools. Not attempted in this pass: no servers were started and app.component.ts was not touched (per binding constraint).
+- Evidence: All three surfaces show freedom year 2069 for the dev account (facebook@gmail.com, userId 40), captured 2026-07-07 on localhost:8100 via ?devPage. (1) tab3 stat strip — DOM innerText of div.stat-strip: "Freedom date 2069 / Freedom age 79 / To go $1.80M" (stable across two loads). (2) my-profile Freedom Date card — DOM innerText of ion-content: "Freedom Date 2069 / 43 years away". (3) MFU reopen — authenticated GET https://local.fredvested.com/api/monthly-freedom-update/generate?reopen=true -> HTTP 200, JSON projectedFreedomYear=2069. Inputs (all HTTP 200): /user/progress retirementIncome=72000 (live target 72000x25 = $1,800,000, matches strip "To go $1.80M" and card "Goal $1,800,000"); survey monthlyInvestment=2100 correctly IGNORED in favor of the actual schedule; /investment-schedule/current investmentAmount=$50 WEEKLY (monthlyAmount $216.5 ~ $217/mo). Confirms unification landed on all three surfaces: target = retirementIncome x 25 live, contribution = actual schedule (else survey).
+- Status:   pass
 
 ## AC-7: Existing 'does not read currentFreedomEstimate' spec passes unmodified
 - Type:     frontend-unit
