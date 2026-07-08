@@ -350,14 +350,14 @@ describe('FreedomStatsService — FRED-200', () => {
   // AC-6: tab3-vs-MFU split — service does NOT read MFU fields
   // =========================================================================
 
-  describe('AC-6: tab3-vs-MFU split', () => {
+  describe('AC-6: tab3 computes live — never reads persisted MFU output', () => {
 
     it('does not read currentFreedomEstimate (MFU value) when computing freedom year', fakeAsync(() => {
       // Progress with currentFreedomEstimate set to a specific year (2030)
       // The service should NOT use this value.
       const progressWithMfuEstimate = {
         ...userProgressStub,
-        currentFreedomEstimate: 2030  // MFU's contribution-based estimate
+        currentFreedomEstimate: 2030  // persisted MFU output — tab3 must compute live, never read this
       };
       configureTestBed(makeAuthServiceMock(progressWithMfuEstimate as any));
       const svc = getService();
@@ -590,6 +590,10 @@ describe('FreedomStatsService — FRED-200', () => {
 
       expect(svc.scheduleMonthly()).toBe(433);
       expect(svc.isLoading()).toBeFalse();
+      // Discriminates the contribution SOURCE: equity $50k · $433/mo · target $1.5M
+      // → 328.08 months → 28 years. If the projection regressed to the survey's
+      // $500/mo it would read 27 years — so this assertion fails on regression.
+      expect(svc.stats().freedomYear).toBe(String(new Date().getFullYear() + 28));
     }));
 
     it('falls back to the survey monthlyInvestment when no schedule exists', fakeAsync(() => {

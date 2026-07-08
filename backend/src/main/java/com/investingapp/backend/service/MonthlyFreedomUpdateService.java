@@ -273,7 +273,8 @@ public class MonthlyFreedomUpdateService {
         dto.setFrequencyLabel(freqLabel);
 
         // --- Projection: Freedom Year ---
-        BigDecimal monthlyContribution = calculateMonthlyEquivalent(investmentAmount, frequency);
+        BigDecimal monthlyContribution = resolveMonthlyContribution(
+                calculateMonthlyEquivalent(investmentAmount, frequency), user);
         double targetPortfolio = resolveTargetPortfolio(user);
 
         int freedomYear = calculateFreedomYear(currentEquity, monthlyContribution, new BigDecimal(targetPortfolio));
@@ -675,6 +676,23 @@ public class MonthlyFreedomUpdateService {
     }
 
     /**
+     * Resolve the projection contribution — the actual schedule's monthly
+     * equivalent, falling back to the survey monthlyInvestment when no
+     * schedule exists yet. Mirrors FreedomStatsService (frontend):
+     * scheduleMonthly > 0 ? scheduleMonthly : surveyMonthly.
+     */
+    BigDecimal resolveMonthlyContribution(BigDecimal scheduleMonthlyEquivalent, User user) {
+        if (scheduleMonthlyEquivalent != null && scheduleMonthlyEquivalent.compareTo(BigDecimal.ZERO) > 0) {
+            return scheduleMonthlyEquivalent;
+        }
+        Double surveyMonthly = user.getMonthlyInvestment();
+        if (surveyMonthly != null && surveyMonthly > 0) {
+            return BigDecimal.valueOf(surveyMonthly);
+        }
+        return BigDecimal.ZERO;
+    }
+
+    /**
      * Resolve the FI target portfolio — live income-based 4% rule, $1.5M default.
      * UNIFIED with the tab3 stat strip (frontend FreedomStatsService): both sides
      * compute retirementIncome / SAFE_WITHDRAWAL_RATE from the user's CURRENT
@@ -753,7 +771,7 @@ public class MonthlyFreedomUpdateService {
     /**
      * Convert per-execution investment amount to monthly equivalent.
      */
-    private BigDecimal calculateMonthlyEquivalent(BigDecimal amount, String frequency) {
+    BigDecimal calculateMonthlyEquivalent(BigDecimal amount, String frequency) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) == 0) return BigDecimal.ZERO;
 
         switch (frequency.toUpperCase()) {
@@ -761,6 +779,7 @@ public class MonthlyFreedomUpdateService {
                 return amount.multiply(new BigDecimal("4.33")).setScale(2, RoundingMode.HALF_UP);
             case "BIWEEKLY":
                 return amount.multiply(new BigDecimal("2.17")).setScale(2, RoundingMode.HALF_UP);
+            case "SEMIMONTHLY":
             case "SEMI_MONTHLY":
                 return amount.multiply(new BigDecimal("2")).setScale(2, RoundingMode.HALF_UP);
             case "MONTHLY":
