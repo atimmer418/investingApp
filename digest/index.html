@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Digest — 2026-07-08</title>
+  <title>Claude Digest — 2026-07-09</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#0f1117;color:#e8eaf0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.6;padding:48px 24px 80px}
@@ -45,7 +45,7 @@
       <span class="wordmark-text">Claude Daily Digest</span>
     </div>
     <h1>What's new in Claude</h1>
-    <span class="date-label">Wednesday, July 8, 2026</span>
+    <span class="date-label">Thursday, July 9, 2026</span>
   </header>
   <hr />
 
@@ -53,12 +53,16 @@
     <div class="section-head"><span>📦</span><span class="section-title">New Releases</span></div>
     <div class="card">
       <div class="item">
+        <div class="meta"><span class="version">v2.1.205</span><span class="ts">July 8, 2026</span></div>
+        <div class="body">Auto mode now blocks tampering with session transcript files; fixed <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 4px;border-radius:3px">--json-schema</code> silently producing unstructured output with invalid schemas. Multiple reliability fixes: message loss at <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 4px;border-radius:3px">--max-turns</code> limit, Windows worktree deletion issues, background agent state inconsistencies, and plugin LSP server initialization failures.</div>
+      </div>
+      <div class="item">
         <div class="meta"><span class="version">v2.1.204</span><span class="ts">July 8, 2026</span></div>
-        <div class="body">Fixed hook events not streaming during SessionStart hooks in headless sessions, which could cause remote workers to be idle-reaped mid-hook.</div>
+        <div class="body">Fixed hook events not streaming during <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 4px;border-radius:3px">SessionStart</code> hooks in headless sessions, which could cause remote workers to be idle-reaped mid-hook before completing setup.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="version">v2.1.203</span><span class="ts">July 7, 2026</span></div>
-        <div class="body">Major release with 40+ fixes: session stability improvements, background agent PATH handling, login expiration warnings with re-auth prompts, and a context-usage indicator optimization that eliminates a memory and CPU regression in interactive sessions. Fixes 15–20 second macOS stalls on background session open (regression from v2.1.196).</div>
+        <div class="body">Login expiration warnings added to prevent background session interruptions with automatic recovery from stale daemon tokens. Fixed subagents silently stopping when returning to <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 4px;border-radius:3px">claude agents</code>, memory/CPU regression in interactive sessions, stale PATH on Windows, and worktree-isolated subagents running in wrong directories.</div>
       </div>
     </div>
   </section>
@@ -68,19 +72,19 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="tag">Week 26 · June 22–26, 2026</span></div>
-        <div class="body"><strong>claude mcp login</strong>: authenticate a configured MCP server directly from your shell instead of the interactive /mcp menu, and clear stored credentials later with <code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px">claude mcp logout</code>.</div>
+        <div class="body"><strong>claude mcp login</strong>: authenticate a configured MCP server directly from your shell instead of the interactive <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 4px;border-radius:3px">/mcp</code> menu, and clear stored credentials with <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 4px;border-radius:3px">claude mcp logout</code>.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 26 · June 22–26, 2026</span></div>
-        <div class="body"><strong>Shell mode responds to command output</strong>: running <code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px">! npm test</code> now gets an automatic explanation without needing a second prompt.</div>
+        <div class="body"><strong>Shell mode explains command output</strong>: running <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 4px;border-radius:3px">! npm test</code> now returns an explanation of the result without needing a follow-up prompt.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 26 · June 22–26, 2026</span></div>
-        <div class="body"><strong>/rewind</strong> can now resume a conversation from before /clear was run, recovering context you thought was gone.</div>
+        <div class="body"><strong>/rewind across /clear</strong>: <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 4px;border-radius:3px">/rewind</code> can now resume a conversation from before a <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 4px;border-radius:3px">/clear</code> was run, restoring full prior context.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">Week 26 · June 22–26, 2026</span></div>
-        <div class="body"><strong>Background subagents surface permission prompts</strong> in the main session instead of auto-denying, so long-running agent chains no longer silently stall on blocked actions.</div>
+        <div class="body"><strong>Background subagent permission prompts</strong>: instead of auto-denying, subagents now surface permission prompts in the main session so you can approve them without the task failing.</div>
       </div>
     </div>
   </section>
@@ -90,19 +94,19 @@
     <div class="card">
       <div class="item">
         <div class="meta"><span class="tag">July 1, 2026</span></div>
-        <div class="body"><strong>Claude Fable 5 &amp; Mythos 5 restored</strong>: access is back after a 19-day suspension for US export-control compliance. A new safety classifier blocks the reported jailbreak in over 99% of cases. As of July 7, Fable 5 moves off standard subscription allowances and onto usage credits.</div>
+        <div class="body">Claude Fable 5 and Claude Mythos 5 restored after a brief suspension. See Anthropic's statement on the redeployment for full details.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">June 30, 2026</span></div>
-        <div class="body"><strong>Claude Sonnet 5</strong> launched at introductory pricing of $2/$10 per MTok (through Aug 31). Supports 1M token context, 128k max output, and adaptive thinking on by default. Note: new tokenizer produces ~30% more tokens than previous models.</div>
+        <div class="body"><strong>Claude Sonnet 5</strong> (<code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 4px;border-radius:3px">claude-sonnet-5</code>) launched at introductory pricing of $2/$10 per MTok through August 31, 2026. Supports 1M token context window and 128k max output. Note: adaptive thinking is on by default; manual extended thinking and non-default sampling params now return 400 errors.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">June 30, 2026</span></div>
-        <div class="body"><strong>Managed Agents streaming event deltas</strong>: opt in with <code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px">event_deltas[]</code> on the session event stream to preview agent message text as it generates, before the complete event arrives.</div>
+        <div class="body"><strong>Managed Agents event deltas</strong>: session event streams now support streaming deltas so you can preview agent message text as it's generated, before the complete event arrives. Opt in via <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 4px;border-radius:3px">event_deltas[]</code> on the events stream endpoint.</div>
       </div>
       <div class="item">
         <div class="meta"><span class="tag">June 30, 2026</span></div>
-        <div class="body"><strong>Managed Agents session config overrides</strong>: pass <code style="background:#1e2235;padding:1px 5px;border-radius:4px;font-size:12px">agent: {type: "agent_with_overrides"}</code> at session creation to swap the model, system prompt, tools, or MCP servers for a single run without changing the agent definition.</div>
+        <div class="body"><strong>Per-session agent config overrides</strong>: when creating a Managed Agents session, pass <code style="font-family:ui-monospace,monospace;font-size:12px;background:#1e2235;padding:1px 4px;border-radius:3px">agent: {type: "agent_with_overrides"}</code> to replace the model, system prompt, tools, MCP servers, or skills for that session without modifying the agent definition.</div>
       </div>
     </div>
   </section>
@@ -111,20 +115,20 @@
     <div class="section-head"><span>𝕏</span><span class="section-title">From the Team</span></div>
     <div class="card">
       <div class="item">
-        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">This week</span></div>
-        <div class="body">Claude Code weekly limits are increasing 50%, now through July 13. Live now for all Pro, Max, Team, and seat-based Enterprise users.</div>
+        <div class="meta"><span class="handle">@ClaudeDevs</span><span class="ts">July 7, 2026</span></div>
+        <div class="body">Published a definitive Claude Code loops guide, explaining how the team categorizes loops by trigger, stop criteria, and primitive — covering the full range of loop patterns now available in Claude Code.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@claudeai</span><span class="ts">This week</span></div>
-        <div class="body">Claude Cowork is now available on web and mobile in addition to desktop — sessions and files are saved to your Claude account and go where you go. Rolling out starting with Max plan over the next several weeks.</div>
+        <div class="meta"><span class="handle">@claudeai</span><span class="ts">June 30, 2026</span></div>
+        <div class="body">Claude Sonnet 5 is now the default model for Free and Pro plans. Also announced: Claude Science, a new product optimized for pharmaceutical research and scientific lab use cases.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@bcherny</span><span class="ts">July 6, 2026</span></div>
-        <div class="body">"This is our first time telling the story of how we first built and launched Claude Code, starting with its origins in Anthropic safety research. So much more to do. We are 1% done."</div>
+        <div class="meta"><span class="handle">@bcherny</span><span class="ts">Recently</span></div>
+        <div class="body">"Hello from Code with Claude London!" — Boris has been attending Code with Claude community events globally and continues sharing that he hasn't written a line of code himself in 2026, letting Claude Code handle it all.</div>
       </div>
       <div class="item">
-        <div class="meta"><span class="handle">@trq212</span><span class="ts">July 2, 2026</span></div>
-        <div class="body">Clarified that while Fable 5 is leaving standard subscriptions after July 7, Anthropic aims to restore it as part of subscriptions "as soon as capacity allows." Also: dynamic workflows post walking through Claude writing its own harness on the fly.</div>
+        <div class="meta"><span class="handle">@trq212</span><span class="ts">Recently</span></div>
+        <div class="body">"A Field Guide to Fable: Finding Your Unknowns" — Thariq published a guide on effectively working with Claude Fable 5, exploring how to surface the model's unknowns and get the most out of its reasoning capabilities.</div>
       </div>
     </div>
   </section>
@@ -132,7 +136,7 @@
   <hr />
   <footer>
     <span><span class="dot"></span>digest.fredvested.com</span>
-    <span>Generated 2026-07-08 at 8:00 AM ET</span>
+    <span>Generated 2026-07-09 at 8:00 AM ET</span>
   </footer>
 </div>
 </body>
