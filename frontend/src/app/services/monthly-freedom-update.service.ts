@@ -70,6 +70,10 @@ export interface MonthlyFreedomUpdateData {
 
   // Pig level (1-6) based on end equity
   equityLevel: number;
+
+  // Server-produced month (yyyy-MM) this update was generated for; echoed back on commitSeen so the
+  // "seen" stamp is the month actually shown, never a post-rollover month.
+  generatedForMonth: string;
 }
 
 @Injectable({
@@ -108,10 +112,13 @@ export class MonthlyFreedomUpdateService {
   }
 
   /**
-   * Dismiss the update (mark as seen for this month)
+   * Commit the update as "seen" for the shown month. Fired at data-ready (not on the dismiss button)
+   * so the primary CTA / swipe paths can't skip it. seenMonth echoes the server-produced
+   * generatedForMonth so the stamp is the month actually displayed.
    */
-  dismissUpdate(): Observable<any> {
-    return this.http.post(`${this.apiUrl}/dismiss`, {}, {
+  commitSeen(seenMonth?: string): Observable<any> {
+    const body = seenMonth ? { seenMonth } : {};
+    return this.http.post(`${this.apiUrl}/dismiss`, body, {
       headers: this.getAuthHeaders()
     });
   }

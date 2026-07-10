@@ -13,8 +13,8 @@ import { Injectable, signal, computed, Signal, WritableSignal, inject } from '@a
 import { toSignal } from '@angular/core/rxjs-interop';
 import { timeout, retry, timer, throwError } from 'rxjs';
 import { AuthService, UserProgress } from './auth.service';
-import { PortfolioService } from './portfolio.service';
 import { AlpacaService } from './alpaca.service';
+import { PortfolioStoreService } from './portfolio-store.service';
 import { InvestmentFrequencyUtils } from '../utils/investment-frequency.utils';
 
 /** Shape of the three computed stat-strip values. */
@@ -47,7 +47,7 @@ export class FreedomStatsService {
 
   // --- Injected services ---
   private authService = inject(AuthService);
-  private portfolioService = inject(PortfolioService);
+  private portfolioStore = inject(PortfolioStoreService);
   private alpacaService = inject(AlpacaService);
 
   // --- Reactive state ---
@@ -247,19 +247,21 @@ export class FreedomStatsService {
   // ---------------------------------------------------------------------------
 
   private _fetchEquity(): void {
-    this.portfolioService.getPortfolioDashboard()
-      .subscribe({
-        next: (data) => {
-          const value = data?.summary?.equity ?? 0;
-          this.equity.set(value);
-          // Clear snapshot once real data has arrived.
-          this._snapshot.set(null);
-        },
-        error: () => {
-          this.equity.set(0);
-          this._snapshot.set(null);
-        }
-      });
+    // Route through the FRED-205 single-flight store so concurrent callers
+    // (constructor + ionViewWillEnter refresh) join one in-flight HTTP request
+    // rather than each firing their own.
+    this.portfolioStore.load$().subscribe({
+      next: (bundle) => {
+        const value = bundle?.dashboard?.summary?.equity ?? 0;
+        this.equity.set(value);
+        // Clear snapshot once real data has arrived.
+        this._snapshot.set(null);
+      },
+      error: () => {
+        this.equity.set(0);
+        this._snapshot.set(null);
+      }
+    });
   }
 
   private _fetchBirthYear(): void {

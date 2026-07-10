@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tab1 Refactor — Interactive Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..700,0..1,-50..200" rel="stylesheet">
+<style>
+:root{
+  --primary:#2563EB; --text:#0f172a; --gray:#6b7280; --bg:#f8fafc; --border:#e5e7eb;
+  --sim-deep:#081c4e; --sim-mid:#16309b;
+  --glass:rgba(255,255,255,.1); --glass-border:rgba(255,255,255,.18);
+  --up:#16a34a; --down:#dc2626;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+html,body{height:100%;}
+body{
+  font-family:'Manrope',sans-serif;background:#0d1220;
+  background-image:radial-gradient(1200px 600px at 80% -10%, rgba(37,99,235,.16), transparent 60%),
+    radial-gradient(900px 500px at 10% 110%, rgba(37,99,235,.10), transparent 60%);
+  color:#e6eaf3;display:flex;flex-direction:column;align-items:center;overflow:hidden;
+}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;}
+
+.proto-bar{width:100%;max-width:1180px;display:flex;align-items:center;justify-content:space-between;padding:18px 28px 8px;flex-shrink:0;}
+.proto-title .kicker{font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#5b7bd6;}
+.proto-title h1{font-size:17px;font-weight:800;color:#f2f5fb;letter-spacing:-.01em;}
+.proto-hint{font-size:11.5px;color:#5d6a89;font-weight:500;padding:0 28px 4px;flex-shrink:0;}
+.proto-hint strong{color:#8fa3d0;font-weight:700;}
+
+.stage{flex:1;display:flex;align-items:center;justify-content:center;width:100%;min-height:0;}
+.phone-wrap{transform-origin:center center;}
+.phone{width:390px;height:844px;position:relative;border-radius:54px;background:#000;padding:6px;
+  box-shadow:0 0 0 2px #1a2138,0 40px 100px -20px rgba(0,0,0,.8),0 0 120px -40px rgba(37,99,235,.35);}
+.screen-clip{position:relative;width:100%;height:100%;border-radius:48px;overflow:hidden;background:var(--bg);}
+.island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:118px;height:34px;background:#000;border-radius:20px;z-index:400;}
+.statusbar{position:absolute;top:0;left:0;right:0;height:54px;z-index:390;display:flex;align-items:center;justify-content:space-between;
+  padding:16px 30px 0;pointer-events:none;font-size:14px;font-weight:700;color:var(--text);}
+.statusbar .right{display:flex;gap:5px;}
+.statusbar .right .material-symbols-outlined{font-size:16px;}
+
+.app{position:absolute;inset:0;display:flex;flex-direction:column;}
+.app-header{flex-shrink:0;background:var(--bg);padding:58px 0 0;}
+.app-header .title{font-size:18px;font-weight:800;letter-spacing:-.015em;color:var(--text);text-align:center;}
+.switcher-row{display:flex;justify-content:center;padding:10px 0 8px;}
+.ios-switcher{display:flex;background:#e8ecf3;border-radius:12px;padding:3px;gap:2px;}
+.ios-switcher button{border:none;background:transparent;width:64px;height:32px;border-radius:9px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;color:#8b94a7;transition:all .2s;}
+.ios-switcher button.on{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(15,23,42,.12);}
+.ios-switcher .material-symbols-outlined{font-size:19px;}
+.app-content{flex:1;overflow-y:auto;background:var(--bg);scrollbar-width:none;padding:6px 18px 20px;}
+.app-content::-webkit-scrollbar{display:none;}
+.tabbar{flex-shrink:0;height:82px;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+  border-top:1px solid #eef1f6;display:flex;justify-content:space-around;align-items:flex-start;padding-top:10px;}
+.tabbar .tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:#a2abbd;font-size:9.5px;font-weight:700;}
+.tabbar .tab.on{color:var(--primary);}
+.tabbar .material-symbols-outlined{font-size:24px;}
+
+/* ============================================================
+   GRADIENT HERO (flip card)
+   ============================================================ */
+.hero-wrap{perspective:1200px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.hero-flipper{position:relative;width:100%;height:190px;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.4,.1,.2,1);}
+.hero-flipper.flipped{transform:rotateY(180deg);}
+.hero-face{
+  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:22px;overflow:hidden;
+  background:
+    radial-gradient(130% 110% at 85% -20%, rgba(96,165,250,.45), transparent 55%),
+    radial-gradient(120% 90% at 0% 115%, rgba(59,130,246,.35), transparent 55%),
+    linear-gradient(160deg, var(--sim-deep) 0%, var(--sim-mid) 52%, #2563EB 100%);
+  box-shadow:0 18px 40px -12px rgba(22,48,155,.45), inset 0 1px 0 rgba(255,255,255,.14);
+  display:flex;align-items:center;justify-content:center;
+}
+.hero-face.back{transform:rotateY(180deg);}
+.hero-front-inner{text-align:center;padding:0 20px;}
+.hero-eyebrow{font-size:10px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.55);}
+.equity-row{display:flex;align-items:baseline;justify-content:center;margin-top:8px;}
+.equity-whole{font-size:46px;font-weight:800;letter-spacing:-.035em;color:#fff;line-height:1;text-shadow:0 4px 20px rgba(8,28,78,.4);}
+.equity-cents{font-size:22px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:-.01em;}
+.freedom-badge{
+  display:inline-flex;align-items:center;gap:6px;margin-top:14px;
+  background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(10px);
+  color:#fff;font-size:11.5px;font-weight:700;padding:7px 14px;border-radius:20px;
+}
+.freedom-badge .material-symbols-outlined{font-size:14px;color:#7fb3ff;font-variation-settings:'FILL' 1;}
+.flip-hint{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:8.5px;font-weight:800;
+  letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.3);}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;padding:18px;}
+.hero-tile{
+  background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;
+  padding:12px 14px;backdrop-filter:blur(10px);
+}
+.hero-tile .ht-label{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5);}
+.hero-tile .ht-value{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-top:4px;}
+
+/* ============================================================
+   ZONE CARDS (light theme, tab2 grammar)
+   ============================================================ */
+.zone-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);
+  margin:20px 0 8px;display:flex;align-items:center;justify-content:space-between;}
+.zone-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:16px 16px 14px;}
+
+/* chart */
+.chips{display:flex;background:#eef1f6;border-radius:12px;padding:3px;gap:2px;margin-bottom:14px;}
+.chips button{flex:1;border:none;background:transparent;font-family:'Manrope';font-size:11.5px;font-weight:700;color:#8b94a7;
+  height:32px;border-radius:9px;cursor:pointer;transition:all .2s;}
+.chips button.on{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(15,23,42,.12);}
+.scrub-readout{height:34px;display:flex;flex-direction:column;justify-content:center;margin-bottom:2px;}
+.sr-value{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.02em;line-height:1.1;}
+.sr-date{font-size:10.5px;font-weight:600;color:var(--gray);margin-top:1px;}
+.sr-idle .sr-value{color:var(--text);}
+.chart-box{position:relative;height:170px;touch-action:none;cursor:crosshair;}
+.chart-box svg{display:block;width:100%;height:100%;overflow:visible;}
+.axis-lab{position:absolute;font-size:9px;font-weight:700;color:#b3bccb;letter-spacing:.03em;}
+.return-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9;}
+.return-row .rr-label{font-size:12px;font-weight:600;color:var(--gray);}
+.return-row .rr-value{font-size:15px;font-weight:800;letter-spacing:-.01em;}
+.pos{color:var(--up);} .neg{color:var(--down);}
+
+/* analytics rows */
+.perf-row{padding:11px 0;border-bottom:1px solid #f1f5f9;}
+.perf-middle{max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.3,.7,.3,1);}
+.perf-middle.open{max-height:440px;}
+.perf-toggle{
+  display:flex;align-items:center;justify-content:center;gap:5px;width:100%;
+  border:none;background:none;cursor:pointer;padding:12px 0 2px;
+  font-family:'Manrope';font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa6ba;
+  -webkit-tap-highlight-color:transparent;
+}
+.perf-toggle .material-symbols-outlined{font-size:16px;transition:transform .3s;}
+.perf-toggle.open .material-symbols-outlined{transform:rotate(180deg);}
+.perf-toggle:active{color:var(--primary);}
+.perf-top{display:flex;align-items:center;justify-content:space-between;}
+.perf-period{font-size:13px;font-weight:800;color:var(--text);letter-spacing:-.01em;}
+.perf-pct{font-size:15px;font-weight:800;letter-spacing:-.01em;}
+.perf-bar{height:4px;border-radius:2px;background:#eef1f6;margin-top:8px;overflow:hidden;}
+.perf-bar i{display:block;height:100%;border-radius:2px;width:0;transition:width .8s cubic-bezier(.2,.7,.2,1);}
+.perf-bar i.pos{background:linear-gradient(90deg,#34d399,#16a34a);}
+.perf-bar i.neg{background:linear-gradient(90deg,#f87171,#dc2626);}
+.perf-sub{display:flex;justify-content:space-between;margin-top:6px;font-size:10.5px;font-weight:600;color:#9aa6ba;}
+
+/* holdings rows */
+.hold-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #f1f5f9;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;}
+.hold-row:last-of-type{border-bottom:none;}
+.hold-row:active{opacity:.6;}
+.hold-tile{width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  background:#eef4ff;color:var(--primary);font-size:11px;font-weight:800;letter-spacing:.02em;}
+.hold-mid{flex:1;min-width:0;}
+.hold-sym{font-size:13.5px;font-weight:800;color:var(--text);letter-spacing:-.01em;}
+.hold-name{font-size:10.5px;font-weight:600;color:var(--gray);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hold-right{text-align:right;flex-shrink:0;}
+.hold-val{font-size:13.5px;font-weight:800;color:var(--text);letter-spacing:-.01em;}
+.hold-pill{display:inline-block;font-size:10px;font-weight:800;padding:2.5px 8px;border-radius:12px;margin-top:3px;}
+.hold-pill.pos{background:#dcfce7;color:#14532d;}
+.hold-pill.neg{background:#fee2e2;color:#991b1b;}
+.hold-total{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1.5px solid #eef1f6;}
+.hold-total .t-label{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);}
+.hold-total .t-right{text-align:right;}
+.hold-total .t-val{font-size:14px;font-weight:800;color:var(--text);}
+.hold-total .t-gl{font-size:11px;font-weight:700;margin-top:1px;}
+
+/* position detail sheet */
+.sheet-backdrop{position:absolute;inset:0;background:rgba(8,15,35,.5);z-index:340;opacity:0;pointer-events:none;transition:opacity .3s;}
+.sheet-backdrop.on{opacity:1;pointer-events:auto;}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:350;background:#fff;border-radius:24px 24px 0 0;
+  padding:14px 22px 40px;transform:translateY(105%);transition:transform .38s cubic-bezier(.3,.9,.3,1);}
+.sheet.on{transform:translateY(0);}
+.sheet-handle{width:38px;height:4.5px;border-radius:3px;background:#e2e6ee;margin:0 auto 16px;}
+.ps-head{display:flex;align-items:center;gap:13px;}
+.ps-tile{width:46px;height:46px;border-radius:13px;background:#eef4ff;color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;}
+.ps-sym{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.02em;}
+.ps-name{font-size:11.5px;font-weight:600;color:var(--gray);margin-top:1px;}
+.ps-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px;}
+.ps-cell{background:#f8fafc;border:1px solid #eef1f6;border-radius:13px;padding:11px 13px;}
+.ps-cell .pc-label{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa6ba;}
+.ps-cell .pc-value{font-size:15px;font-weight:800;color:var(--text);margin-top:3px;letter-spacing:-.01em;}
+.ps-cell .pc-sub{font-size:10px;font-weight:700;margin-top:1px;}
+.ps-done{display:block;width:100%;height:50px;margin-top:16px;border:none;border-radius:13px;cursor:pointer;
+  background:#111827;color:#fff;font-family:'Manrope';font-size:15px;font-weight:800;}
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <div class="proto-title">
+    <span class="kicker">Tab1 Refactor · Interactive Prototype</span>
+    <h1>Portfolio — gradient hero, scrub chart, clean analytics</h1>
+  </div>
+</div>
+<div class="proto-hint">Tap the <strong>hero</strong> to flip it · <strong>drag across the chart</strong> to scrub values · switch <strong>periods</strong> with the chips · toggle the <strong>analytics tab</strong> up top · tap a <strong>holding</strong> for its detail sheet.</div>
+
+<div class="stage">
+  <div class="phone-wrap" id="phoneWrap">
+    <div class="phone">
+      <div class="screen-clip">
+        <div class="island"></div>
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="right">
+            <span class="material-symbols-outlined">signal_cellular_alt</span>
+            <span class="material-symbols-outlined">wifi</span>
+            <span class="material-symbols-outlined">battery_full</span>
+          </span>
+        </div>
+
+        <div class="app">
+          <div class="app-header">
+            <div class="title">Portfolio</div>
+            <div class="switcher-row">
+              <div class="ios-switcher">
+                <button id="swOverview" class="on"><span class="material-symbols-outlined">bar_chart</span></button>
+                <button id="swAnalytics"><span class="material-symbols-outlined">monitoring</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="app-content" id="appContent">
+
+            <!-- GRADIENT HERO (flip) -->
+            <div class="hero-wrap" id="heroWrap">
+              <div class="hero-flipper" id="heroFlipper">
+                <div class="hero-face front">
+                  <div class="hero-front-inner">
+                    <div class="hero-eyebrow">Total Equity</div>
+                    <div class="equity-row">
+                      <span class="equity-whole">$621</span><span class="equity-cents">.48</span>
+                    </div>
+                    <div class="freedom-badge">
+                      <span class="material-symbols-outlined">verified_user</span>
+                      3 days of financial freedom (est.)
+                    </div>
+                  </div>
+                  <div class="flip-hint">Tap for details</div>
+                </div>
+                <div class="hero-face back">
+                  <div class="hero-grid">
+                    <div class="hero-tile"><div class="ht-label">Total Invested</div><div class="ht-value">$499.88</div></div>
+                    <div class="hero-tile"><div class="ht-label">Portfolio Value</div><div class="ht-value">$551.38</div></div>
+                    <div class="hero-tile"><div class="ht-label">Buying Power</div><div class="ht-value">$70.10</div></div>
+                    <div class="hero-tile"><div class="ht-label">Settled Cash</div><div class="ht-value">$70.10</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ============ OVERVIEW ============ -->
+            <div id="overviewSection">
+              <p class="zone-label">Performance</p>
+              <div class="zone-card">
+                <div class="chips" id="periodChips">
+                  <button data-p="1W">1W</button>
+                  <button data-p="1M">1M</button>
+                  <button data-p="3M">3M</button>
+                  <button data-p="YTD">YTD</button>
+                  <button data-p="ALL" class="on">ALL</button>
+                </div>
+                <div class="scrub-readout sr-idle" id="scrubReadout">
+                  <div class="sr-value" id="srValue">$621.48</div>
+                  <div class="sr-date" id="srDate">Nov 21, 2025 – Jul 6, 2026</div>
+                </div>
+                <div class="chart-box" id="chartBox">
+                  <svg id="chartSvg" preserveAspectRatio="none"></svg>
+                </div>
+                <div class="return-row">
+                  <span class="rr-label" id="returnLabel">Your all-time cumulative pre-tax return</span>
+                  <span class="rr-value pos" id="returnValue">+10.30%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ============ ANALYTICS ============ -->
+            <div id="analyticsSection" style="display:none;">
+              <p class="zone-label">Performance Analytics</p>
+              <div class="zone-card" id="perfCard"></div>
+
+              <p class="zone-label">Holdings<span style="font-size:9.5px;letter-spacing:.06em;color:#b3bccb;">TAP FOR DETAILS</span></p>
+              <div class="zone-card" id="holdCard"></div>
+            </div>
+
+          </div>
+
+          <div class="tabbar">
+            <div class="tab on"><span class="material-symbols-outlined">pie_chart</span>Portfolio</div>
+            <div class="tab"><span class="material-symbols-outlined">savings</span>Retire</div>
+            <div class="tab"><span class="material-symbols-outlined">person</span>Profile</div>
+          </div>
+        </div>
+
+        <!-- position detail sheet -->
+        <div class="sheet-backdrop" id="sheetBackdrop"></div>
+        <div class="sheet" id="posSheet"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt$ = n => '$' + n.toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtPct = n => (n>=0?'+':'') + n.toFixed(2) + '%';
+
+/* ---------- synthetic equity series (deterministic, resembles the real staircase) ---------- */
+const DAYS = 228; // Nov 21 2025 -> Jul 6 2026
+const START = new Date(2025, 10, 21).getTime();
+const series = [];
+(function(){
+  let v = 2, seed = 42;
+  const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  for (let d = 0; d < DAYS; d++){
+    if (d % 14 === 3) v += 30 + rnd() * 12;          // biweekly contribution steps
+    v *= 1 + (rnd() - 0.47) * 0.006;                  // gentle market drift
+    series.push({ t: START + d * 86400000, v: Math.max(1, v) });
+  }
+  const scale = 621.48 / series[series.length - 1].v; // land exactly on today's equity
+  series.forEach(p => p.v *= scale);
+})();
+const PERIOD_DAYS = { '1W': 7, '1M': 30, '3M': 91, 'YTD': 187, 'ALL': DAYS };
+let period = 'ALL', view = series.slice();
+
+/* ---------- chart render + scrub ---------- */
+const svg = $('chartSvg'), box = $('chartBox');
+function renderChart(){
+  const days = PERIOD_DAYS[period];
+  view = series.slice(-days);
+  const W = box.clientWidth, H = box.clientHeight;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const vs = view.map(p=>p.v), min = Math.min(...vs), max = Math.max(...vs);
+  const pad = (max-min)*0.08 || 1;
+  const y = v => H - 6 - ((v - min + pad) / (max - min + pad*2)) * (H - 12);
+  const x = i => (i / (view.length - 1)) * W;
+  let line = '', area = `M0,${H} `;
+  view.forEach((p,i)=>{ const px=x(i), py=y(p.v); line += (i?'L':'M')+px.toFixed(1)+','+py.toFixed(1)+' '; area += `L${px.toFixed(1)},${py.toFixed(1)} `; });
+  area += `L${W},${H} Z`;
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="fillGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2563EB" stop-opacity=".22"/>
+        <stop offset="100%" stop-color="#2563EB" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${area}" fill="url(#fillGrad)"/>
+    <path d="${line}" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <line id="hair" x1="0" x2="0" y1="4" y2="${H-4}" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
+    <circle id="dot" r="5" fill="#2563EB" stroke="#fff" stroke-width="2.5" opacity="0"/>`;
+  resetReadout();
+}
+function resetReadout(){
+  const first = view[0], last = view[view.length-1];
+  $('srValue').textContent = fmt$(last.v);
+  const opts = {month:'short', day:'numeric', year:'numeric'};
+  $('srDate').textContent = new Date(first.t).toLocaleDateString('en-US',opts) + ' – ' + new Date(last.t).toLocaleDateString('en-US',opts);
+  const pct = (last.v - first.v) / first.v * 100;
+  const label = period==='ALL' ? 'all-time' : period;
+  $('returnLabel').textContent = `Your ${label} cumulative pre-tax return`;
+  const rv = $('returnValue');
+  rv.textContent = fmtPct(period==='ALL' ? 10.30 : pct);
+  rv.className = 'rr-value ' + ((period==='ALL'?10.3:pct) >= 0 ? 'pos' : 'neg');
+}
+function scrub(clientX){
+  const r = box.getBoundingClientRect();
+  const frac = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+  const i = Math.round(frac * (view.length - 1));
+  const p = view[i];
+  const W = box.clientWidth, H = box.clientHeight;
+  const vs = view.map(q=>q.v), min = Math.min(...vs), max = Math.max(...vs), pad=(max-min)*0.08||1;
+  const py = H - 6 - ((p.v - min + pad)/(max - min + pad*2))*(H-12);
+  const px = (i/(view.length-1))*W;
+  const hair = svg.querySelector('#hair'), dot = svg.querySelector('#dot');
+  hair.setAttribute('x1',px); hair.setAttribute('x2',px); hair.setAttribute('opacity',1);
+  dot.setAttribute('cx',px); dot.setAttribute('cy',py); dot.setAttribute('opacity',1);
+  $('srValue').textContent = fmt$(p.v);
+  $('srDate').textContent = new Date(p.t).toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric', year:'numeric'});
+}
+function endScrub(){
+  svg.querySelector('#hair')?.setAttribute('opacity',0);
+  svg.querySelector('#dot')?.setAttribute('opacity',0);
+  resetReadout();
+}
+box.addEventListener('pointerdown', e=>{ try{ box.setPointerCapture(e.pointerId); }catch(_){} scrub(e.clientX); });
+box.addEventListener('pointermove', e=>{ if(e.buttons) scrub(e.clientX); });
+box.addEventListener('pointerup', endScrub);
+box.addEventListener('pointercancel', endScrub);
+
+$('periodChips').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  [...$('periodChips').children].forEach(x=>x.classList.toggle('on', x===b));
+  period = b.dataset.p;
+  renderChart();
+});
+
+/* ---------- hero flip ---------- */
+$('heroWrap').addEventListener('click', ()=> $('heroFlipper').classList.toggle('flipped'));
+
+/* ---------- analytics: performance rows ---------- */
+const PERF_MAIN_TOP = { period:'Daily',    pct:0.21,  amt:1.29,  from:620.19, to:621.48 };
+const PERF_MIDDLE = [
+  { period:'1 Week',  pct:0.82,  amt:4.21,  from:617.27, to:621.48 },
+  { period:'1 Month', pct:2.41,  amt:12.90, from:538.48, to:551.38 },
+  { period:'3 Months',pct:5.62,  amt:29.10, from:522.28, to:551.38 },
+  { period:'YTD',     pct:8.94,  amt:45.00, from:506.38, to:551.38 },
+];
+const PERF_MAIN_BOT = { period:'All Time', pct:10.30, amt:51.50, from:499.88, to:551.38 };
+const maxPct = Math.max(...[PERF_MAIN_TOP, ...PERF_MIDDLE, PERF_MAIN_BOT].map(p=>Math.abs(p.pct)));
+const perfRow = p => `
+  <div class="perf-row">
+    <div class="perf-top">
+      <span class="perf-period">${p.period}</span>
+      <span class="perf-pct ${p.pct>=0?'pos':'neg'}">${fmtPct(p.pct)}</span>
+    </div>
+    <div class="perf-bar"><i class="${p.pct>=0?'pos':'neg'}" data-w="${Math.abs(p.pct)/maxPct*100}"></i></div>
+    <div class="perf-sub">
+      <span>${fmt$(p.from)} → ${fmt$(p.to)}</span>
+      <span class="${p.pct>=0?'pos':'neg'}" style="font-weight:800">${p.pct>=0?'+':''}${fmt$(p.amt)}</span>
+    </div>
+  </div>`;
+$('perfCard').innerHTML =
+  perfRow(PERF_MAIN_TOP) +
+  `<div class="perf-middle" id="perfMiddle">${PERF_MIDDLE.map(perfRow).join('')}</div>` +
+  perfRow(PERF_MAIN_BOT) +
+  `<button class="perf-toggle" id="perfToggle">
+     <span id="perfToggleLabel">Tap to show more</span>
+     <span class="material-symbols-outlined">expand_more</span>
+   </button>`;
+$('perfToggle').addEventListener('click', ()=>{
+  const mid = $('perfMiddle'), open = !mid.classList.contains('open');
+  mid.classList.toggle('open', open);
+  $('perfToggle').classList.toggle('open', open);
+  $('perfToggleLabel').textContent = open ? 'Show less' : 'Tap to show more';
+  if(open) requestAnimationFrame(()=>
+    mid.querySelectorAll('.perf-bar i').forEach(b=>{ b.style.width = b.dataset.w + '%'; }));
+});
+
+/* ---------- holdings ---------- */
+const HOLDINGS = [
+  { sym:'VTI',  name:'Vanguard Total Stock Market ETF', qty:1.204,  avg:248.10, cur:259.47, dayGL:1.84,  dayPct:0.59,  totGL:13.69, totPct:4.58,  val:312.40 },
+  { sym:'VXUS', name:'Vanguard Total International ETF', qty:2.012, avg:61.20,  cur:64.64,  dayGL:0.52,  dayPct:0.40,  totGL:6.92,  totPct:5.62,  val:130.05 },
+  { sym:'QQQ',  name:'Invesco QQQ Trust',                qty:0.180, avg:441.11, cur:494.44, dayGL:0.71,  dayPct:0.80,  totGL:9.60,  totPct:12.09, val:89.00 },
+  { sym:'BND',  name:'Vanguard Total Bond Market ETF',   qty:0.268, avg:74.35,  cur:74.37,  dayGL:0.02,  dayPct:0.03,  totGL:0.01,  totPct:0.01,  val:19.93 },
+];
+const totalVal = HOLDINGS.reduce((s,h)=>s+h.val,0);
+$('holdCard').innerHTML = HOLDINGS.map((h,i)=>`
+  <div class="hold-row" data-i="${i}">
+    <div class="hold-tile">${h.sym}</div>
+    <div class="hold-mid">
+      <div class="hold-sym">${h.sym}</div>
+      <div class="hold-name">${h.name}</div>
+    </div>
+    <div class="hold-right">
+      <div class="hold-val">${fmt$(h.val)}</div>
+      <span class="hold-pill ${h.totGL>=0?'pos':'neg'}">${fmtPct(h.totPct)}</span>
+    </div>
+  </div>`).join('') + `
+  <div class="hold-total">
+    <span class="t-label">Total · 4 positions</span>
+    <div class="t-right">
+      <div class="t-val">${fmt$(totalVal)}</div>
+      <div class="t-gl pos">+${fmt$(51.50).replace('$','$')} all time</div>
+    </div>
+  </div>`;
+
+$('holdCard').addEventListener('click', e=>{
+  const row = e.target.closest('.hold-row'); if(!row) return;
+  openPosSheet(HOLDINGS[+row.dataset.i]);
+});
+function openPosSheet(h){
+  $('posSheet').innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="ps-head">
+      <div class="ps-tile">${h.sym}</div>
+      <div>
+        <div class="ps-sym">${h.sym}</div>
+        <div class="ps-name">${h.name}</div>
+      </div>
+    </div>
+    <div class="ps-grid">
+      <div class="ps-cell"><div class="pc-label">Market Value</div><div class="pc-value">${fmt$(h.val)}</div></div>
+      <div class="ps-cell"><div class="pc-label">% of Account</div><div class="pc-value">${(h.val/totalVal*100).toFixed(1)}%</div></div>
+      <div class="ps-cell"><div class="pc-label">Shares</div><div class="pc-value">${h.qty.toFixed(3)}</div></div>
+      <div class="ps-cell"><div class="pc-label">Avg Cost → Current</div><div class="pc-value">${fmt$(h.avg)} → ${fmt$(h.cur)}</div></div>
+      <div class="ps-cell"><div class="pc-label">Today</div><div class="pc-value ${h.dayGL>=0?'pos':'neg'}">${h.dayGL>=0?'+':''}${fmt$(h.dayGL)}</div><div class="pc-sub ${h.dayGL>=0?'pos':'neg'}">${fmtPct(h.dayPct)}</div></div>
+      <div class="ps-cell"><div class="pc-label">Total Return</div><div class="pc-value ${h.totGL>=0?'pos':'neg'}">${h.totGL>=0?'+':''}${fmt$(h.totGL)}</div><div class="pc-sub ${h.totGL>=0?'pos':'neg'}">${fmtPct(h.totPct)}</div></div>
+    </div>
+    <button class="ps-done" id="psDone">Done</button>`;
+  $('sheetBackdrop').classList.add('on');
+  $('posSheet').classList.add('on');
+  $('psDone').addEventListener('click', closePosSheet);
+}
+function closePosSheet(){ $('sheetBackdrop').classList.remove('on'); $('posSheet').classList.remove('on'); }
+$('sheetBackdrop').addEventListener('click', closePosSheet);
+
+/* ---------- section switcher ---------- */
+function show(which){
+  $('overviewSection').style.display = which==='o' ? '' : 'none';
+  $('analyticsSection').style.display = which==='a' ? '' : 'none';
+  $('swOverview').classList.toggle('on', which==='o');
+  $('swAnalytics').classList.toggle('on', which==='a');
+  if(which==='o') requestAnimationFrame(renderChart);
+  if(which==='a') requestAnimationFrame(()=>
+    document.querySelectorAll('.perf-bar i').forEach(b=>{ b.style.width = b.dataset.w + '%'; }));
+}
+$('swOverview').addEventListener('click', ()=>show('o'));
+$('swAnalytics').addEventListener('click', ()=>show('a'));
+
+/* ---------- fit ---------- */
+function fit(){ $('phoneWrap').style.transform = `scale(${Math.min(1,(window.innerHeight-140)/880)})`; }
+window.addEventListener('resize', fit); fit();
+renderChart();
+</script>
+</body>
+</html>

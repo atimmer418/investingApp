@@ -1,24 +1,70 @@
-<div class="portfolio-chart-container" *ngIf="data.length > 0; else noData">
-  <!-- Chart Canvas -->
-  <div class="chart-wrapper">
-    <canvas #chartCanvas class="portfolio-chart" (mousedown)="handleStart($event)" (touchstart)="handleStart($event)"
-      (mouseleave)="clearSelection()" (touchend)="clearSelection()" (mouseup)="clearSelection()"></canvas>
+<ng-container *ngIf="data.length > 0; else noData">
+  <div class="chart-box" #chartBox
+       (pointerdown)="onPointerDown($event)"
+       (pointermove)="onPointerMove($event)"
+       (pointerup)="onPointerUp()"
+       (pointercancel)="onPointerCancel()">
+    <svg [attr.viewBox]="'0 0 ' + svgW + ' ' + svgH"
+         preserveAspectRatio="none"
+         aria-hidden="true">
+      <defs>
+        <linearGradient id="portfolioFillGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2563EB" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#2563EB" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
 
-    <!-- Floating tooltip above clicked point -->
-    <div class="chart-tooltip" [class.visible]="isTooltipVisible" [style.left.px]="tooltipPosition.x"
-      [style.top.px]="tooltipPosition.y">
-      <div class="tooltip-content" *ngIf="selectedDataPoint">
-        <div class="tooltip-date">{{ selectedDataPoint.formattedDate }}</div>
-        <div class="tooltip-value">{{ formatCurrency(selectedDataPoint.value) }}</div>
-      </div>
-      <div class="tooltip-arrow"></div>
-    </div>
+      <!-- Gradient fill area -->
+      <path [attr.d]="areaPath" fill="url(#portfolioFillGrad)"/>
+
+      <!-- Price line -->
+      <path [attr.d]="linePath"
+            fill="none"
+            stroke="#2563EB"
+            stroke-width="2.2"
+            stroke-linejoin="round"
+            stroke-linecap="round"/>
+
+      <!-- Scrub hairline (shown during scrubbing) -->
+      <line *ngIf="hairlineX !== null"
+            [attr.x1]="hairlineX" [attr.x2]="hairlineX"
+            [attr.y1]="4" [attr.y2]="svgH - 4"
+            stroke="#94a3b8"
+            stroke-width="1"
+            stroke-dasharray="3 3"/>
+
+      <!-- Scrub dot (shown during scrubbing) -->
+      <circle *ngIf="dotCx !== null && dotCy !== null"
+              [attr.cx]="dotCx" [attr.cy]="dotCy"
+              r="5"
+              fill="#2563EB"
+              stroke="#fff"
+              stroke-width="2.5"/>
+    </svg>
   </div>
-</div>
+</ng-container>
 
-<!-- Empty state -->
 <ng-template #noData>
-  <div class="empty-state">
-    <p>No portfolio data available yet</p>
+  <!-- Ghost state: a preview of the line to come, not a dead end -->
+  <div class="chart-ghost">
+    <svg [attr.viewBox]="'0 0 ' + svgW + ' ' + svgH" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="portfolioGhostGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2563EB" stop-opacity="0.08"/>
+          <stop offset="100%" stop-color="#2563EB" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path [attr.d]="ghostAreaPath" fill="url(#portfolioGhostGrad)"/>
+      <path [attr.d]="ghostLinePath"
+            fill="none"
+            stroke="#b9c8ea"
+            stroke-width="2.2"
+            stroke-dasharray="7 7"
+            stroke-linecap="round"/>
+    </svg>
+    <div class="ghost-copy">
+      <p class="ghost-title">Your portfolio, eventually.</p>
+      <p class="ghost-sub">This chart fills in as you invest.</p>
+    </div>
   </div>
 </ng-template>

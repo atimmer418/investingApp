@@ -1,5 +1,5 @@
-// ─── Blue Hero Header (shared partial) ────────────────────────────────────────
-@use '../../../theme/blue-hero-header';
+// ─── Settings Shell (shared partial) ──────────────────────────────────────────
+@use '../../../theme/settings-shell';
 
 :host {
   --ion-background-color: #f8fafc;
@@ -10,15 +10,7 @@
   --ion-footer-background: #f8fafc;
 }
 
-ion-content { --background: #f8fafc; }
-
-.content-inner {
-  padding: 0px 18px 10px;
-  font-family: 'Manrope', sans-serif;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
+// ion-content background and shell structure are provided by settings-shell.
 
 // --- Reactivation banner ---
 .reactivation-banner {

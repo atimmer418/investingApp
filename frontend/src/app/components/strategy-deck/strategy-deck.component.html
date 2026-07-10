@@ -1,0 +1,98 @@
+<!-- Strategy Deck — fullscreen blue-gradient modal (5 horizontal scroll-snap slides) -->
+<div class="deck-host">
+
+  <!-- Top bar: spacer · progress dots · X ─────────────────────────────────── -->
+  <div class="deck-top">
+    <div class="deck-spacer"></div>
+    <div class="deck-dots">
+      <span *ngFor="let i of SLIDE_INDICES" [class.on]="i === currentSlide"></span>
+    </div>
+    <button class="deck-x" (click)="dismiss()" aria-label="Close">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
+
+  <!-- Slide scroll container ───────────────────────────────────────────────── -->
+  <!-- Right-half tap advances; left-edge tap goes back (buttons excluded).   -->
+  <div class="deck-scroll" #deckScroll (scroll)="onScroll()" (click)="onDeckClick($event)">
+
+    <!-- SLIDE 0 — What it is ─────────────────────────────────────────────── -->
+    <div class="slide">
+      <div class="sl-eyebrow">{{ eyebrow(0) }}</div>
+      <div class="sl-h1">{{ strategy.slides.whatH }}</div>
+      <p class="sl-body" [innerHTML]="strategy.slides.what"></p>
+      <div class="stat-chip">
+        <span class="big">{{ strategy.slides.stat[0] }}</span>
+        <span class="lab">{{ strategy.slides.stat[1] }}</span>
+      </div>
+      <div class="sl-spacer"></div>
+    </div>
+
+    <!-- SLIDE 1 — How it works ───────────────────────────────────────────── -->
+    <div class="slide">
+      <div class="sl-eyebrow">{{ eyebrow(1) }}</div>
+      <div class="sl-h1">How it works.</div>
+      <div class="step-row" *ngFor="let step of strategy.slides.how; let n = index">
+        <div class="step-num">{{ n + 1 }}</div>
+        <div class="step-txt">
+          <div class="st-1">{{ step[1] }}</div>
+          <div class="st-2">{{ step[2] }}</div>
+        </div>
+      </div>
+      <div class="sl-spacer"></div>
+    </div>
+
+    <!-- SLIDE 2 — Why it works ───────────────────────────────────────────── -->
+    <div class="slide">
+      <div class="sl-eyebrow">{{ eyebrow(2) }}</div>
+      <div class="sl-h1">Why it works.</div>
+      <div class="step-row" *ngFor="let row of strategy.slides.why">
+        <span class="material-symbols-outlined">{{ row[0] }}</span>
+        <div class="step-txt">
+          <div class="st-1">{{ row[1] }}</div>
+          <div class="st-2">{{ row[2] }}</div>
+        </div>
+      </div>
+      <div class="sl-spacer"></div>
+    </div>
+
+    <!-- SLIDE 3 — Do it safely ───────────────────────────────────────────── -->
+    <div class="slide">
+      <div class="sl-eyebrow">{{ eyebrow(3) }}</div>
+      <div class="sl-h1">Do it safely.</div>
+      <div class="step-row" *ngFor="let rule of strategy.slides.safe">
+        <span class="material-symbols-outlined">verified_user</span>
+        <div class="step-txt">
+          <div class="st-1">{{ rule[0] }}</div>
+          <div class="st-2">{{ rule[1] }}</div>
+        </div>
+      </div>
+      <div class="warn-card">
+        <span class="material-symbols-outlined">info</span>
+        <p>Educational content, not investment advice. Talk to a fiduciary advisor before acting on any strategy.</p>
+      </div>
+      <div class="sl-spacer"></div>
+    </div>
+
+    <!-- SLIDE 4 — The playbook ───────────────────────────────────────────── -->
+    <div class="slide">
+      <div class="sl-eyebrow">{{ eyebrow(4) }}</div>
+      <div class="sl-h1">The playbook.</div>
+      <div class="recap-row" *ngFor="let item of strategy.slides.recap">
+        <span class="material-symbols-outlined">check_circle</span>
+        <p>{{ item }}</p>
+      </div>
+      <div class="sl-spacer"></div>
+      <button class="sl-cta" (click)="stressTest()">
+        <span class="material-symbols-outlined">play_arrow</span>
+        Stress-test this strategy
+      </button>
+      <button class="sl-ghost" (click)="done()">Done</button>
+    </div>
+
+  </div><!-- .deck-scroll -->
+
+  <!-- Swipe hint — hidden permanently after first swipe ───────────────────── -->
+  <div class="swipe-hint" [class.gone]="hintShown">Swipe to explore</div>
+
+</div><!-- .deck-host -->

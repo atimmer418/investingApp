@@ -1,0 +1,50 @@
+<div class="sheet-body">
+  <div class="sheet-handle"></div>
+
+  <div class="ps-head">
+    <div class="ps-tile">{{ position.symbol }}</div>
+    <div>
+      <div class="ps-sym">{{ position.symbol }}</div>
+      <div class="ps-name">{{ position.name }}</div>
+    </div>
+  </div>
+
+  <div class="ps-grid">
+    <div class="ps-cell">
+      <div class="pc-label">Market Value</div>
+      <div class="pc-value">{{ formatCurrency(position.marketValue) }}</div>
+    </div>
+    <div class="ps-cell">
+      <div class="pc-label">% of Account</div>
+      <div class="pc-value">{{ position.percentOfAccount.toFixed(1) }}%</div>
+    </div>
+    <div class="ps-cell">
+      <div class="pc-label">Shares</div>
+      <div class="pc-value">{{ formatQuantity(position.quantity) }}</div>
+    </div>
+    <div class="ps-cell">
+      <div class="pc-label">Avg Cost → Current</div>
+      <div class="pc-value pc-value-sm">{{ formatCurrency(position.averageCostBasis) }} → {{ formatCurrency(position.currentPrice) }}</div>
+    </div>
+    <div class="ps-cell">
+      <div class="pc-label">Today</div>
+      <div class="pc-value" [class.pos]="position.todayGainLoss >= 0" [class.neg]="position.todayGainLoss < 0">
+        {{ position.todayGainLoss >= 0 ? '+' : '' }}{{ formatCurrency(position.todayGainLoss) }}
+      </div>
+      <div class="pc-sub" [class.pos]="position.todayGainLoss >= 0" [class.neg]="position.todayGainLoss < 0">
+        {{ formatPercent(position.todayGainLossPercent) }}
+      </div>
+    </div>
+    <div class="ps-cell">
+      <div class="pc-label">Total Return</div>
+      <div class="pc-value" [class.pos]="position.unrealizedPL >= 0" [class.neg]="position.unrealizedPL < 0">
+        {{ position.unrealizedPL >= 0 ? '+' : '' }}{{ formatCurrency(position.unrealizedPL) }}
+      </div>
+      <div class="pc-sub" [class.pos]="position.unrealizedPL >= 0" [class.neg]="position.unrealizedPL < 0">
+        {{ formatPercent(position.unrealizedPLPercent) }}
+      </div>
+    </div>
+  </div>
+
+  <button class="ps-done" (click)="close()">Done</button>
+</div>

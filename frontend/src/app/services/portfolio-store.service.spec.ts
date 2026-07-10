@@ -347,4 +347,56 @@ describe('PortfolioStoreService — FRED-205', () => {
     });
   });
 
+  // =========================================================================
+  // Phase 2 snapshot (FRED-206): peekSnapshot / persistSnapshot
+  // =========================================================================
+
+  describe('Phase 2 snapshot: peekSnapshot / persistSnapshot', () => {
+    const freshDash = () => JSON.parse(JSON.stringify(mockDashboard));
+
+    it('persistSnapshot then peekSnapshot round-trips for the same user', () => {
+      setup();
+      localStorage.setItem('userId', '1');
+      service.persistSnapshot({ dashboard: freshDash(), performance: mockPerformance as any, history: mockHistory as any, freedomLabel: 'FI in 12y', period: 'ALL' });
+
+      const snap = service.peekSnapshot();
+      expect(snap).not.toBeNull();
+      expect(snap!.userId).toBe('1');
+      expect(snap!.period).toBe('ALL');
+      expect(snap!.freedomLabel).toBe('FI in 12y');
+      expect(snap!.dashboard.summary.equity).toBe(1000);
+      expect(typeof snap!.savedAt).toBe('number');
+    });
+
+    it('persistSnapshot strips recentTransactions', () => {
+      setup();
+      localStorage.setItem('userId', '1');
+      const d = freshDash();
+      d.recentTransactions = [{ id: 1 }, { id: 2 }];
+      service.persistSnapshot({ dashboard: d, performance: [], history: null, freedomLabel: '', period: 'ALL' });
+      expect(service.peekSnapshot()!.dashboard.recentTransactions).toEqual([]);
+    });
+
+    it('peekSnapshot returns null for a different user (never cross-user)', () => {
+      setup();
+      localStorage.setItem('userId', '1');
+      service.persistSnapshot({ dashboard: freshDash(), performance: [], history: null, freedomLabel: '', period: 'ALL' });
+      localStorage.setItem('userId', '2');
+      expect(service.peekSnapshot()).toBeNull();
+    });
+
+    it('peekSnapshot returns null when there is no snapshot', () => {
+      setup();
+      localStorage.setItem('userId', '1');
+      expect(service.peekSnapshot()).toBeNull();
+    });
+
+    it('peekSnapshot returns null for corrupt JSON', () => {
+      setup();
+      localStorage.setItem('userId', '1');
+      localStorage.setItem('fred.portfolioDash.v1.1', '{not valid json');
+      expect(service.peekSnapshot()).toBeNull();
+    });
+  });
+
 });

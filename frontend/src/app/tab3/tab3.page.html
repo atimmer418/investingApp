@@ -18,7 +18,7 @@
            (click)="onFredLogoClick()"> FRED</div>
     </div>
 
-    <!-- Freedom stat strip — three tiles below the user/branding row -->
+    <!-- Freedom stat strip — three glass tiles below the user/branding row -->
     <div class="stat-strip">
       <div class="stat-tile">
         <span class="stat-label">Freedom date</span>
@@ -37,52 +37,37 @@
 </ion-header>
 
 <ion-content [scrollY]="false" class="settings-content">
-  <div class="content-scroll" appTabBarScroll>
-    <div class="scroll-inner">
-      <!-- Blue strip continuing the header; the card overlaps onto this so its
-         rounded top + first label sit on blue without crossing into ion-header -->
-      <div class="header-overlap" aria-hidden="true"></div>
+  <!-- sheet-shell: non-scrolling flex container; its blue bg shows through the sheet's rounded corners -->
+  <div class="sheet-shell">
+    <!-- sheet-scroll: the only scrolling element; rounded top stays pinned -->
+    <div class="sheet-scroll" appTabBarScroll>
+      <div class="sheet-inner">
 
-      <!-- Overlapping white card pulled up over the blue strip -->
-      <div class="sections-card">
-
-      <!-- Settings Sections -->
-      <div *ngFor="let section of settingSections" class="settings-group">
-        <h3 class="group-header">{{ section.title }}</h3>
-
-        <div class="settings-list">
-          <button
-            *ngFor="let item of section.items; let last = last"
-            class="setting-item"
-            [class.last-item]="last"
-            (click)="onSettingClick(item.action)">
-
-            <div class="setting-icon-container">
-              <ion-icon [name]="item.icon" class="setting-icon"></ion-icon>
-            </div>
-
-            <div class="setting-content">
-              <div class="setting-main">
-                <h4 class="setting-title">{{ item.title }}</h4>
+        <div *ngFor="let section of settingSections" class="settings-group">
+          <p class="zone-label">{{ section.title }}</p>
+          <div class="settings-list">
+            <button
+              *ngFor="let item of section.items"
+              class="srow"
+              (click)="onSettingClick(item.action)">
+              <div class="srow-tile">
+                <span class="material-symbols-outlined">{{ item.icon }}</span>
               </div>
-
-              <div class="setting-trailing">
-                <ion-badge *ngIf="item.badge" [color]="item.badgeColor || 'primary'" class="setting-badge">
-                  {{ item.badge }}
-                </ion-badge>
-                <ion-icon name="chevron-forward" class="chevron-icon"></ion-icon>
+              <div class="srow-label">{{ item.title }}</div>
+              <ion-badge *ngIf="item.badge" [color]="item.badgeColor || 'primary'" class="setting-badge">
+                {{ item.badge }}
+              </ion-badge>
+              <div class="srow-chevron">
+                <span class="material-symbols-outlined">chevron_right</span>
               </div>
-            </div>
-          </button>
+            </button>
+          </div>
         </div>
 
-      </div>
+        <div class="footer-content">
+          <p class="footer-text">© 2026 FREDvested LLC · v1.0.0 (Beta)</p>
+        </div>
 
-      </div>
-
-      <!-- Footer -->
-      <div class="footer-content">
-      <p class="footer-text">© 2026 FREDvested LLC · v1.0.0 (Beta)</p>
       </div>
     </div>
   </div>

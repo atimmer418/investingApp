@@ -10,6 +10,7 @@ import com.investingapp.backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,6 +79,14 @@ public class MonthlyFreedomUpdateService {
     @Autowired
     private PortfolioDashboardService portfolioDashboardService;
 
+    // Self-reference (through the Spring proxy) so commitMfuSeen can invoke the @Transactional
+    // applySeenCommit as a SEPARATE physical transaction: the recompute reads run first outside any
+    // write tx (so a read failure can't poison the write), and the pessimistic row lock is held only
+    // for the fast DB write, never across the Alpaca network calls.
+    @Autowired
+    @Lazy
+    private MonthlyFreedomUpdateService self;
+
     /**
      * Check if the Monthly Freedom Update should be shown for the given user.
      * Returns a short DTO with just shouldShow and the user's lastLoggedInMonth.
@@ -94,6 +103,7 @@ public class MonthlyFreedomUpdateService {
         dto.setHasMfuHistory(user.getLastMfuPeriodStart() != null && !user.getLastMfuPeriodStart().isEmpty());
 
         String currentMonth = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+        dto.setGeneratedForMonth(currentMonth);
         String lastLoggedMonth = user.getLastLoggedInMonth();
 
         // If no last logged month, this is first time -> initialize it and don't show
@@ -148,6 +158,7 @@ public class MonthlyFreedomUpdateService {
         dto.setMfuCount(mfuCountVal != null ? mfuCountVal : 0);
 
         String currentMonthStr = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+        dto.setGeneratedForMonth(currentMonthStr);
         String lastLoggedMonth = user.getLastLoggedInMonth();
 
         // --- Period Calculation ---
@@ -323,13 +334,135 @@ public class MonthlyFreedomUpdateService {
             dto.setYearlyContributions(yearlyContributions);
         }
 
-        // --- Persist user state (idempotent) ---
-        if (!isReopen) {
-            updateUserState(user, currentMonthStr, freedomYear, (int) totalInvestmentCount,
-                    milestones, startEquity, endEquity, periodStart, periodEnd);
+        // NOTE: generateUpdate is intentionally PURE — it performs NO persistence. That makes it safe
+        // to prefetch/retry (Stage 3 present-when-ready) and to call from commitMfuSeen() for the
+        // server-authoritative recompute. The non-reopen "seen" side effects (lastLoggedInMonth,
+        // mfuCount++, freedom-estimate rotation, milestone history, lastMfuPeriod*) are committed
+        // exactly once by commitMfuSeen() when the update is dismissed / has been shown.
+        return dto;
+    }
+
+    /**
+     * Commit the "seen" side effects for the shown Monthly Freedom Update exactly once.
+     *
+     * Called from POST /dismiss (Stage 3 fires it at data-ready). Because generateUpdate() is now
+     * pure, this is the ONLY place the month is marked seen and mfuCount / freedom-estimate are
+     * advanced.
+     *
+     * Exactly-once is enforced two ways:
+     *   - The user row is loaded under a pessimistic write-lock (findByIdForUpdate), so concurrent
+     *     commits (double-tap, two devices) serialize on the row.
+     *   - An advances-only guard no-ops when lastLoggedInMonth is already >= the stamp month.
+     *
+     * The persisted period / equities / milestones / freedomYear are RECOMPUTED server-side from the
+     * (now warm) portfolio data — no client-supplied financial value is ever trusted. clientSeenMonth
+     * is a server-produced hint (DTO.generatedForMonth) that can only pull the stamp EARLIER, toward
+     * the month actually displayed, so a commit that lands after a midnight/month rollover still
+     * stamps the shown month and the new month's update still fires next launch.
+     */
+    public void commitMfuSeen(Long userId, String clientSeenMonth) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            logger.warn("commitMfuSeen: user {} not found", userId);
+            return;
+        }
+        User user = userOpt.get();
+
+        // Phase 1 — recompute the displayed values from warm portfolio data (Alpaca-free within the
+        // 60s dashboard cache). Reads ONLY, and NO write-lock is held yet: generateUpdate reads the
+        // OLD lastLoggedInMonth so period + equities reproduce what the modal showed. Any failure here
+        // (Alpaca down, a repo read error) is isolated from the phase-2 write transaction and simply
+        // falls through to a month-only stamp.
+        RecomputedSeen recomputed = null;
+        try {
+            PortfolioDashboardService.PortfolioDashboardData dashboard =
+                    portfolioDashboardService.getPortfolioDashboard(user);
+            BigDecimal currentEquity = dashboard.summary.equity;
+            PortfolioDashboardService.PortfolioHistory history =
+                    portfolioDashboardService.getPortfolioHistoryForPeriod(user, "ALL");
+
+            MonthlyFreedomUpdateDTO dto = generateUpdate(user, currentEquity, history, dashboard.positions, false);
+            long totalInvestmentCount = executionRepository.countCompletedExecutionsByUser(user.getId());
+
+            recomputed = new RecomputedSeen(
+                    dto.getProjectedFreedomYear(),
+                    dto.getMilestones(),
+                    dto.getStartEquityValue(),
+                    dto.getEndEquityValue(),
+                    LocalDate.parse(dto.getPeriodStart()),
+                    LocalDate.parse(dto.getPeriodEnd()),
+                    (int) totalInvestmentCount);
+        } catch (Exception e) {
+            logger.warn("commitMfuSeen: recompute failed for user {}, will stamp month only: {}",
+                    userId, e.getMessage());
         }
 
-        return dto;
+        // Phase 2 — locked write in its OWN transaction (through the proxy so @Transactional applies).
+        self.applySeenCommit(userId, clientSeenMonth, recomputed);
+    }
+
+    /**
+     * Phase 2 of commitMfuSeen: under a pessimistic write-lock on the user row, no-op if the month is
+     * already seen (advances-only), otherwise persist the recomputed state — or stamp the month only
+     * when the recompute failed. Public + @Transactional so it runs through the Spring proxy as a
+     * distinct physical transaction; call it via commitMfuSeen, not directly.
+     */
+    @Transactional
+    public void applySeenCommit(Long userId, String clientSeenMonth, RecomputedSeen recomputed) {
+        Optional<User> userOpt = userRepository.findByIdForUpdate(userId);
+        if (userOpt.isEmpty()) {
+            logger.warn("applySeenCommit: user {} not found", userId);
+            return;
+        }
+        User user = userOpt.get();
+
+        YearMonth now = YearMonth.now();
+        YearMonth stamp = now;
+        if (clientSeenMonth != null && !clientSeenMonth.isEmpty()) {
+            try {
+                YearMonth hinted = YearMonth.parse(clientSeenMonth);
+                // The hint may only pull the stamp EARLIER (toward the shown month), never later.
+                if (hinted.isBefore(now)) {
+                    stamp = hinted;
+                }
+            } catch (Exception e) {
+                logger.warn("applySeenCommit: ignoring unparseable seenMonth '{}'", clientSeenMonth);
+            }
+        }
+
+        // Advances-only guard under the row lock: a duplicate (already stamped >= stamp) is a no-op,
+        // so two concurrent commits cannot double-advance mfuCount / the freedom estimate.
+        String lastLoggedMonth = user.getLastLoggedInMonth();
+        if (lastLoggedMonth != null && !lastLoggedMonth.isEmpty()) {
+            try {
+                YearMonth last = YearMonth.parse(lastLoggedMonth);
+                if (!last.isBefore(stamp)) {
+                    logger.debug("applySeenCommit: already seen for {} (last={}), no-op", stamp, last);
+                    return;
+                }
+            } catch (Exception e) {
+                // Unparseable stored month -> treat as not-yet-seen and proceed.
+            }
+        }
+
+        String stampStr = stamp.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+
+        if (recomputed != null) {
+            updateUserState(user, stampStr, recomputed.freedomYear(), recomputed.totalInvestmentCount(),
+                    recomputed.milestones(), recomputed.startEquity(), recomputed.endEquity(),
+                    recomputed.periodStart(), recomputed.periodEnd());
+        } else {
+            // Degraded: recompute failed upstream, but still stamp so the popup does not re-fire.
+            user.setLastLoggedInMonth(stampStr);
+            userRepository.save(user);
+        }
+    }
+
+    /** Values recomputed server-side in phase 1 of commitMfuSeen, persisted under the lock in phase 2. */
+    private record RecomputedSeen(int freedomYear, List<MilestoneDTO> milestones,
+                                  BigDecimal startEquity, BigDecimal endEquity,
+                                  LocalDate periodStart, LocalDate periodEnd,
+                                  int totalInvestmentCount) {
     }
 
     /**

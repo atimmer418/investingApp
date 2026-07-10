@@ -6,6 +6,7 @@
   --chat-canvas-dot: rgba(17, 24, 39, 0.1);
 }
 
+
 #main-content {
   background-color: var(--chat-canvas);
   background-image: radial-gradient(circle, var(--chat-canvas-dot) 1px, transparent 1px);
@@ -19,16 +20,94 @@
   height: calc(100% - (var(--ion-tab-bar-height, 56px) + env(safe-area-inset-bottom) + 36px + 50px));
 
   &::part(scroll) {
-    margin-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+    margin-top: calc(40px + env(safe-area-inset-top, 0px)) !important; // condensed 40px toolbar
     padding: 0 4px !important; // Balanced 4px padding on both sides
     margin-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 50px) !important;
     scrollbar-gutter: stable;
   }
 }
 
-/* History drawer keeps the standard app background */
-ion-menu ion-content {
-  --background: var(--app-background);
+/* History drawer — clean white panel, condensed Manrope header, card-style rows */
+ion-menu {
+  --width: 300px;
+
+  ion-header ion-toolbar {
+    --background: #ffffff;
+    --border-width: 0;
+    --min-height: 40px;
+    --padding-top: 0;
+    --padding-bottom: 0;
+  }
+
+  ion-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    color: var(--app-text-primary);
+    text-align: center;
+  }
+
+  .new-chat-btn {
+    --color: var(--app-primary, #2563eb);
+  }
+
+  ion-content.history-content {
+    --background: #ffffff;
+  }
+
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+  }
+
+  .history-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    text-align: left;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+
+    &:active {
+      background: var(--app-gray-100, #f3f4f6);
+    }
+
+    &.active {
+      background: rgba(37, 99, 235, 0.08);
+    }
+
+    .history-item-title {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--app-gray-900, #111827);
+    }
+
+    .history-item-date {
+      font-size: 12px;
+      color: var(--app-gray-500, #6b7280);
+    }
+  }
+
+  .history-empty {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 13.5px;
+    color: var(--app-gray-500, #6b7280);
+  }
 }
 
 .safe-area-top {
@@ -39,78 +118,85 @@ ion-menu ion-content {
   --background: transparent;
   background: transparent !important;
 
+  // Condensed header matching tab1/tab2: tight 40px toolbar, Manrope title
   ion-toolbar {
     --background: transparent;
     --color: var(--app-text-primary);
     --border-width: 0;
+    --min-height: 40px;
+    --padding-top: 0;
+    --padding-bottom: 0;
+  }
+
+  ion-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    color: var(--app-text-primary);
+    text-align: center;
   }
 }
 
 .messages-container {
-  padding: 0px;
-  /* Removed horizontal padding */
-  padding-bottom: 0px;
+  padding: 0 8px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px; // airy rhythm between turns
 }
 
 .message-wrapper {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start; // avatar top-aligned with the card, Cloudflare-style
 
   /* Streaming placeholder: an assistant message exists before its first token
      arrives — keep it hidden so only the thinking row shows */
   &.empty-message {
     display: none;
   }
-  /* 
-    Updated Logic:
-    - Assistant messages: 0 padding on wrapper. 
-      Left Gutter = Avatar(50) + Gap(12) = 62px.
-      Right Gutter = Bubble Margin Right (62px).
-    - User messages: 12px padding on wrapper to maintain spacing.
-  */
-  gap: 4px;
+
+  gap: 10px;
   max-width: 100%;
-  /* Match header height precisely for scrollIntoView: 56px toolbar + safe area + 8px buffer */
-  scroll-margin-top: calc(64px + env(safe-area-inset-top, 0px));
-  /* Ensures the message starts below the header (approx 56px + padding) */
+  /* Match header height precisely for scrollIntoView: 40px toolbar + safe area + 8px buffer */
+  scroll-margin-top: calc(48px + env(safe-area-inset-top, 0px));
   position: relative; // For retry button positioning
 
+  /* User: soft gray pill, dark text, right-aligned — no tail */
   &.user-message {
     justify-content: flex-end;
-    padding-left: 12px;
-    padding-right: 2px; // Tightened from 6px
+    padding-left: 40px;
 
     .message-bubble {
-      background-color: var(--app-primary, #007aff);
-      color: white;
-      border-radius: 20px 20px 4px 20px;
-      max-width: 70%; // Increased from 70% for better flow
+      background-color: var(--app-gray-100, #f3f4f6);
+      color: var(--app-gray-900, #111827);
+      border-radius: 16px;
+      max-width: 82%;
     }
   }
 
+  /* FRED: full-width white answer card, hairline border */
   &.assistant-message {
     justify-content: flex-start;
-    padding-left: 0;
-    padding-right: 0;
 
     .message-bubble {
-      background-color: var(--app-card-background, #ffffff);
-      color: var(--app-gray-900, #000000);
-      border-radius: 20px 20px 20px 4px;
-      margin-right: 54px;
+      flex: 1;
+      width: 100%;
       max-width: none;
+      background-color: var(--app-card-background, #ffffff);
+      color: var(--app-gray-900, #111827);
+      border: 1px solid var(--app-card-border, #e5e5ea);
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-right: 2px;
     }
-
   }
 }
 
 .avatar {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
+  margin-top: 4px; // optically aligns pig with the card's first text line
   /* Full-body pig SVG on transparent background — no circle mask/crop */
 
   /* Hardware acceleration for containment */
@@ -129,16 +215,123 @@ ion-menu ion-content {
   padding: 10px 14px;
   width: fit-content;
   max-width: 80%;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04); // whisper, not a drop shadow
   position: relative;
 
   .message-text {
     font-size: 16px;
-    line-height: 1.4;
-    white-space: pre-wrap;
+    line-height: 1.45;
 
-    ::ng-deep strong {
-      font-weight: 600;
+    &.user-text {
+      white-space: pre-wrap; // user input is plain text; keep their line breaks
+    }
+
+    .md-block {
+      overflow-x: auto; // wide tables scroll inside the bubble
+
+      ::ng-deep {
+        p {
+          margin: 0 0 10px;
+        }
+
+        p:last-child,
+        ul:last-child,
+        ol:last-child {
+          margin-bottom: 0;
+        }
+
+        strong {
+          font-weight: 600;
+        }
+
+        ul,
+        ol {
+          margin: 6px 0 10px;
+          padding-left: 22px;
+        }
+
+        li {
+          margin: 4px 0;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+          font-weight: 700;
+          color: var(--app-gray-900, #111827);
+          margin: 14px 0 6px;
+        }
+
+        h1 { font-size: 18px; }
+        h2 { font-size: 17px; }
+        h3 { font-size: 16px; }
+        h4 { font-size: 15px; }
+
+        a {
+          color: var(--app-primary, #2563eb);
+        }
+
+        /* Inline code chips — Cloudflare answer-state treatment */
+        code {
+          font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+          font-size: 13.5px;
+          background: var(--app-gray-100, #f3f4f6);
+          border: 1px solid var(--app-card-border, #e5e5ea);
+          border-radius: 6px;
+          padding: 1px 6px;
+        }
+
+        pre {
+          background: #f8fafc;
+          border: 1px solid var(--app-card-border, #e5e5ea);
+          border-radius: 10px;
+          padding: 10px 12px;
+          overflow-x: auto;
+          margin: 10px 0;
+
+          code {
+            background: none;
+            border: none;
+            padding: 0;
+            font-size: 13px;
+          }
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 10px 0;
+          font-size: 14px;
+        }
+
+        th {
+          text-align: left;
+          font-weight: 700;
+          color: var(--app-gray-900, #111827);
+          padding: 8px 10px;
+          border-bottom: 2px solid var(--app-card-border, #e5e5ea);
+        }
+
+        td {
+          padding: 8px 10px;
+          border-bottom: 1px solid var(--app-gray-100, #f3f4f6);
+          color: var(--app-gray-900, #111827);
+        }
+
+        blockquote {
+          margin: 10px 0;
+          padding: 2px 0 2px 12px;
+          border-left: 3px solid var(--app-card-border, #e5e5ea);
+          color: var(--app-gray-500, #6b7280);
+        }
+
+        hr {
+          border: none;
+          border-top: 1px solid var(--app-card-border, #e5e5ea);
+          margin: 12px 0;
+        }
+      }
     }
   }
 
@@ -147,6 +340,31 @@ ion-menu ion-content {
     opacity: 0.7;
     margin-top: 4px;
     text-align: right;
+  }
+}
+
+/* Quick-reply chips — model-suggested next messages, latest reply only */
+.quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.quick-reply {
+  padding: 7px 14px;
+  background: #ffffff;
+  border: 1.5px solid rgba(37, 99, 235, 0.35);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-primary, #2563eb);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    background: rgba(37, 99, 235, 0.08);
   }
 }
 
@@ -284,13 +502,15 @@ ion-footer {
   --background: transparent !important;
   border-top: none;
   padding-bottom: var(--fred-tabbar-clearance);
-  transition: transform 220ms ease, padding-bottom 220ms ease;
-  will-change: transform;
+  /* CARET WARNING: never lift this footer with transform (or will-change) — a
+     composited ancestor kills the WKWebView text caret exactly while the
+     keyboard is up. margin-bottom animates via layout instead. */
+  transition: margin-bottom 220ms ease, padding-bottom 220ms ease;
 
   /* Native keyboard is overlay-mode (Capacitor resize:'none') — lift the composer
      above it. --kb-offset is bound from the page TS on keyboardWillShow/Hide. */
   &.kb-open {
-    transform: translateY(calc(-1 * var(--kb-offset, 0px)));
+    margin-bottom: var(--kb-offset, 0px);
     padding-bottom: 8px; // tab bar is under the keyboard; drop the clearance
   }
 }
@@ -314,13 +534,23 @@ ion-footer {
   align-items: flex-end !important;
   position: relative !important; // Anchor for absolute button
 
-  // Same glass treatment as the floating tab bar capsule
-  background: rgba(255, 255, 255, 0.8);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
   border-radius: 28px; // = 56px/2: pill when single-line, rounded rect when grown
   border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  // Same glass treatment as the floating tab bar capsule — but on a pseudo
+  // element: backdrop-filter directly on the input's container composites it
+  // and WKWebView stops rendering the text caret inside.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.8);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    z-index: 0;
+  }
 
   // CONTAINER WRAPS CONTENT
   max-height: none !important;
@@ -331,6 +561,9 @@ ion-footer {
   padding-right: 2px;
 
   ion-textarea {
+    position: relative;
+    z-index: 1; // above the ::before glass layer
+
     // (56px pill - 22px line) / 2 = 17px: centers a single line in the pill
     --padding-top: 17px !important;
     --padding-bottom: 17px !important;
@@ -362,6 +595,7 @@ ion-footer {
     --highlight-color-valid: transparent;
     --highlight-color-invalid: transparent;
     --highlight-height: 0;
+    caret-color: var(--app-primary, #2563eb);
     flex: 1;
 
     // Scrollbar styling (Curve Fix)
@@ -413,6 +647,7 @@ ion-footer {
     }
 
     ::ng-deep textarea {
+      caret-color: var(--app-primary, #2563eb) !important;
       border: none !important;
       outline: none !important;
       box-shadow: none !important;

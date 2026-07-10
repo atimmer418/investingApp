@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 export interface InvestmentExecution {
   id: number;
@@ -102,7 +104,7 @@ export class InvestmentService {
   // Temporary storage for onboarding flow
   public pendingAcatsRequest: AcatsRequestData | null = null; 
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private authService: AuthService) { }
 
   initiateAcatsTransfer(data: AcatsRequestData): Observable<any> {
     const headers = this.getAuthHeaders();
@@ -145,7 +147,7 @@ export class InvestmentService {
   }): Observable<any> {
     return this.http.post(`${this.apiUrl}/schedule`, settings, {
       headers: this.getAuthHeaders()
-    });
+    }).pipe(tap(() => this.authService.clearScheduleCache()));
   }
 
   /**
@@ -200,7 +202,7 @@ export class InvestmentService {
   createSchedule(request: CreateInvestmentScheduleRequest): Observable<InvestmentSchedule> {
     return this.http.post<InvestmentSchedule>(`${this.scheduleApiUrl}/create`, request, {
       headers: this.getAuthHeaders()
-    });
+    }).pipe(tap(() => this.authService.clearScheduleCache()));
   }
 
   /**
@@ -209,7 +211,7 @@ export class InvestmentService {
   pauseSchedule(scheduleId: number): Observable<InvestmentSchedule> {
     return this.http.post<InvestmentSchedule>(`${this.scheduleApiUrl}/${scheduleId}/pause`, {}, {
       headers: this.getAuthHeaders()
-    });
+    }).pipe(tap(() => this.authService.clearScheduleCache()));
   }
 
   /**
@@ -218,7 +220,7 @@ export class InvestmentService {
   resumeSchedule(scheduleId: number): Observable<InvestmentSchedule> {
     return this.http.post<InvestmentSchedule>(`${this.scheduleApiUrl}/${scheduleId}/resume`, {}, {
       headers: this.getAuthHeaders()
-    });
+    }).pipe(tap(() => this.authService.clearScheduleCache()));
   }
 
   /**

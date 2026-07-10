@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ChangeDetectorRef, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuController } from '@ionic/angular';
@@ -13,9 +13,6 @@ import {
   IonButton,
   IonIcon,
   IonMenu,
-  IonList,
-  IonItem,
-  IonLabel,
   IonMenuToggle,
   IonMenuButton
 } from '@ionic/angular/standalone';
@@ -28,6 +25,14 @@ import { arrowUp, menuOutline, addOutline, refreshOutline, sparklesOutline, tren
 import { TabBarScrollDirective } from '../../directives/tab-bar-scroll.directive';
 import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
 import { Keyboard } from '@capacitor/keyboard';
+import { MarkdownPipe } from '../../pipes/markdown.pipe';
+import { ChatChartComponent, ChatChartConfig } from './chat-chart.component';
+
+/** A rendered slice of an assistant message: markdown, an inline chart, or quick-reply options */
+export type MessageSegment =
+  | { kind: 'md'; text: string }
+  | { kind: 'chart'; config: ChatChartConfig }
+  | { kind: 'suggestions'; options: string[] };
 
 @Component({
   selector: 'app-ai-chat',
@@ -47,13 +52,12 @@ import { Keyboard } from '@capacitor/keyboard';
     IonButton,
     IonIcon,
     IonMenu,
-    IonList,
-    IonItem,
-    IonLabel,
     IonMenuToggle,
     IonMenuButton,
     TabBarScrollDirective,
-    KeyboardAvoidDirective
+    KeyboardAvoidDirective,
+    MarkdownPipe,
+    ChatChartComponent
   ]
 })
 export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
@@ -62,6 +66,11 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
   readonly FRED_STORY_TRIGGER = "What's your story FRED?";
 
   private streamSubscription: Subscription | null = null;
+
+  /** The assistant message currently receiving streamed tokens (null when idle) */
+  private activeStreamMsg: ChatMessage | null = null;
+
+  @ViewChild('chatMenu', { read: ElementRef }) chatMenuRef?: ElementRef<HTMLElement>;
 
   /** Keyboard height (px) while the native keyboard is up — lifts the composer (resize:'none'). */
   keyboardOffset = 0;
@@ -147,6 +156,17 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
+    // Portal the history drawer up to ion-app: ion-tabs' .tabs-inner has
+    // contain:layout (a stacking context), so anything inside the page can
+    // never stack above the floating tab bar. At app level the menu's backdrop
+    // dims the ENTIRE app — tab bar included — and the panel slides over it.
+    // Angular bindings and scoped styles travel with the node, and Angular
+    // still removes it correctly on destroy.
+    const ionApp = document.querySelector('ion-app');
+    if (ionApp && this.chatMenuRef?.nativeElement) {
+      ionApp.appendChild(this.chatMenuRef.nativeElement);
+    }
+
     // Give time for async operations to complete and populate messages
     setTimeout(() => {
       if (this.messages.length > 0) {
@@ -158,6 +178,10 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
 
   ionViewDidEnter() {
     this.isActive = true;
+    // The history drawer is portaled to ion-app (stacking-context fix) and the
+    // chat page stays cached across tab switches — only allow the menu (and its
+    // edge-swipe gesture) while this page is actually the active tab.
+    this.menuCtrl.enable(true, 'chat-menu');
     // Scroll to bottom if there are existing messages
     if (this.messages.length > 0) {
       setTimeout(() => this.scrollToBottom(), 300);
@@ -166,6 +190,8 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
 
   ionViewWillLeave() {
     this.isActive = false;
+    this.menuCtrl.close('chat-menu');
+    this.menuCtrl.enable(false, 'chat-menu');
   }
 
   loadDailySuggestions() {
@@ -360,14 +386,18 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
     this.pickThinkingPhrase();
     this.scrollToBottom();
 
-    // Check if we need to generate a title (first user message in session)
-    const isFirstUserMessage = this.messages.filter(m => m.role === 'user').length === 1;
+    // Ask for a title whenever this session doesn't have a real one yet —
+    // covers the first message AND heals resumed/previously-untitled sessions
+    const needsTitle = !this.currentSession
+      || this.currentSession.title === 'New Chat'
+      || this.currentSession.title === 'Resumed Chat';
 
     const sessionId = this.currentSession?.id || 'default-session';
 
     // Push placeholder assistant message
     const assistantMsgIndex = this.messages.length;
     this.addMessage({ role: 'assistant', content: '', timestamp: new Date() });
+    this.activeStreamMsg = this.messages[assistantMsgIndex];
     this.cdr.detectChanges();
     this.scrollToBottom();
 
@@ -377,7 +407,7 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
       this.streamSubscription = null;
     }
 
-    this.streamSubscription = this.chatService.streamChat(userMsg, sessionId, isFirstUserMessage)
+    this.streamSubscription = this.chatService.streamChat(userMsg, sessionId, needsTitle)
       .subscribe({
         next: (event) => {
           if (event.token) {
@@ -390,29 +420,43 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
           }
           if (event.done) {
             this.isLoading = false;
-            if (event.title && this.currentSession) {
-              this.currentSession.title = event.title;
+            this.activeStreamMsg = null;
+            // Persist the streamed reply regardless of title — history must
+            // never depend on title generation succeeding
+            if (this.currentSession) {
+              if (event.title) {
+                this.currentSession.title = event.title;
+              }
+              this.currentSession.messages = this.messages;
+              this.currentSession.lastModified = Date.now();
               this.chatService.saveSession(this.currentSession);
               this.loadSessions();
             }
             this.cdr.detectChanges();
-            this.scrollToMessage(assistantMsgIndex);
           }
         },
         error: (err) => {
           console.error('[Chat] Stream error:', err);
           this.isLoading = false;
+          this.activeStreamMsg = null;
           if (this.messages[userMsgIndex]) {
             this.messages[userMsgIndex].failed = true;
           }
           this.messages[assistantMsgIndex].content = "I'm sorry, I'm having trouble connecting right now. Please try again.";
           this.cdr.detectChanges();
-          this.scrollToMessage(assistantMsgIndex);
         },
         complete: () => {
           this.isLoading = false;
+          this.activeStreamMsg = null;
+          // Belt-and-suspenders: if the stream closed without a done event
+          // (dropped final chunk), still persist whatever streamed in
+          if (this.currentSession && this.messages[assistantMsgIndex]?.content) {
+            this.currentSession.messages = this.messages;
+            this.currentSession.lastModified = Date.now();
+            this.chatService.saveSession(this.currentSession);
+            this.loadSessions();
+          }
           this.cdr.detectChanges();
-          this.scrollToMessage(assistantMsgIndex);
         }
       });
   }
@@ -435,26 +479,6 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
     // Resend the message
     this.newMessage = failedMsg.content;
     this.sendMessage();
-  }
-
-  scrollToMessage(index: number) {
-    if (!this.isActive) return;
-
-    setTimeout(() => {
-      const messageWrapper = document.getElementById(`chat-message-${index}`);
-      if (!messageWrapper) return;
-
-      // Find the message-bubble div (the actual bubble with text)
-      const messageBubble = messageWrapper.querySelector('.message-bubble') as HTMLElement;
-
-      if (messageBubble) {
-        // Scroll to the message bubble (not the wrapper with avatar)
-        messageBubble.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else {
-        // Fallback to wrapper
-        messageWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 300);
   }
 
   scrollToBottom() {
@@ -485,19 +509,120 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
     }, 0);
   }
 
-  // Helper to format markdown-like text (basic implementation)
-  // In a real app, you might use a library like marked or ngx-markdown
-  formatMessage(content: string): string {
-    // Basic bold formatting
-    let formatted = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  /**
+   * Split an assistant message into markdown + ```chart segments.
+   * Cached per message object so change detection doesn't re-parse (and
+   * doesn't churn the DOM) unless the content or streaming state changed.
+   */
+  private segmentCache = new WeakMap<
+    ChatMessage,
+    { content: string; streaming: boolean; segments: MessageSegment[] }
+  >();
+  /** Parsed chart configs keyed by raw fence body — keeps object identity
+   *  stable across streaming re-parses so charts don't rebuild per token. */
+  private chartConfigCache = new Map<string, ChatChartConfig>();
 
-    // Basic italics formatting
-    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  segments(msg: ChatMessage): MessageSegment[] {
+    const streaming = msg === this.activeStreamMsg;
+    const cached = this.segmentCache.get(msg);
+    if (cached && cached.content === msg.content && cached.streaming === streaming) {
+      return cached.segments;
+    }
 
-    // Basic list formatting
-    formatted = formatted.replace(/\n\n/g, '<br><br>');
-    formatted = formatted.replace(/\n/g, '<br>');
+    const segments = this.parseSegments(msg.content ?? '', streaming);
+    this.segmentCache.set(msg, { content: msg.content, streaming, segments });
+    return segments;
+  }
 
-    return formatted;
+  trackSegment(index: number, seg: MessageSegment): string {
+    return `${index}:${seg.kind}`;
+  }
+
+  private parseSegments(content: string, streaming: boolean): MessageSegment[] {
+    // While tokens are still arriving, hide an unterminated special block until
+    // its fence closes. On a FINISHED message the raw fence stays visible as a
+    // code block instead — never silently swallow persisted content.
+    if (streaming) {
+      for (const opener of ['```chart', '```suggestions']) {
+        const openFence = content.lastIndexOf(opener);
+        if (openFence !== -1 && content.indexOf('```', openFence + opener.length) === -1) {
+          content = content.slice(0, openFence);
+        }
+      }
+    }
+
+    const segments: MessageSegment[] = [];
+    const fence = /```(chart|suggestions)\s*\n([\s\S]*?)```/g;
+    let last = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = fence.exec(content)) !== null) {
+      if (match.index > last) {
+        segments.push({ kind: 'md', text: content.slice(last, match.index) });
+      }
+      if (match[1] === 'chart') {
+        const config = this.parseChartConfig(match[2]);
+        if (config) {
+          segments.push({ kind: 'chart', config });
+        } else {
+          // Malformed chart JSON — show it as a code block rather than nothing
+          segments.push({ kind: 'md', text: '```json\n' + match[2] + '```' });
+        }
+      } else {
+        const options = this.parseSuggestions(match[2]);
+        if (options.length) {
+          segments.push({ kind: 'suggestions', options });
+        }
+        // Malformed suggestions are dropped silently — they're optional sugar
+      }
+      last = fence.lastIndex;
+    }
+    if (last < content.length) {
+      segments.push({ kind: 'md', text: content.slice(last) });
+    }
+    return segments;
+  }
+
+  private parseSuggestions(raw: string): string[] {
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter((o): o is string => typeof o === 'string' && o.trim().length > 0)
+        .map(o => o.trim().slice(0, 60))
+        .slice(0, 3);
+    } catch {
+      return [];
+    }
+  }
+
+  /** Quick-reply chips only make sense on the latest message — older ones would
+   *  answer questions the conversation has moved past. */
+  isLatestMessage(msg: ChatMessage): boolean {
+    return this.messages.length > 0 && this.messages[this.messages.length - 1] === msg;
+  }
+
+  sendQuickReply(option: string) {
+    if (this.isLoading) return;
+    this.newMessage = option;
+    this.sendMessage();
+  }
+
+  private parseChartConfig(raw: string): ChatChartConfig | null {
+    const cached = this.chartConfigCache.get(raw);
+    if (cached) return cached;
+    try {
+      const config = JSON.parse(raw) as ChatChartConfig;
+      const valid =
+        Array.isArray(config?.labels) &&
+        Array.isArray(config?.datasets) &&
+        config.datasets.length > 0 &&
+        config.datasets.every(d => d && Array.isArray(d.data));
+      if (!valid) return null;
+      this.chartConfigCache.set(raw, config);
+      return config;
+    } catch {
+      return null;
+    }
   }
 }

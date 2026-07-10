@@ -1,0 +1,222 @@
+// ─── Settings Shell — shared gradient header + pinned white sheet ──────────────
+// FRED-214: Applied to every tab3-linked settings page.
+//
+// Import from your page SCSS:
+//   src/app/<page>/*.scss               →  @use '../../theme/settings-shell';
+//   src/app/pages/<page>/*.scss         →  @use '../../../theme/settings-shell';
+//   src/app/components/<page>/*.scss    →  @use '../../../theme/settings-shell';
+//
+// Template (HTML):
+//   <ion-header class="ion-no-border">
+//     <div class="blue-hero-header">
+//       <div class="hero-nav">
+//         <button class="back-btn" (click)="goBack()">
+//           <span class="material-symbols-outlined">arrow_back_ios_new</span>
+//         </button>
+//         <h2 class="header-title">Page Title</h2>
+//         <div class="back-btn-spacer"></div>  <!-- OR .hero-action-btn for right action -->
+//       </div>
+//     </div>
+//   </ion-header>
+//
+//   <ion-content class="shell-content" [appKeyboardAvoid]="(form pages only)">
+//     <div class="shell-inner">
+//       <!-- page content -->
+//     </div>
+//   </ion-content>
+//
+// Keyboard constraint proof (AC-4):
+//   KeyboardAvoidDirective constructor injects IonContent (the <ion-content> host).
+//   ngOnInit calls content.getScrollElement() — Ionic resolves this to the native
+//   .inner-scroll element (the ::part(scroll) DOM node). That IS the actual scroller.
+//   keyboardWillShow handler sets scrollEl.style.paddingBottom = keyboardHeight px
+//   on that element → the scroll container grows to make room for the keyboard.
+//   focusin handler calls content.scrollByPoint(0, overshoot, 150) — works because
+//   IonContent.scrollY is true (default, unchanged). No silent no-op.
+//
+// Pinned-sheet proof (AC-3):
+//   The scroll CONTAINER (::part(scroll)) is stationary — Ionic sizes it to fill
+//   the ion-content and it does not scroll. Only its children (the slotted content)
+//   translate vertically. border-radius applied to the container stays fixed at the
+//   top of the viewport while content scrolls beneath it — the round top acts as a
+//   permanent divider, identical to the tab3 .sheet-scroll div approach.
+
+// ─── ion-header reset ──────────────────────────────────────────────────────────
+
+ion-header {
+  --background: transparent;
+  background: transparent !important;
+  contain: none;
+  overflow: visible;
+}
+
+ion-toolbar {
+  --background: transparent;
+  --border-width: 0;
+  --min-height: 0;
+}
+
+// ─── Gradient header ───────────────────────────────────────────────────────────
+
+.blue-hero-header {
+  // Tuned family gradient (FRED-211/214). The end colour (#0e3a96) matches the
+  // --background on .shell-content so the blue corners of the rounded sheet are
+  // indistinguishable from the gradient strip — no visible seam.
+  background: linear-gradient(160deg, #1e60e3 0%, #1a58d0 60%, #0e3a96 100%);
+  // safe-area-top handles iOS notch; bottom padding leaves a gradient strip for
+  // the sheet's rounded top corners to sit against.
+  padding: calc(env(safe-area-inset-top, 0px) + 2px) 20px 14px 20px;
+  position: relative;
+  z-index: 10;
+  // No ::after concave cutout — the pinned sheet provides the header/content divider.
+}
+
+// Nav row: back button, centered title, spacer or right action
+.hero-nav {
+  display: flex;
+  align-items: center;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active { background: rgba(255, 255, 255, 0.2); }
+  .material-symbols-outlined { font-size: 20px; }
+}
+
+// Mirrors the back-btn width so .header-title is truly centered in flex layout
+.back-btn-spacer {
+  width: 40px;
+  flex-shrink: 0;
+}
+
+// Manrope 800 / 18px / centered / WHITE (AC-2).
+// Centering is achieved via flex siblings: back-btn (40px) + spacer (40px)
+// bracket the flex-1 title, producing exact optical center.
+.header-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  text-align: center;
+  flex: 1;
+  margin: 0;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Optional right-side action (e.g. "Save" on my-profile). Same width as back-btn
+// so title stays centered when this replaces .back-btn-spacer.
+.hero-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 40px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active { opacity: 0.75; }
+}
+
+// Account peek strip — used by change-bank-account page below the nav row
+.hero-account-peek {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+
+  .hero-bank-icon {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.85);
+    font-variation-settings: 'FILL' 1;
+  }
+
+  .hero-account-text {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: -0.01em;
+  }
+
+  &--empty {
+    .hero-bank-icon { color: rgba(255, 255, 255, 0.55); }
+    .hero-account-text { color: rgba(255, 255, 255, 0.6); }
+  }
+}
+
+// ─── Content — ion-content as the pinned white sheet ──────────────────────────
+
+.shell-content {
+  // Gradient end colour (#0e3a96) is the host background; it shows through the
+  // rounded top corners of ::part(scroll), creating a seamless gradient→sheet
+  // transition with no visible colour break.
+  --background: #0e3a96;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  // No position/z-index here — adding them would create a stacking context that
+  // traps any position:fixed children (e.g. security-settings overlays) below the
+  // z-index:10 .blue-hero-header. ion-header is already above ion-content via
+  // Ionic's built-in layout; the gradient/sheet visual needs no z-index on the host.
+
+  // Style the native scroll CONTAINER (not the scrolled content) as the white
+  // sheet. Because the container element is stationary (Ionic sizes it to fill
+  // ion-content; it does not translate as user scrolls), border-radius here
+  // produces a FIXED divider — the rounded top stays pinned while content beneath
+  // it scrolls freely. This is the ::part(scroll) pinned-sheet technique.
+  &::part(scroll) {
+    background: #ffffff;
+    border-radius: 26px 26px 0 0;
+    box-shadow: 0 -12px 30px -18px rgba(8, 28, 78, 0.35);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+}
+
+// Inner content padding — matches tab3 .sheet-inner lateral / top spacing.
+// Bottom: safe-area-inset-bottom + fixed clearance (no tab bar on settings pages).
+.shell-inner {
+  padding: 18px 20px calc(env(safe-area-inset-bottom, 0px) + 16px);
+  box-sizing: border-box;
+  min-height: 100%;
+  font-family: 'Manrope', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+// ─── Tablet breakpoint ─────────────────────────────────────────────────────────
+
+@media (min-width: 768px) {
+  .shell-inner {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}

@@ -10,30 +10,32 @@
   </div>
 </ion-header>
 
-<ion-content class="security-content">
+<!-- Overlays at the page root (sibling of ion-header/ion-content) so they escape
+     ion-content's internal stacking context and cover the gradient header with z-index:100. -->
 
-  <!-- Neutral checking spinner: shown only while hasPin() is resolving.
-       No "verify your identity" framing here — this is an indeterminate load state. -->
-  <div class="checking-overlay" *ngIf="checkingStepUp">
-    <ion-spinner name="crescent"></ion-spinner>
-  </div>
+<!-- Neutral checking spinner: shown only while hasPin() is resolving.
+     No "verify your identity" framing here — this is an indeterminate load state. -->
+<div class="checking-overlay" *ngIf="checkingStepUp">
+  <ion-spinner name="crescent"></ion-spinner>
+</div>
 
-  <!-- Step-up verification overlay: shown only after checking resolves AND user has a PIN.
-       Security Verification framing is appropriate here because we know they need to verify. -->
-  <div class="auth-overlay" *ngIf="!checkingStepUp && !isAuthenticated">
-    <div class="auth-card">
-      <span class="material-symbols-outlined auth-icon">shield</span>
-      <h2 class="auth-title">Security Verification</h2>
-      <p class="auth-desc">Please verify your identity to access security settings.</p>
+<!-- Step-up verification overlay: shown only after checking resolves AND user has a PIN.
+     Security Verification framing is appropriate here because we know they need to verify. -->
+<div class="auth-overlay" *ngIf="!checkingStepUp && !isAuthenticated">
+  <div class="auth-card">
+    <span class="material-symbols-outlined auth-icon">shield</span>
+    <h2 class="auth-title">Security Verification</h2>
+    <p class="auth-desc">Please verify your identity to access security settings.</p>
 
-      <div class="auth-spinner">
-        <ion-spinner name="crescent"></ion-spinner>
-        <span>Verifying...</span>
-      </div>
+    <div class="auth-spinner">
+      <ion-spinner name="crescent"></ion-spinner>
+      <span>Verifying...</span>
     </div>
   </div>
+</div>
 
-  <div class="content-inner" *ngIf="isAuthenticated">
+<ion-content class="shell-content">
+  <div class="shell-inner" *ngIf="isAuthenticated">
 
     <!-- Security Preferences -->
     <div class="section-card">

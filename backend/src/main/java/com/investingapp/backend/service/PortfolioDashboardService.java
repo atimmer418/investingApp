@@ -21,6 +21,9 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +32,31 @@ import java.util.concurrent.TimeUnit;
 public class PortfolioDashboardService {
 
     private static final Logger logger = LoggerFactory.getLogger(PortfolioDashboardService.class);
+
+    // Short-TTL cache for parsed Alpaca portfolio-history responses. The dashboard
+    // load, chart period switches, and the /performance period rows can all request
+    // the same (account, period) window within seconds — fetch once, serve parsed.
+    private static final long HISTORY_CACHE_TTL_MS = 60_000;
+    private final Map<String, CachedHistory> historyCache = new ConcurrentHashMap<>();
+
+    private record CachedHistory(PortfolioHistory history, long fetchedAt) {
+    }
+
+    // Short-TTL single-flight cache for the assembled portfolio dashboard. getPortfolioDashboard()
+    // makes four uncached Alpaca round-trips (account summary, real-time positions, 1M history,
+    // recent transactions), and the dashboard load, the Monthly Freedom Update /check + /generate,
+    // and my-profile can each request the SAME account within a couple of seconds.
+    //   - dashboardCache serves repeat callers within the TTL (the same idea as historyCache above).
+    //   - dashboardInFlight single-flights CONCURRENT callers onto ONE fetch — the backend analog of
+    //     the frontend shareReplay(1) single-flight in PortfolioStoreService. A plain TTL cache alone
+    //     would let a simultaneous burst (e.g. tab1 /check + my-profile + tab3) each stampede Alpaca
+    //     before the first result populates the cache.
+    private static final long DASHBOARD_CACHE_TTL_MS = 60_000;
+    private final Map<String, CachedDashboard> dashboardCache = new ConcurrentHashMap<>();
+    private final Map<String, CompletableFuture<PortfolioDashboardData>> dashboardInFlight = new ConcurrentHashMap<>();
+
+    private record CachedDashboard(PortfolioDashboardData data, long fetchedAt) {
+    }
 
     // Broker API credentials (for account management, portfolio data, etc.)
     @Value("${alpaca.api.key}")
@@ -102,6 +130,50 @@ public class PortfolioDashboardService {
 
         String accountId = encryptionService.decrypt(user.getAlpacaAccountId());
 
+        // 1. Fresh cache hit → serve without touching Alpaca.
+        CachedDashboard cached = dashboardCache.get(accountId);
+        if (cached != null && System.currentTimeMillis() - cached.fetchedAt() < DASHBOARD_CACHE_TTL_MS) {
+            logger.debug("Portfolio dashboard cache hit for {}", accountId);
+            return cached.data();
+        }
+
+        // 2. Single-flight: if another thread is already fetching this account, join its result
+        //    instead of firing a second (identical) set of Alpaca calls.
+        CompletableFuture<PortfolioDashboardData> myFetch = new CompletableFuture<>();
+        CompletableFuture<PortfolioDashboardData> inFlight = dashboardInFlight.putIfAbsent(accountId, myFetch);
+        if (inFlight != null) {
+            try {
+                return inFlight.join();
+            } catch (CompletionException e) {
+                Throwable cause = e.getCause() != null ? e.getCause() : e;
+                if (cause instanceof RuntimeException re) {
+                    throw re;
+                }
+                throw new RuntimeException("Failed to fetch portfolio data: " + cause.getMessage(), cause);
+            }
+        }
+
+        // 3. We own the fetch for this account.
+        try {
+            PortfolioDashboardData data = fetchPortfolioDashboard(user, accountId);
+            // Only cache real data — mirror historyCache: the error path caches nothing and retries next call.
+            dashboardCache.put(accountId, new CachedDashboard(data, System.currentTimeMillis()));
+            myFetch.complete(data);
+            return data;
+        } catch (RuntimeException e) {
+            myFetch.completeExceptionally(e); // joined callers see the same failure; nothing cached → next call retries
+            throw e;
+        } finally {
+            dashboardInFlight.remove(accountId, myFetch);
+        }
+    }
+
+    /**
+     * Uncached assembly of the portfolio dashboard from Alpaca (account summary, real-time
+     * positions, history, recent transactions). Extracted so getPortfolioDashboard() can wrap it in
+     * the single-flight TTL cache above. Package-private so tests can override it to count fetches.
+     */
+    PortfolioDashboardData fetchPortfolioDashboard(User user, String accountId) {
         try {
             // Get all required data from Alpaca
             // initialSummary contains buyingPower and last_equity (as portfolioValue)
@@ -214,6 +286,32 @@ public class PortfolioDashboardService {
         } catch (Exception e) {
             logger.error("Error fetching portfolio history for user {} with period {}", user.getId(), period, e);
             throw new RuntimeException("Failed to fetch portfolio history: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Compute 1W/1M/3M/YTD performance period rows for the given user.
+     *
+     * <p>Fetches one year of portfolio history (to cover all four windows including
+     * YTD) and delegates window math to {@link PerformancePeriodCalculator}.
+     * Returns an empty list if history retrieval fails — never throws — so the
+     * caller's Today and Total rows are always unaffected.
+     *
+     * @param user      The authenticated user with an Alpaca account
+     * @param endValue  Current portfolio equity (same value used by the Total row)
+     * @return          Ordered period rows for 1W/1M/3M/YTD; omits any window
+     *                  older than the account's earliest history point
+     */
+    public List<Map<String, Object>> computePerformancePeriodRows(User user, BigDecimal endValue) {
+        try {
+            String accountId = encryptionService.decrypt(user.getAlpacaAccountId());
+            PortfolioHistory history = getPortfolioHistory(accountId, "1A");
+            LocalDate today = LocalDate.now(PerformancePeriodCalculator.MARKET_ZONE);
+            return PerformancePeriodCalculator.computePeriods(
+                    history.timestamps, history.values, endValue, today);
+        } catch (Exception e) {
+            logger.warn("Period-window computation failed, returning empty periods: {}", e.getMessage());
+            return Collections.emptyList();
         }
     }
 
@@ -645,10 +743,31 @@ public class PortfolioDashboardService {
     }
 
     /**
-     * Get portfolio value history for charting using Broker API
-     * Uses the /v1/trading/accounts/{account_id}/account/portfolio/history endpoint
+     * Get portfolio value history for charting using Broker API, served from a
+     * short-TTL cache so repeat requests (dashboard bundle + performance rows +
+     * chart period flips) don't each round-trip to Alpaca.
      */
     private PortfolioHistory getPortfolioHistory(String accountId, String period) {
+        String cacheKey = accountId + ":" + period;
+        CachedHistory cached = historyCache.get(cacheKey);
+        if (cached != null && System.currentTimeMillis() - cached.fetchedAt() < HISTORY_CACHE_TTL_MS) {
+            logger.debug("Portfolio history cache hit for {}", cacheKey);
+            return cached.history();
+        }
+
+        PortfolioHistory fresh = fetchPortfolioHistory(accountId, period);
+        // Only cache real data — an empty result (error path) should retry next call
+        if (fresh != null && !fresh.timestamps.isEmpty()) {
+            historyCache.put(cacheKey, new CachedHistory(fresh, System.currentTimeMillis()));
+        }
+        return fresh;
+    }
+
+    /**
+     * Fetch portfolio value history for charting using Broker API
+     * Uses the /v1/trading/accounts/{account_id}/account/portfolio/history endpoint
+     */
+    private PortfolioHistory fetchPortfolioHistory(String accountId, String period) {
         try {
             // Map 1Y to 1A as Alpaca uses 1A for "1 Annum/Year"
             String alpacaPeriod = period;

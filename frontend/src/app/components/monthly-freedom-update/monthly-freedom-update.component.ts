@@ -2,9 +2,11 @@ import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { ModalController, NavController } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { MonthlyFreedomUpdateService, MonthlyFreedomUpdateData, MilestoneDTO } from '../../services/monthly-freedom-update.service';
+import { MfuStoreService } from '../../services/mfu-store.service';
 import { ReviewService } from '../../services/review.service';
 import { Router } from '@angular/router';
 import { EquityPigUtils } from '../../utils/equity-pig.utils';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-monthly-freedom-update',
@@ -18,6 +20,9 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
   /** When true, skip the 5-second lock (reopened from FRED tab) */
   @Input() isReopen: boolean = false;
 
+  /** Preloaded payload for present-when-ready. When set, the modal opens fully painted (no spinner). */
+  @Input() preloaded: MonthlyFreedomUpdateData | null = null;
+
   data: MonthlyFreedomUpdateData | null = null;
   loading = true;
   error: string | null = null;
@@ -26,9 +31,14 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
   canDismiss = false;
   private dismissTimer: any;
 
+  // "Seen" is committed exactly once at data-ready (non-reopen); this guards against a double fire.
+  private committed = false;
+  private reopenSub?: Subscription;
+
   constructor(
     private modalController: ModalController,
     private mfuService: MonthlyFreedomUpdateService,
+    private mfuStore: MfuStoreService,
     private router: Router,
     private reviewService: ReviewService
   ) {}
@@ -44,13 +54,30 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
       }, 5000);
     }
 
-    this.loadData();
+    if (this.isReopen) {
+      if (this.preloaded) {
+        // Instant paint from the localStorage snapshot; live fields are revalidated below.
+        this.data = this.preloaded;
+        this.loading = false;
+      }
+      this.revalidateReopen(!this.preloaded);
+    } else if (this.preloaded) {
+      // Present-when-ready: payload already in hand → the "Preparing your update…" state never renders.
+      this.data = this.preloaded;
+      this.loading = false;
+      this.mfuStore.persistSnapshot(this.data);
+      this.maybeCommitSeen(this.data);
+    } else {
+      // Shell fallback (shouldShow was true but /generate errored upstream): self-load as before.
+      this.loadData();
+    }
   }
 
   ngOnDestroy() {
     if (this.dismissTimer) {
       clearTimeout(this.dismissTimer);
     }
+    this.reopenSub?.unsubscribe();
   }
 
   private static fontsLoaded = false;
@@ -78,6 +105,10 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
     Promise.all([dataReady, fontsReady]).then(([data]) => {
       this.data = data;
       this.loading = false;
+      if (!this.isReopen) {
+        this.mfuStore.persistSnapshot(data);
+        this.maybeCommitSeen(data);
+      }
     }).catch((err) => {
       console.error('Error loading Monthly Freedom Update:', err);
       this.error = 'Failed to load your monthly update.';
@@ -86,15 +117,70 @@ export class MonthlyFreedomUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Reopen: pull a fresh (warm, Alpaca-free) payload via the store's single-flight; patch ONLY the
+   * live/projection fields over the snapshot so the freedom year matches the live app, or fill the
+   * whole modal on a cold cache miss. Period/recap fields never swap.
+   */
+  private revalidateReopen(fillIfEmpty: boolean) {
+    if (fillIfEmpty) {
+      this.loading = true;
+    }
+    this.reopenSub = this.mfuStore.loadReopen$().subscribe({
+      next: (fresh) => {
+        if (this.data) {
+          this.patchLiveFields(fresh);
+        } else {
+          this.data = fresh;
+        }
+        this.loading = false;
+      },
+      error: () => {
+        // Keep the snapshot if we have one; only surface an error on a true cold miss.
+        if (!this.data) {
+          this.error = 'Failed to load your monthly update.';
+          this.canDismiss = true;
+        }
+        this.loading = false;
+      }
+    });
+  }
+
+  /** Commit "seen" exactly once, anchored to data-ready (never the dismiss button). Non-reopen only. */
+  private maybeCommitSeen(d: MonthlyFreedomUpdateData) {
+    if (this.isReopen || this.committed) return;
+    this.committed = true;
+    this.mfuService.commitSeen(d.generatedForMonth).subscribe({
+      error: (err) => console.error('Error committing MFU seen:', err)
+    });
+  }
+
+  /** Overwrite only the live/projection fields so a reopened recap's numbers match the live app. */
+  private patchLiveFields(fresh: MonthlyFreedomUpdateData) {
+    if (!this.data) return;
+    this.data = {
+      ...this.data,
+      projectedFreedomYear: fresh.projectedFreedomYear,
+      currentEquityValue: fresh.currentEquityValue,
+      statusPercentile: fresh.statusPercentile,
+      bestNextMoveYear: fresh.bestNextMoveYear,
+      bestNextMoveYearsEarlier: fresh.bestNextMoveYearsEarlier,
+      bestNextMoveBoostAmount: fresh.bestNextMoveBoostAmount,
+      currentInvestmentAmount: fresh.currentInvestmentAmount,
+      recurringInvestmentAmount: fresh.recurringInvestmentAmount,
+      showQuarterlyCompare: fresh.showQuarterlyCompare,
+      equity12MonthsAgo: fresh.equity12MonthsAgo,
+      netWorthChange: fresh.netWorthChange,
+      freedomYearsChange: fresh.freedomYearsChange,
+      yearlyContributions: fresh.yearlyContributions,
+    };
+  }
+
   dismiss() {
     if (!this.canDismiss) return;
 
-    // Mark as seen if not a reopen
-    if (!this.isReopen) {
-      this.mfuService.dismissUpdate().subscribe({
-        error: (err) => console.error('Error dismissing MFU:', err)
-      });
-    }
+    // "Seen" is committed at data-ready (maybeCommitSeen), NOT here, so the primary CTA and swipe
+    // paths can't skip it. This handler only closes the modal and requests a review.
     this.modalController.dismiss();
     if (!this.isReopen) {
       this.reviewService.requestReviewIfFirstMFU();

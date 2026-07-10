@@ -1,3 +1,15 @@
+// Phase 2 (FRED-206): subtle marker shown while the last-known snapshot is on screen.
+// Static (no transition/animation) — the global reduced-motion rule + Reduce Motion on device
+// would zero any CSS animation anyway.
+.snapshot-updating-marker {
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--app-gray-400, #9ca3af);
+  padding: 2px 0 6px;
+}
+
 :host {
   --portfolio-background: var(--app-background);
   --portfolio-card-background: var(--app-card-background);
@@ -23,8 +35,7 @@
   /* Fill the space below the header (flex child), not 100% of the whole host. */
   flex: 1 1 auto;
   min-height: 0;
-  /* Bottom scroll padding so the last row clears the floating bar, while the
-     viewport stays full-height (content scrolls *behind* the translucent bar). */
+  /* Bottom scroll padding so the last row clears the floating bar. */
   --padding-bottom: var(--fred-tabbar-clearance);
 
   ion-refresher-content {
@@ -32,28 +43,15 @@
     color: var(--portfolio-primary);
   }
 
-  // Penetrate shadow DOM to color the refresher text
   ::ng-deep ion-refresher-content {
     color: var(--portfolio-primary) !important;
-
-    * {
-      color: var(--portfolio-primary) !important;
-    }
+    * { color: var(--portfolio-primary) !important; }
   }
 
   &::part(scroll) {
     padding-top: 8px !important;
   }
-
-  &.scroll-disabled::part(scroll) {
-    overflow-y: hidden;
-  }
-
-  &:not(.scroll-disabled)::part(scroll) {
-    overflow-y: auto;
-  }
 }
-
 
 /* =============================================================================
    PORTFOLIO DASHBOARD CONTAINER
@@ -86,202 +84,7 @@
 }
 
 /* =============================================================================
-   PORTFOLIO HERO SECTION (FLIP CARD)
-   ============================================================================= */
-
-.portfolio-hero-container {
-  perspective: 1000px;
-  margin-bottom: var(--app-spacing-md);
-  cursor: pointer;
-  height: 200px; // Fixed height to ensure flip works well
-  position: relative;
-  z-index: 1;
-}
-
-.portfolio-hero-flipper {
-  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  transform-style: preserve-3d;
-  position: relative;
-  height: 100%;
-  width: 100%;
-  will-change: transform;
-
-  &.flipped {
-    transform: rotateY(180deg);
-  }
-}
-
-.portfolio-hero-front,
-.portfolio-hero-back {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  background: linear-gradient(135deg, var(--portfolio-card-background) 0%, rgba(0, 122, 255, 0.05) 100%);
-  border: 1px solid var(--app-card-border);
-  overflow: hidden;
-}
-
-.portfolio-hero-front {
-  transform: rotateY(0deg);
-
-  .portfolio-value {
-    position: relative;
-    z-index: 1;
-    padding: var(--app-spacing-lg) 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    .value-label {
-      font-size: 11px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: var(--portfolio-text-secondary);
-      margin-bottom: 6px;
-    }
-
-    .value-amount-row {
-      display: flex;
-      align-items: baseline;
-      gap: 2px;
-      margin-bottom: 16px;
-    }
-
-    .value-amount-whole {
-      font-size: 2.75rem;
-      font-weight: 700;
-      letter-spacing: -1.5px;
-      color: var(--portfolio-text-primary);
-      line-height: 1;
-    }
-
-    .value-amount-cents {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--portfolio-text-secondary);
-      line-height: 1;
-    }
-
-    .freedom-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border-radius: 9999px;
-      background: color-mix(in srgb, var(--portfolio-primary) 12%, transparent);
-      border: 1px solid color-mix(in srgb, var(--portfolio-primary) 20%, transparent);
-
-      ion-icon {
-        font-size: 14px;
-        color: var(--portfolio-primary);
-      }
-
-      span {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--portfolio-primary);
-        line-height: 1;
-      }
-    }
-  }
-}
-
-.portfolio-hero-back {
-  transform: rotateY(180deg);
-  padding: var(--app-spacing-lg);
-
-  .hero-grid {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    height: 100%;
-    gap: var(--app-spacing-md);
-
-    .hero-grid-item {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-
-      .hero-label {
-        font-size: var(--app-font-size-xs);
-        color: var(--portfolio-text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 4px;
-        font-weight: 500;
-      }
-
-      .hero-value {
-        font-size: var(--app-font-size-lg);
-        font-weight: 600;
-        color: var(--portfolio-text-primary);
-      }
-
-      &.top-left {
-        align-items: flex-start;
-        text-align: left;
-      }
-
-      &.top-right {
-        align-items: flex-end;
-        text-align: right;
-      }
-
-      &.bottom-left {
-        align-items: flex-start;
-        text-align: left;
-      }
-
-      &.bottom-right {
-        align-items: flex-end;
-        text-align: right;
-      }
-    }
-  }
-}
-
-/* =============================================================================
-   QUICK STATS ROW
-   ============================================================================= */
-
-.quick-stats {
-  display: flex;
-  gap: var(--app-spacing-sm);
-  margin-bottom: var(--app-spacing-md);
-
-  .stat-card {
-    flex: 1;
-    text-align: center;
-    padding: var(--app-spacing-md);
-
-    .stat-value {
-      color: var(--portfolio-text-primary);
-      margin-bottom: var(--app-spacing-xs);
-    }
-
-    .stat-label {
-      color: var(--portfolio-text-secondary);
-      font-size: var(--app-font-size-sm);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-  }
-}
-
-/* =============================================================================
-   IOS-STYLE HEADER TAB SWITCHER
+   HEADER TAB SWITCHER — compact pill matching tab2
    ============================================================================= */
 
 ion-header {
@@ -291,20 +94,34 @@ ion-header {
   top: 0;
   z-index: 10;
 
+  // Condensed header: tight toolbar with Manrope title (per approved mockup)
   ion-toolbar {
     --background: var(--app-background);
     --border-width: 0;
+    --min-height: 40px;
+    --padding-top: 0;
+    --padding-bottom: 0;
+  }
+
+  ion-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    color: var(--app-text-primary);
+    text-align: center;
   }
 }
 
 .header-tab-container {
   background: var(--app-background);
   border-bottom: 1px solid var(--app-card-border);
-  padding: 0 var(--app-spacing-md) var(--app-spacing-sm);
+  padding: 2px var(--app-spacing-md) 8px;
   display: flex;
   justify-content: center;
 }
 
+// Wide slider matching tab2's switcher, inside the condensed header
 .ios-tab-switcher {
   display: flex;
   background: var(--app-gray-200);
@@ -313,7 +130,6 @@ ion-header {
   width: calc(100% - var(--app-spacing-md));
   margin: 0 auto;
   position: relative;
-
 }
 
 .ios-tab-button {
@@ -322,60 +138,36 @@ ion-header {
   border: none;
   border-radius: 10px;
   padding: var(--app-spacing-sm);
+  min-height: 40px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  cursor: pointer;
   color: var(--app-gray-500);
-  font-family: var(--app-font-family);
-  font-weight: 500;
-  position: relative;
-  z-index: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
 
-  ion-icon {
-    font-size: 24px;
-    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  }
-
-  &:hover {
-    color: var(--app-gray-600);
-    transform: scale(0.98);
+  .material-symbols-outlined {
+    font-size: 22px;
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   &:active {
     transform: scale(0.96);
   }
 
+  // Active: icon fades to FRED blue on the white thumb — same as tab2
   &.active {
     background: var(--app-card-background);
     color: var(--app-primary);
     box-shadow:
       0 2px 8px rgba(0, 0, 0, 0.1),
       0 1px 3px rgba(0, 0, 0, 0.06);
-
-    ion-icon {
-      transform: scale(1.05);
-    }
-
-    span {
-      font-weight: 600;
-    }
-
-    &:hover {
-      transform: scale(1.0);
-      color: var(--app-primary);
-    }
   }
 }
 
 /* =============================================================================
-   CHART SECTION
-   ============================================================================= */
-
-/* =============================================================================
-   TAB CONTENT AREAS
+   TAB CONTENT AREA
    ============================================================================= */
 
 .tab-content-area {
@@ -383,465 +175,566 @@ ion-header {
 }
 
 /* =============================================================================
-   CHART SECTION
+   ZONE LABELS + ZONE CARDS (tab2 grammar)
    ============================================================================= */
 
-.chart-section {
-  margin-bottom: var(--app-spacing-md);
+.zone-label {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  margin: 20px 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.zone-label-hint {
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: #b3bccb;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.zone-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 16px 16px 14px;
+}
+
+/* =============================================================================
+   GRADIENT HERO FLIP CARD
+   ============================================================================= */
+
+.hero-wrap {
+  perspective: 1200px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hero-flipper {
+  position: relative;
+  width: 100%;
+  height: 190px;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.4, 0.1, 0.2, 1);
+
+  &.flipped {
+    transform: rotateY(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.hero-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #1e60e3 0%, #1a58d0 60%, #0e3a96 100%);
+  box-shadow: 0 18px 40px -12px rgba(22, 48, 155, .45), inset 0 1px 0 rgba(255, 255, 255, .14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-face-back {
+  transform: rotateY(180deg);
+}
+
+// ---- Front face ----
+.hero-front-inner {
+  text-align: center;
+  padding: 0 20px;
+}
+
+.hero-eyebrow {
+  font-family: 'Manrope', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .55);
+}
+
+.equity-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.equity-whole {
+  font-family: 'Manrope', sans-serif;
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 4px 20px rgba(8, 28, 78, .4);
+}
+
+.equity-cents {
+  font-family: 'Manrope', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, .55);
+  letter-spacing: -0.01em;
+}
+
+.freedom-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 20px;
+
+  .material-symbols-outlined {
+    font-size: 14px;
+    color: #7fb3ff;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+  }
+}
+
+.flip-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: 'Manrope', sans-serif;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .3);
+}
+
+// ---- Back face ----
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  padding: 18px;
+}
+
+.hero-tile {
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 14px;
+  padding: 12px 14px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  .ht-label {
+    font-family: 'Manrope', sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .5);
+  }
+
+  .ht-value {
+    font-family: 'Manrope', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+    margin-top: 4px;
+  }
+}
+
+/* =============================================================================
+   CHART ZONE — period chips + scrub readout + chart
+   ============================================================================= */
+
+.chips {
+  display: flex;
+  background: #eef1f6;
+  border-radius: 12px;
+  padding: 3px;
+  gap: 2px;
+  margin-bottom: 14px;
+
+  button {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #8b94a7;
+    height: 32px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+
+    &.on {
+      background: #fff;
+      color: #0f172a;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, .12);
+    }
+  }
+}
+
+.scrub-readout {
+  height: 34px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  margin-bottom: 2px;
+}
 
-  .chart-header {
-    display: flex;
-    flex-direction: column;
-    gap: var(--app-spacing-sm);
-    margin-bottom: var(--app-spacing-md);
-    flex-shrink: 0; // Prevent header from shrinking
+.sr-value {
+  font-family: 'Manrope', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
 
-    h3 {
-      margin: 0;
-      color: var(--portfolio-text-primary);
-    }
+.sr-date {
+  font-family: 'Manrope', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-top: 1px;
+}
 
-    .period-selector {
-      align-self: stretch;
-      box-sizing: border-box;
+.return-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
 
-      // Vertical: 2px (Reduced height "cut in half")
-      // Horizontal: 1px (Creates the gray frame effect at the ends)
-      padding: 2px 1px !important;
-
-      border-radius: 4.5px;
-
-      // Ensure the segment itself doesn't force a large height
-      height: auto;
-      min-height: 32px;
-
-      ion-segment-button {
-        // Remove margins to allow buttons to expand and fix "smushed" look
-        margin: 0;
-
-        // Ensure buttons are compact
-        min-height: 28px;
-        font-size: var(--app-font-size-xs);
-        font-weight: 500;
-
-        // Use minimal internal padding to maximize text space
-        --padding-start: 2px;
-        --padding-end: 2px;
-
-        // Allow buttons to shrink if needed
-        min-width: 0;
-      }
-    }
+  .rr-label {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
   }
 
-  .chart-container {
-    min-height: 350px; // Increased height to properly contain the full chart
-    height: auto;
-    position: relative;
-    margin: 0;
-    padding: 0px 0px 0px 8px; // More padding for better visual containment
-    overflow: visible; // Allow chart to display fully
+  .rr-value {
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
 
-    app-portfolio-chart {
-      display: block;
-      height: 100%;
-      width: 100%;
-    }
+    &.pos { color: #16a34a; }
+    &.neg { color: #dc2626; }
   }
 }
 
 /* =============================================================================
-   HOLDINGS SECTION
+   PERFORMANCE ANALYTICS — collapse / expand pattern
    ============================================================================= */
 
-.holdings-section {
-  margin-bottom: var(--app-spacing-md);
+.perf-row {
+  padding: 11px 0;
+  border-bottom: 1px solid #f1f5f9;
 
-  h3 {
-    margin: 0 0 var(--app-spacing-md) 0;
-    color: var(--portfolio-text-primary);
+  &.perf-row-nob {
+    border-bottom: none;
+  }
+}
+
+.perf-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.perf-period {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.perf-pct {
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+
+  &.pos { color: #16a34a; }
+  &.neg { color: #dc2626; }
+}
+
+.perf-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: #eef1f6;
+  margin-top: 8px;
+  overflow: hidden;
+
+  i {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    width: 0;
+    transition: width 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+
+    &.pos { background: linear-gradient(90deg, #34d399, #16a34a); }
+    &.neg { background: linear-gradient(90deg, #f87171, #dc2626); }
+  }
+}
+
+.perf-sub {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #9aa6ba;
+
+  .perf-sub-gl {
+    font-weight: 800;
+
+    &.pos { color: #16a34a; }
+    &.neg { color: #dc2626; }
+  }
+}
+
+// Collapsible middle periods container
+.perf-middle {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.3, 0.7, 0.3, 1);
+
+  &.open {
+    max-height: 600px;
   }
 
-  .holding-item {
-    padding: var(--app-spacing-md) 0;
-    border-bottom: 1px solid var(--app-card-border);
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    &.open { max-height: none; }
+  }
+}
 
-    &:last-child {
-      border-bottom: none;
+// Expand/collapse toggle button
+.perf-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 12px 0 2px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9aa6ba;
+  -webkit-tap-highlight-color: transparent;
+
+  .material-symbols-outlined {
+    font-size: 16px;
+    transition: transform 0.3s;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
     }
+  }
 
-    .holding-main {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: var(--app-spacing-md);
+  &.open .material-symbols-outlined {
+    transform: rotate(180deg);
+  }
 
-      .holding-info {
-        flex: 1;
-
-        .holding-symbol {
-          margin: 0 0 var(--app-spacing-xs) 0;
-          color: var(--portfolio-text-primary);
-        }
-
-        .holding-details {
-          margin: 0;
-        }
-      }
-
-      .holding-values {
-        flex-shrink: 0;
-
-        .holding-value {
-          color: var(--portfolio-text-primary);
-          margin-bottom: var(--app-spacing-xs);
-        }
-
-        .holding-change {
-          &.change-success {
-            color: var(--portfolio-success);
-          }
-
-          &.change-danger {
-            color: var(--portfolio-danger);
-          }
-        }
-      }
-    }
+  &:active {
+    color: #2563EB;
   }
 }
 
 /* =============================================================================
-   ANALYTICS SECTIONS
+   HOLDINGS ROWS
    ============================================================================= */
 
-.analytics-section,
-.transactions-section {
-  margin-bottom: var(--app-spacing-md);
+.hold-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 
-  h3 {
-    margin: 0 0 var(--app-spacing-md) 0;
-    color: var(--portfolio-text-primary);
+  &.hold-row-last {
+    border-bottom: none;
   }
 
-  .performance-item,
-  .transaction-item {
-    padding: var(--app-spacing-md) 0;
-    border-bottom: 1px solid var(--app-card-border);
-
-    &:last-child {
-      border-bottom: none;
-    }
-
-    .performance-main,
-    .transaction-main {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: var(--app-spacing-md);
-
-      .performance-info,
-      .transaction-info {
-        flex: 1;
-
-        h4 {
-          margin: 0 0 var(--app-spacing-xs) 0;
-          color: var(--portfolio-text-primary);
-        }
-
-        p {
-          margin: var(--app-spacing-xs) 0;
-        }
-      }
-
-      .performance-values,
-      .transaction-values {
-        flex-shrink: 0;
-        text-align: right;
-
-        .performance-return,
-        .transaction-amount {
-          color: var(--portfolio-text-primary);
-          margin-bottom: var(--app-spacing-xs);
-        }
-
-        .performance-amount {
-          &.change-success {
-            color: var(--portfolio-success);
-          }
-
-          &.change-danger {
-            color: var(--portfolio-danger);
-          }
-        }
-
-        ion-chip {
-          margin: var(--app-spacing-xs) 0 0 0;
-        }
-      }
-    }
-  }
-}
-
-/* =============================================================================
-   EMPTY STATES
-   ============================================================================= */
-
-.empty-state {
-  .empty-icon {
-    font-size: 48px;
-    margin-bottom: var(--app-spacing-md);
+  &:active {
     opacity: 0.6;
+  }
+}
+
+.hold-tile {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef4ff;
+  color: #2563EB;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.hold-mid {
+  flex: 1;
+  min-width: 0;
+
+  .hold-sym {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+
+  .hold-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.hold-right {
+  text-align: right;
+  flex-shrink: 0;
+
+  .hold-val {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+
+  .hold-pill {
+    display: inline-block;
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2.5px 8px;
+    border-radius: 12px;
+    margin-top: 3px;
+
+    &.pos { background: #dcfce7; color: #14532d; }
+    &.neg { background: #fee2e2; color: #991b1b; }
+  }
+}
+
+// Holdings totals footer
+.hold-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1.5px solid #eef1f6;
+
+  .t-label {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
+  }
+
+  .t-right {
+    text-align: right;
+
+    .t-val {
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .t-gl {
+      font-family: 'Manrope', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 1px;
+
+      &.pos { color: #16a34a; }
+      &.neg { color: #dc2626; }
+    }
+  }
+}
+
+/* =============================================================================
+   EMPTY STATES — dashed-box pattern from retirement-planning
+   ============================================================================= */
+
+.empty-dashed {
+  border: 1.5px dashed #dde3ec;
+  border-radius: 14px;
+  padding: 20px 16px;
+  text-align: center;
+
+  .material-symbols-outlined {
+    font-size: 22px;
+    color: #c3cbd9;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
   }
 
   p {
-    margin: 0;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    margin: 6px 0 0;
+    line-height: 1.5;
     font-style: italic;
   }
 }
 
-/* =============================================================================
-   RESPONSIVE DESIGN
-   ============================================================================= */
-
-@media (max-width: 480px) {
-  .portfolio-hero .portfolio-value .value-amount {
-    font-size: var(--app-font-size-3xl);
-  }
-
-  .chart-container {
-    min-height: 200px !important;
-    height: auto !important;
-  }
-
-  .quick-stats {
-    flex-direction: column;
-    gap: var(--app-spacing-xs);
-
-    .stat-card {
-      padding: var(--app-spacing-sm);
-    }
-  }
-
-  .chart-header {
-    .period-selector ion-segment-button {
-      font-size: 10px !important;
-    }
-  }
-
-  .ios-tab-switcher {
-    width: calc(100% - var(--app-spacing-sm));
-
-    .ios-tab-button {
-      min-height: 40px;
-
-      ion-icon {
-        font-size: 24px;
-      }
-    }
-  }
-}
-
-@media (min-width: 768px) {
-  .mobile-container {
-    max-width: 600px;
-  }
-
-  .chart-container {
-    min-height: 300px;
-    height: auto;
-  }
-
-  .ios-tab-switcher {
-    max-width: 360px;
-
-    .ios-tab-button {
-      min-height: 60px;
-
-      ion-icon {
-        font-size: 22px;
-      }
-
-      span {
-        font-size: 12px;
-      }
-    }
-  }
-}
-
-/* =============================================================================
-   PORTFOLIO INSIGHT TABLE
-   ============================================================================= */
-
-.portfolio-insight-section {
-  margin-bottom: var(--app-spacing-md);
-
-  h3 {
-    margin: 0 0 var(--app-spacing-md) 0;
-    color: var(--portfolio-text-primary);
-  }
-}
-
-.positions-table-container {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  margin: 0 calc(-1 * var(--app-spacing-md));
-  padding: 0 var(--app-spacing-md);
-}
-
-.positions-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--app-font-size-sm);
-  min-width: 720px; // Ensure table doesn't get too cramped
-
-  thead {
-    tr {
-      border-bottom: 2px solid var(--app-card-border);
-    }
-
-    th {
-      padding: var(--app-spacing-sm) var(--app-spacing-xs);
-      font-size: var(--app-font-size-xs);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--portfolio-text-secondary);
-      white-space: nowrap;
-
-      &:first-child {
-        padding-left: var(--app-spacing-sm);
-      }
-
-      &:last-child {
-        padding-right: var(--app-spacing-sm);
-      }
-    }
-  }
-
-  tbody {
-    .position-row {
-      border-bottom: 1px solid var(--app-card-border);
-      transition: background-color 0.2s ease;
-
-      &:hover {
-        background-color: var(--app-gray-50);
-      }
-
-      &:last-child {
-        border-bottom: none;
-      }
-    }
-
-    td {
-      padding: var(--app-spacing-md) var(--app-spacing-xs);
-      color: var(--portfolio-text-primary);
-      white-space: nowrap;
-
-      &:first-child {
-        padding-left: var(--app-spacing-sm);
-      }
-
-      &:last-child {
-        padding-right: var(--app-spacing-sm);
-      }
-    }
-  }
-}
-
-.position-symbol {
-  .symbol-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-
-    .symbol-text {
-      color: var(--portfolio-text-primary);
-      font-size: var(--app-font-size-base);
-    }
-
-    .symbol-name {
-      font-size: var(--app-font-size-xs);
-      color: var(--portfolio-text-secondary);
-      max-width: 150px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-}
-
-.gain-loss-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-/* =============================================================================
-   RETURN YIELD SECTION
-   ============================================================================= */
-
-.return-yield-section {
-  margin-top: var(--app-spacing-md);
-  padding-top: var(--app-spacing-sm);
-  border-top: 1px solid var(--app-border-color, #e0e0e0);
-
-  .yield-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 4px 0;
-  }
-
-  .yield-label {
-    font-size: 14px;
-    color: var(--portfolio-text-secondary);
-  }
-
-  .yield-value {
-    font-size: 16px;
-    font-weight: 600;
-
-    &.change-success {
-      color: var(--portfolio-success);
-    }
-
-    &.change-danger {
-      color: var(--portfolio-danger);
-    }
-  }
-}
-
-/* =============================================================================
-   POSITIONS TABLE - TOTAL ROW
-   ============================================================================= */
-
-.positions-table {
-  tfoot {
-    border-top: 2px solid var(--app-border-color, #e0e0e0);
-    background-color: var(--app-background-alt, #f9f9f9);
-
-    td {
-      padding: 12px 8px;
-      font-weight: 600;
-      color: var(--portfolio-text-primary);
-    }
-
-    .yield-percent-text {
-      font-size: 0.85em;
-      display: block;
-    }
-  }
-}
-
-.text-middle {
-  text-align: center;
-}
-
-// Style the refresher spinner - use CSS custom properties that penetrate shadow DOM
+// Style the refresher spinner
 ion-refresher-content {
   --spinner-color: var(--portfolio-primary);
   color: var(--portfolio-primary);

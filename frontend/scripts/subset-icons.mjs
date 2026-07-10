@@ -17,7 +17,18 @@ const VENV_DIR = join(__dirname, '.venv');
 
 // Icons returned by TS functions as string literals — not detectable by HTML scanning.
 // Add new ones here when needed (e.g. from iconForState(), dynamic class bindings).
-const DYNAMIC_ICONS = ['check', 'arrow_upward', 'lock', 'schedule', 'swap_vert'];
+const DYNAMIC_ICONS = [
+  'check', 'arrow_upward', 'lock', 'schedule', 'swap_vert',
+  // strategy-deck (FRED-208): EDU_CARD_DEFS card icons + STRATEGIES how/why row icons
+  'payments', 'tune', 'security', 'account_balance',
+  'event_repeat', 'play_arrow', 'event_available', 'trending_up', 'sell', 'undo',
+  'trending_down', 'psychology', 'all_inclusive', 'query_stats', 'history',
+  'sentiment_satisfied', 'shield',
+  // retirement-planning (FRED-207): scenarioIcon() history-card icons
+  'south_east', 'north_east',
+  // tab3 settings rows (FRED-211): icon names live in TS data, not detectable by HTML scan
+  'pie_chart', 'credit_card', 'verified_user', 'description', 'group', 'help', 'mail', 'menu_book',
+];
 
 // Material Symbols renamed some legacy icon glyphs. The ligature text (used in templates)
 // still works at render time, but --glyphs= requires the internal glyph name, not the text.

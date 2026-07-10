@@ -16,6 +16,17 @@ export interface PortfolioBundle {
   history: PortfolioHistory | null;
 }
 
+/** Persisted last-known view-model for instant cold-launch paint (Phase 2, FRED-206). */
+export interface PortfolioSnapshot {
+  userId: string;
+  savedAt: number;
+  period: string;
+  dashboard: PortfolioDashboardData;
+  performance: PerformanceData[];
+  history: PortfolioHistory | null;
+  freedomLabel: string;
+}
+
 /**
  * In-memory single-flight cache for the three portfolio GETs.
  *
@@ -37,6 +48,10 @@ export interface PortfolioBundle {
 @Injectable({ providedIn: 'root' })
 export class PortfolioStoreService {
   private static readonly TTL_MS = 60_000;
+  // localStorage key prefix for the persisted snapshot. Bump the version (v1 → v2) whenever the
+  // persisted shape (PortfolioDashboardData / PortfolioHistory) changes, so an old snapshot can
+  // never hydrate a mismatched shape.
+  private static readonly SNAP_PREFIX = 'fred.portfolioDash.v1.';
 
   private entry: { bundle: PortfolioBundle; fetchedAt: number; userId: string; period: string } | null = null;
   private inFlight$: Observable<PortfolioBundle> | null = null;
@@ -121,6 +136,58 @@ export class PortfolioStoreService {
     if (!JwtTokenUtils.getValidJwtToken()) return;
     if (this.isFresh(period)) return;
     this.load$(period).subscribe({ error: () => {} });
+  }
+
+  /**
+   * Synchronously read the persisted last-known snapshot for the CURRENT user, or null.
+   * Validated: same userId + a present dashboard summary. Corrupt/foreign snapshots → null.
+   * Synchronous so the component can hydrate it in ngOnInit before the first change-detection.
+   */
+  peekSnapshot(): PortfolioSnapshot | null {
+    const userId = this.uid();
+    if (!userId) return null;
+    try {
+      const raw = localStorage.getItem(PortfolioStoreService.SNAP_PREFIX + userId);
+      if (!raw) return null;
+      const snap = JSON.parse(raw) as PortfolioSnapshot;
+      return (snap && snap.userId === userId && snap.dashboard?.summary) ? snap : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Persist the last-known view-model for instant paint on the next cold launch. Strips
+   * recentTransactions (large, not needed for first paint). Best-effort — swallows quota /
+   * private-mode write errors.
+   */
+  persistSnapshot(vm: {
+    dashboard: PortfolioDashboardData;
+    performance: PerformanceData[];
+    history: PortfolioHistory | null;
+    freedomLabel: string;
+    period: string;
+  }): void {
+    const userId = this.uid();
+    if (!userId || !vm.dashboard) return;
+    // Strip recentTransactions (large, unused at first paint) AND dashboard.history — the history
+    // used for the chart is stored once at the top level (snapshot.history) and read from there on
+    // hydrate, so keeping dashboard.history too would double-store the largest array (quota risk).
+    const { recentTransactions, history, ...leanDashboard } = vm.dashboard as any;
+    const snapshot: PortfolioSnapshot = {
+      userId,
+      savedAt: Date.now(),
+      period: vm.period,
+      dashboard: { ...leanDashboard, recentTransactions: [], history: { timestamps: [], values: [] } },
+      performance: vm.performance,
+      history: vm.history,
+      freedomLabel: vm.freedomLabel,
+    };
+    try {
+      localStorage.setItem(PortfolioStoreService.SNAP_PREFIX + userId, JSON.stringify(snapshot));
+    } catch {
+      /* quota / private mode — persistence is best-effort */
+    }
   }
 
   /** Wipe the in-memory entry and any in-flight reference. Called on logout. */

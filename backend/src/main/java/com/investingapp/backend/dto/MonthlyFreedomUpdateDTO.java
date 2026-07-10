@@ -73,6 +73,11 @@ public class MonthlyFreedomUpdateDTO {
     // Equity level (1-6) based on endEquity ranges
     private int equityLevel;
 
+    // The calendar month (yyyy-MM) this update was generated FOR, produced server-side. The client
+    // echoes it back on /dismiss so the "seen" commit stamps the month actually shown, never the
+    // month the dismiss happens to land in (e.g. after a midnight rollover). Carries no financial meaning.
+    private String generatedForMonth;
+
     // Getters and Setters
     public boolean isShouldShow() { return shouldShow; }
     public void setShouldShow(boolean shouldShow) { this.shouldShow = shouldShow; }
@@ -175,6 +180,9 @@ public class MonthlyFreedomUpdateDTO {
 
     public int getEquityLevel() { return equityLevel; }
     public void setEquityLevel(int equityLevel) { this.equityLevel = equityLevel; }
+
+    public String getGeneratedForMonth() { return generatedForMonth; }
+    public void setGeneratedForMonth(String generatedForMonth) { this.generatedForMonth = generatedForMonth; }
 
     /**
      * Nested DTO for milestones

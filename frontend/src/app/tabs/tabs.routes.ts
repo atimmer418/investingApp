@@ -13,18 +13,8 @@ export const routes: Routes = [
       },
       {
         path: 'tab2',
-        children: [
-          {
-            path: '',
-            loadComponent: () =>
-              import('../tab2/tab2.page').then((m) => m.Tab2Page),
-          },
-          {
-            path: 'strategy/:id',
-            loadComponent: () =>
-              import('../pages/strategy-detail/strategy-detail.page').then((m) => m.StrategyDetailPage),
-          },
-        ],
+        loadComponent: () =>
+          import('../tab2/tab2.page').then((m) => m.Tab2Page),
       },
       {
         path: 'chat',

@@ -3,24 +3,26 @@
     <ion-title>Portfolio</ion-title>
   </ion-toolbar>
 
-  <!-- iOS-Style Tab Switcher -->
+  <!-- iOS-Style Tab Switcher — wide slider matching tab2 -->
   <div class="header-tab-container">
     <div class="ios-tab-switcher">
       <button class="ios-tab-button" [class.active]="selectedTab === 'overview'"
         (click)="onTabChange({detail: {value: 'overview'}})">
-        <ion-icon name="bar-chart-outline"></ion-icon>
+        <span class="material-symbols-outlined">bar_chart</span>
       </button>
       <button class="ios-tab-button" [class.active]="selectedTab === 'analytics'"
         (click)="onTabChange({detail: {value: 'analytics'}})">
-        <ion-icon name="analytics-outline"></ion-icon>
+        <span class="material-symbols-outlined">monitoring</span>
       </button>
     </div>
   </div>
 </ion-header>
 
-<ion-content class="portfolio-content" [class.scroll-disabled]="selectedTab === 'overview'" appTabBarScroll>
-  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" [disabled]="loading || isRefreshing">
-    <ion-refresher-content refreshingSpinner="crescent" pullingText="Pull to Refresh" pullingIcon="chevron-down-circle-outline"></ion-refresher-content>
+<ion-content class="portfolio-content" appTabBarScroll>
+  <!-- Cleaner pull-to-refresh: no text, longer pull distance before triggering -->
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" [disabled]="loading || isRefreshing"
+    [pullMin]="100" [pullMax]="180">
+    <ion-refresher-content refreshingSpinner="crescent" pullingIcon="chevron-down-circle-outline"></ion-refresher-content>
   </ion-refresher>
 
   <!-- Loading State -->
@@ -30,7 +32,7 @@
   </div>
 
   <!-- Error State -->
-  <div *ngIf="error && !loading" class="mobile-container">
+  <div *ngIf="error && !loading" class="mobile-container portfolio-error">
     <div class="mobile-card text-center">
       <ion-icon name="warning-outline" class="error-icon text-danger"></ion-icon>
       <h3 class="text-lg font-semibold m-sm">Unable to load portfolio</h3>
@@ -42,54 +44,55 @@
   </div>
 
   <!-- Portfolio Dashboard Content -->
-  <div *ngIf="dashboard && !loading" class="portfolio-dashboard mobile-container">
+  <!-- data-fresh marks that REAL (revalidated) data is painted; the launch cover holds until this
+       (or the 2s cap) so fast networks show current numbers and never the snapshot. -->
+  <div *ngIf="dashboard && !loading" class="portfolio-dashboard mobile-container" [attr.data-fresh]="dataIsFresh ? '' : null">
 
-    <!-- Portfolio Value Hero Card (Flip) -->
-    <div class="portfolio-hero-container" (click)="toggleFlip()">
-      <div class="portfolio-hero-flipper" [class.flipped]="isFlipped">
+    <!-- Snapshot staleness marker (Phase 2): only while last-known data is on screen. -->
+    <div *ngIf="snapshotAsOf" class="snapshot-updating-marker text-center">
+      {{ revalidateFailed ? ('as of ' + (snapshotAsOf | date:'shortTime')) : 'Updating…' }}
+    </div>
 
-        <!-- Front Side -->
-        <div class="portfolio-hero-front">
-          <div class="portfolio-value text-center">
-            <span class="value-label">Total Equity</span>
-            <div class="value-amount-row">
-              <span class="value-amount-whole">{{ getEquityParts(dashboard.summary.equity).whole }}</span>
-              <span class="value-amount-cents">{{ getEquityParts(dashboard.summary.equity).cents }}</span>
+    <!-- ================================================================
+         GRADIENT HERO FLIP CARD
+         ================================================================ -->
+    <div class="hero-wrap" (click)="toggleFlip()">
+      <div class="hero-flipper" [class.flipped]="isFlipped">
+
+        <!-- Front Face -->
+        <div class="hero-face hero-face-front">
+          <div class="hero-front-inner">
+            <div class="hero-eyebrow">Total Equity</div>
+            <div class="equity-row">
+              <span class="equity-whole">{{ getEquityParts(dashboard.summary.equity).whole }}</span>
+              <span class="equity-cents">{{ getEquityParts(dashboard.summary.equity).cents }}</span>
             </div>
-            <!-- Motivational Badge -->
             <div class="freedom-badge" *ngIf="freedomLabel">
-              <ion-icon name="shield-checkmark"></ion-icon>
-              <span>{{ freedomLabel }}</span>
+              <span class="material-symbols-outlined">verified_user</span>
+              {{ freedomLabel }}
             </div>
           </div>
+          <div class="flip-hint">Tap for details</div>
         </div>
 
-        <!-- Back Side -->
-        <div class="portfolio-hero-back">
+        <!-- Back Face — 2×2 glass tiles -->
+        <div class="hero-face hero-face-back">
           <div class="hero-grid">
-            <!-- Top Left: Total Invested -->
-            <div class="hero-grid-item top-left">
-              <span class="hero-label">Total Invested</span>
-              <span class="hero-value">{{ formatCurrency(dashboard.totalInvested) }}</span>
+            <div class="hero-tile">
+              <div class="ht-label">Total Invested</div>
+              <div class="ht-value">{{ formatCurrency(dashboard.totalInvested) }}</div>
             </div>
-
-            <!-- Top Right: Total Portfolio Value -->
-            <div class="hero-grid-item top-right">
-              <span class="hero-label">Portfolio Value</span>
-              <span class="hero-value">{{ formatCurrency(dashboard.summary.portfolioValue) }}</span>
+            <div class="hero-tile">
+              <div class="ht-label">Portfolio Value</div>
+              <div class="ht-value">{{ formatCurrency(dashboard.summary.portfolioValue) }}</div>
             </div>
-
-            <!-- Bottom Left: Buying Power -->
-            <div class="hero-grid-item bottom-left">
-              <span class="hero-label">Buying Power</span>
-              <span class="hero-value">{{ formatCurrency(dashboard.summary.buyingPower) }}</span>
+            <div class="hero-tile">
+              <div class="ht-label">Buying Power</div>
+              <div class="ht-value">{{ formatCurrency(dashboard.summary.buyingPower) }}</div>
             </div>
-
-            <!-- Bottom Right: Settled Cash -->
-            <div class="hero-grid-item bottom-right">
-              <span class="hero-label">Settled Cash</span>
-              <span class="hero-value">{{ formatCurrency(dashboard.summary.withdrawableCash ?? dashboard.summary.cash)
-                }}</span>
+            <div class="hero-tile">
+              <div class="ht-label">Settled Cash</div>
+              <div class="ht-value">{{ formatCurrency(dashboard.summary.withdrawableCash ?? dashboard.summary.cash) }}</div>
             </div>
           </div>
         </div>
@@ -97,180 +100,200 @@
       </div>
     </div>
 
-
-
-    <!-- Overview Tab Content -->
+    <!-- ================================================================
+         OVERVIEW TAB
+         ================================================================ -->
     <div *ngIf="selectedTab === 'overview'" class="tab-content-area">
 
-      <!-- Portfolio Chart -->
-      <div class="chart-section mobile-card">
-        <div class="chart-header" style="margin-bottom: 0px;">
-          <h3 class="text-lg font-semibold">Performance</h3>
+      <p class="zone-label">Performance</p>
+      <div class="zone-card">
 
-          <!-- Period Selector -->
-          <ion-segment [(ngModel)]="selectedPeriod" (ionChange)="onPeriodChange($event.detail.value)" size="small"
-            class="period-selector">
-            <ion-segment-button *ngFor="let period of periodOptions" [value]="period.value">
-              {{ period.label }}
-            </ion-segment-button>
-          </ion-segment>
+        <!-- Period chips (existing periodOptions keys → same API calls) -->
+        <div class="chips">
+          <button *ngFor="let p of periodOptions"
+                  [class.on]="selectedPeriod === p.value"
+                  (click)="onPeriodChange(p.value)">{{ p.label }}</button>
         </div>
 
-        <div class="chart-container">
-          <app-portfolio-chart [data]="chartData" [selectedPeriod]="selectedPeriod">
-          </app-portfolio-chart>
-        </div>
-
-        <!-- Return Yield Section -->
-        <div class="return-yield-section" *ngIf="getReturnForCurrentPeriod() as returnData">
-          <div class="yield-row">
-            <span class="yield-label">Your {{ getPeriodLabel() }} cumulative pre-tax return</span>
-            <span class="yield-value" [class]="'change-' + getGainLossColor(returnData.value)">
-              {{ formatPercent(returnData.percent) }}
-            </span>
+        <!-- Scrub readout row: idle = current value + date range; scrubbing = exact value + weekday date -->
+        <div class="scrub-readout" [class.scrubbing]="scrubState !== null">
+          <div class="sr-value">
+            {{ scrubState
+              ? formatCurrency(scrubState.value)
+              : (chartData.length > 0 ? formatCurrency(chartData[chartData.length - 1].value) : '') }}
+          </div>
+          <div class="sr-date">
+            {{ scrubState ? scrubState.date : getChartDateRange() }}
           </div>
         </div>
-      </div>
 
+        <!-- Chart — [data]/[selectedPeriod] inputs unchanged per A/C 10 -->
+        <app-portfolio-chart
+          [data]="chartData"
+          [selectedPeriod]="selectedPeriod"
+          (scrubChange)="onScrubChange($event)">
+        </app-portfolio-chart>
+
+        <!-- Cumulative return row (existing logic/values, restyled) -->
+        <div class="return-row" *ngIf="getReturnForCurrentPeriod() as returnData">
+          <span class="rr-label">Your {{ getPeriodLabel() }} cumulative pre-tax return</span>
+          <span class="rr-value" [class.pos]="returnData.value >= 0" [class.neg]="returnData.value < 0">
+            {{ formatPercent(returnData.percent) }}
+          </span>
+        </div>
+
+      </div>
     </div>
 
-    <!-- Analytics Tab Content -->
+    <!-- ================================================================
+         ANALYTICS TAB
+         ================================================================ -->
     <div *ngIf="selectedTab === 'analytics'" class="tab-content-area">
 
-      <!-- Performance Analytics -->
-      <div class="analytics-section mobile-card">
-        <h3 class="text-lg font-semibold m-md">Performance Analytics</h3>
+      <!-- Performance Analytics zone -->
+      <p class="zone-label">Performance Analytics</p>
+      <div class="zone-card">
 
-        <div *ngFor="let perf of performanceData" class="performance-item">
-          <div class="performance-main">
-            <div class="performance-info">
-              <h4 class="text-base font-medium">{{ perf.period }}</h4>
-              <p class="text-sm text-gray">{{ formatCurrency(perf.startValue) }} &#8594; {{
-                formatCurrency(perf.endValue) }}</p>
-            </div>
-            <div class="performance-values text-right">
-              <div class="performance-return text-lg font-semibold"
-                [class]="'change-' + getGainLossColor(perf.totalReturn)">
-                {{ formatPercent(perf.totalReturnPercent) }}
+        <ng-container *ngIf="performanceData && performanceData.length > 0; else noPerfData">
+
+          <!-- Daily row (always visible) -->
+          <ng-container *ngIf="getDailyPerformance() as daily">
+            <div class="perf-row">
+              <div class="perf-top">
+                <span class="perf-period">Daily</span>
+                <span class="perf-pct" [class.pos]="daily.totalReturn >= 0" [class.neg]="daily.totalReturn < 0">
+                  {{ formatPercent(daily.totalReturnPercent) }}
+                </span>
               </div>
-              <div class="performance-amount text-sm" [class]="'change-' + getGainLossColor(perf.totalReturn)">
-                {{ formatCurrency(perf.totalReturn) }}
+              <div class="perf-bar">
+                <i [class.pos]="daily.totalReturn >= 0" [class.neg]="daily.totalReturn < 0"
+                   [style.width]="analyticsActive ? (getBarWidth(daily) + '%') : '0%'"></i>
+              </div>
+              <div class="perf-sub">
+                <span>{{ formatCurrency(daily.startValue) }} → {{ formatCurrency(daily.endValue) }}</span>
+                <span class="perf-sub-gl" [class.pos]="daily.totalReturn >= 0" [class.neg]="daily.totalReturn < 0">
+                  {{ daily.totalReturn >= 0 ? '+' : '' }}{{ formatCurrency(daily.totalReturn) }}
+                </span>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Middle periods — collapsed by default, expand on "Tap to show more" -->
+          <div class="perf-middle" [class.open]="analyticsExpanded">
+            <div *ngFor="let perf of getMiddlePerformancePeriods()" class="perf-row">
+              <div class="perf-top">
+                <span class="perf-period">{{ perf.period }}</span>
+                <span class="perf-pct" [class.pos]="perf.totalReturn >= 0" [class.neg]="perf.totalReturn < 0">
+                  {{ formatPercent(perf.totalReturnPercent) }}
+                </span>
+              </div>
+              <div class="perf-bar">
+                <i [class.pos]="perf.totalReturn >= 0" [class.neg]="perf.totalReturn < 0"
+                   [style.width]="analyticsExpanded ? (getBarWidth(perf) + '%') : '0%'"></i>
+              </div>
+              <div class="perf-sub">
+                <span>{{ formatCurrency(perf.startValue) }} → {{ formatCurrency(perf.endValue) }}</span>
+                <span class="perf-sub-gl" [class.pos]="perf.totalReturn >= 0" [class.neg]="perf.totalReturn < 0">
+                  {{ perf.totalReturn >= 0 ? '+' : '' }}{{ formatCurrency(perf.totalReturn) }}
+                </span>
               </div>
             </div>
           </div>
-        </div>
 
-        <div *ngIf="!performanceData || performanceData.length === 0" class="empty-state text-center p-xl">
-          <ion-icon name="analytics-outline" class="empty-icon text-gray"></ion-icon>
-          <p class="text-gray">No performance data yet</p>
-        </div>
+          <!-- All Time row (always visible) -->
+          <ng-container *ngIf="getAllTimePerformance() as allTime">
+            <div class="perf-row perf-row-nob">
+              <div class="perf-top">
+                <span class="perf-period">All Time</span>
+                <span class="perf-pct" [class.pos]="allTime.totalReturn >= 0" [class.neg]="allTime.totalReturn < 0">
+                  {{ formatPercent(allTime.totalReturnPercent) }}
+                </span>
+              </div>
+              <div class="perf-bar">
+                <i [class.pos]="allTime.totalReturn >= 0" [class.neg]="allTime.totalReturn < 0"
+                   [style.width]="analyticsActive ? (getBarWidth(allTime) + '%') : '0%'"></i>
+              </div>
+              <div class="perf-sub">
+                <span>{{ formatCurrency(allTime.startValue) }} → {{ formatCurrency(allTime.endValue) }}</span>
+                <span class="perf-sub-gl" [class.pos]="allTime.totalReturn >= 0" [class.neg]="allTime.totalReturn < 0">
+                  {{ allTime.totalReturn >= 0 ? '+' : '' }}{{ formatCurrency(allTime.totalReturn) }}
+                </span>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Expand / collapse toggle (only rendered if middle periods exist) -->
+          <button class="perf-toggle" [class.open]="analyticsExpanded"
+                  *ngIf="getMiddlePerformancePeriods().length > 0"
+                  (click)="analyticsExpanded = !analyticsExpanded">
+            <span>{{ analyticsExpanded ? 'Show less' : 'Tap to show more' }}</span>
+            <span class="material-symbols-outlined">expand_more</span>
+          </button>
+
+        </ng-container>
+
+        <!-- Empty state: no performance data -->
+        <ng-template #noPerfData>
+          <div class="empty-dashed">
+            <span class="material-symbols-outlined">insights</span>
+            <p>No performance data yet</p>
+          </div>
+        </ng-template>
+
       </div>
 
-      <!-- Portfolio Insight Table -->
-      <div class="portfolio-insight-section mobile-card">
-        <h3 class="text-lg font-semibold m-md">Portfolio Insight</h3>
+      <!-- Holdings zone -->
+      <p class="zone-label">
+        Holdings
+        <span class="zone-label-hint">Tap for details</span>
+      </p>
+      <div class="zone-card">
 
-        <div *ngIf="dashboard.positions && dashboard.positions.length > 0" class="positions-table-container">
-          <table class="positions-table">
-            <thead>
-              <tr>
-                <th class="text-left">Symbol</th>
-                <th class="text-right">Quantity</th>
-                <th class="text-right">Avg Cost</th>
-                <th class="text-right">Current</th>
-                <th class="text-right">Value</th>
-                <th class="text-right">Day G/L</th>
-                <th class="text-right">Total G/L</th>
-                <th class="text-right">% Account</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let position of dashboard.positions" class="position-row">
-                <td class="position-symbol">
-                  <div class="symbol-info">
-                    <span class="symbol-text font-semibold">{{ position.symbol }}</span>
-                    <span class="symbol-name text-sm text-gray">{{ position.name }}</span>
-                  </div>
-                </td>
-                <td class="text-right">
-                  <span class="text-base">{{ formatQuantity(position.quantity) }}</span>
-                </td>
-                <td class="text-right">
-                  <span class="text-base">{{ formatCurrency(position.averageCostBasis) }}</span>
-                </td>
-                <td class="text-right">
-                  <span class="text-base">{{ formatCurrency(position.currentPrice) }}</span>
-                </td>
-                <td class="text-right">
-                  <span class="text-base font-medium">{{ formatCurrency(position.marketValue) }}</span>
-                </td>
-                <td class="text-right">
-                  <div class="gain-loss-cell">
-                    <span class="text-base font-semibold"
-                      [class]="'change-' + getGainLossColor(position.todayGainLoss)">
-                      {{ formatCurrency(position.todayGainLoss) }}
-                    </span>
-                    <span class="text-sm" [class]="'change-' + getGainLossColor(position.todayGainLoss)">
-                      {{ formatPercent(position.todayGainLossPercent) }}
-                    </span>
-                  </div>
-                </td>
-                <td class="text-right">
-                  <div class="gain-loss-cell">
-                    <span class="text-base font-semibold" [class]="'change-' + getGainLossColor(position.unrealizedPL)">
-                      {{ formatCurrency(position.unrealizedPL) }}
-                    </span>
-                    <span class="text-sm" [class]="'change-' + getGainLossColor(position.unrealizedPL)">
-                      {{ formatPercent(position.unrealizedPLPercent) }}
-                    </span>
-                  </div>
-                </td>
-                <td class="text-right">
-                  <span class="text-base">{{ formatPercent(position.percentOfAccount) }}</span>
-                </td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr>
-                <td class="text-left">Total</td>
-                <td class="text-middle">-</td>
-                <td class="text-middle"> -</td>
-                <td class="text-middle"> -</td>
-                <td class="text-right">{{ formatCurrency(getPositionsTotalValue()) }}</td>
-                <td class="text-right">
-                  <div class="gain-loss-cell">
-                    <span class="text-base font-semibold"
-                      [class]="'change-' + getGainLossColor(getPositionsTotalTodayGainLoss())">
-                      {{ formatCurrency(getPositionsTotalTodayGainLoss()) }}
-                    </span>
-                    <span class="text-sm yield-percent-text"
-                      [class]="'change-' + getGainLossColor(getPositionsTotalTodayGainLoss())">
-                      {{ formatPercent(getPositionsTotalWeightedTodayReturn()) }}
-                    </span>
-                  </div>
-                </td>
-                <td class="text-right">
-                  <div class="gain-loss-cell">
-                    <span class="text-base font-semibold"
-                      [class]="'change-' + getGainLossColor(getPositionsTotalGainLoss())">
-                      {{ formatCurrency(getPositionsTotalGainLoss()) }}
-                    </span>
-                    <span class="text-sm yield-percent-text"
-                      [class]="'change-' + getGainLossColor(getPositionsTotalGainLoss())">
-                      {{ formatPercent(getPositionsTotalWeightedReturn()) }}
-                    </span>
-                  </div>
-                </td>
-                <td class="text-center">100%</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+        <ng-container *ngIf="dashboard.positions && dashboard.positions.length > 0; else noPositions">
 
-        <div *ngIf="!dashboard.positions || dashboard.positions.length === 0" class="empty-state text-center p-xl">
-          <ion-icon name="briefcase-outline" class="empty-icon text-gray"></ion-icon>
-          <p class="text-gray">No positions yet</p>
-        </div>
+          <div *ngFor="let position of dashboard.positions; let last = last"
+               class="hold-row" [class.hold-row-last]="last"
+               (click)="openPositionSheet(position)">
+            <div class="hold-tile">{{ getSymbolInitials(position.symbol) }}</div>
+            <div class="hold-mid">
+              <div class="hold-sym">{{ position.symbol }}</div>
+              <div class="hold-name">{{ position.name }}</div>
+            </div>
+            <div class="hold-right">
+              <div class="hold-val">{{ formatCurrency(position.marketValue) }}</div>
+              <span class="hold-pill"
+                    [class.pos]="position.unrealizedPL >= 0"
+                    [class.neg]="position.unrealizedPL < 0">
+                {{ formatPercent(position.unrealizedPLPercent) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Totals footer -->
+          <div class="hold-total">
+            <span class="t-label">
+              Total · {{ dashboard.positions.length }} position{{ dashboard.positions.length !== 1 ? 's' : '' }}
+            </span>
+            <div class="t-right">
+              <div class="t-val">{{ formatCurrency(getPositionsTotalValue()) }}</div>
+              <div class="t-gl"
+                   [class.pos]="getPositionsTotalGainLoss() >= 0"
+                   [class.neg]="getPositionsTotalGainLoss() < 0">
+                {{ getPositionsTotalGainLoss() >= 0 ? '+' : '' }}{{ formatCurrency(getPositionsTotalGainLoss()) }} all time
+              </div>
+            </div>
+          </div>
+
+        </ng-container>
+
+        <!-- Empty state: no positions -->
+        <ng-template #noPositions>
+          <div class="empty-dashed">
+            <span class="material-symbols-outlined">pie_chart</span>
+            <p>No positions yet</p>
+          </div>
+        </ng-template>
+
       </div>
 
     </div>

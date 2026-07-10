@@ -115,7 +115,7 @@ public class MonthlyFreedomUpdateController {
      * Called when user dismisses the modal.
      */
     @PostMapping("/dismiss")
-    public ResponseEntity<?> dismissUpdate() {
+    public ResponseEntity<?> dismissUpdate(@RequestBody(required = false) Map<String, String> body) {
         try {
             User user = getCurrentUser();
             if (user == null) {
@@ -123,10 +123,11 @@ public class MonthlyFreedomUpdateController {
                         .body(Map.of("error", "User not authenticated"));
             }
 
-            java.time.YearMonth currentYM = java.time.YearMonth.now();
-            String currentMonth = currentYM.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM"));
-            user.setLastLoggedInMonth(currentMonth);
-            userRepository.save(user);
+            // seenMonth is the server-produced DTO.generatedForMonth echoed by the client (may be
+            // absent — an empty/legacy body degrades to now()). commitMfuSeen marks the month seen and
+            // advances mfuCount / freedom-estimate exactly once under a pessimistic row lock.
+            String seenMonth = body != null ? body.get("seenMonth") : null;
+            monthlyFreedomUpdateService.commitMfuSeen(user.getId(), seenMonth);
 
             return ResponseEntity.ok(Map.of("success", true));
 

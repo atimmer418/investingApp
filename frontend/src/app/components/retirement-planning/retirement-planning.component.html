@@ -113,51 +113,29 @@
          (McInfoSheetComponent) so they overlay the whole app on iOS. -->
   </div>
 
-  <!-- Strategy Education Section -->
-  <div *ngIf="isEducationSection()" class="strategy-section fade-in">
-    <div class="strategy-header">
-      <h2>Withdrawal Strategies</h2>
-      <p>Tap a strategy to see how it works</p>
+  <!-- Education Landing — hero + height-filling 2×2 strategy card grid -->
+  <div *ngIf="isEducationSection()" class="edu-landing fade-in">
+    <div class="edu-hero">
+      <div class="edu-eyebrow">Withdrawal Strategies</div>
+      <h2>Make your money last.</h2>
+      <p>Four proven ways to turn a portfolio into a paycheck.</p>
     </div>
 
-    <div class="edu-card-grid">
-      <div class="edu-card" (click)="openStrategy('yield')">
-        <span class="material-symbols-outlined edu-card-icon">payments</span>
-        <div class="edu-card-name">Yield-Based Income</div>
-        <div class="edu-card-tagline">Live off dividends and interest</div>
+    <div class="edu-grid">
+      <div class="edu-card" *ngFor="let s of EDU_STRATEGIES" (click)="openStrategyDeck(s.key)">
+        <div class="edu-tile">
+          <span class="material-symbols-outlined">{{ s.icon }}</span>
+        </div>
+        <div class="edu-card-name">{{ s.name }}</div>
+        <div class="edu-card-tag">{{ s.tag }}</div>
+        <div class="edu-card-foot">
+          <span class="edu-card-hint">{{ s.hint }}</span>
+          <span class="edu-card-arrow">
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </span>
+        </div>
       </div>
-
-      <div class="edu-card" (click)="openStrategy('guardrails')">
-        <span class="material-symbols-outlined edu-card-icon">tune</span>
-        <div class="edu-card-name">Dynamic Guardrails</div>
-        <div class="edu-card-tagline">Spend more in good years, less in bad</div>
-      </div>
-
-      <div class="edu-card" (click)="openStrategy('annuity')">
-        <span class="material-symbols-outlined edu-card-icon">security</span>
-        <div class="edu-card-name">Annuity</div>
-        <div class="edu-card-tagline">Guaranteed income for life</div>
-      </div>
-
-      <div class="edu-card" (click)="openStrategy('sbloc')">
-        <span class="material-symbols-outlined edu-card-icon">account_balance</span>
-        <div class="edu-card-name">SBLOC + 4% Rule</div>
-        <div class="edu-card-tagline">Borrow in bad years, sell in good years</div>
-      </div>
-    </div>
-
-    <!-- Bottom-sheet overlay -->
-    <div class="edu-sheet-backdrop" [class.visible]="openedStrategy !== null" (click)="closeStrategy()"></div>
-    <div class="edu-sheet" [class.visible]="openedStrategy !== null">
-      <div class="edu-sheet-handle"></div>
-      <h3 class="edu-sheet-title">{{ openedStrategyTitle }}</h3>
-      <ul class="edu-sheet-bullets">
-        <li *ngFor="let bullet of openedStrategyBullets">{{ bullet }}</li>
-      </ul>
-      <button class="edu-sheet-close" (click)="closeStrategy()">
-        <span class="material-symbols-outlined">close</span>
-      </button>
     </div>
   </div>
 
-  <!-- Spacer removed -->
+</ion-content>

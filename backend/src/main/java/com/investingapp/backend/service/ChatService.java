@@ -35,16 +35,22 @@ public class ChatService {
     private final LLMService llmService;
     private final SafetyService safetyService; // Inject
     private final ConversationAnalyticsService analyticsService; // NEW: Phase 2A
+    private final FredChatToolsService fredChatToolsService; // Phase A agentic: read-only chat tools
+
+    private static final String TOOLS_UNAVAILABLE_NOTE =
+            "Note: your data-lookup tools are NOT available on this request. Do not claim you can "
+            + "look up the user's portfolio or schedule — guide them to the relevant app tab instead.";
 
     public ChatService(UserRepository userRepository, ChatMessageRepository chatMessageRepository,
             RAGService ragService, LLMService llmService, SafetyService safetyService,
-            ConversationAnalyticsService analyticsService) { // NEW: Phase 2A
+            ConversationAnalyticsService analyticsService, FredChatToolsService fredChatToolsService) {
         this.userRepository = userRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.ragService = ragService;
         this.llmService = llmService;
         this.safetyService = safetyService;
         this.analyticsService = analyticsService; // NEW: Phase 2A
+        this.fredChatToolsService = fredChatToolsService;
     }
 
     public ChatResponse processChat(ChatRequest request) {
@@ -127,6 +133,9 @@ public class ChatService {
         for (ChatMessage h : chronologicalHistory) {
             messages.add(new LLMService.ChatMessage(h.getRole(), h.getContent()));
         }
+
+        // This non-streaming fallback path never binds tools — keep Claude honest
+        messages.add(new LLMService.ChatMessage("system", TOOLS_UNAVAILABLE_NOTE));
 
         // 8. Call LLM
         String response = llmService.generateChatResponse(messages);
@@ -234,7 +243,13 @@ public class ChatService {
             messages.add(new LLMService.ChatMessage(h.getRole(), h.getContent()));
         }
 
-        // 5. Stream on async thread
+        // 5. Stream on async thread — with read-only tools bound to this user
+        FredChatToolsService.BoundTools boundTools = (user != null) ? fredChatToolsService.forUser(user) : null;
+        if (boundTools == null) {
+            // The constitution advertises tools; make sure Claude doesn't promise
+            // lookups it can't perform on this request
+            messages.add(new LLMService.ChatMessage("system", TOOLS_UNAVAILABLE_NOTE));
+        }
         CompletableFuture.runAsync(() -> {
             StringBuilder fullResponse = new StringBuilder();
             try {
@@ -245,7 +260,7 @@ public class ChatService {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                });
+                }, boundTools);
 
                 // 6. Apply smart intercepts to the assembled response
                 String assembled = fullResponse.toString();
@@ -275,10 +290,15 @@ public class ChatService {
                 logger.info("Stream chat interaction - User: {}, Query: {}, RAG Chunks Used: {}",
                         request.userId(), request.message(), ragChunks.size());
 
-                // 9. Generate title if requested
+                // 9. Generate title if requested — a title failure must never
+                // kill the stream (the done event still has to reach the client)
                 String title = null;
                 if (request.generateTitle()) {
-                    title = generateTitle(request.message());
+                    try {
+                        title = generateTitle(request.message());
+                    } catch (Exception e) {
+                        logger.error("Title generation failed — sending done without title", e);
+                    }
                 }
 
                 // 10. Send done event
@@ -300,9 +320,16 @@ public class ChatService {
     private String generateTitle(String userMessage) {
         List<LLMService.ChatMessage> messages = new ArrayList<>();
         messages.add(new LLMService.ChatMessage("system",
-                "You are a helpful assistant. Generate a concise 3-5 word title for the following user question. Do not use quotes."));
+                "Generate a concise 3-5 word title for the following user question. "
+                + "Respond with the title only, in plain text: no quotes, no markdown, no asterisks, no trailing punctuation."));
         messages.add(new LLMService.ChatMessage("user", userMessage));
-        return llmService.generateChatResponse(messages);
+        String title = llmService.generateChatResponse(messages);
+        // Belt-and-suspenders: strip any markdown/quote characters the model adds anyway
+        title = title.replaceAll("[*_`\"'#]", "").trim();
+        if (title.length() > 60) {
+            title = title.substring(0, 60).trim();
+        }
+        return title;
     }
 
     public List<ChatMessage> getChatHistory(String sessionId) {
@@ -312,6 +339,20 @@ public class ChatService {
         List<ChatMessage> history = chatMessageRepository.findBySessionIdOrderByCreatedAtDesc(sessionId);
         Collections.reverse(history); // Return in chronological order
         return history;
+    }
+
+    /**
+     * SECURITY: session-scoped history restricted to the requesting user —
+     * session IDs are client-generated and must not act as bearer tokens for
+     * another user's conversation.
+     */
+    public List<ChatMessage> getChatHistoryForUser(String sessionId, Long userId) {
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+        return getChatHistory(sessionId).stream()
+                .filter(m -> userId.equals(m.getUserId()))
+                .toList();
     }
 
     public List<ChatMessage> getRecentSessionHistory(Long userId) {
@@ -354,7 +395,7 @@ public class ChatService {
                 - Risk tolerance: %s
 
                 Rules:
-                • No dollar amounts
+                • This profile contains no dollar figures — never invent or infer them from it. Real figures come only from your tools (when available).
                 • No advice requests embedded
                 • No speculative inference
                 """, age, payFreq, automated, contribution, timeHorizon, risk);

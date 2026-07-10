@@ -1,124 +1,61 @@
-.portfolio-chart-container {
+:host {
+  display: block;
   width: 100%;
-  position: relative;
-  padding: 16px 0;
 }
 
-.chart-wrapper {
+.chart-box {
   position: relative;
-  width: 100%;
-  height: 300px;
-}
-
-.portfolio-chart {
-  width: 100% !important;
-  height: 100% !important;
+  height: 170px;
+  // Scope touch-action to the chart box only — vertical scroll works outside this element.
+  touch-action: none;
   cursor: crosshair;
-  touch-action: none; // Prevent scrolling while scrubbing
+  -webkit-tap-highlight-color: transparent;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
 }
 
-// Floating tooltip that appears above clicked points
-.chart-tooltip {
+// Ghost state — the example line behind calm "eventually" copy
+.chart-ghost {
+  position: relative;
+  height: 170px;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+}
+
+.ghost-copy {
   position: absolute;
-  pointer-events: none;
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.2s ease-in-out, visibility 0.2s;
-
-  &.visible {
-    opacity: 1;
-    visibility: visible;
-  }
-  
-  .tooltip-content {
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    text-align: center;
-    min-width: 100px;
-    max-width: 140px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    white-space: nowrap;
-    
-    .tooltip-date {
-      font-size: 12px;
-      opacity: 0.8;
-      margin-bottom: 2px;
-    }
-    
-    .tooltip-value {
-      font-size: 14px;
-      font-weight: 600;
-    }
-  }
-  
-  .tooltip-arrow {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid rgba(0, 0, 0, 0.8);
-  }
-}
-
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--ion-color-medium);
-  
-  p {
-    margin: 0;
-    font-style: italic;
-  }
-}
-
-// Responsive adjustments
-@media (max-width: 768px) {
-  .chart-wrapper {
-    height: 250px;
-  }
-  
-  .chart-tooltip {
-    .tooltip-content {
-      padding: 6px 10px;
-      min-width: 100px;
-      
-      .tooltip-value {
-        font-size: 13px;
-      }
-    }
-  }
-}
-
-// Touch interaction improvements
-.portfolio-chart {
-  touch-action: pan-x pan-y;
-}
-
-// Chart loading state
-.chart-wrapper.loading {
+  inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  
-  &::before {
-    content: '';
-    width: 24px;
-    height: 24px;
-    border: 2px solid var(--ion-color-medium);
-    border-top: 2px solid var(--ion-color-primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-}
+  text-align: center;
+  pointer-events: none;
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  .ghost-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    color: var(--app-text-primary, #0f172a);
+    margin: 0;
+  }
+
+  .ghost-sub {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #9aa6ba;
+    margin: 3px 0 0;
+  }
 }

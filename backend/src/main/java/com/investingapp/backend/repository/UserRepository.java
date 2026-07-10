@@ -2,7 +2,9 @@
 package com.investingapp.backend.repository; // Make sure this package name matches
 
 import com.investingapp.backend.model.User; // Import your User entity
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -58,6 +60,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // used by the ACH setup retry scheduler.
     @Query("SELECT u FROM User u WHERE u.accountStatus = 'ACTIVE' AND u.alpacaAccountId IS NOT NULL AND u.plaidAccessToken IS NOT NULL AND u.alpacaAchRelationshipId IS NULL")
     List<User> findActiveUsersNeedingAchSetup();
+
+    // Load a user row under a pessimistic write-lock (SELECT ... FOR UPDATE) so concurrent Monthly
+    // Freedom Update "seen" commits (double-tap, two tabs, two devices) serialize on the row and the
+    // advances-only guard in MonthlyFreedomUpdateService.commitMfuSeen can enforce exactly-once
+    // (no double mfuCount++ / double freedom-estimate rotation).
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.id = :id")
+    Optional<User> findByIdForUpdate(@Param("id") Long id);
 
     // You can add more custom query methods here as needed following Spring Data
     // JPA conventions

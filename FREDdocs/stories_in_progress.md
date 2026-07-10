@@ -21,12 +21,19 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 - FRED-178 — Research: Face ID-only app lock without passkey sheet
 - FRED-180 — Add time-to-freedom visual on profile page
 - FRED-205 — Preload tab1 portfolio — hold splash for fresh data
-- FRED-207 — Refactor Monte Carlo simulator into fullscreen premium flow
-- FRED-208 — Refactor education tab into premium strategy decks
+- FRED-206 — tab1 preload — localStorage snapshot fallback for slow networks
+- FRED-210 — Emit 1W/1M/3M/YTD performance periods from backend
+- FRED-211 — Remodel tab3 into the family design language (Variant A)
+- FRED-212 — Dedupe boot-time API calls via single-flight stores
+- FRED-213 — Dedupe duplicate /user/progress fetches (in-flight join only)
+- FRED-214 — Settings-shell: gradient header + pinned sheet on tab3-linked pages
 
 ## Done
 
 <!-- entries moved here when --done=<ID> is run -->
+- FRED-209 — Refactor tab1 into tab2's premium design language
+- FRED-208 — Refactor education tab into premium strategy decks
+- FRED-207 — Refactor Monte Carlo simulator into fullscreen premium flow
 - FRED-183 — Change AI chat to use token streaming via SSE
 - FRED-181 — Share Monte Carlo simulation results
 - FRED-99 — Implement all features from tiered pricing

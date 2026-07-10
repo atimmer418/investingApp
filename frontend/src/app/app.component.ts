@@ -337,13 +337,16 @@ export class AppComponent implements OnInit {
   }
 
   /**
-   * tab1-only data-readiness gate. Resolves when the portfolio dashboard has painted
-   * its NON-loading state (the .loading-container spinner wrapper is absent), meaning
-   * the real data block or the error card is on screen.
+   * tab1-only data-readiness gate. Resolves when tab1 has painted FRESH (revalidated) data
+   * — the `.portfolio-dashboard[data-fresh]` ready block — or the error card. It deliberately
+   * does NOT resolve on the last-known snapshot (`.portfolio-dashboard` without `data-fresh`),
+   * which is painted behind the cover: on a fast network the cover holds until the current
+   * numbers arrive, so the snapshot is never seen.
    *
    * Bounded by a 2s hard cap so the cover can never hang:
-   *  - slow network → cap fires → cover lifts onto the existing spinner
-   *  - backend down → cap fires → cover lifts onto the error card
+   *  - slow network WITH a snapshot → cap fires → cover lifts onto the last-known snapshot (+ marker)
+   *  - slow network with NO snapshot → cap fires → cover lifts onto the existing spinner
+   *  - backend down → cover lifts onto the error card
    */
   private waitForTab1DataPainted(): Promise<void> {
     return new Promise<void>(resolve => {
@@ -356,7 +359,9 @@ export class AppComponent implements OnInit {
         // transition (e.g. get-started → tab1 on reauth), which a generic 'ion-router-outlet
         // ion-content' selector would, resolving the gate before tab1 actually paints.
         const c = document.querySelector('app-portfolio-dashboard ion-content.portfolio-content') as HTMLElement | null;
-        if (c && c.offsetHeight > 0 && !c.querySelector('.loading-container')) {
+        // Lift only for FRESH data ([data-fresh]) or the error card — never the spinner, never the
+        // snapshot-only block (which holds behind the cover until fresh arrives or the 2s cap fires).
+        if (c && c.offsetHeight > 0 && c.querySelector('.portfolio-dashboard[data-fresh], .portfolio-error')) {
           finish();
           return;
         }

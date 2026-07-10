@@ -1,50 +1,18 @@
 import { Component, OnInit, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Subject, takeUntil, filter, take } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import {
   IonHeader,
   IonContent,
-  IonIcon,
   IonAvatar,
-  IonBadge,
-  ModalController,
-  createAnimation
+  IonBadge
 } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import {
-  settingsOutline,
-  walletOutline,
-  cardOutline,
-  pauseOutline,
-  playOutline,
-  notificationsOutline,
-  shieldCheckmarkOutline,
-  lockClosedOutline,
-  helpCircleOutline,
-  mailOutline,
-  documentTextOutline,
-  peopleOutline,
-  starOutline,
-  logOutOutline,
-  chevronForward,
-  personOutline,
-  businessOutline,
-  pieChartOutline,
-  timeOutline,
-  cashOutline,
-  phonePortraitOutline,
-  moonOutline,
-  checkmarkCircle,
-  giftOutline,
-  sparklesOutline
-} from 'ionicons/icons';
 import { SettingsService, UserPreferences, RecurringInvestment } from '../services/settings.service';
 import { PlaidService } from '../services/plaid.service';
 import { ToastService } from '../services/toast.service';
-import { MonthlyFreedomUpdateComponent } from '../components/monthly-freedom-update/monthly-freedom-update.component';
-import { MonthlyFreedomUpdateService } from '../services/monthly-freedom-update.service';
-import { AppLockService } from '../services/app-lock.service';
+import { MfuStoreService } from '../services/mfu-store.service';
+import { MfuPresenterService } from '../services/mfu-presenter.service';
 import { AccountStatusService } from '../services/account-status.service';
 import { FreedomStatsService } from '../services/freedom-stats.service';
 import { Observable } from 'rxjs';
@@ -74,7 +42,6 @@ interface SettingItem {
     CommonModule,
     IonHeader,
     IonContent,
-    IonIcon,
     IonAvatar,
     IonBadge,
     TabBarScrollDirective
@@ -103,28 +70,28 @@ export class Tab3Page implements OnInit, OnDestroy {
         {
           title: 'Recurring Investments',
           subtitle: 'Adjust or pause your automatic investments',
-          icon: 'time-outline',
+          icon: 'schedule',
           action: 'recurringInvestments',
           type: 'navigation'
         },
         {
           title: 'One-Time Transactions',
           subtitle: 'Invest once or transfer assets into Alpaca',
-          icon: 'cash-outline',
+          icon: 'payments',
           action: 'lumpSumInvestment',
           type: 'navigation'
         },
         {
           title: 'Portfolio Allocation',
           subtitle: 'Customize your investment strategy',
-          icon: 'pie-chart-outline',
+          icon: 'pie_chart',
           action: 'portfolioAllocation',
           type: 'navigation'
         },
         {
           title: 'Sell & Withdraw',
           subtitle: 'Sell stocks and withdraw money',
-          icon: 'card-outline',
+          icon: 'credit_card',
           action: 'sellWithdraw',
           type: 'navigation'
         }
@@ -136,28 +103,28 @@ export class Tab3Page implements OnInit, OnDestroy {
         {
           title: 'Account Security',
           subtitle: 'App locking, identity and email',
-          icon: 'shield-checkmark-outline',
+          icon: 'verified_user',
           action: 'security',
           type: 'navigation'
         },
         {
           title: 'Change Bank Account',
           subtitle: 'Link a different bank account with Plaid',
-          icon: 'business-outline',
+          icon: 'account_balance',
           action: 'changeBankAccount',
           type: 'navigation'
         },
         {
           title: 'Documents',
           subtitle: 'Tax forms & account statements',
-          icon: 'document-text-outline',
+          icon: 'description',
           action: 'taxDocuments',
           type: 'navigation'
         },
         {
           title: 'Beneficiaries',
           subtitle: 'Manage account beneficiaries and TOD',
-          icon: 'people-outline',
+          icon: 'group',
           action: 'beneficiaries',
           type: 'navigation'
         }
@@ -169,21 +136,21 @@ export class Tab3Page implements OnInit, OnDestroy {
         {
           title: 'FAQs',
           subtitle: 'Common questions answered',
-          icon: 'help-circle-outline',
+          icon: 'help',
           action: 'faq',
           type: 'navigation'
         },
         {
           title: 'Contact Us',
           subtitle: 'Get help from our team',
-          icon: 'mail-outline',
+          icon: 'mail',
           action: 'contactSupport',
           type: 'navigation'
         },
         {
           title: 'Legal Information',
           subtitle: 'Terms of Service & Privacy Policy',
-          icon: 'book-outline',
+          icon: 'menu_book',
           action: 'legalInformation',
           type: 'navigation'
         }
@@ -196,9 +163,8 @@ export class Tab3Page implements OnInit, OnDestroy {
     private settingsService: SettingsService,
     private plaidService: PlaidService,
     private toastService: ToastService,
-    private modalController: ModalController,
-    private mfuService: MonthlyFreedomUpdateService,
-    private appLockService: AppLockService,
+    private mfuStore: MfuStoreService,
+    private mfuPresenter: MfuPresenterService,
     private accountStatusService: AccountStatusService,
     public freedomStatsService: FreedomStatsService
   ) {
@@ -210,33 +176,6 @@ export class Tab3Page implements OnInit, OnDestroy {
       this.liveEquity = this.freedomStatsService.equity() ?? 0;
     });
 
-    addIcons({
-      settingsOutline,
-      walletOutline,
-      cardOutline,
-      pauseOutline,
-      playOutline,
-      notificationsOutline,
-      shieldCheckmarkOutline,
-      lockClosedOutline,
-      helpCircleOutline,
-      mailOutline,
-      documentTextOutline,
-      peopleOutline,
-      starOutline,
-      logOutOutline,
-      chevronForward,
-      personOutline,
-      businessOutline,
-      pieChartOutline,
-      timeOutline,
-      cashOutline,
-      phonePortraitOutline,
-      moonOutline,
-      checkmarkCircle,
-      giftOutline,
-      sparklesOutline
-    });
   }
 
   ngOnInit() {
@@ -282,80 +221,23 @@ export class Tab3Page implements OnInit, OnDestroy {
   }
 
   private checkMfuAvailability() {
-    this.mfuService.checkShouldShow()
+    this.mfuStore.ensureAutoSession()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (data) => {
-          // hasMfuHistory indicates the user has had at least one MFU generated
-          this.hasMfuPeriod = !!(data && (data.hasMfuHistory || data.shouldShow));
+        next: (session) => {
+          // hasMfuHistory indicates the user has had at least one MFU generated.
+          this.hasMfuPeriod = !!(session.hasMfuHistory || session.shouldShow);
 
-          // Auto-show the MFU popup if shouldShow is true
-          if (data && data.shouldShow) {
-            this.showMfuAfterUnlock();
+          // Auto-show (present-when-ready). The shared claim dedupes with the dashboard so only one
+          // of the two presents the popup.
+          if (session.shouldShow) {
+            this.mfuPresenter.presentAutoIfDue();
           }
         },
         error: () => {
           this.hasMfuPeriod = false;
         }
       });
-  }
-
-  /**
-   * If the app is currently locked, wait for a successful reauth before
-   * showing the MFU popup. Otherwise show immediately.
-   */
-  private showMfuAfterUnlock() {
-    if (this.appLockService.isCurrentlyLocked()) {
-      // Wait for the lock to be released (successful reauth)
-      this.appLockService.isLocked$
-        .pipe(
-          filter(locked => !locked),
-          take(1),
-          takeUntil(this.destroy$)
-        )
-        .subscribe(() => this.showAutoMfuPopup());
-    } else {
-      this.showAutoMfuPopup();
-    }
-  }
-
-  /**
-   * Show the MFU modal as an auto-popup (isReopen = false, non-dismissable for 5s).
-   */
-  private async showAutoMfuPopup() {
-    const modal = await this.modalController.create({
-      component: MonthlyFreedomUpdateComponent,
-      componentProps: { isReopen: false },
-      cssClass: 'monthly-freedom-update-modal',
-      backdropDismiss: false,
-      leaveAnimation: (baseEl: HTMLElement) => {
-        const backdropEl = baseEl.querySelector('ion-backdrop') || baseEl.shadowRoot?.querySelector('ion-backdrop');
-        const wrapperEl = baseEl.querySelector('.modal-wrapper') || baseEl.shadowRoot?.querySelector('.modal-wrapper') || baseEl;
-        const backdropAnim = createAnimation()
-          .addElement(backdropEl || baseEl)
-          .fromTo('opacity', '1', '0')
-          .easing('ease-in');
-        const contentAnim = createAnimation()
-          .addElement(wrapperEl)
-          .fromTo('opacity', '1', '0')
-          .fromTo('transform', 'translateY(0)', 'translateY(24px)')
-          .easing('cubic-bezier(0.4, 0, 0.2, 1)');
-        return createAnimation()
-          .addElement(baseEl)
-          .duration(400)
-          .addAnimation([backdropAnim, contentAnim]);
-      }
-    });
-
-    await modal.present();
-
-    const { data } = await modal.onDidDismiss();
-    if (data?.action === 'updateContribution') {
-      const suggestedAmount = (data.currentAmount || 0) + (data.boostAmount || 50);
-      this.router.navigate(['/recurring-investments'], {
-        queryParams: { suggestedAmount: suggestedAmount }
-      });
-    }
   }
 
   onFredLogoClick() {
@@ -511,39 +393,9 @@ export class Tab3Page implements OnInit, OnDestroy {
   }
 
   async openMonthlyFreedomUpdate() {
-    const modal = await this.modalController.create({
-      component: MonthlyFreedomUpdateComponent,
-      componentProps: { isReopen: true },
-      cssClass: 'monthly-freedom-update-modal',
-      backdropDismiss: true,
-      leaveAnimation: (baseEl: HTMLElement) => {
-        const backdropEl = baseEl.querySelector('ion-backdrop') || baseEl.shadowRoot?.querySelector('ion-backdrop');
-        const wrapperEl = baseEl.querySelector('.modal-wrapper') || baseEl.shadowRoot?.querySelector('.modal-wrapper') || baseEl;
-        const backdropAnim = createAnimation()
-          .addElement(backdropEl || baseEl)
-          .fromTo('opacity', '1', '0')
-          .easing('ease-in');
-        const contentAnim = createAnimation()
-          .addElement(wrapperEl)
-          .fromTo('opacity', '1', '0')
-          .fromTo('transform', 'translateY(0)', 'translateY(24px)')
-          .easing('cubic-bezier(0.4, 0, 0.2, 1)');
-        return createAnimation()
-          .addElement(baseEl)
-          .duration(400)
-          .addAnimation([backdropAnim, contentAnim]);
-      }
-    });
-
-    await modal.present();
-
-    const { data } = await modal.onDidDismiss();
-    if (data?.action === 'updateContribution') {
-      const suggestedAmount = (data.currentAmount || 0) + (data.boostAmount || 50);
-      this.router.navigate(['/recurring-investments'], {
-        queryParams: { suggestedAmount: suggestedAmount }
-      });
-    }
+    // Reopen: the presenter paints instantly from the localStorage snapshot (0 round-trips) and the
+    // component revalidates the live/projection fields in the background.
+    await this.mfuPresenter.presentReopen();
   }
 
   onLogout() {

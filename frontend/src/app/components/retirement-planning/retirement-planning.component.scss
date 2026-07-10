@@ -34,6 +34,10 @@
 
   &::part(scroll) {
     padding-top: 8px !important;
+    // Flex container so .edu-landing can stretch to fill available height
+    // (flex: 1) without affecting the scrollable simulator section.
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -45,7 +49,7 @@
   padding-top: env(safe-area-inset-top);
 }
 
-/* Match Tab 1 header - gray background */
+/* Match Tab 1 header - gray background, condensed height + Manrope title */
 ion-header {
   --background: var(--app-background);
   background: var(--app-background) !important;
@@ -54,6 +58,18 @@ ion-header {
     --background: var(--app-background);
     --color: var(--app-text-primary);
     --border-width: 0;
+    --min-height: 40px;
+    --padding-top: 0;
+    --padding-bottom: 0;
+  }
+
+  ion-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    color: var(--app-text-primary);
+    text-align: center;
   }
 }
 
@@ -65,7 +81,7 @@ ion-content {
 .header-tab-container {
   background: var(--app-background) !important;
   border-bottom: 1px solid var(--app-card-border);
-  padding: 0 var(--app-spacing-md) var(--app-spacing-sm);
+  padding: 2px var(--app-spacing-md) 8px;
   display: flex;
   justify-content: center;
 }
@@ -764,28 +780,7 @@ ion-item {
   box-shadow: var(--app-shadow-sm);
 }
 
-.strategy-section {
-  padding: 20px 16px;
-  padding-bottom: var(--app-spacing-lg);
-}
-
-.strategy-header {
-  text-align: center;
-  margin-bottom: var(--app-spacing-lg);
-
-  h2 {
-    color: var(--app-primary);
-    margin: 0 0 var(--app-spacing-sm) 0;
-    font-size: var(--app-font-size-xl);
-    font-weight: 500;
-  }
-
-  p {
-    color: var(--app-gray-400);
-    margin: 0;
-    font-size: var(--app-font-size-sm);
-  }
-}
+// .strategy-section and .strategy-header removed — replaced by .edu-landing (FRED-208)
 
 .strategy-card {
   margin: var(--app-spacing-md) 0;
@@ -1420,144 +1415,146 @@ ion-item {
 }
 
 /* =============================================================================
-   EDUCATION SECTION — 2x2 GRID + BOTTOM-SHEET
+   EDU LANDING — hero + height-filling 2×2 strategy card grid (FRED-208)
+   Replaces the old edu-card-grid / edu-sheet-backdrop block.
    ============================================================================= */
 
-.edu-card-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 16px;
-}
-
-.edu-card {
-  background: var(--app-card-background);
-  border: 1px solid var(--app-card-border);
-  border-radius: 16px;
-  padding: 20px 16px;
+// The ion-content scroll part is a flex column (see ::part(scroll) above) so
+// .edu-landing with flex: 1 expands to fill the entire visible content area.
+.edu-landing {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  padding: 10px 18px 20px;
+}
 
-  &:active {
-    transform: scale(0.97);
+.edu-hero {
+  text-align: center;
+  padding: 8px 6px 4px;
+  flex-shrink: 0;
+
+  .edu-eyebrow {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #2563eb;
+  }
+
+  h2 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: #0f172a;
+    margin: 6px 0 0;
+    line-height: 1.15;
+  }
+
+  p {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13.5px;
+    color: #6b7280;
+    margin: 7px auto 0;
+    line-height: 1.45;
+    max-width: 300px;
   }
 }
 
-.edu-card-icon {
-  font-size: 28px;
-  color: var(--app-blue);
-  margin-bottom: 4px;
+.edu-grid {
+  flex: 1;
+  min-height: 0;
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+}
+
+.edu-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 16px 14px 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active { transform: scale(0.975); }
+}
+
+.edu-tile {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: radial-gradient(circle at 32% 28%, #60a5fa 0%, #2563eb 55%, #1d4ed8 100%);
+  box-shadow:
+    0 8px 18px -6px rgba(37, 99, 235, 0.55),
+    inset 0 -3px 8px rgba(13, 42, 148, 0.4),
+    inset 0 2px 5px rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .material-symbols-outlined {
+    font-size: 22px;
+    color: #fff;
+  }
 }
 
 .edu-card-name {
   font-family: 'Manrope', sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  color: var(--app-text-primary);
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.015em;
   line-height: 1.2;
+  margin-top: 12px;
 }
 
-.edu-card-tagline {
+.edu-card-tag {
   font-family: 'Manrope', sans-serif;
-  font-size: 12px;
-  color: var(--app-text-secondary);
-  line-height: 1.3;
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  line-height: 1.4;
+  margin-top: 4px;
+  flex: 1;
 }
 
-/* Bottom-sheet */
-.edu-sheet-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease;
-  z-index: 1000;
-
-  &.visible {
-    opacity: 1;
-    pointer-events: all;
-  }
-}
-
-.edu-sheet {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--app-card-background);
-  border-radius: 20px 20px 0 0;
-  padding: 12px 24px calc(env(safe-area-inset-bottom) + 24px);
-  transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  z-index: 1001;
-  max-height: 60vh;
-  overflow-y: auto;
-
-  &.visible {
-    transform: translateY(0);
-  }
-}
-
-.edu-sheet-handle {
-  width: 36px;
-  height: 4px;
-  background: var(--app-gray-300);
-  border-radius: 2px;
-  margin: 0 auto 16px;
-}
-
-.edu-sheet-title {
-  font-family: 'Manrope', sans-serif;
-  font-weight: 700;
-  font-size: 20px;
-  color: var(--app-text-primary);
-  margin: 0 0 16px;
-}
-
-.edu-sheet-bullets {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.edu-card-foot {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  li {
-    font-family: 'Manrope', sans-serif;
-    font-size: 15px;
-    color: var(--app-text-secondary);
-    line-height: 1.5;
-    padding-left: 20px;
-    position: relative;
-
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 8px;
-      width: 6px;
-      height: 6px;
-      background: var(--app-blue);
-      border-radius: 50%;
-    }
-  }
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
 }
 
-.edu-sheet-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
-  border: none;
-  padding: 4px;
-  cursor: pointer;
-  color: var(--app-text-secondary);
+.edu-card-hint {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9aa6ba;
+}
+
+.edu-card-arrow {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #eef4ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .material-symbols-outlined { font-size: 15px; }
 }
 
 /* =============================================================================

@@ -8,7 +8,8 @@
 }
 
 /* =============================================================================
-   HERO HEADER — Option B
+   HERO HEADER — family gradient (FRED-211)
+   Replaces the old flat linear-gradient(135deg, #2563EB, #1d4ed8) header.
    ============================================================================= */
 
 ion-header {
@@ -17,7 +18,13 @@ ion-header {
 }
 
 .custom-profile-header {
-  background: linear-gradient(135deg, #2563EB, #1d4ed8);
+  // Topmost layer fades the gradient's bottom edge to flat #0e3a96 across the
+  // full width, so it meets the sheet-shell's #0e3a96 corner strip seamlessly
+  // (the 160deg gradient alone varies by x at the bottom → visible seam).
+  background:
+    linear-gradient(180deg, rgba(14, 58, 150, 0) 0%, rgba(14, 58, 150, 0) calc(100% - 42px), #0e3a96 100%),
+    linear-gradient(160deg, #1e60e3 0%, #1a58d0 60%, #0e3a96 100%);
+  /* 40px bottom padding lets the sheet's rounded top sit on the gradient strip */
   padding: 10px 20px 12px 20px;
   position: relative;
   z-index: 10;
@@ -32,7 +39,7 @@ ion-header {
   .user-details {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     position: relative;
     z-index: 10;
     /* leave room for the FRED wordmark on the right */
@@ -48,9 +55,9 @@ ion-header {
     .user-avatar {
       width: 52px;
       height: 52px;
-      border: 2px solid #dbdfe7;
+      border: 2.5px solid rgba(255, 255, 255, .85);
       background: white;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 6px 16px -4px rgba(8, 28, 78, .5);
     }
 
     .profile-badge {
@@ -79,23 +86,22 @@ ion-header {
     .name {
       margin: 0;
       font-family: 'Manrope', sans-serif;
-      font-size: 20px;
-      font-weight: 700;
+      font-size: 19px;
+      font-weight: 800;
       color: #ffffff;
-      letter-spacing: -0.015em;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
     }
 
     .greeting {
       margin: 2px 0 0 0;
       font-family: 'Manrope', sans-serif;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 500;
-      color: rgba(255, 255, 255, 0.85);
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+      color: rgba(255, 255, 255, .6);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -103,15 +109,14 @@ ion-header {
   }
 
   /* -------------------------------------------------------------------
-     FREEDOM STAT STRIP — three equal tiles below the user/branding row
+     GLASS FREEDOM STAT STRIP — three glass tiles (FRED-211)
      ------------------------------------------------------------------- */
   .stat-strip {
     display: flex;
     flex-direction: row;
-    gap: 8px;
-    margin-top: 14px;
-    // height is fixed so no layout shift while data loads
-    min-height: 58px;
+    gap: 9px;
+    margin-top: 16px;
+    min-height: 64px;
   }
 
   .stat-tile {
@@ -120,18 +125,22 @@ ion-header {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.14);
-    border-radius: 11px;
-    padding: 8px 10px;
+    background: rgba(255, 255, 255, .11);
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 14px;
+    padding: 11px 8px 12px;
     min-width: 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 
     .stat-label {
+      display: block;
       font-family: 'Manrope', sans-serif;
-      font-size: 10px;
-      font-weight: 600;
+      font-size: 9px;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: rgba(255, 255, 255, 0.8);
+      letter-spacing: .12em;
+      color: rgba(255, 255, 255, .55);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -139,11 +148,13 @@ ion-header {
     }
 
     .stat-value {
+      display: block;
       font-family: 'Manrope', sans-serif;
-      font-size: 17px;
-      font-weight: 700;
+      font-size: 19px;
+      font-weight: 800;
       color: #ffffff;
-      margin-top: 3px;
+      letter-spacing: -.02em;
+      margin-top: 4px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -152,7 +163,7 @@ ion-header {
   }
 
   /* -------------------------------------------------------------------
-     FRED WORDMARK — verbatim from original .header-branding (both states)
+     FRED WORDMARK — verbatim (do not modify this block)
      ------------------------------------------------------------------- */
   .header-branding {
     position: absolute;
@@ -191,11 +202,13 @@ ion-header {
 }
 
 /* =============================================================================
-   CONTENT AREA
+   CONTENT AREA — gradient stripe + pinned white sheet (Variant A, FRED-211)
    ============================================================================= */
 
 .settings-content {
-  --background: #f8fafc;
+  /* Blue matches the gradient's end colour — shows through the sheet's
+     rounded corners as a seamless continuation of the header gradient. */
+  --background: #0e3a96;
   --padding-top: 0;
   --padding-bottom: 0;
   --padding-start: 0;
@@ -204,180 +217,137 @@ ion-header {
   z-index: 2;
 }
 
-.content-scroll {
+/* Full-height flex column: gives sheet-scroll a defined parent to fill */
+.sheet-shell {
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #0e3a96;
+}
+
+/* White sheet — ONLY this element scrolls; rounded top stays pinned */
+.sheet-scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain; // keep iOS rubber-banding inside the sheet
   -webkit-overflow-scrolling: touch;
-  background-color: #f8fafc;
-
-  background-image: linear-gradient(90deg, #2a5ae0, #1d4ed8);
-  background-repeat: no-repeat;
-  background-size: 100% 50%;   /* full width, top 60% of the height */
-  background-position: top;
-}
-
-.scroll-inner {
-  background: #f8fafc;
-  min-height: 100%;
-  /* Clearance so the last row clears the floating bar. border-box makes
-     min-height:100% include this padding, so short content doesn't force
-     over-scroll — content still scrolls *behind* the translucent bar. */
-  padding-bottom: var(--fred-tabbar-clearance);
-  box-sizing: border-box;
-}
-
-/* =============================================================================
-   HEADER-OVERLAP STRIP
-   A blue band at the very top of ion-content that continues the blue header.
-   The white card overlaps onto THIS (a sibling inside ion-content) instead of
-   poking up into ion-header — so the rounded top + first group label render
-   on blue without crossing the header boundary (which is what clipped them).
-   It scrolls under the pinned header naturally, so no rows bleed over the blue.
-   ============================================================================= */
-
-.header-overlap {
-  height: 20px;
-  /* approximates the blue header's bottom edge so the seam reads as continuous */
-  background: linear-gradient(90deg, #2a5ae0, #1d4ed8);
-}
-
-/* =============================================================================
-   OVERLAPPING WHITE SECTIONS CARD
-   Option B: white rounded card pulled up over the blue header strip
-   ============================================================================= */
-
-.sections-card {
   background: #ffffff;
-  border-radius: 16px;
-  border: 2px solid #e5e7eb;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-  /* overlaps onto the .header-overlap strip above it (sibling, same container) */
-  margin-top: -18px;
-  margin-left: 12px;
-  margin-right: 12px;
-  padding: 0;
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
+  border-radius: 26px 26px 0 0;
+  box-shadow: 0 -12px 30px -18px rgba(8, 28, 78, .35);
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.sheet-inner {
+  padding: 18px 20px var(--fred-tabbar-clearance);
+  box-sizing: border-box;
+  min-height: 100%;
 }
 
 /* =============================================================================
-   SECTION GROUPS
+   SECTION GROUPS + ZONE LABELS
    ============================================================================= */
 
 .settings-group {
   padding: 0;
+
+  &:not(:first-child) .zone-label {
+    margin-top: 22px;
+  }
 }
 
-.group-header {
+.zone-label {
+  margin: 0 0 8px 0;
   font-family: 'Manrope', sans-serif;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: .08em;
   color: #6b7280;
-  margin: 0 0 2px 0;
-  padding: 11px 20px 2px;
 }
 
-.settings-group:not(:first-child) .group-header {
-  border-top: 1px solid #e5e7eb;
-}
+/* =============================================================================
+   SETTINGS LIST + ROW ANATOMY (.srow grammar, FRED-211)
+   ============================================================================= */
 
 .settings-list {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
 }
 
-.setting-item {
+.srow {
   display: flex;
   align-items: center;
+  gap: 13px;
+  padding: 12px 0;
   width: 100%;
   background: transparent;
   border: none;
-  padding: 6px 20px;
-  gap: 14px;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s ease;
-  border-bottom: 1px solid #f1f5f9;
+  -webkit-tap-highlight-color: transparent;
 
-  &.last-item {
-    border-bottom: none;
+  & + .srow {
+    border-top: 1px solid #f1f5f9;
   }
 
   &:active {
-    background: #f8fafc;
+    opacity: .55;
   }
 }
 
-.setting-icon-container {
-  width: 32px;
-  height: 32px;
+.srow-tile {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #eef4ff;
+  color: #2563EB;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 
-  .setting-icon {
-    font-size: 22px;
-    width: 22px;
-    height: 22px;
-    color: #2563EB;
+  .material-symbols-outlined {
+    font-size: 19px;
   }
 }
 
-.setting-content {
+.srow-label {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-width: 0;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -.015em;
 }
 
-.setting-main {
-  flex: 1;
-  min-width: 0;
-
-  .setting-title {
-    margin: 0;
-    font-family: 'Manrope', sans-serif;
-    font-size: 15px;
-    font-weight: 500;
-    color: #0f172a;
-    letter-spacing: -0.01em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-
-.setting-trailing {
+.srow-chevron {
+  color: #c3cbd9;
   display: flex;
-  align-items: center;
-  gap: 6px;
   flex-shrink: 0;
 
-  .setting-badge {
-    font-size: 11px;
-    font-weight: 600;
+  .material-symbols-outlined {
+    font-size: 18px;
   }
+}
 
-  .chevron-icon {
-    font-size: 16px;
-    color: #6b7280;
-    opacity: 0.5;
-  }
+.setting-badge {
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 /* =============================================================================
-   FOOTER
+   FOOTER — inside the scrolling sheet
    ============================================================================= */
 
 .footer-content {
   background: transparent;
-  padding: 20px 20px 24px 20px;
+  padding: 18px 0 22px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -385,10 +355,10 @@ ion-header {
   .footer-text {
     margin: 0;
     font-family: 'Manrope', sans-serif;
-    font-size: 11px;
-    color: #6b7280;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #b3bccb;
     text-align: center;
-    opacity: 0.8;
   }
 }
 
@@ -397,13 +367,9 @@ ion-header {
    ============================================================================= */
 
 @media (min-width: 768px) {
-  .sections-card {
+  .sheet-inner {
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
-  }
-
-  .footer-content {
-    text-align: center;
   }
 }

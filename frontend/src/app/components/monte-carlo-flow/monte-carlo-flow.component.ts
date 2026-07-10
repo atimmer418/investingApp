@@ -24,7 +24,7 @@ export type FlowStep = 'portfolio' | 'outside' | 'spend' | 'duration' | 'calc' |
 // ─── Ordered strategy definitions ────────────────────────────────────────────
 
 export const STRATEGY_DEFS = [
-  { key: 'traditional',         name: 'Traditional 4%',     tag: 'Steady inflation-adjusted withdrawals' },
+  { key: 'traditional',         name: 'Yield-Based Income',  tag: 'Live off dividends and interest — never panic-sell' },
   { key: 'dynamic-guardrails',  name: 'Dynamic Guardrails', tag: 'Spend more in good years, less in bad' },
   { key: 'sbloc',               name: 'SBLOC',              tag: 'Borrow through downturns, never sell low' },
   { key: 'annuity-growth',      name: 'Annuity + Growth',   tag: 'Guarantee essentials, grow the rest' },

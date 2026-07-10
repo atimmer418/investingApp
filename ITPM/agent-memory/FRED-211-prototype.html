@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tab3 Remodel — A/B Interactive Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..700,0..1,-50..200" rel="stylesheet">
+<style>
+:root{
+  --primary:#2563EB; --text:#0f172a; --gray:#6b7280; --bg:#f8fafc; --border:#e5e7eb;
+  --sim-deep:#081c4e; --sim-mid:#16309b;
+  --glass:rgba(255,255,255,.11); --glass-border:rgba(255,255,255,.2);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+html,body{height:100%;}
+body{
+  font-family:'Manrope',sans-serif;background:#0d1220;
+  background-image:radial-gradient(1200px 600px at 80% -10%, rgba(37,99,235,.16), transparent 60%),
+    radial-gradient(900px 500px at 10% 110%, rgba(37,99,235,.10), transparent 60%);
+  color:#e6eaf3;display:flex;flex-direction:column;align-items:center;overflow:hidden;
+}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;}
+
+.proto-bar{width:100%;max-width:1180px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 28px 8px;flex-shrink:0;}
+.proto-title .kicker{font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#5b7bd6;}
+.proto-title h1{font-size:17px;font-weight:800;color:#f2f5fb;letter-spacing:-.01em;}
+.variant-switch{display:flex;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:3px;}
+.variant-switch button{border:none;background:transparent;color:#93a2c4;font-family:'Manrope';font-size:12px;font-weight:700;
+  padding:6px 16px;border-radius:8px;cursor:pointer;transition:all .18s ease;}
+.variant-switch button.on{background:var(--primary);color:#fff;box-shadow:0 4px 12px -2px rgba(37,99,235,.5);}
+.proto-hint{font-size:11.5px;color:#5d6a89;font-weight:500;padding:0 28px 4px;flex-shrink:0;}
+.proto-hint strong{color:#8fa3d0;font-weight:700;}
+
+.stage{flex:1;display:flex;align-items:center;justify-content:center;width:100%;min-height:0;}
+.phone-wrap{transform-origin:center center;}
+.phone{width:390px;height:844px;position:relative;border-radius:54px;background:#000;padding:6px;
+  box-shadow:0 0 0 2px #1a2138,0 40px 100px -20px rgba(0,0,0,.8),0 0 120px -40px rgba(37,99,235,.35);}
+.screen-clip{position:relative;width:100%;height:100%;border-radius:48px;overflow:hidden;background:var(--bg);}
+.island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:118px;height:34px;background:#000;border-radius:20px;z-index:400;}
+.statusbar{position:absolute;top:0;left:0;right:0;height:54px;z-index:390;display:flex;align-items:center;justify-content:space-between;
+  padding:16px 30px 0;pointer-events:none;font-size:14px;font-weight:700;color:#fff;}
+.statusbar .right{display:flex;gap:5px;}
+.statusbar .right .material-symbols-outlined{font-size:16px;}
+
+.app{position:absolute;inset:0;display:flex;flex-direction:column;}
+.app-scroll{flex:1;overflow-y:auto;scrollbar-width:none;background:var(--bg);}
+.app-scroll::-webkit-scrollbar{display:none;}
+.tabbar{flex-shrink:0;height:82px;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+  border-top:1px solid #eef1f6;display:flex;justify-content:space-around;align-items:flex-start;padding-top:10px;}
+.tabbar .tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:#a2abbd;font-size:9.5px;font-weight:700;}
+.tabbar .tab.on{color:var(--primary);}
+.tabbar .material-symbols-outlined{font-size:24px;}
+
+/* ============================================================
+   GRADIENT HEADER + FREEDOM STRIP (shared by both variants)
+   ============================================================ */
+.p-header{
+  position:relative;
+  padding:64px 18px 0;
+  background:
+    radial-gradient(130% 110% at 85% -20%, rgba(96,165,250,.4), transparent 55%),
+    radial-gradient(120% 90% at 0% 115%, rgba(59,130,246,.3), transparent 55%),
+    linear-gradient(160deg, var(--sim-deep) 0%, var(--sim-mid) 55%, #2563EB 100%);
+}
+.head-row{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 0;}
+.user-wrap{display:flex;align-items:center;gap:12px;}
+.avatar{
+  width:52px;height:52px;border-radius:50%;background:#fff;
+  border:2.5px solid rgba(255,255,255,.85);
+  display:flex;align-items:center;justify-content:center;font-size:28px;
+  box-shadow:0 6px 16px -4px rgba(8,28,78,.5);
+}
+.u-name{font-size:19px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.15;}
+.u-greet{font-size:12px;font-weight:500;color:rgba(255,255,255,.6);margin-top:2px;}
+.wordmark{font-size:30px;font-weight:800;font-style:italic;letter-spacing:-.02em;color:rgba(255,255,255,.28);}
+
+.stat-strip{display:flex;gap:9px;padding:16px 0 0;}
+.stat-tile{
+  flex:1;background:var(--glass);border:1px solid var(--glass-border);
+  border-radius:14px;padding:11px 8px 12px;text-align:center;backdrop-filter:blur(10px);
+}
+.stat-label{display:block;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.55);}
+.stat-value{display:block;font-size:19px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-top:4px;}
+
+/* Variant A: header extends behind the sheet's rounded top */
+.p-header.sheet-mode{padding-bottom:40px;}
+/* Variant B: header ends cleanly */
+.p-header.cards-mode{padding-bottom:20px;border-radius:0 0 26px 26px;}
+
+/* ============================================================
+   ROW ANATOMY (shared)
+   ============================================================ */
+.srow{display:flex;align-items:center;gap:13px;padding:12px 0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.srow:active{opacity:.55;}
+.srow + .srow{border-top:1px solid #f1f5f9;}
+.srow-tile{
+  width:36px;height:36px;border-radius:10px;background:#eef4ff;color:var(--primary);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.srow-tile .material-symbols-outlined{font-size:19px;}
+.srow-label{flex:1;font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.015em;}
+.srow-chevron{color:#c3cbd9;display:flex;}
+.srow-chevron .material-symbols-outlined{font-size:18px;}
+
+.zone-label{
+  font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);
+  margin:0 0 8px;
+}
+
+/* ============================================================
+   VARIANT A — pinned header; scrolling happens INSIDE the sheet
+   ============================================================ */
+.variant-a{display:flex;flex-direction:column;height:100%;}
+.variant-a .p-header{flex-shrink:0;}
+.variant-a .sheet-scroll{
+  flex:1;min-height:0;position:relative;margin-top:-26px;
+  background:#fff;border-radius:26px 26px 0 0;
+  box-shadow:0 -12px 30px -18px rgba(8,28,78,.35);
+  overflow-y:auto;scrollbar-width:none;
+}
+.variant-a .sheet-scroll::-webkit-scrollbar{display:none;}
+.variant-a .sheet-inner{padding:22px 20px 8px;}
+.variant-a .sheet-inner .zone-label{margin-top:22px;}
+.variant-a .sheet-inner .zone-label:first-child{margin-top:0;}
+.foot-note{text-align:center;font-size:10.5px;font-weight:600;color:#b3bccb;padding:18px 0 22px;}
+
+/* ============================================================
+   VARIANT B — zone cards on the page background
+   ============================================================ */
+.variant-b .cards-zone{padding:18px 18px 6px;}
+.variant-b .zone-card{
+  background:#fff;border:1px solid var(--border);border-radius:18px;
+  padding:6px 16px;margin-bottom:4px;
+}
+.variant-b .zone-label{margin:14px 0 8px 2px;}
+.variant-b .zone-label:first-of-type{margin-top:0;}
+.variant-b .foot-note{background:transparent;}
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <div class="proto-title">
+    <span class="kicker">Tab3 Remodel · A/B Prototype</span>
+    <h1>Gradient header + freedom strip — two list treatments</h1>
+  </div>
+  <div class="variant-switch" id="variantSwitch">
+    <button data-v="a" class="on">A · Sheet</button>
+    <button data-v="b">B · Cards</button>
+  </div>
+</div>
+<div class="proto-hint">Both variants share the <strong>gradient header + glass freedom strip</strong>. <strong>A</strong> keeps the white sheet pulled over the gradient (restyled rows inside) · <strong>B</strong> breaks the groups into tab1-style zone cards on the page background.</div>
+
+<div class="stage">
+  <div class="phone-wrap" id="phoneWrap">
+    <div class="phone">
+      <div class="screen-clip">
+        <div class="island"></div>
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="right">
+            <span class="material-symbols-outlined">signal_cellular_alt</span>
+            <span class="material-symbols-outlined">wifi</span>
+            <span class="material-symbols-outlined">battery_full</span>
+          </span>
+        </div>
+
+        <div class="app">
+          <div class="app-scroll" id="appScroll"><!-- rendered by JS --></div>
+          <div class="tabbar">
+            <div class="tab"><span class="material-symbols-outlined">pie_chart</span>Portfolio</div>
+            <div class="tab"><span class="material-symbols-outlined">savings</span>Retire</div>
+            <div class="tab on"><span class="material-symbols-outlined">person</span>Profile</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const SECTIONS = [
+  { label:'Investment Management', rows:[
+    ['schedule','Recurring Investments'],
+    ['payments','One-Time Transactions'],
+    ['pie_chart','Portfolio Allocation'],
+    ['credit_card','Sell & Withdraw'],
+  ]},
+  { label:'Account & Security', rows:[
+    ['verified_user','Account Security'],
+    ['account_balance','Change Bank Account'],
+    ['description','Documents'],
+    ['group','Beneficiaries'],
+  ]},
+  { label:'Support & Legal', rows:[
+    ['help','FAQs'],
+    ['mail','Contact Us'],
+    ['menu_book','Legal Information'],
+  ]},
+];
+
+const headerHtml = mode => `
+  <div class="p-header ${mode}">
+    <div class="head-row">
+      <div class="user-wrap">
+        <div class="avatar">🐷</div>
+        <div>
+          <div class="u-name">My Account</div>
+          <div class="u-greet">Hi, Firstname</div>
+        </div>
+      </div>
+      <div class="wordmark">FRED</div>
+    </div>
+    <div class="stat-strip">
+      <div class="stat-tile"><span class="stat-label">Freedom date</span><span class="stat-value">2048</span></div>
+      <div class="stat-tile"><span class="stat-label">Freedom age</span><span class="stat-value">58</span></div>
+      <div class="stat-tile"><span class="stat-label">To go</span><span class="stat-value">$1.80M</span></div>
+    </div>
+  </div>`;
+
+const rowHtml = ([icon, label]) => `
+  <div class="srow">
+    <div class="srow-tile"><span class="material-symbols-outlined">${icon}</span></div>
+    <div class="srow-label">${label}</div>
+    <div class="srow-chevron"><span class="material-symbols-outlined">chevron_right</span></div>
+  </div>`;
+
+function renderA(){
+  return `<div class="variant-a">
+    ${headerHtml('sheet-mode')}
+    <div class="sheet-scroll">
+      <div class="sheet-inner">
+        ${SECTIONS.map(s => `
+          <p class="zone-label">${s.label}</p>
+          <div>${s.rows.map(rowHtml).join('')}</div>`).join('')}
+        <div class="foot-note">© 2026 FREDvested LLC · v1.0.0 (Beta)</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderB(){
+  return `<div class="variant-b">
+    ${headerHtml('cards-mode')}
+    <div class="cards-zone">
+      ${SECTIONS.map(s => `
+        <p class="zone-label">${s.label}</p>
+        <div class="zone-card">${s.rows.map(rowHtml).join('')}</div>`).join('')}
+    </div>
+    <div class="foot-note">© 2026 FREDvested LLC · v1.0.0 (Beta)</div>
+  </div>`;
+}
+
+function show(v){
+  $('appScroll').innerHTML = v === 'a' ? renderA() : renderB();
+  // A: header pinned — only the sheet scrolls. B: whole page scrolls.
+  $('appScroll').style.overflowY = v === 'a' ? 'hidden' : 'auto';
+  [...$('variantSwitch').children].forEach(b => b.classList.toggle('on', b.dataset.v === v));
+}
+$('variantSwitch').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (b) show(b.dataset.v);
+});
+
+function fit(){ $('phoneWrap').style.transform = `scale(${Math.min(1,(window.innerHeight-140)/880)})`; }
+window.addEventListener('resize', fit); fit();
+show('a');
+</script>
+</body>
+</html>

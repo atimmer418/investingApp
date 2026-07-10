@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of, shareReplay } from 'rxjs';
+import { tap, finalize } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
 
@@ -73,6 +74,13 @@ export interface UpdateKycRequest {
 })
 export class AlpacaService {
   private baseUrl = environment.backendApiUrl;
+
+  // Single-flight cache for KYC data — prevents multiple concurrent callers
+  // (e.g. FreedomStatsService constructor + ionViewWillEnter refresh) from
+  // each firing their own HTTP request.
+  private static readonly KYC_TTL_MS = 60_000;
+  private kycEntry: { value: any; fetchedAt: number; userId: string } | null = null;
+  private kycInFlight$: Observable<any> | null = null;
 
   constructor(private http: HttpClient) {}
 
@@ -161,23 +169,61 @@ export class AlpacaService {
   }
 
   /**
-   * Fetch current user's KYC data from Alpaca (for pre-filling the edit form)
+   * Fetch current user's KYC data from Alpaca (for pre-filling the edit form).
+   *
+   * Single-flight: concurrent callers within TTL_MS share one in-flight HTTP
+   * request (or receive the cached value). Errors are never cached — a failed
+   * request clears the in-flight reference so the next caller retries fresh.
+   * Cache is user-scoped; a different userId invalidates the entry.
    */
   getKycData(): Observable<any> {
-    return this.http.get(
+    const userId = localStorage.getItem('userId') ?? '';
+    if (
+      this.kycEntry &&
+      this.kycEntry.userId === userId &&
+      Date.now() - this.kycEntry.fetchedAt < AlpacaService.KYC_TTL_MS
+    ) {
+      return of(this.kycEntry.value);
+    }
+    if (this.kycInFlight$) {
+      return this.kycInFlight$;
+    }
+    const obs: Observable<any> = this.http.get(
       `${this.baseUrl}/alpaca/account/kyc`,
       { headers: this.getAuthHeaders() }
+    ).pipe(
+      tap(value => {
+        this.kycEntry = { value, fetchedAt: Date.now(), userId: localStorage.getItem('userId') ?? '' };
+      }),
+      finalize(() => {
+        if (this.kycInFlight$ === obs) {
+          this.kycInFlight$ = null;
+        }
+      }),
+      shareReplay(1)
     );
+    this.kycInFlight$ = obs;
+    return obs;
+  }
+
+  /** Clear the KYC single-flight cache. Call after a successful updateKyc() so the next fetch is fresh. */
+  clearKycCache(): void {
+    this.kycEntry = null;
+    this.kycInFlight$ = null;
   }
 
   /**
-   * Update current user's KYC data via Alpaca PATCH API
+   * Update current user's KYC data via Alpaca PATCH API.
+   * Clears the getKycData() single-flight cache on success so the next read
+   * fetches the updated values rather than replaying the pre-mutation cache.
    */
   updateKyc(request: UpdateKycRequest): Observable<any> {
     return this.http.patch(
       `${this.baseUrl}/alpaca/account/kyc`,
       request,
       { headers: this.getAuthHeaders() }
+    ).pipe(
+      tap(() => this.clearKycCache())
     );
   }
 }

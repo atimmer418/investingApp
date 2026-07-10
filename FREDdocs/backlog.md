@@ -78,7 +78,7 @@ Fetch tab1's portfolio data at app launch and hold the launch cover until it's p
 8. Pull-to-refresh still works (`load$(force:true)`, `isRefreshing` spinner, `event.target.complete()`); no auth-race/navigation regression on cold launch, background/resume, locked vs unlocked (Face ID), or dev login.
 9. `ng build` (plain or `--configuration dev` — NOT `development`) passes AOT; lint clean; existing `portfolio-dashboard` / `tab1` specs pass; no new dead code or TODOs.
 
-## FRED-207 — Refactor Monte Carlo simulator into fullscreen premium flow
+## FRED-207 — ✓ Refactor Monte Carlo simulator into fullscreen premium flow
 Full refactor of the tab2 simulator section (everything from the "Monte Carlo Retirement Simulator" heading down inside ion-content; header/tab-switcher and Education tab untouched). Replace the card-based UI with a premium fintech simulation experience — new all-blue-gradient FRED sub-theme, screens fading smoothly one after the other.
 - Landing: big circular gradient play button (subtle idle pulse) centered; past 3 projections below (localStorage per-user, tap to re-run instantly, designed empty state); Conservative/Expected/Aggressive scenario chips (Pro); "Include outside accounts (401k/Roth IRA)" toggle (Pro); "Market assumptions & methodology" link opening a bottom-sheet disclosure.
 - Fullscreen flow via ModalController (true takeover incl. tab bar and header), sequential screens with crossfades: Portfolio value (slider + tap-to-type + "Use my portfolio" fetch) → Outside accounts (Pro, if toggled) → Monthly retirement spend → Years to last → Calculating ("Testing market N of 1,000" theater ~2s) → Results.
@@ -107,7 +107,7 @@ Replace the card-based Monte Carlo section in tab2 with a premium simulation exp
 14. **Assumptions disclosure.** The landing link (and an info affordance on results) opens a bottom sheet listing the per-scenario return/vol assumptions, 2.5% inflation, the 1,000-scenario methodology, data-source line, and an "educational estimates, not guarantees" disclaimer.
 15. **Quality gates.** Typography/colors/motion follow the style guide (Manrope everywhere, FRED palette + gradient sub-theme, force light mode). `ng build` passes AOT (plain or `--configuration dev` — NOT "development"); lint clean; new targeted unit specs for `MonteCarloService` (scenario sets, two-phase accumulation, inverse solver — deterministic via injected/mocked randomness) pass via `ng test --include`; no TODOs or dead code left behind.
 
-## FRED-208 — Refactor education tab into premium strategy decks
+## FRED-208 — ✓ Refactor education tab into premium strategy decks
 Replicate the FRED-207 Monte Carlo styling in tab2's Education tab. Landing: hero (eyebrow WITHDRAWAL STRATEGIES, h2 "Make your money last.", sub "Four proven ways to turn a portfolio into a paycheck.") + a 2×2 card grid that stretches to fill the remaining screen height (no whitespace gap). Four strategies: Yield-Based Income, Dynamic Guardrails, Annuity, SBLOC — each card has a gradient icon tile, name, tagline, "5 slides · 3 min" hint, arrow chip. Tapping a card opens a fullscreen blue-gradient deck (same sub-theme as the simulator) of 5 swipeable slides: What it is → How it works → Why it works → Do it safely (with disclaimer) → The playbook (recap + "Stress-test this strategy" CTA that closes the deck and switches to the simulator section). Swipe + dots navigation, X always available. Education stays ungated (all tiers).
 Also: Yield-Based Income REPLACES Traditional 4% in the Monte Carlo simulator — same survival math (spend funded through ~4% yield first, principal gap-fills), renamed display + taglines + assumptions copy, so every strategy you can learn is one you can stress-test.
 Approved interactive prototype: ITPM/agent-memory/FRED-208-prototype.html (copy verbatim).
@@ -128,6 +128,111 @@ Rebuild tab2's education section in the FRED-207 premium style: a hero ("Make yo
 10. **History compatibility.** Previously saved history entries (old strategy key) never crash the landing or re-run: mapped to the new key or silently discarded via the versioned-schema tolerance — builder documents which. New entries save/re-run correctly with the renamed strategy.
 11. **Legacy removal.** Old education markup (edu-card-grid, edu-sheet backdrop/sheet) and TS (`strategyData`, `openStrategy`, `closeStrategy`, related fields) are removed; unused SCSS from this story's touched blocks pruned (pre-existing unrelated dead styles may stay per convention).
 12. **Quality gates.** `ng build` passes AOT (plain or `--configuration dev`, NEVER "development"); lint clean on touched files; `monte-carlo.service.spec.ts` updated for the rename and green via targeted `ng test --include`; Manrope + FRED palette + force light mode on the landing; `prefers-reduced-motion` degrades deck fades/snap animations; no TODOs or dead code introduced.
+
+## FRED-209 — ✓ Refactor tab1 into tab2's premium design language
+Tab1 UI lift so it stops feeling styled differently from the new tab2: same pieces, re-dressed. Gradient hero flip card (tab2's blue world becomes tab1's statement piece), tab2-compact switcher pill, zone labels, chart card with tab2-style period chips + gradient area fill + press-drag scrubbing (no axis labels — scrub gives exact values), performance analytics collapsed to Daily + All Time with "Tap to show more" expanding the remaining periods as animated return bars, and the horizontally-scrolling Portfolio Insight table replaced by holdings rows with a root-level position detail sheet. No data-flow or backend changes — presentation only.
+Approved interactive prototype: ITPM/agent-memory/FRED-209-prototype.html (built from live account values; copy/layout verbatim).
+
+### Summary
+Restyle tab1 into tab2's design grammar while leaving the data pipeline byte-identical: the flip hero becomes a blue-gradient statement card (white equity numerals, glass freedom badge, glass 2×2 back tiles), the switcher matches tab2's compact pill, the chart gains tab2-style period chips + gradient fill + press-drag scrub readout (no axis labels), Performance Analytics collapses to Daily + All Time with an animated "Tap to show more" expansion of the remaining periods as return bars, and the horizontally-scrolling positions table becomes clean holdings rows with a root-level detail bottom sheet. Hard regression guard: applyBundle/perf-sync money math, `data-fresh`, `.loading-container`, snapshot marker, and pull-to-refresh preserved exactly (FRED-205 launch-cover contract), with dollar-identical rendering pre/post.
+
+### Acceptance Criteria
+1. **Gradient hero flip card.** The hero becomes the blue-gradient statement piece per the prototype: front = "TOTAL EQUITY" eyebrow, white whole/cents equity numerals, glass freedom badge (existing `freedomLabel` binding), "TAP FOR DETAILS" hint; back = 2×2 glass tiles (Total Invested, Portfolio Value, Buying Power, Settled Cash — existing bindings). The 3D flip interaction and `isFlipped` behavior are preserved; values render identically to today for the same account.
+2. **Switcher consistency.** Tab1's ios-tab-switcher restyles to tab2's compact pill (same two tabs, same behavior, ~64px buttons, white active pill) — the header toolbar/title otherwise untouched.
+3. **Zone grammar.** Uppercase zone labels ("Performance", "Performance Analytics", "Holdings" + "TAP FOR DETAILS" hint) and white 18px-radius zone cards per the prototype replace the old mobile-card styling in this component.
+4. **Chart card.** The EXISTING `periodOptions` values render as tab2-style segmented chips (same underlying period keys → same API/history calls — the prototype's 1W/1M/3M/YTD/ALL set is illustrative only). A scrub readout row sits above the chart: idle = current value + visible date range; while scrubbing = exact value + date under the finger with hairline + dot on the chart; release restores idle. Chart visual: smoothed #2563EB line, soft gradient area fill, no plot border, NO axis/tick labels (approved). Scrubbing works with touch and mouse and must not hijack vertical page scroll (touch-action scoped to the chart box).
+5. **Cumulative return row.** The per-period cumulative pre-tax return row is preserved beneath the chart with existing values/logic, restyled per prototype.
+6. **Analytics collapse.** Performance Analytics shows exactly two rows collapsed — Daily and All Time — with a "Tap to show more" control that smoothly expands the remaining existing periods between them (animated return bars scaled to the max |return| in the list, bold %, start→end + $ subline) and flips to "Show less". Daily comes from existing data (an API daily period if present, else computed from the dashboard's existing day gain/loss fields — NO backend change; document the source).
+7. **Holdings rows.** The positions table is replaced by rows (symbol tile, symbol, name, market value, total-return pill) + a totals footer (positions total value + all-time G/L) — zero horizontal scroll anywhere in the component. Rows render the same positions data as today.
+8. **Position detail sheet.** Tapping a row presents a root-level ModalController bottom sheet (auto-height pattern from FRED-207) showing: Market Value, % of Account, Shares, Avg Cost → Current, Today (G/L + %), Total Return (G/L + %), and a Done button; backdrop tap dismisses. All fields sourced from the existing position object.
+9. **Empty states.** "No positions yet" and "No performance data yet" restyle to the tab2 dashed-box empty-state pattern; loading and error states keep their existing structure and classes (see A/C 10) with at most cosmetic alignment.
+10. **DATA-INTEGRITY / COVER-GATE REGRESSION GUARD (hard).** `loadPortfolioData`/`applyBundle` and all perf-sync money math are byte-unchanged; the `data-fresh` attribute, `.loading-container` class, snapshot-updating marker, and pull-to-refresh wiring are preserved exactly (the FRED-205 launch cover gate depends on them); `portfolio-chart`'s `[data]`/`[selectedPeriod]` contract is unchanged. For the same account, every dollar figure, percentage, and period value rendered pre/post refactor is identical.
+11. **First-time tour compatibility.** If the FRED-197 tour anchors to tab1 selectors, those anchors still resolve after the restyle (adjust the tour's selector config if a targeted class was renamed — no tour regression).
+12. **Scope guards.** No backend changes; no auth/tier logic touched; tab2 files untouched; chart library choice is the builder's (restyle Chart.js config or hand-rolled SVG) as long as the prototype visuals + scrub behavior are matched.
+13. **Quality gates.** `ng build` AOT passes (plain or `--configuration dev`, NEVER "development"); lint clean on touched files; any pre-existing green targeted specs for touched components still pass (never run the full suite); Manrope/palette/force-light per style guide; `prefers-reduced-motion` degrades flip, bar, and expand animations; old table/segment/hero SCSS pruned (unrelated legacy dead styles may stay); no TODOs.
+
+## FRED-210 — Emit 1W/1M/3M/YTD performance periods from backend
+The FRED-209 analytics card collapses to Daily + All Time with a "Tap to show more" expander for the middle periods — but `/api/portfolio/performance` (PortfolioDashboardController.getPerformanceMetrics) only ever emits "Today" and "Total", so `getMiddlePerformancePeriods()` is always empty and the expander never renders in production. Add 1W, 1M, 3M, and YTD period rows computed from the same portfolio-history data the chart uses, so the approved expander comes alive with zero frontend changes.
+
+### Summary
+Extend the backend performance endpoint to also return 1W/1M/3M/YTD rows (same shape and simple-return methodology as the existing Today/Total rows, window starts resolved from the chart's history source with closest-prior-point fallback), omitting windows older than the account and degrading to today's exact behavior when history is unavailable. Done = the FRED-209 "Tap to show more" expander renders live with animated bars, zero frontend changes, plain-JUnit coverage of the window math.
+
+### Acceptance Criteria
+1. **New periods.** `/api/portfolio/performance` returns rows for `1W`, `1M`, `3M`, and `YTD` between "Today" and "Total", each with the exact same field shape as existing rows (`period`, `startValue`, `endValue`, `totalReturn`, `totalReturnPercent`).
+2. **Methodology consistency.** Each window's `startValue` is the account equity at (or the closest available point before) the window start, sourced from the SAME portfolio-history data the chart consumes (null-skipping parser preserved); `endValue` = current equity consistent with the Total row; `totalReturn = endValue − startValue`; `totalReturnPercent = totalReturn / startValue × 100` guarding division by zero. No new return model.
+3. **Account-age handling.** Windows older than the account's earliest history point are OMITTED (not zero-filled); builder documents the YTD clamp rule for young accounts.
+4. **Ordering.** Response order: Today, 1W, 1M, 3M, YTD, Total.
+5. **Degradation.** History failure/empty → endpoint returns Today + Total exactly as today; a failed window logs and skips, never 500s.
+6. **Controller stays thin.** Window computation in PortfolioDashboardService per layering conventions.
+7. **Tests.** Plain JUnit 5 (no Spring context/DB): window-start resolution, percent math with zero-start guard, YTD clamp, empty-history degradation; run via `./gradlew test --tests <FullyQualifiedClass>`.
+8. **Frontend proof (no frontend changes).** Tab1 analytics now shows "Tap to show more" live; expanding reveals 1W/1M/3M/YTD with animated bars.
+9. **Quality gates.** Backend compiles; other endpoints' responses unchanged; SLF4J logging on skip paths; no TODOs.
+
+
+## FRED-211 — Remodel tab3 into the family design language (Variant A)
+Tab3 keeps its identity (pig avatar, FRED wordmark, freedom strip, sheet-over-blue) but joins the tab1/tab2 design family: the header becomes the family gradient with the freedom strip as glass tiles, list rows get icon tiles + Manrope typography with zone-label section headers, and scrolling is confined to the white sheet — the header and strip stay pinned. KEEP VERBATIM: the current profile pic (pigAvatarSrc image + badge) and the FRED wordmark styling (Montserrat Black Italic treatment incl. mfu-active behavior).
+Approved interactive prototype (Variant A with pinned header): ITPM/agent-memory/FRED-211-prototype.html — the B variant in its toggle is reference-only, not in scope.
+
+### Summary
+Restyle tab3 in place: family gradient header with glass freedom tiles (bindings unchanged), settings rows re-dressed with icon tiles + Manrope + zone labels (all actions/badges preserved), and scrolling confined to the white sheet whose rounded top stays fixed over the gradient while its content scrolls (appTabBarScroll follows the real scroller). Pig avatar and Montserrat FRED wordmark kept verbatim. Row icon names move to Material Symbols via TS data and MUST be added to DYNAMIC_ICONS + subset regenerated.
+
+### Acceptance Criteria
+1. **Gradient header.** ion-header adopts the family gradient (deep #081c4e → #16309b → #2563EB with radial light catches, per prototype). PRESERVED VERBATIM: pigAvatarSrc avatar + profileActionRequired$ badge + goToMyProfile(); .header-branding FRED wordmark styling (Montserrat Black Italic, size, position, color) incl. mfu-active and onFredLogoClick(); "My Account"/"Hi, Firstname" bindings (typography may tighten to Manrope weights).
+2. **Glass freedom strip.** Stat tiles restyle to glass (translucent white, hairline border, backdrop blur, white values) with unchanged freedomStatsService bindings and loading dashes.
+3. **Pinned-header scroll.** Header + strip never move; only the sheet's CONTENT scrolls beneath its fixed 26px rounded top (lift shadow per prototype); appTabBarScroll observes the actual scroller so tab-bar hide-on-scroll keeps working.
+4. **Row anatomy.** Rows get the family icon tile (36px, radius 10, #eef4ff, blue icon), Manrope 15px/700 label, light chevron; settingSections structure, item badges, and every onSettingClick(action) preserved.
+5. **Icons.** Row icons become Material Symbols per prototype; names live in TS data so they are ADDED TO DYNAMIC_ICONS in subset-icons.mjs and `npm run subset-icons` is run — no ligature-text icons may ship.
+6. **Zone labels.** Section titles use the family zone-label treatment; footer version line stays inside the scrolling sheet.
+7. **Behavior preservation.** All actions, MFU logo interaction, profile badge, safe areas unchanged; no service/data changes; no other tab touched.
+8. **Quality gates.** ng build AOT (dev config, never "development"); lint clean; subset output shows new glyphs; Manrope/palette/force-light; headless proof that scrolling the sheet leaves the header rect unchanged; old replaced styles pruned; no TODOs.
+
+
+## FRED-212 — Dedupe boot-time API calls via single-flight stores
+The FRED-211 verifier observed tab3 boot firing duplicated API calls — portfolio/dashboard, investment-schedule/current, and the Alpaca account/KYC-status endpoints each ~4× per cold boot. Root cause: multiple boot-time consumers (freedom stats, profile badge, MFU checks, dashboard priming…) each call the underlying service methods independently. Fix with the codebase's established single-flight pattern (FRED-205's PortfolioStoreService: shareReplay(1)-backed in-memory cache where concurrent subscribers join one in-flight HTTP call), extended/reused — NOT a new state-management framework. Outcome: each of those endpoints fires exactly once per cold boot with unchanged data for every consumer.
+
+### Summary
+Audit boot network traffic, then route every consumer of the duplicated endpoints through single-flight short-TTL cached observables in the FRED-205 store pattern (shareReplay(1) refCount:false + force-refresh bypass, errors never cached), so portfolio/dashboard, investment-schedule/current, and Alpaca account/KYC status each fire exactly once per cold boot — payloads, refresh paths, and auth behavior unchanged; uncommitted FRED-205/206 store work preserved.
+
+### Acceptance Criteria
+1. **Audit first.** Boot network audit (headless request log) documents every duplicated endpoint + responsible call sites in implementation-notes-FRED-212.md BEFORE changes.
+2. **Exactly once.** Post-fix cold boot (tab1 and tab3) fires exactly one request each to portfolio/dashboard, investment-schedule/current, and the Alpaca account/KYC-status endpoint(s) — harness request-log proof with before/after counts.
+3. **Pattern conformance.** FRED-205 single-flight approach (shareReplay(1) refCount:false, short TTL, force-refresh bypass) extended/reused in the owning services; no NgRx/new library.
+4. **Behavior identity.** Consumers receive identical payloads; pull-to-refresh/explicit refresh bypass the cache; badge/banner triggers unchanged.
+5. **Auth untouched.** No interceptor/header/JWT changes; errors (incl. 401) are never cached.
+6. **FRED-205/206 coexistence.** Existing store API + snapshot/cover-gate paths diff-proven intact.
+7. **Quality gates.** AOT build (dev config), lint, targeted specs green incl. a single-flight join spec (two concurrent subscribers → one HTTP call); no TODOs.
+
+
+## FRED-213 — Dedupe duplicate /user/progress fetches (in-flight join only)
+The FRED-212 verifier's boot audits show GET /api/user/progress firing 2× on tab1 cold boot (builder saw 3× in one run). userProgress is auth-adjacent and the app's ROUTING AUTHORITY (navigateBasedOnProgress, tier gating, onboarding steps) and it MUTATES constantly during onboarding — so unlike FRED-212's endpoints it must NOT get a TTL cache: any staleness risks the progress-fallback-ejects-user class of bug. Fix = in-flight single-flight ONLY: concurrent callers join one HTTP request; once settled, the next call always fetches fresh. Zero staleness by construction, burst deduped.
+
+### Summary
+Audit the boot-time /user/progress duplication, then wrap the progress HTTP source in an in-flight join (shared observable while pending, cleared on settle — success AND error) inside AuthService: concurrent bursts produce exactly one request, post-settle calls always fetch fresh, and the timeout/retry/localStorage-fallback + routing semantics are byte-preserved. No TTL cache, no persisted entries, auth untouched.
+
+### Acceptance Criteria
+1. **Audit first.** implementation-notes-FRED-213.md documents each boot-time /user/progress origin (harness log + call sites) before changes, noting any devPage-only duplication.
+2. **In-flight join only.** Concurrent requests collapse to ONE HTTP call (harness: tab1 cold boot 1×); the shared observable clears on settle (success AND error); the next post-settle call always issues a fresh request. NO TTL cache or post-settle reuse.
+3. **Routing/fallback semantics byte-preserved.** timeout+retry+fallback, _source semantics, navigateBasedOnProgress inputs, and the localStorage fallback behave exactly as before; auth headers/interceptors untouched.
+4. **Mutation safety.** Progress mutations unaffected; mutation → next read fetches fresh (spec-proven).
+5. **Specs.** Targeted: concurrent join → 1 request; post-settle → new request; error propagates to joiners and next call fetches fresh.
+6. **Quality gates.** AOT build (dev config), lint, existing auth-related targeted specs green, no TODOs.
+
+
+## FRED-214 — Settings-shell: family gradient header + pinned sheet on all tab3-linked pages
+Apply the tab3 layout language to every settings page (pages navigated to from tab3, incl. my-profile via the avatar): vivid-royal family gradient on the header, the shared tab1/tab2 title treatment (Manrope 800 18px centered) in WHITE, and the white content sheet with its fixed rounded top acting as the divider that scrolling content flows beneath (pinned-header pattern from FRED-211). One shared style source, not per-page copies. Keyboard avoidance must keep genuinely working on form pages (KeyboardAvoidDirective requires IonContent — no silent no-ops).
+
+### Summary
+Build one shared settings-shell (family gradient header, white Manrope-800 18px centered title with white back affordance, pinned white 26px-rounded sheet whose fixed top edge divides the scrolling content) and convert every tab3-linked page to it — recurring-investments, one-time transactions, portfolio-customize, sell-withdraw, security-settings, tax-documents, beneficiaries, change-bank-account, faq, my-profile (adapted) — preserving each page's content/logic/back behavior and proving keyboard avoidance still engages on form pages. Coming-soon toasts skip; every destination's disposition documented.
+
+### Acceptance Criteria
+1. **Shared shell, single source.** Gradient/title/back/sheet styles live in ONE shared source; no per-page duplicated blocks (grep gate).
+2. **Header.** Exact tuned family gradient; Manrope 800/18px/centered WHITE title, optically centered vs the back button; white back affordance preserving each page's existing back behavior; safe-area top; page-specific right actions preserved, restyled white.
+3. **Pinned sheet.** White sheet, 26px rounded top + lift shadow over the gradient; top edge FIXED, only content scrolls beneath it; overscroll-behavior contain; bottom clearances preserved.
+4. **Keyboard avoidance genuinely works.** Form pages keep a KeyboardAvoidDirective-compatible scroller (IonContent host) and the builder statically proves the mechanics engage — no silent no-ops.
+5. **Behavior preservation.** Content/forms/flows/navigation untouched; no tab1/2/3 or service changes.
+6. **Inventory honesty.** Every tab3-linked destination listed with disposition (converted / skipped-with-reason) in implementation notes.
+7. **Visual proof.** Headless screenshots per converted page (top + scrolled) as fred214-<page>.png, consistent with tab3.
+8. **Quality gates.** AOT build (dev config) zero new warnings; lint; subset-icons re-run if new ligatures; no TODOs/dead styles.
 
 
 # 💤 SLEEPING — Backlog (not yet started)

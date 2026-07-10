@@ -204,7 +204,13 @@ public class PortfolioDashboardController {
                     dashboardData.summary.todayChange, dashboardData.summary.todayChangePercent);
             }
             performanceMetrics.add(dailyPerf);
-            
+
+            // Middle period rows: 1W, 1M, 3M, YTD — windows older than the account are omitted
+            BigDecimal currentEquity = dashboardData.summary.portfolioValue;
+            List<Map<String, Object>> periodRows =
+                    portfolioDashboardService.computePerformancePeriodRows(user, currentEquity);
+            performanceMetrics.addAll(periodRows);
+
             // Overall performance since investment start
             Map<String, Object> totalPerf = new HashMap<>();
             totalPerf.put("period", "Total");

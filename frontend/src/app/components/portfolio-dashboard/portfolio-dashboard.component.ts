@@ -2,22 +2,20 @@ import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PortfolioService, PortfolioDashboardData, Position, PerformanceData, PortfolioHistory } from '../../services/portfolio.service';
-import { PortfolioStoreService, PortfolioBundle } from '../../services/portfolio-store.service';
-import { LoadingController, ModalController, createAnimation } from '@ionic/angular/standalone';
+import { PortfolioStoreService, PortfolioBundle, PortfolioSnapshot } from '../../services/portfolio-store.service';
+import { LoadingController, ModalController } from '@ionic/angular/standalone';
 import { ToastService } from '../../services/toast.service';
 import { AuthService } from '../../services/auth.service';
-import { MonthlyFreedomUpdateService } from '../../services/monthly-freedom-update.service';
-import { MonthlyFreedomUpdateComponent } from '../monthly-freedom-update/monthly-freedom-update.component';
-import { AppLockService } from '../../services/app-lock.service';
+import { MfuPresenterService } from '../../services/mfu-presenter.service';
 import { Router } from '@angular/router';
-import { filter, firstValueFrom, take, Subject, takeUntil } from 'rxjs';
+import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { TabBarScrollDirective } from '../../directives/tab-bar-scroll.directive';
 import { PortfolioChartComponent, PortfolioDataPoint } from '../portfolio-chart/portfolio-chart.component';
+import { PositionDetailSheetComponent } from '../position-detail-sheet/position-detail-sheet.component';
 import {
   IonHeader, IonToolbar, IonTitle, IonButton, IonIcon, IonContent,
   IonRefresher, IonRefresherContent,
-  IonSpinner, IonSegment, IonSegmentButton,
-  IonTabs, IonTabBar, IonTab, IonTabButton, IonRippleEffect
+  IonSpinner
 } from "@ionic/angular/standalone";
 
 @Component({
@@ -31,7 +29,7 @@ import {
     PortfolioChartComponent,
     IonHeader, IonToolbar, IonTitle, IonButton, IonIcon, IonContent,
     IonRefresher, IonRefresherContent,
-    IonSpinner, IonSegment, IonSegmentButton,
+    IonSpinner,
     TabBarScrollDirective
   ]
 })
@@ -49,6 +47,12 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
   backgroundIcons: string[] = [];
   freedomLabel: string = '';
 
+  // Phase 2 (FRED-206) snapshot state
+  snapshotAsOf: number | null = null;   // set while last-known snapshot is on screen; null once fresh is applied
+  dataIsFresh = false;                  // true once real (revalidated) data is painted — the cover gate waits for THIS
+  revalidateFailed = false;             // true if a background revalidate failed while the snapshot shows (offline)
+  private firstApply = true;            // only the first real apply drives the MFU check; silent revalidates don't
+
   // Time period options for chart
   periodOptions = [
     { value: '1M', label: '1M' },
@@ -58,14 +62,20 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
     { value: 'ALL', label: 'All' }
   ];
 
+  // ----------- FRED-209 presentation state (no data-pipeline changes) -----------
+  scrubState: { value: number; date: string } | null = null;
+  analyticsExpanded = false;
+  analyticsActive = false;
+  private openingSheet = false;
+  // -------------------------------------------------------------------------------
+
   constructor(
     private portfolioService: PortfolioService,
     private portfolioStore: PortfolioStoreService,
     private loadingController: LoadingController,
     private toastService: ToastService,
     private authService: AuthService,
-    private mfuService: MonthlyFreedomUpdateService,
-    private appLockService: AppLockService,
+    private mfuPresenter: MfuPresenterService,
     private modalController: ModalController,
     private router: Router,
     private cdr: ChangeDetectorRef
@@ -74,89 +84,37 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   ngOnInit() {
+    // Phase 2: paint the last-known snapshot instantly if we have one. On a SLOW network the cover
+    // cap fires and reveals these last-known numbers (+ an "Updating…" marker) instead of the
+    // spinner. On a FAST network the cover keeps holding for FRESH data (see dataIsFresh /
+    // waitForTab1DataPainted), so the snapshot stays hidden behind the cover and the user only ever
+    // sees their current numbers. loadPortfolioData() then revalidates either way.
+    const snap = this.portfolioStore.peekSnapshot();
+    if (snap) {
+      this.applySnapshot(snap);
+    }
     this.loadPortfolioData();
   }
 
-  /**
-   * Check and show the Monthly Freedom Update modal if needed.
-   * Called after portfolio data loads successfully.
-   */
-  private checkMonthlyFreedomUpdate() {
-    this.mfuService.checkShouldShow().subscribe({
-      next: (result) => {
-        if (result.shouldShow) {
-          this.showMfuAfterUnlock();
-        }
-      },
-      error: (err) => {
-        console.warn('MFU check failed:', err);
-      }
-    });
-  }
-
-  /**
-   * If the app is currently locked, wait for a successful reauth before
-   * showing the MFU popup. Otherwise show immediately.
-   */
-  private showMfuAfterUnlock() {
-    if (this.appLockService.isCurrentlyLocked()) {
-      this.appLockService.isLocked$
-        .pipe(
-          filter(locked => !locked),
-          take(1),
-          takeUntil(this.destroy$)
-        )
-        .subscribe(() => this.showMonthlyFreedomUpdateModal(false));
-    } else {
-      this.showMonthlyFreedomUpdateModal(false);
-    }
-  }
-
-  /**
-   * Show the Monthly Freedom Update modal.
-   * @param isReopen If true, skip the 5-second lock (from FRED tab).
-   */
-  async showMonthlyFreedomUpdateModal(isReopen: boolean) {
-    const modal = await this.modalController.create({
-      component: MonthlyFreedomUpdateComponent,
-      componentProps: { isReopen },
-      cssClass: 'monthly-freedom-update-modal',
-      backdropDismiss: false,
-      leaveAnimation: (baseEl: HTMLElement) => {
-        const backdropEl = baseEl.querySelector('ion-backdrop') || baseEl.shadowRoot?.querySelector('ion-backdrop');
-        const wrapperEl = baseEl.querySelector('.modal-wrapper') || baseEl.shadowRoot?.querySelector('.modal-wrapper') || baseEl;
-        const backdropAnim = createAnimation()
-          .addElement(backdropEl || baseEl)
-          .fromTo('opacity', '1', '0')
-          .easing('ease-in');
-        const contentAnim = createAnimation()
-          .addElement(wrapperEl)
-          .fromTo('opacity', '1', '0')
-          .fromTo('transform', 'translateY(0)', 'translateY(24px)')
-          .easing('cubic-bezier(0.4, 0, 0.2, 1)');
-        return createAnimation()
-          .addElement(baseEl)
-          .duration(400)
-          .addAnimation([backdropAnim, contentAnim]);
-      }
-    });
-
-    await modal.present();
-
-    const { data } = await modal.onDidDismiss();
-    if (data?.action === 'updateContribution') {
-      // Navigate to recurring investments with boost amount from MFU
-      const newAmount = (data.currentAmount || 0) + (data.boostAmount || 50);
-      this.router.navigate(['/recurring-investments'], {
-        queryParams: { suggestedAmount: newAmount }
-      });
-    }
+  /** Hydrate the view from a persisted snapshot for instant paint (held behind the cover on fast networks). */
+  private applySnapshot(snap: PortfolioSnapshot): void {
+    this.dashboard = snap.dashboard;
+    this.performanceData = Array.isArray(snap.performance) ? snap.performance : [];
+    this.selectedPeriod = snap.period || 'ALL';
+    this.chartData = snap.history ? this.processChartData(snap.history) : [];
+    this.freedomLabel = snap.freedomLabel || '';
+    this.snapshotAsOf = snap.savedAt;
+    this.dataIsFresh = false;
+    this.generateBackgroundIcons();
+    this.loading = false;
   }
 
   async loadPortfolioData(isRefresh = false) {
     if (isRefresh) {
       this.isRefreshing = true;
-    } else {
+    } else if (!this.dashboard) {
+      // Only show the full-screen spinner when there is nothing on screen yet. If a snapshot (or
+      // prior data) is already showing, revalidate SILENTLY so we never flash a spinner over it.
       this.loading = true;
     }
     this.error = null;
@@ -166,8 +124,15 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
       this.applyBundle(bundle, isRefresh);
     } catch (error: any) {
       console.error('Error loading portfolio data:', error);
-      this.error = error.error?.message || 'Failed to load portfolio data';
-      this.toastService.showToast('Failed to load portfolio data', 'danger');
+      if (!this.dashboard) {
+        // Nothing on screen → surface the error card.
+        this.error = error.error?.message || 'Failed to load portfolio data';
+        this.toastService.showToast('Failed to load portfolio data', 'danger');
+      } else if (this.snapshotAsOf) {
+        // A snapshot is showing and the revalidate failed (e.g. offline) → keep the snapshot and
+        // switch its marker from "Updating…" to "as of <time>". Never erase good data.
+        this.revalidateFailed = true;
+      }
     } finally {
       if (isRefresh) {
         this.isRefreshing = false;
@@ -247,9 +212,27 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
       this.updateFreedomLabel(this.dashboard.summary.equity);
     }
 
-    // Check if Monthly Freedom Update should be shown (only on initial load)
-    if (!isRefresh && this.dashboard && this.dashboard.summary.equity > 0) {
-      this.checkMonthlyFreedomUpdate();
+    // Check if the Monthly Freedom Update should be shown — only on the FIRST real apply, so a silent
+    // revalidate after a snapshot hydrate doesn't re-pop the modal. The presenter primes the shared
+    // single-flight session and presents the modal already-populated (no "Preparing your update…").
+    if (this.firstApply && !isRefresh && this.dashboard && this.dashboard.summary.equity > 0) {
+      this.mfuPresenter.presentAutoIfDue();
+    }
+    this.firstApply = false;
+
+    // Fresh data is now painted: let the cover gate lift onto it (dataIsFresh), clear the snapshot
+    // marker, and persist this view-model for the next cold launch.
+    this.dataIsFresh = true;
+    this.snapshotAsOf = null;
+    this.revalidateFailed = false;
+    if (this.dashboard) {
+      this.portfolioStore.persistSnapshot({
+        dashboard: this.dashboard,
+        performance: this.performanceData,
+        history: bundle.history,
+        freedomLabel: this.freedomLabel,
+        period: this.selectedPeriod,
+      });
     }
   }
 
@@ -462,7 +445,7 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(amount: number): string {
-    // Handle edge case where value is very small negative (rounds to 0) 
+    // Handle edge case where value is very small negative (rounds to 0)
     // to avoid displaying "-$0.00"
     const roundedAmount = Math.round(amount * 100) / 100;
     const displayAmount = roundedAmount === 0 ? 0 : amount;
@@ -573,6 +556,16 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
     // Overview (default) -> Front side (isFlipped = false)
     // Analytics -> Back side (isFlipped = true)
     this.isFlipped = this.selectedTab === 'analytics';
+    // Trigger bar animation on analytics tab enter
+    if (this.selectedTab === 'analytics') {
+      this.analyticsActive = false;
+      this.analyticsExpanded = false;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.analyticsActive = true;
+        this.cdr.detectChanges();
+      }, 60);
+    }
   }
 
   getPositionsTotalValue(): number {
@@ -631,5 +624,73 @@ export class PortfolioDashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // =========================================================================
+  // FRED-209 — presentation-only helpers (no data pipeline involvement)
+  // =========================================================================
+
+  /** Idle scrub readout: date range of the currently visible chart window. */
+  getChartDateRange(): string {
+    if (!this.chartData || this.chartData.length === 0) return '';
+    const first = new Date(this.chartData[0].date + (this.chartData[0].date.includes('T') ? '' : 'T00:00:00Z'));
+    const last = new Date(this.chartData[this.chartData.length - 1].date + (this.chartData[this.chartData.length - 1].date.includes('T') ? '' : 'T00:00:00Z'));
+    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' };
+    return first.toLocaleDateString('en-US', opts) + ' – ' + last.toLocaleDateString('en-US', opts);
+  }
+
+  /** Receive scrub state emitted by portfolio-chart. */
+  onScrubChange(state: { value: number; date: string } | null): void {
+    this.scrubState = state;
+  }
+
+  /** 'Today' period from performanceData — shown as the Daily row in analytics. */
+  getDailyPerformance(): PerformanceData | null {
+    return this.performanceData.find(p => p.period === 'Today') ?? null;
+  }
+
+  /** 'Total' period from performanceData — shown as the All Time row in analytics. */
+  getAllTimePerformance(): PerformanceData | null {
+    return this.performanceData.find(p => p.period === 'Total') ?? null;
+  }
+
+  /** Middle periods: everything that isn't 'Today' or 'Total'. */
+  getMiddlePerformancePeriods(): PerformanceData[] {
+    return this.performanceData.filter(p => p.period !== 'Total' && p.period !== 'Today');
+  }
+
+  /** Max |return| across all performance periods (for bar scaling). */
+  getMaxAbsReturn(): number {
+    if (!this.performanceData || this.performanceData.length === 0) return 1;
+    return Math.max(...this.performanceData.map(p => Math.abs(p.totalReturnPercent)), 0.01);
+  }
+
+  /** Bar fill width as a percentage of the zone card, scaled to max |return|. */
+  getBarWidth(perf: PerformanceData): number {
+    const max = this.getMaxAbsReturn();
+    return Math.abs(perf.totalReturnPercent) / max * 100;
+  }
+
+  /** First few letters of a ticker for the holdings tile. */
+  getSymbolInitials(symbol: string): string {
+    return symbol.substring(0, 4).toUpperCase();
+  }
+
+  /** Open the position detail bottom sheet (root-level ModalController). */
+  async openPositionSheet(position: Position): Promise<void> {
+    if (this.openingSheet) return;
+    this.openingSheet = true;
+    try {
+      const modal = await this.modalController.create({
+        component: PositionDetailSheetComponent,
+        componentProps: { position },
+        cssClass: 'mc-bottom-sheet-modal',
+        backdropDismiss: true
+      });
+      await modal.present();
+      await modal.onDidDismiss();
+    } finally {
+      this.openingSheet = false;
+    }
   }
 }

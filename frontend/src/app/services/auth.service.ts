@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, Subject, tap, catchError, of, lastValueFrom, timeout, retry, timer, throwError, finalize } from 'rxjs';
+import { Observable, BehaviorSubject, Subject, tap, catchError, of, lastValueFrom, timeout, retry, timer, throwError, finalize, shareReplay, defer } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { JwtTokenUtils } from '../utils/jwt-token.utils';
 import { DeviceIdService } from './device-id.service';
@@ -60,6 +60,11 @@ export class AuthService {
   private reAuthInProgressSubject = new BehaviorSubject<boolean>(false);
   public reAuthInProgress$ = this.reAuthInProgressSubject.asObservable();
   private tokenRefreshInProgress = false;
+
+  // In-flight join for GET /user/progress. While a request is pending, concurrent callers
+  // share this observable (shareReplay(1)). Cleared by finalize on settle — success AND error —
+  // so the next call after settlement always issues a fresh request. No TTL cache.
+  private progressInFlight$: Observable<UserProgress> | null = null;
 
   /**
    * Emits once at the END of handleSuccessfulAuthentication so app.component
@@ -178,6 +183,7 @@ export class AuthService {
     this.isLoggedInSubject.next(false);
     this.reAuthInProgressSubject.next(false);
     this.userProgressSubject.next(null);
+    this.progressInFlight$ = null;
   }
 
   isAuthenticated(): boolean {
@@ -185,8 +191,22 @@ export class AuthService {
   }
 
   getUserProgress(): Observable<UserProgress> {
-    return this.http.get<UserProgress>(`${BACKEND_API_URL}/user/progress`,
-      { headers: this.getAuthHeaders() });
+    if (this.progressInFlight$) {
+      return this.progressInFlight$;
+    }
+    const obs: Observable<UserProgress> = this.http.get<UserProgress>(
+      `${BACKEND_API_URL}/user/progress`,
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      finalize(() => {
+        if (this.progressInFlight$ === obs) {
+          this.progressInFlight$ = null;
+        }
+      }),
+      shareReplay(1)
+    );
+    this.progressInFlight$ = obs;
+    return obs;
   }
 
   /**
@@ -260,7 +280,12 @@ export class AuthService {
   }
 
   loadUserProgress(): void {
-    this.getUserProgress().pipe(
+    // defer re-evaluates getUserProgress() on each subscription attempt (including retries).
+    // After an error, finalize() has already cleared progressInFlight$, so each retry calls
+    // getUserProgress() fresh — creating a new in-flight observable and a real HTTP request.
+    // Without defer, retry would resubscribe to the same shareReplay(1) instance, which
+    // replays the cached error instantly and makes no new HTTP request.
+    defer(() => this.getUserProgress()).pipe(
       // Per-attempt 10s cap (unchanged) — guards against a hung request.
       timeout(10_000),
       // Retry transient failures so a single network blip / cold proxy / 5xx self-heals
@@ -530,9 +555,10 @@ export class AuthService {
   // Investment Schedule methods (one-to-one mapping per user)
   createOrUpdateInvestmentSchedule(schedule: any): Observable<any> {
     console.log('[AuthService] Creating/updating investment schedule (upsert):', schedule);
-    // Use POST to create new or update existing investment schedule
     return this.http.post(`${BACKEND_API_URL}/investment-schedule/create`, schedule,
-      { headers: this.getAuthHeaders() });
+      { headers: this.getAuthHeaders() }).pipe(
+      tap(() => this.clearScheduleCache())
+    );
   }
 
   // Backward compatibility method - delegates to createOrUpdateInvestmentSchedule
@@ -541,11 +567,46 @@ export class AuthService {
     return this.createOrUpdateInvestmentSchedule(schedule);
   }
 
+  // Single-flight cache for investment-schedule/current.
+  // Keyed by userId so logout/login as a different user gets a fresh fetch.
+  private static readonly SCHEDULE_TTL_MS = 60_000;
+  private scheduleEntry: { value: any; fetchedAt: number; userId: string } | null = null;
+  private scheduleInFlight$: Observable<any> | null = null;
+
   getCurrentInvestmentSchedule(): Observable<any> {
-    console.log('[AuthService] Retrieving current user investment schedule...');
-    // GET the user's current investment schedule
-    return this.http.get(`${BACKEND_API_URL}/investment-schedule/current`,
-      { headers: this.getAuthHeaders() });
+    const userId = localStorage.getItem('userId') ?? '';
+    if (
+      this.scheduleEntry &&
+      this.scheduleEntry.userId === userId &&
+      Date.now() - this.scheduleEntry.fetchedAt < AuthService.SCHEDULE_TTL_MS
+    ) {
+      return of(this.scheduleEntry.value);
+    }
+    if (this.scheduleInFlight$) {
+      return this.scheduleInFlight$;
+    }
+    const obs: Observable<any> = this.http.get(
+      `${BACKEND_API_URL}/investment-schedule/current`,
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      tap(value => {
+        this.scheduleEntry = { value, fetchedAt: Date.now(), userId: localStorage.getItem('userId') ?? '' };
+      }),
+      finalize(() => {
+        if (this.scheduleInFlight$ === obs) {
+          this.scheduleInFlight$ = null;
+        }
+      }),
+      shareReplay(1)
+    );
+    this.scheduleInFlight$ = obs;
+    return obs;
+  }
+
+  /** Clear the schedule single-flight cache. Call after creating or updating a schedule. */
+  clearScheduleCache(): void {
+    this.scheduleEntry = null;
+    this.scheduleInFlight$ = null;
   }
 
   getAllInvestmentSchedules(): Observable<any> {
@@ -566,16 +627,18 @@ export class AuthService {
 
   pauseInvestmentSchedule(scheduleId: number): Observable<any> {
     console.log('[AuthService] Pausing investment schedule:', scheduleId);
-    // Pause investment schedule
     return this.http.post(`${BACKEND_API_URL}/investment-schedule/${scheduleId}/pause`, {},
-      { headers: this.getAuthHeaders() });
+      { headers: this.getAuthHeaders() }).pipe(
+      tap(() => this.clearScheduleCache())
+    );
   }
 
   resumeInvestmentSchedule(scheduleId: number): Observable<any> {
     console.log('[AuthService] Resuming investment schedule:', scheduleId);
-    // Resume investment schedule  
     return this.http.post(`${BACKEND_API_URL}/investment-schedule/${scheduleId}/resume`, {},
-      { headers: this.getAuthHeaders() });
+      { headers: this.getAuthHeaders() }).pipe(
+      tap(() => this.clearScheduleCache())
+    );
   }
 
   // Helper method to get current progress synchronously

@@ -1,28 +1,27 @@
-<ion-menu contentId="main-content" side="end" menuId="chat-menu">
-  <ion-header>
+<ion-menu #chatMenu contentId="main-content" side="end" menuId="chat-menu">
+  <ion-header class="ion-no-border">
     <ion-toolbar>
       <ion-title>History</ion-title>
       <ion-buttons slot="end">
         <ion-menu-toggle menu="chat-menu" auto-hide="false">
-          <ion-button (click)="startNewChat()">
+          <ion-button class="new-chat-btn" (click)="startNewChat()">
             <ion-icon slot="icon-only" name="add-outline"></ion-icon>
           </ion-button>
         </ion-menu-toggle>
       </ion-buttons>
     </ion-toolbar>
   </ion-header>
-  <ion-content>
-    <ion-list>
+  <ion-content class="history-content">
+    <div class="history-list">
       <ion-menu-toggle menu="chat-menu" auto-hide="false">
-        <ion-item *ngFor="let session of sessions" (click)="loadSession(session)"
-          [color]="session.id === currentSession?.id ? 'light' : ''" button detail="false">
-          <ion-label>
-            <h2>{{ session.title }}</h2>
-            <p>{{ session.lastModified | date:'short' }}</p>
-          </ion-label>
-        </ion-item>
+        <button class="history-item" *ngFor="let session of sessions" (click)="loadSession(session)"
+          [class.active]="session.id === currentSession?.id">
+          <span class="history-item-title">{{ session.title }}</span>
+          <span class="history-item-date">{{ session.lastModified | date:'MMM d, h:mm a' }}</span>
+        </button>
       </ion-menu-toggle>
-    </ion-list>
+      <p class="history-empty" *ngIf="sessions.length === 0">No conversations yet</p>
+    </div>
   </ion-content>
 </ion-menu>
 
@@ -56,7 +55,20 @@
         </ion-button>
 
         <div class="message-bubble">
-          <div class="message-text" [innerHTML]="formatMessage(msg.content)"></div>
+          <div class="message-text" *ngIf="msg.role === 'assistant'; else userText">
+            <ng-container *ngFor="let seg of segments(msg); trackBy: trackSegment">
+              <div *ngIf="seg.kind === 'md'" class="md-block" [innerHTML]="seg.text | markdown"></div>
+              <app-chat-chart *ngIf="seg.kind === 'chart'" [config]="seg.config"></app-chat-chart>
+              <div *ngIf="seg.kind === 'suggestions' && isLatestMessage(msg) && !isLoading" class="quick-replies">
+                <button class="quick-reply" *ngFor="let option of seg.options" (click)="sendQuickReply(option)">
+                  {{ option }}
+                </button>
+              </div>
+            </ng-container>
+          </div>
+          <ng-template #userText>
+            <div class="message-text user-text">{{ msg.content }}</div>
+          </ng-template>
           <!-- <div class="message-time">{{ msg.timestamp | date:'shortTime' }}</div> -->
         </div>
 

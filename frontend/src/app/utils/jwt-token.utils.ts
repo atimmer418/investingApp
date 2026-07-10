@@ -102,6 +102,8 @@ export class JwtTokenUtils {
       // FRED-200: clear the stat strip snapshot so a logged-out or switched user
       // never sees another user's freedom figures.
       localStorage.removeItem(`fred.statStrip.v1.${userId}`);
+      // FRED-206: clear the portfolio snapshot for the same reason.
+      localStorage.removeItem(`fred.portfolioDash.v1.${userId}`);
     }
     localStorage.removeItem('jwtToken');
     localStorage.removeItem('jwtExpiration');

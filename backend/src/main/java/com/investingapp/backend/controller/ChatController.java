@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.investingapp.backend.model.ChatMessage;
+import com.investingapp.backend.security.services.UserDetailsImpl;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -33,7 +36,11 @@ public class ChatController {
     // Preserved for fallback — prefer GET /stream for new clients
     @PostMapping
     public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
-        ChatResponse response = chatService.processChat(request);
+        // SECURITY: never trust a client-supplied userId — personalization must
+        // follow the authenticated principal.
+        ChatRequest bound = new ChatRequest(request.message(), authenticatedUserId(),
+                request.sessionId(), request.generateTitle());
+        ChatResponse response = chatService.processChat(bound);
         return ResponseEntity.ok(response);
     }
 
@@ -43,20 +50,38 @@ public class ChatController {
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String sessionId,
             @RequestParam(defaultValue = "false") boolean generateTitle) {
-        ChatRequest request = new ChatRequest(message, userId, sessionId != null ? sessionId : "default-session", generateTitle);
+        // SECURITY: the userId query param is ignored — the chat tools read the
+        // real portfolio of whichever user the request binds, so it must always
+        // be the authenticated principal, never client input.
+        ChatRequest request = new ChatRequest(message, authenticatedUserId(),
+                sessionId != null ? sessionId : "default-session", generateTitle);
         return chatService.streamChat(request);
+    }
+
+    private Long authenticatedUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl userDetails) {
+            return userDetails.getId();
+        }
+        return null;
     }
 
     @GetMapping("/history")
     public ResponseEntity<List<ChatMessage>> getHistory(
             @RequestParam(required = false) String sessionId,
             @RequestParam(required = false) Long userId) {
-        if (sessionId != null && !sessionId.trim().isEmpty()) {
-            return ResponseEntity.ok(chatService.getChatHistory(sessionId));
-        } else if (userId != null) {
-            return ResponseEntity.ok(chatService.getRecentSessionHistory(userId));
+        // SECURITY: both params used to be trusted verbatim — a guessed sessionId
+        // or arbitrary userId returned someone else's conversation. History is
+        // now always scoped to the authenticated principal (params kept for API
+        // compatibility; userId is ignored).
+        Long authenticatedUserId = authenticatedUserId();
+        if (authenticatedUserId == null) {
+            return ResponseEntity.status(401).build();
         }
-        return ResponseEntity.badRequest().build();
+        if (sessionId != null && !sessionId.trim().isEmpty()) {
+            return ResponseEntity.ok(chatService.getChatHistoryForUser(sessionId, authenticatedUserId));
+        }
+        return ResponseEntity.ok(chatService.getRecentSessionHistory(authenticatedUserId));
     }
 
     /**

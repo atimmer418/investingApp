@@ -1,17 +1,19 @@
-import { Component, Input, OnInit, OnDestroy, ViewChild, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  Chart,
-  ChartConfiguration,
-  ChartData,
-  registerables,
-  TooltipItem
-} from 'chart.js';
 
 export interface PortfolioDataPoint {
   date: string;
   value: number;
 }
+
+interface ScrubState {
+  value: number;
+  date: string;
+}
+
+// Fixed SVG coordinate space — preserveAspectRatio="none" stretches to fit the DOM container.
+const SVG_W = 1000;
+const SVG_H = 170;
 
 @Component({
   selector: 'app-portfolio-chart',
@@ -20,297 +22,142 @@ export interface PortfolioDataPoint {
   standalone: true,
   imports: [CommonModule]
 })
-export class PortfolioChartComponent implements OnInit, OnDestroy, OnChanges {
-  @ViewChild('chartCanvas') set chartCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
-    if (element) {
-      this._chartCanvas = element;
-      // Initialize only if we have data and no existing chart
-      if (this.data && this.data.length > 0 && !this.chart) {
-        // Small delay to ensure DOM dimensions are settled
-        setTimeout(() => this.initializeChart(), 0);
-      }
-    }
-  }
-  private _chartCanvas: ElementRef<HTMLCanvasElement> | undefined;
-
+export class PortfolioChartComponent implements OnChanges {
   @Input() data: PortfolioDataPoint[] = [];
   @Input() selectedPeriod: string = '1M';
+  @Output() scrubChange = new EventEmitter<ScrubState | null>();
 
-  private chart: Chart | null = null;
-  public selectedDataPoint: { date: string; value: number; formattedDate: string } | null = null;
-  public isTooltipVisible = false;
-  public tooltipPosition: { x: number; y: number } = { x: 0, y: 0 };
-  private isInteracting = false;
+  @ViewChild('chartBox') chartBoxRef!: ElementRef<HTMLDivElement>;
 
-  ngOnInit() {
-    // Chart.js is now registered globally in main.ts
-    this.initializeChart();
-  }
+  readonly svgW = SVG_W;
+  readonly svgH = SVG_H;
 
-  ngOnDestroy() {
-    if (this.chart) {
-      this.chart.destroy();
-      this.chart = null;
-    }
-  }
+  // Ghost state (no data yet): an example compounding curve in viewBox coords.
+  readonly ghostLinePath =
+    'M0,158 C120,155 220,146 330,132 C440,118 520,104 620,86 C720,68 850,44 1000,22';
+  readonly ghostAreaPath =
+    `M0,158 C120,155 220,146 330,132 C440,118 520,104 620,86 C720,68 850,44 1000,22 L${SVG_W},${SVG_H} L0,${SVG_H} Z`;
 
-  ngOnChanges(changes: SimpleChanges) {
+  linePath = '';
+  areaPath = '';
+  hairlineX: number | null = null;
+  dotCx: number | null = null;
+  dotCy: number | null = null;
+
+  private isScrubbing = false;
+  private _yMin = 0;
+  private _yMax = 1;
+  private _pad = 0.08;
+
+  ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] || changes['selectedPeriod']) {
-      this.updateChart();
+      this.renderPaths();
     }
   }
 
-  private initializeChart() {
-    // Don't initialize if no data
+  private renderPaths(): void {
     if (!this.data || this.data.length === 0) {
+      this.linePath = '';
+      this.areaPath = '';
       return;
     }
 
-    // Destroy existing chart before creating new one
-    if (this.chart) {
-      this.chart.destroy();
-      this.chart = null;
+    const values = this.data.map(p => p.value);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const pad = (max - min) * 0.08 || 1;
+
+    this._yMin = min;
+    this._yMax = max;
+    this._pad = pad;
+
+    const scaleY = (v: number) =>
+      SVG_H - 6 - ((v - min + pad) / (max - min + pad * 2)) * (SVG_H - 12);
+
+    const scaleX = (i: number) =>
+      this.data.length <= 1 ? SVG_W / 2 : (i / (this.data.length - 1)) * SVG_W;
+
+    let line = '';
+    let area = `M0,${SVG_H} `;
+
+    for (let i = 0; i < this.data.length; i++) {
+      const px = scaleX(i).toFixed(1);
+      const py = scaleY(this.data[i].value).toFixed(1);
+      line += (i === 0 ? 'M' : 'L') + px + ',' + py + ' ';
+      area += `L${px},${py} `;
     }
 
-    const ctx = this._chartCanvas?.nativeElement?.getContext('2d');
-    if (!ctx || !this._chartCanvas) {
-      console.warn('Chart canvas context not available');
-      return;
-    }
+    area += `L${SVG_W},${SVG_H} Z`;
 
-    // Clear any existing chart from the canvas
-    Chart.getChart(this._chartCanvas.nativeElement)?.destroy();
+    this.linePath = line.trim();
+    this.areaPath = area.trim();
+  }
 
+  onPointerDown(event: PointerEvent): void {
     try {
-      const chartData: ChartData<'line'> = {
-        labels: this.data.map(point => {
-          const date = new Date(point.date);
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            timeZone: 'UTC'
-          });
-        }),
-        datasets: [{
-          label: 'Portfolio Value',
-          data: this.data.map(point => point.value),
-          borderColor: '#3880ff',
-          backgroundColor: 'rgba(56, 128, 255, 0.1)',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.1,
-          pointRadius: 0,
-          pointHoverRadius: 8,
-          pointHoverBackgroundColor: '#3880ff',
-          pointHoverBorderColor: '#ffffff',
-          pointHoverBorderWidth: 2
-        }]
-      };
-
-      // Store reference to component data for use in callbacks
-      const componentData = this.data;
-
-      const config: ChartConfiguration<'line'> = {
-        type: 'line',
-        data: chartData,
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: {
-            intersect: false,
-            mode: 'index'
-          },
-          plugins: {
-            legend: {
-              display: false
-            },
-            tooltip: {
-              enabled: false, // We'll use custom tooltip
-              external: (context) => {
-                this.handleTooltip(context);
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: {
-                display: false
-              },
-              ticks: {
-                color: '#666',
-                maxRotation: 0,
-                minRotation: 0,
-                autoSkip: false,
-                callback: function (value, index, ticks) {
-                  if (index === 0 || index === ticks.length - 1) {
-                    return this.getLabelForValue(value as number);
-                  }
-                  return '';
-                }
-              }
-            },
-            y: {
-              position: 'right',
-              beginAtZero: false,
-              grid: {
-                display: false
-              },
-              ticks: {
-                color: '#666',
-                padding: 10,
-                callback: function (value, index, ticks) {
-                  // Only show the first, last, and middle ticks
-                  if (index === 0 || index === ticks.length - 1 || index === Math.floor(ticks.length / 2)) {
-                    const numValue = Number(value);
-                    if (numValue >= 1000) {
-                      return '$' + (numValue / 1000).toFixed(1) + 'K';
-                    }
-                    return '$' + numValue.toLocaleString('en-US', {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0
-                    });
-                  }
-                  return '';
-                }
-              }
-            }
-          },
-          onHover: (event, elements) => {
-            const canvas = event.native?.target as HTMLCanvasElement;
-            if (canvas) {
-              canvas.style.cursor = elements.length > 0 ? 'pointer' : 'default';
-            }
-
-            // Update tooltip on hover/drag ONLY if interacting
-            if (this.isInteracting && elements.length > 0) {
-              this.handleInteraction(elements);
-            } else if (!this.isInteracting && this.chart && this.chart.getActiveElements().length > 0) {
-              // If not interacting, ensure no points are selected/highlighted
-              this.chart.setActiveElements([]);
-              this.chart.update();
-            }
-          },
-          onClick: (event, elements) => {
-            // Click handling is now managed by mousedown/touchstart and mouseup/touchend
-            // to support "press to view, release to hide" behavior
-          }
-        }
-      };
-
-      this.chart = new Chart(ctx, config);
-    } catch (error) {
-      console.error('Error initializing chart:', error);
+      (event.currentTarget as Element).setPointerCapture(event.pointerId);
+    } catch (_) {
+      // setPointerCapture may fail in some environments; scrubbing still works via pointermove
     }
+    this.isScrubbing = true;
+    this.scrub(event);
   }
 
-  public clearSelection() {
-    this.isInteracting = false;
-    this.isTooltipVisible = false;
-    if (this.chart) {
-      this.chart.setActiveElements([]);
-      this.chart.update();
-    }
+  onPointerMove(event: PointerEvent): void {
+    if (!this.isScrubbing || event.buttons === 0) return;
+    this.scrub(event);
   }
 
-  public handleStart(event: Event) {
-    this.isInteracting = true;
-    if (!this.chart) return;
-
-    const points = this.chart.getElementsAtEventForMode(
-      event as unknown as Event,
-      'index',
-      { intersect: false },
-      false
-    );
-
-    if (points.length > 0) {
-      this.handleInteraction(points);
-    }
+  onPointerUp(): void {
+    this.endScrub();
   }
 
-  private handleInteraction(elements: any[]) {
-    if (elements.length > 0) {
-      const elementIndex = elements[0].index;
-      const dataPoint = this.data[elementIndex];
-      const element = elements[0];
-
-      if (dataPoint && this.chart) {
-        this.selectedDataPoint = {
-          date: dataPoint.date,
-          value: dataPoint.value,
-          formattedDate: this.formatDate(dataPoint.date)
-        };
-
-        this.isTooltipVisible = true;
-
-        // Explicitly highlight the point
-        this.chart.setActiveElements(elements);
-        this.chart.update();
-
-        // Get the x position from the chart element (this is already centered on the point)
-        const pointX = element.element.x;
-        const pointY = element.element.y;
-
-        // Position tooltip centered above the point
-        this.tooltipPosition = {
-          x: pointX - 50, // Center the tooltip (assuming ~100px width)
-          y: pointY - 80  // Position above the point
-        };
-      }
-    }
+  onPointerCancel(): void {
+    this.endScrub();
   }
 
-  private updateChart() {
-    if (!this.data || this.data.length === 0) {
-      return;
-    }
+  private scrub(event: PointerEvent): void {
+    if (!this.data || this.data.length === 0) return;
 
-    if (!this.chart) {
-      this.initializeChart();
-      return;
-    }
+    const box = this.chartBoxRef?.nativeElement;
+    if (!box) return;
 
-    try {
-      this.chart.data.labels = this.data.map(point => {
-        const date = new Date(point.date);
-        return date.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          timeZone: 'UTC'
-        });
+    const rect = box.getBoundingClientRect();
+    const frac = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+    const i = Math.round(frac * (this.data.length - 1));
+    const point = this.data[i];
+    if (!point) return;
+
+    const min = this._yMin;
+    const max = this._yMax;
+    const pad = this._pad;
+    const scaleY = (v: number) =>
+      SVG_H - 6 - ((v - min + pad) / (max - min + pad * 2)) * (SVG_H - 12);
+
+    const px = this.data.length <= 1 ? SVG_W / 2 : (i / (this.data.length - 1)) * SVG_W;
+    const py = scaleY(point.value);
+
+    this.hairlineX = px;
+    this.dotCx = px;
+    this.dotCy = py;
+
+    const weekdayDate = new Date(point.date + (point.date.includes('T') ? '' : 'T00:00:00Z'))
+      .toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'UTC'
       });
-      this.chart.data.datasets[0].data = this.data.map(point => point.value);
 
-      this.chart.update('none');
-    } catch (error) {
-      console.error('Error updating chart:', error);
-    }
+    this.scrubChange.emit({ value: point.value, date: weekdayDate });
   }
 
-  private handleTooltip(context: any) {
-    // We're now using click-to-show instead of hover tooltips
-    // This method can be simplified or removed
-    return;
-  }
-
-  private formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      timeZone: 'UTC'
-    });
-  }
-
-  public formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value);
+  private endScrub(): void {
+    this.isScrubbing = false;
+    this.hairlineX = null;
+    this.dotCx = null;
+    this.dotCy = null;
+    this.scrubChange.emit(null);
   }
 }

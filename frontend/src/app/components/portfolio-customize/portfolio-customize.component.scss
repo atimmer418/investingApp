@@ -1,5 +1,5 @@
-// ─── Blue Hero Header (shared partial) ────────────────────────────────────────
-@use '../../../theme/blue-hero-header';
+// ─── Settings Shell (shared partial) ──────────────────────────────────────────
+@use '../../../theme/settings-shell';
 // ─── Shared form field styles (scoped — NOT global) ───────────────────────────
 @use '../../../theme/form-fields' as ff;
 
@@ -14,26 +14,9 @@
   @include ff.form-fields-scoped();
 }
 
-ion-content {
-  --background: #f8fafc;
-  --keyboard-offset: 0px !important;
-  // Beat the global `.portfolio-content { --padding-top: 8px !important }`
-  // (global.scss) so content sits flush (2px) like the sibling settings pages.
-  --padding-top: 2px !important;
-
-  &::part(scroll) {
-    scrollbar-gutter: stable;
-    overflow-y: scroll !important;
-  }
-}
-
-.content-inner {
-  padding: 0px 18px 10px;
-  font-family: 'Manrope', sans-serif;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
+// ion-content background and shell structure are provided by settings-shell.
+// --keyboard-offset kept to prevent Ionic's native resize on iOS.
+ion-content { --keyboard-offset: 0px !important; }
 
 .section-card {
   background: white;

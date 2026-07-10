@@ -72,16 +72,21 @@ export class ChatService {
           }
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
+          // SSE lines can straddle network chunks (common through the tunnel) —
+          // buffer the trailing partial line instead of dropping mangled events.
+          let buffer = '';
 
           const pump = (): Promise<void> => {
             if (cancelled) return Promise.resolve();
             return reader.read().then(({ done, value }) => {
               if (done) { observer.complete(); return; }
-              const chunk = decoder.decode(value, { stream: true });
-              const lines = chunk.split('\n');
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop() ?? ''; // keep the (possibly partial) last line
               for (const line of lines) {
                 if (!line.startsWith('data:')) continue;
                 const data = line.slice(5).trim();
+                if (!data) continue;
                 try {
                   const parsed = JSON.parse(data);
                   observer.next(parsed);

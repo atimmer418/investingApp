@@ -15,8 +15,8 @@
 // ─── CSS custom properties for the blue sub-theme ─────────────────────────────
 
 .flow-host {
-  --sim-deep:         #081c4e;
-  --sim-mid:          #16309b;
+  --sim-deep:         #0e3a96;
+  --sim-mid:          #1e60e3;
   --sim-primary:      #2563EB;
   --sim-bright:       #3b82f6;
   --glass:            rgba(255, 255, 255, 0.09);
@@ -30,10 +30,7 @@
   overflow: hidden;
 
   // Multi-layer blue gradient background
-  background:
-    radial-gradient(140% 90% at 85% -15%, rgba(96, 165, 250, 0.35), transparent 55%),
-    radial-gradient(120% 70% at 0% 108%, rgba(59, 130, 246, 0.28), transparent 55%),
-    linear-gradient(168deg, var(--sim-deep) 0%, var(--sim-mid) 46%, var(--sim-primary) 100%);
+  background: linear-gradient(160deg, #1e60e3 0%, #1a58d0 60%, #0e3a96 100%);
 }
 
 // ─── Top navigation bar ───────────────────────────────────────────────────────

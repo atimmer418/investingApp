@@ -21,7 +21,7 @@ import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { of, throwError, Observable, BehaviorSubject } from 'rxjs';
 import { FreedomStatsService } from './freedom-stats.service';
 import { AuthService } from './auth.service';
-import { PortfolioService } from './portfolio.service';
+import { PortfolioStoreService, PortfolioBundle } from './portfolio-store.service';
 import { AlpacaService } from './alpaca.service';
 
 // ---------------------------------------------------------------------------
@@ -41,9 +41,18 @@ const userProgressStub = {
   retirementIncome: 60000  // Annual → target = 60000 / 0.04 = $1,500,000
 };
 
-const portfolioDashboardStub = {
-  summary: { equity: 50000, portfolioValue: 50000, todayChange: 0, todayChangePercent: 0, buyingPower: 0, cash: 0 },
-  positions: []
+const portfolioBundleStub: PortfolioBundle = {
+  dashboard: {
+    summary: { equity: 50000, portfolioValue: 50000, todayChange: 0, todayChangePercent: 0, buyingPower: 0, cash: 0, settledCash: 0 },
+    positions: [],
+    history: { timestamps: [], values: [] },
+    recentTransactions: [],
+    totalInvested: 0,
+    totalGainLoss: 0,
+    totalGainLossPercent: 0
+  } as any,
+  performance: [],
+  history: null
 };
 
 const kycDataStub = { identity: { date_of_birth: '1990-05-15' } };
@@ -65,11 +74,13 @@ function makeAuthServiceMock(
   };
 }
 
-function makePortfolioServiceMock(equity = 50000) {
+function makePortfolioStoreMock(equity = 50000) {
+  const bundle: PortfolioBundle = {
+    ...portfolioBundleStub,
+    dashboard: { ...portfolioBundleStub.dashboard, summary: { ...portfolioBundleStub.dashboard.summary, equity } }
+  };
   return {
-    getPortfolioDashboard: jasmine.createSpy('getPortfolioDashboard').and.returnValue(
-      of({ summary: { equity }, positions: [] })
-    )
+    load$: jasmine.createSpy('load$').and.returnValue(of(bundle))
   };
 }
 
@@ -82,14 +93,14 @@ function makeAlpacaServiceMock(kycObservable: Observable<any>) {
 /** Configure TestBed with the given mocks. */
 function configureTestBed(
   authMock = makeAuthServiceMock(),
-  portfolioMock = makePortfolioServiceMock(),
+  portfolioStoreMock = makePortfolioStoreMock(),
   kycObservable: Observable<any> = of(kycDataStub)
 ): void {
   TestBed.configureTestingModule({
     providers: [
       FreedomStatsService,
       { provide: AuthService, useValue: authMock },
-      { provide: PortfolioService, useValue: portfolioMock },
+      { provide: PortfolioStoreService, useValue: portfolioStoreMock },
       { provide: AlpacaService, useValue: makeAlpacaServiceMock(kycObservable) }
     ]
   });
@@ -152,7 +163,7 @@ describe('FreedomStatsService — FRED-200', () => {
       const birthYear = 1990;
       configureTestBed(
         makeAuthServiceMock(),
-        makePortfolioServiceMock(),
+        makePortfolioStoreMock(),
         of({ identity: { date_of_birth: `${birthYear}-03-22` } })
       );
       const svc = getService();
@@ -169,7 +180,7 @@ describe('FreedomStatsService — FRED-200', () => {
       // equity > target → gap = 0
       configureTestBed(
         makeAuthServiceMock(),
-        makePortfolioServiceMock(2_000_000) // already at FI
+        makePortfolioStoreMock(2_000_000) // already at FI
       );
       const svc = getService();
 
@@ -260,7 +271,7 @@ describe('FreedomStatsService — FRED-200', () => {
         }
       });
 
-      configureTestBed(makeAuthServiceMock(), makePortfolioServiceMock(), kycObservable);
+      configureTestBed(makeAuthServiceMock(), makePortfolioStoreMock(), kycObservable);
       const svc = getService();
 
       tick(0);   // portfolio resolves immediately
@@ -280,7 +291,7 @@ describe('FreedomStatsService — FRED-200', () => {
         observer.error({ status: 401, name: 'HttpErrorResponse' });
       });
 
-      configureTestBed(makeAuthServiceMock(), makePortfolioServiceMock(), kycObservable);
+      configureTestBed(makeAuthServiceMock(), makePortfolioStoreMock(), kycObservable);
       const svc = getService();
 
       tick(0);
@@ -297,7 +308,7 @@ describe('FreedomStatsService — FRED-200', () => {
         observer.error({ status: 503, name: 'HttpErrorResponse' });
       });
 
-      configureTestBed(makeAuthServiceMock(), makePortfolioServiceMock(), kycObservable);
+      configureTestBed(makeAuthServiceMock(), makePortfolioStoreMock(), kycObservable);
       const svc = getService();
 
       tick(0);
@@ -312,7 +323,7 @@ describe('FreedomStatsService — FRED-200', () => {
     it('200 KYC with missing date_of_birth → freedomAge stays —', fakeAsync(() => {
       configureTestBed(
         makeAuthServiceMock(),
-        makePortfolioServiceMock(),
+        makePortfolioStoreMock(),
         of({ identity: {} })
       );
       const svc = getService();
@@ -330,7 +341,7 @@ describe('FreedomStatsService — FRED-200', () => {
         observer.error({ status: 503 });
       });
 
-      configureTestBed(makeAuthServiceMock(), makePortfolioServiceMock(), kycObservable);
+      configureTestBed(makeAuthServiceMock(), makePortfolioStoreMock(), kycObservable);
       const svc = getService();
 
       tick(0);
@@ -381,7 +392,7 @@ describe('FreedomStatsService — FRED-200', () => {
   describe('AC-7: unhappy paths', () => {
 
     it('null/zero equity → dollarsAway uses max(0, target - 0) — full target amount', fakeAsync(() => {
-      configureTestBed(makeAuthServiceMock(), makePortfolioServiceMock(0));
+      configureTestBed(makeAuthServiceMock(), makePortfolioStoreMock(0));
       const svc = getService();
       tick(0);
 
@@ -395,13 +406,13 @@ describe('FreedomStatsService — FRED-200', () => {
     }));
 
     it('failed portfolio fetch degrades gracefully — no crash, equity = 0', fakeAsync(() => {
-      const failingPortfolioMock = {
-        getPortfolioDashboard: jasmine.createSpy('getPortfolioDashboard').and.returnValue(
+      const failingStoreMock = {
+        load$: jasmine.createSpy('load$').and.returnValue(
           throwError(() => ({ status: 500 }))
         )
       };
 
-      configureTestBed(makeAuthServiceMock(), failingPortfolioMock);
+      configureTestBed(makeAuthServiceMock(), failingStoreMock);
       const svc = getService();
       tick(0);
 
@@ -423,7 +434,7 @@ describe('FreedomStatsService — FRED-200', () => {
       // default $500 schedule stub would supply a live contribution.
       configureTestBed(
         makeAuthServiceMock(progressNoInputs as any, of(null)),
-        makePortfolioServiceMock(0)
+        makePortfolioStoreMock(0)
       );
       const svc = getService();
       tick(0);
@@ -520,7 +531,7 @@ describe('FreedomStatsService — FRED-200', () => {
       // default $500 schedule stub would supply a live contribution.
       configureTestBed(
         makeAuthServiceMock(progressNoInputs as any, of(null)),
-        makePortfolioServiceMock(0)
+        makePortfolioStoreMock(0)
       );
       const svc = getService();
       tick(0);
@@ -545,15 +556,15 @@ describe('FreedomStatsService — FRED-200', () => {
 
   describe('refresh()', () => {
 
-    it('calls portfolio and KYC again without resetting equity to null', fakeAsync(() => {
-      const portfolioMock = makePortfolioServiceMock(50000);
+    it('calls portfolio store and KYC again without resetting equity to null', fakeAsync(() => {
+      const portfolioStoreMock = makePortfolioStoreMock(50000);
       const kycMock = makeAlpacaServiceMock(of(kycDataStub));
 
       TestBed.configureTestingModule({
         providers: [
           FreedomStatsService,
           { provide: AuthService, useValue: makeAuthServiceMock() },
-          { provide: PortfolioService, useValue: portfolioMock },
+          { provide: PortfolioStoreService, useValue: portfolioStoreMock },
           { provide: AlpacaService, useValue: kycMock }
         ]
       });
@@ -561,14 +572,13 @@ describe('FreedomStatsService — FRED-200', () => {
       const svc = TestBed.inject(FreedomStatsService);
       tick(0); // initial fetches
 
-      const equityBefore = svc.equity();
       svc.refresh();
 
       // equity should not be reset to null during refresh
       expect(svc.equity()).not.toBeNull();
 
-      // Portfolio should have been called twice (initial + refresh)
-      expect(portfolioMock.getPortfolioDashboard).toHaveBeenCalledTimes(2);
+      // Store's load$() should have been called twice (initial + refresh)
+      expect(portfolioStoreMock.load$).toHaveBeenCalledTimes(2);
 
       tick(10000);
     }));
@@ -623,7 +633,7 @@ describe('FreedomStatsService — FRED-200', () => {
       // (backend). If you change one, change both.
       configureTestBed(
         makeAuthServiceMock(userProgressStub, of({ investmentAmount: 500, frequency: 'MONTHLY', isPaused: false })),
-        makePortfolioServiceMock(10000)
+        makePortfolioStoreMock(10000)
       );
       const svc = getService();
       tick(0);

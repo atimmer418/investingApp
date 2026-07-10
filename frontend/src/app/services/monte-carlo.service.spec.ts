@@ -206,7 +206,7 @@ describe('MonteCarloService', () => {
       expect(spend1m).toBeGreaterThan(spend500k);
     });
 
-    it('solved spend produces ≥ 89% success in Traditional (rounding-tolerant check)', () => {
+    it('solved spend produces ≥ 89% success in Yield-Based Income (rounding-tolerant check)', () => {
       const params = mkParams({ portfolioValue: 800_000 });
       const spend = service.solveMaxMonthlySpend(params);
       const result = service.runShowdown({ ...params, monthlySpend: spend });

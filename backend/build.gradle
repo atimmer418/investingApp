@@ -31,6 +31,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'com.plaid:plaid-java:18.0.0'
 	implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+	implementation 'com.anthropic:anthropic-java:2.48.0' // Claude chat (Ask FRED); OpenAI kept for embeddings
 	implementation 'com.yubico:webauthn-server-core:2.7.0' // Check for the latest version
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8' // For Java 8 Optional support
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310' // For Java 8 time types (LocalDate, LocalDateTime, etc.)

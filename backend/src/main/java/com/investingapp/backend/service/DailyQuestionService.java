@@ -114,59 +114,48 @@ public class DailyQuestionService {
     }
 
     /**
-     * Simplified: Generate and save 3 unique LLM questions for the day.
+     * Generate and save the day's 3 suggestions — each slot showcases a different
+     * FRED capability:
+     *   1. an intriguing educational question (classic ask-FRED)
+     *   2. a chart request (exercises the inline ```chart rendering)
+     *   3. a personalized check-in (answered from the user context FRED holds)
      */
     private List<String> generateAndSaveQuestions(LocalDate date, Long userId) {
         try {
-            // Generate 5 candidate questions to ensure we can get 3 unique ones
-            List<String> candidateQuestions = generateLLMQuestions(5, date);
+            List<String> questions = new ArrayList<>(generateShowcaseQuestions(date));
 
-            // Deduplicate and take the first 3
-            List<String> uniqueQuestions = candidateQuestions.stream()
-                    .map(String::trim)
-                    .filter(q -> !q.isEmpty())
-                    .distinct()
-                    .limit(3)
-                    .collect(Collectors.toList());
-
-            // Ensure we have exactly 3 questions using fallbacks if necessary
-            if (uniqueQuestions.size() < 3) {
-                List<String> fallbacks = Arrays.asList(
-                        "What's the best way to start investing with a small amount of money?",
-                        "How do I choose between different investment options?",
-                        "What should I know about market risk?");
-                for (String fallback : fallbacks) {
-                    if (uniqueQuestions.size() >= 3)
-                        break;
-                    if (!uniqueQuestions.contains(fallback)) {
-                        uniqueQuestions.add(fallback);
-                    }
-                }
+            if (questions.isEmpty()) {
+                questions.add("Why is compound interest called the 8th wonder of the world?");
             }
+            if (questions.size() < 2) {
+                questions.add("Show me a graph of how $200 a month grows over 25 years");
+            }
+            questions.add(personalQuestionFor(date));
 
-            List<String> finalQuestions = uniqueQuestions.subList(0, 3);
+            List<String> finalQuestions = questions.subList(0, 3);
 
             // Save to database
             DailyQuestion dq = new DailyQuestion(date, finalQuestions);
             repository.save(dq);
-            logger.info("✅ Saved 3 unique daily questions for {}: {}", date, finalQuestions);
+            logger.info("✅ Saved 3 daily questions for {}: {}", date, finalQuestions);
 
             return finalQuestions;
 
         } catch (Exception e) {
             logger.error("Failed to generate daily questions", e);
-            // Return safe fallback
+            // Return safe fallback (same slot mix)
             return Arrays.asList(
                     "Why is compound interest called the 8th wonder of the world?",
-                    "How do fees impact my long-term returns?",
-                    "What should I do if the market crashes?");
+                    "Show me a graph of how $200 a month grows over 25 years",
+                    "Look at my investing setup — what's one thing I could improve?");
         }
     }
 
     /**
-     * Generate questions using LLM with variety
+     * One LLM call producing slots 1 and 2: an educational question plus a
+     * chart-showcase request.
      */
-    private List<String> generateLLMQuestions(int count, LocalDate date) {
+    private List<String> generateShowcaseQuestions(LocalDate date) {
         try {
             List<ChatMessage> messages = new ArrayList<>();
             List<String> allConcepts = Arrays.asList(
@@ -174,40 +163,50 @@ public class DailyQuestionService {
                     "Inflation", "Market Cycles", "Dividends", "Compound Growth", "Asset Allocation",
                     "Retirement Planning", "Tech Stocks", "Dollar Cost Averaging", "Emergency Funds");
 
-            // Randomly select concepts for variety
             List<String> selectedConcepts = new ArrayList<>(allConcepts);
             java.util.Collections.shuffle(selectedConcepts);
-            String concepts = String.join(", ", selectedConcepts.subList(0, Math.min(3, count)));
+            String concepts = String.join(", ", selectedConcepts.subList(0, 3));
 
             messages.add(new ChatMessage("system",
-                    "You are an engaging financial educator for novices. " +
-                            "Generate exactly " + count
-                            + " short, intriguing questions that a beginner investor might ask to learn about financial concepts. "
-                            +
-                            "Focus specifically on these concepts today: " + concepts + ". " +
-                            "The questions should be written from the user's perspective (e.g., 'Why does inflation matter?'). "
-                            +
-                            "Output ONLY the " + count
-                            + " questions, separated by pipes (|). No numbering, no intro."));
+                    "You write suggestion chips for FRED, a financial education chat for novice investors. "
+                            + "Generate exactly 2 suggestions, written from the user's perspective:\n"
+                            + "1. A short, intriguing beginner question about one of these concepts: " + concepts + ".\n"
+                            + "2. A request for a VISUAL — phrased like 'Show me a graph of ...' or 'Chart the difference between ...', "
+                            + "with concrete numbers (e.g. monthly amounts, years, rates), about growth, compounding, or a comparison.\n"
+                            + "Keep each under 90 characters. Output ONLY the 2 suggestions separated by a pipe (|). No numbering, no intro."));
 
-            messages.add(new ChatMessage("user", "Generate " + count + " unique questions for " + date));
+            messages.add(new ChatMessage("user", "Generate the 2 suggestions for " + date));
 
             String response = llmService.generateChatResponse(messages);
 
-            // Parse response
             List<String> questions = Arrays.stream(response.split("\\|"))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
-                    .limit(count)
+                    .limit(2)
                     .collect(Collectors.toList());
 
-            logger.info("Generated {} LLM questions", questions.size());
+            logger.info("Generated {} showcase questions", questions.size());
             return questions;
 
         } catch (Exception e) {
-            logger.error("Failed to generate LLM questions", e);
+            logger.error("Failed to generate showcase questions", e);
             return new ArrayList<>();
         }
+    }
+
+    /**
+     * Slot 3: a personal check-in FRED can genuinely answer from the user
+     * context it already holds (automation status, horizon, risk tolerance).
+     * Rotates daily. When agentic tools land, this slot upgrades to real
+     * take-an-action prompts.
+     */
+    private String personalQuestionFor(LocalDate date) {
+        List<String> pool = Arrays.asList(
+                "How is my portfolio actually doing?",
+                "Chart my portfolio over the last 3 months",
+                "Look at my investing setup — what's one thing I could improve?",
+                "Am I on track for my time horizon? Be honest.");
+        return pool.get((int) (date.toEpochDay() % pool.size()));
     }
 
 }
