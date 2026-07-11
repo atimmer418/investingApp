@@ -163,10 +163,10 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
-    // Portal the history drawer up to ion-app: ion-tabs' .tabs-inner has
-    // contain:layout (a stacking context), so anything inside the page can
-    // never stack above the floating tab bar. At app level the menu's backdrop
-    // dims the ENTIRE app — tab bar included — and the panel slides over it.
+    // Portal the history drawer up to ion-app: chat is one of several slides in
+    // the tabs pager, and staying inside the page means the drawer can never
+    // stack above the floating tab bar. At app level the menu's backdrop dims
+    // the ENTIRE app — tab bar included — and the panel slides over it.
     // Angular bindings and scoped styles travel with the node, and Angular
     // still removes it correctly on destroy.
     const ionApp = document.querySelector('ion-app');

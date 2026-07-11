@@ -250,13 +250,18 @@ describe('Tab3Page — FRED-200 signal-driven stat strip', () => {
     fixture.detectChanges();
     tick(0);
 
-    const activation = TestBed.inject(TabActivationService);
-    freedomStatsMock.refresh.calls.reset();
+    // never-on-mount: on the default tab (tab1) Profile's enter-work must NOT run
+    expect(freedomStatsMock.refresh).not.toHaveBeenCalled();
 
+    const activation = TestBed.inject(TabActivationService);
     activation.setActive('tab3');
     fixture.detectChanges();
+    expect(freedomStatsMock.refresh).toHaveBeenCalledTimes(1);
 
-    expect(freedomStatsMock.refresh).toHaveBeenCalled();
+    // re-pulse: returning to Profile (same tab) must re-run enter-work despite dedup
+    activation.setActive('tab3');
+    fixture.detectChanges();
+    expect(freedomStatsMock.refresh).toHaveBeenCalledTimes(2);
   }));
 
   it('liveEquity is updated from equity signal', fakeAsync(() => {

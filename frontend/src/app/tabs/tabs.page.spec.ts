@@ -94,4 +94,17 @@ describe('TabsPage pager', () => {
     c.selectTab('tab3');
     expect(slideTo).toHaveBeenCalledWith(3, undefined);
   });
+
+  it('ionViewWillEnter re-pulses activation for the current tab', () => {
+    const fixture = build();
+    const c = fixture.componentInstance;
+    c.ngOnInit();
+    const activation = TestBed.inject(TabActivationService);
+    const setActiveSpy = spyOn(activation, 'setActive');
+
+    c.ionViewWillEnter();
+
+    expect(setActiveSpy).toHaveBeenCalledWith('tab1');
+    expect(scrollSvc.reset).toHaveBeenCalled();
+  });
 });

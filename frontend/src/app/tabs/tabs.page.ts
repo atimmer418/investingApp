@@ -75,10 +75,21 @@ export class TabsPage implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // Sit on the initial slide, apply the expired-sub lock, and fire the initial
-    // activation so a deep-link (e.g. /tabs/tab3) runs that tab's enter logic.
+    // Sit on the initial slide and apply the expired-sub lock. (Activation is
+    // fired from ionViewWillEnter, which also runs on the first enter.)
     this.slideToTab(this.activeTab(), false);
     this.applySwipeLock();
+  }
+
+  /**
+   * Fires on first enter AND on re-entry from a pushed sub-page — TabsPage is
+   * cached in the root ion-router-outlet, so ngOnInit/ngAfterViewInit do not
+   * re-run and the :tab param is unchanged on a navigateBack('/tabs/tab3').
+   * Re-pulse activation so the current tab re-runs its on-enter work (e.g.
+   * Profile's freedom-stats refresh + MFU check). The equal:()=>false activation
+   * signal makes this same-tab re-pulse actually re-notify the tab effects.
+   */
+  ionViewWillEnter() {
     this.emitActivation(this.activeTab());
   }
 
