@@ -1,10 +1,21 @@
 <app-first-time-tour></app-first-time-tour>
-<ion-tabs class="mobile-tabs" (ionTabsDidChange)="onTabsDidChange($event)">
-  <app-floating-tab-bar
-    slot="bottom"
-    [activeTab]="activeTab"
-    [isSubExpired]="isSubExpired"
-    [badge]="settingsTabBadge$ | async"
-    (tabSelect)="selectTab($event)"
-  ></app-floating-tab-bar>
-</ion-tabs>
+
+<swiper-container
+  #swiper
+  class="tabs-swiper"
+  [attr.initial-slide]="initialIndex"
+  slides-per-view="1"
+  (swiperslidechange)="onSlideChange($event)"
+>
+  <swiper-slide><app-tab1></app-tab1></swiper-slide>
+  <swiper-slide><app-tab2></app-tab2></swiper-slide>
+  <swiper-slide><app-ai-chat></app-ai-chat></swiper-slide>
+  <swiper-slide><app-tab3></app-tab3></swiper-slide>
+</swiper-container>
+
+<app-floating-tab-bar
+  [activeTab]="activeTab()"
+  [isSubExpired]="isSubExpired"
+  [badge]="settingsTabBadge$ | async"
+  (tabSelect)="selectTab($event)"
+></app-floating-tab-bar>

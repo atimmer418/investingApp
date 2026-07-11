@@ -1,13 +1,22 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { CommonModule, AsyncPipe } from '@angular/common';
-import { Router } from '@angular/router';
-import { IonTabs } from '@ionic/angular/standalone';
+import {
+  Component, OnInit, AfterViewInit, ViewChild, ElementRef, signal, CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
+import { CommonModule, AsyncPipe, Location } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
+import { Observable } from 'rxjs';
+import type { SwiperContainer } from 'swiper/element';
 import { AccountStatusService } from '../services/account-status.service';
 import { AuthService } from '../services/auth.service';
 import { TabBarScrollService } from '../services/tab-bar-scroll.service';
-import { Observable } from 'rxjs';
+import { TabActivationService } from '../services/tab-activation.service';
 import { FirstTimeTourComponent } from '../components/first-time-tour/first-time-tour.component';
 import { FloatingTabBarComponent } from '../components/floating-tab-bar/floating-tab-bar.component';
+import { Tab1Page } from '../tab1/tab1.page';
+import { Tab2Page } from '../tab2/tab2.page';
+import { AiChatPage } from '../pages/ai-chat/ai-chat.page';
+import { Tab3Page } from '../tab3/tab3.page';
+
+const TAB_ORDER = ['tab1', 'tab2', 'chat', 'tab3'] as const;
 
 @Component({
   selector: 'app-tabs',
@@ -15,56 +24,113 @@ import { FloatingTabBarComponent } from '../components/floating-tab-bar/floating
   styleUrls: ['tabs.page.scss'],
   standalone: true,
   imports: [
-    CommonModule,
-    AsyncPipe,
-    IonTabs,
-    FirstTimeTourComponent,
-    FloatingTabBarComponent,
+    CommonModule, AsyncPipe,
+    FirstTimeTourComponent, FloatingTabBarComponent,
+    Tab1Page, Tab2Page, AiChatPage, Tab3Page,
   ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class TabsPage implements OnInit {
-  @ViewChild(IonTabs) tabs!: IonTabs;
+export class TabsPage implements OnInit, AfterViewInit {
+  @ViewChild('swiper') swiperRef?: ElementRef<SwiperContainer>;
 
   settingsTabBadge$: Observable<string | null>;
   isSubExpired = false;
-  activeTab = 'tab1';
+  initialIndex = 0;
+  readonly activeTab = signal<string>('tab1');
 
   constructor(
     private accountStatusService: AccountStatusService,
     private authService: AuthService,
     private scrollSvc: TabBarScrollService,
-    private router: Router
+    private tabActivation: TabActivationService,
+    private route: ActivatedRoute,
+    private location: Location,
   ) {
     this.settingsTabBadge$ = this.accountStatusService.settingsTabBadge$;
   }
 
   ngOnInit() {
-    this.activeTab = this.deriveActiveTab(this.router.url);
+    const initialTab = this.resolveTab(this.route.snapshot.paramMap.get('tab'));
+    this.activeTab.set(initialTab);
+    this.initialIndex = this.indexForTab(initialTab);
+
     this.accountStatusService.refreshStatus();
+
     this.authService.userProgress$.subscribe((progress) => {
       const fullyOnboarded = progress?.investmentConfirmationCompleted === true;
       const hasActiveSub = progress?.selectedTier != null;
       const isPrivateBeta = progress?.privateBeta === true;
-      // Private beta users bypass the subscription gate
+      // Private beta users bypass the subscription gate.
       this.isSubExpired = fullyOnboarded && !hasActiveSub && !isPrivateBeta;
+      this.applySwipeLock();
+    });
+
+    // External navigations to /tabs/<tab> (e.g. AppLock re-nav) move the pager.
+    this.route.paramMap.subscribe((params) => {
+      const tab = this.resolveTab(params.get('tab'));
+      if (tab !== this.activeTab()) {
+        this.slideToTab(tab);
+      }
     });
   }
 
-  /** Keep the active tab + indicator in sync with Ionic's stack changes. */
-  onTabsDidChange(ev: { tab: string }) {
-    this.activeTab = ev.tab;
+  ngAfterViewInit() {
+    // Sit on the initial slide, apply the expired-sub lock, and fire the initial
+    // activation so a deep-link (e.g. /tabs/tab3) runs that tab's enter logic.
+    this.slideToTab(this.activeTab(), false);
+    this.applySwipeLock();
+    this.emitActivation(this.activeTab());
+  }
+
+  /** Swiper fires this on every settle (drag or programmatic slideTo). */
+  onSlideChange(event: Event) {
+    const swiper = (event.target as SwiperContainer).swiper;
+    const tab = TAB_ORDER[swiper?.activeIndex ?? 0] ?? 'tab1';
+    if (tab === this.activeTab()) {
+      return;
+    }
+    this.activeTab.set(tab);
+    // replaceState updates the URL WITHOUT a router navigation, so it does not
+    // re-trigger paramMap — no feedback loop, no guard flag needed.
+    this.location.replaceState('/tabs/' + tab);
+    this.emitActivation(tab);
+  }
+
+  /** Floating-bar tap. slideTo triggers onSlideChange, which does the rest. */
+  selectTab(tab: string) {
+    this.slideToTab(tab);
+  }
+
+  private emitActivation(tab: string) {
     this.scrollSvc.reset();
     // Chat holds the bar full so no stray/cross-tab scroll can shrink it there.
-    this.scrollSvc.setHoldFull(ev.tab === 'chat');
+    this.scrollSvc.setHoldFull(tab === 'chat');
+    this.tabActivation.setActive(tab);
   }
 
-  /** Navigate via Ionic so per-tab nav stacks are preserved. */
-  selectTab(tab: string) {
-    this.tabs.select(tab);
+  private slideToTab(tab: string, animate = true) {
+    const swiper = this.swiperRef?.nativeElement.swiper;
+    if (!swiper) {
+      return;
+    }
+    swiper.slideTo(this.indexForTab(tab), animate ? undefined : 0);
   }
 
-  private deriveActiveTab(url: string): string {
-    const m = url.match(/\/tabs\/([^/?#]+)/);
-    return m ? m[1] : 'tab1';
+  private applySwipeLock() {
+    const swiper = this.swiperRef?.nativeElement.swiper;
+    if (swiper) {
+      // Expired subscription: gated tabs are unreachable by swipe; Profile is
+      // still reachable by tapping it (programmatic slideTo ignores this flag).
+      swiper.allowTouchMove = !this.isSubExpired;
+    }
+  }
+
+  private indexForTab(tab: string): number {
+    const i = TAB_ORDER.indexOf(tab as (typeof TAB_ORDER)[number]);
+    return i < 0 ? 0 : i;
+  }
+
+  private resolveTab(param: string | null): string {
+    return param && (TAB_ORDER as readonly string[]).includes(param) ? param : 'tab1';
   }
 }

@@ -35,6 +35,7 @@ describe('AiChatPage activation gating', () => {
   it('does not load chat data until first activation, then gates re-loads', () => {
     const fixture = TestBed.createComponent(AiChatPage);
     const c = fixture.componentInstance;
+    const menu = TestBed.inject(MenuController) as any;
     // NOTE: no fixture.detectChanges() — keeps ngOnInit (keyboard listeners) from running.
 
     expect(chat.getDailySuggestions).not.toHaveBeenCalled();
@@ -44,9 +45,12 @@ describe('AiChatPage activation gating', () => {
     expect(c.isActive).toBeTrue();
     expect(chat.getSessions).toHaveBeenCalled();
     expect(chat.getDailySuggestions).toHaveBeenCalledTimes(1);
+    expect(menu.enable).toHaveBeenCalledWith(true, 'chat-menu');
 
     c.onChatActiveChange(false);
     expect(c.isActive).toBeFalse();
+    expect(menu.close).toHaveBeenCalledWith('chat-menu');
+    expect(menu.enable).toHaveBeenCalledWith(false, 'chat-menu');
 
     c.onChatActiveChange(true);
     expect(chat.getDailySuggestions).toHaveBeenCalledTimes(1); // gated — not reloaded

@@ -186,15 +186,19 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Runs when chat becomes/stops being the active pager slide (fired by the
    * activation effect). Loads chat data once on first activation, toggles
-   * isActive, and scrolls to the latest message on activate. Also delegated to
-   * from the Ionic hooks below while the legacy ion-tabs shell is still present
-   * — those hooks are removed in the pager cutover.
+   * isActive, and scrolls to the latest message on activate.
    */
   onChatActiveChange(active: boolean) {
     this.isActive = active;
+    // The history drawer is portaled to ion-app (stacking-context fix) and the
+    // chat page stays mounted across tab switches — only allow the menu (and its
+    // edge-swipe gesture) while chat is the active tab.
     if (!active) {
+      this.menuCtrl.close('chat-menu');
+      this.menuCtrl.enable(false, 'chat-menu');
       return;
     }
+    this.menuCtrl.enable(true, 'chat-menu');
     if (!this.chatLoaded) {
       this.chatLoaded = true;
       this.loadSessions();
@@ -204,20 +208,6 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
     if (this.messages.length > 0) {
       setTimeout(() => this.scrollToBottom(), 300);
     }
-  }
-
-  ionViewDidEnter() {
-    this.onChatActiveChange(true);
-    // The history drawer is portaled to ion-app (stacking-context fix) and the
-    // chat page stays cached across tab switches — only allow the menu (and its
-    // edge-swipe gesture) while this page is actually the active tab.
-    this.menuCtrl.enable(true, 'chat-menu');
-  }
-
-  ionViewWillLeave() {
-    this.onChatActiveChange(false);
-    this.menuCtrl.close('chat-menu');
-    this.menuCtrl.enable(false, 'chat-menu');
   }
 
   loadDailySuggestions() {

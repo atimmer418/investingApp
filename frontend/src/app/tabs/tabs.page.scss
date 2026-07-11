@@ -1,3 +1,23 @@
-.mobile-tabs {
+:host {
+  display: block;
+  height: 100%;
+}
+
+swiper-container.tabs-swiper {
+  display: block;
+  height: 100%;
+}
+
+swiper-slide {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Give each embedded tab page a height context so its ion-content can scroll. */
+app-tab1,
+app-tab2,
+app-ai-chat,
+app-tab3 {
+  display: block;
   height: 100%;
 }

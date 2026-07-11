@@ -212,8 +212,7 @@ export class Tab3Page implements OnInit, OnDestroy {
 
   /**
    * Runs each time Profile becomes the active pager slide (fired by the
-   * activation effect). Also delegated to from ionViewWillEnter while the
-   * legacy ion-tabs shell is still present — removed in the pager cutover.
+   * activation effect).
    */
   onTabActivated() {
     // Re-check MFU availability each time the tab is visited.
@@ -222,10 +221,6 @@ export class Tab3Page implements OnInit, OnDestroy {
     // Silent stale-while-revalidate refresh: show cached stats instantly,
     // then quietly background-refresh. Never flashes '—' on re-entry.
     this.freedomStatsService.refresh();
-  }
-
-  ionViewWillEnter() {
-    this.onTabActivated();
   }
 
   ngOnDestroy() {
