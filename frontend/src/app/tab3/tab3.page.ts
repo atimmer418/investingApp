@@ -15,6 +15,7 @@ import { MfuStoreService } from '../services/mfu-store.service';
 import { MfuPresenterService } from '../services/mfu-presenter.service';
 import { AccountStatusService } from '../services/account-status.service';
 import { FreedomStatsService } from '../services/freedom-stats.service';
+import { TabActivationService } from '../services/tab-activation.service';
 import { Observable } from 'rxjs';
 import { EquityPigUtils } from '../utils/equity-pig.utils';
 import { TabBarScrollDirective } from '../directives/tab-bar-scroll.directive';
@@ -166,7 +167,8 @@ export class Tab3Page implements OnInit, OnDestroy {
     private mfuStore: MfuStoreService,
     private mfuPresenter: MfuPresenterService,
     private accountStatusService: AccountStatusService,
-    public freedomStatsService: FreedomStatsService
+    public freedomStatsService: FreedomStatsService,
+    private tabActivation: TabActivationService
   ) {
     this.profileActionRequired$ = this.accountStatusService.actionRequired$;
 
@@ -176,6 +178,12 @@ export class Tab3Page implements OnInit, OnDestroy {
       this.liveEquity = this.freedomStatsService.equity() ?? 0;
     });
 
+    // Fire the tab's "on enter" work when it becomes the active pager slide.
+    effect(() => {
+      if (this.tabActivation.activeTab() === 'tab3') {
+        this.onTabActivated();
+      }
+    });
   }
 
   ngOnInit() {
@@ -202,13 +210,22 @@ export class Tab3Page implements OnInit, OnDestroy {
       });
   }
 
-  ionViewWillEnter() {
+  /**
+   * Runs each time Profile becomes the active pager slide (fired by the
+   * activation effect). Also delegated to from ionViewWillEnter while the
+   * legacy ion-tabs shell is still present — removed in the pager cutover.
+   */
+  onTabActivated() {
     // Re-check MFU availability each time the tab is visited.
     this.checkMfuAvailability();
 
     // Silent stale-while-revalidate refresh: show cached stats instantly,
     // then quietly background-refresh. Never flashes '—' on re-entry.
     this.freedomStatsService.refresh();
+  }
+
+  ionViewWillEnter() {
+    this.onTabActivated();
   }
 
   ngOnDestroy() {

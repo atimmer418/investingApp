@@ -16,7 +16,9 @@ import { SettingsService } from '../services/settings.service';
 import { PlaidService } from '../services/plaid.service';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
-import { MonthlyFreedomUpdateService } from '../services/monthly-freedom-update.service';
+import { MfuStoreService } from '../services/mfu-store.service';
+import { MfuPresenterService } from '../services/mfu-presenter.service';
+import { TabActivationService } from '../services/tab-activation.service';
 import { AppLockService } from '../services/app-lock.service';
 import { AccountStatusService } from '../services/account-status.service';
 import { FreedomStatsService } from '../services/freedom-stats.service';
@@ -61,12 +63,11 @@ function makeToastServiceMock() {
   return { showToast: jasmine.createSpy('showToast') };
 }
 
-function makeMfuServiceMock() {
-  return {
-    checkShouldShow: jasmine.createSpy('checkShouldShow').and.returnValue(
-      of({ shouldShow: false, hasMfuHistory: false })
-    )
-  };
+function makeMfuStoreMock() {
+  return { ensureAutoSession: () => of({ shouldShow: false, hasMfuHistory: false, data: null }) };
+}
+function makeMfuPresenterMock() {
+  return { presentAutoIfDue: () => Promise.resolve(), presentReopen: () => Promise.resolve() };
 }
 
 function makeAppLockServiceMock() {
@@ -137,7 +138,8 @@ describe('Tab3Page — FRED-200 signal-driven stat strip', () => {
       .overrideProvider(PlaidService, { useValue: makePlaidServiceMock() })
       .overrideProvider(AuthService, { useValue: makeAuthServiceMock() })
       .overrideProvider(ToastService, { useValue: makeToastServiceMock() })
-      .overrideProvider(MonthlyFreedomUpdateService, { useValue: makeMfuServiceMock() })
+      .overrideProvider(MfuStoreService, { useValue: makeMfuStoreMock() })
+      .overrideProvider(MfuPresenterService, { useValue: makeMfuPresenterMock() })
       .overrideProvider(AppLockService, { useValue: makeAppLockServiceMock() })
       .overrideProvider(AccountStatusService, { useValue: makeAccountStatusServiceMock() })
       .overrideProvider(FreedomStatsService, { useValue: freedomStatsMock });
@@ -172,7 +174,8 @@ describe('Tab3Page — FRED-200 signal-driven stat strip', () => {
       .overrideProvider(PlaidService, { useValue: makePlaidServiceMock() })
       .overrideProvider(AuthService, { useValue: makeAuthServiceMock() })
       .overrideProvider(ToastService, { useValue: makeToastServiceMock() })
-      .overrideProvider(MonthlyFreedomUpdateService, { useValue: makeMfuServiceMock() })
+      .overrideProvider(MfuStoreService, { useValue: makeMfuStoreMock() })
+      .overrideProvider(MfuPresenterService, { useValue: makeMfuPresenterMock() })
       .overrideProvider(AppLockService, { useValue: makeAppLockServiceMock() })
       .overrideProvider(AccountStatusService, { useValue: makeAccountStatusServiceMock() })
       .overrideProvider(FreedomStatsService, { useValue: freedomStatsMock });
@@ -189,7 +192,7 @@ describe('Tab3Page — FRED-200 signal-driven stat strip', () => {
     expect(values[2].textContent?.trim()).toBe('$1.2M');
   }));
 
-  it('calls freedomStatsService.refresh() on ionViewWillEnter', fakeAsync(() => {
+  it('runs onTabActivated (freedomStats refresh) when the tab is activated', fakeAsync(() => {
     const freedomStatsMock = makeFreedomStatsServiceMock(
       false,
       { freedomYear: '2045', freedomAge: '42', dollarsAway: '$1.2M' }
@@ -205,7 +208,8 @@ describe('Tab3Page — FRED-200 signal-driven stat strip', () => {
       .overrideProvider(PlaidService, { useValue: makePlaidServiceMock() })
       .overrideProvider(AuthService, { useValue: makeAuthServiceMock() })
       .overrideProvider(ToastService, { useValue: makeToastServiceMock() })
-      .overrideProvider(MonthlyFreedomUpdateService, { useValue: makeMfuServiceMock() })
+      .overrideProvider(MfuStoreService, { useValue: makeMfuStoreMock() })
+      .overrideProvider(MfuPresenterService, { useValue: makeMfuPresenterMock() })
       .overrideProvider(AppLockService, { useValue: makeAppLockServiceMock() })
       .overrideProvider(AccountStatusService, { useValue: makeAccountStatusServiceMock() })
       .overrideProvider(FreedomStatsService, { useValue: freedomStatsMock });
@@ -215,7 +219,42 @@ describe('Tab3Page — FRED-200 signal-driven stat strip', () => {
     tick(0);
 
     const component = fixture.componentInstance;
-    component.ionViewWillEnter();
+    component.onTabActivated();
+
+    expect(freedomStatsMock.refresh).toHaveBeenCalled();
+  }));
+
+  it('runs onTabActivated when TabActivationService activates tab3', fakeAsync(() => {
+    const freedomStatsMock = makeFreedomStatsServiceMock(
+      false,
+      { freedomYear: '2045', freedomAge: '42', dollarsAway: '$1.2M' }
+    );
+
+    TestBed.configureTestingModule({
+      imports: [Tab3Page, RouterTestingModule],
+      providers: [
+        { provide: ModalController, useValue: makeModalControllerMock() }
+      ]
+    })
+      .overrideProvider(SettingsService, { useValue: makeSettingsServiceMock() })
+      .overrideProvider(PlaidService, { useValue: makePlaidServiceMock() })
+      .overrideProvider(AuthService, { useValue: makeAuthServiceMock() })
+      .overrideProvider(ToastService, { useValue: makeToastServiceMock() })
+      .overrideProvider(MfuStoreService, { useValue: makeMfuStoreMock() })
+      .overrideProvider(MfuPresenterService, { useValue: makeMfuPresenterMock() })
+      .overrideProvider(AppLockService, { useValue: makeAppLockServiceMock() })
+      .overrideProvider(AccountStatusService, { useValue: makeAccountStatusServiceMock() })
+      .overrideProvider(FreedomStatsService, { useValue: freedomStatsMock });
+
+    const fixture = TestBed.createComponent(Tab3Page);
+    fixture.detectChanges();
+    tick(0);
+
+    const activation = TestBed.inject(TabActivationService);
+    freedomStatsMock.refresh.calls.reset();
+
+    activation.setActive('tab3');
+    fixture.detectChanges();
 
     expect(freedomStatsMock.refresh).toHaveBeenCalled();
   }));
@@ -237,7 +276,8 @@ describe('Tab3Page — FRED-200 signal-driven stat strip', () => {
       .overrideProvider(PlaidService, { useValue: makePlaidServiceMock() })
       .overrideProvider(AuthService, { useValue: makeAuthServiceMock() })
       .overrideProvider(ToastService, { useValue: makeToastServiceMock() })
-      .overrideProvider(MonthlyFreedomUpdateService, { useValue: makeMfuServiceMock() })
+      .overrideProvider(MfuStoreService, { useValue: makeMfuStoreMock() })
+      .overrideProvider(MfuPresenterService, { useValue: makeMfuPresenterMock() })
       .overrideProvider(AppLockService, { useValue: makeAppLockServiceMock() })
       .overrideProvider(AccountStatusService, { useValue: makeAccountStatusServiceMock() })
       .overrideProvider(FreedomStatsService, { useValue: freedomStatsMock });
