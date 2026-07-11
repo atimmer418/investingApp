@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ChangeDetectorRef, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ChangeDetectorRef, ElementRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuController } from '@ionic/angular';
@@ -18,6 +18,7 @@ import {
 } from '@ionic/angular/standalone';
 import { ChatService, ChatMessage, ChatSession } from '../../services/chat.service';
 import { FirstTimeTourService } from '../../services/first-time-tour.service';
+import { TabActivationService } from '../../services/tab-activation.service';
 import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
@@ -76,6 +77,7 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
   keyboardOffset = 0;
   private kbShow?: Promise<any>;
   private kbHide?: Promise<any>;
+  private chatLoaded = false;
 
   messages: ChatMessage[] = [];
   sessions: ChatSession[] = [];
@@ -83,15 +85,21 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
   newMessage: string = '';
   isLoading: boolean = false;
   dailySuggestions: string[] = [];
-  isActive: boolean = true; // Default to true to ensure it works on reload/entry
+  isActive: boolean = false;
 
   constructor(
     private chatService: ChatService,
     private cdr: ChangeDetectorRef,
     private menuCtrl: MenuController,
-    private tourService: FirstTimeTourService
+    private tourService: FirstTimeTourService,
+    private tabActivation: TabActivationService
   ) {
     addIcons({ arrowUp, menuOutline, addOutline, refreshOutline, sparklesOutline, trendingUpOutline, chatbubbleEllipsesOutline });
+
+    // Drive isActive + first-load from the pager's active-slide signal.
+    effect(() => {
+      this.onChatActiveChange(this.tabActivation.activeTab() === 'chat');
+    });
   }
 
   get isTourOnStep4(): boolean {
@@ -133,9 +141,8 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.loadSessions();
-    this.syncBackendHistory();
-    this.loadDailySuggestions();
+    // Chat data now loads on first activation (see onChatActiveChange), not on
+    // mount — so eager pager mounting does not fire these on app entry.
 
     // Native-only (plugin never fires on web — same pattern as KeyboardAvoidDirective)
     this.kbShow = Keyboard.addListener('keyboardWillShow', info => {
@@ -176,20 +183,39 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
     }, 300);
   }
 
-  ionViewDidEnter() {
-    this.isActive = true;
-    // The history drawer is portaled to ion-app (stacking-context fix) and the
-    // chat page stays cached across tab switches — only allow the menu (and its
-    // edge-swipe gesture) while this page is actually the active tab.
-    this.menuCtrl.enable(true, 'chat-menu');
-    // Scroll to bottom if there are existing messages
+  /**
+   * Runs when chat becomes/stops being the active pager slide (fired by the
+   * activation effect). Loads chat data once on first activation, toggles
+   * isActive, and scrolls to the latest message on activate. Also delegated to
+   * from the Ionic hooks below while the legacy ion-tabs shell is still present
+   * — those hooks are removed in the pager cutover.
+   */
+  onChatActiveChange(active: boolean) {
+    this.isActive = active;
+    if (!active) {
+      return;
+    }
+    if (!this.chatLoaded) {
+      this.chatLoaded = true;
+      this.loadSessions();
+      this.syncBackendHistory();
+      this.loadDailySuggestions();
+    }
     if (this.messages.length > 0) {
       setTimeout(() => this.scrollToBottom(), 300);
     }
   }
 
+  ionViewDidEnter() {
+    this.onChatActiveChange(true);
+    // The history drawer is portaled to ion-app (stacking-context fix) and the
+    // chat page stays cached across tab switches — only allow the menu (and its
+    // edge-swipe gesture) while this page is actually the active tab.
+    this.menuCtrl.enable(true, 'chat-menu');
+  }
+
   ionViewWillLeave() {
-    this.isActive = false;
+    this.onChatActiveChange(false);
     this.menuCtrl.close('chat-menu');
     this.menuCtrl.enable(false, 'chat-menu');
   }
