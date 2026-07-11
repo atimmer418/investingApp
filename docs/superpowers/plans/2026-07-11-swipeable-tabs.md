@@ -484,8 +484,9 @@ Replace `ion-tabs` with the Swiper pager, collapse the child routes to `:tab`, a
 - Modify: `frontend/src/app/tabs/tabs.page.html`
 - Modify: `frontend/src/app/tabs/tabs.page.scss`
 - Modify: `frontend/src/app/tab3/tab3.page.ts` (remove dead `ionViewWillEnter`)
-- Modify: `frontend/src/app/pages/ai-chat/ai-chat.page.ts` (remove dead `ionViewDidEnter`/`ionViewWillLeave`)
+- Modify: `frontend/src/app/pages/ai-chat/ai-chat.page.ts` (relocate chat-menu gating into `onChatActiveChange`, then remove dead `ionViewDidEnter`/`ionViewWillLeave`)
 - Test: `frontend/src/app/tabs/tabs.page.spec.ts` (new)
+- Test: `frontend/src/app/pages/ai-chat/ai-chat.page.spec.ts` (assert relocated chat-menu gating)
 
 **Interfaces:**
 - Consumes: `TabActivationService.setActive` (Task 1); `TabBarScrollService.reset()` / `setHoldFull(bool)`; `FloatingTabBarComponent` `@Input() activeTab`, `@Input() isSubExpired`, `@Input() badge`, `@Output() tabSelect`.
@@ -789,17 +790,84 @@ Delete these lines (the pager drives `onTabActivated` via the effect now; Ionic 
   }
 ```
 
-- [ ] **Step 3f: Remove the now-dead Ionic hooks in `ai-chat.page.ts`**
+- [ ] **Step 3f: Relocate chat-menu gating into `onChatActiveChange`, then remove the dead Ionic hooks in `ai-chat.page.ts`**
 
-Delete these two methods (the activation effect drives `onChatActiveChange` now):
+Once the pager's activation effect is the only driver of `onChatActiveChange`, the `menuCtrl` chat-menu gating that currently lives in `ionViewDidEnter`/`ionViewWillLeave` must move into `onChatActiveChange` — otherwise the chat side-menu (and its edge-swipe gesture) would never be enabled/disabled per active tab.
+
+First, replace the current `onChatActiveChange` method:
+```ts
+  onChatActiveChange(active: boolean) {
+    this.isActive = active;
+    if (!active) {
+      return;
+    }
+    if (!this.chatLoaded) {
+      this.chatLoaded = true;
+      this.loadSessions();
+      this.syncBackendHistory();
+      this.loadDailySuggestions();
+    }
+    if (this.messages.length > 0) {
+      setTimeout(() => this.scrollToBottom(), 300);
+    }
+  }
+```
+with:
+```ts
+  onChatActiveChange(active: boolean) {
+    this.isActive = active;
+    // The history drawer is portaled to ion-app (stacking-context fix) and the
+    // chat page stays mounted across tab switches — only allow the menu (and its
+    // edge-swipe gesture) while chat is the active tab.
+    if (!active) {
+      this.menuCtrl.close('chat-menu');
+      this.menuCtrl.enable(false, 'chat-menu');
+      return;
+    }
+    this.menuCtrl.enable(true, 'chat-menu');
+    if (!this.chatLoaded) {
+      this.chatLoaded = true;
+      this.loadSessions();
+      this.syncBackendHistory();
+      this.loadDailySuggestions();
+    }
+    if (this.messages.length > 0) {
+      setTimeout(() => this.scrollToBottom(), 300);
+    }
+  }
+```
+
+Then delete both now-redundant Ionic hooks (the effect drives `onChatActiveChange`, which now carries the menu gating):
 ```ts
   ionViewDidEnter() {
     this.onChatActiveChange(true);
+    // The history drawer is portaled to ion-app (stacking-context fix) and the
+    // chat page stays cached across tab switches — only allow the menu (and its
+    // edge-swipe gesture) while this page is actually the active tab.
+    this.menuCtrl.enable(true, 'chat-menu');
   }
 
   ionViewWillLeave() {
     this.onChatActiveChange(false);
+    this.menuCtrl.close('chat-menu');
+    this.menuCtrl.enable(false, 'chat-menu');
   }
+```
+
+- [ ] **Step 3g: Assert the relocated chat-menu gating in `ai-chat.page.spec.ts`**
+
+The existing spec's `MenuController` mock already exposes `close`/`enable` spies (`{ provide: MenuController, useValue: { close: jasmine.createSpy('close'), enable: jasmine.createSpy('enable') } }`). In the existing test `'does not load chat data until first activation, then gates re-loads'`, capture the menu mock right after `const c = fixture.componentInstance;`:
+```ts
+    const menu = TestBed.inject(MenuController) as any;
+```
+After the first `c.onChatActiveChange(true);` block, add:
+```ts
+    expect(menu.enable).toHaveBeenCalledWith(true, 'chat-menu');
+```
+After `c.onChatActiveChange(false);`, add:
+```ts
+    expect(menu.close).toHaveBeenCalledWith('chat-menu');
+    expect(menu.enable).toHaveBeenCalledWith(false, 'chat-menu');
 ```
 
 - [ ] **Step 4: Run tests to verify they pass**
@@ -815,7 +883,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add frontend/src/app/tabs/tabs.routes.ts frontend/src/app/tabs/tabs.page.ts frontend/src/app/tabs/tabs.page.html frontend/src/app/tabs/tabs.page.scss frontend/src/app/tabs/tabs.page.spec.ts frontend/src/app/tab3/tab3.page.ts frontend/src/app/pages/ai-chat/ai-chat.page.ts
+git add frontend/src/app/tabs/tabs.routes.ts frontend/src/app/tabs/tabs.page.ts frontend/src/app/tabs/tabs.page.html frontend/src/app/tabs/tabs.page.scss frontend/src/app/tabs/tabs.page.spec.ts frontend/src/app/tab3/tab3.page.ts frontend/src/app/pages/ai-chat/ai-chat.page.ts frontend/src/app/pages/ai-chat/ai-chat.page.spec.ts
 git commit -m "feat(tabs): swap ion-tabs for Swiper pager with URL sync + activation
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
