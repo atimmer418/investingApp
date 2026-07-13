@@ -199,6 +199,11 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.menuCtrl.enable(true, 'chat-menu');
+    // Open the history drawer ONLY via the hamburger button — no edge-swipe-to-
+    // open. The template [swipeGesture]="false" doesn't reliably take on the
+    // proxied ion-menu, so disable it authoritatively on the live menu here
+    // (its right-edge open gesture otherwise collides with the pager's swipe).
+    this.menuCtrl.swipeGesture(false, 'chat-menu');
     if (!this.chatLoaded) {
       this.chatLoaded = true;
       this.loadSessions();
