@@ -61,6 +61,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.accountStatus = 'ACTIVE' AND u.alpacaAccountId IS NOT NULL AND u.plaidAccessToken IS NOT NULL AND u.alpacaAchRelationshipId IS NULL")
     List<User> findActiveUsersNeedingAchSetup();
 
+    // Paid-tier members eligible for the Monthly Market Breakdown email
+    List<User> findBySelectedTierIn(java.util.Collection<String> tiers);
+
     // Load a user row under a pessimistic write-lock (SELECT ... FOR UPDATE) so concurrent Monthly
     // Freedom Update "seen" commits (double-tap, two tabs, two devices) serialize on the row and the
     // advances-only guard in MonthlyFreedomUpdateService.commitMfuSeen can enforce exactly-once
