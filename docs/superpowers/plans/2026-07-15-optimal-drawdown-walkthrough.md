@@ -843,7 +843,7 @@ Create `frontend/src/app/components/drawdown-deck/drawdown-deck.component.scss`:
 - [ ] **Step 4: Run the spec to verify it passes**
 
 Run: `cd frontend && npx ng test --include='**/drawdown-deck.component.spec.ts' --watch=false --browsers=ChromeHeadless`
-Expected: PASS (8 specs).
+Expected: PASS (7 specs).
 
 - [ ] **Step 5: Commit**
 
