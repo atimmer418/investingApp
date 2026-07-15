@@ -19,6 +19,7 @@ import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directiv
 import { MonteCarloFlowComponent } from '../monte-carlo-flow/monte-carlo-flow.component';
 import { McInfoSheetComponent } from '../mc-info-sheet/mc-info-sheet.component';
 import { StrategyDeckComponent, EDU_CARD_DEFS } from '../strategy-deck/strategy-deck.component';
+import { DrawdownDeckComponent } from '../drawdown-deck/drawdown-deck.component';
 import { buildFade } from '../../utils/modal-fade.utils';
 
 
@@ -77,19 +78,62 @@ export class RetirementPlanningComponent implements OnInit {
     const enterAnim = (baseEl: HTMLElement) => buildFade(baseEl, prefersReduced ? 0 : 500);
     const leaveAnim = (baseEl: HTMLElement) => buildFade(baseEl, prefersReduced ? 0 : 320).direction('reverse');
 
-    const modal = await this.modalController.create({
-      component: StrategyDeckComponent,
-      cssClass: 'mc-fullscreen-modal',
-      enterAnimation: enterAnim,
-      leaveAnimation: leaveAnim,
-      componentProps: { strategyKey: key },
-    });
+    let role: string | undefined;
+    try {
+      const modal = await this.modalController.create({
+        component: StrategyDeckComponent,
+        cssClass: 'mc-fullscreen-modal',
+        enterAnimation: enterAnim,
+        leaveAnimation: leaveAnim,
+        componentProps: { strategyKey: key, userTier: this.currentTier },
+      });
+      await modal.present();
+      ({ role } = await modal.onDidDismiss());
+    } finally {
+      this.deckLock = false;
+    }
 
-    await modal.present();
-    setTimeout(() => { this.deckLock = false; }, 600);
-
-    const { role } = await modal.onDidDismiss();
     if (role === 'stress-test') {
+      this.setSelectedSection('simulator');
+      this.toastService.showToast('Simulator ready — tap the piggy', 'medium', 2400);
+    } else if (role === 'drawdown') {
+      await this.openDrawdownDeck();
+    } else if (role === 'upgrade') {
+      this.upgradeToPlusClicked();
+    }
+  }
+
+  /** Guard against double-presenting the drawdown deck. Separate from deckLock:
+   *  the strategy deck's dismissal chain runs while deckLock is still held. */
+  private drawdownLock = false;
+
+  /** Present the Optimal Drawdown deck (Piggy Pro). Reached via the strategy
+   *  decks' 'drawdown' dismiss role; public so the spec can drive it directly. */
+  async openDrawdownDeck(): Promise<void> {
+    if (this.drawdownLock) return;
+    this.drawdownLock = true;
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const enterAnim = (baseEl: HTMLElement) => buildFade(baseEl, prefersReduced ? 0 : 500);
+    const leaveAnim = (baseEl: HTMLElement) => buildFade(baseEl, prefersReduced ? 0 : 320).direction('reverse');
+
+    let role: string | undefined;
+    try {
+      const modal = await this.modalController.create({
+        component: DrawdownDeckComponent,
+        cssClass: 'mc-fullscreen-modal',
+        enterAnimation: enterAnim,
+        leaveAnimation: leaveAnim,
+        componentProps: { userId: this.currentUserId },
+      });
+      await modal.present();
+      ({ role } = await modal.onDidDismiss());
+    } finally {
+      this.drawdownLock = false;
+    }
+
+    if (role === 'stress-test') {
+      this.includeOutsideAccts = true;
       this.setSelectedSection('simulator');
       this.toastService.showToast('Simulator ready — tap the piggy', 'medium', 2400);
     }
@@ -159,24 +203,25 @@ export class RetirementPlanningComponent implements OnInit {
     const enterAnim = (baseEl: HTMLElement) => buildFade(baseEl, 500);
     const leaveAnim = (baseEl: HTMLElement) => buildFade(baseEl, 320).direction('reverse');
 
-    const modal = await this.modalController.create({
-      component: MonteCarloFlowComponent,
-      cssClass: 'mc-fullscreen-modal',
-      enterAnimation: enterAnim,
-      leaveAnimation: leaveAnim,
-      componentProps: {
-        initialScenario: this.selectedScenario,
-        includeOutside: this.includeOutsideAccts,
-        historyEntry: historyEntry ?? null,
-        userTier: this.currentTier,
-        userId: this.currentUserId,
-      },
-    });
-
-    await modal.present();
-    setTimeout(() => { this.flowLock = false; }, 600);
-
-    await modal.onDidDismiss();
+    try {
+      const modal = await this.modalController.create({
+        component: MonteCarloFlowComponent,
+        cssClass: 'mc-fullscreen-modal',
+        enterAnimation: enterAnim,
+        leaveAnimation: leaveAnim,
+        componentProps: {
+          initialScenario: this.selectedScenario,
+          includeOutside: this.includeOutsideAccts,
+          historyEntry: historyEntry ?? null,
+          userTier: this.currentTier,
+          userId: this.currentUserId,
+        },
+      });
+      await modal.present();
+      await modal.onDidDismiss();
+    } finally {
+      this.flowLock = false;
+    }
     this.loadHistory();
   }
 
