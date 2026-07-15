@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -146,6 +147,63 @@ public class MarketBreakdownService {
             }
         }
         return null;
+    }
+
+    static final DateTimeFormatter MONTH_LABEL =
+            DateTimeFormatter.ofPattern("MMMM yyyy", Locale.US);
+
+    /** Voice + hard compliance rules for the narrative generation call. */
+    static String buildSystemPrompt() {
+        return """
+                You are FRED, a calm, plain-English investing companion for everyday long-term \
+                investors. You write the market recap section of FRED's Monthly Market Breakdown email.
+
+                Hard rules — violating any of these makes the output unusable:
+                - NEVER recommend any action. No changes to allocation, contributions, or strategy. \
+                Never tell the reader to buy, sell, hold, wait, or "consider" anything. You explain what \
+                happened; you do not advise.
+                - NEVER predict future performance and never imply outcomes are guaranteed.
+                - Use ONLY the portfolio numbers provided in the request. Never invent, estimate, or \
+                round differently any figure. Facts about news events must come from your web search results.
+                - Voice: calm, clear, friendly, jargon-free. If a term like "yield" or "index" is needed, \
+                explain it in a few plain words. Never salesy, never urgent.
+                - Output: an HTML fragment using ONLY <p>, <strong>, <em>, <h3>, <ul>, <li>, <br> tags. \
+                No other tags, no attributes, no links, no markdown, no code fences.
+                """;
+    }
+
+    /** The month's real numbers + the grounded task. */
+    static String buildUserPrompt(YearMonth month, List<SymbolMonthlyReturn> returns) {
+        String label = month.format(MONTH_LABEL);
+        StringBuilder numbers = new StringBuilder();
+        for (SymbolMonthlyReturn r : returns) {
+            Integer weight = PORTFOLIO_WEIGHTS.get(r.symbol);
+            String role = weight != null
+                    ? weight + "% of the FRED default portfolio"
+                    : "S&P 500, market context only — NOT in the portfolio";
+            numbers.append(String.format(Locale.US,
+                    "- %s (%s): %s%% for %s (closed the prior month at $%s, %s at $%s)%n",
+                    r.symbol, role, r.returnPct, label, r.priorClose, label, r.endClose));
+        }
+        return String.format(Locale.US, """
+                Write the market recap for FRED's Monthly Market Breakdown for %1$s.
+
+                The FRED default portfolio holds three ETFs: VTI (Vanguard Total US Stock Market, 75%%), \
+                VXUS (Vanguard Total International Stock, 20%%), VBR (Vanguard Small-Cap Value, 5%%).
+
+                Actual %1$s monthly results (month-end close to month-end close):
+                %2$s
+                Search the web for the major market-moving events of %1$s — for example Federal Reserve \
+                decisions, inflation reports, jobs data, notable earnings themes, and world events — and \
+                explain in plain English what happened and why these funds likely moved the way they did.
+
+                Structure exactly:
+                <h3>What happened in %1$s</h3> followed by 2-4 short <p> paragraphs, then
+                <h3>Why your funds moved</h3> followed by a <ul> with one <li> per portfolio fund \
+                (VTI, VXUS, VBR), each mentioning that fund's actual return from the numbers above.
+
+                Length: 300-500 words. Remember: explain only — no advice, no predictions, no invented numbers.
+                """, label, numbers);
     }
 
     /** Monthly close-to-close result for one symbol. */

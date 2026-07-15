@@ -25,10 +25,15 @@ import com.anthropic.models.messages.ThinkingConfigDisabled;
 import com.anthropic.models.messages.Tool;
 import com.anthropic.models.messages.ToolChoiceNone;
 import com.anthropic.models.messages.ToolResultBlockParam;
+import com.anthropic.models.messages.ToolUnion;
+import com.anthropic.models.messages.WebSearchTool20250305;
+import com.anthropic.models.messages.WebSearchResultBlock;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -45,6 +50,8 @@ public class LLMService {
     // Shared budget for thinking + visible text on Claude — keep generous so
     // adaptive thinking can't starve the answer
     private static final long CHAT_MAX_TOKENS = 16000L;
+    private static final long GROUNDED_SUMMARY_MAX_TOKENS = 4096L;
+    private static final long GROUNDED_SUMMARY_MAX_SEARCHES = 5L;
     private static final long HEARTBEAT_INTERVAL_MS = 10_000L;
     // Read-tools loop bound: enough for lookup -> follow-up lookup -> answer
     private static final int MAX_TOOL_ROUNDS = 4;
@@ -147,6 +154,74 @@ public class LLMService {
                     text.substring(0, Math.min(text.length(), 80)));
         }
         return text;
+    }
+
+    /**
+     * One-shot, non-streaming completion grounded with the Anthropic server-side
+     * web search tool. Used by the Monthly Market Breakdown — the model searches
+     * for real events (Claude alone cannot know last month's news) and the
+     * citations are returned for the audit trail. No thinking: utility path.
+     */
+    public GroundedSummary generateGroundedMarketSummary(String systemPrompt, String userPrompt) {
+        MessageCreateParams params = MessageCreateParams.builder()
+                .model(anthropicChatModel)
+                .maxTokens(GROUNDED_SUMMARY_MAX_TOKENS)
+                .system(systemPrompt)
+                .addUserMessage(userPrompt)
+                .addTool(ToolUnion.ofWebSearchTool20250305(WebSearchTool20250305.builder()
+                        .maxUses(GROUNDED_SUMMARY_MAX_SEARCHES)
+                        .build()))
+                .build();
+
+        Message message = anthropic().messages().create(params);
+
+        String text = message.content().stream()
+                .flatMap(block -> block.text().stream())
+                .map(TextBlock::text)
+                .collect(Collectors.joining());
+
+        List<GroundedSummary.Source> sources = new ArrayList<>();
+        Set<String> seenUrls = new LinkedHashSet<>();
+        for (ContentBlock block : message.content()) {
+            block.webSearchToolResult().ifPresent(result ->
+                    result.content().resultBlocks().ifPresent(list -> {
+                        for (WebSearchResultBlock res : list) {
+                            if (seenUrls.add(res.url())) {
+                                sources.add(new GroundedSummary.Source(res.url(), res.title()));
+                            }
+                        }
+                    }));
+        }
+
+        String stopReason = message.stopReason().map(Object::toString).orElse("none");
+        if (text.isBlank()) {
+            throw new RuntimeException("Grounded summary came back empty (stop_reason: " + stopReason + ")");
+        }
+        logger.info("Grounded market summary generated: {} chars, {} sources", text.length(), sources.size());
+        return new GroundedSummary(text, anthropicChatModel, sources);
+    }
+
+    /** Result of a grounded generation: narrative text + the searched sources. */
+    public static class GroundedSummary {
+        public final String text;
+        public final String model;
+        public final List<Source> sources;
+
+        public GroundedSummary(String text, String model, List<Source> sources) {
+            this.text = text;
+            this.model = model;
+            this.sources = sources;
+        }
+
+        public static class Source {
+            public final String url;
+            public final String title;
+
+            public Source(String url, String title) {
+                this.url = url;
+                this.title = title;
+            }
+        }
     }
 
     public void streamChatResponse(List<ChatMessage> messages, Consumer<String> tokenCallback) throws Exception {
