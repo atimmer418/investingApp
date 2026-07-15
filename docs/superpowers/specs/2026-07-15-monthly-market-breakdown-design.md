@@ -121,7 +121,7 @@ All other recipients get the **market-only variant** (numbers card swapped for a
 
 ### Subject line
 
-`FRED's Monthly Market Breakdown - {monthName}` (e.g., "FRED's Monthly Market Breakdown - June"). Month name only, no year. Calm, no urgency, no emoji. (Confirmed by Andy in spec review.)
+`FRED's Monthly Market Breakdown - {monthName} {year}` (e.g., "FRED's Monthly Market Breakdown - June 2026"). Calm, no urgency, no emoji. (Confirmed by Andy in spec review.)
 
 ### Template
 
