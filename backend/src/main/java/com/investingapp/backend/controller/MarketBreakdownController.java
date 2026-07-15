@@ -53,24 +53,35 @@ public class MarketBreakdownController {
         this.manualGenerateEnabled = manualGenerateEnabled;
     }
 
-    /** Rendered email HTML for the requesting user. month defaults to the prior month. */
-    @GetMapping(value = "/preview", produces = MediaType.TEXT_HTML_VALUE)
+    /**
+     * Rendered email HTML for the requesting user. month defaults to the prior month.
+     * produces lists JSON too so the mapping accepts Accept: application/json
+     * clients (no 406). Error branches preset Content-Type: application/json —
+     * without a preset, negotiation for Accept: * / * ties on the produces
+     * declaration order, picks text/html, finds no converter for the
+     * MessageResponse POJO, and 500s (HttpMessageNotWritableException),
+     * masking the documented 400/404/401. The happy path pins text/html below.
+     */
+    @GetMapping(value = "/preview", produces = { MediaType.TEXT_HTML_VALUE, MediaType.APPLICATION_JSON_VALUE })
     public ResponseEntity<?> preview(@RequestParam(required = false) String month) {
         try {
             User user = getCurrentUser();
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .contentType(MediaType.APPLICATION_JSON)
                         .body(new MessageResponse("User not authenticated"));
             }
             YearMonth target = parseMonth(month);
             if (target == null) {
                 return ResponseEntity.badRequest()
+                        .contentType(MediaType.APPLICATION_JSON)
                         .body(new MessageResponse("month must look like 2026-06"));
             }
 
             var row = marketBreakdownRepository.findByPeriodKey(target.toString());
             if (row.isEmpty() || !MarketBreakdown.STATUS_GENERATED.equals(row.get().getStatus())) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .contentType(MediaType.APPLICATION_JSON)
                         .body(new MessageResponse("No market breakdown generated for " + target + " yet."));
             }
 
@@ -87,6 +98,7 @@ public class MarketBreakdownController {
         } catch (Exception e) {
             logger.error("Market breakdown preview failed", e);
             return ResponseEntity.internalServerError()
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(new MessageResponse("Preview failed: " + e.getMessage()));
         }
     }
