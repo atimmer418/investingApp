@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.cfg.JsonNodeFeature;
 import com.investingapp.backend.model.MarketBreakdown;
 import com.investingapp.backend.repository.MarketBreakdownRepository;
+import com.investingapp.backend.util.MarketNarrativeValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -204,6 +206,69 @@ public class MarketBreakdownService {
 
                 Length: 300-500 words. Remember: explain only — no advice, no predictions, no invented numbers.
                 """, label, numbers);
+    }
+
+    static final ZoneId MARKET_ZONE = ZoneId.of("America/New_York");
+
+    /**
+     * Return the month's breakdown, generating and persisting it if needed.
+     * Idempotent: an existing GENERATED row is returned as-is (every recipient
+     * gets identical narrative text, and retries never regenerate mid-batch).
+     * A FAILED row is regenerated in place. On any failure a FAILED row is
+     * persisted and IllegalStateException is thrown — callers (scheduler
+     * catch-up runs, manual endpoint) retry by calling again.
+     */
+    public MarketBreakdown getOrGenerate(YearMonth month) {
+        if (!month.isBefore(YearMonth.now(MARKET_ZONE))) {
+            throw new IllegalArgumentException(
+                    "Market breakdown can only be generated for completed months, got " + month);
+        }
+        String periodKey = month.toString();
+        Optional<MarketBreakdown> existing = repository.findByPeriodKey(periodKey);
+        if (existing.isPresent() && MarketBreakdown.STATUS_GENERATED.equals(existing.get().getStatus())) {
+            return existing.get();
+        }
+
+        MarketBreakdown row = existing.orElseGet(MarketBreakdown::new);
+        row.setPeriodKey(periodKey);
+        row.setPeriodLabel(month.format(MONTH_LABEL));
+
+        try {
+            List<SymbolMonthlyReturn> returns = fetchMonthlyReturns(month);
+            row.setEtfReturnsJson(objectMapper.writeValueAsString(returns));
+
+            LLMService.GroundedSummary summary = llmService.generateGroundedMarketSummary(
+                    buildSystemPrompt(), buildUserPrompt(month, returns));
+
+            MarketNarrativeValidator.ValidationResult check =
+                    MarketNarrativeValidator.validate(summary.text);
+            if (!check.valid) {
+                throw new IllegalStateException(
+                        "Narrative failed compliance validation: " + String.join("; ", check.violations));
+            }
+
+            row.setNarrativeHtml(summary.text.trim());
+            row.setSourcesJson(objectMapper.writeValueAsString(summary.sources));
+            row.setModel(summary.model);
+            row.setStatus(MarketBreakdown.STATUS_GENERATED);
+            row.setErrorMessage(null);
+            logger.info("Market breakdown generated for {} ({} chars, {} sources)",
+                    periodKey, row.getNarrativeHtml().length(), summary.sources.size());
+            return repository.save(row);
+        } catch (Exception e) {
+            row.setNarrativeHtml(null); // never leave a rejected/partial narrative sendable
+            row.setStatus(MarketBreakdown.STATUS_FAILED);
+            row.setErrorMessage(e.getMessage() == null ? e.getClass().getSimpleName()
+                    : e.getMessage().substring(0, Math.min(e.getMessage().length(), 2000)));
+            try {
+                repository.save(row);
+            } catch (Exception persistError) {
+                logger.error("Could not persist FAILED market_breakdown row for {}: {}",
+                        periodKey, persistError.getMessage());
+            }
+            throw new IllegalStateException(
+                    "Market breakdown generation failed for " + periodKey + ": " + e.getMessage(), e);
+        }
     }
 
     /** Monthly close-to-close result for one symbol. */
