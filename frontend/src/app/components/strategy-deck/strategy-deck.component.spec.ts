@@ -81,6 +81,20 @@ describe('StrategyDeckComponent — Optimal Drawdown gate', () => {
     expect(modalCtrl.dismiss).toHaveBeenCalledWith(null, 'upgrade');
   }));
 
+  it('releases the nudge lock when sheet creation fails', fakeAsync(() => {
+    component.userTier = null;
+    fixture.detectChanges();
+    modalCtrl.create.and.returnValues(
+      Promise.reject(new Error('create failed')),
+      Promise.resolve(makeSheet(undefined)),
+    );
+    component.discoverDrawdown().catch(() => { /* rejection propagates by design */ });
+    tick();
+    component.discoverDrawdown();
+    tick(700);
+    expect(modalCtrl.create).toHaveBeenCalledTimes(2);
+  }));
+
   it('plus tier is gated like null tier (pro only)', () => {
     component.userTier = 'plus';
     fixture.detectChanges();

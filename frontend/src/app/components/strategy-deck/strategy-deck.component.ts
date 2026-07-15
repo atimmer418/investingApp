@@ -287,6 +287,7 @@ export class StrategyDeckComponent implements OnInit, OnDestroy {
    * Non-pro → present the Piggy Pro nudge over this deck so "Maybe later"
    * keeps the user on the playbook slide; an upgrade tap dismisses the deck
    * with role 'upgrade' for the presenter to route.
+   * The lock releases in finally so a rejected create/present can never strand it.
    */
   async discoverDrawdown(): Promise<void> {
     if (this.isPro) {
@@ -296,20 +297,23 @@ export class StrategyDeckComponent implements OnInit, OnDestroy {
     if (this.nudgeLock) return;
     this.nudgeLock = true;
 
-    const sheet = await this.modalController.create({
-      component: McInfoSheetComponent,
-      cssClass: 'mc-bottom-sheet-modal',
-      componentProps: {
-        mode: 'nudge',
-        nudgeTitle: 'Unlock the Optimal Drawdown',
-        nudgeBody: 'See the tax-smart order for spending your taxable, 401(k), and Roth accounts in retirement — personalized to your portfolio, updating as it grows.',
-        targetTier: 'pro',
-      },
-    });
-    await sheet.present();
-    setTimeout(() => { this.nudgeLock = false; }, 600);
-
-    const { role } = await sheet.onDidDismiss();
+    let role: string | undefined;
+    try {
+      const sheet = await this.modalController.create({
+        component: McInfoSheetComponent,
+        cssClass: 'mc-bottom-sheet-modal',
+        componentProps: {
+          mode: 'nudge',
+          nudgeTitle: 'Unlock the Optimal Drawdown',
+          nudgeBody: 'See the tax-smart order for spending your taxable, 401(k), and Roth accounts in retirement — personalized to your portfolio, updating as it grows.',
+          targetTier: 'pro',
+        },
+      });
+      await sheet.present();
+      ({ role } = await sheet.onDidDismiss());
+    } finally {
+      this.nudgeLock = false;
+    }
     if (role === 'upgrade') {
       await this.modalController.dismiss(null, 'upgrade');
     }
