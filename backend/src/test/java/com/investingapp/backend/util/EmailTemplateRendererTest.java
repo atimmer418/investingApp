@@ -44,7 +44,8 @@ class EmailTemplateRendererTest {
                 "changeLabel", "Change in June",
                 "changeValue", "+$120.50 (+2.1%)",
                 "changeColor", "#16A34A",
-                "marketReturnPct", "+1.4%"));
+                "marketReturnPct", "+1.4%",
+                "marketReturnColor", "#DC2626"));
         String html = EmailTemplateRenderer.render("market-breakdown-numbers.html", Map.of(
                 "periodLabel", "June 2026",
                 "endValue", "$5,930.10",
