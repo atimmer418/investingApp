@@ -124,7 +124,8 @@ public class MarketBreakdownService {
             BigDecimal priorClose = closeForMonth(sorted, prior);
             BigDecimal endClose = closeForMonth(sorted, target);
             if (priorClose == null || endClose == null
-                    || priorClose.compareTo(BigDecimal.ZERO) <= 0) {
+                    || priorClose.compareTo(BigDecimal.ZERO) <= 0
+                    || endClose.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new IllegalStateException("Missing monthly close for symbol " + symbol
                         + " (prior=" + priorClose + ", end=" + endClose + ")");
             }

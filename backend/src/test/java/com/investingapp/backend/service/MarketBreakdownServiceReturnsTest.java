@@ -85,4 +85,30 @@ class MarketBreakdownServiceReturnsTest {
                         bars(oneBar), YearMonth.of(2026, 6), List.of("VTI")));
         assertTrue(ex.getMessage().contains("VTI"));
     }
+
+    @Test
+    void missingTargetMonthBarThrows() throws Exception {
+        String priorOnly = """
+                {"bars": {"VTI": [{"t":"2026-05-01T04:00:00Z","c":250.10}]}}
+                """;
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
+                MarketBreakdownService.extractMonthlyReturns(
+                        bars(priorOnly), YearMonth.of(2026, 6), List.of("VTI")));
+        assertTrue(ex.getMessage().contains("VTI"));
+    }
+
+    @Test
+    void zeroEndCloseThrows() throws Exception {
+        // A zero target-month close must throw, not silently yield -100.00%.
+        String zeroEnd = """
+                {"bars": {"VTI": [
+                  {"t":"2026-05-01T04:00:00Z","c":250.10},
+                  {"t":"2026-06-01T04:00:00Z","c":0}
+                ]}}
+                """;
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
+                MarketBreakdownService.extractMonthlyReturns(
+                        bars(zeroEnd), YearMonth.of(2026, 6), List.of("VTI")));
+        assertTrue(ex.getMessage().contains("VTI"));
+    }
 }
