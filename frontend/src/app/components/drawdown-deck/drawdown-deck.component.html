@@ -1,0 +1,79 @@
+<!-- Optimal Drawdown deck (Piggy Pro) — fullscreen blue-gradient modal, 2 slides -->
+<div class="deck-host">
+
+  <!-- Top bar: spacer · progress dots · X ─────────────────────────────────── -->
+  <div class="deck-top">
+    <div class="deck-spacer"></div>
+    <div class="deck-dots">
+      <span *ngFor="let i of SLIDE_INDICES" [class.on]="i === currentSlide"></span>
+    </div>
+    <button class="deck-x" (click)="dismiss()" aria-label="Close">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
+
+  <!-- Slide scroll container ───────────────────────────────────────────────── -->
+  <div class="deck-scroll" #deckScroll (scroll)="onScroll()" (click)="onDeckClick($event)">
+
+    <!-- SLIDE 0 — Spend in the right order ───────────────────────────────── -->
+    <div class="slide">
+      <div class="sl-eyebrow">{{ eyebrow(0) }}</div>
+      <div class="sl-h1">Spend in the right order.</div>
+      <p class="sl-body">In retirement, <strong>which account you tap first</strong> matters almost as much as how much you withdraw. The tax-smart sequence most planners start from: taxable first, tax-deferred second, Roth last.</p>
+
+      <div class="step-row" *ngFor="let b of BUCKETS; let n = index">
+        <div class="step-num">{{ n + 1 }}</div>
+        <div class="step-txt">
+          <div class="st-1">
+            {{ b.title }}
+            <span class="bucket-chip" *ngIf="chip(b.balanceKey) !== '—'">{{ chip(b.balanceKey) }}</span>
+          </div>
+          <div class="st-2">{{ b.body }}</div>
+        </div>
+      </div>
+
+      <div class="bucket-strip">
+        <div class="bs-label">Your buckets today</div>
+        <div class="bs-tiles">
+          <div class="bs-tile"><span class="bs-k">Taxable</span><span class="bs-v">{{ chip('fred') }}</span></div>
+          <div class="bs-tile"><span class="bs-k">401(k)</span><span class="bs-v">{{ chip('k401') }}</span></div>
+          <div class="bs-tile"><span class="bs-k">Roth</span><span class="bs-v">{{ chip('roth') }}</span></div>
+        </div>
+        <div class="bs-hint" *ngIf="!hasOutside">Add your 401(k) and Roth in the simulator to see your own mix.</div>
+      </div>
+      <div class="sl-spacer"></div>
+    </div>
+
+    <!-- SLIDE 1 — Why the order matters ──────────────────────────────────── -->
+    <div class="slide">
+      <div class="sl-eyebrow">{{ eyebrow(1) }}</div>
+      <div class="sl-h1">Why the order matters.</div>
+      <div class="stat-chip">
+        <span class="big">0%</span>
+        <span class="lab">the long-term capital-gains rate many retirees actually pay</span>
+      </div>
+      <div class="step-row" *ngFor="let row of WHY">
+        <span class="material-symbols-outlined">{{ row[0] }}</span>
+        <div class="step-txt">
+          <div class="st-1">{{ row[1] }}</div>
+          <div class="st-2">{{ row[2] }}</div>
+        </div>
+      </div>
+      <div class="warn-card">
+        <span class="material-symbols-outlined">info</span>
+        <p>Educational content, not tax advice. Everyone’s tax picture is different — talk to a qualified tax advisor before acting on any withdrawal plan.</p>
+      </div>
+      <div class="sl-spacer"></div>
+      <button class="sl-cta" (click)="stressTest()">
+        <span class="material-symbols-outlined">play_arrow</span>
+        Stress-test with your outside accounts
+      </button>
+      <button class="sl-ghost" (click)="done()">Done</button>
+    </div>
+
+  </div><!-- .deck-scroll -->
+
+  <!-- Swipe hint — hidden permanently after first swipe ───────────────────── -->
+  <div class="swipe-hint" [class.gone]="hintShown">Swipe to explore</div>
+
+</div><!-- .deck-host -->
