@@ -1,5 +1,7 @@
 package com.investingapp.backend.util;
 
+import java.util.Locale;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -57,5 +59,42 @@ class MarketNarrativeValidatorTest {
         assertFalse(MarketNarrativeValidator.validate(clean().repeat(30)).valid);
         assertFalse(MarketNarrativeValidator.validate(null).valid);
         assertFalse(MarketNarrativeValidator.validate("  ").valid);
+    }
+
+    /** Asserts rejection AND that some violation message identifies the cause. */
+    private static void assertRejectedFor(String html, String causeFragment) {
+        MarketNarrativeValidator.ValidationResult r = MarketNarrativeValidator.validate(html);
+        assertFalse(r.valid, () -> "expected rejection, but narrative passed: " + html);
+        String joined = String.join("; ", r.violations).toLowerCase(Locale.US);
+        assertTrue(joined.contains(causeFragment),
+                () -> "expected a violation mentioning '" + causeFragment + "' but got: " + joined);
+    }
+
+    @Test
+    void whitespaceVariantAdviceRejected() {
+        assertRejectedFor(clean() + "<p>You  should buy more VTI.</p>", "you should");
+        assertRejectedFor(clean() + "<p>You\nshould buy more VTI.</p>", "you should");
+    }
+
+    @Test
+    void markupSplitAdviceRejected() {
+        assertRejectedFor(clean() + "<p>you <strong>should</strong> buy more VTI</p>", "you should");
+    }
+
+    @Test
+    void quoteDesyncHrefRejected() {
+        assertRejectedFor(
+                clean() + "<p title=\"x>\" href=\"https://phishing.example.com\">click here</p>",
+                "href");
+    }
+
+    @Test
+    void upperCaseHrefRejected() {
+        assertRejectedFor(clean() + "<p HREF=\"https://phishing.example.com\">click</p>", "href");
+    }
+
+    @Test
+    void anyAttributeRejected() {
+        assertRejectedFor(clean() + "<p title=\"hi\">hello</p>", "attribute");
     }
 }

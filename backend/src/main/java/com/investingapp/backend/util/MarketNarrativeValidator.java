@@ -13,6 +13,9 @@ import java.util.regex.Pattern;
  * tags — this class is the hard backstop: if anything slips through, the
  * narrative is rejected and NOTHING is emailed that month until a regeneration
  * passes. Financial content ships on a gate, not on vibes.
+ *
+ * <p>Bias is deliberately strict: a false negative is a compliance risk, while
+ * a false positive only costs a regeneration.
  */
 public final class MarketNarrativeValidator {
 
@@ -34,7 +37,10 @@ public final class MarketNarrativeValidator {
     private static final Set<String> ALLOWED_TAGS = Set.of("p", "strong", "em", "h3", "ul", "li", "br");
 
     private static final Pattern TAG = Pattern.compile("<\\s*/?\\s*([a-zA-Z0-9]+)([^>]*)>");
-    private static final Pattern EVENT_ATTR = Pattern.compile("on[a-z]+\\s*=", Pattern.CASE_INSENSITIVE);
+    private static final Pattern TAG_STRIP = Pattern.compile("<[^>]+>");
+    /** Defense-in-depth whole-string scans — calm financial prose never legitimately contains these. */
+    private static final Pattern HREF_ANYWHERE = Pattern.compile("href\\s*=", Pattern.CASE_INSENSITIVE);
+    private static final Pattern EVENT_ATTR_ANYWHERE = Pattern.compile("\\bon[a-z]+\\s*=", Pattern.CASE_INSENSITIVE);
 
     public static ValidationResult validate(String html) {
         List<String> violations = new ArrayList<>();
@@ -52,14 +58,29 @@ public final class MarketNarrativeValidator {
             violations.add("unresolved template artifact '{{' present");
         }
 
+        // The phrase scan runs on two derived views of the input so neither
+        // whitespace tricks ("you\nshould") nor markup splits
+        // ("you <strong>should</strong>") can hide advice language. Length
+        // checks above intentionally stay on the raw input.
         String lower = html.toLowerCase(Locale.US);
+        String normalized = collapseWhitespace(lower);
+        String tagStripped = collapseWhitespace(TAG_STRIP.matcher(lower).replaceAll(" "));
         for (String phrase : FORBIDDEN_PHRASES) {
-            if (lower.contains(phrase)) {
+            if (normalized.contains(phrase) || tagStripped.contains(phrase)) {
                 violations.add("forbidden phrase: \"" + phrase + "\"");
             }
         }
         if (lower.contains("javascript:")) {
             violations.add("javascript: URI present");
+        }
+        // Whole-raw-string scans, independent of tag parsing, so quote-desync
+        // or otherwise malformed markup can't smuggle these past the per-tag
+        // attribute check below.
+        if (HREF_ANYWHERE.matcher(html).find()) {
+            violations.add("href attribute present");
+        }
+        if (EVENT_ATTR_ANYWHERE.matcher(html).find()) {
+            violations.add("inline event handler attribute present");
         }
 
         Matcher tags = TAG.matcher(html);
@@ -68,14 +89,25 @@ public final class MarketNarrativeValidator {
             if (!ALLOWED_TAGS.contains(name)) {
                 violations.add("disallowed tag: <" + name + ">");
             }
-            String attrs = tags.group(2);
-            if (attrs != null && !attrs.isBlank()
-                    && (EVENT_ATTR.matcher(attrs).find() || attrs.contains("href"))) {
-                violations.add("disallowed attribute on <" + name + ">: " + attrs.trim());
+            // Output contract: NO attributes on any tag. Anything beyond pure
+            // whitespace (and a trailing "/" on self-closing tags) is rejected
+            // outright. This also defuses quote-desync smuggling: a '>' inside
+            // a quoted attribute value truncates the match, but the truncated
+            // match still carries attribute content and is rejected here.
+            String attrs = tags.group(2) == null ? "" : tags.group(2).trim();
+            if (attrs.endsWith("/")) {
+                attrs = attrs.substring(0, attrs.length() - 1).trim();
+            }
+            if (!attrs.isEmpty()) {
+                violations.add("disallowed attribute content on <" + name + ">: " + attrs);
             }
         }
 
         return new ValidationResult(violations);
+    }
+
+    private static String collapseWhitespace(String s) {
+        return s.replaceAll("\\s+", " ");
     }
 
     public static final class ValidationResult {
