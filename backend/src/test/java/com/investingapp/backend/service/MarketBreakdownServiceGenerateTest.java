@@ -120,4 +120,19 @@ class MarketBreakdownServiceGenerateTest {
         assertThrows(IllegalArgumentException.class, () -> service.getOrGenerate(YearMonth.now().plusMonths(1)));
         verify(repo, never()).save(any());
     }
+
+    @Test
+    void ungroundedNarrativePersistsFailedAndThrows() {
+        when(llm.generateGroundedMarketSummary(anyString(), anyString()))
+                .thenReturn(new LLMService.GroundedSummary(validNarrative(), "claude-sonnet-5", List.of()));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> service.getOrGenerate(JUNE));
+
+        assertTrue(ex.getMessage().contains("grounded"));
+        ArgumentCaptor<MarketBreakdown> cap = ArgumentCaptor.forClass(MarketBreakdown.class);
+        verify(repo).save(cap.capture());
+        assertEquals(MarketBreakdown.STATUS_FAILED, cap.getValue().getStatus());
+        assertNull(cap.getValue().getNarrativeHtml());
+    }
 }

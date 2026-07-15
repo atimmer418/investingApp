@@ -240,6 +240,12 @@ public class MarketBreakdownService {
             LLMService.GroundedSummary summary = llmService.generateGroundedMarketSummary(
                     buildSystemPrompt(), buildUserPrompt(month, returns));
 
+            if (summary.sources.isEmpty()) {
+                throw new IllegalStateException(
+                        "Narrative not grounded: the model performed no web searches — "
+                        + "market facts must come from search results");
+            }
+
             MarketNarrativeValidator.ValidationResult check =
                     MarketNarrativeValidator.validate(summary.text);
             if (!check.valid) {
