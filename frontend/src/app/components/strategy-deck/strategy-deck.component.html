@@ -87,6 +87,11 @@
         <span class="material-symbols-outlined">play_arrow</span>
         Stress-test this strategy
       </button>
+      <button class="sl-drawdown" (click)="discoverDrawdown()">
+        <span class="material-symbols-outlined">route</span>
+        Discover the Optimal Drawdown
+        <span class="deck-lockchip" *ngIf="!isPro"><span class="material-symbols-outlined">lock</span>PRO</span>
+      </button>
       <button class="sl-ghost" (click)="done()">Done</button>
     </div>
 

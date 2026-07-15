@@ -9,6 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { ModalController } from '@ionic/angular/standalone';
 import { ToastService } from '../../services/toast.service';
+import { McInfoSheetComponent } from '../mc-info-sheet/mc-info-sheet.component';
 
 // ─── Content types ────────────────────────────────────────────────────────────
 
@@ -188,12 +189,21 @@ export const EDU_CARD_DEFS = STRATEGIES.map(s => ({
 export class StrategyDeckComponent implements OnInit, OnDestroy {
 
   @Input() strategyKey = 'yield';
+
+  /** Subscription tier passed by the presenter (same pattern as MonteCarloFlowComponent). */
+  @Input() userTier: string | null = null;
+
+  get isPro(): boolean { return this.userTier === 'pro'; }
+
   @ViewChild('deckScroll') scrollRef!: ElementRef<HTMLElement>;
 
   strategy!: StrategyData;
 
   currentSlide = 0;
   hintShown    = false;
+
+  /** Guard against double-presenting the upgrade nudge. */
+  private nudgeLock = false;
 
   readonly SLIDE_INDICES = [0, 1, 2, 3, 4];
 
@@ -269,5 +279,39 @@ export class StrategyDeckComponent implements OnInit, OnDestroy {
 
   async done(): Promise<void> {
     await this.modalController.dismiss(null, 'done');
+  }
+
+  /**
+   * "Discover the Optimal Drawdown" (playbook slide).
+   * Pro → dismiss with role 'drawdown'; the presenter opens the drawdown deck.
+   * Non-pro → present the Piggy Pro nudge over this deck so "Maybe later"
+   * keeps the user on the playbook slide; an upgrade tap dismisses the deck
+   * with role 'upgrade' for the presenter to route.
+   */
+  async discoverDrawdown(): Promise<void> {
+    if (this.isPro) {
+      await this.modalController.dismiss(null, 'drawdown');
+      return;
+    }
+    if (this.nudgeLock) return;
+    this.nudgeLock = true;
+
+    const sheet = await this.modalController.create({
+      component: McInfoSheetComponent,
+      cssClass: 'mc-bottom-sheet-modal',
+      componentProps: {
+        mode: 'nudge',
+        nudgeTitle: 'Unlock the Optimal Drawdown',
+        nudgeBody: 'See the tax-smart order for spending your taxable, 401(k), and Roth accounts in retirement — personalized to your portfolio, updating as it grows.',
+        targetTier: 'pro',
+      },
+    });
+    await sheet.present();
+    setTimeout(() => { this.nudgeLock = false; }, 600);
+
+    const { role } = await sheet.onDidDismiss();
+    if (role === 'upgrade') {
+      await this.modalController.dismiss(null, 'upgrade');
+    }
   }
 }
