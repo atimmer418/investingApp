@@ -233,6 +233,8 @@ import { McInfoSheetComponent } from '../mc-info-sheet/mc-info-sheet.component';
    * Non-pro → present the Piggy Pro nudge over this deck so "Maybe later"
    * keeps the user on the playbook slide; an upgrade tap dismisses the deck
    * with role 'upgrade' for the presenter to route.
+   * The lock releases in finally so a rejected create/present can never
+   * strand it (hardening decision, Andy 2026-07-15).
    */
   async discoverDrawdown(): Promise<void> {
     if (this.isPro) {
@@ -242,24 +244,45 @@ import { McInfoSheetComponent } from '../mc-info-sheet/mc-info-sheet.component';
     if (this.nudgeLock) return;
     this.nudgeLock = true;
 
-    const sheet = await this.modalController.create({
-      component: McInfoSheetComponent,
-      cssClass: 'mc-bottom-sheet-modal',
-      componentProps: {
-        mode: 'nudge',
-        nudgeTitle: 'Unlock the Optimal Drawdown',
-        nudgeBody: 'See the tax-smart order for spending your taxable, 401(k), and Roth accounts in retirement — personalized to your portfolio, updating as it grows.',
-        targetTier: 'pro',
-      },
-    });
-    await sheet.present();
-    setTimeout(() => { this.nudgeLock = false; }, 600);
-
-    const { role } = await sheet.onDidDismiss();
+    let role: string | undefined;
+    try {
+      const sheet = await this.modalController.create({
+        component: McInfoSheetComponent,
+        cssClass: 'mc-bottom-sheet-modal',
+        componentProps: {
+          mode: 'nudge',
+          nudgeTitle: 'Unlock the Optimal Drawdown',
+          nudgeBody: 'See the tax-smart order for spending your taxable, 401(k), and Roth accounts in retirement — personalized to your portfolio, updating as it grows.',
+          targetTier: 'pro',
+        },
+      });
+      await sheet.present();
+      ({ role } = await sheet.onDidDismiss());
+    } finally {
+      this.nudgeLock = false;
+    }
     if (role === 'upgrade') {
       await this.modalController.dismiss(null, 'upgrade');
     }
   }
+```
+
+3f. Add a lock-release regression test to the spec file (inside the same `describe`):
+
+```typescript
+  it('releases the nudge lock when sheet creation fails', fakeAsync(() => {
+    component.userTier = null;
+    fixture.detectChanges();
+    modalCtrl.create.and.returnValues(
+      Promise.reject(new Error('create failed')),
+      Promise.resolve(makeSheet(undefined)),
+    );
+    component.discoverDrawdown().catch(() => { /* rejection propagates by design */ });
+    tick();
+    component.discoverDrawdown();
+    tick(700);
+    expect(modalCtrl.create).toHaveBeenCalledTimes(2);
+  }));
 ```
 
 3d. In `frontend/src/app/components/strategy-deck/strategy-deck.component.html`, on the playbook slide, insert the new button between the stress-test CTA and the Done ghost (after line 89's `</button>`, before `<button class="sl-ghost"`):
@@ -328,7 +351,7 @@ Expected: output lists `route` among the found icons and writes `src/assets/font
 - [ ] **Step 5: Run the spec to verify it passes**
 
 Run: `cd frontend && npx ng test --include='**/strategy-deck.component.spec.ts' --watch=false --browsers=ChromeHeadless`
-Expected: PASS (6 specs).
+Expected: PASS (7 specs — 6 original + the lock-release regression test from step 3f).
 
 - [ ] **Step 6: Commit**
 
@@ -839,7 +862,7 @@ git commit -m "feat(tab2): Optimal Drawdown deck — 2-slide pro walkthrough wit
 
 **Interfaces:**
 - Consumes: `StrategyDeckComponent` roles `'drawdown'` / `'upgrade'` and input `userTier` (Task 2); `DrawdownDeckComponent` with input `userId` and role `'stress-test'` (Task 3); existing `buildFade`, `upgradeToPlusClicked()`, `setSelectedSection()`, `toastService.showToast()`.
-- Produces: `openDrawdownDeck(): Promise<void>` (public — role handler and spec call it) with its own `drawdownLock` guard (NOT `deckLock` — the strategy deck's dismissal chain runs while `deckLock` is still held, so sharing it would dead-lock the hand-off).
+- Produces: `openDrawdownDeck(): Promise<void>` (public — role handler and spec call it) with its own `drawdownLock` guard. ALL modal locks in this component (`deckLock`, `flowLock`, `drawdownLock`) release in `finally` before role handling — hardening decision (Andy 2026-07-15) so a rejected create/present can never strand a lock; `drawdownLock` stays separate from `deckLock` for defense in depth.
 
 - [ ] **Step 1: Write the failing spec**
 
@@ -955,6 +978,19 @@ describe('RetirementPlanningComponent — drawdown orchestration', () => {
     expect(component.selectedSection).toBe('education');
     flush();
   }));
+
+  it('releases the drawdown lock when modal creation fails', fakeAsync(() => {
+    modalCtrl.create.and.returnValues(
+      Promise.reject(new Error('create failed')),
+      Promise.resolve(makeModal(undefined)),
+    );
+    component.openDrawdownDeck().catch(() => { /* rejection propagates by design */ });
+    tick();
+    component.openDrawdownDeck();
+    tick(700);
+    expect(modalCtrl.create).toHaveBeenCalledTimes(2);
+    flush();
+  }));
 });
 ```
 
@@ -981,10 +1017,32 @@ import { DrawdownDeckComponent } from '../drawdown-deck/drawdown-deck.component'
       componentProps: { strategyKey: key, userTier: this.currentTier },
 ```
 
-3c. Still in `openStrategyDeck`, replace the dismissal handling at the end of the method:
+3c. Replace the ENTIRE `openStrategyDeck` method (hardened lock + new role branches — the `deckLock` now releases in `finally` before role handling, per the 2026-07-15 hardening decision):
 
 ```typescript
-    const { role } = await modal.onDidDismiss();
+  async openStrategyDeck(key: string): Promise<void> {
+    if (this.deckLock) return;
+    this.deckLock = true;
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const enterAnim = (baseEl: HTMLElement) => buildFade(baseEl, prefersReduced ? 0 : 500);
+    const leaveAnim = (baseEl: HTMLElement) => buildFade(baseEl, prefersReduced ? 0 : 320).direction('reverse');
+
+    let role: string | undefined;
+    try {
+      const modal = await this.modalController.create({
+        component: StrategyDeckComponent,
+        cssClass: 'mc-fullscreen-modal',
+        enterAnimation: enterAnim,
+        leaveAnimation: leaveAnim,
+        componentProps: { strategyKey: key, userTier: this.currentTier },
+      });
+      await modal.present();
+      ({ role } = await modal.onDidDismiss());
+    } finally {
+      this.deckLock = false;
+    }
+
     if (role === 'stress-test') {
       this.setSelectedSection('simulator');
       this.toastService.showToast('Simulator ready — tap the piggy', 'medium', 2400);
@@ -993,7 +1051,10 @@ import { DrawdownDeckComponent } from '../drawdown-deck/drawdown-deck.component'
     } else if (role === 'upgrade') {
       this.upgradeToPlusClicked();
     }
+  }
 ```
+
+(This removes the old `setTimeout(() => { this.deckLock = false; }, 600)` release — the `finally` supersedes it.)
 
 3d. Add the guard field next to `deckLock`:
 
@@ -1016,18 +1077,21 @@ import { DrawdownDeckComponent } from '../drawdown-deck/drawdown-deck.component'
     const enterAnim = (baseEl: HTMLElement) => buildFade(baseEl, prefersReduced ? 0 : 500);
     const leaveAnim = (baseEl: HTMLElement) => buildFade(baseEl, prefersReduced ? 0 : 320).direction('reverse');
 
-    const modal = await this.modalController.create({
-      component: DrawdownDeckComponent,
-      cssClass: 'mc-fullscreen-modal',
-      enterAnimation: enterAnim,
-      leaveAnimation: leaveAnim,
-      componentProps: { userId: this.currentUserId },
-    });
+    let role: string | undefined;
+    try {
+      const modal = await this.modalController.create({
+        component: DrawdownDeckComponent,
+        cssClass: 'mc-fullscreen-modal',
+        enterAnimation: enterAnim,
+        leaveAnimation: leaveAnim,
+        componentProps: { userId: this.currentUserId },
+      });
+      await modal.present();
+      ({ role } = await modal.onDidDismiss());
+    } finally {
+      this.drawdownLock = false;
+    }
 
-    await modal.present();
-    setTimeout(() => { this.drawdownLock = false; }, 600);
-
-    const { role } = await modal.onDidDismiss();
     if (role === 'stress-test') {
       this.includeOutsideAccts = true;
       this.setSelectedSection('simulator');
@@ -1036,10 +1100,37 @@ import { DrawdownDeckComponent } from '../drawdown-deck/drawdown-deck.component'
   }
 ```
 
+3f. Harden `openSimulatorFlow` the same way — the `create` call must sit INSIDE the try (a rejected `create()` is exactly the stranding case). Replace everything in the method from `const modal = await this.modalController.create({` through the closing `this.loadHistory();` with (the enterAnim/leaveAnim lines and the comments above them stay unchanged):
+
+```typescript
+    try {
+      const modal = await this.modalController.create({
+        component: MonteCarloFlowComponent,
+        cssClass: 'mc-fullscreen-modal',
+        enterAnimation: enterAnim,
+        leaveAnimation: leaveAnim,
+        componentProps: {
+          initialScenario: this.selectedScenario,
+          includeOutside: this.includeOutsideAccts,
+          historyEntry: historyEntry ?? null,
+          userTier: this.currentTier,
+          userId: this.currentUserId,
+        },
+      });
+      await modal.present();
+      await modal.onDidDismiss();
+    } finally {
+      this.flowLock = false;
+    }
+    this.loadHistory();
+```
+
+Note: `flowLock` previously released 600ms after present; releasing after dismissal is strictly stronger for double-present protection (the fullscreen modal's backdrop blocks re-taps while open) and can never strand the lock.
+
 - [ ] **Step 4: Run the spec to verify it passes**
 
 Run: `cd frontend && npx ng test --include='**/retirement-planning.drawdown.spec.ts' --watch=false --browsers=ChromeHeadless`
-Expected: PASS (5 specs).
+Expected: PASS (6 specs).
 
 - [ ] **Step 5: Commit**
 
