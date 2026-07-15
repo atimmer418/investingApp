@@ -98,13 +98,12 @@ public class MarketBreakdownEmailComposer {
                 BigDecimal delta = numbers.endEquity.subtract(numbers.startEquity);
                 BigDecimal deltaPct = pct(delta, numbers.startEquity);
                 BigDecimal marketDriven = pct(delta.subtract(numbers.contributions), numbers.startEquity);
-                String color = delta.compareTo(BigDecimal.ZERO) > 0 ? GREEN
-                        : delta.compareTo(BigDecimal.ZERO) < 0 ? RED : NEUTRAL;
                 changeRows = EmailTemplateRenderer.render("market-breakdown-change-rows.html", Map.of(
                         "changeLabel", "Change in " + periodLabel,
                         "changeValue", signedMoney(delta, money) + " (" + signedPct(deltaPct) + ")",
-                        "changeColor", color,
-                        "marketReturnPct", signedPct(marketDriven)));
+                        "changeColor", colorFor(delta),
+                        "marketReturnPct", signedPct(marketDriven),
+                        "marketReturnColor", colorFor(marketDriven)));
             }
             Map<String, String> slots = new HashMap<>();
             slots.put("periodLabel", periodLabel);
@@ -131,6 +130,12 @@ public class MarketBreakdownEmailComposer {
                 + "Questions? help@fredvested.com";
 
         return new ComposedEmail(subject, html, text);
+    }
+
+    /** Sign → display color: green for gains, red for losses, neutral gray for flat. */
+    private static String colorFor(BigDecimal value) {
+        int sign = value.compareTo(BigDecimal.ZERO);
+        return sign > 0 ? GREEN : sign < 0 ? RED : NEUTRAL;
     }
 
     private static BigDecimal pct(BigDecimal part, BigDecimal whole) {

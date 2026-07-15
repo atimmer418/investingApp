@@ -154,6 +154,23 @@ class MarketBreakdownEmailComposerTest {
     }
 
     @Test
+    void composeSignMismatchColorsRowsIndependently() {
+        MarketBreakdownEmailComposer.UserMonthlyNumbers numbers =
+                new MarketBreakdownEmailComposer.UserMonthlyNumbers(
+                        new BigDecimal("5000.00"), new BigDecimal("5550.00"), new BigDecimal("600.00"));
+
+        MarketBreakdownEmailComposer.ComposedEmail email = composer.compose(juneBreakdown(), numbers);
+
+        // delta = +550.00 (+11.0%) — green; market-driven = (550-600)/5000 = -1.0% — red
+        assertTrue(email.htmlBody.contains("color:#16A34A;\">+$550.00 (+11.0%)"),
+                "positive delta row renders green");
+        assertTrue(email.htmlBody.contains("color:#DC2626;\">-1.0%"),
+                "negative market-driven row renders red");
+        assertFalse(email.htmlBody.contains("color:#16A34A;\">-1.0%"),
+                "market-driven row must not inherit the delta's color");
+    }
+
+    @Test
     void composeMidMonthFundedOmitsChangeRows() {
         MarketBreakdownEmailComposer.UserMonthlyNumbers numbers =
                 new MarketBreakdownEmailComposer.UserMonthlyNumbers(
