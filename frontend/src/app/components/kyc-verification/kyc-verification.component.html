@@ -20,8 +20,8 @@
   </div>
 </ion-header>
 
-<ion-content class="kyc-content" [appKeyboardAvoid]="'.form-field'">
-  <div class="content-inner">
+<ion-content class="kyc-content" [class.shell-content]="editMode" [appKeyboardAvoid]="'.form-field'">
+  <div class="content-inner" [class.content-inner--edit]="editMode">
 
     <!-- Hero — top-pinned -->
     <div class="hero-section">

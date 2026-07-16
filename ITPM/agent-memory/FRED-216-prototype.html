@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile Refactor — Interactive Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..700,0..1,-50..200" rel="stylesheet">
+<style>
+:root{
+  --primary:#2563EB; --text:#0f172a; --gray:#6b7280; --bg:#f8fafc; --border:#e5e7eb;
+  --grad-a:#1e60e3; --grad-m:#1a58d0; --grad-z:#0e3a96;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+html,body{height:100%;}
+body{
+  font-family:'Manrope',sans-serif;background:#0d1220;
+  background-image:radial-gradient(1200px 600px at 80% -10%, rgba(37,99,235,.16), transparent 60%),
+    radial-gradient(900px 500px at 10% 110%, rgba(37,99,235,.10), transparent 60%);
+  color:#e6eaf3;display:flex;flex-direction:column;align-items:center;overflow:hidden;
+}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;}
+
+.proto-bar{width:100%;max-width:1180px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 28px 8px;flex-shrink:0;}
+.proto-title .kicker{font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#5b7bd6;}
+.proto-title h1{font-size:17px;font-weight:800;color:#f2f5fb;letter-spacing:-.01em;}
+.tier-switch{display:flex;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:3px;}
+.tier-switch button{border:none;background:transparent;color:#93a2c4;font-family:'Manrope';font-size:12px;font-weight:700;
+  padding:6px 14px;border-radius:8px;cursor:pointer;transition:all .18s;}
+.tier-switch button.on{background:var(--primary);color:#fff;box-shadow:0 4px 12px -2px rgba(37,99,235,.5);}
+.proto-hint{font-size:11.5px;color:#5d6a89;font-weight:500;padding:0 28px 4px;flex-shrink:0;}
+.proto-hint strong{color:#8fa3d0;font-weight:700;}
+
+.stage{flex:1;display:flex;align-items:center;justify-content:center;width:100%;min-height:0;}
+.phone-wrap{transform-origin:center center;}
+.phone{width:390px;height:844px;position:relative;border-radius:54px;background:#000;padding:6px;
+  box-shadow:0 0 0 2px #1a2138,0 40px 100px -20px rgba(0,0,0,.8),0 0 120px -40px rgba(37,99,235,.35);}
+.screen-clip{position:relative;width:100%;height:100%;border-radius:48px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;}
+.island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:118px;height:34px;background:#000;border-radius:20px;z-index:400;}
+.statusbar{position:absolute;top:0;left:0;right:0;height:54px;z-index:390;display:flex;align-items:center;justify-content:space-between;
+  padding:16px 30px 0;pointer-events:none;font-size:14px;font-weight:700;color:#fff;}
+.statusbar .right{display:flex;gap:5px;}
+.statusbar .right .material-symbols-outlined{font-size:16px;}
+
+/* ── Settings-shell header (with the fade-to-flat seam fix) ── */
+.shell-header{
+  flex-shrink:0;position:relative;z-index:10;
+  padding:58px 20px 26px;
+  background:
+    linear-gradient(180deg, rgba(14,58,150,0) 0%, rgba(14,58,150,0) calc(100% - 26px), var(--grad-z) 100%),
+    linear-gradient(160deg, var(--grad-a) 0%, var(--grad-m) 60%, var(--grad-z) 100%);
+}
+.hero-nav{display:flex;align-items:center;}
+.back-btn{width:40px;height:40px;border-radius:50%;background:transparent;border:none;color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.back-btn .material-symbols-outlined{font-size:20px;}
+.header-title{flex:1;text-align:center;font-size:18px;font-weight:800;letter-spacing:-.015em;color:#fff;margin:0;padding-right:40px;}
+
+/* ── Pinned sheet ── */
+.sheet{
+  flex:1;min-height:0;position:relative;margin-top:-14px;
+  background:#fff;border-radius:26px 26px 0 0;
+  box-shadow:0 -12px 30px -18px rgba(8,28,78,.35);
+  overflow:hidden;display:flex;flex-direction:column;
+}
+.sheet-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;}
+.sheet-scroll::-webkit-scrollbar{display:none;}
+.sheet-inner{padding:24px 18px 40px;}
+
+/* ── Identity hero ── */
+.id-hero{text-align:center;padding-bottom:4px;}
+.avatar-wrap{position:relative;display:inline-block;}
+.avatar{width:104px;height:104px;border-radius:50%;background:#fff;border:3px solid #e8eef9;
+  box-shadow:0 14px 30px -10px rgba(22,48,155,.35);display:flex;align-items:center;justify-content:center;font-size:56px;}
+.camera-badge{position:absolute;bottom:2px;right:2px;width:30px;height:30px;border-radius:50%;
+  background:var(--primary);border:2.5px solid #fff;color:#fff;display:flex;align-items:center;justify-content:center;}
+.camera-badge .material-symbols-outlined{font-size:15px;}
+.id-name{font-size:21px;font-weight:800;color:var(--text);letter-spacing:-.02em;margin-top:12px;}
+.percentile-pill{display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:#eef4ff;color:#1d4ed8;
+  font-size:11.5px;font-weight:700;padding:6px 13px;border-radius:20px;}
+.percentile-pill .material-symbols-outlined{font-size:14px;}
+
+/* ── Zone grammar ── */
+.zone-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);
+  margin:22px 0 8px;display:flex;align-items:center;gap:6px;}
+.lockchip{display:inline-flex;align-items:center;gap:3px;background:#eef2ff;color:#4553d8;
+  font-size:9px;font-weight:800;letter-spacing:.08em;padding:2px 7px;border-radius:20px;text-transform:uppercase;}
+.lockchip .material-symbols-outlined{font-size:10px;}
+.prochip{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#3d2c00;}
+.soonpill{display:inline-flex;background:#f1f5f9;color:#64748b;font-size:9px;font-weight:800;letter-spacing:.08em;
+  padding:2px 8px;border-radius:20px;text-transform:uppercase;}
+.zone-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:16px;position:relative;overflow:hidden;}
+
+/* ── Freedom plan (simplified) ── */
+.fp-tiles{display:flex;gap:9px;}
+.fp-tile{flex:1;background:#f8fafc;border:1px solid #eef1f6;border-radius:13px;padding:11px 12px;}
+.fp-tile .t-label{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa6ba;}
+.fp-tile .t-edit{display:flex;align-items:baseline;gap:2px;margin-top:4px;}
+.fp-tile .t-edit .pre{font-size:13px;font-weight:700;color:#9aa6ba;}
+.fp-tile input{width:100%;border:none;outline:none;background:transparent;font-family:'Manrope';
+  font-size:19px;font-weight:800;color:var(--text);letter-spacing:-.02em;padding:0;}
+.fp-tile .t-edit .suf{font-size:11px;font-weight:700;color:#9aa6ba;}
+.fp-projection{display:flex;align-items:center;gap:12px;margin-top:14px;}
+.fp-year-bubble{
+  width:74px;height:74px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(160deg,var(--grad-a),var(--grad-z));
+  color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 10px 22px -8px rgba(22,48,155,.5);
+}
+.fp-year-bubble .y{font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1;}
+.fp-year-bubble .l{font-size:7.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-top:3px;}
+.fp-line{font-size:13.5px;font-weight:600;color:var(--gray);line-height:1.55;}
+.fp-line strong{color:var(--text);font-weight:800;}
+.fp-progress{margin-top:14px;}
+.fp-bar{height:6px;border-radius:3px;background:#eef1f6;overflow:hidden;}
+.fp-bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--grad-a),var(--grad-z));width:0;transition:width .8s cubic-bezier(.2,.7,.2,1);}
+.fp-progress-labels{display:flex;justify-content:space-between;margin-top:6px;font-size:10.5px;font-weight:700;color:#9aa6ba;}
+.fp-note{font-size:10px;font-weight:500;color:#b3bccb;margin-top:12px;line-height:1.5;}
+
+/* ── Rebalancing ── */
+.rb-row{display:flex;gap:11px;align-items:flex-start;}
+.rb-icon{width:38px;height:38px;border-radius:11px;background:#eef4ff;color:var(--primary);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rb-icon .material-symbols-outlined{font-size:20px;}
+.rb-text{font-size:12.5px;font-weight:600;color:var(--gray);line-height:1.55;}
+.rb-text strong{color:var(--text);font-weight:800;}
+.rb-chips{display:flex;background:#eef1f6;border-radius:12px;padding:3px;gap:2px;margin-top:13px;}
+.rb-chips button{flex:1;border:none;background:transparent;font-family:'Manrope';font-size:11.5px;font-weight:700;color:#8b94a7;
+  height:34px;border-radius:9px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;}
+.rb-chips button.on{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(15,23,42,.12);}
+.rb-chips.locked button{color:#b6bdcb;cursor:pointer;}
+.rb-chips.locked button.on{color:#9aa3b5;}
+.rb-next{display:flex;align-items:center;gap:6px;margin-top:11px;font-size:11px;font-weight:700;color:#16a34a;}
+.rb-next .material-symbols-outlined{font-size:14px;}
+.rb-default-note{margin-top:11px;font-size:11px;font-weight:600;color:#9aa6ba;}
+
+/* ── Goals ── */
+.goal-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9;}
+.goal-row:last-of-type{border-bottom:none;}
+.goal-tile{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  background:#eef4ff;color:var(--primary);font-size:19px;}
+.goal-tile .material-symbols-outlined{font-size:19px;}
+.goal-tile.freedom{background:linear-gradient(160deg,var(--grad-a),var(--grad-z));color:#fff;}
+.goal-mid{flex:1;min-width:0;}
+.goal-name{font-size:13.5px;font-weight:800;color:var(--text);letter-spacing:-.01em;display:flex;align-items:center;gap:6px;}
+.goal-sub{font-size:11px;font-weight:600;color:var(--gray);margin-top:2px;}
+.goal-bar{height:3.5px;border-radius:2px;background:#eef1f6;margin-top:7px;overflow:hidden;max-width:190px;}
+.goal-bar i{display:block;height:100%;border-radius:2px;}
+.goal-bar i.ok{background:linear-gradient(90deg,#34d399,#16a34a);}
+.goal-bar i.late{background:linear-gradient(90deg,#fbbf24,#f59e0b);}
+.goal-right{text-align:right;flex-shrink:0;}
+.goal-proj{font-size:11px;font-weight:800;}
+.goal-proj.ok{color:#16a34a;}
+.goal-proj.late{color:#b45309;}
+.fred-invests{display:inline-flex;align-items:center;gap:3px;background:#dcfce7;color:#14532d;
+  font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:10px;}
+.add-goal-btn{
+  width:100%;margin-top:12px;padding:13px;border:1.5px dashed #cfd8e6;border-radius:13px;background:none;cursor:pointer;
+  font-family:'Manrope';font-size:12.5px;font-weight:700;color:var(--primary);
+  display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;
+}
+.add-goal-btn .material-symbols-outlined{font-size:17px;}
+.goals-disclaimer{margin-top:12px;font-size:10px;font-weight:500;color:#b3bccb;line-height:1.55;}
+.goals-veil{
+  position:absolute;inset:0;background:rgba(248,250,252,.6);backdrop-filter:blur(3px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;z-index:5;
+}
+.goals-veil .material-symbols-outlined{font-size:22px;color:#4553d8;}
+.goals-veil .gv-1{font-size:12.5px;font-weight:800;color:var(--text);}
+.goals-veil .gv-2{font-size:10.5px;font-weight:600;color:var(--gray);}
+
+/* ── TLH ── */
+.tlh-row{display:flex;align-items:center;gap:12px;}
+.tlh-icon{width:38px;height:38px;border-radius:11px;background:#ecfdf5;color:#16a34a;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tlh-icon .material-symbols-outlined{font-size:20px;}
+.tlh-main{flex:1;}
+.tlh-headline{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.01em;}
+.tlh-headline .amt{color:#16a34a;}
+.tlh-sub{font-size:10.5px;font-weight:600;color:#9aa6ba;margin-top:2px;}
+
+/* ── Referrals (restyled, concept kept) ── */
+.ref-progress{display:flex;gap:5px;margin-top:2px;}
+.ref-seg{flex:1;height:7px;border-radius:4px;background:#eef1f6;}
+.ref-seg.filled{background:linear-gradient(90deg,var(--grad-a),var(--grad-z));}
+.ref-count{font-size:10.5px;font-weight:700;color:#9aa6ba;margin-top:6px;}
+.code-box{display:flex;align-items:center;margin-top:12px;background:#f8fafc;border:1.5px dashed #cfd8e6;border-radius:13px;padding:12px 14px;}
+.code-text{flex:1;font-size:16px;font-weight:800;letter-spacing:.14em;color:var(--text);}
+.share-chip{width:36px;height:36px;border-radius:10px;background:var(--primary);color:#fff;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px -4px rgba(37,99,235,.5);}
+.share-chip .material-symbols-outlined{font-size:17px;}
+.ref-helper{font-size:10.5px;font-weight:600;color:#9aa6ba;margin-top:10px;line-height:1.5;}
+.redeem-row{display:flex;gap:9px;margin-top:13px;}
+.redeem-input{flex:1;display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #eef1f6;border-radius:12px;padding:0 12px;}
+.redeem-input .material-symbols-outlined{font-size:16px;color:#9aa6ba;}
+.redeem-input input{flex:1;border:none;outline:none;background:transparent;font-family:'Manrope';font-size:12.5px;font-weight:600;color:var(--text);height:42px;}
+.redeem-btn{border:none;border-radius:12px;background:#111827;color:#fff;font-family:'Manrope';font-size:12.5px;font-weight:800;padding:0 18px;cursor:pointer;}
+
+/* ── Add-goal sheet ── */
+.sheet-backdrop{position:absolute;inset:0;background:rgba(8,15,35,.5);z-index:340;opacity:0;pointer-events:none;transition:opacity .3s;}
+.sheet-backdrop.on{opacity:1;pointer-events:auto;}
+.bottom-sheet{position:absolute;left:0;right:0;bottom:0;z-index:350;background:#fff;border-radius:24px 24px 0 0;
+  padding:14px 22px 40px;transform:translateY(105%);transition:transform .38s cubic-bezier(.3,.9,.3,1);}
+.bottom-sheet.on{transform:translateY(0);}
+.bs-handle{width:38px;height:4.5px;border-radius:3px;background:#e2e6ee;margin:0 auto 16px;}
+.bottom-sheet h3{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.02em;}
+.bs-sub{font-size:11.5px;color:var(--gray);font-weight:500;margin-top:4px;line-height:1.5;}
+.bs-field{margin-top:14px;}
+.bs-field label{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa6ba;display:block;margin-bottom:5px;}
+.bs-field input{width:100%;border:none;border-bottom:2px solid var(--primary);background:transparent;outline:none;
+  font-family:'Manrope';font-size:16px;font-weight:700;color:var(--text);padding:6px 0;}
+.bs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.bs-cta{width:100%;height:50px;margin-top:20px;border:none;border-radius:13px;cursor:pointer;
+  background:#111827;color:#fff;font-family:'Manrope';font-size:14.5px;font-weight:800;}
+.toast{position:absolute;left:50%;bottom:60px;transform:translateX(-50%) translateY(16px);z-index:380;
+  background:rgba(15,23,42,.92);color:#fff;font-size:12px;font-weight:700;padding:11px 18px;border-radius:24px;
+  opacity:0;pointer-events:none;transition:all .3s;white-space:nowrap;}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <div class="proto-title">
+    <span class="kicker">My Profile Refactor · Interactive Prototype</span>
+    <h1>Identity, simplified plan, rebalancing, goals, TLH</h1>
+  </div>
+  <div class="tier-switch" id="tierSwitch">
+    <button data-t="piggy">Piggy</button>
+    <button data-t="plus" class="on">Plus</button>
+    <button data-t="pro">Pro</button>
+  </div>
+</div>
+<div class="proto-hint">Flip <strong>tiers</strong> to see gating (rebalancing chips · goals · tax loss harvesting). Edit the <strong>plan tiles</strong> — the projection recomputes. Tap <strong>Add a goal</strong> (Plus+) to append a live projected goal.</div>
+
+<div class="stage">
+  <div class="phone-wrap" id="phoneWrap">
+    <div class="phone">
+      <div class="screen-clip">
+        <div class="island"></div>
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="right">
+            <span class="material-symbols-outlined">signal_cellular_alt</span>
+            <span class="material-symbols-outlined">wifi</span>
+            <span class="material-symbols-outlined">battery_full</span>
+          </span>
+        </div>
+
+        <!-- shell header -->
+        <div class="shell-header">
+          <div class="hero-nav">
+            <button class="back-btn"><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
+            <h2 class="header-title">My Profile</h2>
+          </div>
+        </div>
+
+        <!-- pinned sheet -->
+        <div class="sheet">
+          <div class="sheet-scroll">
+            <div class="sheet-inner">
+
+              <!-- identity -->
+              <div class="id-hero">
+                <div class="avatar-wrap">
+                  <div class="avatar">🐷</div>
+                  <div class="camera-badge"><span class="material-symbols-outlined">photo_camera</span></div>
+                </div>
+                <div class="id-name">Firstname Lastname</div>
+                <div class="percentile-pill">
+                  <span class="material-symbols-outlined">trending_up</span>
+                  Ahead of 82% of investors
+                </div>
+              </div>
+
+              <!-- freedom plan (simplified) -->
+              <p class="zone-label">Freedom Plan</p>
+              <div class="zone-card">
+                <div class="fp-tiles">
+                  <div class="fp-tile">
+                    <span class="t-label">Income goal</span>
+                    <div class="t-edit"><span class="pre">$</span><input id="fpIncome" type="tel" value="4,000"><span class="suf">/mo</span></div>
+                  </div>
+                  <div class="fp-tile">
+                    <span class="t-label">Investing</span>
+                    <div class="t-edit"><span class="pre">$</span><input id="fpInvest" type="tel" value="500"><span class="suf">/mo</span></div>
+                  </div>
+                </div>
+                <div class="fp-projection">
+                  <div class="fp-year-bubble"><span class="y" id="fpYear">2048</span><span class="l">Freedom</span></div>
+                  <div class="fp-line" id="fpLine">
+                    A <strong>$1.2M</strong> portfolio covers <strong>$4,000/mo</strong> —
+                    at <strong>$500/mo</strong> you're free around <strong>2048</strong>, age <strong>58</strong>.
+                  </div>
+                </div>
+                <div class="fp-progress">
+                  <div class="fp-bar"><i id="fpBar"></i></div>
+                  <div class="fp-progress-labels"><span>Now: $621</span><span id="fpGoalLabel">Goal: $1.2M</span></div>
+                </div>
+                <p class="fp-note">Assumes a 10% avg annual return and a 4% withdrawal rate. Past performance is not indicative of future results.</p>
+              </div>
+
+              <!-- rebalancing -->
+              <p class="zone-label">Portfolio Rebalancing <span class="lockchip" id="rbLock" style="display:none"><span class="material-symbols-outlined">lock</span>Plus</span></p>
+              <div class="zone-card">
+                <div class="rb-row">
+                  <div class="rb-icon"><span class="material-symbols-outlined">balance</span></div>
+                  <div class="rb-text"><strong>FRED keeps your portfolio on target.</strong> When your allocation drifts, FRED automatically realigns it — no trade approvals needed.</div>
+                </div>
+                <div class="rb-chips" id="rbChips">
+                  <button data-s="Quarterly" class="on">Quarterly</button>
+                  <button data-s="Semi-annual">Semi-annual</button>
+                  <button data-s="Annual">Annual</button>
+                </div>
+                <div class="rb-next" id="rbNext"><span class="material-symbols-outlined">event_available</span>Next rebalance: Oct 1, 2026</div>
+                <div class="rb-default-note" id="rbDefaultNote" style="display:none">On Piggy, FRED uses the default quarterly schedule. Upgrade to choose your own.</div>
+              </div>
+
+              <!-- goals -->
+              <p class="zone-label">Goals <span class="lockchip" id="goalsLock" style="display:none"><span class="material-symbols-outlined">lock</span>Plus</span></p>
+              <div class="zone-card" id="goalsCard">
+                <div class="goal-row">
+                  <div class="goal-tile freedom"><span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">savings</span></div>
+                  <div class="goal-mid">
+                    <div class="goal-name">Freedom Date <span class="fred-invests">FRED invests</span></div>
+                    <div class="goal-sub" id="freedomGoalSub">$1.2M by 2057 · $500/mo through FRED</div>
+                    <div class="goal-bar"><i class="ok" style="width:32%"></i></div>
+                  </div>
+                  <div class="goal-right"><div class="goal-proj ok">On track</div></div>
+                </div>
+                <div id="extraGoals"></div>
+                <button class="add-goal-btn" id="addGoalBtn"><span class="material-symbols-outlined">add_circle</span>Add a goal</button>
+                <p class="goals-disclaimer">FRED invests only toward your Freedom Date. Other goals are projections built from amounts you contribute outside FRED — FRED never holds or moves those funds.</p>
+
+                <div class="goals-veil" id="goalsVeil" style="display:none">
+                  <span class="material-symbols-outlined">lock</span>
+                  <div class="gv-1">Track more than one goal with Piggy Plus</div>
+                  <div class="gv-2">House, college, emergency fund — projected side by side</div>
+                </div>
+              </div>
+
+              <!-- tax loss harvesting -->
+              <p class="zone-label">Tax Loss Harvesting
+                <span class="lockchip prochip" id="tlhLock" style="display:none"><span class="material-symbols-outlined">lock</span>Pro</span>
+                <span class="soonpill">Coming soon</span>
+              </p>
+              <div class="zone-card">
+                <div class="tlh-row">
+                  <div class="tlh-icon"><span class="material-symbols-outlined">energy_savings_leaf</span></div>
+                  <div class="tlh-main">
+                    <div class="tlh-headline" id="tlhHeadline">You could save <span class="amt">~$210/yr</span> in taxes</div>
+                    <div class="tlh-sub">Rule-based harvesting on your portfolio's ETFs — VTI · VXUS · VBR</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- referrals (restyled) -->
+              <p class="zone-label">Referrals</p>
+              <div class="zone-card">
+                <div class="ref-progress">
+                  <div class="ref-seg filled"></div><div class="ref-seg"></div><div class="ref-seg"></div>
+                </div>
+                <div class="ref-count">1 / 3 redeemed · limited-edition FRED merch at 3</div>
+                <div class="code-box">
+                  <span class="code-text">FRED-8H2K</span>
+                  <button class="share-chip"><span class="material-symbols-outlined">ios_share</span></button>
+                </div>
+                <div class="redeem-row">
+                  <div class="redeem-input">
+                    <span class="material-symbols-outlined">confirmation_number</span>
+                    <input placeholder="Enter referral code">
+                  </div>
+                  <button class="redeem-btn">Redeem</button>
+                </div>
+                <p class="ref-helper">Users can redeem only one code.</p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- add-goal sheet -->
+        <div class="sheet-backdrop" id="bsBackdrop"></div>
+        <div class="bottom-sheet" id="goalSheet">
+          <div class="bs-handle"></div>
+          <h3>Add a goal</h3>
+          <p class="bs-sub">Tracked as a projection from your inputs — FRED never touches these funds.</p>
+          <div class="bs-field"><label>Goal name</label><input id="gName" placeholder="House down payment"></div>
+          <div class="bs-grid">
+            <div class="bs-field"><label>Target amount</label><input id="gAmount" type="tel" placeholder="60,000"></div>
+            <div class="bs-field"><label>Target year</label><input id="gYear" type="tel" placeholder="2030"></div>
+          </div>
+          <div class="bs-field"><label>Saving monthly (outside FRED)</label><input id="gMonthly" type="tel" placeholder="550"></div>
+          <button class="bs-cta" id="gAdd">Track this goal</button>
+        </div>
+        <div class="toast" id="toast"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let tier = 'plus';
+
+/* ── freedom plan math ── */
+function num(v){ return parseInt(String(v).replace(/[^0-9]/g,''),10) || 0; }
+function fmtK(n){ return n >= 1e6 ? '$'+(n/1e6).toFixed(1).replace(/\.0$/,'')+'M' : '$'+Math.round(n/1e3)+'k'; }
+function recalcPlan(){
+  const income = num($('fpIncome').value), invest = num($('fpInvest').value);
+  const goal = income * 300;                       // 4% rule: monthly×12÷0.04
+  const r = 0.10/12, current = 621;
+  let months = 0, v = current;
+  while (v < goal && months < 12*80){ v = v*(1+r) + invest; months++; }
+  const years = Math.round(months/12);
+  const year = 2026 + years, age = 36 + years;
+  $('fpYear').textContent = year;
+  $('fpLine').innerHTML = `A <strong>${fmtK(goal)}</strong> portfolio covers <strong>$${income.toLocaleString()}/mo</strong> — at <strong>$${invest.toLocaleString()}/mo</strong> you're free around <strong>${year}</strong>, age <strong>${age}</strong>.`;
+  $('fpGoalLabel').textContent = 'Goal: ' + fmtK(goal);
+  const fgs = $('freedomGoalSub'); if (fgs) fgs.textContent = `${fmtK(goal)} by ${year} · $${invest.toLocaleString()}/mo through FRED`;
+  $('fpBar').style.width = Math.max(1.5, Math.min(100, current/goal*100)) + '%';
+}
+['fpIncome','fpInvest'].forEach(id => $(id).addEventListener('input', e => {
+  const raw = num(e.target.value);
+  e.target.value = raw ? raw.toLocaleString() : '';
+  recalcPlan();
+}));
+
+/* ── rebalancing chips ── */
+const RB_NEXT = { 'Quarterly':'Oct 1, 2026', 'Semi-annual':'Jan 1, 2027', 'Annual':'Jul 1, 2027' };
+$('rbChips').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  if (tier === 'piggy'){ toast('Schedule choice is part of Piggy Plus'); return; }
+  [...$('rbChips').children].forEach(x=>x.classList.toggle('on', x===b));
+  $('rbNext').innerHTML = `<span class="material-symbols-outlined">event_available</span>Next rebalance: ${RB_NEXT[b.dataset.s]}`;
+});
+
+/* ── goals ── */
+const seedGoals = [
+  { name:'House down payment', icon:'home', amount:24000, year:2031, monthly:500 },
+  { name:'Emergency fund',     icon:'health_and_safety', amount:15000, year:2027, monthly:200 },
+];
+function projectGoal(g){
+  const monthsNeeded = Math.ceil(g.amount / Math.max(1, g.monthly));
+  const proj = new Date(2026, 6 + monthsNeeded, 1);
+  const target = new Date(g.year, 11, 31);
+  const ok = proj <= target;
+  const projLabel = proj.toLocaleDateString('en-US', { month:'short', year:'numeric' });
+  const pct = Math.max(6, Math.min(100, Math.round(6 / monthsNeeded * 100)));
+  return { ok, projLabel, pct };
+}
+function goalRow(g){
+  const p = projectGoal(g);
+  return `<div class="goal-row">
+    <div class="goal-tile"><span class="material-symbols-outlined">${g.icon}</span></div>
+    <div class="goal-mid">
+      <div class="goal-name">${g.name}</div>
+      <div class="goal-sub">$${g.amount.toLocaleString()} by ${g.year} · $${g.monthly.toLocaleString()}/mo outside FRED</div>
+      <div class="goal-bar"><i class="${p.ok?'ok':'late'}" style="width:${p.pct}%"></i></div>
+    </div>
+    <div class="goal-right"><div class="goal-proj ${p.ok?'ok':'late'}">${p.ok?'On track':'Projected'} · ${p.projLabel}</div></div>
+  </div>`;
+}
+let extraGoals = [...seedGoals];
+function renderGoals(){ $('extraGoals').innerHTML = extraGoals.map(goalRow).join(''); }
+
+$('addGoalBtn').addEventListener('click', () => {
+  if (tier === 'piggy') { toast('Multi-goal tracking is part of Piggy Plus'); return; }
+  $('bsBackdrop').classList.add('on'); $('goalSheet').classList.add('on');
+});
+$('bsBackdrop').addEventListener('click', closeSheet);
+function closeSheet(){ $('bsBackdrop').classList.remove('on'); $('goalSheet').classList.remove('on'); }
+$('gAdd').addEventListener('click', () => {
+  const g = { name: $('gName').value || 'New goal', icon:'flag',
+    amount: num($('gAmount').value) || 10000, year: num($('gYear').value) || 2030, monthly: num($('gMonthly').value) || 250 };
+  extraGoals.push(g); renderGoals(); closeSheet();
+  toast('Goal added — projection tracked');
+});
+
+/* ── tier gating ── */
+$('tierSwitch').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  [...$('tierSwitch').children].forEach(x=>x.classList.toggle('on', x===b));
+  tier = b.dataset.t;
+  applyTier();
+});
+function applyTier(){
+  const piggy = tier==='piggy', pro = tier==='pro';
+  // rebalancing
+  $('rbChips').classList.toggle('locked', piggy);
+  $('rbLock').style.display = piggy ? '' : 'none';
+  $('rbNext').style.display = piggy ? 'none' : '';
+  $('rbDefaultNote').style.display = piggy ? '' : 'none';
+  if (piggy){ [...$('rbChips').children].forEach((x,i)=>x.classList.toggle('on', i===0)); }
+  // goals
+  $('goalsVeil').style.display = piggy ? '' : 'none';
+  $('goalsLock').style.display = piggy ? '' : 'none';
+  // tlh
+  $('tlhLock').style.display = pro ? 'none' : '';
+  $('tlhHeadline').innerHTML = pro
+    ? 'Saved this year: <span class="amt">$184</span>'
+    : 'You could save <span class="amt">~$210/yr</span> in taxes';
+}
+$('goalsVeil').addEventListener('click', ()=>toast('Multi-goal tracking is part of Piggy Plus'));
+
+/* ── misc ── */
+let toastT=null;
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),2200); }
+function fit(){ $('phoneWrap').style.transform = `scale(${Math.min(1,(window.innerHeight-140)/880)})`; }
+window.addEventListener('resize', fit);
+
+fit(); recalcPlan(); renderGoals(); applyTier();
+</script>
+</body>
+</html>

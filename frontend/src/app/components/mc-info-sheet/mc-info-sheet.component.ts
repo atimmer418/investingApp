@@ -9,10 +9,18 @@ import { ModalController } from '@ionic/angular/standalone';
  * the component's inner ion-content (which clips position:fixed on iOS).
  *
  * mode 'assumptions' — market assumptions & methodology disclosure
- * mode 'nudge'       — Piggy Pro upgrade nudge (Plus users tapping Pro chips)
+ * mode 'nudge'       — upgrade nudge (default: Piggy Pro; override with
+ *                      nudgeTitle / nudgeBody / nudgeCtaLabel / targetTier)
  *
- * Dismisses with role 'upgrade' when the nudge CTA is tapped; the presenter
- * decides what upgrading means.
+ * Configurable inputs (all optional — existing callers get identical output):
+ *   nudgeTitle      — overrides the default "Go deeper with Piggy Pro" heading
+ *   nudgeBody       — overrides the default body paragraph
+ *   nudgeCtaLabel   — overrides the default "Upgrade to Pro" button text
+ *   targetTier      — passed back in the 'upgrade' dismiss data so callers
+ *                     can route to the right upgrade flow; default 'pro'
+ *
+ * Dismisses with role 'upgrade' and data { targetTier } when the nudge CTA
+ * is tapped; the presenter decides what upgrading means.
  */
 @Component({
   selector: 'app-mc-info-sheet',
@@ -24,6 +32,12 @@ import { ModalController } from '@ionic/angular/standalone';
 export class McInfoSheetComponent {
   @Input() mode: 'assumptions' | 'nudge' = 'assumptions';
 
+  // Optional overrides for nudge mode — default values match the existing tab2 copy.
+  @Input() nudgeTitle: string = 'Go deeper with Piggy Pro';
+  @Input() nudgeBody: string = 'Run conservative and aggressive scenarios, adjust contributions and retirement age on the fly, and see monthly withdrawal estimates in retirement.';
+  @Input() nudgeCtaLabel: string = 'Upgrade to Pro';
+  @Input() targetTier: string = 'pro';
+
   constructor(private modalController: ModalController) {}
 
   close(): void {
@@ -31,6 +45,6 @@ export class McInfoSheetComponent {
   }
 
   upgrade(): void {
-    this.modalController.dismiss(null, 'upgrade');
+    this.modalController.dismiss({ targetTier: this.targetTier }, 'upgrade');
   }
 }

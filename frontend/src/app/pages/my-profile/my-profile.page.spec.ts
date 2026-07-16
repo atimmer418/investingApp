@@ -19,7 +19,6 @@ function makePage(freedomYearStat: string): MyProfilePage {
 
   return new MyProfilePage(
     {} as any,            // AuthService
-    {} as any,            // SettingsService
     {} as any,            // ToastService
     {} as any,            // PortfolioService
     accountStatusMock,    // AccountStatusService
@@ -27,6 +26,8 @@ function makePage(freedomYearStat: string): MyProfilePage {
     {} as any,            // Router
     {} as any,            // AlertController
     {} as any,            // NavController
+    {} as any,            // ModalController
+    {} as any,            // GoalsService (FRED-216)
     freedomStatsMock      // FreedomStatsService
   );
 }

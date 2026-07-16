@@ -1,30 +1,17 @@
-// ─── Blue Hero Header (shared partial) ────────────────────────────────────────
-@use '../../../theme/blue-hero-header';
+// ─── Settings Shell (shared partial) ──────────────────────────────────────────
+@use '../../../theme/settings-shell';
 // ─── Shared form field styles (scoped — NOT global) ───────────────────────────
 @use '../../../theme/form-fields' as ff;
 
 :host {
   --ion-background-color: #f8fafc;
-  --ion-toolbar-background: #f8fafc;
+  --ion-toolbar-background: transparent;
   --ion-toolbar-color: #ffffff;
   --ion-text-color: #0f172a;
   --ion-color-primary: #2563EB;
 
   // Apply canonical field styles scoped to this page's host
   @include ff.form-fields-scoped();
-}
-
-ion-content {
-  --background: #f8fafc;
-  --keyboard-offset: 0px !important;
-}
-
-.content-inner {
-  padding: 12px 18px 40px;
-  font-family: 'Manrope', sans-serif;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
 }
 
 .section-card {

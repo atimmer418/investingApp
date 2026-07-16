@@ -235,7 +235,40 @@ Build one shared settings-shell (family gradient header, white Manrope-800 18px 
 8. **Quality gates.** AOT build (dev config) zero new warnings; lint; subset-icons re-run if new ligatures; no TODOs/dead styles.
 
 
-# 💤 SLEEPING — Backlog (not yet started)
+## FRED-215 — Extend settings-shell to change-email + KYC edit mode
+The two surfaces FRED-214 skipped now get the shell so the settings flows are style-consistent one level deep: /change-email (pushed from security-settings) converts fully; kyc-verification converts ONLY in editMode (the `?edit=true` path from security-settings) — its onboarding appearance must remain pixel-identical. Includes the fade-to-flat shell seam fix automatically.
+
+### Summary
+Convert change-email.page fully and kyc-verification.component conditionally (editMode only) to the shared settings-shell, with onboarding KYC proven unchanged, keyboard avoidance genuinely engaging on both form pages, and the seam-correct header inherited from the fixed partial.
+
+### Acceptance Criteria
+1. change-email adopts the shell (shell-content/shell-inner + appKeyboardAvoid); logic/back untouched.
+2. KYC editMode-only shell: `editMode===true` → shell presentation; onboarding mode renders EXACTLY as today (screenshot + diff proof).
+3. Keyboard avoidance engages on both (IonContent-hosted scroller, no silent no-op).
+4. Seam correctness inherited (fade-to-flat bottom edge meets #0e3a96 strip, verified visually).
+5. Behavior preservation: KYC prefill/SSN-lock/steps, change-email flow, guards untouched; minimal .ts (conditional classing only).
+6. Gates: AOT build (dev), lint, fred215-*.png screenshots incl. onboarding-unchanged proof, no TODOs.
+
+
+## FRED-216 — My Profile refactor: simplified plan, rebalancing, goals, TLH
+Rebuild my-profile per the approved prototype (ITPM/agent-memory/FRED-216-prototype.html): keep + restyle the enlarged pig hero, percentile pill, and referral card; simplify Freedom Plan to two editable tiles + gradient year-bubble + one projection sentence + progress (absorbing the Freedom Timeline card); ADD Portfolio Rebalancing (Piggy locked default w/ note; Plus+ quarterly/semi-annual/annual chips), Multi-Goal Tracking (Plus+, projection-only, add-goal sheet, FRED-invests badge on Freedom Date), concise Tax Loss Harvesting (non-Pro: estimate + "Want to save this money?" → Pro nudge; Pro: saved-to-date; Coming-soon). Piggy tapping Goals prompts the tab2-style Plus upgrade sheet. v1 persistence (rebalance pref + goals) = per-user localStorage. All existing flows preserved (photo, referrals, offers, banner).
+
+### Summary
+Rebuild my-profile content to the approved prototype with tier-gated Rebalancing/Goals/TLH, tab2-style upgrade nudges on gated taps (extended mc-info-sheet with configurable copy), simplified plan rendered from existing computed values (no new math model), a per-user localStorage goals/preferences service (versioned, corrupt-tolerant), DYNAMIC_ICONS + subset for TS-bound icons, and byte-preserved existing flows.
+
+### Acceptance Criteria
+1. **Identity hero.** ~104px avatar + camera badge wired to the existing photo flow; name + percentile pill (existing bindings); action-required banner preserved.
+2. **Freedom Plan simplified.** Editable tiles bound to existing retirementIncomeGoal/monthlyInvestGoal + handlers; year-bubble/sentence/progress/footnote from EXISTING computed values; replaces both old plan + timeline cards; edits live-update.
+3. **Referrals restyled, behavior identical** (segments, code/share, redeem incl. states, reward banner, upgrade-offers card).
+4. **Rebalancing.** Explainer + chips; Piggy locked w/ default note + PLUS chip + nudge on tap; Plus+ selectable, per-user localStorage persistence (documented v1), Next-rebalance line per schedule.
+5. **Goals (Plus+).** Freedom Date row first (plan values + FRED-INVESTS badge); added goals with projection-only math (on-track/late), add-goal root-level sheet, per-user persistence, edit/delete affordance; compliance disclaimer verbatim.
+6. **Piggy gating on Goals:** veil + any gated tap presents the tab2-style Plus upgrade sheet; CTA → existing upgrade path.
+7. **TLH concise.** Coming-soon pill; non-Pro: documented estimate + "Want to save this money?" → Pro sheet; Pro: saved-to-date placeholder framed by coming-soon; VTI · VXUS · VBR sub. One card.
+8. **Nudge sheets** via root-level ModalController (extended mc-info-sheet; tab2 defaults byte-preserved).
+9. **Tier reactivity** from userProgress.selectedTier without reload.
+10. **Gates.** AOT build (dev), lint, DYNAMIC_ICONS + subset (no ligature text), keyboard on tiles/sheet inputs, per-tier screenshots, versioned/corrupt-tolerant storage, reduced-motion, no TODOs/dead styles.
+
+\n# 💤 SLEEPING — Backlog (not yet started)
 _Queued but not prioritized. Promote to READY (remove the 💤) when ripe._
 
 ## FRED-100 — 💤 RAG chunks for app knowledge and philosophy

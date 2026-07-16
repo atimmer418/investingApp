@@ -28,6 +28,10 @@ const DYNAMIC_ICONS = [
   'south_east', 'north_east',
   // tab3 settings rows (FRED-211): icon names live in TS data, not detectable by HTML scan
   'pie_chart', 'credit_card', 'verified_user', 'description', 'group', 'help', 'mail', 'menu_book',
+  // my-profile goal icons (FRED-216): returned from TS as GoalIcon string literals
+  'home', 'health_and_safety', 'flag', 'energy_savings_leaf', 'savings', 'school', 'directions_car',
+  // my-profile UI icons (FRED-216): camera badge + add-goal button
+  'photo_camera', 'add_circle',
 ];
 
 // Material Symbols renamed some legacy icon glyphs. The ligature text (used in templates)

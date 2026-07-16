@@ -59,10 +59,19 @@
             <ng-container *ngFor="let seg of segments(msg); trackBy: trackSegment">
               <div *ngIf="seg.kind === 'md'" class="md-block" [innerHTML]="seg.text | markdown"></div>
               <app-chat-chart *ngIf="seg.kind === 'chart'" [config]="seg.config"></app-chat-chart>
+              <app-chat-action-card *ngIf="seg.kind === 'action'"
+                [proposal]="seg.proposal" [state]="seg.state" [resultMessage]="seg.resultMessage"
+                [actionable]="isLatestMessage(msg) && !isLoading"
+                (confirmed)="confirmAction(seg)" (cancelled)="cancelAction(seg)">
+              </app-chat-action-card>
               <div *ngIf="seg.kind === 'suggestions' && isLatestMessage(msg) && !isLoading" class="quick-replies">
-                <button class="quick-reply" *ngFor="let option of seg.options" (click)="sendQuickReply(option)">
-                  {{ option }}
-                </button>
+                <div class="quick-reply" *ngFor="let option of seg.options">
+                  <button class="quick-reply-text" (click)="sendQuickReply(option)">{{ option }}</button>
+                  <button class="quick-reply-edit" (click)="editQuickReply(option)"
+                    aria-label="Edit this reply before sending">
+                    <ion-icon name="pencil-outline"></ion-icon>
+                  </button>
+                </div>
               </div>
             </ng-container>
           </div>

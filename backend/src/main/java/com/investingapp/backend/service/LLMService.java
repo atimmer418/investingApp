@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import com.anthropic.client.AnthropicClient;
 import com.anthropic.client.okhttp.AnthropicOkHttpClient;
+import com.anthropic.core.JsonMissing;
+import com.anthropic.core.JsonValue;
 import com.anthropic.core.http.StreamResponse;
 import com.anthropic.helpers.MessageAccumulator;
 import com.anthropic.models.messages.ContentBlock;
@@ -312,8 +314,9 @@ public class LLMService {
                     break;
                 }
 
-                // Claude asked for data — execute the requested tools and continue
-                Message assistantMessage = accumulator.message();
+                // Claude asked for data — execute the requested tools and continue.
+                // Sanitize FIRST: the echo and the execution must see identical blocks.
+                Message assistantMessage = sanitizeForEcho(accumulator.message());
                 List<ContentBlockParam> toolResults = new ArrayList<>();
                 for (ContentBlock block : assistantMessage.content()) {
                     block.toolUse().ifPresent(toolUse -> {
@@ -371,6 +374,23 @@ public class LLMService {
             logger.warn("Streamed chat response truncated at max_tokens ({})", CHAT_MAX_TOKENS);
             emit.accept("\n\n*…I ran out of room — ask me to continue and I'll pick up from there.*");
         }
+    }
+
+    /**
+     * Streaming accumulation leaves tool_use.input MISSING when the call has no
+     * arguments — the API sends no input_json_delta events for `{}`, so the
+     * accumulator never sets the field, and echoing the message back fails
+     * validation ("tool_use.input: Field required"). Fill in an explicit {}.
+     */
+    private static Message sanitizeForEcho(Message message) {
+        List<ContentBlock> fixed = message.content().stream()
+                .map(block -> block.toolUse()
+                        .filter(toolUse -> toolUse._input() instanceof JsonMissing)
+                        .map(toolUse -> ContentBlock.ofToolUse(
+                                toolUse.toBuilder().input(JsonValue.from(Map.of())).build()))
+                        .orElse(block))
+                .collect(Collectors.toList());
+        return message.toBuilder().content(fixed).build();
     }
 
     /**

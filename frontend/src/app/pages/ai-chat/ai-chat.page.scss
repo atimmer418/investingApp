@@ -6,6 +6,29 @@
   --chat-canvas-dot: rgba(17, 24, 39, 0.1);
 }
 
+// #2 (composer flicker) — WebKit repaints an editable field conservatively when
+// an ancestor is transformed (the Swiper wrapper), blanking the composer's
+// placeholder + send button for one frame on every chat activation. Give those
+// two NESTED elements their own stable compositing layers so the pager's
+// transform COMPOSITES them instead of REPAINTING them. (Compositing the host /
+// footer — an ancestor — did nothing and risks the caret; the fix belongs on the
+// elements themselves, per WebKit's guidance.)
+.input-container ion-textarea,
+.input-container .send-button {
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+// CARET SAFETY: a transform on/around the editable field breaks the WKWebView
+// caret while the keyboard is up. Drop the layers whenever the keyboard is up —
+// you never activate a tab (the flicker trigger) while typing. `.kb-up` is
+// host-bound from the page TS on keyboardWillShow/Hide.
+:host(.kb-up) .input-container ion-textarea,
+:host(.kb-up) .input-container .send-button {
+  transform: none;
+}
+
 
 #main-content {
   background-color: var(--chat-canvas);
@@ -352,19 +375,47 @@ ion-menu {
 }
 
 .quick-reply {
-  padding: 7px 14px;
+  display: inline-flex;
+  align-items: stretch;
   background: #ffffff;
   border: 1.5px solid rgba(37, 99, 235, 0.35);
   border-radius: 999px;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--app-primary, #2563eb);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
 
-  &:active {
-    background: rgba(37, 99, 235, 0.08);
+  .quick-reply-text {
+    padding: 7px 4px 7px 14px;
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--app-primary, #2563eb);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+
+    &:active {
+      background: rgba(37, 99, 235, 0.08);
+    }
+  }
+
+  .quick-reply-edit {
+    display: flex;
+    align-items: center;
+    padding: 0 10px 0 6px;
+    background: transparent;
+    border: none;
+    border-left: 1px solid rgba(37, 99, 235, 0.18);
+    color: var(--app-primary, #2563eb);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+
+    ion-icon {
+      font-size: 14px;
+    }
+
+    &:active {
+      background: rgba(37, 99, 235, 0.08);
+    }
   }
 }
 

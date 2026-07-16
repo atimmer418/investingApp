@@ -1,0 +1,85 @@
+<div class="gs-body">
+  <div class="gs-handle"></div>
+  <h3>{{ isEditing ? 'Edit goal' : 'Add a goal' }}</h3>
+  <p class="gs-sub">Tracked as a projection from your inputs — FRED never touches these funds.</p>
+
+  <!-- Goal name -->
+  <div class="gs-field">
+    <label class="gs-label">Goal name</label>
+    <input
+      class="gs-input"
+      type="text"
+      [(ngModel)]="goalName"
+      [placeholder]="placeholders.name"
+      maxlength="50"
+    />
+    <div class="gs-error" *ngIf="nameError">{{ nameError }}</div>
+  </div>
+
+  <!-- Icon picker -->
+  <div class="gs-field">
+    <label class="gs-label">Icon</label>
+    <div class="gs-icon-row">
+      <button
+        *ngFor="let opt of iconOptions"
+        class="gs-icon-btn"
+        [class.selected]="selectedIcon === opt.icon"
+        (click)="selectIcon(opt.icon)"
+        type="button"
+      >
+        <span class="material-symbols-outlined">{{ opt.icon }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Amount + Year -->
+  <div class="gs-grid">
+    <div class="gs-field">
+      <label class="gs-label">Target amount</label>
+      <div class="gs-input-wrap">
+        <span class="gs-prefix">$</span>
+        <input
+          class="gs-input with-prefix"
+          type="number"
+          [(ngModel)]="targetAmount"
+          [placeholder]="placeholders.amount"
+          min="1"
+        />
+      </div>
+      <div class="gs-error" *ngIf="amountError">{{ amountError }}</div>
+    </div>
+    <div class="gs-field">
+      <label class="gs-label">Target year</label>
+      <input
+        class="gs-input"
+        type="number"
+        [(ngModel)]="targetYear"
+        [placeholder]="placeholders.year"
+        min="2025"
+        max="2100"
+      />
+      <div class="gs-error" *ngIf="yearError">{{ yearError }}</div>
+    </div>
+  </div>
+
+  <!-- Monthly saving outside FRED -->
+  <div class="gs-field">
+    <label class="gs-label">Saving monthly (outside FRED)</label>
+    <div class="gs-input-wrap">
+      <span class="gs-prefix">$</span>
+      <input
+        class="gs-input with-prefix"
+        type="number"
+        [(ngModel)]="monthlyOutsideFRED"
+        [placeholder]="placeholders.monthly"
+        min="0"
+      />
+    </div>
+    <div class="gs-error" *ngIf="monthlyError">{{ monthlyError }}</div>
+  </div>
+
+  <button class="gs-cta" (click)="save()" type="button">
+    {{ isEditing ? 'Save changes' : 'Track this goal' }}
+  </button>
+  <button class="gs-cancel" (click)="close()" type="button">Cancel</button>
+</div>

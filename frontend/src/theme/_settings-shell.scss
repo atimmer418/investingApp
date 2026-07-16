@@ -59,10 +59,15 @@ ion-toolbar {
 // ─── Gradient header ───────────────────────────────────────────────────────────
 
 .blue-hero-header {
-  // Tuned family gradient (FRED-211/214). The end colour (#0e3a96) matches the
-  // --background on .shell-content so the blue corners of the rounded sheet are
-  // indistinguishable from the gradient strip — no visible seam.
-  background: linear-gradient(160deg, #1e60e3 0%, #1a58d0 60%, #0e3a96 100%);
+  // Tuned family gradient (FRED-211/214) + fade-to-flat bottom edge.
+  // A 160deg gradient's bottom edge varies by x (bottom-left stays mid-royal on
+  // a short header), so the raw ramp does NOT match the flat #0e3a96 strip
+  // showing through the sheet corners — visible seam (tab3 had the same bug).
+  // The topmost layer fades the last 26px to flat #0e3a96 across the full width,
+  // guaranteeing the header's bottom edge equals the strip at every x.
+  background:
+    linear-gradient(180deg, rgba(14, 58, 150, 0) 0%, rgba(14, 58, 150, 0) calc(100% - 26px), #0e3a96 100%),
+    linear-gradient(160deg, #1e60e3 0%, #1a58d0 60%, #0e3a96 100%);
   // safe-area-top handles iOS notch; bottom padding leaves a gradient strip for
   // the sheet's rounded top corners to sit against.
   padding: calc(env(safe-area-inset-top, 0px) + 2px) 20px 14px 20px;

@@ -1,14 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  IonContent, IonHeader, IonToolbar, IonIcon, IonAvatar, AlertController
+  IonContent, IonHeader, IonIcon, IonAvatar, AlertController, ModalController, NavController
 } from '@ionic/angular/standalone';
-import { NavController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { shareOutline, checkmarkCircleOutline, saveOutline, camera, walletOutline, timeOutline, ticketOutline } from 'ionicons/icons';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
 import { AuthService } from '../../services/auth.service';
-import { SettingsService } from '../../services/settings.service';
 import { ToastService } from '../../services/toast.service';
 import { PortfolioService } from '../../services/portfolio.service';
 import { AccountStatusService } from '../../services/account-status.service';
@@ -19,6 +20,60 @@ import { EquityPigUtils } from '../../utils/equity-pig.utils';
 import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
 import { FreedomStatsService } from '../../services/freedom-stats.service';
 import { InvestmentFrequencyUtils } from '../../utils/investment-frequency.utils';
+import { GoalsService, Goal, GoalIcon, RebalanceSchedule } from '../../services/goals.service';
+import { McInfoSheetComponent } from '../../components/mc-info-sheet/mc-info-sheet.component';
+import { GoalAddSheetComponent } from '../../components/goal-add-sheet/goal-add-sheet.component';
+
+/** Computed projection for a single user-added goal. */
+export interface GoalProjection {
+  goal: Goal;
+  onTrack: boolean;
+  projectedLabel: string;
+  progressPct: number;
+}
+
+/** Rebalance schedule options shown as chips. */
+const REBALANCE_SCHEDULES: RebalanceSchedule[] = ['Quarterly', 'Semi-annual', 'Annual'];
+
+/**
+ * Next-rebalance date by schedule.
+ * Heuristic: next calendar quarter/half/year boundary from today.
+ */
+function nextRebalanceDate(schedule: RebalanceSchedule): string {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = today.getMonth(); // 0-indexed
+
+  let candidate: Date;
+  switch (schedule) {
+    case 'Quarterly':
+      // Next of: Apr 1, Jul 1, Oct 1, Jan 1
+      if (m < 3)       candidate = new Date(y, 3, 1);
+      else if (m < 6)  candidate = new Date(y, 6, 1);
+      else if (m < 9)  candidate = new Date(y, 9, 1);
+      else             candidate = new Date(y + 1, 0, 1);
+      break;
+    case 'Semi-annual':
+      candidate = m < 6 ? new Date(y, 6, 1) : new Date(y + 1, 0, 1);
+      break;
+    case 'Annual':
+      candidate = new Date(y + 1, 0, 1);
+      break;
+  }
+  return candidate!.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/**
+ * TLH heuristic estimate for non-Pro users.
+ * Formula (documented in implementation-notes-FRED-216.md):
+ *   estimate = round(portfolioValue × 0.003 / 10) × 10
+ *   i.e. ~0.30 %/yr of invested value, rounded to the nearest $10.
+ * Label is always "~$X/yr" — clearly marked as an estimate.
+ */
+function tlhEstimate(portfolioValue: number): number {
+  if (portfolioValue <= 0) return 0;
+  return Math.round(portfolioValue * 0.003 / 10) * 10;
+}
 
 @Component({
   selector: 'app-my-profile',
@@ -27,48 +82,52 @@ import { InvestmentFrequencyUtils } from '../../utils/investment-frequency.utils
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    IonContent, IonHeader, IonToolbar, IonIcon, IonAvatar,
+    IonContent, IonHeader, IonIcon, IonAvatar,
     KeyboardAvoidDirective
   ]
 })
-export class MyProfilePage implements OnInit {
-  // Action-required banner
+export class MyProfilePage implements OnInit, OnDestroy {
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
+  private readonly destroy$ = new Subject<void>();
+
+  // ── Action-required banner ─────────────────────────────────────────────────
   actionRequired$: Observable<boolean>;
 
-  // User Info
+  // ── User info ──────────────────────────────────────────────────────────────
   userName: string = 'Investor';
   userEmail: string = '';
 
-  // Inputs (Editable)
+  // ── Freedom Plan inputs (editable) ────────────────────────────────────────
   monthlyInvestGoal: number = 2500;
-  retirementIncomeGoal: number = 5000; // Monthly
+  retirementIncomeGoal: number = 5000; // Monthly display; stored annually
 
-  // Read-only / Calculated
+  // ── Computed plan values ───────────────────────────────────────────────────
   currentScheduledInvestment: number = 0;
   investmentFrequencyText: string = '';
   portfolioGoal: number = 0;
-  yearsToReach: number | string = 0; // Based on input goal
-  yearsToReachCurrent: number | string = 0; // Based on actual schedule (From $0)
-  yearsToReachRemaining: number | string | null = null; // Based on actual schedule + current equity
-  currentMonthlyEquivalent: number = 0; // Derived effective monthly amount
-  currentPortfolioValue: number = 0; // From Portfolio Service
-  progressPercentage: number = 0; // currentPortfolioValue / portfolioGoal
+  yearsToReach: number | string = 0;
+  yearsToReachCurrent: number | string = 0;
+  yearsToReachRemaining: number | string | null = null;
+  currentMonthlyEquivalent: number = 0;
+  currentPortfolioValue: number = 0;
+  progressPercentage: number = 0;
 
-  // Referral
+  // ── Referral ───────────────────────────────────────────────────────────────
   referralCode: string = '';
   redeemCodeInput: string = '';
   referralCount: number = 0;
   hasAppliedReferral: boolean = false;
   isLoadingReferral: boolean = false;
-  isCodeValid = false;
-  referralThreshold = 3;
-  referralRewardTriggered = false;
+  isCodeValid: boolean = false;
+  referralThreshold: number = 3;
+  referralRewardTriggered: boolean = false;
 
   get referralSegments(): number[] {
     return Array.from({ length: this.referralThreshold }, (_, i) => i);
   }
 
-  // Percentile badge and pig level from MFU
+  // ── Percentile / pig level ─────────────────────────────────────────────────
   statusPercentile: number | null = null;
   equityLevel: number = 0;
 
@@ -76,34 +135,47 @@ export class MyProfilePage implements OnInit {
     return EquityPigUtils.pigSrcFromEquity(this.currentPortfolioValue);
   }
 
+  // ── Tier ──────────────────────────────────────────────────────────────────
   selectedTier: string = '';
 
-  // State
+  get isPiggy(): boolean { return this.selectedTier === 'piggy' || this.selectedTier === 'core' || this.selectedTier === ''; }
+  get isPlus(): boolean  { return this.selectedTier === 'plus'; }
+  get isPro(): boolean   { return this.selectedTier === 'pro'; }
+  get isPlusOrPro(): boolean { return this.isPlus || this.isPro; }
+
+  // ── State ──────────────────────────────────────────────────────────────────
   isDirty: boolean = false;
   isSubExpired: boolean = false;
-  originalValues: { monthly: number, income: number } = { monthly: 0, income: 0 };
-
-  // Constants
-  private readonly SAFE_WITHDRAWAL_RATE = 0.04;
-  private readonly AVG_MARKET_YIELD = 0.10;
-
-  // Internal state
+  private originalValues: { monthly: number; income: number } = { monthly: 0, income: 0 };
   private exactAnnualIncome: number | null = null;
   currentFrequency: string = '';
 
-  get referralUpgradeOffers(): Array<{tier: string, label: string, discountedPrice: number, regularPrice: number}> {
-    const offers: Array<{tier: string, label: string, discountedPrice: number, regularPrice: number}> = [];
-    if (this.referralCount < 1) return offers;
-    if (this.selectedTier !== 'pro') {
-      offers.push({ tier: 'pro', label: 'Premium', discountedPrice: 20, regularPrice: 40 });
-    }
-    if (this.referralCount >= 2 && this.selectedTier === 'core') {
-      offers.push({ tier: 'plus', label: 'Standard', discountedPrice: 10, regularPrice: 15 });
-    }
-    return offers;
+  // ── Constants ──────────────────────────────────────────────────────────────
+  private readonly SAFE_WITHDRAWAL_RATE = 0.04;
+  private readonly AVG_MARKET_YIELD = 0.10;
+
+  // ── Rebalancing ────────────────────────────────────────────────────────────
+  readonly rebalanceSchedules = REBALANCE_SCHEDULES;
+  selectedSchedule: RebalanceSchedule = 'Quarterly';
+
+  get nextRebalanceDate(): string {
+    return nextRebalanceDate(this.selectedSchedule);
   }
 
-  // Freedom Timeline — live unified value (same signal tab3 renders).
+  // ── Goals ─────────────────────────────────────────────────────────────────
+  goals: Goal[] = [];
+
+  get goalProjections(): GoalProjection[] {
+    return this.goals.map(g => this._projectGoal(g));
+  }
+
+  // ── TLH ───────────────────────────────────────────────────────────────────
+  get tlhEstimateDisplay(): string {
+    const est = tlhEstimate(this.currentPortfolioValue);
+    return est > 0 ? `~$${est.toLocaleString()}/yr` : '~$0/yr';
+  }
+
+  // ── Freedom Date (for the Goals freedom row) ───────────────────────────────
   get freedomYear(): number | null {
     const year = parseInt(this.freedomStats.stats().freedomYear, 10);
     return isNaN(year) ? null : year;
@@ -114,9 +186,37 @@ export class MyProfilePage implements OnInit {
     return this.freedomYear - new Date().getFullYear();
   }
 
+  get freedomGoalSub(): string {
+    const goal = this.portfolioGoal > 0
+      ? (this.portfolioGoal >= 1_000_000
+          ? '$' + (this.portfolioGoal / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M'
+          : '$' + Math.round(this.portfolioGoal / 1_000) + 'k')
+      : '—';
+    const yr = this.freedomYear ?? '—';
+    const invest = this.monthlyInvestGoal ? `$${this.monthlyInvestGoal.toLocaleString()}/mo` : '—';
+    return `${goal} by ${yr} · ${invest} through FRED`;
+  }
+
+  // ── Referral upgrade offers ────────────────────────────────────────────────
+  get referralUpgradeOffers(): Array<{ tier: string; label: string; discountedPrice: number; regularPrice: number }> {
+    const offers: Array<{ tier: string; label: string; discountedPrice: number; regularPrice: number }> = [];
+    if (this.referralCount < 1) return offers;
+    if (this.selectedTier !== 'pro') {
+      offers.push({ tier: 'pro', label: 'Premium', discountedPrice: 20, regularPrice: 40 });
+    }
+    if (this.referralCount >= 2 && this.selectedTier === 'core') {
+      offers.push({ tier: 'plus', label: 'Standard', discountedPrice: 10, regularPrice: 15 });
+    }
+    return offers;
+  }
+
+  // ── UserId (for localStorage keying) ──────────────────────────────────────
+  private get userId(): string {
+    return localStorage.getItem('userId') ?? '';
+  }
+
   constructor(
     private authService: AuthService,
-    private settingsService: SettingsService,
     private toastService: ToastService,
     private portfolioService: PortfolioService,
     private accountStatusService: AccountStatusService,
@@ -124,105 +224,109 @@ export class MyProfilePage implements OnInit {
     private router: Router,
     private alertController: AlertController,
     private navCtrl: NavController,
+    private modalController: ModalController,
+    private goalsService: GoalsService,
     public freedomStats: FreedomStatsService
   ) {
-    addIcons({camera,walletOutline,timeOutline,shareOutline,ticketOutline,checkmarkCircleOutline,saveOutline});
+    addIcons({ camera, walletOutline, timeOutline, shareOutline, ticketOutline, checkmarkCircleOutline, saveOutline });
     this.actionRequired$ = this.accountStatusService.actionRequired$;
   }
 
-  goBack() {
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
+
+  ngOnInit(): void {
+    this.loadUserData();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ── Navigation ─────────────────────────────────────────────────────────────
+
+  goBack(): void {
     this.navCtrl.navigateBack('/tabs/tab3');
   }
 
-  goToDocumentUpload() {
+  goToDocumentUpload(): void {
     this.router.navigateByUrl('/document-upload');
   }
 
   reactivateSubscription(): void {
-    // TODO: trigger Apple IAP resubscription
     console.log('[MyProfile] Reactivate subscription requested');
   }
 
-  ngOnInit() {
-    this.loadUserData();
-  }
+  // ── Data loading ───────────────────────────────────────────────────────────
 
-  loadUserData() {
-    // Get Basic User Info & Progress Data
-    this.authService.userProgress$.subscribe(progress => {
-      if (progress) {
-        // Name
-        if (progress.firstName && progress.lastName) {
-          this.userName = `${progress.firstName} ${progress.lastName}`;
-        } else if (progress.firstName) {
-          this.userName = progress.firstName;
+  loadUserData(): void {
+    this.authService.userProgress$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(progress => {
+        if (progress) {
+          if (progress.firstName && progress.lastName) {
+            this.userName = `${progress.firstName} ${progress.lastName}`;
+          } else if (progress.firstName) {
+            this.userName = progress.firstName;
+          }
+
+          if (progress.monthlyInvestment) {
+            this.monthlyInvestGoal = progress.monthlyInvestment;
+          }
+
+          if (progress.retirementIncome) {
+            this.exactAnnualIncome = progress.retirementIncome;
+            this.retirementIncomeGoal = Math.round(progress.retirementIncome / 12);
+          }
+
+          if (progress.referralCode) {
+            this.referralCode = progress.referralCode;
+          }
+          if (progress.referralCount !== undefined) {
+            this.referralCount = progress.referralCount;
+          }
+          if (progress.hasAppliedReferral !== undefined) {
+            this.hasAppliedReferral = progress.hasAppliedReferral;
+          }
+          if (progress.referralRewardTriggered !== undefined) {
+            this.referralRewardTriggered = progress.referralRewardTriggered;
+          }
+
+          if (progress.privateBeta)                          this.referralThreshold = 3;
+          else if (progress.selectedTier === 'plus')         this.referralThreshold = 2;
+          else if (progress.selectedTier === 'pro')          this.referralThreshold = 1;
+          else                                               this.referralThreshold = 3;
+
+          if (progress.selectedTier) {
+            this.selectedTier = progress.selectedTier;
+          }
+
+          this.originalValues = {
+            monthly: this.monthlyInvestGoal,
+            income: this.retirementIncomeGoal
+          };
+
+          this.calculatePlan();
+
+          const fullyOnboarded = progress.investmentConfirmationCompleted === true;
+          const hasActiveSub = progress.selectedTier != null;
+          this.isSubExpired = fullyOnboarded && !hasActiveSub;
+
+          // Load persisted goals + prefs now that userId is stable.
+          this._loadGoalsAndPrefs();
         }
+      });
 
-        // Goals
-        if (progress.monthlyInvestment) {
-          this.monthlyInvestGoal = progress.monthlyInvestment;
-        }
-
-        // Income is stored as Annual in backend, convert to Monthly for UI
-        if (progress.retirementIncome) {
-          this.exactAnnualIncome = progress.retirementIncome; // Store exact value
-          this.retirementIncomeGoal = Math.round(progress.retirementIncome / 12);
-        }
-        
-        // Referral Data
-        if (progress.referralCode) {
-           this.referralCode = progress.referralCode;
-        }
-        if (progress.referralCount !== undefined) {
-           this.referralCount = progress.referralCount;
-        }
-        if (progress.hasAppliedReferral !== undefined) {
-           this.hasAppliedReferral = progress.hasAppliedReferral;
-        }
-        if (progress.referralRewardTriggered !== undefined) {
-           this.referralRewardTriggered = progress.referralRewardTriggered;
-        }
-
-        // Referral threshold by tier
-        if (progress.privateBeta) this.referralThreshold = 3;
-        else if (progress.selectedTier === 'plus') this.referralThreshold = 2;
-        else if (progress.selectedTier === 'pro') this.referralThreshold = 1;
-        else this.referralThreshold = 3;
-
-        if (progress.selectedTier) {
-          this.selectedTier = progress.selectedTier;
-        }
-
-        // Store originals for dirty check
-        this.originalValues = {
-          monthly: this.monthlyInvestGoal,
-          income: this.retirementIncomeGoal
-        };
-
-        this.calculatePlan();
-
-        const fullyOnboarded = progress.investmentConfirmationCompleted === true;
-        const hasActiveSub = progress.selectedTier != null;
-        // TODO FRED-113: bypass expired gate for private beta users
-        this.isSubExpired = fullyOnboarded && !hasActiveSub;
-      }
-    });
-
-    // Get Current Scheduled Investment from Backend (Source of Truth)
     this.authService.getCurrentInvestmentSchedule().subscribe({
       next: (investment) => {
         if (investment) {
           this.currentScheduledInvestment = investment.investmentAmount;
           this.currentFrequency = investment.frequency ? investment.frequency.toLowerCase() : '';
-          
           this.formatScheduleText(investment);
-          
-          // Trigger calculation using the centralized method
           this.calculateCurrentScheduleYears();
         }
       },
-      error: (err) => {
-        console.log('No active investment schedule found or error fetching:', err);
+      error: () => {
         this.currentScheduledInvestment = 0;
         this.investmentFrequencyText = '';
         this.currentFrequency = '';
@@ -231,25 +335,20 @@ export class MyProfilePage implements OnInit {
       }
     });
 
-    // Get Current Portfolio Value for Progress Bar
     this.portfolioService.getPortfolioDashboard().subscribe({
       next: (data) => {
         if (data && data.summary) {
           this.currentPortfolioValue = data.summary.equity || 0;
           this.calculateProgress();
-          // Recalculate years now that we have portfolio value
           this.calculateCurrentScheduleYears();
         }
       },
-      error: (err) => {
-        console.log('Error fetching portfolio summary:', err);
-        // Use 0 as default if fails
+      error: () => {
         this.currentPortfolioValue = 0;
         this.calculateProgress();
       }
     });
 
-    // Load statusPercentile and equityLevel from most recent MFU data
     this.mfuService.checkShouldShow().subscribe({
       next: (data) => {
         if (data && data.hasMfuHistory && data.statusPercentile > 0) {
@@ -265,31 +364,22 @@ export class MyProfilePage implements OnInit {
         this.statusPercentile = null;
       }
     });
-
-    // Mock Referral Code based on Email/ID if available
-    // const user = this.authService.getCurrentUser();
-    // if (user && user.email) {
-    //   const prefix = user.email.split('@')[0].toUpperCase().substring(0, 4);
-    //   this.referralCode = `${prefix}${user.id || '2025'}`;
-    // }
   }
 
-  formatScheduleText(investment: any) {
+  // ── Plan calculations ───────────────────────────────────────────────────────
+
+  formatScheduleText(investment: any): void {
     if (!investment || !investment.frequency) {
       this.investmentFrequencyText = '';
       return;
     }
-
-    const freq = investment.frequency ? investment.frequency.toLowerCase() : '';
-
+    const freq = investment.frequency.toLowerCase();
     switch (freq) {
       case 'weekly':
-        const day = this.getDayOfWeekName(investment.dayOfWeek || investment.startDate);
-        this.investmentFrequencyText = `every ${day}`;
+        this.investmentFrequencyText = `every ${this.getDayOfWeekName(investment.dayOfWeek || investment.startDate)}`;
         break;
       case 'biweekly':
-        const biDay = this.getDayOfWeekName(investment.dayOfWeek || investment.startDate);
-        this.investmentFrequencyText = `every other ${biDay}`;
+        this.investmentFrequencyText = `every other ${this.getDayOfWeekName(investment.dayOfWeek || investment.startDate)}`;
         break;
       case 'semi_monthly':
         this.investmentFrequencyText = 'every 1st and 15th';
@@ -305,21 +395,11 @@ export class MyProfilePage implements OnInit {
 
   getDayOfWeekName(source: string | Date): string {
     if (!source) return 'day';
-
-    // If it's a string (e.g. "FRIDAY" from backend)
     if (typeof source === 'string' && isNaN(Date.parse(source))) {
-      // Capitalize first letter, lowercase rest
       return source.charAt(0).toUpperCase() + source.slice(1).toLowerCase();
     }
-
-    // If it's a date string or Date object
     const date = new Date(source);
-    // Adjust for timezone issues if pulling raw date string YYYY-MM-DD which JS treats as UTC
-    // We want the literal day name. 
-    // Actually, backend 'startDate' is LocalDate (YYYY-MM-DD). Date(str) treats as UTC.
-    // To be safe, we use the UTC methods if the input looks like ISO date without time
-    const dayName = date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
-    return dayName;
+    return date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
   }
 
   getOrdinal(n: number): string {
@@ -328,84 +408,63 @@ export class MyProfilePage implements OnInit {
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
 
-  calculatePlan() {
-    // Initial load full calculation
+  calculatePlan(): void {
     this.calculatePortfolioGoal();
     this.calculateHypotheticalYears();
     this.calculateCurrentScheduleYears();
     this.checkDirty();
   }
 
-  // Triggered by "To retire with $Y/mo" input
-  onIncomeChange() {
-    // 1. Validate Input
+  onIncomeChange(): void {
     if (this.retirementIncomeGoal && this.retirementIncomeGoal.toString().length > 5) {
       this.retirementIncomeGoal = Number(this.retirementIncomeGoal.toString().slice(0, 5));
     }
-
-    // 2. Update Portfolio Goal (Source of Truth)
     this.calculatePortfolioGoal();
-
-    // 3. Update BOTH time estimates because target changed
     this.calculateHypotheticalYears();
     this.calculateCurrentScheduleYears();
-
     this.checkDirty();
   }
 
-  // Triggered by "By investing $X/mo" input
-  onInvestChange() {
-    // 1. Validate Input
+  onInvestChange(): void {
     if (this.monthlyInvestGoal && this.monthlyInvestGoal.toString().length > 5) {
       this.monthlyInvestGoal = Number(this.monthlyInvestGoal.toString().slice(0, 5));
     }
-
-    // 2. Only update the hypothetical years locally
-    // Does NOT affect portfolio goal or current schedule outlook
     this.calculateHypotheticalYears();
-
     this.checkDirty();
   }
 
-  private calculatePortfolioGoal() {
+  private calculatePortfolioGoal(): void {
     let annualIncome: number;
     if (this.exactAnnualIncome !== null &&
-      Math.round(this.exactAnnualIncome / 12) === this.retirementIncomeGoal) {
+        Math.round(this.exactAnnualIncome / 12) === this.retirementIncomeGoal) {
       annualIncome = this.exactAnnualIncome;
     } else {
       annualIncome = this.retirementIncomeGoal * 12;
     }
     this.portfolioGoal = annualIncome / this.SAFE_WITHDRAWAL_RATE;
-    this.calculateProgress(); // Update progress when goal changes
+    this.calculateProgress();
   }
 
-  private calculateProgress() {
+  private calculateProgress(): void {
     if (this.portfolioGoal > 0) {
-      this.progressPercentage = Math.min((this.currentPortfolioValue / this.portfolioGoal), 1.0);
+      this.progressPercentage = Math.min(this.currentPortfolioValue / this.portfolioGoal, 1.0);
     } else {
       this.progressPercentage = 0;
     }
   }
 
-  private calculateHypotheticalYears() {
-    if (this.monthlyInvestGoal > 0) {
-      this.yearsToReach = this.calculateYears(this.monthlyInvestGoal);
-    } else {
-      this.yearsToReach = '∞';
-    }
+  private calculateHypotheticalYears(): void {
+    this.yearsToReach = this.monthlyInvestGoal > 0
+      ? this.calculateYears(this.monthlyInvestGoal)
+      : '∞';
   }
 
-  private calculateCurrentScheduleYears() {
+  private calculateCurrentScheduleYears(): void {
     if (this.currentScheduledInvestment > 0) {
-      // Shared conversion — same factors as the backend MFU projection
-      // (fixes the old inline biweekly 2.16 vs backend 2.17 drift).
       const monthly = InvestmentFrequencyUtils.toMonthlyEquivalent(
         this.currentScheduledInvestment, this.currentFrequency);
-
       this.currentMonthlyEquivalent = monthly;
       this.yearsToReachCurrent = this.calculateYears(monthly);
-
-      // Calculate remaining years considering current equity (PV)
       if (this.currentPortfolioValue > 0) {
         this.yearsToReachRemaining = this.calculateYearsWithPV(monthly, this.currentPortfolioValue);
       } else {
@@ -417,84 +476,57 @@ export class MyProfilePage implements OnInit {
   calculateYearsWithPV(monthlyAmount: number, currentEquity: number): string | number {
     if (monthlyAmount <= 0) return '∞';
     if (currentEquity >= this.portfolioGoal) return 0;
-
-    const r = this.AVG_MARKET_YIELD / 12; // Monthly rate
-    const FV = this.portfolioGoal;
-    const PV = currentEquity;
-    const PMT = monthlyAmount;
-
-    // Formula: n = ln( (FV + PMT/r) / (PV + PMT/r) ) / ln(1 + r)
-    const numerator = Math.log((FV + PMT / r) / (PV + PMT / r));
+    const r = this.AVG_MARKET_YIELD / 12;
+    const numerator = Math.log((this.portfolioGoal + monthlyAmount / r) / (currentEquity + monthlyAmount / r));
     const denominator = Math.log(1 + r);
     const months = numerator / denominator;
-
-    if (isNaN(months) || !isFinite(months)) {
-      return '∞';
-    } else {
-      return (months / 12).toFixed(1);
-    }
+    return (isNaN(months) || !isFinite(months)) ? '∞' : (months / 12).toFixed(1);
   }
 
   calculateYears(monthlyAmount: number): string | number {
-    if (monthlyAmount <= 0) {
-      return '∞';
-    }
-
-    const monthlyRate = this.AVG_MARKET_YIELD / 12;
-    const numerator = Math.log((this.portfolioGoal * monthlyRate / monthlyAmount) + 1);
-    const denominator = Math.log(1 + monthlyRate);
+    if (monthlyAmount <= 0) return '∞';
+    const r = this.AVG_MARKET_YIELD / 12;
+    const numerator = Math.log((this.portfolioGoal * r / monthlyAmount) + 1);
+    const denominator = Math.log(1 + r);
     const months = numerator / denominator;
-
-    if (isNaN(months) || !isFinite(months)) {
-      return '∞';
-    } else {
-      return (months / 12).toFixed(1);
-    }
+    return (isNaN(months) || !isFinite(months)) ? '∞' : (months / 12).toFixed(1);
   }
 
-  // Old method kept or removed? Removed to replace with calculateYears
-  calculateYearsToReach(monthlyAmount: number) {
-      this.yearsToReach = this.calculateYears(monthlyAmount);
+  calculateYearsToReach(monthlyAmount: number): void {
+    this.yearsToReach = this.calculateYears(monthlyAmount);
   }
 
-
-
-  checkDirty() {
+  checkDirty(): void {
     this.isDirty =
       this.monthlyInvestGoal !== this.originalValues.monthly ||
       this.retirementIncomeGoal !== this.originalValues.income;
   }
 
-  saveChanges() {
+  saveChanges(): void {
     if (!this.isDirty) return;
-
     if (!this.monthlyInvestGoal || !this.retirementIncomeGoal) {
-        this.toastService.showToast('Please enter valid amounts for both goals.', 'warning');
-        return;
+      this.toastService.showToast('Please enter valid amounts for both goals.', 'warning');
+      return;
     }
-
     this.authService.updateUserProfile({
       monthlyInvestment: this.monthlyInvestGoal,
-      retirementIncome: this.retirementIncomeGoal * 12 // Convert back to Annual
+      retirementIncome: this.retirementIncomeGoal * 12
     }).subscribe({
       next: () => {
         this.toastService.showToast('Profile updated!', 'success');
         this.isDirty = false;
-        this.originalValues = {
-          monthly: this.monthlyInvestGoal,
-          income: this.retirementIncomeGoal
-        };
-        // Refresh local state from backend to ensure persistence
+        this.originalValues = { monthly: this.monthlyInvestGoal, income: this.retirementIncomeGoal };
         this.authService.loadUserProgress();
       },
-      error: (err) => {
-        console.error('Failed to save changes:', err);
+      error: () => {
         this.toastService.showToast('Failed to save changes.', 'danger');
       }
     });
   }
 
-  async copyReferral() {
+  // ── Referral ───────────────────────────────────────────────────────────────
+
+  async copyReferral(): Promise<void> {
     if (!this.referralCode) return;
     await navigator.clipboard.writeText(this.referralCode);
     this.toastService.showToast('Referral code copied!', 'success');
@@ -508,29 +540,26 @@ export class MyProfilePage implements OnInit {
     });
   }
 
-  redeemCode() {
+  redeemCode(): void {
     if (!this.redeemCodeInput || this.redeemCodeInput.trim() === '') {
       this.toastService.showToast('Please enter a referral code.', 'warning');
       return;
     }
-
     if (this.referralCode && this.redeemCodeInput.trim().toUpperCase() === this.referralCode.toUpperCase()) {
-        this.toastService.showToast('You cannot use your own referral code.', 'danger');
-        return;
+      this.toastService.showToast('You cannot use your own referral code.', 'danger');
+      return;
     }
-
     if (this.hasAppliedReferral) {
-        this.toastService.showToast('You have already applied a referral code.', 'warning');
-        return;
+      this.toastService.showToast('You have already applied a referral code.', 'warning');
+      return;
     }
-
     this.isLoadingReferral = true;
     this.authService.applyReferralCode(this.redeemCodeInput).subscribe({
       next: () => {
         this.isLoadingReferral = false;
         this.toastService.showToast('Referral code applied successfully!', 'success');
         this.redeemCodeInput = '';
-        this.authService.loadUserProgress(); // Refresh state
+        this.authService.loadUserProgress();
       },
       error: (error) => {
         this.isLoadingReferral = false;
@@ -540,7 +569,9 @@ export class MyProfilePage implements OnInit {
     });
   }
 
-  async confirmTierUpgrade(tier: string, label: string, price: number) {
+  // ── Upgrade offers (referral-triggered) ────────────────────────────────────
+
+  async confirmTierUpgrade(tier: string, label: string, price: number): Promise<void> {
     const alert = await this.alertController.create({
       header: `Upgrade to ${label}`,
       message: `Upgrade to ${label} for $${price}/mo using your referral discount?`,
@@ -563,5 +594,181 @@ export class MyProfilePage implements OnInit {
       ]
     });
     await alert.present();
+  }
+
+  // ── Rebalancing ────────────────────────────────────────────────────────────
+
+  selectSchedule(schedule: RebalanceSchedule): void {
+    if (!this.isPlusOrPro) {
+      this.openPlusNudge();
+      return;
+    }
+    this.selectedSchedule = schedule;
+    this.goalsService.savePrefs(this.userId, { rebalanceSchedule: schedule });
+  }
+
+  // ── Goals ─────────────────────────────────────────────────────────────────
+
+  async openAddGoalSheet(editGoal?: Goal): Promise<void> {
+    if (!this.isPlusOrPro) {
+      await this.openPlusNudge();
+      return;
+    }
+    const modal = await this.modalController.create({
+      component: GoalAddSheetComponent,
+      componentProps: editGoal ? { editGoal } : {},
+      cssClass: 'mc-bottom-sheet-modal',
+    });
+    await modal.present();
+    const { role, data } = await modal.onDidDismiss();
+    if (role === 'saved' && data) {
+      const newGoal = this.goalsService.addGoal(this.userId, data);
+      this.goals = [...this.goals, newGoal];
+      this.toastService.showToast('Goal added — projection tracked', 'success');
+    } else if (role === 'updated' && data) {
+      this.goalsService.updateGoal(this.userId, data);
+      this.goals = this.goals.map(g => g.id === data.id ? data : g);
+      this.toastService.showToast('Goal updated', 'success');
+    }
+  }
+
+  deleteGoal(goalId: string): void {
+    this.goalsService.deleteGoal(this.userId, goalId);
+    this.goals = this.goals.filter(g => g.id !== goalId);
+    this.toastService.showToast('Goal removed', 'success');
+  }
+
+  /** Long-press on a goal row opens the edit sheet with a delete affordance. */
+  async onGoalLongPress(goal: Goal): Promise<void> {
+    if (!this.isPlusOrPro) return;
+    const alert = await this.alertController.create({
+      header: goal.name,
+      buttons: [
+        {
+          text: 'Edit',
+          handler: () => { this.openAddGoalSheet(goal); }
+        },
+        {
+          text: 'Delete',
+          role: 'destructive',
+          handler: () => { this.deleteGoal(goal.id); }
+        },
+        { text: 'Cancel', role: 'cancel' }
+      ]
+    });
+    await alert.present();
+  }
+
+  // ── Nudge sheets ───────────────────────────────────────────────────────────
+
+  /**
+   * Goals area tapped on Piggy — presents the Plus upgrade sheet.
+   * Wired to: mc-info-sheet mode='nudge' with Plus-targeted copy.
+   * On 'upgrade' role: delegates to upgradeToPlusClicked() (same as tab2 pattern).
+   */
+  async openGoalsVeilNudge(): Promise<void> {
+    if (this.isPlusOrPro) return;
+    await this.openPlusNudge();
+  }
+
+  /** Reusable Plus upgrade nudge — used by goals veil + rebalancing lock tap. */
+  async openPlusNudge(): Promise<void> {
+    const modal = await this.modalController.create({
+      component: McInfoSheetComponent,
+      componentProps: {
+        mode: 'nudge',
+        nudgeTitle: 'Unlock multi-goal tracking with Piggy Plus',
+        nudgeBody: 'Track your house, emergency fund, college savings, and more — side by side with projected timelines.',
+        nudgeCtaLabel: 'Upgrade to Piggy Plus',
+        targetTier: 'plus',
+      },
+      cssClass: 'mc-bottom-sheet-modal',
+    });
+    await modal.present();
+    const { role } = await modal.onDidDismiss();
+    if (role === 'upgrade') {
+      this.upgradeToPlusClicked();
+    }
+  }
+
+  /**
+   * TLH "Want to save this money?" tapped on non-Pro — presents the Pro upgrade sheet.
+   * Wired to: mc-info-sheet mode='nudge' with Pro-targeted copy (defaults).
+   */
+  async openTlhProNudge(): Promise<void> {
+    if (this.isPro) return;
+    const modal = await this.modalController.create({
+      component: McInfoSheetComponent,
+      componentProps: {
+        mode: 'nudge',
+        nudgeTitle: 'Go deeper with Piggy Pro',
+        nudgeBody: 'Rule-based Tax Loss Harvesting automatically sells losing positions and replaces them with similar ETFs — potentially saving you hundreds per year.',
+        nudgeCtaLabel: 'Upgrade to Pro',
+        targetTier: 'pro',
+      },
+      cssClass: 'mc-bottom-sheet-modal',
+    });
+    await modal.present();
+    const { role } = await modal.onDidDismiss();
+    if (role === 'upgrade') {
+      this.upgradeToProClicked();
+    }
+  }
+
+  /** Plus upgrade handler — mirrors the tab2 retirementPlanning pattern. */
+  upgradeToPlusClicked(): void {
+    // TODO: trigger Plus subscription IAP
+    console.log('[MyProfile] Plus upgrade requested');
+  }
+
+  /** Pro upgrade handler. */
+  upgradeToProClicked(): void {
+    // TODO: trigger Pro subscription IAP
+    console.log('[MyProfile] Pro upgrade requested');
+  }
+
+  // ── Private helpers ────────────────────────────────────────────────────────
+
+  private _loadGoalsAndPrefs(): void {
+    const uid = this.userId;
+    if (!uid) return;
+    this.goals = this.goalsService.getGoals(uid);
+    const prefs = this.goalsService.getPrefs(uid);
+    this.selectedSchedule = prefs.rebalanceSchedule;
+  }
+
+  private _projectGoal(g: Goal): GoalProjection {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+
+    const monthly = Math.max(0, g.monthlyOutsideFRED);
+
+    // Months needed to accumulate targetAmount at the stated monthly saving.
+    // Guard: if monthly is 0, projection is infinite → rendered as "late".
+    let monthsNeeded: number;
+    if (monthly <= 0) {
+      monthsNeeded = 9999;
+    } else {
+      monthsNeeded = Math.ceil(g.targetAmount / monthly);
+    }
+
+    const projYear = currentYear + Math.floor((currentMonth + monthsNeeded) / 12);
+    const projMonth = (currentMonth + monthsNeeded) % 12;
+
+    const projDate = new Date(projYear, projMonth, 1);
+    const targetDate = new Date(g.targetYear, 11, 31);
+
+    const onTrack = projDate <= targetDate;
+
+    const projectedLabel = projDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+    // Progress: rough fraction of time elapsed toward the target (capped 2%–100%)
+    const totalMonths = (g.targetYear - currentYear) * 12 + (12 - currentMonth);
+    const pct = totalMonths > 0
+      ? Math.max(2, Math.min(100, Math.round((monthsNeeded > 0 ? (1 - monthsNeeded / totalMonths) * 100 : 100))))
+      : 100;
+
+    return { goal: g, onTrack, projectedLabel, progressPct: pct };
   }
 }

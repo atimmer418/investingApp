@@ -39,14 +39,14 @@
     <button class="sheet-cta-btn" (click)="close()">Done</button>
   </ng-container>
 
-  <!-- Piggy Pro upgrade nudge -->
+  <!-- Upgrade nudge (Pro or Plus — configurable via inputs) -->
   <ng-container *ngIf="mode === 'nudge'">
     <div class="nudge-icon">
       <span class="material-symbols-outlined">query_stats</span>
     </div>
-    <h3 class="nudge-title">Go deeper with Piggy Pro</h3>
-    <p class="assump-sub nudge-sub">Run conservative and aggressive scenarios, adjust contributions and retirement age on the fly, and see monthly withdrawal estimates in retirement.</p>
-    <button class="sheet-cta-btn nudge-cta-btn" (click)="upgrade()">Upgrade to Pro</button>
+    <h3 class="nudge-title">{{ nudgeTitle }}</h3>
+    <p class="assump-sub nudge-sub">{{ nudgeBody }}</p>
+    <button class="sheet-cta-btn nudge-cta-btn" (click)="upgrade()">{{ nudgeCtaLabel }}</button>
     <button class="nudge-later" (click)="close()">Maybe later</button>
   </ng-container>
 </div>

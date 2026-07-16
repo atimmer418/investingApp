@@ -194,13 +194,19 @@ public class FredChatToolsService {
             InvestmentSchedule s = schedule.get();
             out.put("active", !Boolean.TRUE.equals(s.getIsPaused()));
             out.put("paused", Boolean.TRUE.equals(s.getIsPaused()));
-            out.put("amountPerRun", s.getInvestmentAmount());
-            out.put("monthlyAmount", s.getMonthlyAmount());
+            // Money at 2dp — schedule math carries scale-4 internally, and the
+            // model echoes whatever it sees (e.g. "$2054.9900")
+            out.put("amountPerRun", money2(s.getInvestmentAmount()));
+            out.put("monthlyAmount", money2(s.getMonthlyAmount()));
             out.put("frequency", s.getFrequency());
             out.put("nextInvestmentDate", s.getNextInvestmentDate() != null ? s.getNextInvestmentDate().toString() : null);
             out.put("monthlyStreak", s.getMonthlyStreak());
         }
         return MAPPER.writeValueAsString(out);
+    }
+
+    private static BigDecimal money2(BigDecimal value) {
+        return value == null ? null : value.setScale(2, java.math.RoundingMode.HALF_UP);
     }
 
     private String investorProfile(User user) throws Exception {

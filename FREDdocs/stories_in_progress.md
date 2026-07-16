@@ -26,9 +26,9 @@ Tracks stories pulled into active work via the triage skill (`--story=<ID>` or `
 - FRED-211 — Remodel tab3 into the family design language (Variant A)
 - FRED-212 — Dedupe boot-time API calls via single-flight stores
 - FRED-213 — Dedupe duplicate /user/progress fetches (in-flight join only)
-- FRED-214 — Settings-shell: gradient header + pinned sheet on tab3-linked pages
+- FRED-214 — Settings-shell: gradient header + pinned sheet on tab3-linked pages\n- FRED-215 — Extend settings-shell to change-email + KYC edit mode
 
-## Done
+- FRED-216 — My Profile refactor: simplified plan, rebalancing, goals, TLH\n\n## Done
 
 <!-- entries moved here when --done=<ID> is run -->
 - FRED-209 — Refactor tab1 into tab2's premium design language

@@ -105,6 +105,18 @@ export class ChatService {
     });
   }
 
+  /** Phase B: execute a FRED-proposed action after the user's Confirm tap. */
+  confirmAction(action: string, params: Record<string, unknown>, sessionId: string):
+    Observable<{ success: boolean, message: string }> {
+    const token = JwtTokenUtils.getValidJwtToken();
+    let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return this.http.post<{ success: boolean, message: string }>(
+      `${this.apiUrl}/action`, { action, params, sessionId }, { headers });
+  }
+
   getHistory(sessionId?: string, userId?: string | null): Observable<any[]> {
     const token = JwtTokenUtils.getValidJwtToken();
     let queryParams = '';

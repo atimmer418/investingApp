@@ -1,8 +1,10 @@
-// ─── Blue Hero Header (shared partial — editMode only) ────────────────────────
+// ─── Settings Shell (shared partial — editMode only) ──────────────────────────
 // The partial emits bare selectors. The KYC component's own rules (below) take
 // cascade precedence over the partial's; two scoped overrides re-apply white
 // colour inside .blue-hero-header so the editMode nav looks correct.
-@use '../../../theme/blue-hero-header';
+// ion-toolbar override (below) restores the onboarding header's light background
+// since the shell resets ion-toolbar to transparent.
+@use '../../../theme/settings-shell';
 
 // Scoped overrides: restore white text inside the blue hero nav
 // (the component's .back-btn and .header-title rules are dark; these win inside
@@ -106,6 +108,11 @@ ion-content::part(scroll) {
   flex-direction: column;
   padding: 0px 18px 16px 18px;
   font-family: 'Manrope', sans-serif;
+}
+
+// Edit mode: shell's rounded-top sheet needs breathing room above content
+.content-inner--edit {
+  padding-top: 18px;
 }
 
 // --- Hero (top-pinned) ---

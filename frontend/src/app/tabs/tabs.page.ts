@@ -2,9 +2,11 @@ import {
   Component, OnInit, AfterViewInit, ViewChild, ElementRef, signal, CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
 import { CommonModule, AsyncPipe, Location } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import type { SwiperContainer } from 'swiper/element';
+import { IonTextarea, IonButton, IonIcon } from '@ionic/angular/standalone';
 import { AccountStatusService } from '../services/account-status.service';
 import { AuthService } from '../services/auth.service';
 import { TabBarScrollService } from '../services/tab-bar-scroll.service';
@@ -24,14 +26,23 @@ const TAB_ORDER = ['tab1', 'tab2', 'chat', 'tab3'] as const;
   styleUrls: ['tabs.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, AsyncPipe,
+    CommonModule, AsyncPipe, FormsModule,
     FirstTimeTourComponent, FloatingTabBarComponent,
     Tab1Page, Tab2Page, AiChatPage, Tab3Page,
+    IonTextarea, IonButton, IonIcon,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class TabsPage implements OnInit, AfterViewInit {
   @ViewChild('swiper') swiperRef?: ElementRef<SwiperContainer>;
+
+  // The chat composer is rendered HERE (outside <swiper-container>, see
+  // tabs.page.html) rather than inside AiChatPage's own <ion-footer> — see the
+  // big comment on .chat-composer-portal in tabs.page.scss for why. AiChatPage
+  // is still eagerly mounted as a pager slide, so its instance (and all its
+  // message/session/streaming state) is reached directly through this
+  // ViewChild; the composer template below just binds to its public members.
+  @ViewChild(AiChatPage) chatPage?: AiChatPage;
 
   settingsTabBadge$: Observable<string | null>;
   isSubExpired = false;

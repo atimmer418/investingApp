@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ChangeDetectorRef, ElementRef, effect } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ChangeDetectorRef, ElementRef, effect, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuController } from '@ionic/angular';
@@ -22,18 +22,23 @@ import { TabActivationService } from '../../services/tab-activation.service';
 import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
-import { arrowUp, menuOutline, addOutline, refreshOutline, sparklesOutline, trendingUpOutline, chatbubbleEllipsesOutline } from 'ionicons/icons';
+import { arrowUp, menuOutline, addOutline, refreshOutline, sparklesOutline, trendingUpOutline, chatbubbleEllipsesOutline, pencilOutline } from 'ionicons/icons';
 import { TabBarScrollDirective } from '../../directives/tab-bar-scroll.directive';
 import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
 import { Keyboard } from '@capacitor/keyboard';
 import { MarkdownPipe } from '../../pipes/markdown.pipe';
 import { ChatChartComponent, ChatChartConfig } from './chat-chart.component';
+import { ChatActionCardComponent, ChatActionProposal, ActionCardState } from './chat-action-card.component';
 
-/** A rendered slice of an assistant message: markdown, an inline chart, or quick-reply options */
+/** A rendered slice of an assistant message: markdown, chart, quick replies, or an action proposal */
 export type MessageSegment =
   | { kind: 'md'; text: string }
   | { kind: 'chart'; config: ChatChartConfig }
-  | { kind: 'suggestions'; options: string[] };
+  | { kind: 'suggestions'; options: string[] }
+  | { kind: 'action'; proposal: ChatActionProposal; state: ActionCardState; resultMessage?: string };
+
+/** Must mirror the backend allowlist (FredChatActionService.ALLOWED_ACTIONS) */
+const KNOWN_ACTIONS = ['update_investment_amount', 'pause_investing', 'resume_investing'];
 
 @Component({
   selector: 'app-ai-chat',
@@ -58,7 +63,8 @@ export type MessageSegment =
     TabBarScrollDirective,
     KeyboardAvoidDirective,
     MarkdownPipe,
-    ChatChartComponent
+    ChatChartComponent,
+    ChatActionCardComponent
   ]
 })
 export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
@@ -72,9 +78,18 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
   private activeStreamMsg: ChatMessage | null = null;
 
   @ViewChild('chatMenu', { read: ElementRef }) chatMenuRef?: ElementRef<HTMLElement>;
+  @ViewChild(IonTextarea) composerTextarea?: IonTextarea;
 
   /** Keyboard height (px) while the native keyboard is up — lifts the composer (resize:'none'). */
   keyboardOffset = 0;
+
+  /** #1 — while the keyboard is up, drop the chat slide's compositing layer (see
+   *  :host / :host(.kb-up) in scss) so a composited ancestor can't break the
+   *  WKWebView text caret. You never swipe tabs mid-type, so the layer isn't
+   *  needed then. */
+  @HostBinding('class.kb-up') get kbUp(): boolean {
+    return this.keyboardOffset > 0;
+  }
   private kbShow?: Promise<any>;
   private kbHide?: Promise<any>;
   private chatLoaded = false;
@@ -94,7 +109,7 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
     private tourService: FirstTimeTourService,
     private tabActivation: TabActivationService
   ) {
-    addIcons({ arrowUp, menuOutline, addOutline, refreshOutline, sparklesOutline, trendingUpOutline, chatbubbleEllipsesOutline });
+    addIcons({ arrowUp, menuOutline, addOutline, refreshOutline, sparklesOutline, trendingUpOutline, chatbubbleEllipsesOutline, pencilOutline });
 
     // Drive isActive + first-load from the pager's active-slide signal.
     effect(() => {
@@ -189,20 +204,23 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
    * isActive, and scrolls to the latest message on activate.
    */
   onChatActiveChange(active: boolean) {
+    console.log('[DIAG] --- onChatActiveChange active=' + active + ' t=' + Math.round(performance.now()) + ' ---');
     this.isActive = active;
-    // The history drawer is portaled to ion-app (stacking-context fix) and the
-    // chat page stays mounted across tab switches — only allow the menu (and its
-    // edge-swipe gesture) while chat is the active tab.
     if (!active) {
+      // Close the drawer if it's open, but do NOT disable the menu. Re-enabling
+      // it on the next entry was a real `disabled` change that re-ran Ionic's
+      // menu updateState against #main-content — the .ion-page that holds the
+      // composer — flashing the composer on EVERY entry to chat. Leaving it
+      // enabled is safe: swipe-to-open is off and the hamburger that opens it
+      // only exists on this page, so it can't be opened from other tabs.
       this.menuCtrl.close('chat-menu');
-      this.menuCtrl.enable(false, 'chat-menu');
       return;
     }
+    // Idempotent — these no-op once set (Stencil @Watch only fires on a real
+    // change), so there is no per-entry menu reflow. Keeps the history drawer
+    // opening ONLY via the hamburger, never an edge-swipe (which collided with
+    // the pager's right-edge swipe).
     this.menuCtrl.enable(true, 'chat-menu');
-    // Open the history drawer ONLY via the hamburger button — no edge-swipe-to-
-    // open. The template [swipeGesture]="false" doesn't reliably take on the
-    // proxied ion-menu, so disable it authoritatively on the live menu here
-    // (its right-edge open gesture otherwise collides with the pager's swipe).
     this.menuCtrl.swipeGesture(false, 'chat-menu');
     if (!this.chatLoaded) {
       this.chatLoaded = true;
@@ -564,7 +582,7 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
     // its fence closes. On a FINISHED message the raw fence stays visible as a
     // code block instead — never silently swallow persisted content.
     if (streaming) {
-      for (const opener of ['```chart', '```suggestions']) {
+      for (const opener of ['```chart', '```suggestions', '```action']) {
         const openFence = content.lastIndexOf(opener);
         if (openFence !== -1 && content.indexOf('```', openFence + opener.length) === -1) {
           content = content.slice(0, openFence);
@@ -573,7 +591,7 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const segments: MessageSegment[] = [];
-    const fence = /```(chart|suggestions)\s*\n([\s\S]*?)```/g;
+    const fence = /```(chart|suggestions|action)\s*\n([\s\S]*?)```/g;
     let last = 0;
     let match: RegExpExecArray | null;
 
@@ -587,6 +605,14 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
           segments.push({ kind: 'chart', config });
         } else {
           // Malformed chart JSON — show it as a code block rather than nothing
+          segments.push({ kind: 'md', text: '```json\n' + match[2] + '```' });
+        }
+      } else if (match[1] === 'action') {
+        const proposal = this.parseActionProposal(match[2]);
+        if (proposal) {
+          segments.push({ kind: 'action', proposal, state: 'idle' });
+        } else {
+          // A proposed-but-unrenderable action must not vanish silently
           segments.push({ kind: 'md', text: '```json\n' + match[2] + '```' });
         }
       } else {
@@ -627,6 +653,73 @@ export class AiChatPage implements OnInit, AfterViewInit, OnDestroy {
     if (this.isLoading) return;
     this.newMessage = option;
     this.sendMessage();
+  }
+
+  private parseActionProposal(raw: string): ChatActionProposal | null {
+    try {
+      const parsed = JSON.parse(raw);
+      if (
+        typeof parsed?.action !== 'string' ||
+        !KNOWN_ACTIONS.includes(parsed.action) ||
+        typeof parsed?.summary !== 'string' ||
+        !parsed.summary.trim()
+      ) {
+        return null;
+      }
+      return {
+        action: parsed.action,
+        params: parsed.params && typeof parsed.params === 'object' ? parsed.params : {},
+        summary: parsed.summary.trim().slice(0, 200),
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /** Confirm tap on an action card — the ONLY path that executes a FRED proposal. */
+  confirmAction(seg: MessageSegment) {
+    if (seg.kind !== 'action' || seg.state !== 'idle') return;
+    seg.state = 'executing';
+    this.cdr.detectChanges();
+
+    const sessionId = this.currentSession?.id || 'default-session';
+    this.chatService.confirmAction(seg.proposal.action, seg.proposal.params, sessionId).subscribe({
+      next: (res) => {
+        seg.state = res.success ? 'done' : 'failed';
+        seg.resultMessage = res.message;
+        // Mirror the outcome into the conversation (the backend persisted the
+        // same text server-side, so history and model context stay consistent)
+        this.addMessage({ role: 'assistant', content: res.message, timestamp: new Date() });
+        this.cdr.detectChanges();
+        this.scrollToBottom();
+      },
+      error: (err) => {
+        console.error('[Chat] Action confirm failed:', err);
+        seg.state = 'failed';
+        seg.resultMessage = "Couldn't reach the server — nothing was changed.";
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  cancelAction(seg: MessageSegment) {
+    if (seg.kind !== 'action' || seg.state !== 'idle') return;
+    seg.state = 'cancelled';
+    this.cdr.detectChanges();
+  }
+
+  /** Pencil tap: load the chip text into the composer for editing, with the
+   *  caret placed at the end so added details flow naturally. */
+  async editQuickReply(option: string) {
+    this.newMessage = option;
+    this.cdr.detectChanges();
+    const textarea = this.composerTextarea;
+    if (!textarea) return;
+    await textarea.setFocus();
+    try {
+      const native = await textarea.getInputElement();
+      native.setSelectionRange(native.value.length, native.value.length);
+    } catch { /* caret placement is best-effort */ }
   }
 
   private parseChartConfig(raw: string): ChatChartConfig | null {

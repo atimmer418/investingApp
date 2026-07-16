@@ -14,6 +14,7 @@
 <ion-content class="shell-content" appKeyboardAvoid>
   <div class="shell-inner">
 
+    <!-- Subscription reactivation banner -->
     <div *ngIf="isSubExpired" class="reactivation-banner">
       <span class="material-symbols-outlined">lock</span>
       <div class="reactivation-text">
@@ -23,157 +24,297 @@
       <button class="reactivation-btn" (click)="reactivateSubscription()">Reactivate</button>
     </div>
 
+    <!-- Action-required banner -->
     <div *ngIf="(actionRequired$ | async)" class="action-required-banner" (click)="goToDocumentUpload()">
       <span class="material-symbols-outlined ar-icon">warning</span>
       <span class="ar-text">Action required: Upload verification documents</span>
       <span class="material-symbols-outlined ar-chevron">chevron_right</span>
     </div>
 
-    <div class="hero-section">
-      <ion-avatar class="user-avatar">
-        <img [src]="avatarSrc" alt="User Avatar" />
-      </ion-avatar>
-      <div class="camera-icon">
-        <ion-icon name="camera"></ion-icon>
+    <!-- ── Identity hero ───────────────────────────────────────────────────── -->
+    <div class="id-hero">
+      <div class="avatar-wrap">
+        <ion-avatar class="user-avatar">
+          <img [src]="avatarSrc" alt="User Avatar" />
+        </ion-avatar>
+        <div class="camera-badge">
+          <span class="material-symbols-outlined">photo_camera</span>
+        </div>
       </div>
-      <h2 class="user-name">{{ userName }}</h2>
-      <div class="percentile-badge" *ngIf="statusPercentile !== null">
-        <span class="material-symbols-outlined percentile-icon">trending_up</span>
-        <span class="percentile-text">Ahead of {{ statusPercentile }}% of investors</span>
+      <div class="id-name">{{ userName }}</div>
+      <div class="percentile-pill" *ngIf="statusPercentile !== null">
+        <span class="material-symbols-outlined pill-icon">trending_up</span>
+        <span>Ahead of {{ statusPercentile }}% of investors</span>
       </div>
     </div>
 
-    <!-- Freedom Plan Card -->
-    <div class="section-card">
-      <div class="card-header-row">
-        <span class="material-symbols-outlined card-icon">trending_up</span>
-        <h3 class="card-title">Freedom Plan</h3>
+    <!-- ── Freedom Plan (simplified) ────────────────────────────────────────── -->
+    <p class="zone-label">Freedom Plan</p>
+    <div class="zone-card">
+      <!-- Editable tiles -->
+      <div class="fp-tiles">
+        <div class="fp-tile">
+          <span class="fp-tile-label">Income goal</span>
+          <div class="fp-tile-edit">
+            <span class="fp-tile-pre">$</span>
+            <input
+              type="number"
+              class="fp-tile-input"
+              [(ngModel)]="retirementIncomeGoal"
+              (ngModelChange)="onIncomeChange()"
+              placeholder="5,000"
+              maxlength="5"
+            />
+            <span class="fp-tile-suf">/mo</span>
+          </div>
+        </div>
+        <div class="fp-tile">
+          <span class="fp-tile-label">Investing</span>
+          <div class="fp-tile-edit">
+            <span class="fp-tile-pre">$</span>
+            <input
+              type="number"
+              class="fp-tile-input"
+              [(ngModel)]="monthlyInvestGoal"
+              (ngModelChange)="onInvestChange()"
+              placeholder="500"
+              maxlength="5"
+            />
+            <span class="fp-tile-suf">/mo</span>
+          </div>
+        </div>
       </div>
 
-      <div class="plan-sentence">
-        To be free with
-        <div class="inline-input-wrapper">
-          <span class="prefix">$</span>
-          <input type="number" [(ngModel)]="retirementIncomeGoal" (ngModelChange)="onIncomeChange()"
-            class="inline-input" oninput="if(this.value.length > 5) this.value = this.value.slice(0, 5);" />
-          <span class="suffix">/mo</span>
-        </div>, you need a portfolio worth <strong>{{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</strong>.
+      <!-- Projection row -->
+      <div class="fp-projection">
+        <div class="fp-year-bubble">
+          <span class="fp-year" *ngIf="freedomYear">{{ freedomYear }}</span>
+          <span class="fp-year" *ngIf="!freedomYear">—</span>
+          <span class="fp-year-label">Freedom</span>
+        </div>
+        <div class="fp-line">
+          A <strong>{{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</strong> portfolio covers
+          <strong>{{ retirementIncomeGoal | currency:'USD':'symbol':'1.0-0' }}/mo</strong> —
+          at <strong>{{ monthlyInvestGoal | currency:'USD':'symbol':'1.0-0' }}/mo</strong>
+          you're free around
+          <strong *ngIf="freedomYear">{{ freedomYear }}, age {{ freedomStats.stats().freedomAge }}</strong>
+          <span *ngIf="!freedomYear">your freedom date will appear once your plan is set up.</span>
+        </div>
       </div>
 
-      <div class="plan-sentence">
-        By investing
-        <div class="inline-input-wrapper">
-          <span class="prefix">$</span>
-          <input type="number" [(ngModel)]="monthlyInvestGoal" (ngModelChange)="onInvestChange()" class="inline-input"
-            oninput="if(this.value.length > 5) this.value = this.value.slice(0, 5);" />
-          <span class="suffix">/mo</span>
-        </div>, you can reach that portfolio in <strong>{{ yearsToReach }} years</strong>.
-      </div>
-
-      <div class="insight-box">
-        <div class="insight-icon-wrap">
-          <span class="material-symbols-outlined">schedule</span>
+      <!-- Progress bar -->
+      <div class="fp-progress">
+        <div class="fp-bar">
+          <i [style.width.%]="progressPercentage * 100"></i>
         </div>
-        <div class="insight-text">
-          At your current investment rate of <strong>{{ currentScheduledInvestment | currency }} {{
-            investmentFrequencyText }}</strong>
-          <span *ngIf="currentMonthlyEquivalent > 0 && currentFrequency !== 'monthly'" class="secondary-text">
-            ({{ currentMonthlyEquivalent | currency:'USD':'symbol':'1.0-0' }}/mo)</span>,
-          you'd reach <strong>{{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</strong> in roughly <strong>{{
-            yearsToReachRemaining }} more years</strong>.
-        </div>
-        <div class="progress-bar-container">
-          <div class="progress-bar" [style.width.%]="progressPercentage * 100"></div>
-        </div>
-        <div class="progress-labels">
-          <span>Current: {{ currentPortfolioValue | currency:'USD':'symbol':'1.0-0' }}</span>
+        <div class="fp-progress-labels">
+          <span>Now: {{ currentPortfolioValue | currency:'USD':'symbol':'1.0-0' }}</span>
           <span>Goal: {{ portfolioGoal | currency:'USD':'symbol':'1.0-0' }}</span>
         </div>
       </div>
 
-      <p class="disclaimer-text">
-        Assumes 10% avg annual return. Past performance is not indicative of future results.
+      <p class="fp-note">Assumes a 10% avg annual return and a 4% withdrawal rate. Past performance is not indicative of future results.</p>
+    </div>
+
+    <!-- ── Portfolio Rebalancing ─────────────────────────────────────────────── -->
+    <p class="zone-label">
+      Portfolio Rebalancing
+      <span class="lockchip" *ngIf="isPiggy">
+        <span class="material-symbols-outlined">lock</span>Plus
+      </span>
+    </p>
+    <div class="zone-card">
+      <div class="rb-row">
+        <div class="rb-icon">
+          <span class="material-symbols-outlined">balance</span>
+        </div>
+        <div class="rb-text">
+          <strong>FRED keeps your portfolio on target.</strong>
+          When your allocation drifts, FRED automatically realigns it — no trade approvals needed.
+        </div>
+      </div>
+
+      <div class="rb-chips" [class.locked]="isPiggy">
+        <button
+          *ngFor="let s of rebalanceSchedules"
+          [class.on]="selectedSchedule === s"
+          (click)="selectSchedule(s)"
+          type="button"
+        >{{ s }}</button>
+      </div>
+
+      <div class="rb-next" *ngIf="isPlusOrPro">
+        <span class="material-symbols-outlined">event_available</span>
+        Next rebalance: {{ nextRebalanceDate }}
+      </div>
+      <div class="rb-default-note" *ngIf="isPiggy">
+        On Piggy, FRED uses the default quarterly schedule. Upgrade to choose your own.
+      </div>
+    </div>
+
+    <!-- ── Goals (Plus+) ─────────────────────────────────────────────────────── -->
+    <p class="zone-label">
+      Goals
+      <span class="lockchip" *ngIf="isPiggy">
+        <span class="material-symbols-outlined">lock</span>Plus
+      </span>
+    </p>
+    <div class="zone-card goals-card">
+      <!-- Freedom Date row (always first) -->
+      <div class="goal-row">
+        <div class="goal-tile goal-tile--freedom">
+          <span class="material-symbols-outlined">savings</span>
+        </div>
+        <div class="goal-mid">
+          <div class="goal-name">
+            Freedom Date
+            <span class="fred-invests-badge">FRED invests</span>
+          </div>
+          <div class="goal-sub">{{ freedomGoalSub }}</div>
+          <div class="goal-bar">
+            <i class="goal-bar-fill ok" [style.width.%]="progressPercentage * 100"></i>
+          </div>
+        </div>
+        <div class="goal-right">
+          <div class="goal-proj ok">On track</div>
+        </div>
+      </div>
+
+      <!-- User-added goals (Plus/Pro only — behind veil on Piggy) -->
+      <ng-container *ngIf="isPlusOrPro">
+        <div
+          *ngFor="let proj of goalProjections"
+          class="goal-row"
+          (click)="openAddGoalSheet(proj.goal)"
+          (contextmenu)="onGoalLongPress(proj.goal); $event.preventDefault()"
+        >
+          <div class="goal-tile">
+            <span class="material-symbols-outlined">{{ proj.goal.icon }}</span>
+          </div>
+          <div class="goal-mid">
+            <div class="goal-name ellipsis">{{ proj.goal.name }}</div>
+            <div class="goal-sub">
+              {{ proj.goal.targetAmount | currency:'USD':'symbol':'1.0-0' }} by {{ proj.goal.targetYear }} ·
+              {{ proj.goal.monthlyOutsideFRED | currency:'USD':'symbol':'1.0-0' }}/mo outside FRED
+            </div>
+            <div class="goal-bar">
+              <i
+                class="goal-bar-fill"
+                [class.ok]="proj.onTrack"
+                [class.late]="!proj.onTrack"
+                [style.width.%]="proj.progressPct"
+              ></i>
+            </div>
+          </div>
+          <div class="goal-right">
+            <div class="goal-proj" [class.ok]="proj.onTrack" [class.late]="!proj.onTrack">
+              {{ proj.onTrack ? 'On track' : 'Projected' }} · {{ proj.projectedLabel }}
+            </div>
+          </div>
+        </div>
+
+        <button class="add-goal-btn" (click)="openAddGoalSheet()" type="button">
+          <span class="material-symbols-outlined">add_circle</span>Add a goal
+        </button>
+      </ng-container>
+
+      <!-- Compliance disclaimer -->
+      <p class="goals-disclaimer" *ngIf="isPlusOrPro">
+        FRED invests only toward your Freedom Date. Other goals are projections built from amounts you contribute outside FRED — FRED never holds or moves those funds.
       </p>
+
+      <!-- Frosted veil for Piggy — entire area tappable -->
+      <div class="goals-veil" *ngIf="isPiggy" (click)="openGoalsVeilNudge()">
+        <span class="material-symbols-outlined">lock</span>
+        <div class="gv-title">Track more than one goal with Piggy Plus</div>
+        <div class="gv-sub">House, college, emergency fund — projected side by side</div>
+      </div>
     </div>
 
-    <!-- Freedom Timeline Card -->
-    <div class="section-card freedom-timeline-card">
-      <div class="timeline-hero">
-        <img src="assets/images/whenPiggybanksFly-3.jpg" alt="Freedom" class="timeline-pig-hero" />
-        <div class="timeline-body">
-          <div class="card-header-row">
-            <span class="material-symbols-outlined card-icon">event</span>
-            <h3 class="card-title">Freedom Date</h3>
-          </div>
-          <ng-container *ngIf="freedomYear; else noFreedomDate">
-            <div class="timeline-year">{{ freedomYear }}</div>
-            <div class="timeline-years-away">{{ yearsToFreedom }} years away</div>
+    <!-- ── Tax Loss Harvesting ───────────────────────────────────────────────── -->
+    <p class="zone-label">
+      Tax Loss Harvesting
+      <span class="lockchip prochip" *ngIf="!isPro">
+        <span class="material-symbols-outlined">lock</span>Pro
+      </span>
+      <span class="soonpill">Coming soon</span>
+    </p>
+    <div class="zone-card">
+      <div class="tlh-row">
+        <div class="tlh-icon">
+          <span class="material-symbols-outlined">energy_savings_leaf</span>
+        </div>
+        <div class="tlh-main">
+          <!-- Non-Pro: heuristic estimate + CTA -->
+          <ng-container *ngIf="!isPro">
+            <div class="tlh-headline">
+              You could save <span class="tlh-amt">{{ tlhEstimateDisplay }}</span> in taxes
+            </div>
+            <div class="tlh-sub">Rule-based harvesting on your portfolio's ETFs — VTI · VXUS · VBR</div>
+            <button class="tlh-cta-btn" (click)="openTlhProNudge()" type="button">
+              Want to save this money?
+            </button>
           </ng-container>
-          <ng-template #noFreedomDate>
-            <div class="timeline-placeholder">Complete your setup to see your freedom date</div>
-          </ng-template>
+          <!-- Pro: placeholder (engine not built yet — framed by coming-soon pill above) -->
+          <ng-container *ngIf="isPro">
+            <div class="tlh-headline">
+              Saved this year: <span class="tlh-amt green">$0.00</span>
+            </div>
+            <div class="tlh-sub">Rule-based harvesting on your portfolio's ETFs — VTI · VXUS · VBR</div>
+          </ng-container>
         </div>
       </div>
     </div>
 
-    <!-- Referrals Card -->
-    <div class="section-card">
-      <div class="card-header-row">
-        <span class="material-symbols-outlined card-icon">card_giftcard</span>
-        <h3 class="card-title">Referrals</h3>
+    <!-- ── Referrals ─────────────────────────────────────────────────────────── -->
+    <p class="zone-label">Referrals</p>
+    <div class="zone-card">
+      <div class="ref-progress">
+        <div
+          *ngFor="let seg of referralSegments; let i = index"
+          class="ref-seg"
+          [class.filled]="i < referralCount"
+        ></div>
+      </div>
+      <div class="ref-count">{{ referralCount }} / {{ referralThreshold }} redeemed · limited-edition FRED merch at {{ referralThreshold }}</div>
+
+      <div class="code-box">
+        <span class="code-text">{{ referralCode }}</span>
+        <button class="share-chip" (click)="copyReferral()" type="button">
+          <ion-icon name="share-outline"></ion-icon>
+        </button>
       </div>
 
-      <div class="referral-share">
-        <div class="field-label">SHARE THE WEALTH</div>
-
-        <div class="referral-progress-bar">
-          <div *ngFor="let seg of referralSegments; let i = index"
-               class="referral-segment"
-               [class.filled]="i < referralCount"
-               [class.complete]="referralCount >= referralThreshold">
-          </div>
+      <div class="redeem-row">
+        <div class="redeem-input">
+          <span class="material-symbols-outlined">confirmation_number</span>
+          <input
+            type="text"
+            [placeholder]="hasAppliedReferral ? 'Code applied' : 'Enter referral code'"
+            [(ngModel)]="redeemCodeInput"
+            (input)="onReferralCodeInput(redeemCodeInput)"
+            [disabled]="isLoadingReferral || hasAppliedReferral"
+          />
         </div>
-        <div class="referral-progress-label">{{ referralCount }} / {{ referralThreshold }} redeemed</div>
-
-        <div class="code-box">
-          <div class="code-text">{{ referralCode }}</div>
-          <div class="share-btn" (click)="copyReferral()">
-            <ion-icon name="share-outline"></ion-icon>
-          </div>
-        </div>
-        <div class="helper-text">Claim limited edition FRED merch when 3 users redeem your code. Users can redeem only one code.</div>
-        <div *ngIf="referralCount >= referralThreshold" class="reward-unlocked-banner">
-          Reward unlocked!
-        </div>
+        <button
+          class="redeem-btn"
+          (click)="redeemCode()"
+          [disabled]="isLoadingReferral || hasAppliedReferral || (!hasAppliedReferral && !isCodeValid)"
+          type="button"
+        >
+          {{ isLoadingReferral ? '...' : (hasAppliedReferral ? 'Applied' : 'Redeem') }}
+        </button>
       </div>
+      <p class="ref-helper">Users can redeem only one code.</p>
 
-      <div class="section-divider"></div>
-
-      <div class="redeem-section">
-        <div class="field-label">REDEEM CODE</div>
-        <div class="redeem-row">
-          <div class="input-container">
-            <span class="material-symbols-outlined input-icon">confirmation_number</span>
-            <input type="text" [placeholder]="hasAppliedReferral ? 'Code applied' : 'Enter referral code'"
-              [(ngModel)]="redeemCodeInput" (input)="onReferralCodeInput(redeemCodeInput)" [disabled]="isLoadingReferral || hasAppliedReferral" />
-          </div>
-          <button class="apply-btn" (click)="redeemCode()" [disabled]="isLoadingReferral || hasAppliedReferral || (!hasAppliedReferral && !isCodeValid)">
-            {{ isLoadingReferral ? '...' : (hasAppliedReferral ? 'Applied' : 'Apply') }}
-          </button>
-        </div>
-        <div class="redeem-success" *ngIf="hasAppliedReferral">
-          <span class="material-symbols-outlined success-icon">check_circle</span>
-          <span>Referral code applied</span>
-        </div>
+      <div *ngIf="referralRewardTriggered" class="reward-unlocked-banner">
+        Reward unlocked!
       </div>
     </div>
 
-    <!-- Referral Upgrade Offers -->
-    <div class="section-card" *ngIf="referralUpgradeOffers.length > 0">
-      <div class="card-header-row">
-        <span class="material-symbols-outlined card-icon">upgrade</span>
-        <h3 class="card-title">Upgrade Your Plan</h3>
-      </div>
+    <!-- ── Referral upgrade offers ──────────────────────────────────────────── -->
+    <div class="zone-card" *ngIf="referralUpgradeOffers.length > 0">
+      <p class="zone-label" style="margin: 0 0 10px;">Upgrade Your Plan</p>
       <div *ngFor="let offer of referralUpgradeOffers" class="upgrade-offer-row">
         <div class="upgrade-info">
           <div class="upgrade-label">{{ offer.label }}</div>
@@ -183,7 +324,7 @@
           </div>
           <div class="upgrade-unlock">{{ referralCount }} referral{{ referralCount === 1 ? '' : 's' }} unlocked this discount</div>
         </div>
-        <button class="upgrade-btn" (click)="confirmTierUpgrade(offer.tier, offer.label, offer.discountedPrice)">
+        <button class="upgrade-btn" (click)="confirmTierUpgrade(offer.tier, offer.label, offer.discountedPrice)" type="button">
           Upgrade
         </button>
       </div>

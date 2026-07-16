@@ -58,6 +58,24 @@ public class ChatController {
         return chatService.streamChat(request);
     }
 
+    /**
+     * Phase B agentic: execute a FRED-proposed action. Only fires on an explicit
+     * Confirm tap in the UI; the model itself can never call this.
+     */
+    @PostMapping("/action")
+    public ResponseEntity<java.util.Map<String, Object>> executeAction(
+            @RequestBody com.investingapp.backend.dto.ChatActionRequest request) {
+        Long authenticatedUserId = authenticatedUserId();
+        if (authenticatedUserId == null) {
+            return ResponseEntity.status(401).build();
+        }
+        var result = chatService.executeChatAction(authenticatedUserId, request.sessionId(),
+                request.action(), request.params());
+        return ResponseEntity.ok(java.util.Map.of(
+                "success", result.success(),
+                "message", result.message()));
+    }
+
     private Long authenticatedUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl userDetails) {

@@ -36,6 +36,7 @@ public class ChatService {
     private final SafetyService safetyService; // Inject
     private final ConversationAnalyticsService analyticsService; // NEW: Phase 2A
     private final FredChatToolsService fredChatToolsService; // Phase A agentic: read-only chat tools
+    private final FredChatActionService fredChatActionService; // Phase B agentic: confirmed mutations
 
     private static final String TOOLS_UNAVAILABLE_NOTE =
             "Note: your data-lookup tools are NOT available on this request. Do not claim you can "
@@ -43,7 +44,8 @@ public class ChatService {
 
     public ChatService(UserRepository userRepository, ChatMessageRepository chatMessageRepository,
             RAGService ragService, LLMService llmService, SafetyService safetyService,
-            ConversationAnalyticsService analyticsService, FredChatToolsService fredChatToolsService) {
+            ConversationAnalyticsService analyticsService, FredChatToolsService fredChatToolsService,
+            FredChatActionService fredChatActionService) {
         this.userRepository = userRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.ragService = ragService;
@@ -51,6 +53,33 @@ public class ChatService {
         this.safetyService = safetyService;
         this.analyticsService = analyticsService; // NEW: Phase 2A
         this.fredChatToolsService = fredChatToolsService;
+        this.fredChatActionService = fredChatActionService;
+    }
+
+    /**
+     * Phase B: execute a FRED-proposed action after the user's Confirm tap.
+     * The outcome is also persisted as an assistant message so the next model
+     * turn (and a reloaded chat) sees what actually happened.
+     */
+    public FredChatActionService.ActionResult executeChatAction(Long userId, String sessionId,
+            String action, com.fasterxml.jackson.databind.JsonNode params) {
+        User user = userId != null ? userRepository.findById(userId).orElse(null) : null;
+        if (user == null) {
+            return new FredChatActionService.ActionResult(false, "User not found");
+        }
+        FredChatActionService.ActionResult result = fredChatActionService.execute(user, action, params, sessionId);
+        if (sessionId != null && !sessionId.isBlank()) {
+            try {
+                // ✅/⚠️ prefix marks this as a SYSTEM outcome record — the
+                // constitution tells the model these are not its own words, so
+                // history can't teach it to claim executions itself
+                String prefix = result.success() ? "✅ " : "⚠️ ";
+                chatMessageRepository.save(new ChatMessage(userId, sessionId, "assistant", prefix + result.message()));
+            } catch (Exception e) {
+                logger.error("Failed to persist action outcome for session {}", sessionId, e);
+            }
+        }
+        return result;
     }
 
     public ChatResponse processChat(ChatRequest request) {

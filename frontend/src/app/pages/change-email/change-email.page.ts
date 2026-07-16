@@ -8,6 +8,7 @@ import {
   IonHeader, IonToolbar, IonContent,
   IonSpinner
 } from '@ionic/angular/standalone';
+import { KeyboardAvoidDirective } from '../../directives/keyboard-avoid.directive';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 import { PasskeyService } from '../../services/passkey.service';
@@ -27,7 +28,8 @@ import { firstValueFrom } from 'rxjs';
   imports: [
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonContent,
-    IonSpinner
+    IonSpinner,
+    KeyboardAvoidDirective
   ]
 })
 export class ChangeEmailPage implements OnInit {
